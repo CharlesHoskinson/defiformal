@@ -1,0 +1,302 @@
+OpenAI Codex v0.146.0
+--------
+workdir: /root/DefiElements
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 019fcdb2-da39-7853-9f5d-a4e1452ca089
+--------
+user
+Do NOT run graphify, do NOT build a knowledge graph, do NOT index the repo. Read two files and answer.
+
+Read /root/DefiElements/council/motion/review-brief.md first, then /root/DefiElements/council/motion/motion-bundle.md in full.
+
+YOUR LENS: **Information design and encoding.**
+
+You decide whether 3D adds meaning or subtracts it. Nothing else.
+
+Rule on Part 3 tensions 1, 2 and 3. Also interrogate:
+
+1. Mapping stratum to the Z axis: is depth-as-distance a genuine encoding, or is it redundant with row position and the printed S-token that already carry it? Redundancy is not automatically bad — say whether this redundancy is reinforcing or wasteful.
+2. Perspective introduces a systematic distortion: further things are smaller and more occluded. If S4 sits furthest back, the deepest and most trust-laden elements become the least visible. Is that acceptable, backwards, or actively misleading? Rule directly.
+3. The packed layout's finding is that S0 has 3 elements and S3 has 22. Does putting those rows at different Z distances help a viewer see that asymmetry, or destroy the comparison by changing their apparent size?
+4. Occlusion: in a 3D scene, tiles hide other tiles. In a reference table every element must be reachable and comparable. How do you reconcile those, and does your answer effectively force a face-on camera?
+5. What quantity in this data would ACTUALLY benefit from a third spatial dimension, if any? Consider law-membership count, hazard membership, and the protocol build order.
+6. If Z is not the right use of 3D here, what is — and is your answer just "do not use 3D"? If so, say it plainly.
+
+Output ONLY the JSON object from the review contract. No prose, no fences.
+
+exec
+/bin/bash -lc "sed -n '1,240p' /root/DefiElements/council/motion/review-brief.md" in /root/DefiElements
+ succeeded in 0ms:
+# Design Council — review contract
+
+## What you are reviewing
+
+`design-bundle.md` — a **draft design brief** for visualising a reference table
+of DeFi mechanisms. Not code. Not a finished design. A brief.
+
+Author identity is sealed. Do not speculate about who wrote it.
+
+## Your job
+
+Decide, **from your assigned lens only**, whether this is the right brief. You
+are not polishing it. You are deciding whether it should be built as written.
+
+The brief's Part 3 lists six tensions it has *not* resolved. Take a position on
+every one that falls in your lens. "It depends" is not a position.
+
+## Standards
+
+- **Decide, don't survey.** Every finding must end in a concrete instruction
+  someone could follow tomorrow.
+- **Ground it.** Name the section or claim you are contradicting.
+- **Separate** taste ("I would have chosen otherwise") from defect ("this will
+  fail for a real user, and here is who").
+- Do not invent research findings, WCAG clause numbers, or user studies. If you
+  are reasoning from principle, say so and mark the finding `principle`.
+- If you cannot decide because the brief omits something you need, return
+  `insufficient_evidence` and name exactly what is missing. That is a valid
+  outcome, not a cop-out.
+
+## Output contract
+
+Output ONLY a single JSON object. No prose before or after, no markdown fences.
+
+```
+{
+  "lens": "<your assigned lens>",
+  "verdict": "approved" | "changes_requested" | "insufficient_evidence",
+  "summary": "<=60 words — the single most important decision you are forcing",
+  "tension_rulings": [
+    { "tension": 1, "ruling": "<keep|cut|change>", "why": "<one sentence>" }
+  ],
+  "findings": [
+    {
+      "id": "F1",
+      "severity": "high" | "medium" | "low",
+      "section": "<which part of the brief>",
+      "problem": "<what is wrong, and for whom>",
+      "instruction": "<the concrete change you are directing>",
+      "basis": "verified" | "principle"
+    }
+  ],
+  "what_to_keep": "<the one thing in this brief that must not be lost>",
+  "dissent_note": "<where you expect another lens to disagree, <=40 words>"
+}
+```
+
+`changes_requested` requires at least one `high` or `medium` finding.
+Only rule on tensions that fall within your lens.
+
+exec
+/bin/bash -lc 'cat /root/DefiElements/council/motion/motion-bundle.md' in /root/DefiElements
+ succeeded in 0ms:
+# Design brief under review — adding three.js motion to a working table
+
+You are deciding **how**, not whether. The client has directed three.js. Your
+job is to make that decision good, or to say precisely where it will do damage.
+
+---
+
+## Part 1 — What exists now, and what it cost to get here
+
+A reference table of the recurring mechanisms in decentralized finance:
+**48 core elements, 10 candidates, 10 contested**, in **16 substitutability
+families** across **5 prerequisite depths (S0–S4)**.
+
+### The layout was already rebuilt once
+
+The first attempt was a 16×5 group-by-depth matrix. It failed badly: **61 of
+80 cells were empty**, because family and depth are close to collinear in this
+data — credit is entirely S3, pricing entirely S1, truth entirely S2. A
+cross-product of two nearly-dependent axes cannot be filled. The client's
+verdict on it was "unusable".
+
+**The current form is packed:** five depth rows, each holding a run of labelled
+family blocks. Only what exists is drawn. Row is exactly depth; block is
+exactly family. Nothing is empty. Tiles became large enough to read because the
+layout stopped spending space on nothing.
+
+The shape now carries a finding on its own: **S0 holds 3 elements, S3 holds 22.**
+Most of DeFi is machinery for owing, pricing and unwinding obligations.
+
+### What else the interface does
+
+- **Protocol projection.** Twelve real protocols (Aave, Uniswap v3, Maker,
+  Lido, CoW, CCTP, Centrifuge; and four dead ones — Terra, Mango, Euler).
+  Selecting one dims every non-member tile and numbers its members **1..n in
+  the order each part became necessary**. Aave's ten parts land across four
+  different depth rows.
+- **Dead protocols** additionally show what broke, a reflexive cycle drawn as
+  a loop, the loss, and the hazard rule naming the shape.
+- Detail dialog per element, search, filters, laws and hazards views.
+
+### Hard constraints carried from the previous council
+
+These were decided by an earlier six-lane review and are not up for
+re-litigation unless you have a specific, strong reason:
+
+1. **Colour means hazard and nothing else.** Depth carries no hue — it is row
+   position, a printed S-token, and a lightness ramp solved for contrast.
+2. **Status is text first** — a badge on the tile face plus a nine-field
+   accessible name. Glyph and border are redundant channels.
+3. **The 2D document is layout zero**, feature-complete, canonical — not a
+   fallback.
+4. **No overclaiming.** This is explicitly not a periodic table: no periodic
+   law, no atomic number, no closure.
+5. Single self-contained file. Current payload **22.5 KB gzipped**; the budget
+   is 150 KB. three.js will consume most of the remaining headroom.
+
+### Why the previous council cut three.js
+
+Unanimously, on these grounds: the only layouts that justified a scene graph
+were non-semantic (sphere, helix, grid) and were themselves cut; a free
+trackball camera puts tile text off-axis; camera drag conflicts with clickable,
+focusable tiles; and ~68 permanently composited layers stress mobile
+compositing.
+
+**Two corrections to that record, which you should weigh rather than inherit.**
+First, the claim that CSS3D makes text unreadable was overstated — the
+reference demo is demonstrably legible face-on, and the defect belongs to free
+rotation rather than to the renderer. Second, the client has seen that demo and
+judged it legible. **Assume three.js is in. Decide what it should do.**
+
+---
+
+## Part 2 — The proposal you are reviewing
+
+### Core idea: depth becomes literal
+
+Map **stratum to the Z axis**. S0 sits nearest the viewer, S4 furthest back.
+"How much must already exist underneath this" stops being a label and becomes
+physical distance. The claim is that this is a semantic use of 3D rather than a
+decorative one.
+
+### Proposed motion
+
+1. **Assembly.** Selecting a protocol flies its member tiles forward out of the
+   depth planes and assembles them in reading order, 1..n, while non-members
+   recede and desaturate. For Aave this is a climb from S0 up to S4.
+2. **Depth parallax.** Slow, small camera drift so the separation between
+   planes is perceivable without interaction.
+3. **The reflexive loop.** For Terra, the three elements in the cycle orbit a
+   closed path — the loop that killed it, drawn as an actual loop in space.
+4. **Arrangement change.** Moving between *by depth* and *by family* re-forms
+   the tiles through 3D rather than a 2D FLIP.
+
+### Proposed technique
+
+`CSS3DRenderer`, so tiles stay real DOM — selectable text, working focus,
+existing accessible names — rather than WebGL quads. Camera constrained: no
+free trackball, tiles always parallel to the view plane, movement limited to
+dolly and small orbit.
+
+---
+
+## Part 3 — Tensions the brief has not resolved
+
+Rule on the ones inside your lens.
+
+1. **Does Z-as-depth actually teach anything**, or is it a literalisation of a
+   metaphor that was already clear from row position and a printed token?
+2. **Density and scanability are the packed layout's whole virtue.** Note the
+   evidence here, because an earlier review overstated this: the well-known
+   `CSS3DRenderer` periodic-table demo renders its tile text **perfectly
+   crisply** in its default face-on state. CSS3D does not blur text as such.
+   Degradation comes from *free rotation* and from non-integer scale, not from
+   using a scene graph. So the honest question is narrower: at what camera
+   angles and dolly distances does this specific table stop being scannable,
+   and where should the constraint be set?
+3. **Is the assembly animation teaching or theatre?** The numbered 1..n order
+   already conveys sequence statically.
+4. **CSS3D vs WebGL.** CSS3D preserves DOM and accessibility but blurs text
+   under transforms and composites badly at scale. WebGL renders beautifully
+   and throws away every accessibility property already built.
+5. **What does a reduced-motion or non-3D user get?** They must not receive a
+   lesser product — that was a binding ruling last time.
+6. **Payload.** three.js will take most of the remaining budget for motion that
+   may be decorative. Is that trade defensible?
+7. **Does 3D fit this visual world at all** — a flat, dark, ledger-like
+   interface whose entire discipline is that nothing is decorative?
+
+codex
+{
+  "lens": "Information design and encoding",
+  "verdict": "changes_requested",
+  "summary": "Persistent 3D subtracts information: Z duplicates stratum while perspective reverses salience, occlusion breaks reference access, and unequal apparent scale corrupts density comparison. Keep the table coplanar and face-on; if three.js is mandatory, use it only for in-plane transitions.",
+  "tension_rulings": [
+    {
+      "tension": 1,
+      "ruling": "cut",
+      "why": "Z is wasteful redundancy because row position and the printed S-token already encode stratum without altering visibility, scale, or comparability."
+    },
+    {
+      "tension": 2,
+      "ruling": "change",
+      "why": "Set the reference view to a fixed face-on orthographic camera with equal tile scale and zero overlap; any angle or dolly distance that changes those conditions is outside the allowed range."
+    },
+    {
+      "tension": 3,
+      "ruling": "cut",
+      "why": "Flying tiles forward and reassembling them adds theatre to the existing 1..n sequence while temporarily removing the depth and family context that makes the sequence informative."
+    }
+  ],
+  "findings": [
+    {
+      "id": "F1",
+      "severity": "high",
+      "section": "Part 2 — Core idea: depth becomes literal",
+      "problem": "Mapping stratum to Z adds no independent information, and its redundancy is wasteful because perceiving it requires perspective or parallax that damages the primary table encoding.",
+      "instruction": "Remove persistent Z-as-stratum and retain row position plus the printed S-token as the complete depth encoding.",
+      "basis": "principle"
+    },
+    {
+      "id": "F2",
+      "severity": "high",
+      "section": "Part 2 — Core idea and proposed depth parallax",
+      "problem": "Perspective makes S4 smaller and more occluded precisely because it is deepest, systematically reducing the visibility of the most prerequisite- and trust-laden elements; this is actively misleading.",
+      "instruction": "Prohibit perspective depth, camera orbit, and parallax in the reference state; render every stratum at identical scale and visibility.",
+      "basis": "principle"
+    },
+    {
+      "id": "F3",
+      "severity": "high",
+      "section": "Part 1 — The current packed form",
+      "problem": "Placing S0's 3 elements and S3's 22 elements at different perspective distances corrupts their apparent-size comparison and conceals the packed layout's central finding.",
+      "instruction": "Keep all five rows coplanar at one scale so occupied width and tile count remain directly comparable.",
+      "basis": "principle"
+    },
+    {
+      "id": "F4",
+      "severity": "high",
+      "section": "Part 2 — Proposed technique",
+      "problem": "Occlusion makes some elements unreachable or incomparable in a reference table; avoiding it while preserving readable faces effectively requires a face-on camera.",
+      "instruction": "Require a fixed face-on orthographic view with no tile overlap or clipping; if a transition temporarily overlaps tiles, restore the complete coplanar table before interaction resumes.",
+      "basis": "principle"
+    },
+    {
+      "id": "F5",
+      "severity": "medium",
+      "section": "Part 1 — Protocol projection, laws, and hazards",
+      "problem": "No listed quantity benefits from a third spatial dimension: law and hazard membership are categorical or countable, while protocol build order is a one-dimensional sequence already encoded by numbers.",
+      "instruction": "Show membership through filtering or badges, counts through aligned bars or numerals, and build order through numbers, an in-plane path, or sequential highlighting; assign none of them to Z.",
+      "basis": "principle"
+    },
+    {
+      "id": "F6",
+      "severity": "medium",
+      "section": "Part 2 — Proposed motion",
+      "problem": "The assembly and arrangement motions use depth without adding a durable, comparable data relationship, so 3D functions as decoration rather than encoding.",
+      "instruction": "Do not use 3D for this table; if three.js remains mandatory, constrain it to coplanar in-plane transitions that never change scale, ordering evidence, visibility, or reachability.",
+      "basis": "principle"
+    }
+  ],
+  "what_to_keep": "The packed 2D structure in which row means stratum, block means family, and equal-scale occupancy exposes the S0-to-S3 asymmetry.",
+  "dissent_note": "A motion or branding lens may value spatial spectacle, but spectacle cannot justify corrupting the table's quantitative comparison and reference function."
+}
+tokens used
+12,900
