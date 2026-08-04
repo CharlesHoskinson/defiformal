@@ -162,3 +162,33 @@ for (const s of [["Of"],["Rl"],["Fl","Xm"],["Uc"],["Pl"],["Cd"]]) {
   console.log(`  seed {${s.join(",")}}: steps=${steps} |x_inf|=${x.size}/58  sound vs ${compl.length} small completions: ${soundSmall}  vs ${live.length} live protocols: ${soundLive}  excluded=${58 - x.size}  slack vs observed UB=${[...x].filter(e => !ub.has(e)).length}`);
   if (s.join() === "Fl,Xm") console.log(`     x_inf excludes: ${E.filter(e => !x.has(e)).join(" ")}`);
 }
+
+console.log("\n=== F11.3 why the downward iteration cannot descend ===");
+const TOP = new Set(E);
+const dtop = D(TOP);
+console.log(`Delta(TOP) == TOP ?  ${dtop.size === TOP.size}   (|Delta(TOP)| = ${dtop.size} of ${TOP.size})`);
+console.log(`  elements Delta strips from TOP: ${[...TOP].filter(e => !dtop.has(e)).join(" ") || "NONE"}`);
+console.log(`Cn(TOP) == TOP ? ${Cn(TOP).size === TOP.size}`);
+console.log("=> x_0 = TOP is already a fixpoint of x -> Gamma(Delta(x) join S): the iteration");
+console.log("   terminates at step 0 at TOP for every seed. Sound by triviality, exact never.");
+console.log("Reason: warrant is a co-presence condition. At TOP every dependent has a consumer");
+console.log("present, so Delta removes nothing; and Gamma is extensive so it cannot remove either.");
+console.log("Neither operator is contractive anywhere near the top of the lattice.");
+
+console.log("\n--- would a ban-aware variant descend?  x_{n+1} = Gamma(Delta(x_n) join S) minus {atoms in no admissible subset of x_n} ---");
+// cheap surrogate: drop atoms a such that S+{a} already violates a ban/cond that cannot be repaired inside x_n
+function downward2(Sarr, universe) {
+  const S = new Set(Sarr); let x = new Set(universe);
+  for (let k = 0; k < 60; k++) {
+    let y = new Set([...Cn(new Set([...D(x), ...S]))].filter(e => x.has(e) || universe.includes(e)));
+    // prune: any atom a whose addition to S arms a ban with no witness available in y
+    const pruned = [...y].filter(a => { const cand = new Set([...S, a]); return T.bansCond(cand).length === 0 || T.bansCond(new Set([...y])).length === 0; });
+    const z = new Set(pruned);
+    if (z.size === x.size) { x = z; break; } x = z;
+  }
+  return x;
+}
+for (const s of [["Fl","Xm"],["Fl"],["Uc"],["Rl"]]) {
+  const x = downward2(s, E);
+  console.log(`  seed {${s.join(",")}}: |x_inf|=${x.size}/58 excluded=${E.filter(e => !x.has(e)).join(" ") || "none"}`);
+}

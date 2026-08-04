@@ -787,3 +787,227 @@ The 10.83x is real, and more than half of it comes from `Ban+Cond` and `Ground` 
 blocks scoring 1.31x and 1.17x alone, which MODEL.md never mentions and OP-ORD's own
 prose dismisses. "Neither half works, the product does" is true of *four* blocks, not
 two, and the two that carry it are the two nobody argued for.
+
+---
+
+## F10 — does `KK` on `[S,⊤]` survive at 58 elements? **No. Median exclusion = 0.0%.**
+
+F9's salvage — *"`KK` on the completion lattice is informative, it derived `X21` search-free"* —
+was measured on a 10-element sublattice. Re-run at the full **58-element** vocabulary over
+the **72 real protocols**, it does not survive. **The median fraction of candidate elements
+excluded is `0.0%`. 37 of the 72 protocol seeds get an upper bound of exactly `⊤`.**
+
+### Method — exact, not approximate
+
+`U_O(x,y) = (glb O([x,y]), lub O([x,y]))`, `O = O_A` closed into `[S,⊤]`, so
+`Ov(z) = z` if `Adm(z)` else `S`. The interval has up to `2^58` points and is **never
+enumerated**. Both bounds are put in closed form, which is exact:
+
+```
+lub O([x,y]) = x ∪ ⋃{ z : x ⊆ z ⊆ y, Adm(z) }
+             ⇒  e ∈ lub  ⇔  e ∈ x  or  ∃ admissible z ∈ [x,y] with e ∈ z     — one SAT query per element
+glb O([x,y]) = S   if some z ∈ [x,y] is not admissible,  else x               — one clause scan, O(|CNF|)
+```
+
+Admissibility is **exactly** a CNF formula over the 58 element-variables: `gammaOpen`,
+`unwarranted`, `armedListed`, the five conditional bans of `bansCond`, and `ungrounded` are
+each transcribed one-for-one into clauses (93 clauses: 31 closure, 27 warrant, 1 listed,
+13 ban, 21 grounding). Queries are decided by a **complete DPLL** — so `UNSAT` is a proof and
+no element is ever excluded without one. **Nothing is approximated.** The only sampling
+anywhere is in the soundness counterexample hunt (§ soundness F2), and it is labelled there.
+
+Two independent validations of the machinery, both run every time:
+
+```
+$ node f10.mjs
+vocabulary |E| = 58;  CNF: 93 clauses over 58 vars
+  clauses by source: {"closure":31,"warrant":27,"listed":1,"ban":13,"ground":21}
+CNF differential test: 305272 sets, 0 mismatches vs tables.admissible()  PASS
+...
+brute-force cross-check: 208 seeds compared against exhaustive enumeration, 0 divergences  PASS
+```
+
+- **differential test** — 305,272 sets (all `2^10` of the F9 sublattice, 300k random subsets
+  of the 58 at five densities, the 72 corpus protocols and all their 1-element extensions):
+  the CNF and `tables.admissible()` agree everywhere.
+- **brute-force cross-check** — on the 10-element instance, the SAT-computed upper bound is
+  compared against the union of admissible supersets enumerated exhaustively, for the 6 F9
+  seeds plus 200 random seeds. Zero divergences, so the DPLL's `UNSAT` answers are right too.
+
+Part A reproduces F9's completion-lattice numbers exactly through the new code path
+(`{Fl,Xm} → {Fl,Xm,Au,Sh,Ix,In,Bs}`, excluding `Xf,Rl,Of`), so the two scales are comparable.
+
+### The number: informativeness across the 72 real protocols
+
+Informativeness ratio = fraction of candidate elements **excluded** = `1 − |upper\S| / |E\S|`.
+`0%` = vacuous.
+
+```
+72-protocol EXCLUSION FRACTION distribution:
+  min 0.0%  p25 0.0%  MEDIAN 0.0%  p75 2.1%  max 12.2%
+  mean 1.8%;  vacuous (0% excluded): 37/72;  >=10% excluded: 5/72
+  histogram (5% bins): 0-5%:65  5-10%:2  10-15%:5
+  seeds that are themselves admissible: 65/72
+  most-excluded elements: Fl:28 Of:7 Rl:7 Xf:7 Cl:3 Cp:3 Cd:2 Im:2 Pl:2
+```
+
+| | |
+|---|---|
+| **median exclusion, 72 real protocols** | **0.0%** |
+| p75 / max | 2.1% / 12.2% (Aave V3) |
+| seeds where `upper = ⊤` exactly | **37 / 72** |
+| seeds excluding ≥ 10% | 5 / 72 (Uniswap, PancakeSwap, Aave V3, SparkLend, Morpho) |
+| total element-exclusions, all 72 seeds | 61, out of 3,553 candidate slots (**1.7%**) |
+
+Adversarial seeds behave the same way: `{}` → 0% excluded, `{Bs}` → 0%, `{Uc,Aw}` → 0%,
+`{Fl}` → 5.3% (`Xf,Rl,Of`). A near-complete seed (`|S| = 53`, grown greedily and admissible)
+excludes 5 of its 5 remaining candidates — the only regime where the ratio is high, and only
+because the denominator has collapsed to 5.
+
+The six F9 seeds at 58 elements, against their 10-element values:
+
+| seed | excluded @10 | excluded @58 |
+|---|---|---|
+| `{Pl}` | 10/10 = **100%** | 0/57 = **0%** |
+| `{Uc}` | 10/10 = **100%** | 0/57 = **0%** |
+| `{Of}` | 1/9 = 11.1% | 1/57 = 1.8% |
+| `{Rl}` | 1/9 = 11.1% | 1/57 = 1.8% |
+| `{Fl,Xm}` | 3/8 = 37.5% | 3/56 = 5.4% |
+| `{Of,Rl}` | 1/8 = 12.5% | 1/56 = 1.8% |
+
+The **lower** bound is `S` on every single seed tested — `KK` here is a strictly one-sided
+oracle and contributes nothing at all on the lower side. That was already true at 10 elements.
+
+### Soundness — passes, no blocking bug
+
+```
+F1 inclusion certificates: 3938 verified admissible-and-inside, 0 failed
+F2 sampled admissible completions: 9600 inside [S,upper], 0 outside
+   no counterexamples
+SOUNDNESS VERDICT: PASS - no admissible completion falls outside [lower,upper]
+```
+
+- **F1** — for every `e ∈ upper\S` on all 72 protocol seeds plus 8 others, the SAT model that
+  put `e` into the bound is extracted and checked with `tables.admissible()`: it must be
+  genuinely admissible, contain `S`, contain `e`, and lie inside `upper`. 3,938 certificates,
+  all pass. So the bound is not merely sound, it is **element-wise tight** — every element it
+  admits is witnessed by a real admissible completion. It is *not* set-wise tight: `[S,upper]`
+  still contains many non-admissible sets.
+- **F2** — 120 randomly-polarised SAT models per seed, i.e. **sampled** admissible completions
+  (this is the one sampled step in F10, and it can only ever *find* a violation, never hide
+  one). 9,600 sampled completions, every one inside `[S,upper]`, all confirmed admissible by
+  `tables.admissible()`.
+
+Error direction, stated: the bound is a `lub`, so error toward *larger* would be conservative
+and safe. There is no error in either direction here — `upper` is exactly the union of the
+admissible completions, proved by the exhaustive cross-check at 10 elements and by complete
+DPLL at 58.
+
+### Does it still derive hazards? Yes — and that turns out to be the bad news
+
+```
+seed {Fl,Xm} at 58 elements: excluded = {Of,Rl,Xf}
+  F9 claimed Xf, Rl, Of are excluded. At 58: Xf=EXCLUDED, Rl=EXCLUDED, Of=EXCLUDED
+   Of excluded, load-bearing rule(s): X21
+   Rl excluded, load-bearing rule(s): X21
+   Xf excluded, load-bearing rule(s): X21
+
+across the 72 protocol seeds: 61 element-exclusions in total
+  hazard rule -> number of the 72 seeds where it is load-bearing for >=1 exclusion:
+    X11a*  0/72      X19*   0/72      X2     8/72      X18    0/72      X21    32/72
+  exclusions attributable to no single rule (closure/warrant/ground interaction): 0
+```
+
+`X21` survives verbatim at 58 elements. But the attribution test — drop one rule group from
+the CNF, re-ask whether the element becomes possible — shows what that is worth:
+
+```
+over the 72 protocol seeds, total element-exclusions at 58 elements:
+  full theory (closure + warrant + ground + bans):  61
+  positive theory ONLY (closure + warrant + ground): 0   [seeds with any: 0/72]
+  flat negative bans ONLY (X2,X11a*,X18,X19*,X21):   61
+  => information beyond the literal hand-written bans: 0 exclusions
+```
+
+**Every one of the 61 exclusions is produced by a flat negative ban that is literally a clause
+of the input.** `X21` is `Fl ∧ (Xf|Rl|Of) → ⊥` sitting in `bansCond`; `KK` "deriving" it on
+seed `{Fl,Xm}` is one unit propagation away from reading it. The positive half of the theory —
+all 31 closure clauses, all 27 warrant clauses, all 21 grounding clauses — excludes **nothing
+whatever** at 58 elements, on any of the 72 seeds. So the answer to *"does it derive any of the
+other 20 written hazards without being told them?"* is **no**: it re-derives the two it was
+told (`X21`, `X2`), never fires the other three encodable ones on any of the 72 seeds (`X11a*`, `X19*`, `X18` —
+`X11a*` and `X18` have positive consequents and cannot exclude at all; `X19*` could but
+does not on this corpus), and the remaining 15 written hazards have no set-membership projection at all (`HAZ_PROJ` eligible = 1)
+so this method can neither derive nor refute them.
+
+**And that reframes F9.** At 10 elements the two seeds that looked most informative were `{Pl}`
+and `{Uc}` at 100% exclusion:
+
+```
+  10-elem seed {Pl}: full 10, positive-only 10, bans-only 0 of 10 candidates
+  10-elem seed {Uc}: full 10, positive-only 10, bans-only 10 of 10 candidates
+```
+
+`Pl` and `Uc` are **not in** the 10-element vocabulary, so their closure obligations cannot be
+met by any subset of it: there are zero admissible completions and everything is excluded
+vacuously. That was vocabulary truncation, not hazard content, and it is exactly what
+disappears at 58 elements where the vocabulary is rich enough to satisfy every positive
+obligation. F9's `|Adm| = 196` sublattice made the positive theory look binding because it had
+been starved of the elements that discharge it.
+
+### The other two operators — vacuous at 58, and vacuous at 10 too
+
+F9 only ran `O_A` on the completion lattice. `O_R = Δ₁∘Cn` and `O_H` are settled without any
+search: `lub O([S,⊤]) ⊇ O(⊤)`, and
+
+```
+O_R(TOP) = Delta1(Cn(TOP)) has 58 of 58 elements; == TOP? true
+TOP admissible? false  =>  O_H(TOP) = O_R(TOP)
+  => KK upper = TOP and the completion query is VACUOUS for O_R and O_H at 58 elements,
+     for every seed, with no computation.
+same check on the F9 10-element instance: |O_R(TOP10)| = 10/10 -> also vacuous there
+```
+
+Every `CONSUME` list is non-empty and lies inside the vocabulary, so `Δ₁(⊤) = ⊤`. The
+completion-lattice salvage therefore holds for **`O_A` only** — the one operator whose
+fixpoints are exactly `Adm`. It is not a property of AFT on `[S,⊤]`; it is a property of that
+single operator, and even for it the content is nil.
+
+### Cost — cheap, and cheapness is not the problem
+
+```
+WALL 3.15 s  MAXRSS 68328 kB     (entire f10.mjs: validation + 88 seeds + soundness + attribution)
+total DPLL calls this run: 45467, decisions 1677134, unit props 253068
+per-seed KK wall clock over the 72: min 1 ms, median 3 ms, max 6 ms
+per-seed SAT calls over the 72: 37 .. 89 (= |E\S| per KK iteration)
+```
+
+`KK` converges in **2 iterations**, and structurally cannot need more: `y₁` is already the
+union of every admissible completion in `[S,⊤]`, so the second application of `A₂` is
+idempotent (1 iteration when the bound is `⊤` on the first pass). Each iteration costs `|E\S|`
+SAT calls. Median 3 ms per protocol, worst case 6 ms. Nothing here is slow. **The oracle is
+essentially free and it returns essentially nothing** — cost was never the obstacle.
+
+### F10 verdict
+
+**`KK` on `[S,⊤]` does not go formally vacuous at 58 elements — it goes empirically vacuous,
+which is worse, because it still returns a bound and the bound is `⊤` on the median query.**
+
+- median exclusion over the 72 real protocols: **0.0%**; mean 1.8%; `upper = ⊤` on 37/72.
+- sound and element-wise tight — the bound is correct, there is no bug, and it is exact.
+- 100% of its content is a restatement of the two flat bans `X21` and `X2` already written in
+  the atlas. The positive theory contributes zero exclusions at full scale.
+- F9's informative-looking 10-element result was an artifact of vocabulary truncation.
+
+R1b said *"work on completion lattices, not the powerset."* That is now measured: the
+completion lattice removes the `(⊥,⊤)` collapse of F9, but what it leaves behind is a
+`1.7%`-dense re-statement of hand-written bans that a single-pass rule check gets for free.
+**Do not build the foundation on ultimate `KK`.** Anything the atlas can currently say about
+"given `S`, what may I add" is said by evaluating `bansCond` directly; AFT adds machinery, a
+soundness burden and a second semantics, and no information. The remaining open route is not a
+different fixpoint semantics but a richer positive theory — the 31 closure and 27 warrant
+clauses are far too weak to bind anything at 58 elements, and until that changes no semantics
+built on top of them can be informative.
+
+**Reproduce:** `cd /root/DefiElements/formal/v2 && node f10.mjs` — full output in `f10.out`,
+per-protocol rows in `f10-rows.json`.
