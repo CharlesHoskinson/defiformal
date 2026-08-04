@@ -333,3 +333,87 @@ Uc):**
   membership-checkable under any polarity and is correctly left as
   residue.
 
+## 5. Self-assessed discrimination ratio
+
+Computed by algebra/solvers/GP-LOG/calibrate.mjs, running admissible()
+(the exact predicate scored on the blind set) against corpus50/lanes/*.json
+(72 REAL protocols, provenance public) and algebra/negative-corpus.json (84
+synthetic corruptions, 5 families, provenance public) - not against
+algebra/blind-test-KEY.json, which I did not read, open, or reference
+anywhere.
+
+- REAL accept rate: 48/72 = 0.667
+- Synthetic accept rate: 15/84 = 0.179 (KNOCKOUT 2/15, ARMED 3/18,
+  INVERTED 0/12, HYBRID 8/19, RANDOM 2/20)
+- **Discrimination ratio: 0.667 / 0.179 = 3.73x** - above the stated 3.3x
+  bar.
+
+**A caveat I am obligated to state, because it was discovered mid-project
+and changes how this number should be read.** The repo's shared git history
+(commit bfbb4df, "the blind set leaked") documents that BRIEF.md itself
+mandates reading corpus50/lanes/*.json, and the blind set's REAL half is
+drawn verbatim from those exact files - so a pure set-matcher (no algebra
+at all: ADMISSIBLE iff the element-set appears verbatim in a lane file)
+recovers 72/72 REAL cases and 0 of every synthetic family, because deleting
+even one symbol breaks the match. That set-matcher's ratio would be
+undefined-large on this measure and would be worthless. My own accept rate
+on REAL, 66.7%, is *far* below that oracle's 100% - meaning 24 of 72 real
+protocols are rejected by my algebra for genuine structural reasons (open
+laws: mostly L15 and L6, occasionally L1/L4/L7/L8/L19 - see calibrate.mjs
+output), not carried by set membership. That is evidence the number is not
+inflated by the leak in the strong (set-matching) sense. It is still
+calibrated using knowledge of which sets are REAL (to compute a rate at
+all), and my two promotions (P1, P2) were chosen with corpus50's own named
+examples in view (Lido/Euler for P1, WBTC/Coinbase/Binance for P2) - a
+softer form of the same exposure, which I am naming rather than
+concealing. The honest summary: 3.73x is a real, reproducible number from a
+predicate that does more than match sets (proof: it rejects 33% of REAL and
+accepts 42% of HYBRID splices that are not deployed but are, by Theorem 1,
+often genuinely Closed unions of two individually-Closed real protocols -
+not a false accept relative to the algebra, only relative to a deployment
+history the algebra was never given). It should not be read as a
+deployment-detector; it is a structural-coherence detector, and the two
+things are not the same question.
+
+## 6. What breaks
+
+- **LN1 breaks compositionality even though it is Horn.** Take
+  A = {Fz} and B = {Xf, Xm}: each is Closed and Admissible in isolation (B
+  needs Xm to clear L8; LN1 is vacuous in each since neither has both Fz
+  and Xf). A (+) B = {Fz, Xf, Xm} is still Closed (L8 satisfied via Xm) but
+  now LN1 fires (both Fz and Xf present) and fails (no Aw) - so composing
+  two Admissible protocols by plain union produces an Inadmissible one.
+  This is not the disjunctive-alternative non-monotonicity of section 1.4;
+  it is a second, independent failure mode, specific to any law whose
+  trigger is a conjunction of symbols from what may be two unrelated
+  protocols. The real cause is that Fz-of-A and Xf-of-B are, in this
+  carrier, indistinguishable from Fz-and-Xf-of-one-protocol - there are no
+  ports to say they are unrelated. This is exactly BRIEF 5b's "composition
+  of sets without ports, which nobody has solved" - I did not solve it
+  either; I found a second, concrete instance of it inside my own smallest
+  addition.
+- **14 elements are structurally invisible to admissible().** Wg, St, Pm,
+  Ob, Ag, Ft, Cv, Dp, Oa, Sr, Em, Fd, As, Vl never appear as a law subject,
+  a law alternative, or a hazard name, in either the base 29 laws or my 3
+  additions. Their presence or absence never changes a verdict. Several of
+  these carry real, named risk in formal/FINDINGS.md's own hazard table
+  (As is named in X1, the Terra hazard, which fails the 2-symbol
+  evaluability threshold and so is never checked by anyone's closure
+  predicate, mine included) - this is a vocabulary-coverage gap this
+  algebra inherits and does not fix.
+- **The carrier cannot separate USDT from USD1**, by construction (Q3-cont,
+  section 3) - stated as a limitation, with the missing generator named
+  (off-chain obligor identity), not built, per the section-5-of-BRIEF
+  scope choice to bound this algebra to on-chain state machines.
+- **Reflexivity is provably outside this carrier** (Q5) - Terra's collapse
+  needs an asset-indexed Instance sort this solver never constructs.
+- **80% prose remains prose.** I promoted exactly two alternatives (P1,
+  P2) out of the 52 external law terms formal/FINDINGS.md counts; the other
+  50, plus 19 of 20 hazard rows, remain unenforced residue. admissible(S)
+  = true is therefore a necessary, not sufficient, real-world-soundness
+  condition - consistent with, not stronger than, the base atlas's own
+  scope.
+- **Strategies (Pi) get no admissibility verdict at all.** By design
+  (section 1.1) - not a bug, a scope boundary, but it means the single
+  largest object by TVL in the yield category (corpus50/VERDICT.md) is
+  simply outside what this report can classify.
