@@ -617,14 +617,107 @@ Proposition~\ref{prop:twoeffects} says the prohibitions destroy. We obtain
 accessibility without the axiom system that usually delivers it.
 \end{remark}
 
+\section{The composable fragment problem}\label{sec:cfp}
+
+Theorem~\ref{thm:noncong} says $\Adm$ is not closed under $\oplus$. The useful
+question is how much of it is. We state that precisely, because the precise form
+turns out to be a named problem rather than a vague one.
+
+\begin{definition}[Safe and closed fragments]
+Let $F \subseteq \Adm$. Call $F$
+\begin{itemize}
+  \item \emph{$\oplus$-safe} if $A, B \in F \implies A \oplus B \in \Adm$;
+  \item \emph{$\oplus$-closed} if $A, B \in F \implies A \oplus B \in F$.
+\end{itemize}
+Every $\oplus$-closed set is $\oplus$-safe; the converse fails, since a composite
+may be admissible without lying in $F$.
+\end{definition}
+
+\begin{remark}
+The distinction is operational. $\oplus$-safety is what an integrator needs:
+\emph{if I compose two protocols from this family, is the result sound?}
+$\oplus$-closure is what an algebraist needs: a subalgebra. Our measured fragment
+(Measurement~\ref{meas:frag}) is a join-semilattice and hence $\oplus$-closed,
+but the certification figure reports $\oplus$-safety.
+\end{remark}
+
+\begin{definition}[Compatibility graph]
+Let $G_\oplus$ be the simple graph with vertex set $\Adm$ and
+\[
+  A \sim B \quad\Longleftrightarrow\quad A \oplus B \in \Adm .
+\]
+Every vertex is self-compatible, since $A \oplus A = \Gamma(A) = A$ for
+$A \in \Adm$.
+\end{definition}
+
+\begin{proposition}[Reformulation]\label{prop:clique}
+$F \subseteq \Adm$ is $\oplus$-safe if and only if $F$ is a clique in
+$G_\oplus$. Consequently the largest $\oplus$-safe fragment has size
+$\omega(G_\oplus)$, the clique number of the compatibility graph.
+\end{proposition}
+
+\begin{proof}
+Immediate from the definitions: $\oplus$-safety asserts pairwise compatibility of
+the members of $F$, which is precisely the clique condition, and self-loops are
+present for every vertex.
+\end{proof}
+
+\begin{corollary}[No maximum, only maximal]\label{cor:nomax}
+The family of $\oplus$-safe sets is closed downward but not under union: if
+$A \in F_1$ and $B \in F_2$ with $A \not\sim B$, then $F_1 \cup F_2$ is not
+$\oplus$-safe. Hence there is in general no unique largest $\oplus$-safe
+fragment, only maximal ones, and ``the largest composable fragment'' must be read
+as a maximum-cardinality one.
+\end{corollary}
+
+\begin{remark}[Consequences of Proposition~\ref{prop:clique}]
+Three follow immediately, and together they change the status of the problem.
+
+\emph{(i) Hardness.} Maximum clique is NP-hard and hard to approximate, so we
+should not expect a closed-form description of the maximum fragment. This
+explains, rather than excuses, why Measurement~\ref{meas:frag} reports an
+interval: those are clique bounds, a witnessed lower bound and a structural upper
+bound, not a failure to finish a computation.
+
+\emph{(ii) The right question is structural, not extremal.} Maximum clique is
+tractable on perfect graphs, chordal graphs and comparability graphs. So the
+productive question is not ``what is $\omega(G_\oplus)$'' but:
+\begin{quote}
+  \textbf{Does $G_\oplus$ belong to a class on which clique is tractable, and if
+  so, why --- what is it about requirement/prohibition systems that makes
+  compatibility perfect?}
+\end{quote}
+That question is decidable for our instance and, unlike the extremal one, has an
+answer that would transfer to other constraint systems.
+
+\emph{(iii) The certification figure is an edge density.} The reported $59\%$ of
+live protocol pairs is the density of $G_\oplus$ restricted to the $72$ corpus
+protocols, not a property of any fragment. The two numbers measure different
+things and should not be conflated.
+\end{remark}
+
+\begin{conjecture}\label{conj:perfect}
+$G_\oplus$ is a perfect graph.
+\end{conjecture}
+
+\begin{remark}
+Conjecture~\ref{conj:perfect} is the form in which the open problem should be
+attacked. It is falsifiable by exhibiting an odd hole or odd antihole in
+$G_\oplus$, which is a finite search at our scale, and if true it makes the
+maximum composable fragment computable in polynomial time by the
+Gr\"otschel--Lov\'asz--Schrijver algorithm. We have not tested it.
+\end{remark}
+
 \section{Open problems}
 
 \begin{enumerate}
   \item \textbf{Invariance --- resolved} (Theorem~\ref{thm:invariance},
     Corollary~\ref{cor:tarski}). What remains is whether meet is intersection on
     $\Fix(\Gamma) \cap \Fix(\Delta)$, which Tarski does not supply.
-  \item \textbf{Maximal composable fragment.} Characterise the largest
-    $F \subseteq \Adm$ closed under $\oplus$; see Measurement~\ref{meas:frag}.
+  \item \textbf{Maximal composable fragment --- restated as
+    Conjecture~\ref{conj:perfect}.} By Proposition~\ref{prop:clique} this is a
+    maximum-clique problem on the compatibility graph, so the tractable question
+    is whether $G_\oplus$ is perfect, not what its clique number is.
   \item \textbf{Minimal repair --- resolved for the prohibition half}
     (Theorem~\ref{thm:blocker}, Proposition~\ref{prop:oneobject}). What remains
     open is \emph{restoring closure after removal}, which is the completion
