@@ -1,0 +1,1273 @@
+                                              ORDERED DIRECT IMPLICATIONAL BASIS OF A FINITE
+                                                            CLOSURE SYSTEM
+
+
+
+
+arXiv:1110.5805v3 [math.CO] 13 May 2012
+                                                                K. ADARICHEVA, J. B. NATION, AND R. RAND
+
+
+                                                   Abstract. Closure system on a finite set is a unifying concept in logic pro-
+                                                   gramming, relational data bases and knowledge systems. It can also be pre-
+                                                   sented in the terms of finite lattices, and the tools of economic description of a
+                                                   finite lattice have long existed in lattice theory. We present this approach by
+                                                   describing the so-called D-basis and introducing the concept of ordered direct
+                                                   basis of an implicational system. A direct basis of a closure operator, or an
+                                                   implicational system, is a set of implications that allows one to compute the
+                                                   closure of an arbitrary set by a single iteration. This property is preserved by
+                                                   the D-basis at the cost of following a prescribed order in which implications
+                                                   will be attended. In particular, using an ordered direct basis allows to opti-
+                                                   mize the forward chaining procedure in logic programming that uses the Horn
+                                                   fragment of propositional logic. One can extract the D-basis from any direct
+                                                   unit basis Σ in time polynomial in the size s(Σ), and it takes only linear time
+                                                   of the cardinality of the D-basis to put it into a proper order. We produce
+                                                   examples of closure systems on a 6-element set, for which the canonical basis
+                                                   of Duquenne and Guigues is not ordered direct.
+
+
+
+
+                                                                                1. Introduction
+                                             In K. Bertet and B. Monjardet [5], it is shown that five implicational bases
+                                          for a closure operator on a finite set, found in various contexts in the literature,
+                                          are actually the same. The goal of this paper is to demonstrate that standard
+                                          lattice-theoretic results about the “most economical way” to describe the structure
+                                          of a finite lattice may be transformed into a basis for a closure system naturally
+                                          associated with that lattice.
+                                             The coding of a finite lattice in the form of a so-called OD-graph was first
+                                          suggested in [16]. We will call the basis directly following from this OD-graph a D-
+                                          basis, since it is closely associated with a D-relation on the set of join-irreducibles
+                                          of a lattice (not necessarily finite) that was crucial in the studies of free and lower
+                                          bounded lattices, see [9]. The definition and the proof that D-basis does define a
+                                          given closure system are given in section 4.
+                                             The D-basis is a subset of a so-called dependence relation basis (Definition 6 in
+                                          [5]). Thus, it is also a subset of the canonical direct unit basis that unifies the five
+                                          bases discussed in [5]. In section 5, we give an example to demonstrate that the
+                                          reverse inclusion does not hold, thus showing that this newly introduced D-basis is
+                                          generally shorter than the existing ones.
+
+                                             2010 Mathematics Subject Classification. 06A15, 08A70, 06B99.
+                                             Key words and phrases. Closure operator, system of implications, lattice of closed sets, Horn
+                                          formula, Horn Boolean function, forward chaining, direct basis, canonical basis.
+                                             The first author was partially supported by AWM-NSF Mentor Travel grant N0839954.
+                                                                                           1
+2                    K. ADARICHEVA, J. B. NATION, AND R. RAND
+
+
+    Recall that the main desirable feature of bases from [5] is that they be direct,
+which means that the computation of the closure of any subset can be done by
+attending each implication from the basis only once. This makes the computation
+of closures a one-iteration process.
+    While the D-basis is not direct in this meaning of this term, the closures can
+still be computed in a single iteration of the basis, provided the basis was put in a
+specific order prior to computation. Moreover, there is a simple and effective linear
+time algorithm for ordering a D-basis appropriately. Thus, applying the D-basis
+can be compared to the iteration known in artificial intelligence as the forward
+chaining algorithm, see for example [12].
+    We introduce the definition of ordered iteration and ordered direct basis in sec-
+tion 6, where we also prove that the D-basis is ordered direct and discuss the
+algorithmic aspects of ordering it. The further directions of optimization of D-basis
+are outlined in section 8, where we also introduce the notion of an ordered direct
+sequence built from a given basis of a closure system.
+    In section 9, we also discuss the so-called E-relation, introduced in [9], which
+leads to the definition of the E-basis in closure systems without D-cycles. In general,
+the implications written from the E-relation do not necessarily form a basis of a
+closure system, but in closure systems without D-cycles, the E-basis is ordered
+direct, is contained in the D-basis, and often shorter than the D-basis. We discuss
+a polynomial time algorithm for ordering the E-basis.
+    We explore the connections between D-basis, E-basis and the so-called canonical
+basis introduced by Duquenne and Guigues in [11]. While the canonical basis has
+the minimal number of implications among all the bases of a closure system, it does
+not have the feature of D-basis or E-basis discussed in this paper, namely, it cannot
+be turned into an ordered direct basis. Section 10 of our paper presents examples of
+closure systems on a 6-element set, for which the canonical basis cannot be ordered.
+As a result, the time required for one iteration of D-basis wins over at least two
+iterations of the canonical basis. Further polynomial-time optimizations of both
+D-basis and the canonical basis are discussed.
+    Section 7 is devoted to discussion and testing the forward chaining algorithm in
+comparison to the ordered direct basis algorithm. Section 11 provides test results
+comparing the performance of the D-basis with the Duquenne-Guigues canonical
+basis and canonical direct unit basis.
+    The next two sections contain the required definitions and establish connections
+between finite lattices, closure operators, implicational systems, Horn formulas and
+Horn Boolean functions. The reader may consult the survey [4] for various aspects
+of closure systems on finite sets.
+
+                      2. Lattices and closure operators
+   By a lattice, one means an algebra with two binary operations ∧, ∨, called meet
+and join, respectively. Both operations are idempotent and symmetric and are
+connected by absorbtion laws: x ∨ (x ∧ y) = x and x ∧ (x ∨ y) = x. These laws
+allow us to define a partially order on the base set of the lattice: x ⩽ y iff x ∧ y = x
+(which is equivalent to x ∨ y = y). Vice versa, every partially ordered set, where
+every two elements have a least upper bound and a greatest lower bound, is, in
+effect, a lattice. Indeed, in this case the operation ∨ can be defined as the least
+upper bound, and ∧ as the greatest lower bound of two elements in the poset. A
+      ORDERED DIRECT IMPLICATIONAL BASIS OF A FINITE CLOSURE SYSTEM                    3
+
+                                                                                V W
+lattice is finite when the base set of this algebra is finite. The symbols , are
+used when more than two elements meet or join. We will use the notation 0 for the
+least element of a lattice, and 1 for its greatest element. If a ⩽ b in lattice L, then
+we denote by [a, b] the interval in L, i.e., the set of all c satisfying a ⩽ c ⩽ b.
+   Recall now the standard connection between a closure operator on a set and the
+lattice of its closed sets. Given a non-empty set S and the set P (S) = 2S of all its
+subsets, a closure operator is a map φ : P (S) → P (S) that satisfies the following,
+for all X, Y ∈ P (S):
+     (1) increasing: X ⊆ φ(X);
+     (2) isotone: X ⊆ Y implies φ(X) ⊆ φ(Y );
+     (3) idempotent: φ(φ(X)) = φ(X).
+It would be convenient for us to refer to the pair hS, φi of a set S and a closure
+operator on it as a closure system.
+   A subset X ⊆ S is called closed if φ(X) = X. The collection of closed subsets of
+closure operator φ on S forms a lattice, which is usually called the closure lattice
+of the closure system hS, φi. This paper deals with only finite closure systems and
+finite lattices.
+   Conversely, we can associate with every finite lattice L a particular closure system
+hS, φi in such a way that L is isomorphic to a closure lattice of that closure system.
+Consider J(L) ⊆ L, a subset of join-irreducible elements. An element j ∈ L is
+called join-irreducible, if j 6= 0, and j = a ∨ b implies a = j or b = j. We define a
+closure system with S = J(L) and the following closure operator:
+                                           _
+                                 φ(X) = [0, X] ∩ J(L)
+It is straightforward to check that the closure lattice of φ is isomorphic to L.
+Example 1. Consider a simple example illustrating a closure system built from the
+lattice L = {0, a, b, c, 1}, for which 0 < a < b < 1, 0 < c < 1, a ∨ c = b ∨ c = 1 and
+a ∧ c = b ∧ c = 0. Then S = J(L) = {a, b, c}. The closed subsets are [0, x] ∩ J(L)
+for x ∈ L, which are ∅, {a}, {c},{a, b} and {a, b, c}. Knowing all closed subsets,
+one can define a closure of X, or φ(X), as the smallest closed set containing X.
+For example, φ({b}) = {a, b}.
+   There are infinitely many sets and closure operators whose closure lattice is
+isomorphic to a given L. On the other hand, the one just described is the unique
+one with two additional properties:
+    (1) φ(∅) = ∅;
+    (2) φ({i}) \ {i} is closed, for every i ∈ S.
+Condition (2) just says that each φ({i}) is join irreducible. Note that (1) is a special
+case of (2), and that (2) implies the property
+    (3) φ({i}) = φ({j}) implies i = j, for any i, j ∈ S.
+               S
+   Note that i∈X φ({i}) ⊆ φ(X), but the inverse inclusion does not necessarily
+hold. In Example 1, for instance, φ({a}) ∪ φ({c}) ⊂ φ({a, c}), since b belongs to
+the right side and not to the left side.
+   We will call a closure system with properties (1), (2) above a standard closure
+system. Closure systems with (2) are called (T 12 ) closure spaces in Wild [17].
+   A closure system satisfying property (3) is said to be reduced. Note that (3)
+implies |φ(∅)| ⩽ 1. Reduced closure systems correspond to a representation of a
+4                    K. ADARICHEVA, J. B. NATION, AND R. RAND
+
+                                                                            W
+lattice L as a closure system on a set S with J(L) ⊆ S ⊆ L and φ(X) = [0, X]∩S.
+A natural example is the set of principal congruences in the congruence lattice of
+a finite algebra. Every standard closure system is reduced, and reduced closure
+systems form a useful intermediate ground between standard and general systems.
+   It is straightforward to verify that the standard system is characterized by the
+property that the set S is of the smallest possible size. In other words, one cannot
+reduce S to define an equivalent closure system. On the other hand, the reduced
+systems might have excessive elements in S.
+
+Example 2. Consider again lattice L = {0, a, b, c, 1} from Example 1. It will
+represent the closure lattice on S1 = {a, b, c, d}, where the closed sets are ∅, {a},
+{c},{a, b} and {a, b, c, d}. Thus, in this representation J(L) ⊂ S1 , and property (2)
+fails: φ({d}) \ {d} = {a, b, c} is not closed. On the other hand, property (3) holds,
+thus, it is a reduced closure system. Apparently, S1 can be reduce by element d, to
+get an equivalent representation of Example 1.
+
+   If the closure system hS, φi is not reduced, one can modify it to produce an
+equivalent one that is reduced. Moreover, there is an effective algorithm for doing
+so. Thus, for all practical purposes, one can work with a reduced closure system
+hU, µi replacing a given one hS, φi. Slightly more effort yields an equivalent standard
+closure system hV, νi. The transition is described as follows.
+   If φ(∅) = A ⊆ S in hS, φi, then define T = S \ A, and redefine a closure operator:
+τ (Y ) = φ(Y ) \ A, for all Y ⊆ T . The closure system hT, τ i satisfies property (1).
+As (1) is required for a standard closure system, but not for a reduced system, this
+step may be omitted if only the latter is sought.
+   Next define an equivalence relation ≈ on T by x ≈ y if and only if τ (x) = τ (y).
+Then factor out ≈, letting U = T / ≈ and µ(Y ) = τ (Y )/ ≈ for Y ⊆ U . Alternately,
+we could define U to be a set of representatives for T / ≈ and µ to be the restriction
+of τ . Either way, one easily checks that µ is a well-defined closure operator on U ,
+and that the closure lattice of hU, µi is isomorphic to that of hS, φi. At this point,
+hU, µi is reduced. Moreover, we can recover the original system hS, φi by expanding
+the equivalence classes and adding back in φ(∅). If desired, we can now continue to
+produce an equivalent standard closure system.
+   Let V = {u ∈ U : µ({u}) \ {u} is closed}, that is, u ∈      / µ(µ({u}) \ {u}), and
+for Z ⊆ V let ν(Z) = µ(Z) ∩ V . It is straightforward to verify that hV, νi is a
+closure system satisfying (1) and (2), and that the lattice of closed sets of hV, νi is
+isomorphic to that of hU, νi.
+   For the sequel, we will consider primarily reduced closure systems. Given an
+arbitrary closure system, not necessarily reduced, the above reduction can be con-
+sidered as a setup process to allow us to apply the D-basis and related methods.
+
+
+    3. The bases of closure systems, Horn formulas and Horn Boolean
+                                 functions
+   If y ∈ φ(X), then this relation between an element y ∈ S and a subset X ⊆ S
+in a closure system can be written in the form of implication: X → y. Thus, the
+closure system hS, φi can be replaced by the set of implications:
+
+                    Σφ = {X → y : y ∈ S, X ⊆ S and y ∈ φ(X)}
+      ORDERED DIRECT IMPLICATIONAL BASIS OF A FINITE CLOSURE SYSTEM                      5
+
+
+Conversely, any set of implications Σ defines a closure system: the closed sets are
+exactly subsets Y ⊆ S that respect the implications from Σ, i.e., if X → y is in Σ,
+and X ⊆ Y , then y ∈ Y .
+    It is convenient to define an implication X → y as any ordered pair (X, y),
+X ⊆ S, y ∈ S, especially having in mind its interpretation as a propositional
+formula, see this section two paragraphs below. On the other hand, from the point
+of view of closure systems, any single implication X → x, with x ∈ X, defines
+a trivial closure system, where all subsets of S are closed. If such implication is
+present in the set of implications Σ, then it can be removed without any change
+to the family of closed sets that Σ defines. We will assume throughout the paper
+that implications X → x, where x ∈ X, are not included in the set of implications
+defining closure systems.
+    Two sets of implications Σ and Σ0 on the same set S are called equivalent, if they
+define the same closure system on S. The term basis is used for a set of implications
+Σ0 satisfying some minimality condition; thus there may be different types of bases.
+    Note that, in general, one can consider implications of the form X → Y , where Y
+is not necessarily a one-element subset of S. Following [5], we will call basis Σ a unit
+implicational basis if |Y | = 1 for all implications X → Y in Σ. We will mostly be
+concerned with unit implicational bases, except for the discussion of the canonical
+basis of Duquenne-Guigues and its comparison with D-basis and E-basis. Given
+any unit basis, we can always collapse the implications with the same premise into
+one with all conclusions combined into a single set. This will be called an aggregated
+basis.
+    For aPset of implications Σ = {X1 → Y1 , . . . , Xm → Ym }, define the size by
+            m
+s(Σ) = j=1 (|Xj | + |Yj |). This is one convenient measure of the complexity of an
+implicational system.
+    In general, implications X → y, where X ⊆ S and y ∈ S, can be treated    W as the
+formulas of propositional logic over the set of variables S, equivalent to y∨ x∈X ¬x.
+Formulae of this form are also called definite Horn clauses. More generally, Horn
+clauses are disjunctions of negations of several literals and at most one positive
+literal. The presence of a positive literal makes a Horn clause definite. A Horn
+formula is a conjunction of Horn clauses.
+    What is called a model of a definite Horn clause in logic programming literature
+corresponds to a closed set of the closure operator defined by this clause. Indeed,
+by the definition, a model of any formula is simply a tuple m ∈ 2S of zeros and ones
+assigned to literals from S, such that the formula is true (=1) on this assignment.
+For the definite Horn clause X → y, m corresponds to a subset Y of S that is closed
+for a closure operator on S defined by X → y. In fact, m is just the characteristic
+function of Y .
+    There is also a direct correspondence between Horn formulas and Horn Boolean
+functions: a Boolean function f : {0, 1}n → {0, 1} is called a (pure or definite) Horn
+function, if it has some CNF representation given by a (definite) Horn formula Σ.
+The dual definition is sometimes used in the literature, so that a Horn function
+is given by some formula in DNF, whose negation is a Horn formula [6]. Using
+either definition, one can translate many results on Horn Boolean functions to the
+language of closure operators, see more details in [5].
+    Consider a set Σ of Horn clauses over some finite set of literals
+                                                                 W S = {x1 , . . . , xn }.
+If some Horn clause α in Σ is not definite, i.e., is of the form x∈X ¬x, X ⊂ S, and
+6                     K. ADARICHEVA, J. B. NATION, AND R. RAND
+
+
+it does not use all literals from S, then we could define the set of definite clauses
+Σα = {X → y : y ∈ S \WX}. It is easy to observe that the set of models of Σα
+consists of all models of x∈X ¬x and one additional model, which is a tuple of all
+ones, representing the set S itself. If some clause β ∈ Σ is not definite and uses all
+the literals from S, then we define Σβ = ∅ (another possibility, x1 → x1 ). Again,
+the set of models Σβ , i.e., all tuples of zeros and ones, extends the models of β by
+single tuple of all ones. It follows that the set of definite clauses Σ0 , where each
+non-definite clause α from Σ is replaced by a set of clauses Σα , has the set of models
+that extends the set of models of Σ by a single tuple of all ones. This includes the
+case when Σ has no models, i.e., when it is inconsistent.
+   This observation allows us to reduce the solution of various questions about sets
+of Horn clauses to sets of definite Horn clauses. Thus, it emphasizes the importance
+of the study of closure operators on S.
+   One of the important questions in logic programming is whether one clause φ
+is a consequence of the set (or conjunction) of clauses Σ. Denoted by Σ |= φ, this
+means that every model of Σ is also a model of φ. If φ and formulas in Σ are
+Horn clauses, then, translating this question to the language of closure systems,
+one reduces it to checking whether every closed set of a closure system defined by
+Σ respects φ.
+
+                                   4. The D-basis
+    In this section we are going to define a basis that translates to the language
+of closure systems the defining relations of a finite lattice developed in the lattice
+theory framework. One can consult [9] for the corresponding notion of a minimal
+cover and D-relation used in the theory of free lattices and lower bounded lattices.
+    Given a reduced closure system hS, φi, let us define two auxiliary relations. The
+first relation is between the subsets of S: we write X  Y , if for every x ∈ X
+there is y ∈ Y satisfying x ∈ φ(y). In Example 1, for instance, we have {a}  {b},
+{a, c}  {b, c} and {c}  {a, c}. Note that X ⊆ Y implies X  Y . We also write
+X ∼ Y , if X  Y and Y  X. This is true for X = {a, b, c} and Y = {b, c} in
+Example 1.
+    Several observations are easy.
+Lemma 3. The relation  is a quasi-order, and thus ∼ is an equivalence relation
+on P (S).
+  We will denote a ∼ -equivalence class containing X by [X]. Note that for any
+two members X, Y ∈ [X], we have φ(X) = φ(Y ). Indeed, X  Y implies X ⊆ φ(Y )
+and φ(X) ⊆ φ(Y ). Inverse inclusion follows from Y  X.
+  There is a natural order ⩽c on ∼ -classes: [X] ⩽c [Y ] if X  Y .
+Lemma 4. The relation ⩽c is a partial order on the set of ∼ -equivalence classes.
+   Each class [X] is ordered itself with respect to set containment.
+   In Example 1, we have that {a, b, c} ∼ {b, c}, and no more subsets are ∼ -
+equivalent to {a, b, c}. Thus, [{b, c}] consists of two subsets, and {b, c} ⊆ {a, b, c} is
+the minimal (with respect to the order of containment) subset in that equivalence
+class of ∼ . Also {a, c}  {b, c}, whence [{a, c}] ⩽c [{b, c}].
+Lemma 5. If hS, φi is reduced, then each equivalence class [X] has a unique min-
+imal element with respect to the containment order.
+      ORDERED DIRECT IMPLICATIONAL BASIS OF A FINITE CLOSURE SYSTEM                   7
+
+
+Proof. Let us assume that there are two minimal members X1 and X2 in [X].
+Without loss of generality we assume that there is x ∈ X1 \ X2 . Since X1  X2 
+X1 , we have x ∈ φ(x2 ) and x2 ∈ φ(x1 ), for some x1 ∈ X1 , x2 ∈ X2 . We cannot
+have x = x1 , because, if so, then φ(x) = φ(x2 ), which implies x = x2 , since our
+closure system is reduced. This would contradict to the choice of x.
+   Thus, x 6= x1 , and x ∈ φ(x1 ). But then we can reduce X1 to X 0 = X1 \ x ⊂ X1 ,
+which is still a member of [X] since X1  X 0 ⊂ X1 . This contradicts the minimality
+of X1 in [X].                                                                     
+   The second relation we want to introduce in this section is between an element
+x ∈ S and a subset X ⊆ S, which will be called a cover of x. (In lattice theory,
+the
+S terminology      nontrivial join cover is used.) We will write x / X, if x ∈ φ(X) \
+            0
+  x0 ∈X φ(x   ). This notion is illustrated in Example 1 by b / {a, c}. Note that it
+is not true that a / {b, c}, because a < b, so that a ∈ φ(b) for the corresponding
+standard closure operator.
+   We will call a subset Y ⊆ S a minimal cover of an element x ∈ S, if Y is a cover
+of x, and for every other cover Z of x, Z  Y implies Y ⊆ Z. So a minimal cover of
+x is a cover Y that is minimal with respect to the quasi-order , and minimal with
+respect to set containment within its ∼ -equivalence class [Y ], as per Lemma 5.
+   To illustrate this notion, let us slightly modify Example 1. Rename element 0 by
+d and add a new 0 element: 0 < d, resulting in a lattice L1 with J(L1 ) = J(L)∪{d}.
+We will have Y = {a, c} as a minimal cover for b. Indeed, the only other cover for
+b is Z = {a, c, d}, for which we have Z  Y and Y ⊆ Z.
+Lemma 6. For a reduced closure system, if x / X, then there exists Y such that
+x / Y , Y  X and Y is a minimal cover for x. In other words, every cover can be
+-reduced to a minimal cover.
+Proof. Consider Px = {[X] : x / X}, a sub-poset in the ⩽c poset of ∼ -classes. If
+it is not empty, choose a minimal element in this sub-poset, say [Y ], and let Y be
+the unique minimal element in [Y ] with respect to containment, which exists due
+to Lemma 5. Then Y  X and x / Y . It remains to show that, for every other
+cover Z of x, Z  Y implies Y ⊆ Z. Indeed, since Z  Y , we have [Z] ⩽c [Y ].
+But [Y ] is the minimal element in Px , hence, [Z] = [Y ]. It follows that Y ⊆ Z,
+since Y is the minimal element of [Y ] with respect to containment order.        
+  We finish this section by introducing the D-basis of a reduced closure system.
+Definition 7. Given a reduced closure system hS, φi, we define the D-basis ΣD as
+a union of two subsets of implications:
+    (1) {y → x : x ∈ φ(y) \ y, y ∈ S};
+    (2) {X → x : X is a minimal cover for x}.
+   Part (1) in the definition of the D-basis will also be called the binary part of the
+basis, due to the fact that both the premise and the conclusion of implications in
+(1) are one-element subsets of S.
+   For the closure system hJ(L), φi associated with the lattice L in Example 1, the
+D-basis consists of two implications: b → a and {a, c} → b.
+Lemma 8. ΣD generates hS, φi.
+Proof. We need to show that, for any x ∈ S and X ⊆ S such that x ∈ φ(X) \ X,
+the implication X → x follows from implications in ΣD .
+8                    K. ADARICHEVA, J. B. NATION, AND R. RAND
+
+
+   If x ∈ φ({x0 }), for some x0 ∈ X, x0 6= x, then X → x follows from x0 → x that
+is in ΣD . So assume that x 6∈ φ({x0 }), for any x0 ∈ X. Then x / X. According
+to Lemma 6, there exists Y  X such that x / Y , and Y is a minimal cover for
+x. Then Y → x is in ΣD . Besides, for each y ∈ Y \ X there exists xy ∈ X such
+that y ∈ φ({xy }). Therefore, xy → y is in ΣD as well. Evidently, X → x is a
+consequence of Y → x and {xy → y : y ∈ Y }.                                    
+
+    5. Comparison of the D-basis and the dependence relation basis
+   One of the bases discussed in [5] is the dependence relation basis. For a closure
+system hS, φi, not necessarily reduced, the dependence relation basis is
+            Σδ = {X → y : y ∈ φ(X) \ X and y ∈
+                                             / φ(Z) for all Z ⊂ X}.
+Since Z ⊆ X implies Z  X, a minimal cover (as defined above) is automatically
+minimal with respect to containment. Thus we have the following connection.
+Lemma 9. For a reduced closure system, ΣD ⊆ Σδ .
+   For later reference, the dependence relation δ from Monjardet [15] can be de-
+scribed by yδx whenever x ∈ X for some X → y in Σδ .
+   In the next example and in the sequel, whenever there is no confusion, we will
+omit the braces in notations of subsets of some set S: {x}, {a, b, c}, etc. will be
+denoted simply x, abc, etc.
+
+
+
+
+                                                         5
+
+
+                            1       2            3       4
+
+
+
+
+                                Figure 1. Example 10
+
+
+Example 10. This example is based on Example 5 from [5]. Consider the closure
+system on S = {1, 2, 3, 4, 5} with the set of closed subsets F = {∅, 1, 2, 3, 4, 12, 13,
+234, 45, 12345}. Then Σδ = {5 → 4, 23 → 4, 24 → 3, 34 → 2, 14 → 2, 14 → 3, 14 →
+5, 25 → 1, 35 → 1, 15 → 2, 35 → 2, 15 → 3, 25 → 3, 123 → 5}.
+    All implications except 5 → 4 are of the form X → x, where x / X. On the
+other hand, not all covers X are minimal covers of x. We can check that each of
+implications 15 → 2, 35 → 2, 15 → 3, 25 → 3 does not represent a minimal cover.
+For example, 2 / 15, but 14  15 and 2 / 14 is the minimal cover. In particular,
+D-basis consists of all implications from Σδ except the four indicated: ΣD = {5 →
+4, 23 → 4, 24 → 3, 34 → 2, 14 → 2, 14 → 3, 14 → 5, 25 → 1, 35 → 1, 123 → 5}.
+    As this example demonstrates, the D-basis can be obtained from Σδ simply by
+removing some unnecessary implications. It turns out that the same can be done
+      ORDERED DIRECT IMPLICATIONAL BASIS OF A FINITE CLOSURE SYSTEM                     9
+
+
+for the big range of bases called direct unit bases. Moreover, it can be done in
+polynomial time in the size of the given basis. See Proposition 17 in the next
+section.
+
+                 6. Direct basis versus ordered direct basis
+   The bases discussed in Bertet and Monjardet [5] are, in general, redundant: a
+proper subset of such a basis would generate the same closure system. For example,
+as we saw in the previous section, Σδ from Example 5 was reduced to a smaller basis
+ΣD . Example 30 shows that the D-basis can also be redundant; see Remark 31.
+   While the desire to keep the basis as small as possible might be a plausible
+task, there is another property of a basis that could be better appreciated in a
+programming setting. Here we recall the definition of a direct S basis.
+   If Σ is some set of implications, then let πΣ (X) = X ∪ {B : A ⊆ X and (A →
+B) ∈ Σ}. In order to obtain φΣ (X), for any X ⊆ S, one would normally need to
+repeat several iterations of π: φ(X) = π(X) ∪ π 2 (X) ∪ π 3 (X) . . . .
+   The bases for which one can obtain the closure of any set X performing only one
+iteration, i.e., φ(X) = π(X), are called direct.
+   It follows from Theorem 15 of [5] that the dependency relation basis Σδ is direct.
+Moreover, this basis is direct-optimal, meaning that no other direct basis for the
+same closure system can be found of smaller total size. (The total size t(Σ) is the
+sum of the cardinalities of all sets participating in its implications. This will be less
+than s(Σ) if some sets are repeated.) In particular, any reduction of Σδ will cease to
+be direct. Thus, there is a apparent trade-off between the number of implications in
+the basis and the number of iterations one needs to compute the closures of subsets.
+   The goal of this section to implement a different approach to the concept of
+iteration. That would allow the same number of programming steps as with the
+iteration of π, while allowing us to reduce the bases to a smaller size.
+Definition 11. Suppose the set of implications Σ is equipped with some linear order
+<, or equivalently, the implications are indexed as Σ = {s1 , s2 , . . . , sn }. Define a
+mapping ρΣ : P (S) → P (S) associated with this ordering as follows. For any
+X ⊆ S, let X0 = X. If Xk is computed and implication sk+1 is A → B, then
+                                 
+                                    Xk ∪ B, if A ⊆ Xk ,
+                         Xk+1 =
+                                    Xk ,      otherwise.
+Finally, ρΣ (X) = Xn . We will call ρΣ an ordered iteration of Σ.
+
+   Apparently, πΣ (X) ⊆ ρΣ (X), because all implications from Σ are applied to
+the original subset X, while they are applied to potentially bigger subsets Xk in
+the construction for ρΣ (X). We note though that assuming the order on Σ is
+established, the number of computational steps to produce ρΣ (X) is the same as
+for πΣ (X).
+Definition 12. The set of implications with some linear ordering on it, hΣ, <i, is
+called an ordered direct basis, if, with respect to this ordering, φΣ (X) = ρΣ (X) for
+all X ⊆ S.
+  Our next goal is to demonstrate that ΣD is, in fact, an ordered direct basis.
+Moreover, it does not take much computational effort to impose a proper ordering
+on ΣD .
+10                   K. ADARICHEVA, J. B. NATION, AND R. RAND
+
+
+Theorem 13. Let ΣD be the D-basis for a reduced closure system. Let < be any
+linear ordering on ΣD such that all implications of the form y → z precede all
+implications of the form X → x, where X is a minimal cover of x. Then, with
+respect to this ordering, ΣD is an ordered direct basis.
+Proof. Suppose that X ⊆ S and b ∈ φ(X) \ X. We want to show that b will appear
+in one of the Xk in the sequence that leads to ρ(X).
+   If b ∈ φ({a}) \ {a} for some a ∈ X, then b will appear in some Xk , when a → b
+from ΣD is applied. So now assume that b ∈  / φ({a}) for every a ∈ X. Then b / X
+and, according to Lemma 6, there exists Y  X such that b / Y and Y is a minimal
+cover for y. It follows that for any y ∈ Y there exists a ∈ X such that y ∈ φ(a).
+All implications a → y will be applied prior to any application with the minimal
+cover. It follows that by the time the implication sk , say Y → b, is tested against
+Xk−1 , we will have Y ⊆ Xk−1 . Hence, Xk = Xk−1 ∪ {b}.                            
+Corollary 14. D-basis is also ordered direct in its aggregated form.
+  Indeed, it follows from the fact that the only restriction on the order of the
+D-basis is to have its binary part prior to the rest of the basis.
+Corollary 15. If ΣD = {s1 , . . . , sm } is the D-basis of a reduced implicational
+system Σ, then it requires time O(m) to turn it into an ordered direct basis of Σ.
+Example 16. Consider the closure system with S = {1, 2, 3, 4, 5, 6} and the family
+of closed sets F = {1, 12, 13, 4,145, 134,2136, 1362, 3
+                                                      1346, 13456,
+                                                               4 123456}. Then the
+D-basis of this system is ΣD = {5 → 4, 14 → 3, 23 → 6, 6 → 3, 15 → 6, 24 →
+6, 24 → 5, 3 → 1, 2 → 1}. According to Theorem 13, a proper ordering that turns
+this basis into ordered direct can be defined, for example, as: (1) 5 → 4, (2) 6 → 3,
+(3) 3 → 1, (4) 2 → 1, (5) 14 → 3, (6) 23 → 6, (7) 15 → 6, (8) 24 → 6, (9) 24 → 5.
+                                       Figure 1. Example 9
+
+
+
+
+                        2               6                                    5
+
+
+                                                     3               4
+
+
+                                        1
+
+
+
+
+                                   Figure 2. Example 16
+                              Figure 2. Example 16
+      ORDERED DIRECT IMPLICATIONAL BASIS OF A FINITE CLOSURE SYSTEM                     11
+
+
+  7. Processing of ordered basis versus forward chaining algorithm
+    The forward chaining algorithm was originally introduced in 1984 by W. Dowling
+and J.H. Gallier in the context of checking the satisfiability of Horn formulae [8].
+In 1992, H. Mannila and K.J. Räihä [14] introduced the LINCLOSURE algorithm,
+which applies the same approach to expanding functional dependencies in Database
+Systems. In this section, we will look at the efficiency of this approach in comparison
+with a folklore algorithm to computing closures for the D-Basis, an approach that
+can be generalized to any direct or ordered basis.
+    We will assume that the base set is S = {x1 , . . . , xn }, which can be interpreted as
+propositional variables, and the closure system is given by a unit basis Σ = {A1 →
+b1 , . . . , Am → bm }.
+    The forward chaining procedure requires a pre-processing setup, during which
+it constructs three data structures: ClauseList i = {Aj : xi ∈ Aj } for i ⩽ n,
+Propositions j = |Aj | and Consequent j = {bj } for j ⩽ m, along with subset True
+⊆ S thought of as an input set, whose closure needs to be computed.
+    When forward chaining computes the closure of True, for each new xi ∈ True, for
+each Aj ∈ ClauseList i , it decrements the value of Propositions j by one. Whenever
+Propositions j = 0, Consequent j is added to the set True.
+    Since every entry of Propositions will, in the worst case, be reduced to zero,
+the number of steps in computing the closure is bounded by the size s(Σ), i.e., the
+combined length of the implications in the basis. Including the pre-processing steps,
+the forward chaining algorithm should require O(s(Σ)) operations to compute the
+closure. If the closures of multiple sets are to be performed, of course, the setup
+steps can be abbreviated: only Propositions and True need to be updated for
+subsequent runs.
+    As noted in [18], forward chaining, while efficient in the worst case, generally
+underperforms the folklore algorithm of simply checking if each Aj is contained
+within True, and if so appending bj to True, until the ability of the algorithm to
+generate new True elements is exhausted. In particular, forward chaining does
+poorly on large sets, where we often only need to examine a fraction of the |Σ|
+variables examined in the forward chaining procedure.
+    As an alternative to the forward chaining procedure, M. Wild [18] suggested an
+algorithm that considers the set difference Σ0 = Σ \ {Ak → bk : Ak 6⊆ True}.
+For each (Aj → bj ) ∈ Σ0 it then adds bj to True and repeats as necessary. This
+algorithm retains the need for preprocessing in the form of ClauseLists. Though
+typically faster than forward chaining, Wild’s algorithm has a worst-case running
+time of O(s(Σ)m2 ), which can cause problems for large values of m.
+    Applying the folklore algorithm to processing ordered bases, theoretically, avoids
+the pitfalls of both forward chaining and Wild’s algorithm. It simply iterates from
+(A1 → b1 ) to (Am → bm ) adding bi to True whenever Ai ⊆ True. On one hand,
+its worst case processing time is O(s(Σ)) since we only need to iterate through the
+ordered basis once. At the same time, it takes a fraction of the time of the folklore
+approach on an non-ordered basis, which will require a minimum of two iterations
+in order to confirm that no new variables were added to True.
+    In testing the performance of these three algorithms, we generated D-bases from
+the domains {1, 2, 3, 4, 5} through {1, 2, 3, 4, 5, 6, 7, 8} and calculated the time nec-
+essary to derive the closure of some random subset of the set. For forward chaining
+and Wild’s algorithm, which require substantial preprocessing, we calculated the
+12                    K. ADARICHEVA, J. B. NATION, AND R. RAND
+
+
+ Average Time (µs)               Domain 5 Domain 6 Domain 7                      Domain 8
+ Folklore                        3.87      6.59        10.12                     14.90
+ Forward Chaining (preprocessed) 7.74      11.32       15.99                     21.58
+ Forward Chaining                30.34     46.10       66.74                     91.48
+ Wild’s Algorithm (preprocessed) 10.14     14.51       19.66                     26.16
+ Wild’s Algorithm                23.75     35.28       50.11                     69.58
+               Table 1. Comparing Algorithm Processing Times
+
+
+
+time with and without the preprocessing, which corresponds to the time required
+for computing the first closure on a basis versus the time for subsequent closures.
+   In our testing, the folklore algorithm considerably outperformed both forward
+chaining and Wild’s algorithm (without preprocessing) though its advantage fell,
+as the domain grew larger. For a domain of size 5, forward chaining and Wild’s al-
+gorithm took 2 and 2.66 times as long as folklore, respectively, which shrank to 1.45
+and 1.76 as the domain grew to size 8. If we include preprocessing times, however,
+both algorithms continued to take over 4 times as long, with the relative time of
+forward chaining remaining relatively constant. Domains of sizes 5-8 corresponded
+to bases with an average of 8, 13, 19 and 27 implication, respectively.
+   Taking into an account that LINCLOSURE and Wild’s algorithm are normally
+performed on the agregated bases, we also ran a series of similar tests with the
+aggregated bases. Such a test is based on the fact that the D-basis is ordered
+direct in both the unit and the aggreagted form. The bases on domains of sizes
+5-8 had an overage of 5,7,10 and 13 implications, respectively. The test showed
+even higher ratios of forward chaining (without preprocessing) times to the ordered
+direct processing times: from 3.04 for domain 5 to 2.1 for domain 8.
+   Noticeably, the ordered-basis approach does not actually require the represen-
+tation of propositions as S = {x1 , . . . , xn } and implications as Σ = {s1 , . . . , sm },
+where each proposition has an associated integer value, necessary for indexing and
+traversing ClauseList, Propositions, and Consequent. Though we can in principle
+take advantage of integer values in constructing our set of true values, we only
+require a set of satisfied propositions. By contrast, to use the forward chaining
+method on a basis without this representation would require significant overhead
+in hashing each proposition to its corresponding integer.
+   Additionally, the ordered-basis approach eliminates the need for pre-processing of
+the basis to store it in the form of ClauseList and Consequent. Since the D-basis is
+defined as the union of binary and non-binary sets of implications, which is reflected
+in the algorithm for producing it, we assume all D-bases are properly ordered. This
+is particularly important when the basis may not fit into main memory. Instead
+of having to individually access each ClauseList i when the propositional variable
+xi appears in True, the ordered-basis approach allows us to parse the basis in
+conveniently sized pieces.
+   There is at least one observation how the idea of the ordered basis may improve
+the performance of the forward chaining algorithm. Indexing the implications ac-
+cording to the proper order of the D-basis, whenever we add a variable to True,
+we may additionally maintain the index j of the implication from which it was
+derived. Then, when we process this variable, we only need to update k-entries of
+Propositions where k ≥ j, saving us significant processing time for very large sets.
+      ORDERED DIRECT IMPLICATIONAL BASIS OF A FINITE CLOSURE SYSTEM                  13
+
+
+                   8. Building and optimizing the D-basis
+   We consider the D-basis a good alternative of any direct basis, since it has a
+smaller size than any direct basis and preserves the directness property, under a
+special ordering we define. In this section we consider an effective procedure to
+obtain the D-basis from any given direct basis, also to further optimize its binary
+part or to use the concept of the ordered sequence. The problem of obtaining the
+D-basis from other non-direct bases is also tackled in [3].
+   As we saw in Lemma 9 and Example 10, the D-basis ΣD of any reduced closure
+system is a subset of the direct unit basis Σδ . The next statement shows that,
+given any direct unit basis, one can extract the D-basis from it in a polynomial
+time procedure.
+Proposition 17. Let hS, φi be a reduced closure system. If the direct unit basis Σ
+for this system has m implications, and |S| = n, then it requires time O((nm)2 ) ∼
+O(s(Σ)2 ) to build the D-basis ΣD equivalent to Σ.
+Proof. Let hS, φi be the closure system on set S defined by Σ. By Lemma 9,
+ΣD ⊆ Σδ . According to Theorem 15 of [5], Σδ coincides with the canonical iteration-
+free basis introduced by M. Wild in [17]. Hence, by Corollary 17 of [5], Σδ is
+the smallest basis, with respect to containment, of all direct unit bases of hS, φi.
+Therefore, ΣD ⊆ Σδ ⊆ Σ.
+   It follows that ΣD can simply be extracted from Σ by removing unnecessary
+implications. This amounts to finding the implications X → x, where X will be a
+minimal join cover of x, among the implications of Σ.
+   Note that O(m) steps will be needed to separate binary implications y → x from
+X → x, where |X| > 1. The number of x ∈ S that appear in the consequence of
+implications X → x is at most the minimum of m and n.
+   For every fixed x, it will take time O(m) to separate all implications X → x,
+and the number of such implications is at most m. If X1 → x and X2 → x are
+two implications in this set, we can decide in time O(mn) whether X1  X2 or
+x ∈ φ(y) for some y ∈ X2 . If either holds, X2 → x does not belong to the D-basis.
+To check this, consider the closure systems Σi ⊆ Σ, i = 1, 2 that consist of all
+binary implications of Σ, in addition to Xi → x. Also, put an order on Σi , where
+all the binary implications precede Xi → x. Apparently, x is in the closure of X2 ,
+in the closure system defined on S by Σ1 , iff either X1  X2 or x ⩽ y for some
+y ∈ X2 .
+   As pointed out in section 7, computation of the closure of any input set, either
+by the forward chaining algorithm, or by the ordered basis algorithm, is linear in
+the size of the input, which in this case is essentially the size of the binary part of
+Σ, or O(n2 ).
+   At the worst case, about O(m2 ) comparisons have to be made, for different covers
+X1 , X2 of the same element x, to determine the minimal ones. Hence, the overall
+complexity is O(m2 n2 ) ∼ O(s(Σ)2 ).                                                 
+    It follows from the procedure of Proposition 17 that the D-basis is obtained
+from any direct unit basis by removing implications X → x, for which X is not a
+minimal cover of x and |X| > 1. In particular, the binary part of the direct basis,
+i.e., implications of the form y → x, remain in the D-basis.
+    We want to discuss a further optimization of the D-basis, as well as any other
+basis that has the same binary part as the D-basis. As was observed in section 2, for
+14                     K. ADARICHEVA, J. B. NATION, AND R. RAND
+
+
+a reduced closure system hS, φi, the elements of S can be identified with elements
+of the closure lattice L, in such a way that J(L) ⊆ S ⊆ L. This correspondence
+induces a natural order on S, with s ⩽ t if and only if φ(s) ⊆ φ(t). Thus, an
+implication y → x belongs to the D-basis iff x ∈ φ(y) iff x ⩽ y. The binary part of
+the D-basis then describes the partially ordered set (S, ⩽).
+   Recall that, in the language of ordered sets, we say that y covers x if y > x and
+there is no element z such that y > z > x.
+   We can shorten the binary part of the D-basis, leaving only those implications
+y → x for which y covers x in (S, ⩽). This will come at the cost of the need to
+order the remaining implications. For example, if x → y, y → z, x → z are three
+implications from the binary part of some D-basis, then the last implication can
+be removed, under condition that the first two will be placed in that particular
+order into the ordered D-basis. More generally, suppose only covering pairs are
+to be included in the binary part of an ordered basis. Then the ordering of the
+implications should be such that, if x > y ≥ z > t in S with the strict inequalities
+being covers, then x → y precedes z → t.
+   Recall also that if some set of implications Σ0 is ordered, then ρΣ0 (X), the ordered
+iteration of Σ0 , is defined for every X ⊆ S, see Definition 11.
+Proposition 18. Let Σ1 be the binary part of the D-basis of a reduced closure
+system on a set S. If Σ1 has k implications and |S| = n, then there is an O(nk+n2 )
+time algorithm that extracts Σ0 ⊆ Σ1 describing the cover relation of join irreducible
+elements of closure system, and places the implications of Σ0 into a proper order.
+Under this order, ρΣ0 (y) = ρΣ1 (y) for every y ∈ S.
+Proof. We have the partially ordered set (S, ⩽) of size n, whose cover relation has
+at most k pairs, thus, it will take time O(nk + n2 ) to find the cover relation of this
+poset, see [10], also Theorem 11.3 in [9]. Let Σ0 ⊆ Σ1 be the set of all implications
+y → x, where y covers x in (S, ⩽) . It remains to put these implications into a
+proper order. If (S, ⩽1 ) is any linear extension of (S, ⩽), then one can take any
+order of Σ0 associated with this extension. Starting from the maximal element
+y of (S, ⩽1 ), write all implications y → x from Σ0 , in any order, then pick next
+to maximal element z of (S, ⩽1 ) and write all implications z → t, in any order,
+then proceed with all elements of (S, ⩽1 ) in the same manner, in descending order
+≥1 . It remains to notice that there is an O(n + k) algorithm for producing the
+linear extension of partially ordered set with n elements and k pairs of comparable
+elements, see Theorem 11.1 in [9].                                                   
+
+   Now we want to deviate slightly from the notion of ordered direct basis to the
+notion of ordered direct sequence of implications. Suppose Σ is some basis of a
+closure system hS, φi. The ordered sequence σ = hs1 , . . . , st i of implications from Σ,
+not all necessarily different, is called an ordered direct sequence from Σ, if ρσ (X) =
+φ(X) for every X ⊆ S.
+   The idea of ordered direct sequencing allows some further optimization of the
+D-basis. If Z = hz1 , . . . , zk i and T = ht1 , . . . , ts i are two ordered sequences, then
+Z _ T denotes their concatenation (the attachment of T at the end of Z).
+Lemma 19. Suppose σ = Σ_         _
+                              1 Σ2 Σ3 is an ordered direct sequence from some basis
+Σ, where Σ1 , Σ3 consist of binary implications in proper order of Proposition 18, Σ2
+consists of non-binary implications, and Σ2 can be put into arbitrary order without
+      ORDERED DIRECT IMPLICATIONAL BASIS OF A FINITE CLOSURE SYSTEM               15
+
+
+changing the ordered direct status. If (A → y), (A → x) ∈ Σ2 and (y → x) ∈ Σ1 ,
+then A → x can be dropped from Σ2 and replaced by an additional y → x in Σ3 .
+Proof. We need to show that whenever Y is an input set such that x ∈ φ(Y ), the
+replacement of A → x by y → x will not affect computation of ρσ (Y ).
+   Consider the case when y 6∈ φ(Y ). Then also A 6⊆ φ(Y ), whence any implication
+with the premise A will never be applied in computation of ρσ (Y ). The same is true
+for implications with premise y, so replacement of A → x by y → x can trivially be
+done.
+   Now suppose that y ∈ φ(Y ). By assumption, we can take A → x to be the last
+implication in the ordering of Σ2 . So consider Yk , the result of ordered iteration
+of Σ_1 Σ2 \ (A → x) on the input set Y . If y ∈ Yk , then we can drop A → x from
+Σ2 and place y → x anywhere in proper order in Σ3 , which will guarantee that
+x appears in ρ(Y ). If y 6∈ Yk , then there is z ∈ Yk such that there exists some
+sequence in Σ3 from z to y. By assumption, Σ3 is in the proper order, hence any
+implication w → y precedes x → t. Thus, we can place y → x in between those
+groups, following the proper order on all binary implications from Proposition 18.
+After replacing A → x by y → x in proper position of Σ3 , we can still assume that
+the ordering of remaining part of Σ2 can be arbitrary.                             
+
+Corollary 20. Suppose ΣD is the D-basis of some closure system. Consider Σ+
+                                                                          D ⊆
+ΣD obtained from ΣD by performing the following reductions:
+   (a) Remove A → x, if A → y and y → x are also in ΣD .
+   (b) Remove z → x, if z → y and y → x are also in ΣD .
+Let Σ1 be a the proper ordering of binary part of Σ+ D given in Proposition 18, and
+let Σ3 be a subordering of this proper ordering on implications y → x that appear
+in triples of A → x, A → y, y → x of (a). Finally, let Σ2 be some ordering of
+non-binary implications of Σ+                _ _
+                             D . Then σ = Σ1 Σ2 Σ3 is the ordered direct sequence
+               +
+for the basis ΣD . In particular, the length of this sequence is no longer than the
+length of the D-basis.
+Proof. Indeed, following the procedure of Lemma 19 we can replace all A → x from
+the triples A → x, A → y, y → x in ΣD by the second copy of y → x in additional
+binary part Σ3 that follows the non-binary part of the D-basis.                
+
+Example 21. Given the D-basis of the closure system: ΣD = h3 → 2, 2 → 1, 3 →
+1, 45 → 3, 45 → 2, 45 → 1i, we can produce a shorter basis Σ+   D = {3 → 2, 2 →
+1, 45 → 3} with the ordered direct sequence: σ = h3 → 2, 2 → 1, 45 → 3, 3 → 2, 2 →
+1i. We note that Σ+ D is only half as long as ΣD ,, and its ordered direct sequence
+σ has the same length as D-basis with optimized binary part but the size of σ is
+smaller than that of the optimized D-basis.
+
+
+         9. Closure systems without D-cycles and the E-basis
+   It turns out that the D-basis can be further reduced, when an additional property
+holds in a closure system hS, φi. The results of this section follow closely the
+exposition given in [9], section 2.4.
+   We will write xDy, for x, y ∈ S, if y ∈ Y for some minimal cover Y of x. We
+note that the D-relation is a subset of the dependence relation δ from section 5.
+16                   K. ADARICHEVA, J. B. NATION, AND R. RAND
+
+
+Definition 22. A sequence x1 , x2 , . . . , xn , where n > 1, is called a D-cycle, if
+x1 Dx2 D . . . xn Dx1 . A finite closure system hS, φi is said to be without D-cycles if
+it has no D-cycles.
+   We note that the lattices of closed sets of closure systems without D-cycles are
+known in lattice-theoretical literature as lower bounded.
+   For every x ∈ S, let M (x) = {Y ⊆ S :Y is a minimal cover of x}. The family
+φ(M (x)) = {φ(Y ) : Y ∈ M (x)} is ordered by set containment, so we can consider
+its minimal elements. Let M ∗ (x) = {Y ∈ M (x) : φ(Y ) is minimal in φ(M (x))}.
+   We will write xEy, for x, y ∈ S, if y ∈ Y for some Y ∈ M ∗ (x). According to the
+definition, if xEy then xDy. On the other hand, the converse is not always true.
+Example 23. Consider the closure system and its D-basis from Example 16. We
+note that this closure system has no D-cycles. We have three minimal covers of 6:
+15, 24 and 23. Since φ(15) = S \ 2, φ(24) = S and φ(23) = S \ 45, we have only
+two of these covers in M ∗ (6): 15 and 23. Thus, while 6D4, we do not have 6E4.
+  We now define two sequences of subsets of S, based on covers from M (x) and
+M ∗ (x), correspondingly.
+  Let D0 = E0 = {p ∈ S : p ∈ φ(p1 , . . . , pk ) implies p ∈ φ(pi ) for some i ⩽ k}. If
+Dk and Ek are defined, then Dk+1 = Dk ∪ {s ∈ S : if s / Y then s / Z for some Z ⊆
+Dk , Z  Y and Z ∈ M (s)}. Similarly, Ek+1 = Ek ∪ {s ∈ S : if s / Y then s /
+Z for some Z ⊆ Ek , Z  Y and Z ∈ M ∗ (s)}. Apparently, Ek ⊆ Dk , for any k.
+The following result is proved in [9], Theorem 2.51.
+Lemma 24. If hS, φi is a reduced closure system without D-cycles, then, for some
+k, S = Ek = Dk .
+   As a consequence, we can often shorten the D-basis for a closure system without
+D-cycles. We will say that s ∈ S has D-rank k = 0, if s ∈ D0 , and k > 0, if
+s ∈ Dk \ Dk−1 . According to Lemma 24, every s ∈ S in a closure system without
+D-cycles has a D-rank.
+   Recall that a basis is called aggregated when all its premises are different. Ev-
+ery basis can be brought to the aggregated form by combining conclusions of all
+implications with the same premises.
+Theorem 25. Let hS, φi be a reduced closure system without D-cycles. Consider
+a subset ΣE of the D-basis that is the union of two sets of implications:
+    (1) {y → x : x ∈ φ(y)},
+    (2) {X → x : X ∈ M ∗ (x)}.
+Then
+    (a) ΣE is a basis for hS, φi.
+    (b) ΣE is ordered direct.
+    (c) The aggregated form of ΣE is ordered direct.
+Proof. To begin with, it is not true that every cover of an element x ∈ S refines
+to a cover in M ∗ (x), so ΣE must be ordered more carefully than ΣD . Nonetheless,
+mimicking the proof of Theorem 2.50 of [9], we can construct an order on ΣE that
+makes it an ordered direct basis. This will be done for the aggregated E-basis,
+proving parts (a) and (c) simultaneously; part (b) then follows.
+   Consider the aggregated form of ΣE . Given an implication X → Y in this basis,
+let D∗ (X → Y ) be the maximal D-rank of elements in X, and D∗ (X → Y ) be the
+minimal D-rank of elements in Y . Then D∗ (X → Y ) < D∗ (X → Y ).
+      ORDERED DIRECT IMPLICATIONAL BASIS OF A FINITE CLOSURE SYSTEM                   17
+
+
+   Order the implications following the rule: put the implications x → Y first
+(aggregated form of binary part of ΣE ), and for the rest, if D∗ (X1 → Y1 ) <
+D∗ (X2 → Y2 ) then X1 → Y1 precedes X2 → Y2 in the order.
+Claim. If X1 → Y1 and X2 → Y2 are in the aggregated E-basis, and Y1 ∩ X2 6= ∅,
+then X1 → Y1 precedes X2 → Y2 .
+   Indeed, take any x ∈ Y1 ∩ X2 . If the D-rank of x is k, then D∗ (X2 → Y2 ) ≥ k ≥
+D∗ (X1 → Y1 ) > D∗ (X1 → Y1 ). Hence, X1 → Y1 will appear in the order before
+X2 → Y2 .
+   Now take any input set Z. We want to show that φ(Z) can be obtained when
+applying the aggregated basis in the described order. We argue by induction on
+the rank of an element z ∈ φ(Z) \ Z.
+   If z ∈ D0 , then it only can be obtained via some implication x → Y , for some
+x ∈ Z, and z ∈ Y , and implications x → Y form an initial segment in the ordered
+sequence of the basis. Now assume that it is already proved that all elements of
+φ(Z) \ Z of rank at most k can be obtained in some initial segment of the sequence
+for the basis. If we have now element z of rank k + 1, then it can be obtained
+via an implication X → Y with X ⊆ φ(Z), z ∈ Y , and D∗ (X) < k + 1. By the
+induction hypothesis, all elements in X ⊆ φ(Z)\Z can be obtained via implications
+located in some initial segment of the sequence, and by the Claim above, all those
+implications precede X → Y . Thus, all implications producing elements of rank
+k + 1 from φ(Z) will be located after the segment of the sequence producing all
+rank k elements.                                                                  
+   To illustrate the ordering of an E-basis, consider again the closure system given in
+Example 16. As we know from Example 23, ΣE exists and includes all implications
+of the D-basis, except 24 → 6. Elements 1, 2, 4 have D-rank 0; elements 3, 5
+have D-rank 1, and D-rank of 6 is 2. This allows to impose a proper ordering on
+implications of ΣE that turns it into ordered direct:
+(1) 5 → 4, (2) 6 → 3, (3) 3 → 1, (4) 2 → 1, (5) 14 → 3, (6) 24 → 5, (7) 23 → 6, (8)
+15 → 6. This basis is also aggregated.
+Proposition 26. Suppose ΣD = {s1 , s2 , . . . , sn } is a D-basis of some reduced
+closure system hS, φi and |S| = m. It requires time O(mn2 ) to determine whether
+the closure system is without D-cycles, and if it is, to build its ordered direct basis
+ΣE .
+Proof. Since the D-relation is a subset of S 2 , it will contain at most m2 pairs. On
+the other hand, it is built from implications X → x, so the other upper bound for
+pairs in D-relation is mn. Evidently, the closure system is without D-cycles iff its
+D-relation can be extended to a linear order. There exists an algorithm that can
+decide whether hS, Di can be extended to a partial order on S in time O(m + |D|),
+see Theorem 11.1 in [9]. We will see below that the rest of the algorithm will take
+time O(mn2 ), which makes the total time also O(mn2 ).
+   Assuming the first part of algorithm provides a positive answer and there are no
+D-cycles, we proceed by finding the ranks of all elements. It will take at most n
+operations to find set D0 : include p into D0 , if it does not appear as a conclusion
+in any (non-binary) implication X → x of the D-basis, where x / X. If the system
+                                                                      2
+is without D-cycles, then πΣ (D0 ) \ D0 gives elements of rank 1, πΣ    (D0 ) \ πΣ (D0 )
+elements of rank 2, etc. Note that πΣ (X) is defined in the beginning of section
+18                   K. ADARICHEVA, J. B. NATION, AND R. RAND
+
+
+6. Computation of πΣ (X) requires time O(mn), since Σ = ΣD in our case has n
+implications, and checking that the premise of each implication is a subset of X
+takes time O(m). After at most m iterations of π on D0 , one would obtain the
+whole S, whence, O(m2 n) operations are needed to obtain the ranks of all elements
+from S. Assuming that m ⩽ n in most closure systems, this time will not beat
+O(mn2 ).
+   It remains to decide which implications from the D-basis should remain in the
+E-basis. To that end, for each element x ∈ S we need to compare the closures
+φ(X) of subsets X, for which X → x is in the D-basis, and choose for the E-basis
+those that are minimal. There is at most n implications X → x, for a given x ∈ S,
+and the closure φ(X), for each such X, can be found in O(s(ΣD )) steps. It will
+take time O(n2 ) to determine all minimal subsets among O(n) given subsets φ(X),
+associated with fixed x ∈ S. Hence, it will require time O(mn2 ) for all x ∈ S.
+   The size of the E-basis will be at most n, and it will take time O(n2 ) to order it
+with respect to the rank of elements, per Theorem 25.                               
+   When a closure system has D-cycles, the subset ΣE of ΣD , defined in Corollary
+25, may not form a basis.
+Example 27. Consider S = {1, 2, 3, 4} and a closure operator defined by the D-
+basis
+                        13 → 2, 24 → 3, 14 → 2, 14 → 3.
+This closure system has the cycle 2D3D2. It is easy to verify that ΣE has only
+13 → 2 and 24 → 3, so the last two implications from the D-basis cannot be
+recovered from ΣE .
+
+
+
+
+                              1            2                3             4
+
+
+
+
+                               Figure 3. Example 27
+
+  Further results about closure systems without D-cycles, and more generally sys-
+tems whose closure lattice is join semidistributive, will be presented in [3].
+
+          10. D-basis versus Duquenne-Guigues canonical basis
+   We recall the definition of the canonical basis introduced by V. Duquenne and
+J.L. Guigues in [11], see also [4]. This applies to arbitrary closure systems, not just
+reduced ones.
+       ORDERED DIRECT IMPLICATIONAL BASIS OF A FINITE CLOSURE SYSTEM                         19
+
+
+Definition 28. The canonical basis of a closure system (S, φ) consists of implica-
+tions X → Y for X, Y ⊆ S, that satisfy the following properties:
+    (1) X ⊂ φ(X) = Y ;
+    (2) for any φ-closed set Z, either X ⊆ Z or Z ∩ X is φ-closed;
+    (3) if W ⊆ X, φ(W ) = Y and W satisfies (2) in place of X, then W = X.
+    The subsets X ⊂ S with properties (1) and (2) are usually called quasi-closed, see
+[4]. The meaning of (2) is that adding X to the family of closed sets of φ produces
+the family of closed sets of another closure operator. Property (3) indicates that
+among all quasi-closed subsets with the same closure one needs to choose the min-
+imal ones. This basis is called canonical, since it is minimal, in that no implication
+can be removed from it without altering φ, and every other minimal implicational
+basis for φ can be obtained from it. In particular, no other basis can have a smaller
+number of implications. Note that here the implications are of the form X → Y ,
+where Y is not necessarily a one-element set. We will also call it the D-G basis, to
+distinguish from canonical unit direct basis.
+    To bring this basis in comparison with other bases discussed in this paper, each
+implication X → Y may be replaced by set of implications X → y, y ∈ Y \ X. We
+will call this modification of the canonical basis the unit D-G basis.
+    In many cases the canonical basis may be turned into an ordered direct basis.
+Example 29. Consider again the closure system from Example 16. The canonical
+basis is
+     2 → 1, 3 → 1, 5 → 4, 6 → 3, 6 → 1, 14 → 3, 123 → 6, 1345 → 6, 12346 → 5.
+Besides, it is ordered direct in the given order.
+   In general, though, the canonical basis cannot be ordered so that it becomes
+direct. Thus, it is not ordered direct. The following two examples were uncovered
+by running a computer program and checking about a million of various closure
+systems on 5- and 6-element sets. The first example demonstrates a closure system,
+where the canonical basis cannot be ordered, while the unit expansion of this basis
+does admit an ordering to make it direct. The second example shows that some
+canonical bases cannot be ordered in either form.
+Example 30.
+    Let hS, φi be a closure system on S = {1, 2, 3, 4, 5, 6}, given by the family of closed
+sets: {∅, 1, 2, 3, 4, 6, 36, 26, 13, 24, 14, 35, 23, 16, 135, 136, 236, 1246, 2345, S}. The lat-
+tice representation of this system is given in Figure 4.
+    Then the canonical basis is 5 → 3, 34 → 25, 12 → 46, 46 → 12, 235 → 4, 356 →
+124. It is easy to show that this basis cannot be ordered. Indeed, in order to obtain
+φ(145) = S in one application of canonical basis, one would need to put 5 → 3 first,
+then 34 → 25, followed by 12 → 46. On the other hand, φ(123) = S, too, and the
+only implication applicable to 123 is 12 → 46, but it comes after 34 → 25, and one
+cannot obtain 5 in the closure otherwise.
+    As was mentioned, the unit expansion of this canonical basis is still ordered
+direct: one would need to place implications 12 → 4 and 12 → 6 around 34 → 2
+and 34 → 5, thusly: 5 → 3, 12 → 4, 34 → 2, 34 → 5, 12 → 6, 46 → 2, 46 → 1, 235 →
+4, 356 → 1, 356 → 2, 356 → 4.
+20                     K. ADARICHEVA, J. B. NATION, AND R. RAND
+
+
+
+
+                                                                           5
+
+
+                                         2                           4
+                             1                             3                     6
+
+
+
+                                          Figure 1. Example 66
+                                 Figure 4. Example 30
+
+
+  As always, the D-basis is ordered direct in both forms: in its original unit form,
+and in the aggregated form. For example, the aggregated form of D-basis in this
+example is 5 → 3, 34 → 25, 12 → 46, 46 → 12, 25 → 4, 56 → 124, 123 → 5, 134 → 6.
+  One needs to run the canonical basis two times to ensure the closure of arbitrary
+subset, i.e., apply 6·2 = 12 implications, versus only 8 implications of the aggregated
+D-basis. In the unit form, the canonical basis has 11 implications and the D-basis
+has 13, but the ordering of the canonical basis requires special care.
+Remark 31.
+   Example 30 also shows that the D-basis, unlike the canonical basis, can be
+redundant (even in its aggregated form): this means that some implications can
+be removed, and the remaining ones still define the same closure system. In the
+D-basis of our example, both implications 123 → 5, 134 → 6 can be removed, since
+they follow from 34 → 25, 12 → 46. On the other hand, the basis without these
+two implications is no longer ordered direct.
+   The following example shows that the canonical basis might be un-orderable in
+either form.
+Example 32.
+   Let hS, φi be a closure system on S = {1, 2, 3, 4, 5, 6}, given by the family of
+closed sets: {∅, 1, 2, 3, 5, 6, 12, 13, 14, 16, 23, 123, 124, 135, 256, 1346, S}. The lattice
+representation of this system is given in Figure 5.
+   The canonical basis has 9 implications:
+4 → 1, 15 → 3, 35 → 1, 25 → 6, 56 → 2, 26 → 5, 36 → 14, 134 → 6, 146 → 3.
+There is a single implication 36 → 14 that can be expanded to two unit implications
+36 → 1 and 36 → 4.
+   The proof that the unit expansion of canonical basis cannot be ordered to make
+it direct, follows from consideration of the next three closures:
+       • 45 → 145 → 1345 → 13456 → S, hence, 134 → 6 should be placed later
+         than 15 → 3.
+       • 1234 → 12346 → S, hence 26 → 5 should be placed later than 134 → 6.
+
+
+
+                                                       1
+      ORDERED DIRECT IMPLICATIONAL BASIS OF A FINITE CLOSURE SYSTEM                  21
+
+
+
+
+                         4
+
+
+                  1              2                     3              5              6
+
+
+
+                                     Figure 1. Example 67
+                               Figure 5. Example 32
+
+       • 126 → 1256 → 12356 → S, hence 15 → 3 should be placed later than
+         26 → 5, which contradicts the combination of the previous two items.
+    For comparison, the aggregated D-basis has 15 implications:
+4 → 1, 45 → 26, 36 → 14, 34 → 6, 15 → 3, 46 → 3, 35 → 1, 25 → 6, 26 → 5, 56 →
+2, 126 → 34, 235 → 4, 156 → 4, 234 → 5, 125 → 4.
+    Thus, one run of the aggregated D-basis (15 implications) wins over two runs (18
+implications) of the canonical basis. In unit expansions: D-basis (18 implications)
+still wins over two runs (20) of canonical basis.
+    In this example, the D-basis is 4 implications shorter than the canonical unit
+direct basis, which has 22 implications.
+
+   Our earlier analysis of the binomial part of the D-basis in Proposition 18 carries
+over to a partial optimization of the canonical basis.
+Proposition 33. The binary part of the unit expansion of the D-G canonical basis
+of any reduced closure system coincides with the binary part of the D-basis (or,
+E-basis, if it exists) of the same system.
+Proof. We recall that the binary part of the D-basis of closure system hS, φi consists
+of implications y → x, where x ∈ φ(y) \ y. This implies that {y} is not a φ-closed
+set. Besides, it is a quasi-closed set, since the intersection of {y} with any φ-closed
+set is either {y} or ∅. Evidently, {y} will be the minimum quasi-closed set with
+the closure φ(y). Hence, {y} → φ(y) \ y should be an implication in the canonical
+basis. Evidently, the unit expansion of {y} → φ(y) \ y gives all the implications
+in the D-basis with the premise y. Vice versa, every implication in the canonical
+basis of the form y → Y implies that Y = φ(y) \ y. Hence, y → y 0 for y 0 ∈ Y should
+appear in the D-basis.                                                                
+  The following statement is an immediate consequence of Proposition 18 and
+Proposition 33. We recall that L stands for the lattice of closed sets of hS, φi, and
+(J(L), ⩽) is a partially ordered set of join-irreducible elements of L.
+Corollary 34. Let ΣC be the canonical basis of hS, φi, where |S| = m. Let ΣbC ⊆
+ΣC be a binary part of ΣC , and let n be the number of implications in the unit
+
+
+
+                                                   1
+22                       K. ADARICHEVA, J. B. NATION, AND R. RAND
+
+
+expansion of ΣbC . Then an algorithm that requires O(mn + n2 ) time will replace
+each implication y → Y in ΣbC by y → Y 0 , Y 0 ⊆ Y , where φ(y) covers φ(y 0 ) in
+(J(L), ⩽), for each y 0 ∈ Y 0 . Let Σ0C be this new set of implications. The algorithm
+will also put an appropriate order on Σ0C in such a way that ρΣC = ρΣ0C .
+
+   Thus, the optimization of the canonical basis inspired by Proposition 18 is in
+the form of a possible size reduction of some implications.
+
+   We finish this section with a comparison of the canonical D-G basis with the
+D-basis on some illustrative examples. We consider one particular type of closure
+systems for which the description of the canonical basis is easy. The closure system
+hS, φi is called a convex geometry, if φ satisfies the anti-exchange axiom: if x ∈
+φ(C ∪ {y}) and x ∈  / C, then y ∈
+                                / φ(C ∪ {x}), for all x 6= y in S and all closed C ⊆ S.
+   For any closed set X in a convex geometry, the set of extreme points of X is
+defined as Ex(X) = {x ∈ X : x 6∈ φ(X \ x)}. It is well-known that, in every convex
+geometry, X = φ(Ex(X)). The equivalent statement in the framework of lattice
+theory is that every element Y in the closure lattice of a finite convex
+                                                                     W geometry has
+unique representation as a join of join irreducible elements: Y = Yi , so that none
+of Yi can be removed (such representation is called irredundant join decomposition
+of Y ); see, for example, [2].
+   An important example of convex geometry is Co(Rn , A), where A is a finite set
+of points in Rn , and Co(Rn , A) stands for geometry of convex sets relative to A. In
+other words, the base set of such closure system is A, and closed sets are subsets X
+of A with the property that whenever point a ∈ A is in convex hall of some points
+from X, then a must be in X (see more details of the definition, for example, in
+[2]).
+
+Lemma 35. If Y is the premise of an implication from the canonical basis of some
+convex geometry Co(Rn , A), then Y is the set of extreme points of a closed set φ(Y )
+such that every subset of Y is closed.
+
+Proof. Evidently, the premise Y of every implication of the canonical basis con-
+tains ex(φ(Y )). Moreover, Co(Rn , A) satisfies the n-Carathéodory property, see
+[1], which means that |Ex(φ(Y ))| ⩽ n + 1. Suppose there exists an implication
+Y → z in canonical basis with Ex(Y ) = {y1 , y2 , . . . , yn+1 }, z ∈ φ(Y ) and z 6∈ φ(Y 0 )
+for every Y 0 ⊂ ex(Y ). We claim that every Yi = Y \ {yi } is closed. Indeed, suppose
+w.l.o.g. that x ∈ φ(Yn+1 ) = φ(y1 , . . . , yn ), x 6∈ {y1 , . . . , yn }. Then simplex gen-
+erated by y1 , . . . , yn+1 is split into simplices generated by X1 = {x, y2 , . . . , yn+1 },
+X2 = {y1 , x, y3 , . . . , yn+1 },. . . , Xn = {y1 , y2 , . . . , yn−1 , x, yn+1 }. Then z must be in
+one of those simplices, say, z ∈ φ(Xi ). Since Y is quasi-closed, φ(Yn+1 ) ⊂ φ(Y ) im-
+plies x ∈ Y , and φ(Xi ) ⊂ φ(Y ) implies z ∈ Y , a contradiction with the assumption
+z 6∈ Y .
+    Similar argument applies for any other Y with Ex(φ(Y )) < n + 1.                               
+
+  In the next two examples, we consider convex geometries of the form Co(R2 , A)
+and compare the canonical bases and D-bases.
+
+Example 36. If A is a set of points in general position, i.e., no three points are
+on a line, then the D-basis and canonical basis of convex geometry Co(R2 , A) are
+the same.
+      ORDERED DIRECT IMPLICATIONAL BASIS OF A FINITE CLOSURE SYSTEM                     23
+
+
+   Due to the 3-Carathéodory property, all covers can be reduced to covers by three
+elements. So the D-basis consists of implications abc → x, for all triangles abc that
+have x inside.
+   Now, for any relatively convex subset X ⊆ A, Ex(X) consists of the vertices of a
+convex polygon that holds all the points of X inside. If there exists y ∈ X \ Ex(X),
+then there are a, b, c ∈ X with y ∈ φ(a, b, c). Hence, {a, b, c} ⊆ X is not closed. This
+will not contradict Lemma 35, only if X = {a, b, c}. Thus, the only implications in
+the canonical basis are abc → x, where x is inside triangle abc. It follows that the
+D-basis and canonical basis are the same.
+Example 37. If A is a set of points that is not in general position, then the
+canonical basis of Co(R2 , A) is a proper subset of the D-basis.
+   Indeed, consider a point configuration of 5 points: a, b, c form a triangle, x is
+inside the triangle, and d is on the side ab, so that x is also inside triangle dbc. The
+D-basis is ab → d, abc → x, bcd → x, while the canonical basis is ab → d, bcd → x.
+   Note that abc cannot be a premise of an implication in the canonical basis due
+to Lemma 28, since the subset ab is not closed.
+
+  We note that Lemma 35 is not true for arbitrary convex geometries.
+Example 38.
+   Take convex geometry ({a, b, c, d, x}, φ) of Example 37. Adding another closed
+set {b, c, d} will result in a new convex geometry ({a, b, c, d, x}, ψ) with the canonical
+basis ab → d, abcd → x. Note that in implication abcd → x, d 6∈ Ex(abcd), and
+subset ab is not closed.
+
+                   11. Testing the performance of D-basis
+   The performance of D-basis in comparison with the D-G unit basis and canonical
+unit direct basis was tested on 300, 000 randomly generated closure systems on base
+sets of 6 and 7 elements. The closed sets in these systems were generated by taking
+3 to 8 arbitrary subsets of the domain, the intersection of all combinations of these
+sets, the empty set, and the domain itself.
+   The computation of the closure of random input set X was implemented, for
+the D-G unit basis, according to the folklore algorithm, which essentially makes
+the computation of π(X), π 2 (X), etc., on its consecutive loops. This algorithm is
+presented, for example, as Algorithm 0 in section 2 of [18], also see our discussion
+of this algorithm in comparison with the forward chaining algorithm in section 7.
+Based on this algorithm, computing the closure of an input set using the D-G basis
+will always take at least two passes: the final pass produces nothing and exists
+solely to determine that the ability of the basis to expand the given set has been
+exhausted.
+   In contrast, the computation of the closure of any input set, by the D-basis or
+canonical unit direct basis, is done simply in one loop of such algorithm. The data
+collected reflects the number of implications attended in the run of each algorithm.
+Thus, with respect to these two bases, it makes a comparison of their length.
+   In the testing on domain length 6, with inputs sets of length 3, the D-G unit
+basis cycled through, on average, 22.9 implications before returning the closure.
+By comparison, the direct canonical (optimal) basis took 15.8 such steps and the
+24                  K. ADARICHEVA, J. B. NATION, AND R. RAND
+
+
+          Closed Sets D-G Unit Basis Direct Optimal Basis D-Basis
+          5             32.37           18.71              16.45
+          10            22.59           16.24              12.23
+          15            21.22           15.54              12.47
+          20            18.13           13.06              11.45
+          25            15.54           11.09              10.34
+          30            11.70           7.96               7.65
+        Table 2. Average implications checked to expand an arbitrary
+        3-element set in a length 6 domain
+
+
+
+D-basis took only 12.7 checks on average. Due to their ordered directness, the
+number of implications checked in the direct optimal and D-basis was equivalent
+to the number of implications they contained.
+   It was observed that the efficiency gap between the direct and indirect bases was
+greatest when there were fewer closed sets, meaning that more subsets could be
+expanded through the bases’ implications. This relation is shown in Figure 6.
+
+
+
+
+        Figure 6. Implications checked (Y-Axis) by the number of closed
+        sets in the basis (X-axis) for a domain of size 6.
+
+   We saw similar results on bases of domain length 7. There, we once again saw
+the convergence of the D-Basis and direct optimal as the number of closed sets
+approached either extreme, with a more pronounced gap in between.
+      ORDERED DIRECT IMPLICATIONAL BASIS OF A FINITE CLOSURE SYSTEM             25
+
+
+          Closed Sets D-G Unit Basis Direct Optimal Basis D-Basis
+          5             46.73           27.70              23.57
+          10            33.74           26.26              17.92
+          15            32.11           26.80              18.59
+          20            31.01           25.68              19.43
+          25            29.77           23.99              19.66
+          30            26.71           20.64              17.73
+        Table 3. Average implications checked to expand an arbitrary
+        3-element set in a length 7 domain.
+
+
+
+   There were 33.8 checks on average for the D-G unit basis, and 26.0 and 19.0 for
+the direct optimal and D-basis, respectively, see Table 3.
+
+
+
+
+        Figure 7. Implications checked (Y-Axis) by the number of closed
+        sets in the basis (X-axis) for a domain of size 7.
+
+   Acknowledgments. We are grateful to several people who read the draft of this
+paper at different stages of its preparation and made valuable comments: György
+Turán, Vincent Duquenne, Marina Langlois, Ralph Freese, Marcel Wild and Karell
+Bertet, also students of Yeshiva College Joshua Blumenkopf and Jeremy Jaffe. Ma-
+jor advancements of this paper were done during the first author’s visits to Uni-
+versity of Hawai’i in 2010-2011, supported by the AWM-NSF Mentor Travel grant.
+The welcoming atmosphere at the Department of Mathematics at UofH is greatly
+26                      K. ADARICHEVA, J. B. NATION, AND R. RAND
+
+
+appreciated. We thank our anonymous referees for making the numerous comments,
+pointing to a few references and fixing some of our omissions.
+
+                                         References
+ [1] K. Adaricheva, Representing finite convex geometries by relatively convex sets, to appear in
+     European J. of Combinatorics, available in arxiv: http://arxiv.org/abs/1101.1539
+ [2] K.V. Adaricheva, V.A. Gorbunov, and V.I. Tumanov, Join-semidistributive lattices and con-
+     vex geometries, Adv. Math. 173(2003), 1–49.
+ [3] K.V. Adaricheva and J. B. Nation, On effective bases of closure systems with the unique
+     criticals, manuscript.
+ [4] N. Caspard and B. Monjardet, The lattices of closure systems, closure operators, and impli-
+     cational systems on a finite set: a survey, Disc. Appl. Math. 127(2003), 241–269.
+ [5] K. Bertet and B. Monjardet, The multiple facets of the canonical direct unit implicational
+     basis, Theoretical Computer Science 411(2010), 2155–2166.
+ [6] Y. Crama and P.L. Hammer, Boolean functions: Theory, Algorithms and Applications, Cam-
+     bridge University Press, 2011.
+ [7] A. Day, The lattice theory of functional dependencies and normal decompositions, Int.J.Alg.
+     Comp. 2(1992), 409–431.
+ [8] W. Dowling and J.H. Gallier, Linear-time algorithms for testing the satisfiability of proposi-
+     tional Horn formulae, J. Logic Programming 3 (1984), 267–284.
+ [9] R. Freese, J. Ježek and J.B. Nation, Free Lattices, Mathematical Surveys and Monographs
+     42, Amer. Math. Soc., Providence, 1995.
+[10] A. Goralčı́ková and V. Koubek, A reduct and closure algorithm for graphs, Mathematical
+     Foundations of Computer Science, LNCS, volume 74, Springer, 1979, 301–307.
+[11] J.L. Guigues and V. Duquenne, Familles minimales d’implications informatives résultant
+     d’une tables de données binares, Math. Sci. Hum. 95 (1986), 5–18.
+[12] H. Kleine Büning and T. Lettmann, Propositional Logic: Deduction and Algorithms, Cam-
+     bridge University Press, Cambridge, 1999, x+409 pp.
+[13] B. Jónsson and J.E. Kiefer, Finite sublattices of a free lattice, Canad. J. Math 14 (1962),
+     487–497.
+[14] H. Mannila and K.J. Räihä, The design of relational databases, Addison-Wesley, 1992.
+[15] B. Monjardet, Arrowian characterizations of latticial federation consensus functions, Math-
+     ematical Social Sciences 20 (1990), 51–71.
+[16] J.B. Nation, An approach to lattice varieties of finite height, Algebra Universalis 27 (1990),
+     no. 4, 521–543.
+[17] M. Wild, A theory of finite closure spaces based on implications, Adv. Math. 108(1994),
+     118–139.
+[18] M. Wild, Computations with finite closure systems and implications, In Proc. of the 1st An-
+     nual International Conference on Computing and Combinatorics, vol. 959 of LNCS, Springer,
+     1995, 111–120.
+
+  Department of Mathematical Sciences, Yeshiva University, New York, NY 10016,
+USA
+  E-mail address: adariche@yu.edu
+
+     Department of Mathematics, University of Hawai’i, Honolulu, HI 96822, USA
+     E-mail address: jb@math.hawaii.edu
+
+     Yeshiva University, New York, NY 10033, USA
+     E-mail address: rrand@yu.edu
+

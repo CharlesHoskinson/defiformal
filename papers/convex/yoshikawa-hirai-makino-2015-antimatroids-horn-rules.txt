@@ -1,0 +1,1332 @@
+                                                   A representation of antimatroids by Horn rules and its
+                                                             application to educational systems
+                                                              Hiyori Yoshikawa∗ Hiroshi Hirai† Kazuhisa Makino‡
+
+                                                                                    October 18, 2018
+
+
+
+                                                                                         Abstract
+
+
+
+
+arXiv:1508.05465v4 [math.CO] 9 Sep 2018
+                                                      We study a representation of an antimatroid by Horn rules, motivated by its recent
+                                                  application to computer-aided educational systems. We associate any set R of Horn rules
+                                                  with the unique maximal antimatroid A(R) that is contained in the union-closed family
+                                                  K(R) naturally determined by R. We address algorithmic and Boolean function theoretic
+                                                  aspects on the association R 7→ A(R), where R is viewed as the input. We present
+                                                  linear time algorithms to solve the membership problem and the inference problem for
+                                                  A(R). We also provide efficient algorithms for generating all members and all implicates
+                                                  of A(R). We show that this representation is essentially equivalent to the Korte-Lovász
+                                                  representation of antimatroids by rooted sets. Based on the equivalence, we provide a
+                                                  quadratic time algorithm to construct the uniquely-determined minimal representation.
+                                                  These results have potential applications to computer-aided educational systems, where
+                                                  an antimatroid is used as a model of the space of possible knowledge states of learners,
+                                                  and is constructed by giving Horn queries to a human expert.
+
+                                                  Keywords: Antimatroids; Horn rules; Implicational systems; Learning spaces;
+                                                  Knowledge spaces; Educational systems
+
+
+                                          1       Introduction
+                                          An antimatroid is a family K of subsets of a finite set Q satisfying the following conditions:
+                                          (Union-closedness) For members X, Y of K, the union X ∪ Y is also a member of K.
+
+                                          (Accessibility) For every nonempty member X of K, there exists an element x in X such
+                                              that X \ {x} is a member of K.
+                                          (We do not impose the usual condition Q ∈ K.) An antimatroid (or its dual, convex geometry)
+                                          is an axiomatic abstraction of a finite point set in Euclidean space, and ubiquitously arises
+                                          from various areas of discrete mathematics and theoretical computer science. Examples appear
+                                          from graph search, tree shelling, posets, and so on [13, 19]. One of the major applications
+                                          of antimatroids is the analysis of greedily solvable structures in combinatorial optimization;
+                                          see [30].
+                                              A remarkable application of antimatroids has been emerging from the design of computer-
+                                          aided education systems [15, 21, 22]. In Knowledge Space Theory (KST), an antimatroid is
+                                              ∗
+                                               Department of Mathematical Informatics, Graduate School of Information Science and Technology, Uni-
+                                          versity of Tokyo, Tokyo, 113-8656, Japan. hyr480.yskw1103@gmail.com
+                                             †
+                                               Department of Mathematical Informatics, Graduate School of Information Science and Technology, Uni-
+                                          versity of Tokyo, Tokyo, 113-8656, Japan. hirai@mist.i.u-tokyo.ac.jp
+                                             ‡
+                                               Research Institute for Mathematical Science, Kyoto University, Kyoto 606–8502, Japan
+                                          makino@kurims.kyoto-u.ac.jp
+
+
+                                                                                             1
+called a learning space, whereas a union-closed family is called a knowledge space. They are
+used as mathematical models of the space of all possible knowledge states of learners, where
+the ground set Q is a set of questions and the knowledge state of a learner is associated with
+the subset of questions that he/she answers correctly. KST-based educational systems have
+already been in practical use, e.g., ALEKS1 . In this application, the size of antimatroids can be
+quite large. Thus efficient representation, construction, and implementation of antimatroids
+are of great importance.
+     In the literature of KST, Dowling-Müller [16, 32] and Koppen and Doignon [28] inde-
+pendently introduced a rule-based representation of union-closed families by certain binary
+relations, called entailments. They established a Galois connection between union-closed fam-
+ilies and entailments. In fact, their result may be viewed as a sharpening of the representation
+of families of Horn rules (or Horn formulas), a well-known concept in artificial intelligence and
+Boolean function theory; see [11, Chapter 6]. By a Horn rule (or rule) we mean a pair (A, q)
+of a set A ⊆ Q and an element q in Q. We say that a rule (A, q) accepts a subset X if q ∈ X
+implies X ∩ A 6= ∅. For a set R of rules, let K(R) denote the set of subsets accepted by all
+rules in R. A classical result [24, 31] in formal logic says that a family K of subsets (including
+∅) is union-closed if and only if it is represented by a set R of Horn rules as K = K(R); see [11,
+Theorem 6.6]. Theory of implicational systems [9, 10, 34, 36] provides a unified and systematic
+approach to this classical result, generalizations, and ramifications, obtained in different fields
+of mathematical sciences (e.g., formal logic, lattice theory, formal concept analysis, relational
+database, and KST). In this theory, a Horn rule is called a unit implication, and a set R of
+Horn rules with K = K(R) is called a unit implicational basis of K.
+     By definition, an antimatroid is a union-closed family. Thus an antimatroid A can be
+realized in computers by maintaining some implicational base R of A = K(R). Various
+operations on K(R) can be efficiently conducted by accessing R. In practice, a large family
+can often be represented by a small set of rules. Also in the literature of implicational systems,
+several “useful” or “compact” implicational bases of antimatroids (or convex geometries)
+and related closure systems have been investigated; see [1, 3, 4, 25, 34]. However this way
+of representing an antimatroid by K(R) has one obvious drawback: Not every set of rules
+corresponds to an antimatroid. Therefore we need a special care to keep K(R) an antimatroid
+when R is frequently varied by addition/deletion. Such a situation naturally occurs in the
+design of KST-based educational systems, and this drawback has been one of main difficulties
+for practical use of antimatroids.
+     In this paper, we overcome this drawback by another way of associating any set of rules
+with an antimatroid. Our starting point is the following:
+        There exists a unique maximal antimatroid contained in any union-closed family.
+This fundamental fact was recently noticed by Doignon [14, p. 14] in KST, and is a direct
+corollary of a classical result [18, Theorem 2.2] of Edelman that for two antimatroids A, A0 in
+the same ground set, the family {X ∪ X 0 | X ∈ A, X 0 ∈ A0 } is again an antimatroid. We will
+use the following explicit characterization of this maximal antimatroid. For finite sets X and
+Y with Y ⊆ X, a tight path from Y to X is a sequence Y = Y0 , Y1 , . . . , Yk = X of subsets of
+Q satisfying Yi ⊆ Yi+1 and |Yi+1 \ Yi | = 1 for i = 0, . . . , k − 1. For a union-closed family K on
+Q, let Ǩ denote the family of subsets K in K such that there is a tight path from ∅ to K in
+K. Then it holds:
+Theorem 1.1. For a union-closed family K, the family Ǩ is the unique maximal antimatroid
+contained in K.
+   For a set R of rules, we define A(R) as the maximal antimatroid Ǩ(R) in the union-closed
+family K(R).
+  1
+      http://www.aleks.com/.
+
+
+                                                 2
+   The main subjects of this paper are fundamental algorithmic aspects on the association
+R 7→ A(R), and their implications to the educational system design. To begin with, let us
+                               P We are given a set R of rules as an input, where the size of
+formalize our algorithmic setting.
+R is its coding length l(R) := (A,q)∈R (|A| + 1). We address algorithms and computational
+complexity for basic problems of handling A(R) by R. Notice that this is different from a
+standard setting in implicational systems: an implication basis of a family in question is given.
+Indeed, R is not necessarily an implicational basis of A(R).
+   We first consider the membership problem for A(R):
+
+Membership problem
+      Input: A set R of rules and a set X.
+      Task: Determine whether X belongs to A(R).
+
+Whereas the membership problem for K(R) is easily solved (in linear time), the computational
+complexity of the membership problem for A(R) is not trivial, and is in NP since a tight
+path from ∅ to X in K(R) is a polynomial certificate. If the membership problem can be
+solved efficiently, then one might say that an antimatroid A can be realized in computers by
+maintaining R with A = A(R). We show that the membership problem for A(R) can also
+be solved in linear time.
+
+Theorem 1.2. The membership problem for A(R) can be solved in linear time.
+
+   Based on this linear time membership algorithm, we will provide an efficient algorithm to
+enumerate all members of A(R).
+   We next consider the inference problem, which is motivated by the query learning for
+educational systems; see below. A rule (A, q) is called an implicate of a family K if (A, q)
+accepts all the members of K.
+
+Inference problem
+      Input: A set R of rules and a rule (A, q).
+      Task: Determine whether (A, q) is an implicate of A(R).
+
+We show that this problem can also be solved efficiently.
+
+Theorem 1.3. The inference problem for A(R) can be solved in linear time.
+
+    It turns out that this construction R 7→ A(R) of an antimatroid is essentially equivalent to
+the construction of an antimatroid from rooted sets or circuits by Korte and Lovász [29]; see
+[30, Section III. 3]. We will establish this equivalence. Korte and Lovász showed the existence
+of the unique minimal representation of antimatroids by special circuits, called critical circuits.
+Translating their result, for an antimatroid A, there is a uniquel minimal set R∗ of rules such
+that A(R∗ ) = A, where R∗ is minimal in its cardinality as well as its size. A rule in R∗ is said
+to be critical for A. We will provide a quadratic time algorithm to construct this minimal set
+R∗ from a given R.
+
+Theorem 1.4. For a given set R of rules, the set of critical rules for A(R) can be obtained
+in quadratic time.
+
+   As an application, we can determine, in quadratic time, whether two sets of rules define
+the same antimatroid.
+   The representation R 7→ A(R) fits naturally into the query learning of antimatroids arising
+from the design of KST-based educational systems, which is our practical motivation of this
+paper. Koppen [26] and others [28, 32] considered a procedure QUERY to build a space of
+
+                                                3
+knowledge states by asking a series of queries (A1 , q1 ), (A2 , q2 ), . . . , to a human expert. Here
+a query (A, q) is the question: does a learner fail to solve question q provided he/she fails to
+solve every question in A? Then, for the set R of ‘yes’ queries, the space of knowledge states
+is estimated as K(R). The QUERY procedure is designed for the case where the space is
+modeled as a union-closed family (a knowledge space). Therefore, the resulting K(R) is not
+necessarily an antimatroid. In practical situations, however, educational systems need to use
+an antimatroid (a learning space) as a model. This leads to the following question given by
+Doignon and Falmagne in [22, p. 335]:
+
+      This raises the following problem: assuming that, except for errors, the responses
+      to the queries are dictated by a latent learning space L, can a learning space approx-
+      imating L be derived by the querying method through some elaboration of QUERY ?
+
+They developed a relatively complicated adaptation of QUERY, called adapted QUERY, that
+always keeps the estimated space an antimatroid by careful managing of ‘yes’ queries and the
+surmise function; see [22, Chapter 16] for detail.
+    Our results suggest a simple revision of QUERY to use A(R) instead of K(R). Actually
+this approach was also suggested by Doignon under the name of adjusted QUERY, though an
+effective way of handling A(R) was “still under investigation” [14, p.14]. Now the adjusted
+QUERY is efficiently implementable. We believe that this is a desired elaboration of QUERY,
+which affirmatively answers the above question. Indeed, by Theorem 1.1, the resulting space
+A(R) is always an antimatroid that includes the target antimatroid L, and might be a reason-
+able approximation of L. As seen in Theorem 1.2, the association R 7→ A(R) is manageable
+in computer. Moreover we can avoid giving redundant queries to the expert by making use of
+the algorithm in Theorem 1.3.
+
+Related work. Eppstein, Falmagne, and Uzun [20] consider a different approach to the
+above question of Doignon and Falmagne according to base families of antimatroids; see
+also [22, Section 16.3]. Here the base of a (union-closed) family K consists of members of
+K that are not able to be represented as a union of other members. Clearly the base B
+of K can recover the original K completely. Eppstein, Falmagne, and Uzun study several
+algorithmic questions on the base of an antimatroid (a well-graded family, more generally).
+They developed a polynomial time algorithm to determine whether given a family B is the
+base of an antimatroid. Moreover they also provided a polynomial time algorithm to construct
+(the base of) a minimal antimatroid containing given a (union-closed) family. These results
+lead to another elaboration of the QUERY algorithm, which first estimates a union-closed
+family K by the original QUERY algorithm, and, from the base of K, constructs and outputs
+a minimal antimatroid A containing K. Our approach may be viewed as a counter part of
+theirs, since it constructs a maximal antimatroid contained in a union-closed family.
+    Wild [35] applies a compression technique to the antimatroid construction in KST. This
+technique encodes a union-closed family L into a {0, 1, 2, n}-valued matrix for which each row
+vector is a compressed expression of a subfamily of L and L is the disjoint union of these
+subfamilies. This matrix is constructed from an implicational basis of L. He discusses how to
+work the adapted QUERY with this encoding. It would be an interesting research direction
+to incorporate this compression technique into our revision (or adjusted QUERY).
+
+Organization. The rest of the paper is organized as follows. In Section 2, we give prelimi-
+nary arguments including a proof of Theorem 1.1. We also summarize some basic relationship
+among Horn rules, entailments, closure operators, and convex geometries, with the help of
+results in implicational systems, and then explain the Korte-Lovász representation. In Sec-
+tion 3, we give algorithmic results. We present algorithms for Theorems 1.2, 1.3, and 1.4.
+
+
+                                                  4
+Also we give an efficient algorithm to generate all members of A(R) and a resolution-type
+algorithm to generate all implicates of A(R). In Section 4, we discuss the above revised
+QUERY algorithm in more detail. Preliminary experimental results show that the revised
+QUERY algorithm reduces 30% of queries that are needed by the original QUERY when the
+target space is an antimatroid. In Section 5, we mention open problems and future research
+issues.
+
+
+2      Preliminaries
+Throughout the paper, Q denotes a finite set. By a family we mean a family of subsets of Q.
+The union A ∪ {a} of a set A and an element a is denoted by A + a. The difference A \ {a}
+is denoted by A − a. We assume that any union-closed family K considered in this paper
+contains the empty set, i.e.,
+                                          ∅ ∈ K,
+whereas any intersection-closed family contains the whole set Q. For a union-closed family K
+and a set X ⊆ Q, there uniquely exists a maximal subset Y ∈ K contained in X. This Y is
+denoted by X ◦ .
+   An antimatroid is usually defined as a family K on Q satisfying (Union-closedness),
+(Accessibility), and
+                                           Q∈K
+We here call such an antimatroid proper. For an improper antimatroid A, every subset is
+contained in Q◦ (∈ A). Hence A is regarded as a family on Q◦ , and is a proper antimatroid
+on Q◦ . Thus known results and properties for (proper) antimatroids are easily adjusted for
+improper ones. We remark that a union-closed family may or may not contain a proper
+antimatroid. Notice that a union-closed family K contains a proper antimatroid if and only
+if there is a tight path from ∅ to Q in K.
+    As explained in several papers of implicational systems, a set R of Horn rules is naturally
+identified with a (pure) Horn Boolean CNF ϕ, and K(R) is identified with the set of true points
+of ϕ; see [9, Section 5] and [36, Section 3.4]. Various Boolean function theoretic concepts and
+algorithms are easily adapted to our setting. In Appendix, we briefly summarize this relation
+to Horn Boolean CNFs.
+
+2.1     The unique maximal antimatroid in a union-closed family
+Here we prove Theorem 1.1. Let K be a union-closed family. We first show that Ǩ is an
+antimatroid. Since the accessibility immediately follows from the definition of Ǩ, it suffices
+to show that Ǩ is union-closed. Let X and Y be members of Ǩ. By definition, there are tight
+paths ∅ = X0 , X1 , . . . , Xk = X and ∅ = Y0 , Y1 , . . . , Ym = Y in K. Then the distinct members
+of {X ∪ Yi | i = 0, . . . , m} form a tight path from X to X ∪ Y . By the union-closedness of
+K, all of them are members of K. Combining it with the tight path from ∅ to X, we obtain a
+tight path from ∅ to X ∪ Y in K. Hence we have X ∪ Y ∈ Ǩ.
+    Finally we show the maximality of Ǩ. Let L be an antimatroid contained by K. By the
+accessibility, for every member X of L, there is a tight path from ∅ to X in K. Hence L ⊆ Ǩ,
+and Theorem 1.1 is proved.
+Example 2.1. Let Q = {0, 1, 2, 3, 4, 5, 6}. Let R be the set of rules consisting of
+      ({0, 1, 2, 3}, 6), ({0, 1, 3, 5, 6}, 2), ({0, 3, 4, 5, 6}, 2), ({0, 3, 5, 6}, 1), ({0, 5, 6}, 4), ({6}, 0),
+      ({1, 2, 3}, 0), ({1, 4, 5}, 2), ({1, 5}, 4), ({2, 3, 4}, 1), ({2, 3, 6}, 4), ({2, 5, 6}, 4), and ({2, 6}, 3).
+As in Figure 1, there are 26 members in A(R) and 53 members in K(R), where members in
+A(R) are colored gray.
+
+                                                          5
+                                                                                                                                             0,1,2,3,4,5,6
+
+
+
+
+                                                   0,1,2,3,4,6                        0,1,2,4,5,6                             1,2,3,4,5,6                            0,1,2,3,5,6                             0,2,3,4,5,6                   0,1,3,4,5,6
+
+
+
+
+0,1,2,4,6             0,1,4,5,6       0,1,2,3,6    0,1,2,5,6        1,2,4,5,6             1,2,3,4,5           0,2,4,5,6         1,2,3,5,6          2,3,4,5,6            0,2,3,5,6             1,3,4,5,6           1,2,3,4,6    0,1,3,4,6         0,3,4,5,6             0,1,3,5,6
+
+
+
+
+            0,1,2,6         1,2,4,6      0,1,4,6   1,4,5,6       1,2,4,5        0,2,5,6           1,2,3,5         1,2,5,6        2,3,4,5        2,3,5,6        2,4,5,6              1,2,3,6        0,3,5,6          1,3,4,6   3,4,5,6      1,3,5,6           0,1,3,6
+
+
+
+
+                                                                      1,2,3          1,2,6            1,4,6           1,2,5          2,3,5         2,4,5         2,5,6               3,5,6          0,3,6          1,3,6
+
+
+                                                                                                                                                               2,5                     3,6
+                                                                                                                                                                           5
+
+                                                                                                                                                                          ∅
+
+
+
+
+                                                                                     Figure 1: K(R) and A(R).
+
+2.2              Closure operator and entailment
+Here we first summarize the basic relationship between Horn rules, entailments, and closure
+operators. This is essentially one given by Dowling [16, Section 2]; see [9, 36] from the view of
+implicational systems. We then discuss entailments for antimatroids (or convex geometries).
+    We allow rule (A, q) to be q ∈ A; such a rule accepts every subset, and is called trivial.
+Thus a set of rules is a subset of 2Q × Q, and is a binary relation between 2Q and Q (called
+an implication relation by Dowling [16]). An entailment (entail relation) on Q is a binary
+relation R ⊆ 2Q × Q satisfying
+(E1) for all A ⊆ Q and q ∈ A, it holds ARq.
+(E2) for all nonempty A, B ⊆ Q and q ∈ Q, if ARb holds for all b ∈ B and BRq holds, then
+     ARq holds.
+Here we say “ARq holds” if (A, q) ∈ R. In the terminology of implicational systems, an
+entailment is a full unit implicational system (full UIS) [9].
+    The following is a fundamental relationship between union-closed families and entailments;
+recall that an implicate of a family K is a rule (A, q) accepted by all members of K, i.e.,
+A ∩ X 6= ∅ or q 6∈ X for all X ∈ K.
+Theorem 2.2 (Galois connection [28, 32]; see [22, Chapter 7]). (1) For K ⊆ 2Q , the set R
+    of all implicates of K is an entailment, and K(R) is the unique minimal union-closed
+    family containing K. In particular, if K is union-closed, then K = K(R).
+  (2) For R ⊆ 2Q × Q, the set of all implicates of K(R) is the unique minimal entailment
+      containing R. In particular, if R is an entailment, then R is equal to the set of all
+      implicates of K(R).
+       For a family K, let K∗ denote the dual of K defined by
+                                                                                              K∗ := {Q \ X | X ∈ K}.
+The dual of a union-closed family is an intersection-closed family (or a closure system). For
+an intersection-closed family J on Q, we can define a map τ : 2Q → 2Q , called the closure
+operator, by                      \
+                          τ (X) := {Y ∈ J | X ⊆ Y } (X ⊆ Q).
+
+                                                                                                                                 6
+For a union-closed family K and the closure operator τ of dual K∗ , it obviously holds that
+
+                               Q \ τ (X) = (Q \ X)◦     (X ⊆ Q).                             (2.1)
+
+We will often use the following relation between implicates of K and closure operator τ of K∗ ,
+which was given by Dowling-Müller [16, 32] in the literature of KST.
+
+Lemma 2.3 ([32, Proposition 4.4 (i)]; see [16, Proposition 2.8]). Let K be a union-closed
+family and let τ be the closure operator of the dual K∗ . For a rule (A, q), the following
+conditions are equivalent:
+
+  (i) (A, q) is an implicate of K.
+
+ (ii) q ∈ τ (A).
+
+(iii) q 6∈ (Q \ A)◦ .
+
+Proof. The equivalence
+                 T        between (ii) and (iii) follows from (2.1). Condition (ii) is equivalent
+to: q belongs to {Q \ X | X ∈ K : X ∩ A = ∅}. This is further equivalent to: every X ∈ K
+disjoint with A satisfies q 6∈ X. This is nothing but condition (i).
+
+   We next give a characterization of the entailment of an antimatroid. As Koppen did in [27,
+p.142, (27)], such a characterization of R is directly obtained from (Accessibility) as:
+
+ For every subset X ⊆ Q with X ∩ A 6= ∅ or q 6∈ X for all (A, q) ∈ R, there exists an element
+      x in X such that (X − x) ∩ A 6= ∅ or q 6∈ X − x for all (A, q) ∈ R.
+
+This is a rather cumbersome condition. We here provide another useful characterization,
+which is directly obtained from the anti-exchange property of convex geometries dual to
+antimatroids.
+   A convex geometry [19] is an intersection-closed family with its closure operator τ satisfying
+the following anti-exchange property (AE):
+
+(AE) for X ⊆ Q and distinct y, z ∈ Q, if y, z ∈
+                                              / τ (X) and z ∈ τ (X + y) then y ∈
+                                                                               / τ (X + z).
+
+It is well known that a family is a convex geometry if and only if its dual is an antimatroid [30,
+Theorem 1.3]. Therefore, by using Lemma 2.3 and Theorem 2.2, the condition (AE) is trans-
+lated into a condition for an entailment R to have an antimatroid K(R)(= A(R)). We will
+use the following slightly different characterization.
+
+Proposition 2.4. For an entailment R on Q, the family K(R) is an antimatroid if and only
+if R satisfies:
+
+(AE0 ) for X ⊆ Q and distinct y, z ∈ Q, if (X + y)Rz and (X + z)Ry hold, then XRy and
+     XRz hold.
+
+Proof. Observe that (AE0 ) implies (AE). We show the converse. Suppose that entailment R
+satisfies (AE). To show (AE0 ), suppose that (X + y)Rz and (X + z)Ry hold. By (AE), XRy
+or XRz holds. By symmetry, we can assume that XRy holds. Then, by (E1), XRx holds
+for all x ∈ X + y. By (E2) and (X + y)Rz, we have XRz, and obtain (AE0 ).
+
+    Based on this characterization, in Section 3 we develop an algorithm to generate all im-
+plicates of A(R).
+
+
+
+
+                                                7
+2.3       Korte-Lovász representation
+We here explain the relationship between the above construction of an antimatroid from Horn
+rules and the construction of an antimatroid from rooted sets by Korte and Lovász [29]; see
+also [30, Section III. 3]. A rooted set (C, r) is a pair of a subset C ⊆ Q and an element r
+in C, where r is called the root of (C, r). For a given family C of rooted sets, Korte and
+Lovász defined a family L(C) ⊆ 2Q as follows: A subset X is a member of L(C) if and
+only if there is an ordering x1 , x2 , . . . , xk of the elements in X such that (C, xi ) ∈ C implies
+C ∩ {x1 , x2 , . . . , xi−1 } 6= ∅ for each i. In [25], a family (or a language) determined in this way
+is called a transversal precedence structure.
+    Korte and Lovász showed that L(C) is always an antimatroid [30, Lemma 3.2]. In fact,
+L(C) is equal to A(R), provided a nontrivial rule (A, q) is associated with a rooted set (A+q, q).
+The map (A, q) 7→ (A + q, q) is a bijection between the set of all nontrivial rules and the set
+of all rooted sets.
+
+Theorem 2.5. For a set R of nontrivial rules, let C be the set of rooted sets defined by
+C := {(A + q, q) | (A, q) ∈ R}. Then it holds A(R) = L(C).
+
+Proof. Pick X from L(C). By definition, there is an ordering x1 , x2 , . . . , xk of X such that
+(A, xi ) ∈ R implies A ∩ {x1 , x2 , . . . , xi−1 } 6= ∅. This means that {x1 , x2 , . . . , xi } ∈ K(R)
+for i = 1, 2, . . . , k. Thus {x1 , x2 , . . . , xi } (i = 1, 2, . . . , k) form a tight path from ∅ to X
+in K(R), and X ∈ A(R). Conversely, pick X from A(R). Then there is a tight path
+∅, {x1 }, {x1 , x2 }, . . . , {x1 , x2 . . . , xk } = X in K(R). The ordering x1 , x2 , . . . , xk of X fulfills
+the definition of L(C), hence X ∈ L(C). Thus we conclude that A(R) = L(C).
+
+    Korte and Lovász introduced a natural class of rooted sets determined by and determining
+an antimatroid. Let A be an antimatroid, A∗ the convex geometry dual to A, and τ the closure
+operator of A∗ . A subset X is said to be free if {X ∩ K | K ∈ A} is equal to 2X . A circuit
+is a subset C such that C is not free and every proper subset of C is free2 . It is known in
+[30, Lemma 3.2] that there is an unique element r, called the root, in a circuit C such that
+τ (C) − r 6∈ A∗ and τ (C) − s ∈ A∗ for s ∈ C − r. Now a circuit C is regarded as a rooted set
+(C, r) for the root r of C. A critical circuit is a rooted set (C, r) such that τ (C) − r 6∈ A∗ and
+τ (C) − r − s ∈ A∗ for s ∈ C − r. It is known in [30, p.31] that a critical circuit is indeed a
+circuit. Circuits can determine the original antimatroid, and such circuits always contain all
+critical circuits, as follows.
+
+Theorem 2.6 ([29]; see [30, Theorem 3.11]). Let A be an antimatroid, and let S be the set
+of critical circuits of A. Then the following hold:
+
+ (1) A = L(S).
+
+ (2) For any family C of circuits of A, if A = L(C), then S ⊆ C.
+
+    We develop in Section 3.3 an algorithm to construct the set S of all critical circuits
+of A = A(R) from R. For this purpose, we use the following Boolean function theoretic
+characterization of circuits. A nontrivial implicate (A, q) of A is said to be prime if for every
+a ∈ A, the rule (A − a, q) is not an implicate of A. This definition is consistent with prime
+implicates of the corresponding Horn CNF [11, Definition 1.21]. The set of prime implicates
+is shown to be equal to the canonical direct unit implicational basis in [9]. In the case of
+an antimatroid (convex geometry), Wild [34] showed that this basis is exactly the set of all
+circuits.
+   2
+       Any free subset is a subset of Q◦ , and circuits are for the proper antimatroid on Q◦ .
+
+
+
+
+                                                          8
+Proposition 2.7 (implied by [9, Theorem 15, Corollary 22] and [34, Corollary 13]). Let A
+be an antimatroid.
+
+ (1) For a circuit (C, r) of A, the rule (C − r, r) is a prime implicate of A.
+
+ (2) For a prime implicate (A, q) of A, the rooted set (A + q, q) is a circuit of A.
+
+   For completeness, we give a direct proof in Appendix. It should be noted that the circuit
+concept is extended to general closure spaces/union-closed families [25], and an analogous
+characterization holds [36, Section 3.3].
+   In particular, for any union-closed family K, the set R of all prime implicates determines
+K as K = K(R). Thus we have the following.
+
+Corollary 2.8 ([29]; see [12, Lemma 2]). Let A be an antimatroid, C the set of all circuits in
+A, and R := {(C − r, r) | (C, r) ∈ C} the corresponding set of rules. Then it holds
+
+                                         A = A(R) = K(R).
+
+    As remarked in [34, p. 137] and [25, Example 21], the set R∗ of critical rules (circuits)
+of an antimatroid A is not necessarily an implicational basis of A, i.e., A ⊆ K(R∗ ) possibly
+strict.
+
+
+3     Algorithms
+3.1     Membership and inference problems
+We give linear time algorithms for the membership and inference problems defined in the
+introduction.
+         P      From now on, let n denote the cardinality of the ground set Q. The size
+l(R) := (A,q)∈R (|A| + 1) of input R is simply denoted by l. We tacitly assume that l ≥ n.
+We first provide a linear time algorithm to compute the maximum member X ◦ ⊆ X in A(R)
+from given X ⊆ Q and R. Linear time algorithms for the membership and inference problems
+are immediate consequences (via Lemma 2.3).
+     The idea of our algorithm is to trace a tight path on K(R) from the empty set. We show
+that a tight path to X, if it exists, is obtained by greedily adding elements from the empty
+set.
+
+Proposition 3.1. Let K be a union-closed family on Q. For any subset X of Q, the following
+statements are equivalent:
+
+    (i) There exists a tight path from ∅ to X in K.
+
+ (ii) For any member S in K, if S is a proper subset of X, there exists an element x ∈ X \ S
+      such that S + x ∈ K.
+
+Proof. It is obvious that (ii) implies (i). Indeed, according to (ii), we can construct a tight
+path from ∅ to X by adding elements of X.
+    We next show that (i) implies (ii).                         Suppose that K contains a tight path
+∅, {q1 }, {q1 , q2 }, . . . , {q1 , q2 , . . . , qm } = X. Let S be a member of K. Suppose that S is a
+proper subset of X. Take the minimum index i with qi ∈                 / S. By the union-closedness of K,
+we have S + qi = S ∪ {q1 , q2 , . . . , qi } ∈ K. Thus qi is a required element.
+
+    According to Proposition 3.1, we easily obtain the following algorithm to compute X ◦ .
+Starting with S = ∅, if there exists an element x ∈ X \ S such that S + x is again a member
+of K(R), then add x to S, and repeat. If such an element x does not exist, then the current S
+
+
+                                                   9
+is actually equal to X ◦ . In each iteration, we can check whether S + x is a member of K(R)
+in O(l). Therefore the time complexity of this algorithm is O(n2 l).
+    We are going to improve this naive algorithm by searching the feasible continuations x
+of the current S efficiently. We first point out that it requires only a part of the input R to
+check whether S + x belongs to K(R). Indeed, we do not have to care about the elements not
+in X. Hence, instead of (A, q), we may keep the rule (A ∩ X, q). If q is not in X, then (A, q)
+can be ignored. Also, if (A, q) satisfies A ∩ S 6= ∅, then (A, q) accepts S + x for any x, and
+can be ignored. Summarizing, instead of R, it suffices to keep, in each step, the following set
+of rules:
+                    RXS := {(A ∩ X, q) | (A, q) ∈ R : A ∩ S = ∅, q ∈ X \ A}.
+
+The next lemma explains how to obtain x with S + x ∈ K(A) from RX
+                                                                S.
+
+Lemma 3.2. Let X be an arbitrary subset of Q, and S a member of K(R) properly contained
+by X. For x ∈ X \ S, the subset S + x belongs to K(R) if and only if RX
+                                                                      S has no rule of the
+form (A, x).
+
+Proof. The if part is obvious from the above discussion. To show the only if part, let (A, x) ∈
+RX
+ S . Since A ∩ S = ∅ (and x ∈/ A), A has no intersection with S + x. Hence S + x ∈/ K(R).
+
+   Now we are ready to describe our algorithm.
+
+Algorithm 3.3 (to compute X ◦ ).
+Input: A set R of Horn rules and a subset X of Q.
+Output: X ◦ .
+ 1: S ← ∅
+ 2: C := {x ∈ X \ S | RX
+                       S has no rules of the form (A, x)}
+ 3: if C = ∅ then
+ 4:    return S
+ 5: end if
+ 6: Choose q ∈ C, S ← S + q (or S ← S ∪ C directly), update RX
+                                                             S , and go to line 1
+
+    We give a linear time implementation of this algorithm by using an appropriate data
+structure to maintain RX       S . Suppose that R = {R1 , R2 , . . . , Rm } and Ri = (Ai , qi ) for i =
+1, 2, . . . , m. In each iteration, we retain RX  S by three kinds of lists Hx , Tx , and E. For each
+x ∈ X \ S, let Hx be the set of indexes i such that Ai ∩ S = ∅ and x ∈ Ai , and Tx be the set
+of indexes j such that x = qj and Aj ∩ S = ∅. Let E be the set of elements q ∈ X \ S such
+that Tq is empty. Here Tx is kept by a doubly-linked list, and Hx and E are kept by a stack
+or queue.
+    The initialization is done by the following. Look (Ai , qi ) for i = 1, 2, . . . , m. Append index
+i to Tqi . We also keep a pointer from i to “i” in the list Tqi . For each element x ∈ Ai , push
+index i to Hx . After that, E is obtained by pushing elements q with Tq = ∅. The total time
+is O(l); recall n ≤ l. In each iteration, it holds C = E. Pop q from C, and add q to S. The
+update RX      S is as follows. Pop all indices i from Hq , and remove i from the list Tqi by tracing
+the pointer from i (in constant time), since it now holds Ai ∩ S =P{q} 6= ∅. If Tqi gets empty,
+then we push qi to E. The computation time of the update is O( i∈Hq |Ai |). Since each rule
+in R is referred at most once, the total time complexity is O(l).
+
+Theorem 3.4. For a set R of rules and a subset X, the maximum member X ◦ ⊆ X in A(R)
+can be obtained in linear time.
+
+  Dually speaking, the closure operator of the dual of A(R) is computable in linear time.
+Now a linear algorithm for membership problem (Theorem 1.2) is immediate:
+
+
+                                                  10
+Algorithm 3.5 (to solve the membership problem).
+Input: A set R of rules and a subset X.
+Output: YES if X ∈ A(R), and NO otherwise.
+ 1: Obtain X ◦ by Algorithm 3.3.
+ 2: if X = X ◦ then
+ 3:    return YES // X is a member of A(R).
+ 4: end if
+ 5: return NO     // X is not a member of A(R).
+
+    Recalling Lemma 2.3 for a characterization of implicates, we obtain a linear time algorithm
+for the inference problem (Theorem 1.3) as follows.
+
+Algorithm 3.6 (to solve the inference problem).
+Input: A set R of rules and a rule (A, q).
+Output: YES if (A, q) is an implicate of A(R), and NO otherwise.
+ 1: Obtain (Q \ A)◦ by Algorithm 3.3.
+         / (Q \ A)◦ then
+ 2: if q ∈
+ 3:    return YES // (A, q) is an implicate of A(R).
+ 4: end if
+ 5: return NO       // (A, q) is not an implicate of A(R).
+
+3.2   Generating all members of A(R)
+As an application of the membership algorithm, we here provide a simple and efficient al-
+gorithm to enumerate all members in A(R). The efficiency of an enumeration algorithm is
+measured by the time delay (interval) between two consecutive outputs. Our enumeration
+algorithm is of O(nl) time delay, and is designed on the basis of the standard technique of
+the reverse search [8].
+    Let A = A(R) be an antimatroid given by a set R of rules. Let Q = {1, 2, . . . , n}; we
+will use the natural ordering <. Following terminologies in [22], the outer fringe X O and the
+inner fringe X I of a member X ∈ A are defined by
+
+                            X O := {x ∈ Q \ X | X + x ∈ A},                               (3.1)
+                                 I
+                             X       := {x ∈ X | X − x ∈ A}.                              (3.2)
+
+For a nonempty member X in A, let φ(X) be defined as the element q in X I such that q is
+added in the last iteration of Algorithm 3.3 for the input X(= X ◦ ). The map X 7→ φ(X) is
+well-defined if the data structures of inputs R and X are fixed (so that the smallest q with
+respect to < is chosen from C in line 6 of Algorithm 3.3). Let F(X) be the set of elements x
+in X O with x = φ(X + x). Let T be a directed graph on A, where an edge from X to X 0 is
+given if and only if X − φ(X) = X 0 . Every nonempty member X has exactly one edge leaving
+X. Thus we obtain the following.
+
+Lemma 3.7. T is a spanning rooted tree with root ∅.
+
+    Our algorithm is a depth first search on T . Starting at the root X = ∅, if X is labeled
+(or output), then we next label X + x by choosing the smallest x from F(X) with unlabeled
+X + x. If such an x does not exist, then backtrack by computing φ(X). An important point
+is that this can be done only by a local information at X.
+
+Algorithm 3.8 (to enumerate all members in A(R)).
+Input: A set R of rules.
+Output: All members in A(R).
+
+                                              11
+ 1: X ← ∅.
+ 2: Output X.
+ 3: Compute F(X).
+ 4: if F(X) is empty then
+ 5:     go to line 11.
+ 6: end if
+ 7: Choose the minimum element y in F(X), X ← X + y, and go to line 2.
+ 8: if X = ∅ then
+ 9:    stop.
+10: end if
+11: y ← φ(X) and X ← X − y.       // backtracking
+12: if there is no element x in F(X) with x > y then
+13:    go to line 8.
+14: end if
+15: Choose the minimum element x in F(X) with x > y, X ← X + x, and go to line 2.
+
+    We can compute φ(X) in O(l) time (Algorithm 3.5), and can compute F(X) in O(nl) time
+by n computations of φ. We estimate the time delay between consecutive output. Suppose
+that X is output at line 2. Next F(X) is computed in O(nl) time. If the algorithm goes to
+line 7, then it goes to line 2, and hence the delay is O(nl) time. Suppose that the algorithm
+goes to line 11. The backtracking loop (lines 11 to 15) iterates at most n times. We need
+not to compute φ and F in the backtracking. In lines 7 and 15, if y and F(X) are pushed
+into a stack, then φ(X) and F(X) in lines 11 and 12 are popped off the stack. Thus the
+backtracking loop is conducted in O(n2 ) time. Summarizing, we have the following.
+Theorem 3.9. Algorithm 3.8 enumerates all members of A(R) with O(nl) delay.
+
+3.3      Computing critical circuits
+As an application of the inference algorithm, we here present a quadratic time algorithm to
+construct all critical rules (or circuits) of antimatroid A(R) from R. Recall from Section 2.3
+that a critical rule of an antimatroid A is a rule (A, q) such that the rooted set (A + q, q) is
+a critical circuit of A. Our algorithm is justified by the following lemma, which is a slight
+generalization of Theorem 2.6 (2).
+Lemma 3.10. Let R be a set of rules. For a critical rule (A, q) of A(R), there exists a rule
+(A0 , q) in R with A ⊆ A0 .
+Proof. Let (A, q) be a critical rule for A = A(R). Let τ denote the closure operator of the
+dual A∗ of A. Let X := Q \ τ (A + q). By definition, X is a member of A but X + q is not.
+Then X + q is also not a member of K(R). There necessarily exists some rule (A0 , q) ∈ R
+such that A0 ∩ (X + q) = ∅. Take s ∈ A arbitrarily. Since (A, q) is a critical rule, by definition
+we have τ (A + q) − q − s ∈ A∗ and X + q + s ∈ A. Hence A0 ∩ (X + q + s) 6= ∅. It follows
+that s ∈ A0 . Thus we have A ⊆ A0 .
+
+   In particular, the set of critical rules is the unique minimal expression of an antimatroid
+(among all possible Horn representations). The following corollary sharpens Theorem 2.6,
+and coincides with it if R corresponds to a set of circuits of A(R).
+Corollary 3.11. Let R be a set of rules, and let R∗ be the set of critical rules of A(R). Then
+it holds that A(R∗ ) = A(R), |R∗ | ≤ |R|, and l(R∗ ) ≤ l(R).
+      In particular, the following inclusion holds:
+
+                                 A(R∗ ) = A(R) ⊆ K(R) ⊆ K(R∗ ).
+
+                                                 12
+Notice again that the inclusions are strict in general, since that the set R∗ of critical circuits
+(rules) is not necessarily an implicational basis of A(R) or K(R).
+    Now we present a quadratic time algorithm to obtain this unique minimal expression.
+
+Algorithm 3.12 (to compute critical rules).
+Input: A set R of rules.
+Output: All critical rules.
+ 1: for all (A, q) ∈ R do
+ 2:   for all a ∈ A do
+ 3:      if (A − a, q) is an implicate of A(R) then
+ 4:         R ← R − (A, q) + (A − a, q)
+ 5:         A←A−a
+ 6:      end if
+ 7:   end for
+ 8:   if (A, q) is an implicate of A(R − (A, q)) then
+ 9:      R ← R − (A, q)
+10:   end if
+11: end for
+12: return R
+
+    To implement for all in line 1 (resp. line 2) by a usual computer language, we index R
+as R = {(Ai , qi )}m                        k
+                   i=1 (resp. A as A = {aj }j=1 ) and use for-loop from i = 1 to m (resp. j = 1
+to k). We call the inference algorithm (Algorithm 3.6) in lines 3 and 8.
+
+Theorem 3.13. Given a set R of rules, Algorithm 3.12 computes all critical rules of A(R)
+in time O(l2 ).
+
+Proof. The total time of the algorithm is O(l2 ) since the algorithm calls the inference algorithm
+l times. We show that the output is actually the set of critical rules. Notice that A(R)
+does not change in each step. Indeed, if (A − a, q) is an implicate of A(R), then A(R) ⊆
+K(R − (A, q) + (A − a, q)) ⊆ K(R) holds, implying A(R) = A(R − (A, q) + (A − a, q))
+by maximality (Theorem 1.1). Similarly, if (A, q) is an implicate of A(R − (A, q)), then
+A(R) ⊆ A(R−(A, q)) = A(R−(A, q))∩K({(A, q)}) ⊆ K(R), implying A(R) = A(R−(A, q)).
+    In lines 3 to 6, the rule (A, q) becomes prime. Indeed, suppose to the contrary that
+(A − a, q) is an implicate of A(R) for some a ∈ A. Then (A0 − a, q) is not an implicate for
+A ⊆ A0 , where A0 is equal to A at the step of a chosen. However, by A − a ⊆ A0 − a and
+(E2), the rule (A − a, q) cannot be an implicate, a contradiction. Therefore, the output R
+consists of prime implicates. By lines 8 and 9, the set R becomes minimal. By Theorem 2.6,
+this must be equal to the set of critical rules.
+
+   By using Algorithm 3.12, we can efficiently check whether two given sets of rules define
+the same antimatroid. Indeed, make both sets of rules critical, and compare them; they are
+equal if and only if they define the same antimatroid.
+
+Corollary 3.14. Given two sets R and R0 of rules, we can determine whether A(R) = A(R0 )
+in time O(l2 ) with l = max{l(R), l(R0 )}.
+
+3.4   Generating all nontrivial implicates of A(R)
+It is a natural problem to construct a superset R0 of given R that satisfies K(R0 ) = A(R).
+We do not know a polynomial time algorithm to construct such a set R0 ; see Section 5 for
+further discussion. We here provide a simple algorithm to a related problem of generating
+all implicates of A(R) from R. As was seen in Theorem 2.2, the set E of all implicates of
+
+
+                                               13
+A(R) obviously satisfies K(E) = A(R). Our algorithm sharpens Dietrich’s construction [12,
+Proposition 8] of all circuits from critical circuits, and may be comparable with the resolution
+principle (or the consensus procedure) in Boolean function theory, where the resolution is used
+to generate (prime) implicates of a Horn formula (or K(R)); see [11, Chapter 6].
+    Our algorithm is based on the following variation of Proposition 2.4.
+
+Lemma 3.15. For a set R of rules, it holds K(R) = A(R) if and only if for every pair of
+nontrivial implicates (A, q),(A0 , q 0 ) of K(R), both ((A ∪ A0 ) − q − q 0 , q) and ((A ∪ A0 ) − q − q 0 , q 0 )
+are implicates of K(R).
+
+Proof. The condition K(R) = A(R) is equivalent to that K(R) itself is an antimatroid. By
+Proposition 2.4, it suffices to show that the condition of the statement is equivalent to (AE0 ).
+    (Only-if part). Here ((A ∪ A0 ) − q 0 , q) and ((A ∪ A0 ) − q, q 0 ) are also implicates (by (E1),
+(E2)). By (AE0 ) with X = (A ∪ A0 ) − q − q 0 , x = q, and y = q 0 , both ((A ∪ A0 ) − q − q 0 , q) and
+((A ∪ A0 ) − q − q 0 , q 0 ) are implicates.
+    (If part). Notice that (AE0 ) trivially holds if z ∈ X or y ∈ X. Nontrivial cases of (AE0 )
+follow from letting A = X + y, A0 = X + z, y = q 0 , and z = q.
+
+    For two rules (A, q) and (A0 , q 0 ), define a rule R(A, q; A0 , q 0 ) by
+
+                                 R(A, q; A0 , q 0 ) := ((A ∪ A0 ) − q − q 0 , q).
+
+Consider the following simple procedure:
+
+Algorithm 3.16 (to generate all nontrivial implicates of A(R)).
+Input: A set R0 of (nontrivial) rules.
+Output: All nontrivial implicates.
+ 1: R ← R0
+ 2: if there exist nontrivial rules (A, q), (A0 , q 0 ) ∈ R such that R(A, q; A0 , q 0 ) or R(A0 , q 0 ; A, q)
+    does not belong to R then
+ 3:    R ← R + R(A, q; A0 , q 0 ) + R(A0 , q 0 ; A, q),
+ 4:    and go to line 2.
+ 5: end if
+ 6: return R.
+
+    According to the analogy of the resolution, the procedure in line 3 is called an antimatroidal
+resolution. The following is a sharpening of [12, Proposition 8].
+
+Theorem 3.17. Algorithm 3.16 computes all nontrivial implicates of A(R0 ). In particular,
+it holds K(R) = A(R0 ).
+
+Proof. By Lemma 3.15, the output R(⊇ R0 ) consists of implicates of A(R0 ), and it holds
+A(R) = A(R0 ). Let O be the set of all trivial rules (implicates). Obviously K(R) = K(R∪O)
+and A(R) = A(R ∪ O). We claim that R ∪ O is an entailment. Suppose that this is true.
+Then the entailment R ∪ O is the set of all implicates of K(R ∪ O) = K(R) by Theorem 2.2,
+and satisfies the condition of Lemma 3.15 since R is closed under antimatroidal resolutions.
+Hence K(R ∪ O) = A(R ∪ O) = A(R) = A(R0 ), and R is the set of all nontrivial implicates
+of A(R0 ).
+     Thus it suffices to show that R ∪ O satisfies (E2) (since (E1) follows from (E2) and
+trivial implicates). Let (A, b1 ), (A, b2 ), . . . , (A, bk ) and (B, q) be rules in R ∪ O with B =
+{b1 , b2 , . . . , bk }. We show that (A, q) ∈ R ∪ O. We may assume that q ∈         / A ∪ B (otherwise
+(A, q) ∈ R ∪ O). Suppose that (A, b1 ), . . . , (A, bk0 ) ∈ R and (A, bk0 +1 ), . . . , (A, bk ) ∈ O for
+some k 0 ∈ {1, 2, . . . , k}. We show by induction that for i = 1, . . . , k 0 , one can deduce (A ∪
+(B \ {b1 , . . . , bi }), q) by antimatroidal resolutions, i.e., it holds (A ∪ (B \ {b1 , . . . , bi }), q) ∈ R.
+
+                                                       14
+The case i = k 0 is the desired claim (since A ∪ (B \ {b1 , . . . , bi }) = A). First, nontrivial rule
+(A ∪ (B \ {b1 }), q) is deduced from nontrivial (A, b1 ) and (B, q). Next, assume that (A ∪
+(B \ {b1 , . . . , bi }), q) was deduced for some i with 2 ≤ i ≤ k 0 − 1 by antimatroidal resolutions.
+Then (A ∪ (B \ {b1 , . . . , bi+1 }), q) is deduced from (A, bi+1 ) and (A ∪ (B \ {b1 , . . . , bi }), q). Thus
+(A, q) ∈ R ∪ O as required.
+
+
+4     Application to educational systems
+In this section, we mention possible applications of our results to the design of computer-
+aided educational systems. As mentioned in the introduction, an antimatroid is used as a
+mathematical model of the space of knowledge states of learners, and is called a learning
+space in the literature of Knowledge Space Theory (KST). The ground set Q is a set of
+questions in a certain domain, and the knowledge state of a learner is associated with a subset
+X ⊆ Q which he/she answers correctly. The collection of all possible knowledge states forms
+a family L of subsets of Q. A KST-based educational system gives questions to a learner,
+estimates his/her knowledge state X ∈ L according to the answers, and poses questions for
+the subjects that he/she can acquire next. If the state of the learner reaches Q, then it might
+be said that the learner masters all subjects in the domain. The hypothesis that L is an
+antimatroid (a learning space) is reasonable as well as useful in the above learning process.
+Indeed, for the state X of a learner, the outer fringe X O (defined in (3.1) in Section 3.2) is
+always nonempty, provided L is an antimatroid. Therefore the system naturally chooses a
+question q from X O and poses q to the learner.
+    To realize the above learning process, the educational system needs to know, in advance,
+the space L of knowledge states. The space L is constructed with the help of a human expert
+(teacher) of the domain of the questions. It is practically impossible to ask to the expert
+whether X is a state in L for all subsets X ⊆ Q, because this needs a huge number 2|Q|
+of queries. Koppen [26], Koppen and Doignon [28], and Dowling-Müller [16, 32] introduced
+an alternative procedure to construct K by querying rules (A1 , q1 ), (A2 , q2 ), . . . to the expert,
+where the query (A, q) means:
+
+(QA,q ) “Does a learner fail the question q, provided he/she fails every question in A ?”
+
+Then the space of knowledge states is estimated as K(P) for the set P of queries to which
+the expert said “yes”. The point is that it is not necessary to ask all queries, thanks to
+the inference rules (E1) (E2). Let P and N be the sets of the queries to which the expert
+said “yes” and “no”, respectively. If (A, q) is an implicate of K(P), then the query (A, q) is
+automatically determined to be ‘yes’ at this moment. Such a query (A, q) is called a positive
+inference of P. Let P ? denote the set of all positive inferences of P. Similarly, there are
+queries automatically determined to be ‘no’ by the following rules obtained by (E1) and (E2):
+
+(NI-1) If (A, p) is ‘yes’, (A, q) is ‘no’, and (A + p, b) is ‘yes’ for all b ∈ B, then (B, q) is ‘no’.
+
+(NI-2) If (A, p) is ‘yes’, (B, p) is ‘no’, and (B + q, a) is ‘yes’ for all a ∈ A, then (B, q) is ‘no’.
+
+(NI-3) If (A, p) is ‘no’, (B + q, p) is ‘yes’, and (A, b) is ‘yes’ for all b ∈ B, then (B, q) is ‘no’.
+
+A negative inference of P and N is a ‘no’ query (B, q) obtained by repeated applications
+of (NI-1), (NI-2) and (NI-3). Let N ? denote the set of all negative inferences of P and N .
+Dowling [16] suggests a useful characterization of negative inferences:
+
+(NI0 ) (A, q) ∈ N ? if and only if some query in N is an implicate of K(P + (A, q)).
+
+
+
+
+                                                      15
+Thus there are three types of queries in each step: positive inferences, negative inferences, and
+other queries that are called undetermined. Notice again that positive inferences and negative
+inferences are redundant to be asked.
+    The QUERY algorithm updates positive and negative inferences by using the inference
+rules, once the expert returns the answer. The algorithm next chooses and gives an undeter-
+mined query to the expert. Koppen [26] suggested the following selection rule of queries. In
+the first stage, queries are of form ({p}, q). In the second stage, queries are of form ({p, p0 }, q).
+In the i-th stage, queries are of form (A, q) with |A| = i. He also suggested a stopping criterion
+that after the i-th stage there is no undetermined query (A, q) with |A| = i + 1. Positive and
+negative inferences are collected in a table, and are used by the selection of queries asked
+to the expert. There are several selection rules of queries [22, Section 15.2.9]. The resulting
+space K(P) of knowledge states is constructed from the table; see [22, Section 15.2].
+    Dowling [16] developed a sophisticated version of the QUERY algorithm. Instead of keep-
+ing all positive and negative inferences, her algorithm keeps the base of current K(P) and the
+set m(N ? ) of maximal negative inferences. A maximal negative inference is a negative infer-
+ence (A, q) with the property that (A0 , q) is not a negative inference for every A0 ⊃ A. Then a
+query (B, q) is a negative inference if and only if B ⊆ A for some maximal negative inference
+(A, q). Thus the set N ? of negative inferences is manageable by the set m(N ? ) of maximal
+negative inferences. Recall the the base B of K(P) is the set of members that cannot be the
+union of other members of K(P). The inference problem (i.e., checking whether (A, q) ∈ P ? )
+can be easily solved by the base; see [16, Proposition 3.2]. Dowling gave explicit formulas of
+updating B and m(N ? ), once the expert returns an answer [16, Theorems 4.1, 4.2, 4.3]. All
+states of the resulting space K(P) are efficiently generated from B; see [17].
+
+Revised QUERY algorithm. The QUERY algorithm was designed for the case where
+the target space is assumed to be a union-closed family (a knowledge space). Therefore the
+output K is not necessarily an antimatroid. We present a simple revision of the QUERY
+algorithm to output an antimatroid. Our revision is obtained by replacing K(P) with A(P),
+and is understood as a concrete realization of Doignon’s adjusted QUERY algorithm [14].
+    As above, let P and N denote the sets of queries to which the expert said “yes” and “no”,
+respectively. We can naturally define positive/negative inferences for the revised QUERY. A
+strong positive inference of P is an implicate of A(P), and a strong negative inference of P
+and N is a query (A, q) such that some query in N is an implicate of A(P + (A, q)). Let
+P ?? and N ?? denote the sets of all strong positive and negative inferences, respectively. We
+remark
+                                     P ? ⊆ P ?? , N ? ⊆ N ??
+by A(P) ⊆ K(P) and A(P + (A, q)) ⊆ K(P + (A, q)). Strong positive or negative inferences
+are redundant to be asked, since the estimated space is now A(P). The revision of QUERY
+is as follows.
+Revised QUERY algorithm
+0: Let P = P ?? = N = N ?? := ∅
+1: Choose a query (A, q) 6∈ P ?? ∪ N ?? (with smallest |A|), and ask the question (QA,q ) to the
+     expert.
+2: If the answer is “yes”, then add (A, q) to P (, and make P critical). If the answer is “no”,
+      then add (A, q) to N .
+3: Update P ?? and N ?? .
+4: If a stopping criterion is fulfilled, then output P (or A(P)); stop. Otherwise go to step 1.
+
+                                                 16
+Let us look details of this algorithm. In step 3, we can use Algorithm 3.16 to generate all strong
+positive inferences, i.e., all implicates of A(P). In the practical situation where the storage for
+queries is limited (or Q is large), we can use the inference algorithm (Algorithm 3.6) to generate
+strong positive inferences (A, q) with a specified size of |A|. Similarly, we can generate strong
+negative inferences by applying the inference algorithm to queries in N for A(P + (A, q)).
+Koppen’s termination criterion and other selection rules of queries are implementable. By
+the use of Algorithm 3.12, we may keep P compact. All states in A(P) can be efficiently
+generated by Algorithm 3.8.
+    In the case where the output is required to be a proper antimatroid, we may modify step
+2 as: If the answer is “yes” and Q ∈ A(P + (A, q)), then add (A, q) to P. Actually Doignon’s
+adjusted QUERY adopts this rule. The condition Q ∈ A(P + (A, q)) can be checked by the
+membership algorithm (Algorithm 3.5).
+    In the idealistic case where the answers of the expert correctly follows his/her latent
+antimatroid L, by Theorem 1.1 it always holds
+
+                                       L ⊆ A(P) ⊆ K(P).
+
+Therefore the resulting A(P) might be a reasonable outer approximation of the true antima-
+troid L. Also sufficiently many queries uncover L as L = A(P); see [14, Proposition 13].
+Remark 4.1. J.-P. Doignon asked what about the revised QUERY is applied to the expert
+following a union-closed family L. Also, in this case, L ⊆ K(P) holds throughout iterations.
+Therefore, by maximality (Theorem 1.1), Ľ ⊆ A(P) holds. We could not guarantee that the
+revised QUERY reaches Ľ = A(P). The reason is the existence of a query in N that is ‘no’ for
+L but is ‘yes’ for Ľ. Consequently, even if a query (A, q) satisfies Ľ ⊆ A(P + (A, q)) ⊂ A(P),
+the query (A, q) may fall into N ?? and is never posed.
+    This is not the case if a query is chosen outside P ?? ∪ N ? in each iteration. In fact, if
+A(P) \ Ľ 6= ∅, there is (A, q) 6∈ P ?? ∪ N ? such that (A, q) is an implicate of L and Ľ ⊆
+A(P + (A, q)) ⊂ A(P); such a query is posed to decrease A(P). To see this, consider minimal
+X ∈ A(P) \ Ľ, and consider X ◦ with respect to Ľ. By the minimality and Proposition 3.1, it
+must hold |X \ X ◦ | = 1. Therefore X is not in L, and there is an implicate (A, q) of L (and of
+Ľ) not accepting X(∈ A(P)). Obviously (A, q) 6∈ P ?? . Also (A, q) 6∈ N ? by L ⊆ K(P +(A, q)).
+Thus (A, q) is a desired query.
+Remark 4.2. Our revision can incorporate Dowling’s update of maximal negative inferences.
+Her formulas [16, Theorems 4.2, 4.3] only involve the closure operator of (dual of) K(P). Thus
+the desired update formulas are obtained simply by changing the closure operator of K(P)
+to the closure operator of A(P). By Theorem 3.4, the closure operator of A(P) is efficiently
+computable. On the other hand, the base update [16, Theorems 4.1] seems not to be adapted
+directly to A(P). This issue is left to future work.
+Example 4.3. We give one small but instructive example. Let Q = {0, 1, 2, 3} and R
+consist of two rules ({0, 2}, 1) and ({1, 3}, 0). The goal is to identify L := A(R) by QUERY
+algorithms. Queries are examined, in the same order, for both original and revised QUERY
+algorithms. Algorithms terminates if L = K(P) for original and L = A(P) for revised.
+Table 1 describes the behavior of two algorithms. The first column indicates queries, which
+are examined from top to down, and the second and third columns indicate the actions of
+the original and revised QUERY, respectively. Here posed:YES (resp. posed:NO) means that
+the query in the same row is posed to the expert and the answer is “yes” (resp. “no”), and
+negainf means that the query is a (strong) negative inference (in revised QUERY) and is not
+posed. The first 16 (nontrivial) queries of form (A, q) with |A| ≤ 1 are posed for both original
+and revised, and the answers are all “no”. In total, the original QUERY posed 25 queries to
+the expert. The revised QUERY posed 22 queries, and finished two queries earlier than the
+
+                                                17
+                Table 1: Behavior of original and revised QUERY algorithms
+
+                               query         original       revised
+                          (A, q): |A| ≤ 1   posed:NO      posed:NO
+                            ({0, 1}, 2)     posed:NO      posed:NO
+                            ({0, 1}, 3)     posed:NO      posed:NO
+                            ({0, 2}, 1)     posed:YES     posed:YES
+                            ({0, 2}, 3)     posed:NO      posed:NO
+                            ({0, 3}, 1)     posed:NO      posed:NO
+                            ({0, 3}, 2)      negainf       negainf
+                            ({1, 2}, 0)     posed:NO       negainf
+                            ({1, 2}, 3)      negainf       negainf
+                            ({1, 3}, 0)     posed:YES     posed:YES
+                            ({1, 3}, 2)     posed:NO
+                            ({2, 3}, 0)     posed:YES
+
+
+
+original QUERY, which is caused by L = A(R) ⊂ K(R). Query ({1, 2}, 0) is not a negative
+inference but a strong negative inference, and hence is not posed in the revised QUERY.
+
+Preliminary experimental results. We conducted preliminary computer experiments to
+investigate how the revision contributes to the reduction of the number of queries asked. We
+prepare, in computer, a target antimatroid L and an idealistic expert who answers query
+(A, q) correctly. Namely the expert answers “yes” if (A, q) is an implicate of L, and “no”
+otherwise. The goal is to identify L by queries. We compare two QUERY algorithms. The
+first algorithm is (a simpler version of ) the original QUERY algorithm. In each step, the
+algorithm poses a query (A, q) 6∈ P ? ∪ N ? , where P and N are the sets of ‘yes’ queries and
+‘no’ queries, respectively, obtained so far. The algorithm terminates when K(P) = L. The
+second algorithm is a simpler version of our revised QUERY algorithm, which is obtained from
+the first one by replacing P ? ∪ N ? with P ?? ∪ N ?? and replacing the termination criterion
+K(P) = L with A(P) = L. Thanks to the algorithms in the previous section, they are
+efficiently implementable in computer. We compare the numbers of queries posed to the
+expert.
+     The experiment was done as follows. The ground set Q consists of 10 elements. We applied
+the above two algorithms to 200 instances of target antimatroids L, and compared the numbers
+of queries posed to identify L, where the target antimatroid L is given by L := A(R0 ) for a
+set R0 of randomly chosen 10 rules. The both algorithms examine, in the same order, queries
+(A, q) from smaller |A|. We count the number of queries that are posed to the expert.
+     The result is summarized as follows. In average, the first algorithm posed 2128 queries
+and the second algorithm posed 1525 queries. Table 2 shows the distribution of instances with
+respect to the reduction of queries. Here the rate r of cut of queries (from original to revised)
+is defined as
+                                        N1 − N2
+                                                  × 100,
+                                           N1
+where N1 and N2 denote the numbers of queries posed, respectively, by the original algorithm
+and by the revised algorithm (for the same target). In particular, the revision achieves the
+average cut rate 29%. This reduction of queries was mostly caused by negative inferences.
+For queries (A, q) with smaller A, the answers tend to be ‘no’. Indeed, 99% of queries posed
+are ‘no’ (i.e., posed:NO); the average number of queries that the expert said “no” is 2107 for
+the first algorithm and is 1505 for the second algorithm. Consequently, the query reduction
+
+                                               18
+                                       Table 2: Result
+
+                            Rate r of cut   Number of instances
+                            0 ≤ r ≤ 10              1
+                            10 < r ≤ 15             2
+                            15 < r ≤ 20             7
+                            20 < r ≤ 25            37
+                            25 < r ≤ 30            55
+                            30 < r ≤ 35            70
+                            35 < r ≤ 40            24
+                            40 < r                  4
+
+
+
+by (strong) negative inferences is more powerful than that by (strong) positive inferences. In
+the most successful instance, the cut rate is 42%.
+    We also conducted the same experiment for the reverse ordering of queries, where queries
+are examined from larger |A|. (This is a difficult situation for a human expert.) Also in this
+case, our revision effectively reduces the number of queries posed. In average, the original
+QUERY posed 434 queries and the revised QUERY posed 207 queries. Thus the cut rate
+is 52% in average. Compared with the above ordering, the numbers of required queries are
+considerably small for both the original and revised. This may be caused by our random
+construction of instances. Contrary to the above ordering of queries, posed queries tend to
+be ‘yes’; the average number of queries that the expert said “yes” is 390 for the original and
+is 163 for the revised. Consequently strong positive inferences contribute the reduction of
+queries effectively.
+    These experimental results show that the revised QUERY has a potential to drastically
+reduce the burden of human experts in the antimatroid design in KST-based educational
+system.
+
+
+5    Concluding remarks
+In this paper, we have studied the representation R 7→ A(R) of an antimatroid from algorith-
+mic and Boolean function theoretic points of view, and mentioned its potential applications
+to actual educational system designs. There remain several algorithmic questions that are
+interesting from both theoretical and practical sides. We end this paper with some open
+problems and future research issues.
+
+How to recognize whether K(R) is an antimatroid. We have mainly focused on A(R)
+that is always an antimatroid. As we mentioned in the introduction, an antimatroid A always
+admits a set R of rules with A = K(R). Thus it is natural to give a characterization of a set
+R of rules such that K(R) is an antimatroid, or equivalently, K(R) = A(R). Related to such
+a characterization, it is quite natural to consider the following decision problem:
+
+Input: A set R of rules.
+
+Task: Decide whether K(R) is an antimatroid.
+
+We do not know whether this problem is in NP, though it is not difficult to show that it is in
+co-NP.
+
+Proposition 5.1. The problem of deciding whether K(R) is an antimatroid is in co-NP.
+
+
+                                             19
+Proof. Suppose that K(R) is not an antimatroid, i.e., K(R) 6= A(R). There is X ∈ K(R) \
+A(R). Therefore we can check that X is in K(R)\A(R) by linear time membership algorithms
+for K(R) and for A(R). This gives a polynomial certificate for a NO instance.
+
+    We have seen in Corollary 2.8 a sufficient condition for K(R) = A(R). Namely, if R
+corresponds to the set of circuits of an antimatroid, then K(R) = A(R) holds. By Dietrich’s
+characterization of an antimatroid by circuits [12] (see [30, Theorem 3.9]) we can determine
+in polynomial time whether R corresponds to the set of circuits of an antimatroid. Also if
+all nontrivial (prime) implicates of A(R) are given (e.g., by Algorithm 3.16), then we check
+whether K(R) = A(R). But this approach never gives a polynomial time algorithm, since the
+number of all nontrivial (prime) implicates may be exponential in input size l(R). Another
+approach is to find the base B of K(R), and to use an algorithm of Eppstein, Falmagne,
+and Uzun [20] for checking whether B is the base of an antimatroid. However |B| may be
+exponential of l(R). See [36, Section 3.6] for computational issues on prime implicants, bases,
+and rules (implications).
+    Adaricheva and Nation [3] introduced a notion of a closure system with unique criticals
+(UC-systems), where a convex geometry (antimatroid) is a particular example of a UC-system;
+see also [1]. They showed a polynomial time algorithm to decide whether a given set of rules
+defines a UC-system [2, Proposition 45]. This algorithm checks a necessary condition for K(R)
+to be an antimatroid.
+
+Toward computational learning theory for antimatroids. Building an antimatroid by
+querying an expert in Section 4 should also be discussed and analyzed from the view point of
+computational learning theory, particularly from Angluin’s framework [5] of learning Boolean
+functions by queries; see a survey [33]. The problem formulation is the following. The task
+is to identify (learn) a family L of subsets (or a Boolean function) by a certain (logical)
+expression, such as CNF. Here we are allowed to use a certain kind of an oracle that returns
+information of target L. Typical oracles are:
+
+Membership oracle: The query is a subset X. The oracle returns “yes” if X ∈ L, and “no”
+   otherwise.
+
+Equivalence oracle: The query is a family L0 . The oracle returns “yes” if L0 = L, and “no”
+    otherwise. If the answer is “no”, then a subset X ∈ L4L0 is also returned.
+
+There are several results on query learning of Horn functions, or equivalently, union-closed
+families. Angluin, Frazier, and Pitt [6] gave an algorithm to learn a Horn function (a union-
+closed family L) by O(mn) membership and O(m2 n) equivalence queries, where n is the
+number of variables (the cardinality of the ground set Q) and m is the number of clauses of
+the Horn formula (the number of a set R of rules with L = K(R)). See also a recent related
+work [7]. Frazier and Pitt [23] considered the entailment oracle for a Horn function, and gave
+an algorithm to learn a Horn function by a polynomial number of entailment and equivalence
+queries, where the entailment oracle is:
+
+Entailment oracle: The query is a rule (A, q). The oracle returns “yes” if (A, q) is an
+    implicate of L, and “no” otherwise.
+
+The problem of building a space of knowledge states by querying an expert, considered in
+Section 4, may be formulated mathematically as the problem of learning a Horn function by
+the entailment oracle. In our setting, it is practically impossible to let a human expert play the
+equivalence oracle, and it may be difficult to apply these results to actual educational system
+designs. Nevertheless it is quite interesting to develop a practically feasible and theoretically
+efficient learning algorithm for spaces of knowledge states, particularly antimatroids, from
+
+                                               20
+the viewpoint of computational learning theory. It should be noted that the above learning
+algorithms identify target space L by L = K(R). In the case where L is assumed to be an
+antimatroid, it is natural to identify L by L = A(R), as in our revised QUERY algorithm.
+In this setting, an alternative learning algorithm with a better theoretical guarantee may be
+possible.
+
+Largest extension of an antimatroid. Adaricheva and Nation [2] showed (in dual form)
+that for any antimatroid A on Q there exists a unique maximal antimatroid A on Q containing
+A as a sublattice, where A is called the largest extension of A. This suggests a way of
+associating a set R of rules with the largest extension A(R) of A(R). A natural question
+is: How can we handle A(R) by R efficiently ? A naive membership algorithm for A(R)
+obtained from the definition [2, p.199 (E)] requires checking a condition for all members of
+A(R), and is far from polynomial. An algorithmic theory for association R 7→ A(R) as well
+as its application to KST will deserve an interesting future research.
+
+
+Acknowledgments
+We thank Jean-Paul Doignon for helpful comments and references [14, 16, 27, 35] of KST, and
+the referees for helpful comments and references [2, 3, 9, 25] of implicational systems. We also
+thank Marcel Wild for remarks. The first author was partially supported by JSPS KAKENHI
+Grant Numbers 25280004, 26330023, 26280004. The second author was partially supported
+by JSPS KAKENHI Grant Number 26330023 and the JST, ERATO, Kawarabayashi Large
+Graph Project. The third author was partially supported by JSPS KAKENHI Grant Numbers
+24106002, 26280001.
+
+
+References
+ [1] K. V. Adaricheva, Optimum bases of finite convex geometry, 2012, arXiv:1205.2881.
+
+ [2] K. V. Adaricheva and J. B. Nation. Largest extension of a finite convex geometry. Algebra
+     Universalis, vol. 52 (2004), pp. 185–195.
+
+ [3] K. Adaricheva and J. B. Nation: On implicational bases of closure systems with unique
+     critical sets. Discrete Applied Mathematics, vol. 162 (2014), pp. 51–69.
+
+ [4] K. Adaricheva, J.B. Nation, R. Rand: Ordered direct implicational basis of a finite closure
+     system Discrete Applied Mathematics, vol. 161 (2013), pp. 707–723.
+
+ [5] D. Angluin: Queries and concept learning. Machine Learning, vol. 2 (1987), pp. 319–342.
+
+ [6] D. Angluin, M. Frazier, and L. Pitt: Learning conjunctions of Horn clauses. Machine
+     Learning, vol. 9 (1992), pp. 147–164.
+
+ [7] M. Arias and J.L. Balcázar: Construction and learnability of canonical Horn formulas.
+     Machine Learning, vol. 85 (2011), pp. 273–297.
+
+ [8] D. Avis and K. Fukuda: Reverse search for enumeration. Discrete Applied Mathematics,
+     vol. 65 (1996), pp. 21–46.
+
+ [9] K. Bertet and B. Monjardet: The multiple facets of the canonical direct unit implicational
+     basis. Theoretical Computer Science, vol. 411 (2010), pp. 2155–2166.
+
+
+
+
+                                              21
+[10] N. Caspard and B. Monjardet: The lattices of closure systems, closure operators, and
+     implicational systems on a finite set: a survey. Discrete Applied Mathematics, vol. 127
+     (2003), pp. 241–269.
+
+[11] Y. Crama and P. L. Hammer, Boolean Functions—Theory, Algorithms, and Applications.
+     Cambridge University Press, Cambridge, 2011.
+
+[12] B. L. Dietrich, A circuit set characterization of antimatroids. Journal of Combinatorial
+     Theory, Series B, vol. 43 (1987), pp. 314–321.
+
+[13] B. L. Dietrich, Matroids and antimatroids—a survey. Discrete Mathematics, vol. 78
+     (1989), pp. 223–237.
+
+[14] J.-P. Doignon, Learning spaces, and how to build them. In Proceeding of 12th Interna-
+     tional Conference on Formal Concept Analysis (ICFCA’14), Lecture Notes in Computer
+     Science, vol. 8478 (2014), pp. 1–14.
+
+[15] J.-P. Doignon and J.-Cl. Falmagne, Knowledge Spaces. Springer-Verlag, Berlin, 1999.
+
+[16] C.E. Dowling, Applying the basis of a knowledge space for controlling the questioning of
+     an expert. Journal of Mathematical Psychology, vol. 37 (1993), pp. 21–48.
+
+[17] C.E. Dowling, On the irredundant generation of knowledge spaces. Journal of Mathe-
+     matical Psychology, vol. 37 (1993), pp. 49–62.
+
+[18] P. H. Edelman, Meet-distributive lattices and the anti-exchange closure, Algebra Univer-
+     salis, vol. 10 (1980), pp. 290–299.
+
+[19] P. H. Edelman and R. E. Jamison, The theory of convex geometries. Geometricae dedi-
+     cata, vol. 19 (1985), pp. 247–270.
+
+[20] D. Eppstein, J.-Cl. Falmagne, and H. Uzun: On verifying and engineering the wellgrad-
+     edness of a union-closed family. Journal of Mathematical Psychology, vol. 53 (2009), pp.
+     34–39.
+
+[21] J.-Cl. Falmagne, D. Albert, C. Doble, D. Eppstein, and H. Xiangen: Knowledge Spaces—
+     Applications in Education, Springer-Verlag, Berlin, 2013.
+
+[22] J.-Cl. Falmagne and J.-P. Doignon: Learning Spaces. Springer-Verlag, Berlin, 2011.
+
+[23] M. Frazier and L. Pitt: Learning from entailment: an application to propositional
+     Horn sentences. Proceeding of the Tenth International Conference on Machine Learn-
+     ing (ICML’93) (1993), pp. 120–127.
+
+[24] A. Horn: On sentences which are true of direct unions of algebras. Journal of Symbolic
+     Logic, vol. 16 (1951). pp. 14–21.
+
+[25] K. Kashiwabara and M. Nakamura: The prime stems of rooted circuits of closure spaces
+     and minimum implicational bases. Electronic Journal of Combinatorics, vol. 20 (2013),
+     Paper 22, 13 pp.
+
+[26] M. Koppen: Extracting human expertise for constructing knowledge spaces: An algo-
+     rithm. Journal of Mathematical Psychology, vol. 37 (1993), pp. 1–20.
+
+[27] M. Koppen: On alternative representations for knowledge spaces. Mathematical Social
+     Sciences, vol. 36 (1998), pp. 127–143.
+
+
+                                             22
+[28] M. Koppen and J.-P. Doignon: How to build a knowledge space by querying an expert.
+     Journal of Mathematical Psychology, vol. 34 (1990), pp. 311–331.
+
+[29] B. Korte and L. Lovász: Shelling structures, convexity, and a happy end. In B. Bollobás
+     (ed.): Proceedings of the Cambridge Combinatorial Conference in Honour of Paul Erdős,
+     Academic Press, London, 1984, pp. 219–232.
+
+[30] B. Korte, L. Lovász, and R. Schrader: Greedoids. Springer-Verlag, Berlin, 1991.
+
+[31] J.C.C. McKinsey: The decision problem for some classes of sentences without quantifiers.
+     Journal of Symbolic Logic, vol. 8 (1943), pp. 61–76.
+
+[32] C.E. Müller: A procedure for facilitating an expert’s judgments on a set of rules. In E.E.
+     Roskam (ed.): Mathematical Psychology in Progress, Springer-Verlag, Berlin, 1989, pp.
+     157–170.
+
+[33] R. H. Sloan, B. Szörényi, and G. Turán: Learning Boolean function with queries, In Y.
+     Crama and P. L. Hammer (eds.): Boolean Models and Methods in Mathematics, Computer
+     Science, and Engineering, Cambridge University Press, Cambridge, 2010, pp. 221–256.
+
+[34] M. Wild, A theory of finite closure spaces based on implications, Advances in Mathemat-
+     ics, vol. 108 (1994) pp. 118-139.
+
+[35] M. Wild, Compressed expression of learning spaces, Journal of Mathematical Psychology,
+     to appear, arXiv:1407.6327
+
+[36] M. Wild, The joy of implications, aka pure Horn formulas: mainly a survey, Theoretical
+     Computer Science, to appear, arXiv:1407.6327.
+
+
+A      Appendix
+A.1     Relation to Horn functions
+We summarize a relation to Horn functions in Boolean function theory; see [11, Chapter 6] for
+detail. A Boolean function is a {0, 1}-valued function f defined on {0, 1}n , i.e., f : {0, 1}n →
+{0, 1}. A family K on Q = {1, 2, . . . , n} is identified with a Boolean function fK defined by
+fK (x1 , x2 , . . . , xn ) = 1 if {i | xi = 1} ∈ K and 0 otherwise.
+    A Boolean function f is called Horn if it is represented as a Horn CNF:
+                                                                             
+                                                               m
+                                                               ^   _    _
+                                   f (x1 , x2 , . . . , xn ) =      xj   x̄j  ,
+                                                         i=1    j∈Pi     j∈Ni
+
+where Pi and Ni are disjoint subsets of {1, 2, . . . , n} with |Pi | ≤ 1 for i = 1, 2, . . . , m. Here
+x̄i = 1 − xi , xi ∨ xj W           W i , xj }, and xi ∧ xj := min{xi , xj }. For A = {i1 , i2 , . . . , ik } and
+                            := max{x
+B = {j1 , j2 , . . . , jl }, i∈A xj j∈B x̄j denotes xi1 ∨ xi2 ∨ · · · ∨ xik ∨ x̄j1 ∨ · · · ∨ x̄jl .
+    Suppose that Q = {1, 2, . . . , n}. For a Boolean function f , let T (f ) denote the set of points
+x ∈ {0, 1}n = 2Q with f (x) = 1. For a rule (A, q) with A = {p1 , p2 , . . . , pk }, the Boolean
+function fA,q is defined by
+
+                           fA,q (x1 , x2 , . . . , xn ) = x̄p1 ∨ x̄p2 ∨ · · · ∨ x̄pk ∨ xq .
+
+For a set R of rules, we obtain a Horn function fR by
+                                              ^
+                                     fR :=        fA,q
+                                                       (A,q)∈R
+
+
+                                                         23
+Then the family K(R) and the Horn function fR are equivalent objects in the following sense.
+For x ∈ {0, 1}n , let I 0 (x) denote the set of elements i ∈ Q with xi = 0 (0-supports).
+
+Lemma A.1. For a set R of rules, it holds K(R) = {I 0 (x) | x ∈ T (fR )}.
+
+     Notice that if we associate a rule (A, q) (A = {p1 , p2 , . . . , pk }) with xp1 ∨xp2 ∨· · ·∨xpk ∨ x̄q ,
+then a set R of rules corresponds to a dual Horn function gR , and K(R) corresponds to the
+set of 1-supports of T (gR ).
+     In particular we can use known results of Horn functions to K(R). For example, deciding
+whether (A, q) is an implicate for K(R) is equivalent to deciding whether an arbitrary x 6∈
+T (fA,q ) satisfies x 6∈ T (fR ). This is solved by the following. Fix variables xq = 0 and xi = 1
+for i ∈ A. Substitute them to fR and then obtain another Horn CNF f 0 . If f 0 is satisfiable
+(i.e., ∃x ∈ T (f 0 )), then the answer is NO. Otherwise the answer is YES. It is well-known that
+the satisfiability problem for Horn CNF is efficiently solved; see [11, Section 6.4.1].
+
+A.2     Proof of Proposition 2.4
+(1). For the set C of all circuits and the corresponding set R of rules, it holds A = L(C) =
+A(R) ⊆ K(R) by Theorems 2.5 and 2.6. This means that for any circuit (C, r), the rule
+(C − r, r) is actually an implicate of A. We next show that (C − r, r) is prime. Let a be an
+arbitrary element of C − r. By definition, C − a is free, and hence there exists a member K
+of A such that K ∩ (C − a) = {r}. Then K contains r and satisfies K ∩ (C − a − r) = ∅. This
+means that (C − a − r, r) is not implicate of A. Thus (C − r, r) is a prime implicate.
+    (2). Next, suppose that (A, q) is a prime implicate. Namely, for any element a of A, the
+rule (A − a, q) is not an implicate of A. Notice that A + q is not free, since there is no member
+K of A with (A + q) ∩ K = {q}. Choose an arbitrary element x of A + q. We are going show
+that A + q − x is free; then it follows that (A + q, q) is a circuit by definition. Here A ∩ X
+denotes {X ∩ K | K ∈ A} for simplicity. We first consider the case where x = q. Let a ∈ A.
+By assumption, (A − a, q) is not an implicate of A. Then there exists a member K of A such
+that q ∈ K and K ∩ (A − a) = ∅. But K ∩ A 6= ∅, since (A, q) is an implicate of A. Therefore,
+K ∩ A = {a} and A ∩ A contains {a}. Since A is closed under union, so is A ∩ A. It follows
+that A + q − q = A is free.
+    We next consider the case where x ∈ A. Let a ∈ A − x. By the same discussion as above,
+there exists a member K of A such that q ∈ K and K ∩ A = {a}. We take a minimal such K.
+By the minimality of K and the accessibility of A, at least K −a or K −q must be a member of
+A. But K −a is not a member of A, since (A, q) is an implicate of A and we have q ∈ K −a and
+(K −a)∩A = ∅. Hence K −q is a member of A. Since (K −q)∩(A−x+q) = K ∩(A−x) = {a},
+the family A ∩ (A − x + q) contains {a}. We show that A ∩ (A − x + q) also contains {q}.
+Since (A, q) is an implicate of A but (A − x, q) is not, there exists a member L of A such that
+q ∈ L and L ∩ A = {x}. We have L ∩ (A − x + q) = {q}. Therefore, A ∩ (A − x + q) contains
+all singletons {a} with a ∈ A − x + q. Since A ∩ (A − x + q) is closed under union, the set
+A − x + q = A + q − x is free. Thus we conclude that (A + q, q) is a circuit.
+
+
+
+
+                                                     24
+

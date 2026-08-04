@@ -1,0 +1,1174 @@
+                                                         Translating between the representations
+                                                              of a ranked convex geometry∗
+                                                       Oscar Defrain†            Lhouari Nourine†             Simon Vilmin†
+
+                                                                                  March 30, 2021
+
+
+                                                                                      Abstract
+
+
+
+
+arXiv:1907.09433v2 [cs.DM] 30 Mar 2021
+                                                   It is well known that every closure system can be represented by an implica-
+                                                   tional base, or by the set of its meet-irreducible elements. In Horn logic, these
+                                                   are respectively known as the Horn expressions and the characteristic models.
+                                                   In this paper, we consider the problem of translating between the two repre-
+                                                   sentations in acyclic convex geometries. Quite surprisingly, we show that the
+                                                   problem in this context is already harder than the dualization in distributive
+                                                   lattices, a generalization of the well-known hypergraph dualization problem for
+                                                   which the existence of an output quasi-polynomial time algorithm is open. In
+                                                   light of this result, we consider a proper subclass of acyclic convex geometries,
+                                                   namely ranked convex geometries, as those that admit a ranked implicational
+                                                   base analogous to that of ranked posets. For this class, we provide output
+                                                   quasi-polynomial time algorithms based on hypergraph dualization for trans-
+                                                   lating between the two representations.
+                                                   Keywords: hypergraph dualization, meet-irreducible enumeration, charac-
+                                                   teristic models, implicational bases, convex geometries, lattices.
+
+
+                                         1       Introduction
+                                         Finite closure systems arise in various fields of discrete mathematics and computer sci-
+                                         ence including Horn logic [KKS93, CH11], relational databases [Mai83, MR92], lattice the-
+                                         ory [DP02,CM03], Formal Concept Analysis (FCA) [GW12] and knowledge spaces [DF12].
+                                         The study of their representations and how to translate from one to another has gathered
+                                         increasing attention these last decades, as witnessed by [Wil94,Kha95,BMN17,HN18] and
+                                         the Dagstuhl Seminar 14201 [AIBT14]. See [Wil17, Rud17] for recent surveys on these
+                                         topics.
+                                             Among the different ways of representing a closure system, the implicational bases
+                                         play a central role. Essentially, they consist of rules A ! B describing a causality rela-
+                                         tion within the closure system: a set containing A must contain B. If every conclusion
+                                         B has size one then the implicational base is called unit. Several implicational bases
+                                         can lead to the same closure system, and consequently numerous bases were defined.
+                                         Among the most frequent, one can find the Duquenne-Guigues basis having a minimum
+                                         number of implications [GD86], the unit-minimum having a minimum number of impli-
+                                         cations among unit implicational bases, or the canonical direct basis having all minimal
+                                         generators [BM10]. Refinements of the canonical direct basis include the E-basis and
+                                             ∗
+                                               The first two authors have been supported by the ANR project GraphEn ANR-15-CE40-0009. The
+                                         last author is funded by the CNRS, France ProFan project.
+                                             †
+                                               LIMOS, Université Clermont Auvergne, France.
+
+
+                                                                                          1
+D-basis [FJN95, AN14, AN17]. Another possible representation for a closure system re-
+sults from a minimum subset of elements from which it can be reconstructed. In Horn
+logic, these elements are known as the characteristic models [Kha95,HK95]. In lattice the-
+ory and closure systems, they are known as the meet-irreducible elements [DP02]. They
+can be found in the poset of irreducibles [BM70, Mar75, HN18], or in the reduced context
+representing the concept lattice in FCA [GW12].
+     As pointed out by Khardon in [Kha95], the utility of these two representations is not
+comparable. More notably, there are cases of (unit) minimum implicational bases of ex-
+ponential size in the number of meet-irreducible elements, and vice versa. Furthermore,
+different complexities can arise for a same problem when considering one representation,
+and the other. This is in particular the case for reasoning, abduction, or when con-
+sidering dualization problems in lattices [KKS93, BK17, DN19]. Hence, the problem of
+translating between implicational bases and meet-irreducible elements is critical in order
+to reap the benefits of both representations. In Horn logic, the problem of computing the
+meet-irreducible elements from an implicational base is known as CCM (for Computing
+Characteristic Models). The problem of computing an implicational base from the meet-
+irreducible elements is denoted by SID (for Structure Identification). For the canonical
+direct and D-basis, output quasi-polynomial time algorithms based on hypergraph dual-
+ization were given for both translations in [MR92, AN17]. An enumeration algorithm is
+said to be running in output-polynomial time if its running time is bounded by a polynomial
+in the combined size of the input and the output. It is said to be running with polynomial
+delay if after polynomial-time preprocessing, the running times between two consecutive
+outputs and after the last output are bounded by a polynomial in the size of the input
+only [JYP88]. For the minimum implicational base, output-polynomial time algorithms
+were obtained in k-meet-semidistributive lattices in [BMN17], and in modular lattices
+in [Wil00]. In [BK13], it is shown that it is coNP-complete in general to decide whether
+an implication belongs to a minimum implicational base. However, the existence of an
+output-polynomial or output quasi-polynomial time algorithm constructing a minimum
+implicational base remains open [BK13, BMN17, Wil17]. In [Kha95], the author is most
+interested in unit implicational bases as they represent Horn expressions. In that case, the
+translation problems SID and CCM are shown to be equivalent, and to be harder than hy-
+pergraph dualization. Moreover, computing a unit-minimum implicational base is harder
+than a minimum one, as the latter can be obtained in polynomial time from the former
+using the algorithms in [Sho86, Wil95], and that it is only polynomially smaller in the size
+of the ground set. Yet, the existence of an output-polynomial or output quasi-polynomial
+time algorithm solving the problem in both contexts remains open.
+     In this paper, we focus on unit implicational bases and acyclic convex geometries,
+i.e., closure systems satisfying the anti-exchange property [EJ85] and admitting an acyclic
+implication-graph [Wil94]. This class has been widely considered in the literature [HK95,
+Wil94,BČKK09]. Even when restricted to this class, we show that the problem of translat-
+ing between one representation and the other is harder than the dualization in distributive
+lattices, a generalization of the hypergraph dualization problem. For this problem, the
+existence of an output quasi-polynomial time algorithm is open [BK17, DN19]. Not only
+this generalizes the observation of Khardon in [Kha95], but it surprisingly holds in a very
+low class of closure spaces. In light of this result, we then consider a proper subclass of
+acyclic convex geometries, namely ranked convex geometries, as those that admit a ranked
+implicational base analogous to that of ranked posets. For this class, we provide output
+quasi-polynomial time algorithms based on hypergraph dualization for translating between
+the two representations. The two algorithms proceed as follows. For the enumeration of
+
+
+                                             2
+the meet-irreducible elements (CCM), the first algorithm constructs solutions from the
+join-irreducible elements by listing all the maximal sets which do not imply them, rank by
+rank. It relies on a recursive partition of the solutions conducted at each step of the al-
+gorithm. As for the construction of a unit-minimum implicational base (SID), the second
+algorithm relies on a bijection between hypergraph transversals and the minimal genera-
+tors that belong to the base. If in addition the size of the premises in the implicational
+base, or the size of the meet-irreducible in the lattice are bounded by constants, then the
+algorithm is shown to perform in output-polynomial time using the algorithm of Eiter and
+Gottlob in [EG95]. These positive and negative results improve the understanding of a
+long-standing open problem.
+    The rest of the paper is structured as follows. In Section 2 we introduce concepts and
+notations that will be used throughout the paper. In Section 3 we give hardness results in
+acyclic convex geometries in relation with the dualization problem in distributive lattices.
+Section 4 presents ranked convex geometries, while Section 5 and 6 are devoted to the
+aforementioned algorithms. We conclude with perspectives in Section 7.
+
+
+2    Preliminaries
+All the objects considered in this paper are finite. For a set X we denote by 2X the set of
+all subsets of X.
+    A partial order P on a set X (or poset) is a binary relation ≤ on X which is reflexive,
+anti-symmetric and transitive, denoted by P = (X, ≤). Two elements x and y of P are
+said comparable if x ≤ y or y ≤ x, and incomparable otherwise. We note x < y if x ≤ y
+and x 6= y. We say that x covers y (y is covered by x) and denote y ≺ x if y ≤ x and there
+is no z ∈ X such that x < z < y. In this case, we also say that x is a successor of y, and y
+a predecessor of x. A subset of a poset in which no two distinct elements are comparable
+is called an antichain. If A ⊆ X, then P [A] denotes the order induced by the elements
+of A, and P − A the poset P [X \ A]. An upper bound of x and y is an element u ∈ X
+such that x ≤ u and y ≤ u. A lower bound for x and y will satisfy the dual statement. If
+moreover u is minimum among all upper bounds of x and y, then it is called least upper
+bound (also known as supremum or join) of x and y and is denoted by x ∨ y. The greatest
+lower bound x ∧ y of x and y (or infimum, meet) is defined dually. Note that x ∨ y and x ∧ y
+may or may not exist in general. A lattice is a poset in which every two elements have an
+infimum and a supremum; see [Bir40,DP02]. It has in particular a maximum element, the
+top, and a minimum one, the bottom. An element covering the bottom is an atom, while
+an element covered by the top is a co-atom. A lattice is called Boolean if it is isomorphic
+to (2X , ⊆) for some set X. It is called distributive if for any three elements x, y, z of the
+lattice,
+                              x ∧ (y ∨ z) = (x ∧ y) ∨ (x ∧ z).
+For x ∈ X, we call principal ideal (or just ideal) of x the set # x = {y ∈ X | y ≤ x}.
+Analogously, " x = {y ∈ X | y ≥Sx} is the (principal) filter of x. More generally, we set
+the ideal # S of S ⊆ X as # S = x∈S # x and its filter accordingly.
+    We define notions related to closure systems. A map φ : 2X ! 2X is a closure operator
+on X if for all A, B ⊆ X:
+    1. A ⊆ φ(A);
+
+    2. A ⊆ B implies φ(A) ⊆ φ(B); and
+
+    3. φ(A) = φ(φ(A)).
+
+                                              3
+A closed set of X w.r.t. φ is a set C ⊆ X such that φ(C) = C. The set of all closed sets
+of X w.r.t. φ is denoted by Cφ . A pair (X, φ) where φ is a closure operator on X is called
+closure space. It is called standard if moreover
+  1. φ(∅) = ∅; and
+  2. φ(x) \ {x} is closed for all x ∈ X.
+In this paper, all closure spaces are considered standard, a common assumption [GW16].
+A closure system is a pair (X, C) where C ⊆ 2X , X ∈ C and C1 ∩ C2 ∈ C for all C1 , C2 ∈ C.
+It is well known that to every closure space (X, φ) corresponds a closure system (X, Cφ ),
+and that to every closure system (X, C) corresponds a closure space (X, φ) where C = Cφ .
+Furthermore, Lφ = (Cφ , ⊆) is a lattice whenever (X, φ) is a closure space [Bir40, DP02].
+Then C1 ∧ C2 = C1 ∩ C2 and C1 ∨ C2 = φ(C1 ∪ C2 ). The lattice of a closure space is given
+in Figure 1.
+    We define meet-irreducible elements. Let (X, C = Cφ ) be a closure system with closure
+operator φ. A set M ⊆ X is a meet-irreducible element of C if M ∈ C, M 6= X, and for
+all C1 , C2 ∈ C such that M = C1 ∩ C2 it follows that C1 = M or C2 = M . Similarly, a set
+J ⊆ X is a join-irreducible element of C if J ∈ C, J 6= ∅ and for all C1 , C2 ∈ C such that
+J = φ(C1 ∪ C2 ) it follows that J = C1 or J = C2 . We denote by J (C) and M(C) the sets
+of join-irreducible and meet-irreducible elements of C. In the lattice L = (C, ⊆), J (C) and
+M(C) respectively correspond to the elements that have a unique predecessor and a unique
+successor; see Figure 1 for an example. In the following, we will interchangeably note M(L)
+and M(C) whenever L = (C, ⊆). Let J, M ∈ C. We define useful notations from [GW12]
+for closure systems using underlying lattice structure. We note J ↗ M whenever M is
+maximal in L−" J, and J ↙ M whenever J is minimal in L−# M . If J ↗ M and J ↙ M
+then we note J ↙ ↗ M . We point out here that M and J are element of L, hence subsets of
+X. On the example of Figure 1, observe that J ↗ M for J = {2} and M = {1, 4}. Also,
+J ↙ M for M = {1, 4} and J = {2}. Hence, J ↙        ↗ M in that case. In the following, we
+extend the ↗ notation to any subset B ⊆ X by defining B ↗ = Max⊆ {M ∈ C | B 6⊆ M }.
+Then M ∈ J ↗ whenever J ↗ M for any two M, J ∈ C. We put j ↗ = {j}↗ for any j ∈ X.
+It is well known that the family of sets {J ↗ | J ∈ J (C)} is a (possibly overlapping) set
+covering of M(C). See for instance [MR92, Wil95, Wil17]. Since C is considered standard,
+another well-known property is that to every J ∈ J (C) corresponds a unique j ∈ X such
+that J = φ(j). Accordingly, J (C) coincides with {φ(j) | j ∈ X}, and J ↗ with j ↗ for j
+such that φ(j) = J.
+    We now turn to definitions on implications, and refer to [Wil17, BDVG18] for recent
+surveys on this topic. An implicational base (X, Σ) is a set Σ of implications of the form
+A ! B where A ⊆ X and B ⊆ X. In this paper we only consider Σ in its equivalent unit
+form where |B| = 1 for every implication, and denote by A ! b such implications. We
+call premise of A ! b the set A, and b its conclusion. We call size of Σ and note |Σ| the
+number of implications in Σ. We call dimension of Σ the size of the largest premise in Σ.
+    A set S is closed in Σ if for every implication A ! b of Σ, at least one of b ∈ S and
+A 6⊆ S holds. To Σ we associate the closure operator φ which maps every subset S ⊆ X
+to the smallest closed set φ(S) of Σ containing S. Then we say that S implies x ∈ X if
+x ∈ φ(S). We will interchangeably denote by CΣ and Cφ the set of all closed sets of Σ.
+Observe that (X, Σ) defines a closure space, hence that (X, CΣ ) defines a closure system
+and LΣ = (CΣ , ⊆) a lattice. Note that to a single closure system can correspond several
+implicational bases. We say that two implicational bases Σ and Σ0 are equivalent, denoted
+by Σ ≡ Σ0 , if CΣ = CΣ0 . An implicational base Σ is called irredundant if Σ \ {A ! b} 6≡ Σ
+for all A ! b ∈ Σ. An implicational base is unit-minimum if it is of minimum size among
+
+                                             4
+                                             12345
+
+                                      1234           1235
+                                             123
+                                      124            125
+
+                                 14                         25
+                                              12
+                                        1            2
+
+                                               ∅
+
+Figure 1: The closure lattice LΣ = (CΣ , ⊆) of the implicational base Σ = {4 ! 1, 5 ! 2,
+3 ! 1, 3 ! 2, 45 ! 3} on ground set X = {1, 2, 3, 4, 5}. Meet-irreducible elements are
+represented by black vertices. For better readability, closed sets are denoted without
+braces in the lattice, i.e., 123 stands for {1, 2, 3}.
+
+
+all equivalent unit implicational bases. A set A ⊆ X is a minimal generator of b if b ∈ φ(A)
+and b 6∈ φ(A \ {x}) for any x ∈ A. The implication-graph of (X, Σ) is the directed graph
+G(Σ) defined on vertex set X and where there is an arc between x and y if there exists
+A ! b ∈ Σ such that x ∈ A and y = b. An implicational base is called acyclic if its
+implication-graph has no directed cycle. A closure space is called acyclic if it admits an
+acyclic implicational base. If moreover the premises in Σ are of size one, then the closure
+lattice LΣ = (CΣ , ⊆) is distributive, and this is in fact a characterization [Bir40, DP02].
+Throughout the paper, for a vertex j of G(Σ) we shall note j − the set of all predecessors
+of j in G(Σ), and j + all its successors.
+     Observe that if (X, Cφ ) is a closure system, then it can be represented and reconstructed
+from a well-chosen implicational base, or from its meet-irreducible elements. For the
+latter case, one has to close M(Cφ ) under intersection to recover the whole family Cφ .
+For the former one, we have to consider Σ such that CΣ = Cφ . Such a Σ always exists:
+Σ = {A ! φ(A) | A ⊆ X} is an expensive but sufficient representation of φ. It can
+furthermore be turned into a unit implicational base. An example of a closure system
+represented by its corresponding lattice, a unit-minimum implicational base, and the set
+of its meet-irreducible elements is given in Figure 1.
+     Before diving into special classes of closure systems, let us include the definitions of
+the problems we consider in this paper. As specified in the introduction, the names CMI,
+CCM and SID below originally come from the problems of translating between Horn rep-
+resentations and their characteristic models [Kha95]: they stand for Characteristic Models
+Identification, Computing Characteristic Models and Structure Identification. Their equiv-
+alence with the problems of translating between implicational bases and meet-irreducible
+elements is well established; see for instance [BMN17, Wil17]. Note that the last problem
+calls for constructing a unit-minimum implicational base. This problem is harder than
+the one of computing a minimum implicational base, as one can compute a minimum
+implicational base in polynomial time from a unit-minimum one using the algorithms
+in [Sho86, Wil95], and that the size of these two implicational bases only differ by a factor
+|X| being part of the input. It is not clear whether the opposite direction holds, as it was
+shown in [HK93] that deciding whether a unit implicational base can be reduced in size
+is NP-hard.
+
+
+
+
+                                               5
+   Meet-irreducible elements identification (CMI)
+   Input:       An implicational base (X, Σ) and a family of sets M ⊆ 2X .
+   Question: Is M = M(CΣ )?
+   Meet-irreducible elements enumeration (CCM)
+   Input:       An implicational base (X, Σ).
+   Output:      The set M(CΣ ).
+   Implicational base identification (SID)
+   Input:       Two sets X and M ⊆ 2X .
+   Output:      A unit-minimum implicational base (X, Σ) such that M = M(CΣ ).
+    We point that CMI is a decision problem while CCM and SID are generation problems.
+As {j ↗ | j ∈ X} is a set covering of M(C), it is well known that the existence of an output-
+polynomial time algorithm for CCM can be reduced to the existence of one enumerating
+j ↗ for all j ∈ X; see [Wil95, Wil17]. Repetitions are either avoided using exponential
+memory, or by running the algorithm again on each output to check whether the solution
+has already been outputted before, in the fashion of [BDH+ 20, Lemma 5.1] and at the cost
+of an increasing complexity. In the general case, it can be seen using a result of Babin and
+Kuznetsov, and of Kavvadias et al. in [KSS00, BK17] on the intractability of generating
+the co-atoms of a lattice that the computation of j ↗ is impossible in output-polynomial
+time unless P=NP. It is however a long-standing open problem whether such a result can
+be inferred for CCM [Kha95, BMN17, Wil17].
+    Let us now consider particular closure systems. A closure space (X, φ) satisfies the
+anti-exchange property if for all x 6= y and all closed sets A ⊆ X,
+
+                    x ∈ φ(A ∪ {y}) and x 6∈ A imply y 6∈ φ(A ∪ {x}).
+
+A standard closure space that satisfies the anti-exchange property is called a convex ge-
+ometry. Convex geometries are known to include acyclic closure spaces, also known as
+poset type closure operators [Wil94, SW14, Wil17]. Sometimes during the paper, we will
+refer to acyclic closure spaces as acyclic convex geometries (or ACG in short). It is known
+from [AGT03] that lattices of convex geometries are both join-semidistributive and lower-
+semimodular. As a consequence, if (X, φ) is a convex geometry and (X, Cφ ) is its associated
+closure system, then J ↗ M implies J ↙       ↗ M for all J ∈ J (Cφ ) and M ∈ M(Cφ ) [Ste99,
+Corollary 4.6.3], and the set {j ↗ | j ∈ X} defines a partition of M(Cφ ). Consequently,
+meet-irreducible elements can be enumerated from join-irreducible elements with no need
+of handling repetitions in that case. This yields the next proposition (the factor two comes
+from the delay between the output of the last element in j ↗ , j ∈ X and the first element
+in j 0↗ for two consecutive j, j 0 ∈ X, j 0 6= j).
+
+Proposition 2.1. Let f : N ! N be a function and (X, CΣ ) be the closure system of a
+given acyclic implicational base (X, Σ). Then there is an algorithm enumerating the set
+M(CΣ ) of meet-irreducible elements of CΣ with delay at most 2 · f (|X| + |Σ|) whenever
+there is one enumerating j ↗ with delay f (|X| + |Σ|) given any j ∈ X.
+
+    We end the preliminaries with a few notions from hypergraph theory. A hypergraph
+H is a couple (V (H), E(H)) where V (H) is the set of vertices, and E(H) ⊆ 2V (H) is the
+set of hyperedges (or simply edges). The size of H, denoted by |H|, is the sum of the
+sizes of V (H) and E(H), and the dimension of H is the largest size of an edge in E(H).
+A transversal in a hypergraph H is a set of vertices that intersects every edge of H. An
+independent set in a hypergraph H is a set of vertices that contains no edge of H as a
+
+                                             6
+subset. We say that a transversal (resp. independent set) is minimal (resp. maximal) if
+it is inclusion-wise minimal (resp. maximal). The sets of all minimal transversals and all
+maximal independent sets of H are respectively denoted by T r(H) and M IS(H). The two
+problems of enumerating T r(H) and M IS(H) given H are denoted by Trans-Enum and
+MIS-Enum. It is well known that a set T ⊆ V (H) is a minimal transversal of H if and only
+if its complementary V (H)\T is a maximal independent set of H, hence that both Trans-
+Enum and MIS-Enum are polynomially equivalent [EMG08]. In the decision version of
+Trans-Enum, one must decide, given two hypergraphs H and G, whether H and G are
+such that E(G) = T r(H). This problem goes by the name of Hypergraph Dualization
+in the literature. It is known that it admits a polynomial-time algorithm if and only if
+Trans-Enum or MIS-Enum admits an output-polynomial time algorithm [BI95,EMG08].
+For the first problem, the best known algorithm runs in quasi-polynomial time N o(log N )
+where N = |H| + |G|. It is due to Fredman and Khachiyan [FK96], and it is a long-
+standing open problem whether it can be improved to run in polynomial time. It has later
+been improved by Tamaki in [Tam00] to perform using polynomial space. If moreover the
+dimension of the hypergraph is known to be bounded by some fixed constant, then the
+problem is known to be solvable in polynomial time [EG95]. In [Kha95] it is shown that
+CMI is harder than Hypergraph Dualization. The goal of this paper is to prove a
+stronger result in acyclic convex geometries, and to show that the two problems become
+equivalent in a subclass of acyclic convex geometries. We refer to [EG95] and to the
+survey [EMG08] for further details on hypergraph dualization.
+
+
+3    Dualization in distributive lattices
+We show that translating between acyclic implicational bases and meet-irreducible ele-
+ments is at least as hard as the dualization in distributive lattices, a generalization of the
+hypergraph dualization problem. For this problem, the existence of a quasi-polynomial
+time algorithm is an open question [BK17, DN19].
+    Let us first define the dualization problem in lattices given by implicational bases. Let
+LΣ = (CΣ , ⊆) be a lattice given by an implicational base (X, Σ), and B + and B − be two
+antichains of LΣ . We say that B + and B − are dual in LΣ if
+
+                         # B + ∩ " B − = ∅ and # B + ∪ " B − = CΣ .                       (1)
+
+In other words, B + and B − are dual if B + = Max⊆ {F ∈ CΣ | A 6⊆ F for any A ∈ B − },
+or equivalently if B − = Min⊆ {F ∈ CΣ | F 6⊆ A for any A ∈ B + }. Then, the dualization
+problem in lattices given by implicational bases is defined as follows.
+    Dualization in lattices given by implicational bases (Dual)
+    Input:       An implicational base (X, Σ) and two antichains B + , B − of LΣ .
+    Question: Are B + and B − dual in LΣ ?
+    Note that the lattice LΣ is not given. Only (X, Σ) is, which is a crucial point. It is
+well known that Dual generalizes Hypergraph Dualization where the implicational
+base is empty, hence when the lattice is Boolean [EMG08, NP15]. Recently, it was proved
+that the problem is coNP-complete in general [BK17]. This result holds even when the
+premises in the implicational base are of size at most two [DN19]. The case where the
+implicational base only has premises of size one captures distributive lattices. In that case,
+the best known algorithm runs in sub-exponential time [BK17], while the existence of one
+running in quasi-polynomial time is an open question [BK17, DN19]. Quasi-polynomial
+
+
+                                              7
+                                                    X ∪ {z}
+
+
+
+
+                              B−
+                         ?
+                     z % = B+
+
+
+                                                      {z}
+
+                                      ∅
+
+                       Figure 2: The construction of Theorem 3.1.
+
+time algorithms are known for proper subclasses, including distributive lattices coded by
+product of chains [Elb09], or those coded by the ideals of an interval order [DN19].
+    The next theorem suggests that translating between implicational bases and meet-
+irreducible elements is a tough problem, even when restricted to acyclic convex geometries.
+Theorem 3.1. There is a polynomial-time algorithm solving Dual in distributive lattices
+if there is one solving CMI in acyclic convex geometries.
+Proof. Let I1 = (X, Σ, B + , B − ) be an instance of Dual where the lattice LΣ = (CΣ , ⊆)
+is assumed to be distributive. Without loss of generality, Σ can be considered acyclic in
+that case; see [BK17, DN19]. We construct an instance I2 = (X ∪ {z}, Ω, M) of CMI as
+follows: Ω is the implicational base on ground set X ∪ {z} constructed from Σ by adding
+an implication A ! z for every A ∈ B − . Clearly the obtained implicational base is acyclic.
+Then, we put
+                           M = {M ∪ {z} | M ∈ M(LΣ )} ∪ B + .                           (2)
+Observe that the left and right sides of the union in Equality (2) are disjoint. A represen-
+tation of the lattice LΩ = (CΩ , ⊆) is given in Figure 2. We shall show that I1 is a positive
+instance of Dual if and only if I2 is one of CMI, and that it can be decided in polynomial
+time in the size of I1 given a polynomial-time algorithm for CMI.
+    Consider the elements of LΩ [" {z}], i.e., the right part of Figure 2. Observe that LΣ and
+LΩ [" {z}] are isomorphic. Consequently, there is a bijection from M(LΣ ) to M(LΩ [" {z}])
+given by f : M 7! M ∪ {z} and f −1 : M 0 7! M 0 \ {z}. Hence
+
+                        {M ∪ {z} | M ∈ M(LΣ )} = M(LΩ [" {z}]).                           (3)
+
+Consider now the elements of LΩ − " {z}, i.e., the left part of Figure 2. Observe that the
+only way for an element N in such a part to be meet-irreducible is to belong to z ↗, as
+otherwise N has at least one successor in LΩ − " {z}, and another one in LΩ [" {z}]. Hence
+M(LΩ )\ " {z} = z ↗ . Consequently by Equalities (2) and (3), M = M(LΩ ) if and only if
+B + = z ↗ . As by construction,
+
+                      z ↗ = Max⊆ {F ∈ CΣ | A 6⊆ F for any A ∈ B − },                      (4)
+
+we conclude that B + = z ↗ if and only if B + and B − are dual in LΣ . Hence I1 is a positive
+instance of Dual if and only if I2 is one of CMI. Concerning the observation that I1 can
+
+                                              8
+be decided in polynomial time in |I1 | using a polynomial-time algorithm for CMI, it is a
+consequence of the fact that LΣ being distributive, the size of M(LΣ ) is bounded by |X|,
+hence that |I2 | = |X ∪ {z}| + |Ω| + |M| is bounded by a polynomial in |I1 |. This concludes
+the proof.
+
+    As a consequence, there is no output quasi-polynomial time algorithm for CCM, nor
+SID, unless there is one solving the dualization in distributive lattices in quasi-polynomial
+time, a long-standing open problem [BK17, DN19].
+    As for the computation of j ↗ given an acyclic implicational base (X, Σ) and some
+element j ∈ X, a corollary of Equality (4) in the proof of Theorem 3.1 is that the task is
+even harder than the dualization in lattices given by acyclic implicational bases (a proper
+superclass of distributive lattices), whenever Σ is acyclic. To the best of our knowledge, no
+better algorithms than exponential naive ones are known on such class. This suggests that
+the technique employed in [BMN17] and pointed by Proposition 2.1 for the enumeration
+of meet-irreducible elements from join-irreducible elements may not be efficient in acyclic
+convex geometries. However, we will show in Section 5 that it can work in a subclass of
+acyclic convex geometries.
+
+
+4       Ranked convex geometries
+Let (X, Σ) be an implicational base. A rank function on (X, Σ) is a function ρ : X ! N
+such that if A ! b ∈ Σ and a ∈ A, then ρ(a) = ρ(b) + 1. We say that (X, Σ) is ranked
+if it admits a rank function. It is not hard to see that ranked implicational bases are
+acyclic, hence that they define a subclass of acyclic convex geometries. We say that a
+convex geometry is ranked if it admits a ranked implicational base. Observe that the
+construction of Theorem 3.1 is not ranked, as not all distributive lattices admit a ranked
+implicational base, and in addition the premises of the constructed implications may not
+contain elements of a same rank.
+     In this section, we prove structural properties on acyclic and ranked convex geometries.
+Let us first give a result from [HK95] (see also [Wil17]) which plays a central role in the
+remaining of the section. We recall that a set A ⊆ X is a minimal generator of b if it is
+minimal satisfying b ∈ φ(A).
+
+Proposition 4.1 ([HK95]). Let (X, φ) be an acyclic convex geometry. Then (X, φ) admits
+a unique irredundant implicational base of minimal generators which is unit-minimum.
+Furthermore, it can be computed in quadratic time from any unit implicational base.
+
+    In the following, we call critical base the irredundant implicational base of minimal
+generators of an acyclic convex geometry given by Proposition 4.1. Accordingly, we call
+critical1 a minimal generator that belongs to this base, and redundant one that does not.
+The next two propositions can be inferred from other results in matroid and antimatroid
+theory [Die87, KLS12, NK13]. We nevertheless reprove them here for self-containment.
+
+Proposition 4.2. Let (X, φ) be an acyclic convex geometry and A ⊆ X be a minimal
+generator of b ∈ X. Then A is redundant if and only if its closure φ(A) contains another
+minimal generator of b.
+    1
+    The terminology coincides with the notion of critical from [Die87] (the second part of Proposition 4.2)
+and essential from [HK95] (minimal generators that belong to every implicational bases of minimal gen-
+erators) in acyclic convex geometries. The critical base is also known to be optimum after implications
+with the same premises are combined into a single implication; see [HK95,ANR13,Ada17,Wil17] for more
+details on these notions.
+
+
+                                                    9
+Proof. Let A be a redundant minimal generator of b and Σ be the critical base of (X, φ)
+given by Proposition 4.1. Since A ! b does not belong to Σ and b ∈ φ(A), there exists an
+implication C ! b ∈ Σ, A 6= C such that C ⊆ φ(A).
+    Let A be a minimal generator of b and suppose that there exists another minimal
+generator C of b such that C ⊆ φ(A). Consider the critical base Σ of (X, φ) given by
+Proposition 4.1. Since A and C are minimal generators, C \ A is not empty. Since
+C ⊆ φ(A), for each c ∈ C \ A there are implications in Σ leading to c from A. Since C is
+a minimal generator of b, there are implications in Σ leading to b from C. Consequently,
+there exists a sequence of implications in Σ that does not contain A ! b and that never-
+theless produces b from A. We conclude that A ! b, if in Σ, is redundant, a contradiction.
+Hence A is redundant.
+
+Remark 4.3. By the choice of Σ in the proof of Proposition 4.2, the minimal generator
+of b in Proposition 4.2 can be required to be critical.
+   A corollary of this proposition is the next characterization.
+
+Corollary 4.4. Let (X, φ) be an acyclic convex geometry and A ⊆ X be a minimal
+generator of b ∈ X. Then A is redundant if and only if there exists a ∈ A such that
+φ(A) \ {a, b} implies b.
+
+    We deduce the following link between critical minimal generators and ranked implica-
+tional bases.
+
+Proposition 4.5. Let (X, φ) be an acyclic convex geometry, A ⊆ X be a critical minimal
+generator of b ∈ X, and Σ be any implicational base of (X, φ). Then there exists C ! b ∈ Σ
+such that A ⊆ C.
+
+Proof. Let A be a critical minimal generator of b and assume for contradiction that there is
+no implication C ! b ∈ Σ such that A ⊆ C. In particular since b 6∈ A and b ∈ φ(A) there
+exists at least one implication D ! b in Σ such that D ⊆ φ(A). By hypothesis A 6⊆ D.
+Hence by acyclicity of (X, φ) we deduce D ⊂ φ(A). Then there exists D0 ⊆ D ⊂ φ(A) such
+that D0 is a minimal generator of b. By Proposition 4.2, it contradicts A being critical.
+
+    We are now ready to state the main result of this section, which is of interest as far as
+the computation of a unit-minimum ranked implicational base is concerned (SID).
+
+Theorem 4.6. Let (X, φ) be an acyclic convex geometry. Then (X, φ) is ranked if and
+only if its critical base is ranked.
+
+Proof. The if part follows from the definition. We prove the other direction. Let us
+assume that (X, φ) is ranked and consider its critical base Σ∗ given by Proposition 4.1.
+Consider now any ranked implicational base Σ of (X, φ). Then by Proposition 4.5 for
+every implication A ! b ∈ Σ∗ there exists A0 ! b ∈ Σ such that A ⊆ A0 . Hence if Σ∗
+is not ranked, it must be that the elements in such A’s together with their conclusion b
+do not admit a rank function in Σ∗ . As all such elements appear as is in Σ, they cannot
+admit a rank function in Σ neither, contradicting Σ being ranked. Consequently Σ∗ must
+be ranked.
+
+    We now consider the problem of deciding whether an acyclic convex geometry is ranked,
+from an implicational base and from its meet-irreducible elements. We show that the first
+problem lies in P while the second is in coNP. Whether the second problem is in P or
+is coNP-hard is left as an open problem. As a preliminary remark, observe that the
+
+
+                                             10
+implicational base obtained by disjoint union of ranked implicational bases is ranked.
+A corollary is that every closure system obtained by product of chains is ranked, a class
+of interest in [Elb09].
+
+Proposition 4.7. Checking whether an implicational base (X, Σ) admits a rank func-
+tion ρ, and computing ρ if it does, can be done in polynomial time in the size of (X, Σ).
+
+Proof. Let G(Σ) be the implication-graph of Σ that can be computed in polynomial time
+in the size of (X, Σ). Observe that we can restrict ourselves to the case where G(Σ) is con-
+nected, as otherwise we handle each connected component independently. The algorithm
+proceeds as follows. At first it picks a vertex x of G(Σ) and set ρ(x) = n (n is chosen
+to ensure that we cannot attribute a negative rank to a vertex in the next steps, hence
+that ρ : X ! N). Then, for every unmarked vertex x with a rank, the algorithm marks x
+and extend ρ to every y ∈ x− ∪ x+ , until no such vertex exists. Note that extending ρ is
+deterministic by definition. Hence if a conflict is detected during the procedure, then we
+can certificate that Σ is not ranked. Otherwise, a rank function is computed.
+
+Proposition 4.8. Deciding whether an acyclic convex geometry is ranked from its meet-
+irreducible elements belongs in coNP.
+
+Proof. We describe a polynomial-size certificate that can be checked in polynomial time
+in order to answer negatively. Such a certificate is a set {A1 ! b1 , . . . , Ak ! bk } of
+critical implications that do not admit a rank function. Recall that by Theorem 4.6
+the convex geometry is not ranked if and only if these implications exist. Furthermore,
+they must induce an undirected cycle in G(Σ), and only one such cycle is needed to
+answer negatively. Hence k is bounded by |X|. One has to check first that each of these
+implications is indeed a critical minimal generator, following the next three steps. To
+decide whether Ai ! bi is valid, we compute the closure of Ai using meet-irreducible
+elements, as described in the preliminaries. To check that Ai is a minimal generator of
+bi , we test whether bi 6∈ φ(Ai \ {a}) for all a ∈ Ai . As for the critical property, we check
+according to Corollary 4.4 whether there exists a ∈ Ai such that φ(Ai ) \ {a, bi } implies bi .
+Then we launch the polynomial-time procedure given in Proposition 4.7 to check whether
+these implications admit a rank function.
+
+
+5    Enumerating the meet-irreducible elements in ranked ACG
+We give an output quasi-polynomial time algorithm, based on hypergraph dualization, for
+the enumeration of meet-irreducible elements (CCM) in closure systems given by a ranked
+implicational base. If in addition the implicational base is known to have its dimension
+bounded by some fixed constant, then the algorithm performs in output-polynomial time.
+    Let CΣ be a closure system given by a ranked implicational base (X, Σ) with rank
+function ρ and closure operator φ. Note that by Proposition 4.1 and Theorem 4.6 we can
+assume Σ to be the critical base of (X, φ). In the following and for every B ⊆ X we put
+
+                            B⇒   = Max⊆ {C ∈ CΣ | C ∩ B = ∅}.
+
+Observe that this definition generalizes the ↗ relation for singletons, as the following
+remark states.
+Remark 5.1. Let B ⊆ X. Then B       ⇒   = B ↗ if |B| = 1. Hence the elements in B      ⇒   are
+meet-irreducible in that case.
+
+
+                                              11
+   In the following, we say that a set B ⊆ X is ranked with respect to ρ if every element in
+B shares the same rank according to ρ, that is, if ρ(a) = ρ(b) for all a, b ∈ B. Then to every
+ranked set B we associate ρ(B) the rank of one of its elements (or an arbitrary rank if B is
+empty), and HB the hypergraph defined on vertex set V (HB ) = {x ∈ X | ρ(x) = ρ(B)+1}
+and edge set
+                        E(HB ) = {A | A ! b ∈ Σ for some b ∈ B}.
+
+             S vertex of HB has the same rank. In general, V (HB ) may be a proper
+Note that every
+superset of E(HB ): the elements that do not belong to any hyperedge of HB are of
+interest in the following. We will show that the maximal independent sets of HB allow to
+                      ⇒
+define a partition of B . For any C ⊆ X we denote by Ci the elements of C with rank i.
+
+Proposition 5.2. Let B ⊆ X be a ranked set of maximum rank in Σ. Then B           ⇒    = {C}
+where C = {x ∈ X | ρ(x) ≤ ρ(B), x 6∈ B}.
+
+Proof. As B is of maximal rank, no implication in Σ has b ∈ B for conclusion. Since Σ
+is acyclic, no element x ∈ X such that ρ(x) ≤ ρ(B) with x 6∈ B can imply b ∈ B. The
+proposition follows.
+
+   In the following, let us put k = Max{ρ(x) | x ∈ X} to be the maximum rank of Σ.
+The aforementioned partition is the following.
+
+Theorem 5.3. Let B ⊆ X be a ranked set of rank i < k, and HB be its associated hyper-
+                                      ⇒
+graph. Then there is a partition of B given by
+                       
+                                 ⇒
+                         {C ∈ B : Ci+1 = S} | S ∈ M IS(HB ) .
+
+    The proof of Theorem 5.3 is decomposed into Lemmas 5.4 and 5.5. The partition is
+illustrated in Figure 3.
+
+Lemma 5.4. Let B ⊆ X be a ranked set of rank i < k, and HB be its associated hyper-
+                            ⇒
+graph. Then to every C ∈ B corresponds S ∈ M IS(HB ) such that Ci+1 = S.
+                  ⇒
+Proof. Let C ∈ B and S = Ci+1 . Observe that since C is closed and as it does not
+intersect B, S is an independent set of HB . We show that it is maximal. Let x ∈ V (HB )
+such that x 6∈ S. Then x 6∈ C and by maximality of C, C ∪ {x} implies an element
+of B. Since ρ(x) = i + 1 and as Σ is ranked, every implication A ! y ∈ Σ with x in its
+premise has A of rank ρ(S) = i + 1 and y of rank ρ(B) = i. As ρ(y) = ρ(B) no such y
+belongs to the premise of an implication having b ∈ B for conclusion. Hence there must
+be A ! b ∈ Σ such that x ∈ A, b ∈ B and consequently such that both A ∈ E(HB ) and
+A ⊆ S ∪ {x}. Therefore S ∪ {x} is no longer an independent set of HB .
+
+Lemma 5.5. Let B ⊆ X be a ranked set of rank i < k, and HB be its associated hyper-
+                                                                ⇒
+graph. Then to every S ∈ M IS(HB ) corresponds some C ∈ B such that Ci+1 = S.
+
+Proof. Consider S ∈ M IS(HB ). Recall that every implication having an element b ∈ B
+for conclusion has its premise in E(HB ). Furthermore since Σ is ranked, the closure of S
+does not contain any other elements than those of S at rank i + 1. Consequently as S is
+an independent set of HB it does not imply any element of B. Hence there exists C ∈ B     ⇒
+such that S ⊆ C. Now since S is maximal, adding any x ∈ V (HB ) \ S to S results into
+implying some b ∈ B. We conclude that Ci+1 = S.
+
+
+
+
+                                             12
+                                                           124            135 235
+                         1        2       3
+                3
+                                                   14            24       15      35 25
+                2             4               5
+                                                           4     1        2       5
+                1
+                                  j
+                                                                      ∅
+
+Figure 3: The situation of Theorem 5.3. On the left a ranked implicational base (X, Σ)
+and its rank function (dashed). On the right the set of closed sets of Σ not containing j,
+ordered by inclusion. Maximal independent sets of E(Hj ) = {{4, 5}} are {4} and {5}.
+They partition j = j ↗ = {{1, 2, 4}} ] {{1, 3, 5}, {2, 3, 5}}.
+               ⇒
+
+
+                                                                              ⇒
+    The next lemma offers a recursive characterization of B based on the partition
+defined in Theorem 5.3. Recall that since Σ is acyclic, no element x ∈ X such that
+ρ(x) ≤ ρ(B), x 6∈ B takes part in a minimal generator of an element of B. In particular,
+                                      ⇒
+every such x belongs to all C ∈ B . For any ranked set S we put Ŝ to be the elements
+of rank ρ(S) not in S, i.e., Ŝ = {x ∈ X | ρ(x) = ρ(S), x 6∈ S}.
+Lemma 5.6. Let B ⊆ X be a ranked set of rank i < k, and HB be its associated hyper-
+graph. Let S ∈ M IS(HB ). Then
+
+                       {C ∈ B ⇒       | Ci+1 = S} = {I \ B | I ∈ Ŝ }.    ⇒                       (5)
+                                                       ⇒
+Proof. We show the first inclusion. Let C ∈ B such that Ci+1 = S. Then Ŝ ∩ C = ∅.
+Since Σ is acyclic, C contains every x ∈ X such that ρ(x) ≤ i and x 6∈ B. Consequently,
+I = C ∪ B is closed. Since ρ(B) = i and ρ(Ŝ) = i + 1, I does not imply any element of Ŝ.
+We show that I is maximal with this property. Let x 6∈ I. Because C ∈ B , there exists    ⇒
+b ∈ B such that C ∪ {x} implies b. Hence φ(C ∪ {x}) must contain an edge of HB (i.e., the
+premise of an implication A ! b, b ∈ B) and so does φ(I ∪ {x}). Since Ci+1 = S and as
+by hypothesis S is a maximal independent set of HB , either x ∈ Ŝ or I ∪ {x} implies s for
+some s ∈ Ŝ, proving the first inclusion.
+                                                  ⇒
+    We show the other inclusion. Let I ∈ Ŝ . Then Ŝ ∩ I = ∅. Since Σ is ranked, I
+contains every x ∈ X such that ρ(x) ≤ i + 1 and x ∈    / Ŝ. In particular B, S ⊆ I. Since
+S is an independent set of HB , C = I \ B does not imply b, for any b ∈ B. Hence it is
+closed and Ci+1 = S. We show that it is maximal with this property. Let x 6∈ C. Either
+x ∈ I (and then x ∈ B) or x ∈    / I. Obviously, x cannot be added to C in the first case
+without intersecting B. Let us assume that x 6∈ I. Then ρ(x) ≥ ρ(Ŝ). Since I ∈ Ŝ and        ⇒
+by maximality of I, either x ∈ Ŝ or there exists s ∈ Ŝ such that I ∪ {x} implies s, hence
+such that C ∪ {x} implies s. As by assumption S is a maximal independent set of HB ,
+C ∪ {x} implies some b ∈ B in both cases, concluding the proof.
+
+    In what follows given C ⊆ X we put C>i = {x ∈ C | ρ(x) > i}. Since the elements
+on the left and right parts of Equation (5) only differ on B, and as ρ(B) = i, a corollary
+of Lemma 5.6 is the following. It is of interest as far as the proof of our algorithm is
+concerned.
+Corollary 5.7. Let B ⊆ X be a ranked set of rank i < k, and HB be its associated hyper-
+graph. Let S ∈ M IS(HB ). Then
+
+                    {C>i | C ∈ B  ⇒       s.t. Ci+1 = S} = {I>i | I ∈ Ŝ }.       ⇒
+
+
+                                                  13
+    We now describe an algorithm which enumerates the set M(CΣ ) of meet-irreducible
+elements of CΣ given (X, Σ) whenever it is ranked. The algorithm proceeds as follows. For
+every j ∈ X, it computes j = j ↗ recursively rank by rank relying on the partition and
+                           ⇒
+the characterizations of Theorem 5.3, Lemma 5.6 and Corollary 5.7. Recall that since CΣ
+is a convex geometry, {j ↗ | j ∈ X} is a partition of M(CΣ ), hence that every solution is
+                                                                             ⇒
+obtained by such a procedure, without duplication. The computation of j is described
+in Algorithm 1. The correctness of the whole procedure is proved in Theorem 5.8.
+
+ Algorithm 1: A recursive algorithm enumerating the set B         ⇒     given a ranked
+ implicational base (X, Σ) and a ranked set B ⊆ X.
+ 1 k    Max{ρ(x) | x ∈ X};
+ 2 C    {x ∈ X | ρ(x) ≤ ρ(B), x 6∈ B};
+ 3 RecENUM(Σ, B, C);
+
+ 4 Procedure RecENUM(Σ, B, C)
+ 5     if ρ(B) = k then output C and return;
+ 6     for all S ∈ M IS(HB ) do
+ 7         Ŝ   {x ∈ X | ρ(x) = ρ(S), x 6∈ S};
+ 8         RecENUM(Σ, Ŝ, C ∪ S);
+ 9     end
+
+
+Theorem 5.8. Let f, g : N ! N be two functions and CΣ be the closure system of a given
+ranked implicational base (X, Σ). Then there is an algorithm enumerating the set M(CΣ )
+of meet-irreducible elements of CΣ with delay
+
+                                    O(|X| · f (|X| + |Σ|)),
+
+O(|X| · g(|X| + |Σ|)) space, and after O(|X| · |Σ|) preprocessing time whenever there is one
+enumerating M IS(H) with delay f (|H|) and space g(|H|) given a hypergraph H.
+
+Proof. Recall that by Proposition 2.1, there is an algorithm enumerating M(CΣ ) with delay
+at most 2 · f (|X| + |Σ|) whenever there is one enumerating j ↗ with delay f (|X| + |Σ|)
+for any j ∈ X. Hence, it is sufficient to show that there is an algorithm enumerating
+j = j ↗ with O(|X| · f (|X| + |Σ|)) delay, O(|X| · g(|X| + |Σ|)) space and after O(|X| · |Σ|)
+⇒
+preprocessing time to prove the theorem. We shall show that Algorithm 1 correctly outputs
+this set and that it performs within these time and space bounds.
+    We show correctness. Assume without loss of generality that Min{ρ(x) | x ∈ X} = 0
+and let us put k = Max{ρ(x) | x ∈ X}. Let T [B, C] denote the recursive execution-tree of
+RecENUM(Σ, B, C) for Σ, a ranked set B and C ⊆ X. We show by induction on the rank i of
+B and for every C ⊆ X that the set {C∪C>i   ∗ | C ∗ ∈ B } is output at the leaves of T [B, C].
+                                                       ⇒
+Note that we aim here to prove both implications at the same time. Let us first consider the
+case i = k. By Proposition 5.2, B = {C ∗ } where C ∗ = {x ∈ X | ρ(x) ≤ ρ(B), x 6∈ B}
+                                    ⇒
+and C>i∗ = ∅ in that case. Also C is output Line 5 of the algorithm. Hence the property
+
+holds for i = k, the tree T [B, C] being reduced to a leaf. Let us assume that the property
+holds for every rank greater than i. We show that it holds for i. Consider B of rank i.
+Recall that by Theorem 5.3, {{C ∗ ∈ B : C ∗i+1 = S} | S ∈ M IS(HB )} is a partition of
+                                        ⇒
+⇒
+B , and furthermore by Corollary 5.7,
+                    ∗
+                  {C>i | C∗ ∈ B ⇒         ∗
+                                    s.t. Ci+1                       ⇒
+                                              = S} = { I>i | I ∈ Ŝ }.
+
+
+                                              14
+                                                                        ⇒
+By inductive hypothesis since ρ(Ŝ) = i + 1, the set {C ∪ I>i+1 | I ∈ Ŝ } is output by a
+call to RecENUM(Σ, Ŝ, C) for every C ⊆ X. Since Ii+1 = S whenever I ∈ Ŝ , ⇒
+
+            {C ∪ C ∗>i | C ∗ ∈ B
+                               ⇒   s.t. C ∗i+1 = S} = {C ∪ S ∪ I>i+1 | I ∈ Ŝ }
+                                                                            ⇒
+
+                                                  ={     C ∪ I>i            ⇒
+                                                                     | I ∈ Ŝ }
+
+for every C ⊆ X. Hence by Theorem 5.3 the set {C ∪ C>i     ∗ | C ∗ ∈ B } is output by
+                                                                         ⇒
+a call to RecENUM(Σ, Ŝ, C ∪ S) for every S ∈ M IS(HB ) Lines 6, 7 and 8. Consequently
+it is obtained at the leaves of T [B, C]. This concludes the induction. Now since every
+C ∗ ∈ B intersects the ρ(B) first ranks on C = {x ∈ X | ρ(x) ≤ ρ(B), x 6∈ B}, the set
+      ⇒
+⇒
+B is output by an initial call to RecENUM(Σ, B, C).
+     Let us now consider the complexity of the algorithm. Observe that a rank function
+of (X, Σ) and an ordered sequence of the elements of X according to their rank can be
+computed in O(|X| · |Σ|) preprocessing time and O(|X|2 ) space, so that the computations
+of C and Ŝ Lines 2 and 7 can be achieved in O(|X|) time. As for the computation
+of HB , it can be achieved in O(|X| + |Σ|) time and space by indexing implications of
+Σ. By assumption since |H| ≤ |X| + |Σ|, every S ∈ M IS(HB ) can be enumerated with
+f (|X|+|Σ|) delay and using g(|X|+|Σ|) total space. Assuming that f, g ∈ Ω(|X|+|Σ|), the
+computation of HB Line 6, Ŝ Line 7 is meaningless in term of time and space compared
+to that of S ∈ M IS(HB ). This also holds for the space needed by the preprocessing
+steps. Now, since the depth of the recursive tree is bounded by |X|, the time and space
+complexities follow.
+
+    A trivial bound of f (|H| + |M IS(H)|) on the delay of an output-polynomial time
+algorithm enumerating M IS(H) within the same time yields an output quasi-polynomial
+time algorithm enumerating meet-irreducible elements in closure systems given by ranked
+implicational bases, using the algorithm of Fredman and Khachiyan [FK96] as a subroutine
+for the enumeration of M IS(H). If moreover the dimension of Σ is known to be bounded
+by some fixed constant, then the described algorithm runs in output-polynomial time using
+the algorithm of Eiter and Gottlob [EG95]. It performs with polynomial delay whenever
+Σ is of dimension two using the algorithm of Tsukiyama [TIAS77] on the enumeration of
+maximal independent sets in graphs.
+    It is worth mentioning that the partition given by Theorem 5.3 holds for more general
+closure spaces than ranked convex geometries. One such convex geometry is given in
+Example 5.9. Therefore, the question of Open problem 5.10 naturally arises.
+Example 5.9. We consider the implicational base Σ = {1 ! 2, 1 ! 3, 2 ! 4, 34 ! 5}.
+Despite the fact that Σ is not ranked, Theorem 5.3 holds. Hence, an algorithm in the
+fashion of Algorithm 1 correctly outputs the meet-irreducible elements in that case.
+Open problem 5.10. For which closure spaces does Theorem 5.3 hold?
+    Recall however that by Theorem 3.1 and Equality (1) the strategy of enumerating j ↗
+for every j ∈ X in acyclic convex geometries is harder than the dualization in lattices
+given by acyclic implicational bases.
+
+
+
+6    Constructing the ranked implicational base
+In this section, we give an output quasi-polynomial time algorithm constructing the critical
+base of a ranked convex geometry given by the set of its meet-irreducible elements (SID).
+Recall by Theorem 4.6 that such an implicational base is unit-minimum.
+
+                                             15
+   In what follows, let (X, φ) be a ranked convex geometry, (X, Cφ ) be its closure system
+and M = M(Cφ ) be the set of its meet-irreducible elements. Let (X, Σ) denote the critical
+base we are willing to compute. Then for every j ∈ X we put
+
+                        pred(j) = {a ∈ X | ∃A ! j ∈ Σ, a ∈ A}.
+
+In other words, pred(j) is the set of elements of X belonging to some critical minimal
+generator of j. Recall that since Σ is ranked, there is no minimal generator A of b such
+that a ∈ A and a, b ∈ pred(j).
+                           T Then, to j ∈ X we associate the hypergraph Hj defined
+on vertex set V (Hj ) = X \ M ∈j ↗ M and edge set
+
+                               E(Hj ) = {X \ M | M ∈ j ↗ }.
+
+It is well known that the minimal transversals of this hypergraph are exactly the minimal
+generators of j. See for instance [MR92, Wil94, BDVG18, HN18]. In the following we
+show that we can restrict this hypergraph so that its minimal transversals are exactly the
+critical minimal generators of j. The next lemma provides a characterization of pred(j)
+that depends on M.
+
+Lemma 6.1. Let j ∈ X, M ∈ j ↗ and a ∈
+                                    / M . Then a ∈ pred(j) if and only if M ∪ {a, j}
+is closed.
+
+Proof. We prove the first implication. Consider j ∈ X, M ∈ j ↗ and a ∈  / M . Note that
+one such M exists as by previous remarks a belongs to at least one minimal transversal of
+Hj . Let us assume that a ∈ pred(j). Since Σ is ranked, for any x such that ρ(x) ≤ ρ(j),
+x 6= j we have x ∈ M . This holds in particular for every element y ∈ X, y 6= j such that
+there is a minimal generator A of y with a ∈ A as ρ(y) < ρ(a) and ρ(a) = ρ(j) + 1 in that
+case. Consequently, M ∪ {a, j} is closed.
+    We prove the other implication. Let j ∈ X, M ∈ j ↗ and a ∈ / M such that M ∪ {a, j}
+is closed. By definition M is closed, it does not contain j, and it is maximal with this
+property. In particular M ∪ {a} implies j, that is, j ∈ φ(M ∪ {a}). By Proposition 4.2
+and Remark 4.3, there exists a critical minimal generator E of j such that E 6⊆ M and
+E ⊆ φ(M ∪ {a}) = M ∪ {a, j} as M ∪ {a, j} is closed by assumption. Then a ∈ E and
+consequently a ∈ pred(j).
+
+   Observe that the second part of the proof holds in the more general context of acyclic
+convex geometries. We are now ready to characterize the critical base of a ranked convex
+geometry. Given a hypergraph H and S ⊆ V (H) we note H[S] the hypergraph induced by
+S defined by V (H[S]) = S and E(H[S]) = {E ∩ S | E ∈ H}.
+
+Theorem 6.2. Let (X, Σ) be the critical base of a ranked convex geometry. Let j ∈ X.
+Then A is a critical minimal generator of j if and only if A ∈ T r(Hj [pred(j)]).
+
+Proof. We prove the first implication. Since A is a critical minimal generator of j, it is a
+minimal transversal of Hj , hence of Hj [pred(j)] as A ⊆ pred(j) by definition.
+    We prove the other implication. Let A be a minimal transversal of Hj [pred(j)]. Note
+that E ∩ pred(j) 6= ∅ for all E ∈ E(Hj ), as pred(j) is a transversal of Hj . Hence A
+is a minimal transversal of Hj . Assume toward a contradiction that A is a redundant
+minimal generator of j. Then by Corollary 4.4 there exists a ∈ A such that φ(A) \ {a, j}
+implies j. That is, there is at least one critical minimal generator E of j, a ∈ / E and
+E ⊆ φ(A) \ {a} ⊆ φ(A). In particular ρ(E) = ρ(j) + 1. Furthermore since A is minimal
+generator of j, E 6⊆ φ(A \ {a}). Consequently, there is an element e ∈ E which is implied
+
+                                            16
+by some A0 ⊂ A such that a ∈ A0 . Hence a and e must have two different ranks. However
+since a belongs to pred(j), it belongs to a critical minimal generator of j and has rank
+ρ(j) + 1. This contradicts ρ(a) 6= ρ(e), and the theorem follows.
+
+    We are now ready to describe an algorithm which enumerates the critical base of a
+ranked convex geometry given by the set of its meet-irreducible elements. For every j ∈ X,
+it computes the set pred(j) of elements belonging to some critical minimal generator of j,
+and the complementary hypergraph Hj of meet-irreducible elements in ↗ relation with j.
+Then according to Theorem 6.2 it enumerates every minimal transversal of Hj [pred(j)].
+A trace of this algorithm is given in Example 6.3. Its complexity analysis is given in
+Theorem 6.4.
+Example 6.3. Consider the implicational base Σ of Figure 3. Note that j ↗ = {{1, 2, 4},
+{1, 3, 5}, {2, 3, 5}}. We aim to compute the critical minimal generators of j. Here, E(Hj ) =
+{{3, 5}, {2, 4}, {1, 4}}. Minimal generators of j are {1, 2, 3}, {1, 2, 5}, {3, 4} and {4, 5}.
+Observe that for 1, {2, 3, 5} ∪ {1, j} is not closed. The same goes for 2 with {1, 3, 5}, and
+3 with {1, 2, 4}. On the other hand, {1, 2, 4} ∪ {5, j} is closed and {2, 3, 5} ∪ {4, j} too.
+Hence by Lemma 6.1, one has pred(j) = {4, 5}, and E(Hj [pred(j)]) = {{4}, {5}}. It has
+a unique minimal transversal which is {4, 5}. By Theorem 6.2, {4, 5} is a critical minimal
+generator of j. Hence 45 ! j belongs to Σ. This coincides with Σ.
+Theorem 6.4. Let f, g : N ! N be two functions and (X, φ) be a ranked convex geometry
+of closure system Cφ given by the set M = M(Cφ ) of its meet-irreducible elements. Then
+there is an algorithm enumerating the ranked implicational base (X, Σ) of critical minimal
+generators of (X, φ) with delay
+                                    O(f (|X| + |M|)),
+O(|X| · |M| + g(|X| + |M|)) space, and after O(|X|3 · |M|2 ) preprocessing time if there is
+one enumerating T r(H) with delay f (|H|) and space g(|H|) given a hypergraph H.
+Proof. By Theorem 6.2, A ⊆ X is a critical minimal generator of j ∈ X if and only if it
+is a minimal transversal of the hypergraph Hj [pred(j)]. Note that the closure φ(S) of a
+set S ⊆ X can be computed in O(|X| · |M|) time by intersecting every M ∈ M such that
+S ⊆ M . Given M ∈ M, computing j ∈ X such that M ∈ j ↗ can be done in O(|M| · |X|2 )
+time by checking whether M ∪ {j} is closed for every j ∈ X \ M . Hence, computing the
+partition {j ↗ | j ∈ X} of M can be done in O(|M|2 · |X|2 ) time and O(|X| · |M|) space.
+Using Lemma 6.1, the sets pred(j), j ∈ X can be computed in O(|X|3 · |M|2 ) time and
+O(|X|2 ) space by checking for every j ∈ X and a ∈ X whether there exists M ∈ j ↗ such
+that a 6∈ M and M ∪ {a, j} is closed. Note that O(|X|2 ) is bounded by O(|X| · |M|) as
+{j ↗ | j ∈ X} is a partition of M. In addition, the hypergraphs Hj [pred(j)], j ∈ X can
+be computed in O(|X|2 · |M|) time and O(|X| · |M|) space as
+                                   X
+                                       |E(Hj )| = |M|.
+                                    j∈X
+
+Ultimately, this computation can be achieved in O(|X|3 · |M|2 ) preprocessing time and
+using O(|X| · |M|) space.
+    Now by assumption and since |Hj [pred(j)]| ≤ |X|+|M|, the critical minimal generators
+of j ∈ X can be enumerated with f (|X| + |M|) delay and using g(|X| + |M|) space. The
+theorem follows.
+
+    A trivial bound of f (|H| + |T r(H)|) on the delay of an output-polynomial time al-
+gorithm enumerating T r(H) within the same time yields an output quasi-polynomial
+
+                                             17
+time algorithm constructing the ranked implicational base of a ranked convex geome-
+try given by the set of its meet-irreducible elements, using the algorithm of Fredman and
+Khachiyan [FK96] as a subroutine for the enumeration of T r(H). If furthermore every
+meet-irreducible element M ∈ M(Cφ ) is such that |M | ≥ |X| − k for some fixed inte-
+ger k ∈ N, then the described algorithm performs in output-polynomial time using the
+algorithm of Eiter and Gottlob in [EG95].
+    As in the previous section, observe that the characterization of Lemma 6.1 may go
+beyond the scope of ranked convex geometries. In particular, the algorithm of Theorem 6.4
+will correctly output the critical base of the convex geometry given in Example 5.9. This
+yields the next question.
+Open problem 6.5. For which closure spaces does Theorem 6.2 hold?
+
+
+7       Conclusion
+In this paper, we investigated the complexity of translating between meet-irreducible el-
+ements and unit-minimum implicational bases in acyclic convex geometries. Even when
+restricted to this class, we showed that the problem is harder than the dualization in
+distributive lattices, a generalization of the hypergraph dualization problem for which the
+existence of an output quasi-polynomial time algorithm is open.2 Then, we considered a
+proper subclass of acyclic convex geometries, namely ranked convex geometries, as those
+that admit a ranked implicational base analogous to that of ranked posets. For this class,
+we provided output quasi-polynomial time algorithms based on hypergraph dualization
+for translating between the two representations.
+    Several questions arise for future research. First, we would like to know how impli-
+cations with premises of size one can be integrated to our result, regardless of the rank.
+It seems that it only barely affects the strategy employed in Section 5 as long as these
+implications do not link the elements of a same rank. This observation relates to Exam-
+ple 5.9 and Open problems 5.10 and 6.5. Note however that in general acyclic convex
+geometries, CMI is harder than the dualization in distributive lattices (c.f. Theorem 3.1),
+and that the computation of j ↗ is even harder than the dualization in lattices given by
+acyclic implicational bases (c.f. Theorem 3.1 and Equality 4).
+    Also, we leave open the question whether ranked convex geometries can be identified
+in polynomial time from meet-irreducible elements. As shown in Proposition 4.8, this
+problem lies in coNP.
+
+
+References
+[Ada17]      Kira Adaricheva. Optimum basis of finite convex geometry. Discrete Applied
+             Mathematics, 230:11–20, 2017.
+
+[AGT03]      Kira V. Adaricheva, Viktor A. Gorbunov, and V. I. Tumanov. Join-
+             semidistributive lattices and convex geometries. Advances in Mathematics,
+             173(1):1–49, 2003.
+
+[AIBT14] Kira V. Adaricheva, Giuseppe F. Italiano, Hans Kleine Büning, and György
+         Turán. Horn formulas, directed hypergraphs, lattices and closure systems: re-
+    2
+    We would like to mention that an output quasi-polynomial time algorithm for the dualization in
+distributive lattices has recently been announced by Elbassioni during the rewiewing process of this article
+[Elb20].
+
+
+                                                    18
+           lated formalisms and applications (Dagstuhl Seminar 14201). Dagstuhl Reports,
+           4(5):1–26, 2014.
+
+[AN14]     Kira Adaricheva and James B Nation. On implicational bases of closure sys-
+           tems with unique critical sets. Discrete Applied Mathematics, 162:51–69, 2014.
+
+[AN17]     Kira V. Adaricheva and James B. Nation. Discovery of the D-basis in bi-
+           nary tables based on hypergraph dualization. Theoretical Computer Science,
+           658:307–315, 2017.
+
+[ANR13]    Kira Adaricheva, James B Nation, and Robert Rand. Ordered direct im-
+           plicational basis of a finite closure system. Discrete Applied Mathematics,
+           161(6):707–723, 2013.
+
+[BČKK09] Endre Boros, Ondřej Čepek, Alexander Kogan, and Petr Kučera. A subclass of
+         horn CNFs optimally compressible in polynomial time. Annals of Mathematics
+         and Artificial Intelligence, 57(3-4):249–291, 2009.
+
+[BDH+ 20] Marthe Bonamy, Oscar Defrain, Marc Heinrich, Michał Pilipczuk, and Jean-
+          Florent Raymond. Enumerating minimal dominating sets in Kt -free and vari-
+          ants. ACM Transactions on Algorithms, 16(3):1–23, 2020.
+
+[BDVG18] Karell Bertet, Christophe Demko, Jean-François Viaud, and Clément Guérin.
+         Lattices, closures systems and implication bases: a survey of structural aspects
+         and algorithms. Theoretical Computer Science, 743:93–109, 2018.
+
+[BI95]     Jan C. Bioch and Toshihide Ibaraki. Complexity of identification and dualiza-
+           tion of positive boolean functions. Information and Computation, 123(1):50–
+           63, 1995.
+
+[Bir40]    Garrett Birkhoff. Lattice theory, volume 25. American Mathematical Soc.,
+           1940.
+
+[BK13]     Mikhail A. Babin and Sergei O. Kuznetsov. Computing premises of a minimal
+           cover of functional dependencies is intractable. Discrete Applied Mathematics,
+           161(6):742–749, 2013.
+
+[BK17]     Mikhail A. Babin and Sergei O. Kuznetsov. Dualization in lattices given by
+           ordered sets of irreducibles. Theoretical Computer Science, 658:316–326, 2017.
+
+[BM70]     Marc Barbut and Bernard Monjardet. Ordre et classification, Algèbre et com-
+           binatoire, volume 1 & 2. Hachette, Paris, 1970.
+
+[BM10]     Karell Bertet and Bernard Monjardet. The multiple facets of the canonical di-
+           rect unit implicational basis. Theoretical Computer Science, 411(22-24):2155–
+           2166, 2010.
+
+[BMN17]    Laurent Beaudou, Arnaud Mary, and Lhouari Nourine. Algorithms for k-meet-
+           semidistributive lattices. Theoretical Computer Science, 658:391–398, 2017.
+
+[CH11]     Yves Crama and Peter L. Hammer. Boolean functions: Theory, algorithms,
+           and applications. Cambridge University Press, 2011.
+
+
+
+
+                                           19
+[CM03]    Nathalie Caspard and Bernard Monjardet. The lattices of closure systems,
+          closure operators, and implicational systems on a finite set: a survey. Discrete
+          Applied Mathematics, 127(2):241–269, 2003.
+
+[DF12]    Jean-Paul Doignon and Jean-Claude Falmagne. Knowledge spaces. Springer
+          Science & Business Media, 2012.
+
+[Die87]   Brenda L. Dietrich. A circuit set characterization of antimatroids. Journal of
+          Combinatorial Theory, Series B, 43(3):314–321, 1987.
+
+[DN19]    Oscar Defrain and Lhouari Nourine. Dualization in lattices given by implica-
+          tional bases. In International Conference on Formal Concept Analysis, pages
+          89–98. Springer, 2019.
+
+[DP02]    Brian A. Davey and Hilary A. Priestley. Introduction to Lattices and Order.
+          Cambridge University Press, 2002.
+
+[EG95]    Thomas Eiter and Georg Gottlob. Identifying the minimal transversals of a
+          hypergraph and related problems. SIAM Journal on Computing, 24(6):1278–
+          1304, 1995.
+
+[EJ85]    Paul H. Edelman and Robert E. Jamison. The theory of convex geometries.
+          Geometriae dedicata, 19(3):247–270, 1985.
+
+[Elb09]   Khaled M. Elbassioni. Algorithms for dualization over products of partially
+          ordered sets. SIAM Journal on Discrete Mathematics, 23(1):487–510, 2009.
+
+[Elb20]   Khaled Elbassioni. On dualization over distributive lattices. arXiv preprint
+          arXiv:2006.15337, 2020.
+
+[EMG08]   Thomas Eiter, Kazuhisa Makino, and Georg Gottlob. Computational as-
+          pects of monotone dualization: A brief survey. Discrete Applied Mathematics,
+          156(11):2035–2049, 2008.
+
+[FJN95]   Ralph Freese, Jaroslav Ježek, and James B. Nation. Free lattices, volume 42.
+          American Mathematical Soc., 1995.
+
+[FK96]    Michael L. Fredman and Leonid Khachiyan. On the complexity of dualization
+          of monotone disjunctive normal forms. Journal of Algorithms, 21(3):618–628,
+          1996.
+
+[GD86]    Jean-Louis Guigues and Vincent Duquenne. Familles minimales d’implications
+          informatives résultant d’un tableau de données binaires. Mathématiques et
+          Sciences humaines, 95:5–18, 1986.
+
+[GW12]    Bernhard Ganter and Rudolf Wille. Formal concept analysis: mathematical
+          foundations. Springer Science & Business Media, 2012.
+
+[GW16]    George Grätzer and Friedrich Wehrung. Lattice theory: special topics and
+          applications. Springer, 2016.
+
+[HK93]    Peter L. Hammer and Alexander Kogan. Optimal compression of propositional
+          horn knowledge bases: complexity and approximation. Artificial Intelligence,
+          64(1):131–145, 1993.
+
+
+                                          20
+[HK95]    Peter L. Hammer and Alexander Kogan. Quasi-acyclic propositional horn
+          knowledge bases: Optimal compression. IEEE Transactions on knowledge and
+          data engineering, 7(5):751–762, 1995.
+
+[HN18]    Michel Habib and Lhouari Nourine. Representation of lattices via set-colored
+          posets. Discrete Applied Mathematics, 249:64–73, 2018.
+
+[JYP88]   David S. Johnson, Mihalis Yannakakis, and Christos H. Papadimitriou. On
+          generating all maximal independent sets. Information Processing Letters,
+          27(3):119–123, 1988.
+
+[Kha95]   Roni Khardon. Translating between horn representations and their character-
+          istic models. Journal of Artificial Intelligence Research, 3:349–372, 1995.
+
+[KKS93]   Henry A. Kautz, Michael J. Kearns, and Bart Selman. Reasoning with char-
+          acteristic models. In AAAI, volume 93, pages 34–39. Citeseer, 1993.
+
+[KLS12]   Bernhard Korte, László Lovász, and Rainer Schrader. Greedoids, volume 4.
+          Springer Science & Business Media, 2012.
+
+[KSS00]   Dimitris J. Kavvadias, Martha Sideri, and Elias C. Stavropoulos. Generating
+          all maximal models of a boolean expression. Information Processing Letters,
+          74(3-4):157–162, 2000.
+
+[Mai83]   David Maier. Theory of relational databases. Computer Science Pr, 1983.
+
+[Mar75]   George Markowsky. The factorization and representation of lattices. Transac-
+          tions of the American Mathematical Society, 203:185–200, 1975.
+
+[MR92]    Heikki Mannila and Kari-Jouko Räihä. The design of relational databases.
+          Addison-Wesley Longman Publishing Co., Inc., 1992.
+
+[NK13]    Masataka Nakamura and Kenji Kashiwabara. The prime stems of rooted cir-
+          cuits of closure spaces and minimum implicational bases. the electronic journal
+          of combinatorics, 20(1):P22, 2013.
+
+[NP15]    Lhouari Nourine and Jean-Marc Petit. Beyond hypergraph dualization. En-
+          cyclopedia of Algorithms, pages 1–6, 2015.
+
+[Rud17]   Sebastian Rudolph. Succinctness and tractability of closure operator represen-
+          tations. Theoretical Computer Science, 658:327–345, 2017.
+
+[Sho86]   Robert C. Shock. Computing the minimum cover of functional dependencies.
+          Information Processing Letters, 22(3):157–159, 1986.
+
+[Ste99]   Manfred Stern. Semimodular lattices: theory and applications, volume 73.
+          Cambridge University Press, 1999.
+
+[SW14]    Luigi Santocanale and Friedrich Wehrung. Lattices of regular closed subsets of
+          closure spaces. International Journal of Algebra and Computation, 24(07):969–
+          1030, 2014.
+
+[Tam00]   Hisao Tamaki. Space-efficient enumeration of minimal transversals of a hyper-
+          graph. IPSJ-AL, 75:29–36, 2000.
+
+
+                                          21
+[TIAS77]   Shuji Tsukiyama, Mikio Ide, Hiromu Ariyoshi, and Isao Shirakawa. A new
+           algorithm for generating all the maximal independent sets. SIAM Journal on
+           Computing, 6(3):505–517, 1977.
+
+[Wil94]    Marcel Wild. A theory of finite closure spaces based on implications. Advances
+           in Mathematics, 108(1):118–139, 1994.
+
+[Wil95]    Marcel Wild. Computations with finite closure systems and implications.
+           In International Computing and Combinatorics Conference, pages 111–120.
+           Springer, 1995.
+
+[Wil00]    Marcel Wild. Optimal implicational bases for finite modular lattices. Quaes-
+           tiones Mathematicae, 23(2):153–161, 2000.
+
+[Wil17]    Marcel Wild. The joy of implications, aka pure horn formulas: mainly a survey.
+           Theoretical Computer Science, 658:264–292, 2017.
+
+
+
+
+                                           22
+
