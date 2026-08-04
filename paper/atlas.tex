@@ -37,13 +37,14 @@
 We study a finite vocabulary $\El$ of recurring on-chain financial mechanisms
 together with two families of constraints: \emph{requirements}, stating what a
 mechanism needs, and \emph{prohibitions}, stating which combinations are
-forbidden. We show that admissibility is the set of common fixed points of an
-inflationary operator $\Gamma$ and a deflationary operator $\Delta$; that this
-``diagonal'' structure obstructs three standard frameworks (interlaced
-bilattices, approximation fixpoint theory, and equalizers in $\mathbf{Pos}$);
-that reasoning over the full powerset collapses for reasons intrinsic to the
-constraint set rather than to any operator; and that a sound and empirically
-exact procedure exists on \emph{completion lattices} $[S,\top]$. We record what
+forbidden. We show that requirements and warrants are dual-Horn while prohibitions are
+Horn; that consequently the protocols satisfying requirements and warrants form
+a complete lattice under union, and that prohibitions are the sole obstruction to
+admissibility inheriting it; that the resulting opposition of polarities
+obstructs approximation fixpoint theory and interlaced bilattices for one common
+reason; that reasoning over the full powerset collapses for reasons intrinsic to
+the constraint set rather than to any operator; and that the positive theory does
+not constrain any completion of any protocol in the corpus. We record what
 is proved, what is measured, and what remains open, and we are explicit about
 which is which.
 \end{abstract}
@@ -98,31 +99,29 @@ formalism that assumed a clean vocabulary would be modelling a different object.
 
 \subsection{The shape of the answer}
 
-Two operators act on protocols. A \emph{closure} $\Gamma$ adds what the present
-mechanisms require. A \emph{warrant} operator $\Delta$ removes mechanisms that
+Two families of constraint act on protocols. \emph{Requirements} say what the
+present mechanisms need. \emph{Warrants} remove mechanisms that
 nothing present makes use of --- an element carried with no consumer is
 unjustified, and in a security setting it is attack surface with no compensating
-function. A protocol is \emph{admissible} when it is fixed by both and forbidden
+function. A protocol is \emph{admissible} when it satisfies both and is forbidden
 by none of the prohibitions.
 
-The two operators point in opposite directions relative to the identity:
-$\Gamma$ is inflationary and $\Delta$ deflationary. Admissibility is therefore a
+Read as operators where that is possible, the two point in opposite directions
+relative to the identity: one inflationary, one deflationary. Admissibility is therefore a
 \emph{diagonal} --- the agreement set of two maps --- and this single fact
-explains a sequence of otherwise unrelated failures. Interlaced bilattices cannot
-represent it, because their representation theorem makes them componentwise
-products and a componentwise structure is blind to a diagonal. Approximation
-fixpoint theory cannot use it, because its consistency requirement, applied on
-the diagonal, forces both operators to be the identity. Equalizers in the
-category of posets give nothing beyond a bare poset. In each case the obstruction
-is the same, and recognising it is more useful than any of the individual
-refutations.
+explains a sequence of otherwise unrelated failures. Interlaced bilattices cannot represent it,
+because their representation theorem makes them componentwise products and a
+componentwise structure is blind to a diagonal; approximation fixpoint theory
+cannot use it, because its consistency requirement forces both operators to be
+the identity. The obstruction is the same in both cases, and recognising that is
+more useful than either refutation on its own.
 
-What survives is more modest and more definite. Because the warrant relation is
-constructed as the residual of the requirement relation, $\Delta$ maps
-$\Gamma$-closed sets to $\Gamma$-closed sets, and the common fixed points form a
-complete lattice. That is a structure theorem, but a thin one: a lattice says
-little about any individual protocol. The stronger result concerns the
-deterministic core. Restricted to requirements with a single consequent, the
+What survives is proved rather than measured, and follows from clause polarity
+alone. Requirements and warrants are both dual-Horn, so the protocols satisfying
+them are closed under union and form a complete lattice; prohibitions are Horn,
+destroy that closure, and are the sole obstruction to admissibility inheriting
+it. A lattice says little about any individual protocol, so the stronger result
+concerns the deterministic core. Restricted to requirements with a single consequent, the
 closure appears to satisfy the anti-exchange property, making it a \emph{convex
 geometry} --- and in a convex geometry every closed set has a unique minimal
 generator. This gives each protocol a canonical form: an irredundant core from
@@ -221,78 +220,85 @@ adjoint) of the requirement relation; the vocabulary as originally recorded
 contains $\Law$ and $\Haz$ only, and $|\War| = 27$.
 \end{remark}
 
-\section{The two operators}
+\section{Model classes, not operators}\label{sec:models}
 
-\begin{definition}[Closure and warrant operators]
-Define $\Gamma, \Delta : L \to L$ by
+It is tempting to model requirements by a closure operator that adds what is
+missing. For disjunctive requirements no such operator exists: a term with
+several alternatives determines no unique addition, so there is no canonical
+map $L \to L$ whose fixed points are the models of $\Law$. We therefore work with
+model classes throughout, and reserve operator language for the definite fragment
+of \S\ref{sec:convex}, where it is available.
+
+\begin{definition}[Model classes]
+For a clause set $S$ write $\mathcal{M}(S) = \{X \subseteq \El : X \models S\}$.
+Put
 \[
-  \Gamma(X) \;=\; X \cup \{\,\text{elements forced by requirements fired in } X\,\},
-  \qquad
-  \Delta(X) \;=\; X \setminus \{\,e \in X : \text{$e$ is unwarranted in } X\,\},
+  \mathcal{R} = \mathcal{M}(\Law), \qquad
+  \mathcal{W} = \mathcal{M}(\War), \qquad
+  \mathcal{H} = \mathcal{M}(\Haz), \qquad
+  \Adm = \mathcal{R} \cap \mathcal{W} \cap \mathcal{H}.
 \]
-each iterated where necessary to a fixed point of its own defining step.
 \end{definition}
 
-\begin{proposition}\label{prop:polarity}
-$\Gamma$ is \emph{inflationary} $(X \subseteq \Gamma(X))$, monotone and
-idempotent, hence a closure operator. $\Delta$ is \emph{deflationary}
-$(\Delta(X) \subseteq X)$ and monotone.
-\end{proposition}
+\begin{lemma}[Polarity]\label{lem:polarity}
+Every requirement and every warrant is a clause with exactly one negative
+literal, hence dual-Horn. Every prohibition is purely negative, hence Horn.
+\end{lemma}
 
-\begin{measurement}\label{meas:notidem}
-$\Delta$ is \emph{not} idempotent.
-\end{measurement}
-
-\begin{proposition}[Free repair]\label{prop:repair}
-$\Delta^{\omega} \coloneqq \Delta^{|\El|}$ is deflationary, monotone and
-idempotent --- a kernel operator --- and $\Fix(\Delta^{\omega}) = \Fix(\Delta)$.
-Consequently Measurement~\ref{meas:notidem} is immaterial to everything below,
-and we may take $\Delta$ idempotent without loss.
-\end{proposition}
-
-\begin{definition}[Admissibility]
-$X$ is \emph{admissible} iff $\Gamma(X) = X$, $\Delta(X) = X$, and no
-$H \in \Haz$ satisfies $H \subseteq X$. Write
-$\Adm = \Fix(\Gamma) \cap \Fix(\Delta) \cap \Haz^{c}$.
-\end{definition}
-
-\begin{proposition}\label{prop:moore}
-$\Fix(\Gamma)$ is a Moore family (closed under intersection) and $\Fix(\Delta)$
-is an interior system (closed under union). Neither conclusion requires
-idempotence of the generating operator.
-\end{proposition}
-
-\begin{remark}[The diagonal]
-Proposition~\ref{prop:moore} is the structural content of the whole paper:
-$\Adm$ is a \emph{Moore family intersected with a co-Moore family}. The two
-closure halves cancel exactly, and $\Adm$ is a diagonal --- the agreement set of
-two maps pointing in opposite directions relative to the identity. Every
-obstruction in Section~\ref{sec:obstructions} is an instance of a framework
-being unable to see a diagonal.
-\end{remark}
-
-\section{Polarity}
-
-\begin{theorem}[Polarity]\label{thm:polarity}
-The models of $\Law$ are closed under union; the models of $\Haz$ are closed
-under intersection; the models of $\Law \cup \Haz$ are in general closed under
-neither.
-\end{theorem}
-
-\begin{proof}[Proof sketch]
-Requirement clauses are dual-Horn and prohibition clauses are Horn. By
-Schaefer's classification, dual-Horn constraint languages are exactly those
-preserved by $\vee$ (union) and Horn languages exactly those preserved by
-$\wedge$ (intersection). A conjunction of the two need be preserved by neither,
-and explicit witnesses exist in the present instance.
+\begin{proof}
+A requirement $(s,T)$ contributes $\neg s \vee \bigvee_{e \in T_j} e$ for each
+$j$; a warrant $(e,C)$ contributes $\neg e \vee \bigvee_{c \in C} c$. A
+prohibition $H$ contributes $\bigvee_{e \in H} \neg e$.
 \end{proof}
 
-\begin{measurement}\label{meas:arity}
-Of the $34$ element-expressible clauses ($31$ requirement, $3$ prohibition),
-exactly $17$ are \emph{bijunctive} (width $\le 2$); the widest has $5$ literals.
-In the CNF scored for Measurement~\ref{meas:ablation58} the widest clause has
-$34$ literals and $20.4\%$ are bijunctive; the system is not median-closed.
+\begin{theorem}[Closure properties]\label{thm:closure}
+$\mathcal{R}$ and $\mathcal{W}$ are closed under union; $\mathcal{H}$ is closed
+under intersection. Neither $\mathcal{R}$ nor $\mathcal{W}$ is closed under
+intersection, and $\mathcal{H}$ is not closed under union.
+\end{theorem}
+
+\begin{proof}
+Dual-Horn clause sets are exactly those whose models are closed under the
+coordinatewise maximum, i.e.\ union; Horn clause sets are exactly those closed
+under minimum, i.e.\ intersection. The negative halves are witnessed below.
+\end{proof}
+
+\begin{measurement}\label{meas:closureprops}
+$\{Op,Tp\}$ and $\{Ex,Op\}$ both satisfy $\Law$, while their intersection
+$\{Op\}$ does not ($L1a$ is unsatisfied). Sampling $194{,}775$ pairs from
+$\mathcal{R}$: $1{,}923$ fail intersection-closure, $0$ fail union-closure.
 \end{measurement}
+
+\begin{corollary}[Structure of $\mathcal{R} \cap \mathcal{W}$]\label{cor:lattice}
+$\mathcal{R} \cap \mathcal{W}$ is a union-closed family containing $\emptyset$
+and $\El$, hence a complete lattice under inclusion with $\bigvee = \bigcup$.
+\end{corollary}
+
+\begin{proof}
+Intersections of dual-Horn model classes are dual-Horn, so union-closure is
+inherited from Lemma~\ref{lem:polarity} and Theorem~\ref{thm:closure}. Both
+$\emptyset$ and $\El$ satisfy every clause with a nonempty antecedent. A
+union-closed family with a top element is a complete lattice, joins being unions
+and meets the union of all common lower bounds.
+\end{proof}
+
+\begin{measurement}\label{meas:latticeconf}
+Over $175{,}230$ pairs from $\mathcal{R} \cap \mathcal{W}$ there are $0$
+union-closure violations. Meet is not intersection: $51{,}917$ pairs have
+$X \cap Y \notin \mathcal{R} \cap \mathcal{W}$.
+\end{measurement}
+
+\begin{corollary}\label{cor:admnotlattice}
+$\Adm = (\mathcal{R} \cap \mathcal{W}) \cap \mathcal{H}$ is not union-closed, and
+so is not a sublattice of Corollary~\ref{cor:lattice}. Prohibitions are the sole
+obstruction.
+\end{corollary}
+
+\begin{definition}[Warrant]
+$X$ \emph{warrants} $e \in X$ if $C(e) \cap X \neq \emptyset$. The map
+$\Delta(X) = \{e \in X : X \text{ warrants } e\}$, iterated to a fixed point, is
+deflationary and monotone; its fixed points are exactly $\mathcal{W}$.
+\end{definition}
 
 \section{Obstructions}\label{sec:obstructions}
 
@@ -523,43 +529,33 @@ $\mathcal{M}(\Haz)$ fails $\cup$-closure exactly when $\Haz \neq \emptyset$. The
 two failures are independent: neither implies nor mitigates the other.
 \end{proposition}
 
-\section{The structure of the admissible sets}\label{sec:structure}
+\section{What the prohibitions cost}\label{sec:cost}
 
-$\Fix(\Gamma)$ is a complete lattice by Tarski's theorem, and $\Fix(\Delta)$ is an
-interior system. Their intersection need not inherit either structure, and here
-it does not.
+Corollary~\ref{cor:lattice} gives a complete lattice; Corollary~\ref{cor:admnotlattice}
+says the prohibitions remove it. This section records the size of that loss.
 
-\begin{proposition}[Non-commutation]\label{prop:noncommute}
-$\Gamma \Delta \neq \Delta \Gamma$. Commutation holds on approximately one pair
-in three hundred of the present shape.
-\end{proposition}
-
-\begin{proposition}[$\Delta$ does not preserve $\Gamma$-closure]\label{prop:noinvariance}
-$\Delta\bigl(\Fix(\Gamma)\bigr) \not\subseteq \Fix(\Gamma)$.
+\begin{proposition}\label{prop:noinvariance}
+$\Delta$ does not preserve $\mathcal{R}$: there is $X \in \mathcal{R}$ with
+$\Delta(X) \notin \mathcal{R}$.
 \end{proposition}
 
 \begin{proof}
-Let $X = \{Ct, Op, Tp\} \in \Fix(\Gamma)$. Then $\Delta^{\omega}(X) = \{Ct, Op\}$,
-in which the requirement $L1a$ is open. The mechanism is that $Op$ depends on a
-term whose only witness in $X$ is $Tp$, while $Op \notin C(Tp)$: $Tp$ is therefore
-unwarranted and removable although another element requires it.
+$X = \{Ct,Op,Tp\} \models \Law$, and $\Delta^{\omega}(X) = \{Ct,Op\}$, in which
+$L1a$ is unsatisfied. The element $Tp$ is the only witness in $X$ for a term $Op$
+depends on, yet $Op \notin C(Tp)$, so $Tp$ counts as unwarranted and is removed.
 \end{proof}
 
 \begin{measurement}\label{meas:noinvariance}
-Exhaustively over the $224{,}025$ members of $\Fix(\Gamma)$ of size at most four,
-$\Delta$ leaves $\Fix(\Gamma)$ on $116$.
+Exhaustively over the $224{,}025$ members of $\mathcal{R}$ of size at most four,
+$\Delta$ leaves $\mathcal{R}$ on $116$.
 \end{measurement}
 
-\begin{proposition}\label{prop:notresidual}
-$C$ is not the residual of $R$: $33$ of the $63$ (subject, term-alternative) pairs
-fail the residual condition.
-\end{proposition}
-
 \begin{remark}
-Propositions~\ref{prop:noncommute} and \ref{prop:noinvariance} close the two routes
-by which a common-fixed-point structure theorem could be obtained, and no such
-theorem is available for non-commuting inflationary/deflationary pairs. The order
-structure of $\Adm$ is open.
+Proposition~\ref{prop:noinvariance} does not threaten Corollary~\ref{cor:lattice},
+which is proved from clause polarity and does not use $\Delta$ as an operator on
+$\mathcal{R}$. It does mean that computing $\mathcal{R} \cap \mathcal{W}$ by
+alternating the two conditions is unsound, and that no Tarski-style argument is
+available.
 \end{remark}
 
 \section{Structure and content are in tension}\label{sec:tradeoff}
