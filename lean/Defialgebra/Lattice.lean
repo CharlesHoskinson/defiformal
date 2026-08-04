@@ -131,7 +131,11 @@ lemma coe_inf (a b : F.carrier) :
   · rintro ⟨h1, h2⟩
     exact Finset.subset_inter h1 h2
   · intro h
-    exact ⟨h.trans Finset.inter_subset_left, h.trans Finset.inter_subset_right⟩
+    refine ⟨?_, ?_⟩
+    · exact show (x : Finset E) ⊆ (a : Finset E) from
+        Finset.Subset.trans h Finset.inter_subset_left
+    · exact show (x : Finset E) ⊆ (b : Finset E) from
+        Finset.Subset.trans h Finset.inter_subset_right
 
 /-- The top of the lattice is the whole ground set (this is where `univ_mem` is used). -/
 lemma top_eq_univ : ((⊤ : F.carrier) : Finset E) = Finset.univ :=

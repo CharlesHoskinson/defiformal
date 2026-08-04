@@ -381,6 +381,198 @@ section AxiomAudit
 
 end AxiomAudit
 
+
+/-! ## Union-stability, down-sets, and the composition law for canonical forms
+
+Paper: `lem:cm` (union-stability for singleton premises), `thm:convex`, `cor:ex`, `thm:excomp`.
+
+Orientation warning. The paper's specialization preorder is `a ≽ b ↔ b ∈ Cn {a}`, i.e.
+`a ≽ b` exactly when `a` reaches `b` along `r`. Consequently a `≼`-**maximal** element of `A`
+is one that no *other* element of `A` reaches — reachability-**minimal**. This is exactly the
+predicate used by `ex_reachCl`, so `ex = max_≼` as claimed in `cor:ex`.
+-/
+
+section ReachExtra
+
+variable (r : E → E → Prop) [DecidableRel (Relation.ReflTransGen r)]
+
+/-- **Union-stability** (paper `lem:cm`, the content that makes `A ⊕ B = A ∪ B`). Because
+every definite rule has a *singleton* premise, the reachability closure distributes over
+union. -/
+theorem reachSet_union (A B : Finset E) :
+    reachSet r (A ∪ B) = reachSet r A ∪ reachSet r B := by
+  ext z
+  simp only [mem_reachSet, Finset.mem_union]
+  constructor
+  · rintro ⟨s, (hs | hs), hsz⟩
+    · exact Or.inl ⟨s, hs, hsz⟩
+    · exact Or.inr ⟨s, hs, hsz⟩
+  · rintro (⟨s, hs, hsz⟩ | ⟨s, hs, hsz⟩)
+    · exact ⟨s, Or.inl hs, hsz⟩
+    · exact ⟨s, Or.inr hs, hsz⟩
+
+/-- Same statement for the closure operator. -/
+theorem reachCl_union (A B : Finset E) :
+    reachCl r (A ∪ B) = reachCl r A ∪ reachCl r B := reachSet_union r A B
+
+/-- For closed `A` and `B`, the composite `A ⊕ B = Cn (A ∪ B)` is literally `A ∪ B`. -/
+theorem reachCl_union_of_closed {A B : Finset E}
+    (hA : reachCl r A = A) (hB : reachCl r B = B) : reachCl r (A ∪ B) = A ∪ B := by
+  rw [reachCl_union, hA, hB]
+
+/-- **The closed sets are exactly the down-sets of the specialization preorder** (paper
+`thm:convex`, second half). Here "down-set" is taken in the `≼`-orientation of the paper:
+`A` is closed iff everything `a ∈ A` reaches stays in `A`. -/
+theorem reachSet_eq_self_iff (A : Finset E) :
+    reachSet r A = A ↔ ∀ a ∈ A, ∀ b : E, Relation.ReflTransGen r a b → b ∈ A := by
+  constructor
+  · intro h a ha b hab
+    rw [← h, mem_reachSet]
+    exact ⟨a, ha, hab⟩
+  · intro h
+    refine Finset.Subset.antisymm ?_ (subset_reachSet r A)
+    intro x hx
+    obtain ⟨s, hs, hsx⟩ := (mem_reachSet r).mp hx
+    exact h s hs x hsx
+
+/-- **Paper `thm:convex`, bundled.** The reachability closure is always union-stable and its
+closed sets are always the down-sets of the specialization preorder; it satisfies
+anti-exchange exactly when that preorder is antisymmetric, i.e. when the digraph is acyclic,
+in which case the preorder is a genuine partial order. -/
+theorem thm_convex :
+    (∀ A B : Finset E, reachCl r (A ∪ B) = reachCl r A ∪ reachCl r B) ∧
+      (∀ A : Finset E, reachCl r A = A ↔ ∀ a ∈ A, ∀ b : E, Relation.ReflTransGen r a b → b ∈ A) ∧
+      (AntiExchange (reachCl r) ↔
+        ∀ x y : E, Relation.ReflTransGen r x y → Relation.ReflTransGen r y x → x = y) :=
+  ⟨reachCl_union r, reachSet_eq_self_iff r, reachCl_antiExchange_iff r⟩
+
+/-! ### Descent to extreme points
+
+The technical heart of `thm:excomp`. Antisymmetry of reachability is genuinely needed: with a
+2-cycle `x ⇄ y` and `S = {x, y}` we have `ex S = ∅`, so no extreme point of `S` reaches `x`.
+-/
+
+/-- Every element of `S` is reached by an *extreme* element of `S`. Proved by strong
+induction on the size of the down-set `{x ∈ S : x ≼ b}`; antisymmetry is what makes that
+set shrink strictly at each step. -/
+theorem exists_ex_reach_aux
+    (hanti : ∀ x y : E, Relation.ReflTransGen r x y → Relation.ReflTransGen r y x → x = y)
+    (S : Finset E) : ∀ (n : ℕ) (b : E), b ∈ S →
+      (S.filter (fun x => Relation.ReflTransGen r x b)).card ≤ n →
+      ∃ b' ∈ ex (reachCl r) S, Relation.ReflTransGen r b' b := by
+  intro n
+  induction n with
+  | zero =>
+    intro b hb hcard
+    have hpos : 0 < (S.filter (fun x => Relation.ReflTransGen r x b)).card :=
+      Finset.card_pos.mpr ⟨b, Finset.mem_filter.mpr ⟨hb, Relation.ReflTransGen.refl⟩⟩
+    exact absurd hcard (by omega)
+  | succ n ih =>
+    intro b hb hcard
+    by_cases h : ∀ y ∈ S, Relation.ReflTransGen r y b → y = b
+    · refine ⟨b, ?_, Relation.ReflTransGen.refl⟩
+      rw [ex_reachCl, Finset.mem_filter]
+      exact ⟨hb, h⟩
+    · push_neg at h
+      obtain ⟨y, hyS, hyb, hne⟩ := h
+      -- the down-set of `y` is a *strict* subset of the down-set of `b`
+      have hsub : S.filter (fun x => Relation.ReflTransGen r x y) ⊆
+          S.filter (fun x => Relation.ReflTransGen r x b) := by
+        intro x hx
+        obtain ⟨hxS, hxy⟩ := Finset.mem_filter.mp hx
+        exact Finset.mem_filter.mpr ⟨hxS, hxy.trans hyb⟩
+      have hbnot : b ∉ S.filter (fun x => Relation.ReflTransGen r x y) := by
+        intro hbm
+        exact hne (hanti y b hyb (Finset.mem_filter.mp hbm).2)
+      have hssub : S.filter (fun x => Relation.ReflTransGen r x y) ⊂
+          S.filter (fun x => Relation.ReflTransGen r x b) :=
+        (Finset.ssubset_iff_of_subset hsub).mpr
+          ⟨b, Finset.mem_filter.mpr ⟨hb, Relation.ReflTransGen.refl⟩, hbnot⟩
+      have hlt := Finset.card_lt_card hssub
+      obtain ⟨b', hb'ex, hb'y⟩ := ih y hyS (by omega)
+      exact ⟨b', hb'ex, hb'y.trans hyb⟩
+
+/-- Every element of `S` is reached by an extreme point of `S` (under acyclicity). -/
+theorem exists_ex_reach
+    (hanti : ∀ x y : E, Relation.ReflTransGen r x y → Relation.ReflTransGen r y x → x = y)
+    {S : Finset E} {b : E} (hb : b ∈ S) :
+    ∃ b' ∈ ex (reachCl r) S, Relation.ReflTransGen r b' b :=
+  exists_ex_reach_aux r hanti S _ b hb le_rfl
+
+/-- **Paper `thm:excomp`.** The extreme points of a union are the `≼`-maximal elements of the
+union of the extreme points — the filter now ranges over the *generators only*, which is what
+makes the law computable in `|ex A| + |ex B|`. Acyclicity is required. -/
+theorem ex_reachCl_union_ex
+    (hanti : ∀ x y : E, Relation.ReflTransGen r x y → Relation.ReflTransGen r y x → x = y)
+    (A B : Finset E) :
+    ex (reachCl r) (A ∪ B)
+      = (ex (reachCl r) A ∪ ex (reachCl r) B).filter
+          (fun a => ∀ b ∈ ex (reachCl r) A ∪ ex (reachCl r) B,
+            Relation.ReflTransGen r b a → b = a) := by
+  have hPsub : ex (reachCl r) A ∪ ex (reachCl r) B ⊆ A ∪ B :=
+    Finset.union_subset_union (ex_subset _ A) (ex_subset _ B)
+  ext a
+  rw [ex_reachCl, Finset.mem_filter, Finset.mem_filter]
+  constructor
+  · -- easy direction: minimal over `A ∪ B` implies extreme in its own side and minimal over
+    -- the smaller set of generators
+    rintro ⟨haAB, hmin⟩
+    refine ⟨?_, fun b hb hba => hmin b (hPsub hb) hba⟩
+    rw [Finset.mem_union] at haAB ⊢
+    rcases haAB with h | h
+    · refine Or.inl ?_
+      rw [ex_reachCl, Finset.mem_filter]
+      exact ⟨h, fun b hb hba => hmin b (Finset.mem_union_left _ hb) hba⟩
+    · refine Or.inr ?_
+      rw [ex_reachCl, Finset.mem_filter]
+      exact ⟨h, fun b hb hba => hmin b (Finset.mem_union_right _ hb) hba⟩
+  · -- hard direction: descend an arbitrary `b ≼ a` to an extreme point of its own side
+    rintro ⟨haP, hmin⟩
+    refine ⟨hPsub haP, fun b hb hba => ?_⟩
+    by_contra hne
+    have hdesc : ∃ b' ∈ ex (reachCl r) A ∪ ex (reachCl r) B,
+        Relation.ReflTransGen r b' b := by
+      rcases Finset.mem_union.mp hb with h | h
+      · obtain ⟨b', hb', hb'b⟩ := exists_ex_reach r hanti h
+        exact ⟨b', Finset.mem_union_left _ hb', hb'b⟩
+      · obtain ⟨b', hb', hb'b⟩ := exists_ex_reach r hanti h
+        exact ⟨b', Finset.mem_union_right _ hb', hb'b⟩
+    obtain ⟨b', hb'P, hb'b⟩ := hdesc
+    -- `b'` is a generator reaching `a`, so minimality of `a` over the generators forces
+    -- `b' = a`; then `a` and `b` reach each other and antisymmetry kills the assumption.
+    have hb'a : Relation.ReflTransGen r b' a := hb'b.trans hba
+    have : b' = a := hmin b' hb'P hb'a
+    subst this
+    exact hne (hanti b' b hb'b hba).symm
+
+/-- **Paper `thm:excomp`, in `⊕` form.** For *closed* `A` and `B` the composite is
+`Cn (A ∪ B)` and its canonical form is computed from the canonical forms of the parts. -/
+theorem ex_oplus
+    (hanti : ∀ x y : E, Relation.ReflTransGen r x y → Relation.ReflTransGen r y x → x = y)
+    {A B : Finset E} (hA : reachCl r A = A) (hB : reachCl r B = B) :
+    ex (reachCl r) (reachCl r (A ∪ B))
+      = (ex (reachCl r) A ∪ ex (reachCl r) B).filter
+          (fun a => ∀ b ∈ ex (reachCl r) A ∪ ex (reachCl r) B,
+            Relation.ReflTransGen r b a → b = a) := by
+  rw [reachCl_union_of_closed r hA hB]
+  exact ex_reachCl_union_ex r hanti A B
+
+end ReachExtra
+
+section AxiomAudit2
+
+#print axioms Defialgebra.ConvexGeometry.reachSet_union
+#print axioms Defialgebra.ConvexGeometry.reachCl_union
+#print axioms Defialgebra.ConvexGeometry.reachCl_union_of_closed
+#print axioms Defialgebra.ConvexGeometry.reachSet_eq_self_iff
+#print axioms Defialgebra.ConvexGeometry.thm_convex
+#print axioms Defialgebra.ConvexGeometry.exists_ex_reach_aux
+#print axioms Defialgebra.ConvexGeometry.exists_ex_reach
+#print axioms Defialgebra.ConvexGeometry.ex_reachCl_union_ex
+#print axioms Defialgebra.ConvexGeometry.ex_oplus
+
+end AxiomAudit2
+
 end ConvexGeometry
 
 end Defialgebra

@@ -1,2 +1,4 @@
 import Defialgebra.Obstruction
 import Defialgebra.ConvexGeometry
+import Defialgebra.Polarity
+import Defialgebra.Lattice
