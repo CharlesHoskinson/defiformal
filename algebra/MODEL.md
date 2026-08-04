@@ -209,64 +209,45 @@ recommended it, and the three who killed it had *tested it against the corpus*.
 Evidence beats provenance. The narrowing `Fl ∧ (Xf|Rl|Of)` survives; the flat
 version does not.
 
-## 4d. AFT: I closed this too early — it is live, and there is a decisive cheap test
+## 4d. AFT is out — and my first two reasons were both wrong
 
-I reported the gate as "a clean no". Two independent literature lanes say the
-reasoning was too narrow. Recording the reversal rather than quietly editing it.
+Three passes. Worth keeping all three, because the final argument is the useful one.
 
-**What we found computationally, and it is still true:** building
-`A(x,y) = (Γ(x), Δ(y))` from our two monotone operators collapses to a
-componentwise product. That kills *that* construction.
+**Pass 1 (wrong).** "Both operators are monotone, so neither fills AFT's antitone
+slot." **Refutable in one line:** `≤_p`-monotonicity unpacks to `A¹` monotone in
+arg 1 and antitone in arg 2, and antitonicity is satisfied **vacuously by
+constancy** — so `A(x,y) = (Γ(x), Δ(y))` with both monotone *is* `≤_p`-monotone.
+DMT (KR2002, Prop 4.7) states outright that for monotone `O` the ultimate
+approximator **is** the product `(O(x), O(y))`.
 
-**Why it does not kill AFT.** Three verified results:
+**Pass 2 (right to reopen, wrong conclusion).** `U_O` exists for any operator
+with no hypotheses, so the framework is not blocked by our operators' shape.
 
-1. **`Appx(O)` is non-empty for ANY operator**, with a trivial witness, and under
-   `≤_p` it is a **complete lattice** — so a most-precise approximator always
-   exists. DMT Thm 4.5 gives it in closed form:
-   `U_O(x,y) = (glb(O([x,y])), lub(O([x,y])))`. **No hypothesis on `O` anywhere.**
-   So we were asking the wrong question. We do not need to *build* `A` out of `Γ`
-   and `Δ`; we need to identify the single operator `O` whose fixpoints are the
-   admissible sets, and take `U_O`.
-2. **The antitone slot is not a property demanded of the ingredients.** Unfolding
-   `≤_p`-monotonicity, an approximator *is definitionally* a coupled
-   opposite-polarity pair — `A¹` monotone in `x` and antitone in `y`, `A²` the
-   reverse. Monotone envelopes `f^u(x)=sup_{y≤x}f(y)`, `f^ℓ(x)=inf_{y≥x}f(y)`
-   construct it from an arbitrary operator; those envelopes *are* the borders of
-   `U_O`. Our operators being monotone is not the obstruction we took it for.
-3. **The splitting theorem needs no approximator at all.** Verified verbatim from
-   200 dpi page renderings (`pdftotext` mangles every restriction bar in that
-   paper): Thm 3.5's only hypotheses are a product lattice and stratifiability —
-   no monotonicity, no continuity, no approximator. And Prop 3.6/3.7 for least
-   fixpoints *require* the monotonicity we have.
+**Pass 3 — the real obstruction, and it is stronger and simpler than either.**
+Every AFT variant requires `A` to preserve **consistency**: `lower ≤ upper`. Take
+`A(x,x) = (Γ(x), Δ(x))`. Consistency forces `Γ(x) ≤ Δ(x)`. But `Γ` is a closure,
+so `x ≤ Γ(x)`; and `Δ` is a kernel, so `Δ(x) ≤ x`. Chain them:
 
-**Also verified, and better than reported:** Thm 3.5 is genuinely an **iff**, and
-the modularity results cover **stable and well-founded** semantics (Thm 3.11,
-Cor 3.12), not merely immediate-consequence fixpoints.
+> `Γ(x) ≤ Δ(x) ≤ x ≤ Γ(x)`  ⟹  `Γ = Δ = id`.
 
-**The real risk is different and worth respecting.** AFT guarantees an answer,
-not a useful one. Denecker's own 2025 paper exhibits a two-line theory where the
-ultimate approximator returns `KK = WF = (⊥,⊤)` — total information loss — and
-says plainly that AFT "is confronted by its limitations in other, relatively
-simple, examples." Precision also costs a polynomial-hierarchy level: ultimate
-stable is `Σ^P_2`-complete against NP.
+This holds for **any** `A`, product-form or not, and needs neither exactness nor
+monotonicity. **AFT's lower slot must *under*-approximate; a closure
+*over*-approximates. The assignment is backwards.** Swapping to
+`A(x,y) = (Δ(x), Γ(y))` is legal but empty: `lfp(Δ) = ⊥` always, so the stable
+operator is a **constant map** and `Δ` never appears in the answer.
 
-> **The decisive test, and it is cheap.** Brute-force `U_O` on our smallest
-> known-answer instance. **If `WF` is not `(⊥,⊤)`, AFT is live.** If it is, AFT
-> gives us a well-defined answer carrying no information, and *that* is the
-> honest reason to drop it — not the one I gave.
+**And that is exactly why candidate 1 is the right next move.** The obstruction
+names our structure precisely: `Γ` is *inflationary* (`x ≤ Γ(x)`) and `Δ` is
+*deflationary* (`Δ(x) ≤ x`). They point in opposite directions **relative to the
+identity**, which is the diagonal picture stated algebraically. The theory of
+`Fix(Γ) ∩ Fix(Δ)` for an inflationary and a deflationary map is common
+fixed-point theory — not approximation theory, which wants both bounds on *one*
+operator.
 
-**Stratifiability ≠ union-closure still stands, and is now canonical rather than
-ours.** The splitting paper's own example `E = {p←¬q,¬r; q←¬p,¬r; s←p,q}` is
-stratifiable with stable models `{p}`, `{q}` whose union is not even a fixpoint —
-and `s ← p,q` has exactly the shape of our `Pl ∧ Of → Ct`, sitting in the top
-stratum, perfectly stratified. Stratifiability constrains information flow
-*between* strata; union-closure is a closure property *of the solution set*. They
-cannot coincide.
-
-**And T2 does not fall out for free.** There is only a *check* for a given
-stratification, no construction of a maximal or coarsest one, and no decidability
-or complexity result. Przymusinski's tightest (dynamic) stratification is
-semantically circular — computing it requires the well-founded model first.
+One escape hatch exists and does not save it: Charalambidis/Rondogiannis/Symeonidou
+2018 and Vanbesien/Bogaerts/Denecker 2025 drop exactness entirely, but their
+interlattice conditions still force `lower ⪯ upper`, so the polarity obstruction
+survives. No non-monotone AFT variant exists.
 
 ## 5. Theorems worth proving
 
