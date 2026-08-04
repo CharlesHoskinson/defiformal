@@ -28,7 +28,7 @@ overturns the result.
 | **S1** | Closed sets are union-closed, contain ⊥ and ⊤, and form a complete lattice. |
 | **S2** | Meet is **not** intersection: `{Xm,Xf,Of,Bs} ∩ {Xm,Xf,Of,Sl}` is open. |
 | **S3** | Validity is **non-monotone**: `{Xm,Xf} ∪ {Aw}` arms X19. Closure is lattice-structured; validity is not. |
-| **S4** | Stratum is **not** derivable as rank — agreement on 3 of 58, all trivial. Independently confirmed by FCA (concept lattices are not graded). |
+| **S4** | Stratum is **not** derivable *as rank over the law graph* — agreement on 3 of 58, all trivial; FCA independently confirms concept lattices are not graded. **This is narrower than "stratum must stay asserted", and OP-CAT has already found the loophole legitimately**: derived as the maximal sort of a typing functor it agrees 57/58. S4 constrains one derivation basis, not all of them. |
 | **S5** | The requirement relation is a DAG with no self-loops, so **no subset of elements can contain a cycle**. Reflexivity is not expressible over element types. |
 
 ---

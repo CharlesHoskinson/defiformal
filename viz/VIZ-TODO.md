@@ -24,7 +24,7 @@ below is a thing to *draw*, not a caveat to footnote.
 | A8 | Contested register | 10 | [~] | **corpus now rules on 7 of them — §E4** |
 | A9 | Asynchrony property | 3 values | [ ] | exactly one element is "impossible" — never shown |
 | A10 | Element status | — | [~] | |
-| A11 | Derived vs asserted stratum | — | [ ] | **ANSWERED: not derivable.** Rank agrees with hand stratum on 3 of 58, all trivially 0=0; rank spans 0–2 against stratum 0–4. One real inversion, L21 `Gs`(S3)→`Au`(S4). FCA says the same independently — concept lattices are not graded. Draw the 55-element disagreement, not the agreement. |
+| A11 | Derived vs asserted stratum | — | [ ] | **CONTESTED, and the disagreement is the drawing.** Not derivable *as law-graph rank*: Rank agrees with hand stratum on 3 of 58, all trivially 0=0; rank spans 0–2 against stratum 0–4. One real inversion, L21 `Gs`(S3)→`Au`(S4). FCA says the same independently — concept lattices are not graded. Draw the 55-element disagreement, not the agreement. **But OP-CAT derives it as the maximal sort of a typing functor and agrees 57/58**, with `Pm` the sole exception and the `Gs`→`Au` inversion dissolving because the sort powerset is not linearly ordered. Two derivations, opposite verdicts — show both bases side by side rather than picking one. |
 
 ## B. The 12 categories and 60 protocols
 

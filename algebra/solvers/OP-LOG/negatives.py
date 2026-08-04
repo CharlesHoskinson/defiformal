@@ -20,6 +20,11 @@ import random, itertools
 import atlas as A
 
 REAL = A.real_protocols()
+# `Ve` (vote-escrow) is on the contested register, not in ELEMENTS; two census
+# decompositions use it. It is out of signature, so it is dropped here and
+# ignored by every axiom rather than being treated as evidence either way.
+for _r in REAL:
+    _r["syms"] = [s for s in _r["syms"] if s in A.SYMSET]
 REAL_SETS = [frozenset(r["syms"]) for r in REAL]
 REAL_INDEX = set(REAL_SETS)
 SIZES = [len(s) for s in REAL_SETS]
