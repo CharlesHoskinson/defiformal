@@ -277,16 +277,33 @@ Set $x_0 = \top$ and $x_{n+1} = \Gamma\bigl(\Delta(x_n) \cup S\bigr)$, and let
 $x_\infty$ be the limit.
 \end{definition}
 
-\begin{conjecture}[Soundness and exactness]\label{conj:downward}
-Every admissible $X$ with $S \subseteq X$ satisfies $X \subseteq x_\infty$
-(soundness), and $x_\infty$ is the least such upper bound (exactness).
-\end{conjecture}
+\begin{proposition}[The iteration is vacuous here]\label{prop:vacuous}
+If every dependent element has a consumer present in $\top$, then
+$\Delta(\top) = \top$, and since $\Gamma$ is inflationary the iteration is
+stationary at $x_0$: $x_\infty = \top$ for every seed.
+\end{proposition}
 
-\begin{measurement}
-On synthetic operators of the present shape, Conjecture~\ref{conj:downward} held
-with soundness $2000/2000$, exactness $2000/2000$ and zero slack. Verification
-against the actual $\Gamma,\Delta$ at $|\El| = 58$ is in progress.
+\begin{proof}
+Warrant is a \emph{co-presence} condition: $e$ is unwarranted in $X$ only if
+$C(e) \cap X = \emptyset$. At $X = \top$ every consumer set is met, so $\Delta$
+removes nothing. Then $x_1 = \Gamma(\top \cup S) = \top$.
+\end{proof}
+
+\begin{measurement}\label{meas:vacuous}
+On synthetic operators of the present shape the iteration was sound $2000/2000$
+and exact $2000/2000$ with zero slack. On the actual $\Gamma,\Delta$ it is sound
+and \emph{vacuous}: $x_\infty = \top$ on every seed at $10$, $20$ and $58$
+elements, exact in $0$ of $18$ seed-instances, slack $1$--$39$. The synthetic
+operators admitted a $\Delta$ that removes at $\top$; ours structurally cannot.
 \end{measurement}
+
+\begin{remark}
+A ban-aware variant does descend and recovers the atomic-scope prohibition on
+seed $\{Fl,Xm\}$, but it is \emph{unsound}: on seed $\{Uc\}$ it prunes to
+$\{Uc,Aw,At\}$, excluding every witness of the third and fourth terms of the
+governing requirement, and so declares $Uc$ uncompletable although two live
+protocols instantiate it. Recorded so that it is not re-derived.
+\end{remark}
 
 \section{What the carrier cannot express}
 
@@ -354,6 +371,61 @@ $\cap$-closure exactly when some requirement has a term of width $\ge 2$, and
 $\mathcal{M}(\Haz)$ fails $\cup$-closure exactly when $\Haz \neq \emptyset$. The
 two failures are independent: neither implies nor mitigates the other.
 \end{proposition}
+
+\section{The structure theorem}
+
+Commutation of $\Gamma$ and $\Delta$ would give a complete lattice of common
+fixed points by Tarski's theorem, but commutation fails here. It can be weakened.
+
+\begin{definition}[Invariance]
+$\Delta$ is \emph{$\Gamma$-invariant} if $\Delta(\Fix(\Gamma)) \subseteq \Fix(\Gamma)$.
+\end{definition}
+
+\begin{theorem}[Invariance holds by construction]\label{thm:invariance}
+If the warrant relation $C$ is the residual of the requirement relation $R$, then
+$\Delta$ is $\Gamma$-invariant.
+\end{theorem}
+
+\begin{proof}
+Let $X \in \Fix(\Gamma)$ and suppose $\Delta$ removes $e \in X$; then $e$ is a
+dependent with $C(e) \cap X = \emptyset$. Suppose removal broke closure. Then
+some $s \in X$ fires a requirement one of whose terms had $e$ as its only witness
+in $X$. Since $C$ is the residual of $R$, any $s$ demanding a term containing $e$
+is by construction a consumer of $e$, so $s \in C(e) \cap X$, contradicting
+$C(e) \cap X = \emptyset$. Hence $\Delta(X) \in \Fix(\Gamma)$.
+\end{proof}
+
+\begin{corollary}[Structure]\label{cor:tarski}
+$\Fix(\Gamma) \cap \Fix(\Delta)$ is a nonempty complete lattice.
+\end{corollary}
+
+\begin{proof}
+$\Fix(\Gamma)$ is a complete lattice by Tarski's theorem. By
+Theorem~\ref{thm:invariance} $\Delta$ restricts to it, and a monotone
+self-map of a complete lattice has a complete lattice of fixed points, again by
+Tarski.
+\end{proof}
+
+\begin{measurement}\label{meas:invariance}
+Invariance was verified on the actual operators at $100\%$ in four independent
+tests: the Galois closure $\gamma = \beta \circ \alpha$ over $58$ elements
+($160/160$); the height-one definite closure $Cn$ over $58$ elements
+($231{,}773$ distinct closures); $Cn$ \emph{exhaustively} over $2^{20}$
+($160{,}000$ closed sets); and the scored admissibility predicate
+($92{,}880/92{,}880$).
+\end{measurement}
+
+\begin{remark}[Scope, and a maintenance hazard]
+Corollary~\ref{cor:tarski} governs $\Gamma \wedge \Delta$ only. Prohibitions are
+downward-closed and lie outside it, so the non-congruence of composition
+(Theorem~\ref{thm:noncong}) and the join-semilattice character of the composable
+fragment (Measurement~\ref{meas:frag}) both stand. Tarski also gives a lattice,
+not that meet is intersection.
+
+More practically: Theorem~\ref{thm:invariance} holds \emph{because} $C$ was
+derived as the residual of $R$. It is therefore a maintenance invariant, and it
+breaks the moment a warrant row is hand-edited without its governing requirement.
+\end{remark}
 
 \section{Repair}
 
@@ -428,10 +500,9 @@ accessibility without the axiom system that usually delivers it.
 \section{Open problems}
 
 \begin{enumerate}
-  \item \textbf{Invariance.} Does $\Delta(\Fix(\Gamma)) \subseteq \Fix(\Gamma)$
-    hold? It is strictly weaker than commutation (which fails here) and suffices
-    for Tarski's conclusion that the common fixed points form a nonempty complete
-    lattice.
+  \item \textbf{Invariance --- resolved} (Theorem~\ref{thm:invariance},
+    Corollary~\ref{cor:tarski}). What remains is whether meet is intersection on
+    $\Fix(\Gamma) \cap \Fix(\Delta)$, which Tarski does not supply.
   \item \textbf{Maximal composable fragment.} Characterise the largest
     $F \subseteq \Adm$ closed under $\oplus$; see Measurement~\ref{meas:frag}.
   \item \textbf{Minimal repair --- resolved for the prohibition half}

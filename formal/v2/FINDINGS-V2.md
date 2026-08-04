@@ -454,7 +454,7 @@ idempotent; `Δ` is contractive and monotone but **not idempotent**.
 > **Correction to MODEL.md §2.** It states that `Δ` is "an interior operator —
 > contractive, monotone, idempotent". The one-pass `Δ(X) = X ∖ {unwarranted}` that
 > OP-ORD defines and that every score in this project is computed from is **not
-> idempotent**: stripping an unwarranted dependent can de-warrant another one. The
+> idempotent**: stripping an unwarranted dependent can de-warrant another one. (Repaired in F11.0 -- the iterate `Δ^ω` is idempotent and has identical fixpoints, so this is a presentational defect, not a substantive one.) The
 > kernel operator is `Δ^∞`, the iterate. Admissibility is unaffected — `Δ(X) = X` and
 > `Δ^∞(X) = X` are equivalent, which is what OP-ORD §1.3 actually says — but the
 > operator called `Δ` in MODEL.md is not the kernel operator it is claimed to be.
@@ -755,39 +755,6 @@ therefore has to be proved on its own terms, which it is.
 
 ---
 
-## What this could not do
-
-- **`quint verify` (Apalache) was not run**, by design (see above). No symbolic result
-  is offered above the enumeration bounds.
-- **F3 is complete to size 5** (5,038,954 subsets), matching the old run's bound. Nothing above size 5.
-- **T2 maximality is open**, bounded to `[11026, 23055)` on a 20-element universe. AFT does not close it (F8).
-- **`Δ` is calibrated.** OP-ORD disclosed that the 27 warrant rows were tuned against the
-  same 72 positives they are scored on. I re-used the rows verbatim, so F1's 10.83x
-  inherits that calibration entirely; the bootstrap interval measures sampling noise,
-  not out-of-sample performance. The only honest out-of-sample estimate on record
-  remains OP-ORD's own 6.88x.
-- **The 72-protocol corpus is the only falsifier available**, for F3 and for R1 alike.
-  It is 72 protocols.
-- **Nothing outside `/root/DefiElements/formal/v2/` was modified.**
-
----
-
-## The single most surprising thing
-
-**The ablation reproduces to the digit and the story attached to it does not.**
-
-`Γ ∧ Δ` — the two adjoints, the closure and the kernel, the "half-specification"
-argument that reframes the entire model — is **4.46x**, which is *less* than the 5.79x
-you would get if the two blocks were statistically independent. They overlap: on the 84
-synthetic protocols they reject 35 of the same cases where independence predicts 31.
-The two halves of the specification are not complementary. They are correlated, and the
-second half adds about 1.8x to the first.
-
-The 10.83x is real, and more than half of it comes from `Ban+Cond` and `Ground` — the
-blocks scoring 1.31x and 1.17x alone, which MODEL.md never mentions and OP-ORD's own
-prose dismisses. "Neither half works, the product does" is true of *four* blocks, not
-two, and the two that carry it are the two nobody argued for.
-
 ---
 
 ## F10 — does `KK` on `[S,⊤]` survive at 58 elements? **No. Median exclusion = 0.0%.**
@@ -1011,3 +978,199 @@ built on top of them can be informative.
 
 **Reproduce:** `cd /root/DefiElements/formal/v2 && node f10.mjs` — full output in `f10.out`,
 per-protocol rows in `f10-rows.json`.
+
+---
+
+## F11 — invariance and the downward iteration, on the real operators
+
+**Lead: invariance HOLDS. 100%, on every test, including exhaustively.** The downward
+iteration is sound and **vacuous** — it never leaves `⊤`.
+
+Both free repairs applied first and confirmed:
+
+```
+$ node f11.mjs
+=== F11.0 the free repair: Delta := Delta^omega ===
+over 20000 random sets: contractive violations 0, monotone violations 0, IDEMPOTENT violations 0
+Fix(Delta^omega) == Fix(Delta^1)?  disagreements: 0  -> IDENTICAL fixpoints, confirmed
+```
+
+`Δ^ω` is a genuine kernel operator — contractive, monotone, idempotent, zero violations
+— with fixpoints identical to the one-pass `Δ`. The non-idempotence I flagged in F8.1
+is a red herring, accepted and withdrawn; `Δ := Δ^ω` is used throughout below. Two
+closure operators were tested as `Γ`, both genuine (extensive, monotone, idempotent,
+spot-checked): `γ = β∘α`, OP-ORD §1.3's Galois closure over 20 obligations, and `Cn`,
+the height-1 definite closure of F2 (16 rules).
+
+### E1 — the invariance check: `Δ(Fix(Γ)) ⊆ Fix(Γ)`
+
+```
+--- E1 Gamma = gamma (Galois, OP-ORD s1.3), sample: all <=3-subsets + 72 lanes + 200k random, 58 elements
+    |Fix(Gamma) sampled| = 160
+    Delta(C) in Fix(Gamma):  160/160 = 100.00%   *** INVARIANCE HOLDS ***
+
+--- E1 Gamma = Cn (definite, height 1), same sample
+    |Fix(Gamma) sampled| = 231773
+    Delta(C) in Fix(Gamma):  231773/231773 = 100.00%   *** INVARIANCE HOLDS ***
+
+--- E1 EXHAUSTIVE, Gamma = Cn, universe 2^20, closures staying inside U
+    |Fix| = 160000
+    invariance: 160000/160000 = 100.00%  *** HOLDS ***
+
+--- E1' does Delta preserve the SCORED closure condition Gamma(X) (L*)?
+    92880/92880 = 100.00%
+```
+
+Four tests, zero failures, including one exhaustive over `2^20` and — the one that
+matters most — **E1′, the scored predicate**: `Δ` preserves the actual L\* closure
+condition on all 92,880 Γ-satisfying sets of the 20-element universe. Not a sample of a
+proxy; the operator the 10.83× is computed from.
+
+**And it is not luck. There is a proof, and it is the Galois adjunction earning its
+keep.** Suppose `X` is Γ-closed and `Δ` removes `e`. By definition `e` is a dependent
+with `C(e) ∩ X = ∅`. Suppose removing `e` broke Γ-closure: then some subject `s ∈ X`
+fires a row whose only witness in `X` was `e`. But `C` is constructed as the **residual
+of `R`** — OP-ORD §1.2: "the laws say a principal demands a service; the residual says a
+service presupposes a principal" — so any `s` that demands a term containing `e` is a
+consumer of `e`, i.e. `s ∈ C(e)`. Then `s ∈ C(e) ∩ X ≠ ∅`, contradicting `e` being
+unwarranted. So `e` was never removable. ∎
+
+Invariance is therefore a **structural consequence of building the warrant table as the
+residual**, not a numerical coincidence — which also means it would break the moment
+somebody hand-edits a warrant row without the corresponding law, and that is now a
+testable maintenance invariant.
+
+**What this buys, stated precisely.** `Fix(Γ)` is a Moore family (it is the fixpoint set
+of a closure operator), hence a complete lattice. `Δ` is monotone and maps it into
+itself. By Tarski, `Fix(Δ ↾ Fix(Γ)) = Fix(Γ) ∩ Fix(Δ)` is a **nonempty complete
+lattice** — the common fixpoints, which is exactly MODEL.md §2's `ADMISSIBLE`. So:
+
+> **The Γ∧Δ core of the admissibility predicate is a nonempty complete lattice, by
+> Tarski, with a citation.**
+
+This is a genuine strengthening and it supersedes the union-closure argument OP-ORD
+gives for `C₁`: that argument gives a complete lattice but leaves the meet defined
+obliquely (`⋀𝒮 = ⋃{Z ∈ C₁ : Z ⊆ ⋂𝒮}`). Tarski gives the lattice directly.
+
+**Three limits, stated.** (i) It covers `Γ ∧ Δ` only. `Ban`, `Cond` and `Ground` are not
+of this shape — the bans are downward-closed prohibitions and cannot be a closure
+operator's fixpoint set — so `Adm` in full is still not a lattice, and F4's four
+refutations stand unchanged. This gives a lattice for OP-ORD's `C₁`, not for `Adm`.
+(ii) Tarski gives a complete lattice; it does **not** give meet = intersection, so
+OP-ORD's `⊓ ≠ ∩` refutation also stands. (iii) The 58-element runs sample `Fix(Γ)`
+(160 and 231,773 distinct closures from ≤3-subsets, the 72 lanes and 200k random draws);
+only the `2^20` run is exhaustive.
+
+### E2 — the downward iteration. **Sound, and vacuous.**
+
+```
+--- 10-element instance (F9 seeds): |L|=2^10, |Adm|=196
+  seed        |compl| x_inf                              sound? |x_inf| exactUB slack
+  {Of}            18  {Au,Bs,Fl,In,Ix,Of,Rl,Sh,Xf,Xm}    true       10       9     1
+  {Rl}            62  {Au,Bs,Fl,In,Ix,Of,Rl,Sh,Xf,Xm}    true       10       9     1
+  {Fl,Xm}         12  {Au,Bs,Fl,In,Ix,Of,Rl,Sh,Xf,Xm}    true       10       7     3
+  {Rl,Of}          6  {Au,Bs,Fl,In,Ix,Of,Rl,Sh,Xf,Xm}    true       10       9     1
+
+--- 20-element instance: |L|=2^20, |Adm|=23055     (all 8 seeds: |x_inf| = 20/20)
+--- 58 elements, vs 83,496 exhaustively enumerated admissible sets of size <=4:
+  seed {Fl,Xm}: steps=0 |x_inf|=58/58  sound vs 87 small completions: true  excluded=0
+     x_inf excludes: (nothing)
+  seed {Uc}:    steps=0 |x_inf|=58/58  sound vs 2 live protocols: true      excluded=0
+```
+
+`x_∞ = ⊤` on **every seed at every instance size**. Sound, trivially — `⊤` contains
+every completion. Exact in **zero** cases. Slack against the true upper bound is 1–3 at
+10 elements and 9–39 at 58. It does **not** reproduce the `{Fl,Xm}` exclusion; it
+excludes nothing at all.
+
+**The reason, and it is one line:**
+
+```
+=== F11.3 why the downward iteration cannot descend ===
+Delta(TOP) == TOP ?  true   (|Delta(TOP)| = 58 of 58)
+  elements Delta strips from TOP: NONE
+Cn(TOP) == TOP ? true
+```
+
+`⊤` is already a fixpoint of `x ↦ Γ(Δ(x) ⊔ S)`, so the iteration terminates at step 0
+for every seed. **Warrant is a co-presence condition**: at the top of the lattice every
+dependent has a consumer present, so `Δ` strips nothing; and `Γ` is extensive, so it
+cannot remove anything either. Neither operator is contractive anywhere near `⊤`. The
+`⊔ S` repair addresses a different failure — `Δ` leaving the interval — which cannot
+arise here because `Δ` never moves.
+
+This is exactly the gap the note flagged: the synthetic operators had a `Δ` that
+actually removes elements at `⊤`. Ours does not, and cannot, because it is a
+co-presence test rather than a support test. **The iteration is not merely weaker on
+real data — it is inert on real data, for a structural reason.**
+
+**A ban-aware variant does descend, and is unsound.** Adding a pruning step that drops
+atoms arming a ban gives, for `{Fl,Xm}`, exactly `excluded = {Uc, Xf, Rl, Of}` — which
+recovers `X21` and matches F9's ultimate-KK result on the completion lattice. But on
+seed `{Uc}` it prunes to `{Uc, Aw, At}`, excluding `Ft`, `Sv`, `Tr`, `Ep`, `Ct` — every
+witness of L3's third and fourth terms — so it declares `Uc` uncompletable when Maple
+and Huma are live admissible completions. **Not sound. Not a fix.** Recorded so nobody
+re-derives it.
+
+### F11 verdict
+
+| | result |
+|---|---|
+| `Δ := Δ^ω` is a genuine kernel with identical fixpoints | **confirmed**, 0 violations |
+| `Δ(Fix(Γ)) ⊆ Fix(Γ)` | **HOLDS, 100%**, 4 tests incl. exhaustive `2^20` and the scored predicate — and **proved** from `C = residual(R)` |
+| common fixpoints form a nonempty complete lattice (Tarski) | **yes, for `Γ ∧ Δ`** — not for full `Adm`, and not with meet = intersection |
+| downward iteration sound | yes, trivially (`x_∞ = ⊤`) |
+| downward iteration exact | **no — 0 of 18 seed-instances**, slack 1–39 |
+| downward iteration cheaper than `U_O` | yes, and worth nothing: it terminates at step 0 at `⊤` |
+| reproduces `{Fl,Xm}` from theory | **no** |
+
+**What to ship.** E1 is the result — take it. The Γ∧Δ core is a complete lattice by
+Tarski via invariance, invariance is proved rather than measured, and the proof turns
+"the warrant table is the residual of the requirement relation" from a design note into
+a load-bearing theorem with a maintenance test attached. E2 is dead: `Δ(⊤) = ⊤` kills
+it before the first step, and the only variant that moves is unsound. For completion
+queries there is now no standing candidate at all: F9's ultimate Kripke–Kleene on
+`[S,⊤]` derives `X21` soundly on a 10-element sublattice, but **F10 shows it collapses
+to a median 0.0% exclusion at 58 elements over the 72 real protocols**, vacuous on 37 of
+them. E2 is inert, the ban-aware variant is unsound, and ultimate KK is vacuous at
+scale. The completion problem stays NP-complete and stays unapproximated.
+
+---
+
+## What this could not do
+
+- **`quint verify` (Apalache) was not run**, by design (see above). No symbolic result
+  is offered above the enumeration bounds.
+- **F3 is complete to size 5** (5,038,954 subsets), matching the old run's bound. Nothing above size 5.
+- **F11's complete lattice covers `Γ ∧ Δ` only.** Full `Adm` also carries the bans, so
+  F4's four refutations and F6's join-semilattice result are unaffected by it.
+- **T2 maximality is open**, bounded to `[11026, 23055)` on a 20-element universe. AFT does not close it (F8).
+- **`Δ` is calibrated.** OP-ORD disclosed that the 27 warrant rows were tuned against the
+  same 72 positives they are scored on. I re-used the rows verbatim, so F1's 10.83x
+  inherits that calibration entirely; the bootstrap interval measures sampling noise,
+  not out-of-sample performance. The only honest out-of-sample estimate on record
+  remains OP-ORD's own 6.88x.
+- **The 72-protocol corpus is the only falsifier available**, for F3 and for R1 alike.
+  It is 72 protocols.
+- **Nothing outside `/root/DefiElements/formal/v2/` was modified.**
+
+---
+
+## The single most surprising thing
+
+**The ablation reproduces to the digit and the story attached to it does not.**
+
+`Γ ∧ Δ` — the two adjoints, the closure and the kernel, the "half-specification"
+argument that reframes the entire model — is **4.46x**, which is *less* than the 5.79x
+you would get if the two blocks were statistically independent. They overlap: on the 84
+synthetic protocols they reject 35 of the same cases where independence predicts 31.
+The two halves of the specification are not complementary. They are correlated, and the
+second half adds about 1.8x to the first.
+
+The 10.83x is real, and more than half of it comes from `Ban+Cond` and `Ground` — the
+blocks scoring 1.31x and 1.17x alone, which MODEL.md never mentions and OP-ORD's own
+prose dismisses. "Neither half works, the product does" is true of *four* blocks, not
+two, and the two that carry it are the two nobody argued for.
+
+---
+
