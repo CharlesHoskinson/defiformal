@@ -2,6 +2,14 @@
 
 Status key: **[✓] built** · **[~] partial** · **[ ] not built** · **[?] undecided**
 
+**DIRECTION CHOSEN: the argument.** Spine — *"Same parts. Different protocol."*
+58 elements and 72 protocols → watch protocols collapse onto one tile set →
+USDT/USD1 as a theorem, no on-chain observation separates them → watch Terra's
+loop vanish when flattened to element types → **what kills protocols is what the
+table forgets.** Payoff: the warrant half restores it, and the tool that falls
+out answers *what can't I justify?* Everything below is now ranked by whether it
+serves that spine.
+
 The organising rule for this whole list: **the failures are the content.** The
 corpus benchmark did not find a tidy table with a few gaps — it found that the
 vocabulary collides on the largest objects in DeFi. A visualization that renders
@@ -98,13 +106,29 @@ should be visible.
 | D6 | The off-chain boundary | [ ] |
 | D7 | Capital vs resolution — the inverse correlation | [ ] |
 
-### D1 detail — the collisions to draw
-- **Top 3 bridges by TVL, $17.8B combined**, identical five symbols containing
-  *no verification symbol at all* — WBTC ≡ Coinbase ≡ Binance BTC
-- USDT ≡ USD1 · USDC ≡ PYUSD · USYC ≡ BUIDL
-- **SparkLend ⊂ Aave V3** — a strict subset, no distinguishing symbol
-- ApeX ≡ edgeX ≡ Lighter · Yearn ≡ Beefy ≡ CIAN · Binance Wallet ≡ OKX DEX
-- Polymarket ≡ three clones · Derive ≡ Aevo
+### D1 detail — CORRECTED. Most of the claimed collisions are not real.
+
+The lanes recorded 10 groups as `identical_decompositions`. Checked against the
+actual element arrays by `viz/scripts/check-collisions.py`, **only 3 are
+identical**. The lanes wrote "identical" where they meant "structurally alike",
+and the earlier version of this log repeated several of the false ones — which
+would have driven the viz to draw claims that are not true.
+
+**Genuinely identical (computed, safe to draw):**
+- **USDT ≡ USD1** at five symbols — the one the whole argument rests on
+- LiquidMesh ≡ KyberSwap at **one** symbol (`Ag`)
+- Binance Wallet ≡ OKX DEX at two — and three of the top five intents protocols
+  by volume reduce to `Ag` alone
+
+**NOT identical — do not draw as collisions:** the three big bridges (Coinbase
+differs by `Tg`,`Up`; Binance BTC by `Tg`) · ApeX vs edgeX (`Gp`,`Tg`) · Yearn vs
+Beefy (3 symbols) · USDC vs PYUSD (`Aw`,`Gp`) · ApeX vs Lighter (5 symbols).
+
+### D1b — the containment lattice is the stronger object [ ]
+**80 strict subset pairs**, computed. SparkLend ⊂ Aave v3 (+5) · Compound V3 ⊂
+Aave v3 (+5) · USDD ⊂ Sky (+1) · Lista CDP ⊂ Sky (+3) · Raydium ⊂ PancakeSwap
+(+2). Containment survives where identity does not, it is a partial order rather
+than a list, and it is drawable as one. **Prefer this to the collision map.**
 
 ### D8 — the negative corpus and the discrimination baseline [ ]
 84 synthetic negatives in five families (knockout, armed, inverted, hybrid,
