@@ -20,15 +20,18 @@ where feasible replaces sampling with exhaustive enumeration.
 
 | Claim | Verdict |
 |---|---|
-| `meas:closureprops` | **VERIFIED (qualitatively); sampled counts NOT reproducible** |
-| `meas:latticeconf` | **VERIFIED** (0 union violations robust; 51,917 is seed-specific, ±3%) |
-| `prop:joinmeet` | **REFUTED** — meet is not `Δ^ω(A ∩ B)`; explicit minimal witness |
-| `cor:oplusclosed` | **VERIFIED**, and the failure attribution in the paper is **partly wrong** |
-| `cor:ourconvex` | **VERIFIED**; the "15 arcs" figure holds only for the raw parse, not for `L*` |
-| `lem:polarity` + `thm:closure` | see Lean section |
-| `cor:lattice` | see Lean section |
+| `lem:polarity` + `thm:closure` | **VERIFIED** in Lean, both halves incl. the negative ones |
+| `cor:lattice` | **VERIFIED** in Lean (largely from mathlib — low-content) |
 | `thm:convex` | **VERIFIED** in Lean and exhaustively in v3 |
-| `thm:excomp` | **VERIFIED** in Lean and on 1,464,616 closed pairs in v3 |
+| `thm:excomp` | **VERIFIED** in Lean and on 1,464,616 closed pairs — **but the paper's proof sketch is missing the acyclicity hypothesis** |
+| `meas:closureprops` | **VERIFIED qualitatively; the two cited counts do NOT reproduce** |
+| `meas:latticeconf` | **VERIFIED** (0 union violations robust; 51,917 is seed-specific, ±3%) |
+| `prop:joinmeet` | **REFUTED** — meet is not `Δ^ω(A ∩ B)`; explicit 4-element witness |
+| `cor:oplusclosed` | **VERIFIED** — but `cor:admnotlattice`'s "prohibitions are the sole obstruction" is **REFUTED** |
+| `cor:ourconvex` | **VERIFIED**; the "15 arcs" figure holds only for the raw parse, not for `L*` |
+
+Two substantive refutations (`prop:joinmeet`, the sole-obstruction claim), one incomplete proof
+(`thm:excomp`), two unreproducible figures (`meas:closureprops`, "15 arcs").
 
 ---
 
@@ -266,3 +269,129 @@ elements whose principal closure is themselves (Cn({e}) = {e}): 48 / 58
 * `formal/v3/m4-oplus.mjs`, `m4.out` — `cor:oplusclosed` + failure attribution
 * `formal/v3/m5-convex.mjs`, `m5.out` — `cor:ourconvex`, `thm:convex`, `thm:excomp`
 * `formal/v3/LEAN-REPORT.md` — full Lean detail (axioms, per-theorem content classification)
+
+---
+
+# Lean targets
+
+Build, verified independently of the lane that wrote the files:
+
+```
+$ cd /root/DefiElements/lean && lake build 2>&1 | tail -3; echo "EXIT=$?"
+Build completed successfully (734 jobs).
+EXIT=0
+```
+
+No `sorry`, no `axiom`, no `native_decide`. The only `sorry` string in the tree is prose inside a
+doc comment at `ConvexGeometry.lean:352`. **Every new declaration depends on at most
+`[propext, Classical.choice, Quot.sound]`**; four (`horn_of_pureNeg`, `dualHorn_reqClause`,
+`pureNeg_prohClause`, `horn_prohClause`) depend on only `[propext, Quot.sound]`. The full
+verbatim `#print axioms` transcript is in `formal/v3/LEAN-REPORT.md`.
+
+Files: `lean/Defialgebra/Polarity.lean` (new), `lean/Defialgebra/Lattice.lean` (new),
+`lean/Defialgebra/ConvexGeometry.lean` (appended, nothing deleted),
+`lean/Defialgebra.lean` (two imports added). `Obstruction.lean` untouched.
+
+## 1. `lem:polarity` + `thm:closure` — VERIFIED, both halves
+
+`Polarity.lean`. Clauses as `⟨pos, neg⟩ : Finset E × Finset E`,
+`Sat X c := (∃ e ∈ c.pos, e ∈ X) ∨ (∃ e ∈ c.neg, e ∉ X)`, `DualHorn c := c.neg.card ≤ 1`,
+`Horn c := c.pos.card ≤ 1`, `PureNeg c := c.pos = ∅`.
+
+| Theorem | Content |
+|---|---|
+| `sat_union_of_dualHorn` | **REAL, small.** The genuine argument: if both witnesses are negative, `card ≤ 1` forces them equal, and `Finset.mem_union` closes it. ~8 lines. |
+| `sat_inter_of_horn` | **REAL, small.** Dual argument on positive literals. |
+| `dualHorn_union_closed`, `horn_inter_closed`, `pureNeg_inter_closed` | **TRIVIAL.** Pointwise lifting to clause sets, one line each. |
+| `sat_reqClause_iff`, `sat_prohClause_iff` | **REAL, modest.** The bridge from the clause encoding to the paper's own conditions (`s ∈ X → (T ∩ X).Nonempty`, `¬ H ⊆ X`). This is the step that makes the general lemma count as the paper claim rather than as a lemma about an unrelated encoding. |
+| `req_models_union_closed`, `proh_models_inter_closed` | **DERIVED.** Transports of the above; short, but they are the statements the paper actually makes. |
+| `warrant_models_union_closed` | **TRIVIAL.** Literally `req_models_union_closed` with variables renamed — warrants and requirements have the same clause shape. Counted as zero. |
+| `dualHorn_reqClause`, `horn_prohClause`, `pureNeg_prohClause` | **TRIVIAL.** `simp`/`rfl`. |
+| `dualHorn_not_inter_closed`, `req_not_inter_closed`, `pureNeg_not_union_closed`, `proh_not_union_closed` | **Real claims, zero-effort proofs (`decide`).** The negative halves of `thm:closure`, which the paper asserts and defers ("the negative halves are witnessed below"). Now witnessed on `Fin 3`: the requirement `(0,{1,2})` holds on `{0,1}` and `{0,2}` but not on `{0}`; the prohibition `{0,1}` holds on `{0}` and `{1}` but not on their union. |
+
+Verdict: the paper's foundation is machine-checked, including the negative halves it left
+informal. The mathematical content is genuinely small — it is a pigeonhole on a `card ≤ 1`
+finset — but it is proved, not restated, and it is now tied to the paper's own definitions.
+
+## 2. `cor:lattice` — VERIFIED, and honestly low-content
+
+`Lattice.lean`. `structure UnionClosedFamily` (carrier, `∅ ∈`, `univ ∈`, binary-union-closed),
+`noncomputable instance completeLattice : CompleteLattice F.carrier`.
+
+mathlib search result, recorded because the instruction was to use mathlib rather than reprove:
+`CompleteSublattice` does **not** apply (it demands `sInf`-closure, which 𝓡 ∩ 𝓦 does not have —
+that is the whole point of `prop:joinmeet`); `SupClosed` is keyed on subsets of a lattice, not on
+the subtype. The usable piece is `completeLatticeOfSup`.
+
+| Theorem | Content |
+|---|---|
+| `famSup_mem` | **REAL.** The only non-mathlib step: binary union-closure plus `∅ ∈ F` upgrades to closure under arbitrary `sSup` over a `Fintype`, by `Finset.sup_induction`. |
+| `completeLattice` | **TRIVIAL given the above** — `completeLatticeOfSup _ F.isLUB_sSup'`. Reported as a one-liner, not as a result. |
+| `coe_sup` | **ROUTINE.** Join is union. |
+| `inf_eq_sSup`, `coe_inf` | **REAL, modest — and independently important.** The meet is `⋃ {C ∈ F : C ⊆ A ∩ B}`. This is proved in Lean *and* is exactly the formula that refutes `prop:joinmeet` below. Two independent routes to the same correction. |
+| `meet_ne_inter` | **Real claim, `decide` proof.** An explicit union-closed family on `Fin 3` containing `∅` and `univ` in which `{0,1} ∩ {0,2} = {0}` is not a member. |
+
+## 3. `thm:convex` — VERIFIED
+
+`ConvexGeometry.lean`. The pre-existing `reachCl_antiExchange_iff` supplied half of this; the new
+material completes it.
+
+| Theorem | Content |
+|---|---|
+| `reachSet_union` / `reachCl_union` | **REAL, modest.** Union-stability of the reachability closure — the `lem:cm` hypothesis, and what makes `A ⊕ B = A ∪ B`. |
+| `reachSet_eq_self_iff` | **REAL, modest.** Closed sets are exactly the down-sets of the specialization preorder. |
+| `reachCl_antiExchange_iff` | pre-existing; **REAL**, both directions. |
+| `thm_convex` | **TRIVIAL.** A bare `⟨_, _, _⟩` bundle of the three above with no new mathematics. It exists so the paper's theorem has one name; it must not be counted as a fourth result. |
+
+Corroborated computationally (`m5-convex.mjs`): union-stability 0 failures / 30,856 splits,
+anti-exchange 0 violations / 5,169,336 direct tests, `Cn` = reachability 0 mismatches / 32,567
+seeds — on both the `L*` and the raw-parse digraphs.
+
+## 4. `thm:excomp` — VERIFIED, and this is the one with real content
+
+| Theorem | Content |
+|---|---|
+| `exists_ex_reach_aux` / `exists_ex_reach` | **REAL — the technical heart.** Every element of `S` is reached by an *extreme* element of `S`, by strong induction on `card {x ∈ S : x ≼ b}`, which shrinks strictly only because antisymmetry rules out a 2-cycle stalling the descent. |
+| `ex_reachCl_union_ex` | **REAL — the paper's theorem.** `ex (A ∪ B) = max_≼ (ex A ∪ ex B)`, with the filter ranging over the *generators only*. This is strictly stronger than the pre-existing `ex_reachCl_union`, whose filter ranged over all of `A ∪ B` and therefore did not give the linear-time composition law the paper claims. |
+| `ex_oplus` | **DERIVED.** The `⊕` form for closed `A, B`, via `reachCl_union_of_closed`. |
+
+**Acyclicity is load-bearing, and that is now machine-checked too.** The Lean statement carries
+antisymmetry as a hypothesis, used in exactly two places. That it cannot be dropped is confirmed
+computationally (`m6-antisymm-needed.mjs`):
+
+```
+$ node m6-antisymm-needed.mjs
+digraph: x<->y, x->z, y->z   (one non-trivial SCC {x,y})
+A = z      closed? true
+B = x,y,z  closed? true
+ex(A)      = {z}
+ex(B)      = {}
+LHS ex(AuB)= {}
+RHS max(exA u exB) = {z}
+thm:excomp holds here? false
+```
+
+Both `A` and `B` are closed, as `thm:excomp` requires, and the identity fails. So the paper's
+proof sketch — which derives `thm:excomp` from union-stability alone and never invokes
+`cor:ourconvex` — is **incomplete as written**: it needs acyclicity, which the paper has but does
+not cite at that point. The theorem is true for this atlas; the sketch is missing a hypothesis.
+
+Corroborated on 1,464,616 closed pairs of the real digraph with 0 failures (`m5.out`), under both
+extractions.
+
+## What is *not* improved
+
+`Obstruction.lean` was left untouched, and the earlier audit's finding stands:
+`adm_univ_of_consistent` is `exact aft_obstruction …` with a `simp` wrapper and adds nothing to
+`aft_obstruction`; `Consistent Γ Δ` is assumed rather than derived. `aft_obstruction` itself is
+real (three lines, and the right three lines), `fix_iterate` is a one-line induction. Nothing in
+this pass changes that, and the count of genuine theorems in that file remains two.
+
+---
+
+## Provenance note
+
+While this verification ran, a concurrent process in `/root/DefiElements` produced commit
+`548dacf` and swept the new `formal/v3/` and `lean/` files into git, and a parallel LaTeX run
+rewrote `texput.log`. Neither was done by this verification, which committed nothing and wrote
+only inside `lean/` and `formal/v3/`.
