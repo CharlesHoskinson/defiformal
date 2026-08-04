@@ -26,9 +26,14 @@ needs a collateral test. A synthetic asset needs a price source.
 
 Nothing anywhere said what a part is **for**.
 
-Once we computed the second half — what each part *serves* — the model got four
-times sharper at telling real protocols from broken ones. Neither half works
-alone. Both together work well.
+Computing the second half — what each part *serves* — makes the model roughly
+**1.8 times sharper** at telling real protocols from broken ones.
+
+*(An earlier version of this file said four times. That was wrong, and the
+correction came from re-implementing the measurement independently. The bigger
+headline number in our notes turned out to come mostly from two other checks
+entirely, not from adding purpose. Purpose still helps, and it is still the
+most interesting thing missing — it just is not doing most of the work.)*
 
 **Why the second half is the valuable one.** The first half answers a question
 designers already ask: *what am I missing?* The second half answers one nobody

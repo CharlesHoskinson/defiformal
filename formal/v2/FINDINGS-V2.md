@@ -170,26 +170,31 @@ vocabulary (all 58 elements), but with the corrected parser, the warrant conditi
 one.
 
 ```
-$ node f3b.mjs 4
-=== EXHAUSTIVE, all subsets of the 58-element vocabulary of size <= 4  (8s) ===
-enumerated: 456838  ADMISSIBLE: 83497
+$ node f3b.mjs 5
+=== EXHAUSTIVE, all subsets of the 58-element vocabulary of size <= 5  (619s) ===
+enumerated: 5038954  ADMISSIBLE: 744590
 
-stratumInversion: 552 admissible violating sets, 1 minimal
+stratumInversion: 7650 admissible violating sets, 1 minimal
   fire on >=1 of the 72 live protocols (DEAD, the R1 test): 1
   SURVIVING candidate unlisted hazards (zero live hits): 0
     killed: {Au,Gs} <- Polymarket
 
-atomicScopeBreak: 87 admissible violating sets, 51 minimal
+atomicScopeBreak: 2151 admissible violating sets, 81 minimal
   fire on >=1 of the 72 live protocols (DEAD, the R1 test): 3
-  SURVIVING candidate unlisted hazards (zero live hits): 48
-    [["Sh","In","Fl","Xm"],["Sh","Fl","Tg","Xm"],["Sh","Fl","Up","Xm"],
-     ["Sh","Fl","Gp","Xm"],["Sh","Fl","Xm","Sb"],["Sh","Fl","Xm","Rs"],
-     ["Sh","Fl","Xm","Vl"],["Ix","In","Fl","Xm"], ...]
+  SURVIVING candidate unlisted hazards (zero live hits): 78
+    [["Sh","In","Fl","Xm"],["Sh","Fl","Tg","Xm"],["Sh","Fl","Up","Xm"],["Sh","Fl","Gp","Xm"],
+     ["Sh","Fl","Xm","Sb"],["Sh","Fl","Xm","Rs"],["Sh","Fl","Xm","Vl"],["Ix","In","Fl","Xm"],
+     ["Rb","Cp","Fl","Xm","Vl"],["Cp","Fl","Sl","Xm","Vl"],["Cp","Fl","Ep","Xm","Vl"], ...]
     killed: {Ix,Fl,Tg,Xm} <- Aave V3
 
-inexpressible: 67962 admissible violating sets, 165 minimal
-  fire on >=1 of the 72 live protocols: 64;  SURVIVING: 101
+inexpressible: 650396 admissible violating sets, 377 minimal
+  fire on >=1 of the 72 live protocols (DEAD, the R1 test): 82
+  SURVIVING candidate unlisted hazards (zero live hits): 295
+    killed: {Sh,Fl,Ct,Ex} <- Morpho, CIAN Yield Layer
 ```
+
+The K=4 run is in `f3_k4.out` and agrees on every minimal witness it can see
+(456,838 subsets, 83,497 admissible, same three families, same kills).
 
 and the old prizes individually:
 
@@ -210,14 +215,14 @@ and the old prizes individually:
    model, and is dead for the other reason: Polymarket has both.** The old model's
    second headline finding fails the same corpus test that killed the first. Both
    prizes are gone; one to the warrant operator, one to the corpus.
-3. **The atomic-scope family is not dead. It is sharpened.** 48 minimal witnesses
-   survive at size <= 4: admissible under `Γ* ∧ Δ ∧ Ban ∧ Cond ∧ Ground`, arming no
-   listed hazard, and instantiated by **none** of the 72 live protocols. Every one has
-   the shape
+3. **The atomic-scope family is not dead. It is sharpened.** 78 of the 81 minimal
+   witnesses survive at size <= 5: admissible under `Γ* ∧ Δ ∧ Ban ∧ Cond ∧ Ground`,
+   arming no listed hazard, and instantiated by **none** of the 72 live protocols. Every
+   one has the shape
 
-   > `{ w_Fl , Fl , Xm , w_Xm }` with `w_Fl` in `{Sh, Ix, Cp, Cl, St, Wg}` (a warrant
-   > for the flash facility) and `w_Xm` in `{In, Sb, Rs, Vl, Tg, Up, Gp}` (a warrant
-   > for cross-domain messaging)
+   > `{ w_Fl , Fl , Xm , w_Xm }` (plus at size 5 a second warrant) with `w_Fl` in
+   > `{Sh, Ix, Rb, Cp, Cl, St, Wg, Pm, Ag}` — a warrant for the flash facility — and
+   > `w_Xm` in `{In, Sb, Rs, Vl, Tg, Up, Gp}` — a warrant for cross-domain messaging
 
    and they are separated from the *dead* ones by exactly which warrant `Xm` gets:
    `{Ix,Fl,Tg,Xm}` is Aave V3 and dies; `{Sh,In,Fl,Xm}` is no live protocol and
@@ -227,13 +232,10 @@ and the old prizes individually:
    warranted by an intent, a proof system, a stake or a queue"** — the cases where the
    message the flash loan races is one the protocol is obliged to honour.
 
-**The bound, stated as a bound.** The table above is complete for all **456,838**
-subsets of size <= 4 over the full 58-element vocabulary. A K=5 run (about 5.0M
-subsets) was launched and had not finished at the time of writing; **nothing here is
-claimed above size 4**, and the old run's headline bound (5,038,954 subsets, size <= 5)
-is therefore *not* matched. Where it is not matched I say so rather than reusing their
-number. If `f3_k5.out` in this directory is non-empty, that file supersedes the K=4
-counts above.
+**The bound, stated as a bound.** The table above is complete for all **5,038,954**
+subsets of size <= 5 over the full 58-element vocabulary — the same bound as the old
+run, so the two are directly comparable. **Nothing is claimed above size 5.** A minimal
+unlisted hazard needing six co-present elements would not be found.
 
 **A caveat that applies to all of it.** "Zero live hits" means zero hits in 72
 decompositions. That is exactly the evidence standard that overturned `{Fl,Xm}` (R1),
@@ -429,12 +431,172 @@ it.
 
 ---
 
+---
+
+## F8 — the Approximation Fixpoint Theory gate. **The gate does NOT clear.**
+
+Asked in a follow-up: can `A(x,y)` be defined from `Γ` and `Δ` that is monotone in the
+precision order `≤_p`? If yes, AFT's three semantics and the splitting theorem come
+free and F6 is answered by citation. Answered explicitly, as requested.
+
+### F8.1 — the two ingredients, measured
+
+```
+$ node f8.mjs
+over 517880 sampled pairs a<=b:  Cn monotone violations 0,  Delta monotone violations 0
+Cn extensive? true  Delta contractive? true
+Cn idempotent? true  Delta idempotent? false
+```
+
+Both operators are `⊆`-**monotone**, with zero violations. `Cn` is extensive and
+idempotent; `Δ` is contractive and monotone but **not idempotent**.
+
+> **Correction to MODEL.md §2.** It states that `Δ` is "an interior operator —
+> contractive, monotone, idempotent". The one-pass `Δ(X) = X ∖ {unwarranted}` that
+> OP-ORD defines and that every score in this project is computed from is **not
+> idempotent**: stripping an unwarranted dependent can de-warrant another one. The
+> kernel operator is `Δ^∞`, the iterate. Admissibility is unaffected — `Δ(X) = X` and
+> `Δ^∞(X) = X` are equivalent, which is what OP-ORD §1.3 actually says — but the
+> operator called `Δ` in MODEL.md is not the kernel operator it is claimed to be.
+
+### F8.2 — the answer: **NO**
+
+`≤_p` is `(x,y) ≤_p (x',y')` iff `x ⊆ x'` and `y' ⊆ y`. So `≤_p`-monotonicity of
+`A = (A₁, A₂)` requires
+
+- `A₁` **monotone** in `x` and **antitone** in `y`
+- `A₂` **antitone** in `x` and **monotone** in `y`
+
+**Theorem.** No `A` built from `Γ` and `Δ` by composition and lattice operations is a
+non-trivial `≤_p`-monotone approximator.
+
+*Proof.* `Γ` and `Δ` are both `⊆`-monotone (F8.1, zero violations over 517,880 sampled
+comparable pairs, and both are monotone by construction: `Cn` because it is a Galois
+closure, `Δ` because `e ∈ Δ(S)` and `S ⊆ T` gives `C(e) ∩ T ⊇ C(e) ∩ S ≠ ∅`). Neither is
+constant. An antitone slot cannot be filled by a monotone non-constant map, or by any
+composition or lattice combination of monotone maps. So `Γ` may appear only in `A₁`
+applied to `x`, and `Δ` only in `A₂` applied to `y`. Hence `A₁ = f(x)`, `A₂ = g(y)`:
+`A` is a **componentwise product operator**. ∎
+
+The canonical candidate, checked:
+
+```
+A(x,y) = (Cn(x), Delta(y)):
+  <=_p-monotone:  MONOTONE            (by the proof above; the random sample was
+                                       degenerate - only 3 of 200000 draws were
+                                       <=_p-comparable - so this rests on the proof)
+  CONSISTENT (x<=y => A1<=A2): 197538 violations in 328860 sampled consistent pairs
+                                                          -> NOT consistent
+  EXACT on the diagonal:  47760 of 50000 have Cn(x) != Delta(x)   -> NOT exact
+  coordinates interact?   A1 ignores y and A2 ignores x  -> NO
+```
+
+So `A` is `≤_p`-monotone and **useless**: it is not consistent (60% of consistent input
+pairs produce a pair whose "lower bound" is not below its "upper bound", so the interval
+reading is meaningless), it is not exact (it approximates no operator `O`, because
+`Γ(x)` and `Δ(x)` are different sets for 96% of `x`), and its coordinates never
+interact, so its Kripke–Kleene and well-founded fixpoints are just
+`(lfp Cn, gfp Δ)` computed independently.
+
+**And this is the same failure as the bilattice refutation, not a different one.** The
+componentwise-product conclusion is exactly Avron Thm 3.3's `L ⊙ R` — pairs with no
+constraint that the coordinates agree, blind to the diagonal where validity lives. The
+follow-up's two corrections turn out to be one correction: *`Γ` and `Δ` are two
+different monotone operators, not the lower and upper estimate of one, and every
+two-sided formalism that assumes otherwise collapses to a product.*
+
+**What would clear the gate.** `≤_p`-monotonicity needs an antitone ingredient, and the
+theory has exactly one: the **hazard fragment**, which is Horn / downward-closed. A
+coupled approximator of the form `A₁(x,y) = Cn(x)` guarded by `banFree(y)` is antitone
+in `y` and legitimate. That is a live construction and it is worth building — but note
+what it says: **the AFT coupling has to run through the hazards, not through the two
+adjoints.** That is independently what F4's attribution found — 100% of the union
+failures are `X19*` / `X21`, never `Γ` and never `Δ`. Two methods, one answer: the
+interesting structure is in the prohibitions, not in the adjunction.
+
+(Caveat on the ban measurement: `bansCond` in this model bundles the pure prohibitions
+`X2`/`X21` — genuinely downward-closed — with the conditional rows `X11a*`/`X19*`/`X18`,
+which are requirements and are not. The run reports 57,002 of 3,495,260 single-element
+extensions turning an illegal set legal, and all of them are the conditional rows. Only
+`X2`/`X21` supply the antitone ingredient.)
+
+### F8.4 — is "composition preserves validity" the same as stratifiability? **No.**
+
+```
+  row                                          antecedent-lvls head-lvls stratified? union-closed?
+  Gamma L*  (single-atom antecedent)           [0]             [0]       true        true
+  Delta     (single-atom antecedent)           [0]             [0]       true        true
+  X11a*     (single-atom antecedent)           [0]             [1]       true        true
+  X19*      (CONJUNCTIVE antecedent)           [1,1]           [1,0]     false       false
+  X18       (CONJUNCTIVE antecedent)           [0,1]           [1,0]     false       false
+```
+
+(Levels from the height-1 definite poset of F2: bodies at 0, heads at 1.)
+
+On this theory's five row shapes the two properties **agree** — which looks like
+confirmation. It is not. They agree by an accident of which atoms happen to sit at
+which level, and they are logically independent properties:
+
+- **stratifiability** is a property of the *dependency graph* — does the value on
+  stratum `i` depend only on strata `⪯ i`;
+- **union-closure** is a property of the *antecedent arity* — a row fires on `A ∪ B`
+  iff it fires on `A` or on `B`, which needs a single-atom antecedent (F6's proof).
+
+The witness, run:
+
+```
+=== F8.6 the clean witness: stratified but not union-closed ===
+  levels: Pl=0 Of=0 Ct=1  -> stratified: true
+  row({Pl}) = true  row({Of}) = true  row({Pl,Of}) = false
+  => stratified AND not union-closed. The two properties are independent.
+```
+
+`Pl ∧ Of → Ct` has every antecedent atom strictly below its head, so it is perfectly
+stratified in the sense of Vennekens Def 3.3, and it is not union-closed. Thm 3.5's
+*iff* is an iff about **fixpoints of a stratified operator**, not about **union-closure
+of a model class**, and the two do not translate.
+
+And the fragment does not come out of stratification either:
+
+```
+=== F8.5 ===
+|Adm| = 23055, |F| = 11026, |Adm restricted to the stratified subtheory| = 23055
+```
+
+Every row of the theory is stratified under the height-1 level map, so the stratified
+subtheory *is the whole theory* and `F` is a proper subset of it — 47.8%. Stratification
+does not recover `F`, does not restrict `Adm` at all here, and answers nothing about
+composition.
+
+### F8.3 — the two carried corrections, discharged
+
+1. **Bilattices were not modelled**, and F8.2 now gives an independent reason not to:
+   any two-sided structure built from `Γ` and `Δ` is componentwise, which is Avron's
+   representation theorem arriving by a different road.
+2. **No ASP encoding was used, and no requirement is encoded as a definite rule.** `Γ`
+   in `tables.mjs` and `atlas2.qnt` evaluates a term as *satisfied iff at least one
+   alternative is present* — which is choice-rule semantics (`{a;b;c} :- body.` plus a
+   constraint that one be chosen), not `a :- b`. That is precisely why `Γ` comes out
+   union-closed in F4's attribution. The trap was not entered.
+
+### F8 verdict
+
+**A clean no.** AFT gives nothing here from `Γ` and `Δ`; the resemblance is cosmetic
+and it is cosmetic for the same reason bilattices are refuted. F6 stands as proved in
+its own right — union-closure by single-atom antecedent, verified with zero
+counterexamples over `2^20`, with maximality still open in `[11026, 23055)`. The one
+salvageable idea is an approximator coupled through the *hazard* fragment, which is a
+new construction rather than an inherited theorem, and which F4's attribution
+independently says is where the structure actually is.
+
+---
+
 ## What this could not do
 
 - **`quint verify` (Apalache) was not run**, by design (see above). No symbolic result
   is offered above the enumeration bounds.
-- **F3 is complete only to size 4** (456,838 subsets), against the old run's size 5.
-- **T2 maximality is open**, bounded to `[11026, 23055)` on a 20-element universe.
+- **F3 is complete to size 5** (5,038,954 subsets), matching the old run's bound. Nothing above size 5.
+- **T2 maximality is open**, bounded to `[11026, 23055)` on a 20-element universe. AFT does not close it (F8).
 - **`Δ` is calibrated.** OP-ORD disclosed that the 27 warrant rows were tuned against the
   same 72 positives they are scored on. I re-used the rows verbatim, so F1's 10.83x
   inherits that calibration entirely; the bootstrap interval measures sampling noise,

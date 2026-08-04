@@ -18,16 +18,40 @@ you get 27 **warrant** rows — `Li → Ct`, `Tp → (Cp|Cl|St|Wg|Pm|Ob)`,
 `As → (Ex|Tp|Oa|At)`. A liquidation mechanism is *for* a collateral test. A
 time-weighted price is *for* a pool that needs one.
 
-The ablation is the argument, and it is decisive:
+The ablation reproduces to the digit under independent re-implementation. **The
+story I told about it does not.**
 
 | | discrimination |
 |---|---|
-| closure (requirements) alone | 2.45× |
-| warrant (purpose) alone | 2.37× |
-| **both** | **10.83×** |
+| closure `Γ` alone | 2.45× |
+| warrant `Δ` alone | 2.37× |
+| **`Γ ∧ Δ` — the two adjoints together** | **4.46×** |
+| independence would predict | 5.79× |
+| all four blocks (adds Ban+Cond, Ground) | **10.83×** |
 
-Neither half works. The product does. The atlas was never under-specified — it
-was **half-specified**, and we had been staring at one of the two halves.
+**Correction, and it is mine.** I reported 10.83× as what the two adjoints
+achieve together. It is not. `Γ ∧ Δ` is **4.46×**, which is *below* the 5.79×
+independence would give — the two adjoints are **sub-multiplicative**, rejecting
+35 of the same 84 negatives where independence predicts 31. More than half of
+the 10.83× comes from **Ban+Cond and Ground**, two blocks this document never
+mentioned.
+
+So warrant is worth about **1.8× on top of closure**, not 4.4×. That is still a
+real and useful contribution, and it is the single largest *conceptual* addition
+— but "the product of two adjoints produces the number" is false, and the
+half-specified framing oversells what the second adjoint buys.
+
+**And `Δ` is not idempotent**, so it is not literally a kernel operator. The
+closure/kernel pairing is the right intuition and the wrong algebra; state it as
+a pair of monotone operators whose common fixed points we want, and stop calling
+`Δ` a kernel until it is repaired.
+
+One more, and it is uncomfortable: **the parser bug was doing discriminating
+work.** Reference closure falls from 2.33× to 1.98× once the mixed terms are
+fixed. Treating five disjunctions as hard requirements was accidentally encoding
+constraints that are really there — which is why the corrected engine accepts
+more junk. The fix was still correct; it just cost us discrimination we had not
+earned.
 
 ## 2. The validity predicate
 
@@ -184,6 +208,24 @@ split is not symmetric: the three who promoted it did so because our FINDINGS
 recommended it, and the three who killed it had *tested it against the corpus*.
 Evidence beats provenance. The narrowing `Fl ∧ (Xf|Rl|Of)` survives; the flat
 version does not.
+
+## 4d. AFT: the gate came back NO
+
+We considered building on Approximation Fixpoint Theory, because its splitting
+theorem would have handed us T2 with a citation. The gate was: *can we build an
+`A(x,y)` from `Γ` and `Δ` that is `≤_p`-monotone?*
+
+**No.** `Γ` and `Δ` are **both monotone**, so neither can fill AFT's antitone
+slot, and any `A` assembled from them collapses to a componentwise product —
+**the identical failure that killed bilattices.** Twice now, from two unrelated
+directions, the obstruction is the same: our validity set is the *diagonal* of a
+product, and frameworks built on componentwise structure cannot see a diagonal.
+
+Also established: **stratifiability ≠ union-closure** (witness `Pl ∧ Of → Ct`),
+so even the splitting result would not have transferred cleanly.
+
+This is a real result, not a dead end. It says the thing we are modelling is not
+a nonmonotonic-reasoning problem wearing an unusual hat.
 
 ## 5. Theorems worth proving
 
