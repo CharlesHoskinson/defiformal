@@ -62,6 +62,52 @@ def parse_law(rule):
 
 LAWS = [(lid, parse_law(rule), rule) for lid, rule in LAWS_RAW]
 
+# --- Promoted prose->formal alternatives (documented, see reports/GR-LOG.md) ---
+# Each of these is a disjunct in a law term whose prose alternative names no
+# element in the vocabulary. We promote the prose to the nearest matching
+# element already in the vocabulary group, rather than let a "mixed" term
+# silently collapse to a stricter single-element requirement than the law
+# actually intends. Every promotion below is stated as a choice, with cost.
+#
+#   L6  term0 "(Sv|mechanical-trigger)"     -> add Ct   (a threshold test IS a
+#                                              mechanical trigger; G06's Ct is
+#                                              the vocabularys generic
+#                                              automatic-threshold mechanism)
+#   L7  term0 "Rd|Ps|liquidation-capacity"  -> add Li   ("liquidation capacity"
+#                                              literally names incentivized
+#                                              liquidation)
+#   L8  term0 "Xm|named-custodian"          -> add At   (a named partys
+#                                              statement about backing/value is
+#                                              exactly what a named custodian
+#                                              provides -- this is precisely
+#                                              the corpus50 finding that the
+#                                              top three bridges by TVL are
+#                                              custodial, with no verification
+#                                              symbol at all)
+#   L15 term0 "Tg|bounded-emergency-process"-> add Gp   (Gp's own definition,
+#                                              "bounded suppression of
+#                                              reachable transitions", IS a
+#                                              bounded emergency process)
+#
+# Cost: each promotion widens closure (fewer real protocols spuriously fail a
+# law whose second disjunct just happens to be unnamed prose). It also means
+# our closure predicate is provably MORE permissive than viz/src/laws.ts on
+# these four terms -- stated here, not hidden.
+_PROMOTIONS = {
+    ("L6", 0): ["Ct"],
+    ("L7", 0): ["Li"],
+    ("L8", 0): ["At"],
+    ("L15", 0): ["Gp"],
+}
+for lid, parsed, rule in LAWS:
+    for (plid, idx), extra in _PROMOTIONS.items():
+        if lid == plid:
+            t = parsed["terms"][idx]
+            for e in extra:
+                if e not in t["alts"]:
+                    t["alts"].append(e)
+            t["external"] = len(t["alts"]) == 0
+
 FIREABLE_LAW_IDS = sorted(lid for lid, p, _ in LAWS if p["subjects"])
 assert len(FIREABLE_LAW_IDS) == 25, (len(FIREABLE_LAW_IDS), FIREABLE_LAW_IDS)
 

@@ -61,6 +61,8 @@ The hazard parser found only three rows at the two-symbol threshold: X2 names `F
 
 Corrected X11a is redundant after closure. If a closed set contains `Uc`, L3 forces `Aw`, `At`, and one of `Bs` or `Tr` (plus external obligor residue). This contradicts every way X11a can arm. Computation confirms that X11a armed on **zero** blind cases that passed closure. It armed on four open cases, always alongside L3 failure. The table's reversed polarity was therefore the bug, not `Uc`: after correction and closure, `Uc` is realizable and remains in the vocabulary.
 
+For a concrete realizability witness, `{Uc,Aw,At,Bs}` is closed, written-hazard-free, and atomic-scope-clean. Also, `{Au,Gs}` is ADMISSIBLE: L21 is satisfied by `Au`, and the stratum inversion is deliberately not a validity check.
+
 The predicate is decidable in time linear in `|S|` plus the fixed schema size: 25 fireable laws with at most five terms, 20 hazard rows, and one atomic rule. For this fixed 58-symbol artifact that is `O(1)` in practice. An unrestricted feature model or propositional theory can be SAT-hard in general, but this is the fixed, bounded, Horn-like-with-disjunctive-head structure diagnosed in `BRIEF.md` §5b as “a propositional theory over 58 atoms—cheap and decidable”; no general SAT search is required for one classification.
 
 ## 3. Answers to `BRIEF.md` §6
@@ -166,7 +168,7 @@ There is no blind-set ground truth, so no measured discrimination ratio is avail
 
 `p_synth = (0.269 - 0.667π)/(1-π)`
 
-and the estimated discrimination ratio is `0.667/p_synth`. This is feasible only for `π ≤ 0.404`; beyond that, at least one transfer assumption is wrong. As a transparent sensitivity range, if the blind set is 20%–35% real, the implied synthetic acceptance is about 17.0%–5.5%, giving an estimated ratio of about **3.9×–12.1×**. This conditional range exceeds the reference 3.3× baseline, but it is not a scored result: the mix is unknown, the calibration has only nine alive observations, and “alive” is not itself ground-truth admissibility.
+and the estimated discrimination ratio is `0.667/p_synth`. This is feasible only for `π ≤ 0.404`; beyond that, at least one transfer assumption is wrong. As a transparent sensitivity range, if the blind set is 20%–35% real, the implied synthetic acceptance is about 17.0%–5.5%, giving an estimated ratio of about **3.9×–12.1×**. This conditional range exceeds the reference baseline of 50% real acceptance versus 15% noise acceptance, or 3.3×, but it is not a scored result: the mix is unknown, the calibration has only nine alive observations, and “alive” is not itself ground-truth admissibility.
 
 ## 6. What breaks
 
