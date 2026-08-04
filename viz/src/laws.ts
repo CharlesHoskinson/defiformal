@@ -95,14 +95,48 @@ export function closes(present: string[]) {
   return { ok: open.length === 0, results: res, open };
 }
 
-/** Hazard rules whose named elements are all present — the joint that will not close. */
-export function armedHazards(present: string[]) {
+/** Hazard rules whose named elements are all present — the joint that will not close.
+ *
+ *  Polarity matters and an earlier version of this got it backwards. Some rules
+ *  describe an element being ABSENT ("Uc with no Aw, At, collateral or
+ *  reputation"; "bridged into a representation with no destination-side Aw").
+ *  For those, "all named elements present" inverts the meaning. Rules whose text
+ *  negates are skipped rather than guessed at — a hazard we cannot evaluate from
+ *  membership is residue, not a clean bill of health.
+ */
+const NEGATED = /\b(no|without|absent|lacking|missing|never)\b/i;
+
+export interface ArmedHazard { id: string; combo: string; cls: string; evaluable: boolean }
+
+export function armedHazards(present: string[]): ArmedHazard[] {
   const S = new Set(present);
+  const out: ArmedHazard[] = [];
+  for (const h of HAZARDS) {
+    const named = [...new Set(
+      (h.combo.match(/\b[A-Z][a-z]{1,2}\b/g) || []).filter((m) => SYMS.has(m))
+    )];
+    if (named.length < 2) continue;                 // not evaluable from membership
+    if (NEGATED.test(h.combo)) continue;            // polarity is inverted; skip
+    if (named.every((m) => S.has(m))) {
+      out.push({ id: h.id, combo: h.combo, cls: h.cls, evaluable: true });
+    }
+  }
+  return out;
+}
+
+/** Hazard rules that membership alone cannot decide — reported, never hidden. */
+export function inevaluableHazards(): string[] {
   return HAZARDS.filter((h) => {
-    const named = (h.combo.match(/\b[A-Z][a-z]{1,2}\b/g) || []).filter((m) => SYMS.has(m));
-    const uniq = [...new Set(named)];
-    return uniq.length >= 2 && uniq.every((m) => S.has(m));
-  });
+    const named = [...new Set(
+      (h.combo.match(/\b[A-Z][a-z]{1,2}\b/g) || []).filter((m) => SYMS.has(m))
+    )];
+    return named.length < 2 || NEGATED.test(h.combo);
+  }).map((h) => h.id);
+}
+
+/** Laws whose subject is prose, so they can never fire from element membership. */
+export function unfireableLaws(): string[] {
+  return PARSED.filter((l) => l.subjects.length === 0).map((l) => l.id);
 }
 
 /* --------------------------------------------------------------- closure */
