@@ -48,6 +48,118 @@ is proved, what is measured, and what remains open, and we are explicit about
 which is which.
 \end{abstract}
 
+\section{Introduction}
+
+\subsection{The problem}
+
+Decentralised finance is built on a promise of composition. Protocols are
+deployed independently, by parties who have never communicated, and are then
+combined: a lending market accepts as collateral a token that represents a
+position in a liquid-staking protocol, which is itself secured by a validator
+set that has been rented out to a third system. Each component was verified in
+isolation, if at all. The composite was verified by nobody.
+
+The promise is usually stated informally, as ``money legos''. The informality is
+not innocent. It presumes that soundness is preserved by combination, and that
+presumption is what fails: several of the largest losses in the sector arose not
+from a defect in any single contract but from an interaction between contracts
+that were individually working as designed. What is missing is not a better
+auditing tool but an answer to a prior question --- \emph{what, if anything, does
+composition preserve?}
+
+Answering that requires first saying what a protocol \emph{is}, in a form on
+which composition can act. This paper takes the coarsest such form that is still
+faithful to practice: a protocol is a finite set of \emph{mechanisms} drawn from
+a fixed vocabulary, together with constraints saying which mechanisms require
+which others and which combinations are forbidden. The question then becomes
+concrete: what is the algebraic structure of the admissible sets, and is it
+closed under the operation that models composition?
+
+\subsection{Where the vocabulary comes from}
+
+The vocabulary is empirical rather than designed. Fifty-eight mechanisms were
+extracted from a corpus of $72$ deployed protocols spanning twelve categories ---
+spot exchange, lending, collateralised stablecoins, liquid staking, perpetual
+futures, yield vaults, bridges, intent systems, tokenised real-world assets,
+options, fiat-backed stablecoins and prediction markets --- selected by capital
+or volume from live data rather than by reputation. Each protocol was decomposed
+into mechanisms, and everything the vocabulary could \emph{not} express was
+recorded as residue.
+
+This matters for the reading of what follows. The vocabulary was not constructed
+to have good algebraic properties, and it does not have them uniformly. It was
+constructed to describe what is actually deployed, and it inherits the
+irregularity of that subject. Roughly two thirds of the recorded requirement
+content is natural language rather than reference to a named mechanism; the
+detail is finest where many independent implementations happen to exist and
+coarsest where the underlying finance is hardest; and the largest single asset in
+the corpus reduces to five mechanisms, of which three are approximations. A
+formalism that assumed a clean vocabulary would be modelling a different object.
+
+\subsection{The shape of the answer}
+
+Two operators act on protocols. A \emph{closure} $\Gamma$ adds what the present
+mechanisms require. A \emph{warrant} operator $\Delta$ removes mechanisms that
+nothing present makes use of --- an element carried with no consumer is
+unjustified, and in a security setting it is attack surface with no compensating
+function. A protocol is \emph{admissible} when it is fixed by both and forbidden
+by none of the prohibitions.
+
+The two operators point in opposite directions relative to the identity:
+$\Gamma$ is inflationary and $\Delta$ deflationary. Admissibility is therefore a
+\emph{diagonal} --- the agreement set of two maps --- and this single fact
+explains a sequence of otherwise unrelated failures. Interlaced bilattices cannot
+represent it, because their representation theorem makes them componentwise
+products and a componentwise structure is blind to a diagonal. Approximation
+fixpoint theory cannot use it, because its consistency requirement, applied on
+the diagonal, forces both operators to be the identity. Equalizers in the
+category of posets give nothing beyond a bare poset. In each case the obstruction
+is the same, and recognising it is more useful than any of the individual
+refutations.
+
+What survives is more modest and more definite. Because the warrant relation is
+constructed as the residual of the requirement relation, $\Delta$ maps
+$\Gamma$-closed sets to $\Gamma$-closed sets, and the common fixed points form a
+complete lattice. That is a structure theorem, but a thin one: a lattice says
+little about any individual protocol. The stronger result concerns the
+deterministic core. Restricted to requirements with a single consequent, the
+closure appears to satisfy the anti-exchange property, making it a \emph{convex
+geometry} --- and in a convex geometry every closed set has a unique minimal
+generator. This gives each protocol a canonical form: an irredundant core from
+which the remainder follows by necessity, defined on the protocol itself rather
+than on any particular presentation of it.
+
+\subsection{Composition, and why it is a clique problem}
+
+Composition does not preserve admissibility. This is not a modelling artefact;
+explicit counterexamples exist, and the reason is structural. Requirements and
+prohibitions have opposite clause polarity --- the first union-closed, the second
+intersection-closed --- so their conjunction is closed under neither operation.
+No amount of care in the encoding removes this.
+
+The useful question is therefore how much of the admissible region \emph{is}
+composable. Stated precisely, a family is composition-safe exactly when it is a
+clique in the \emph{compatibility graph}, whose vertices are admissible protocols
+and whose edges record that a pair composes to something admissible. The largest
+composable family is then a maximum clique. Three things follow at once: the
+problem is NP-hard, so no closed-form description should be expected; there is no
+unique largest family, only maximal ones, since safety is not preserved by union;
+and the productive question is structural rather than extremal, namely whether
+the compatibility graph belongs to a class on which clique is tractable. We
+conjecture that it is perfect, which is falsifiable by a finite search.
+
+\subsection{What this document is not}
+
+It is not a claim that the vocabulary is complete, and the corpus measurement
+argues against that: coverage degrades systematically as more of a protocol's
+substance lies off-chain, and the off-chain fraction is inversely correlated with
+capital held. It is not a verification method; nothing here establishes that any
+protocol is safe. And it is not a finished theory. Several results below began as
+claims that were subsequently refuted --- by independent re-implementation, by
+adversarial review, or by our own measurement --- and those refutations are
+recorded in place rather than removed. The status conventions immediately
+following are load-bearing for that reason.
+
 \section*{Status conventions}
 
 This document is maintained incrementally. Every numbered item carries its

@@ -1,1 +1,2 @@
 import Defialgebra.Obstruction
+import Defialgebra.ConvexGeometry
