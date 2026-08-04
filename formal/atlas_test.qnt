@@ -49,6 +49,13 @@ module atlasTest {
     x11aCoreFree(Set(Uc, Aw, At)),
     not(hazardFree(Set(Xf, Aw))),
   }
+
+  run testMachineCheckabilityIsStricterThanClosure = all {
+    satisfiesClosure(Set(Ex)),
+    hazardFree(Set(Ex)),
+    not(requirementsFullyExpressible(Set(Ex))),
+    requirementsFullyExpressible(Set(Ct)),
+  }
 }
 
 module rawAssemblyTest {

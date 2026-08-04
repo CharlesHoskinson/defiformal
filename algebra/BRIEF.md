@@ -105,6 +105,106 @@ credit · options & structured · fiat stablecoin issuers · prediction markets.
 Pay attention to the residue column. Where the vocabulary failed is where the
 algebra must either extend or explicitly bound its scope.
 
+## 4b. What the corpus measurement already found — the hard part of your job
+
+The 60-protocol decomposition is not a formality we ran to hand you data. It
+returned three results that a candidate algebra must confront directly.
+
+### (i) The decomposition map is not injective, and its fibres are not semantically homogeneous
+
+Distinct protocols decompose to **identical element sets**:
+
+| Fibre | Members |
+|---|---|
+| `{Ps, Rd, At, Fz, Up}` | Tether USDT · World Liberty USD1 |
+| `{Ps, Rd, At, Fz, Xm, Xf, Up, Gp}` | Circle USDC · PayPal PYUSD |
+| `{Aw, Sh, At, Ex, Rd, Fz, Up, Gp}` | Circle USYC · BlackRock BUIDL |
+| options CLOB set | Derive · Aevo |
+| CTF+CLOB+UMA set | Polymarket · Predict.fun · OPINION · InsightX |
+
+Non-injectivity is not by itself a defect — a quotient is a legitimate
+abstraction. **The defect is that the quotient does not respect the property we
+care about.** USDT and USD1 are the same point in this space and are not
+remotely the same credit. So:
+
+> **Q9. Is decomposition a homomorphism onto anything?** State the semantic
+> function you claim your algebra preserves, then check it is constant on the
+> fibres above. If it is not, you have proved that no function of the element
+> set can predict solvency — which is a real theorem, and probably the most
+> important one available here. Prove it or exhibit the missing generators that
+> separate the fibres.
+
+### (ii) Resolution is inversely correlated with capital at risk
+
+The vocabulary spends **five symbols** (`Cp`, `Wg`, `St`, `Cl`, `Pm`)
+distinguishing algebraic variants of a scalar function on a two-asset pool, and
+**one symbol** (`Op`) for the entire options universe — collapsing at least six
+risk-relevant distinctions: European/American/perpetual exercise, cash vs
+physical settlement, peer-to-peer vs peer-to-pool underwriting, upfront vs
+streamed premium, isolated vs portfolio margin, model-priced vs book-priced.
+
+Measured coverage: RWA 39% · options 63% · fiat stablecoins **25%** ·
+prediction/other 44%. Lane-wide ≈41% unweighted. Weighted by *components that
+determine whether a holder gets paid*, fiat stablecoins fall to near zero.
+
+$183B of USDT resolves to five symbols, three of them forced fits, with an
+honest core of **two**: `Fz` and `Up`. Every symbol it uses is control-plane
+(`Fz`, `Up`, `Gp`, `At`, `Aw`), not mechanism.
+
+> **Q10. Is the signature's granularity principled or historical?** The
+> resolution appears to track *how many independent Ethereum codebases were
+> written for a thing*, not economic significance. If so, the vocabulary is a
+> census of implementations rather than a basis. Say whether your algebra
+> inherits that bias, and whether a **normal form** exists that would expose it.
+
+### (iii) There is a boundary, and coverage degrades monotonically across it
+
+Expressibility falls as the off-chain fraction of a protocol rises — and the
+off-chain fraction is *inversely* correlated with how much money the protocol
+holds. Fifteen named gaps, in priority order, all of them off-chain or
+institutional:
+
+obligor & recourse · register of record (is the chain authoritative or a mirror
+of a transfer agent's book?) · reserve composition & custody · bankruptcy
+remoteness & claim perfection · central counterparty / clearing & novation ·
+conditional-token split & merge · peer-to-pool payoff underwriting · delegated
+discretionary allocation mandate · portfolio/scenario margin · pricing model /
+volatility surface · instrument listing & expiry-cycle definition · rulebook
+(natural-language settlement criteria) · off-chain matching with on-chain
+settlement · terminal settlement-price fixing · investment discretion.
+
+Two of these deserve separate notice:
+
+- **Conditional-token split/merge** — deposit $1, receive one YES and one NO;
+  return both, get $1. A *state* partition of collateral. `Py` partitions along
+  **time**; nothing partitions along **state**. This is the founding primitive
+  of an entire sector and it is absent. If your algebra has a tensor or a
+  coproduct, this is the obvious thing for it to be.
+- **Delegated discretionary allocation mandate** — a named human party choosing
+  exposures for depositors' capital, for a fee, with no on-chain recourse.
+  DefiLlama's #9 and #12 categories by TVL, $16.5B combined, **zero coverage**.
+  The fastest-growing organisational form in DeFi has no symbol. Note this is
+  not a mechanism at all; it is an *agent with discretion*, and it may be
+  categorically outside anything a term algebra can express.
+
+> **Q11. Where do you draw the boundary, and can you draw it formally?** The
+> honest reading is that this is a vocabulary of **on-chain state machines**.
+> Options: (a) declare the boundary and bound your completeness claim to it —
+> respectable, and it makes the algebra provable; (b) add an *opaque obligor*
+> generator with stated assumptions and no internal structure, in the spirit of
+> interface automata's environment assumptions; (c) argue the boundary is
+> illusory. Pick one and defend it. **Do not quietly cover the gap with prose
+> terms — that is what produced the 52 prose requirement terms already.**
+
+### What this means for P1
+
+P1 said "every one of the 60 protocols is expressible as a term". Given the
+above, **weaken it honestly rather than satisfy it cheaply**: an algebra in
+which USDT is a term is trivial to build and worthless. The real target is an
+algebra in which USDT is a term *and the terms that differ from it are the ones
+that behave differently*. If that is impossible at this abstraction level, prove
+it — see Q9.
+
 ## 5. Prior art you are expected to engage with
 
 Do not reinvent these. Position your system relative to them.

@@ -261,6 +261,11 @@ module atlas {
 
   pure def satisfiesClosure(protocol: Set[Element]): bool =
     laws.forall(law => lawSatisfied(law, protocol))
+
+  // Meta-safety: every fired requirement is expressible with element terms.
+  // This does not claim that the resulting protocol is financially safe.
+  pure def requirementsFullyExpressible(protocol: Set[Element]): bool =
+    firedLaws(protocol).forall(law => law.externalTerms == 0 and law.mixedTerms == 0)
 }
 
 module rawAssembly {
@@ -288,6 +293,7 @@ module rawAssembly {
   val hazardFreeState: bool = hazardFree(chosen)
   val atomicScopeSafety: bool = atomicScopeConsistent(chosen)
   val stratumSafety: bool = stratumMonotone(chosen)
+  val machineCheckableSafety: bool = requirementsFullyExpressible(chosen)
   val nonemptyAssembly: bool = chosen.size() > 0
 }
 
@@ -325,6 +331,7 @@ module legalAssembly {
   val legal: bool = closure and hazardFreeState
   val atomicScopeSafety: bool = atomicScopeConsistent(chosen)
   val stratumSafety: bool = stratumMonotone(chosen)
+  val machineCheckableSafety: bool = requirementsFullyExpressible(chosen)
   val nonemptyAssembly: bool = chosen.size() > 0
   val undercollateralizedCreditReached: bool = chosen.contains(Uc)
 }
@@ -332,6 +339,37 @@ module legalAssembly {
 module legalFull {
   import atlas.*
   import legalAssembly(UNIVERSE = allElements).*
+}
+
+// Small concrete instances make counterexample searches reproducible.
+module rawPooledLending {
+  import atlas.*
+  import rawAssembly(UNIVERSE = Set(Pl)).*
+}
+
+module rawReversedX19 {
+  import atlas.*
+  import rawAssembly(UNIVERSE = Set(Xm, Xf, Aw)).*
+}
+
+module legalExpressibilityReduced {
+  import atlas.*
+  import legalAssembly(UNIVERSE = Set(Ex)).*
+}
+
+module legalAtomicityReduced {
+  import atlas.*
+  import legalAssembly(UNIVERSE = Set(Fl, Xm)).*
+}
+
+module legalStratumReduced {
+  import atlas.*
+  import legalAssembly(UNIVERSE = Set(Au, Gs)).*
+}
+
+module legalCreditProjectionReduced {
+  import atlas.*
+  import legalAssembly(UNIVERSE = Set(Bs, Uc, Aw, At)).*
 }
 
 module reflexiveLoop {
