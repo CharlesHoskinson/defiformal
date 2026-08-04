@@ -20,6 +20,7 @@
 #table.is3d .tile {
   border-width: 1px;
   transition: opacity 200ms ease, border-color 200ms ease;
+  pointer-events: auto;   /* the renderer container is pointer-events:none */
 }
 
 /* nearer planes carry heavier linework — the only depth cue left to us */
@@ -35,13 +36,11 @@
 }
 #table.is3d .tile.dim { opacity: 0.28; }
 
-/* the drag surface sits behind the tiles */
-#table.is3d::after {
-  content: "";
-  position: absolute; inset: 0;
-  cursor: grab;
-}
-#table.is3d:active::after { cursor: grabbing; }
+/* no overlay: drag is bound on the host itself, and an absolutely
+   positioned ::after would paint over the scene and eat every click */
+#table.is3d { cursor: grab; }
+#table.is3d:active { cursor: grabbing; }
+#table.is3d .tile { cursor: pointer; }
 
 .dim-hint {
   font-size: 11px; color: var(--ink-3); margin-top: 6px;

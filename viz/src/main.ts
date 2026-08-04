@@ -359,6 +359,9 @@ function enter3D() {
   };
   scene.mount(boxes, w, h, frameH);
   apply3D();
+  // the flat containers collapse and the scene centres itself in a tall box,
+  // so without this the viewport is left staring at empty space
+  host.scrollIntoView({ behavior: state.motion ? "smooth" : "auto", block: "start" });
   host.addEventListener("focusin", on3DFocus);
   window.addEventListener("resize", re3D);
 }
