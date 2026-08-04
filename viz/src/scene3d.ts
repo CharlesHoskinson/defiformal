@@ -17,7 +17,6 @@ import { CSS3DObject, CSS3DRenderer } from "three/examples/jsm/renderers/CSS3DRe
 export interface Box { x: number; y: number; w: number; h: number; z: number }
 
 const FOV = 16;                 // near-orthographic: no converging corridor
-const PLANE_GAP = 130;          // shallow — displacement, not distance
 const MAX_YAW = 0.20;           // ~11.5°, tiles stay effectively face-on
 const MAX_PITCH = 0.13;
 
@@ -37,6 +36,7 @@ export class Scene3D {
   private spin: { o: CSS3DObject; c: Vector3; r: number; a: number; sp: number; laps: number; max: number }[] = [];
   private dragging = false;
   private reduce: boolean;
+  private frameH = 0;
   onSpiralEnd: (() => void) | null = null;
 
   constructor(private host: HTMLElement, reduce: boolean) {
@@ -51,7 +51,7 @@ export class Scene3D {
   }
 
   /** Lift measured 2D boxes into the scene. Same nodes, re-parented. */
-  mount(boxes: Map<string, { el: HTMLElement; box: Box }>, w: number, h: number) {
+  mount(boxes: Map<string, { el: HTMLElement; box: Box }>, w: number, h: number, frameH?: number) {
     this.objects.forEach((o) => this.scene.remove(o));
     this.objects.clear();
     for (const [id, { el, box }] of boxes) {
@@ -64,7 +64,7 @@ export class Scene3D {
       this.scene.add(o);
       this.objects.set(id, o);
     }
-    this.resize(w, h);
+    this.resize(w, h, frameH);
   }
 
   /** Put every tile back where the document wants it. */
@@ -80,10 +80,11 @@ export class Scene3D {
     this.objects.clear();
   }
 
-  resize(w: number, h: number) {
+  resize(w: number, h: number, frameH?: number) {
     this.camera.aspect = w / h;
-    // frame the full table height at this FOV
-    const d = (h / 2) / Math.tan((FOV * Math.PI) / 360);
+    if (frameH) this.frameH = frameH;
+    // frame the content extent at this FOV, not the flat document height
+    const d = (this.frameH || h) / 2 / Math.tan((FOV * Math.PI) / 360);
     this.home.set(0, 0, d);
     this.target.copy(this.home);
     this.camera.updateProjectionMatrix();
@@ -204,5 +205,4 @@ export class Scene3D {
     this.renderer.domElement.remove();
   }
 
-  static planeZ(stratum: number) { return -stratum * PLANE_GAP; }
 }

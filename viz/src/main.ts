@@ -291,30 +291,62 @@ function applyProjection() {
 
 /* ------------------------------------------------------------ 3D mode */
 
+/* The 3D layout is computed, not inherited. Reusing the flat layout's measured
+   positions dragged in band padding, the hidden label column and the height of
+   wrapped rows, which is what pushed the planes so far apart. Each stratum
+   instead becomes a compact block, centred on its own plane. */
+const PLANE_STEP = 190;   // depth between planes
+const BAND_GAP = 74;      // vertical breathing room between stratum blocks
+
+function layout3D(tw: number, th: number) {
+  const GX = 9, GY = 9;
+  const boxes = new Map<string, { x: number; y: number; z: number }>();
+  let cursorY = 0, maxX = 0;
+  for (const s of STRATA) {
+    const list = ELEMENTS.filter((e) => e.stratum === s.id)
+      .sort((a, b) => a.group.localeCompare(b.group) || a.id.localeCompare(b.id));
+    if (!list.length) continue;
+    const cols = Math.max(1, Math.ceil(Math.sqrt(list.length * 2.2)));
+    const rows = Math.ceil(list.length / cols);
+    list.forEach((e, i) => {
+      const c = i % cols, r = Math.floor(i / cols);
+      const x = (c - (cols - 1) / 2) * (tw + GX);
+      const y = cursorY - r * (th + GY) - th / 2;
+      boxes.set(e.id, { x, y, z: -s.id * PLANE_STEP });
+      maxX = Math.max(maxX, Math.abs(x) + tw / 2);
+    });
+    cursorY -= rows * (th + GY) + BAND_GAP;
+  }
+  const extentH = Math.abs(cursorY) + BAND_GAP;
+  const midY = -extentH / 2;
+  return { boxes, extentH, extentW: maxX * 2, midY };
+}
+
 function measure() {
   const host = document.getElementById("table")!;
   const hr = host.getBoundingClientRect();
-  const cx = hr.width / 2, cy = hr.height / 2;
+  const probe = tiles.get(ELEMENTS[0].id)!;
+  const pr = probe.getBoundingClientRect();
+  const tw = pr.width || 118, th = pr.height || 82;
+
+  const { boxes: pos, extentH, extentW, midY } = layout3D(tw, th);
   const boxes = new Map<string, { el: HTMLElement; box: any }>();
   tiles.forEach((t, id) => {
-    if (!t.isConnected) return;
-    const r = t.getBoundingClientRect();
-    const e = ELEMENTS.find((x) => x.id === id)!;
-    boxes.set(id, {
-      el: t,
-      box: {
-        x: r.left - hr.left + r.width / 2 - cx,
-        y: -(r.top - hr.top + r.height / 2 - cy),
-        w: r.width, h: r.height,
-        z: Scene3D.planeZ(e.stratum),
-      },
-    });
+    const p = pos.get(id);
+    if (!p) return;
+    boxes.set(id, { el: t, box: { x: p.x, y: p.y - midY, w: tw, h: th, z: p.z } });
   });
-  return { boxes, w: hr.width, h: hr.height, host };
+  // Frame the content at roughly life size: the near plane renders 1:1 and
+  // deeper planes shrink by perspective alone.
+  const pad = 1.06;
+  const byW = (extentW * pad) / Math.max(0.2, hr.width / Math.max(1, extentH * pad));
+  const frameH = Math.max(extentH * pad, byW);
+  const hostH = Math.round(frameH);
+  return { boxes, w: hr.width, h: hostH, frameH, host };
 }
 
 function enter3D() {
-  const { boxes, w, h, host } = measure();
+  const { boxes, w, h, frameH, host } = measure();
   homeBoxes = new Map();
   boxes.forEach((v, k) => homeBoxes.set(k, { x: v.box.x, y: v.box.y, z: v.box.z }));
   host.classList.add("is3d");
@@ -325,7 +357,7 @@ function enter3D() {
     ro?.classList.add("broke-done");
     announce("The loop broke.");
   };
-  scene.mount(boxes, w, h);
+  scene.mount(boxes, w, h, frameH);
   apply3D();
   host.addEventListener("focusin", on3DFocus);
   window.addEventListener("resize", re3D);
@@ -355,12 +387,12 @@ function re3D() {
     const host = document.getElementById("table")!;
     host.style.height = "";
     host.classList.remove("is3d");
-    const { boxes, w, h } = measure();
+    const { boxes, w, h, frameH } = measure();
     homeBoxes = new Map();
     boxes.forEach((v, k) => homeBoxes.set(k, { x: v.box.x, y: v.box.y, z: v.box.z }));
     host.classList.add("is3d");
     host.style.height = `${h}px`;
-    scene.mount(boxes, w, h);
+    scene.mount(boxes, w, h, frameH);
     apply3D();
   }, 140);
 }
