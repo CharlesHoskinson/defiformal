@@ -129,6 +129,8 @@ It sharpens §5b too. Feature models were rated a near-exact structural fit —
 split is precisely why feature-model validity moves in both directions at once.
 The fit was closer than the survey knew.
 
+**Encoding note, so nobody builds this wrong.** The clause classification above is right — `subject → (a|b|c)` is `¬subject ∨ a ∨ b ∨ c`, one negative literal, hence dual-Horn. But the obvious ASP encoding is *not*: `a :- b` is a **definite Horn** rule that derives `a`, and is Horn, not dual-Horn. The union-closed half of the profile is carried by **choice rules** `{a} :- b.`, not by definite rules. Encode as choice rules plus constraints.
+
 **And it corrects my own benchmark.** I built the HYBRID family as a
 contamination probe, on the reasoning that spliced protocols cannot have been
 memorised. It is also — and mostly — a **union-closure detector**: a union-closed
