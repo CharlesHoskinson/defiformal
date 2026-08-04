@@ -446,15 +446,21 @@ const BAN = CL.filter((_, i) => CLSRC[i].startsWith("ban") || CLSRC[i].startsWit
 }
 { // the same split on the F9 10-element instance, to show what the small scale measured
   let posExc = 0, banExc = 0, fullExc = 0;
-  for (const s of [["Of"], ["Rl"], ["Fl", "Xm"], ["Of", "Rl"], ["Au"], ["In", "Bs"], ["Sh"], ["Xf"]]) {
+  const S10 = [["Pl"], ["Uc"], ["Of"], ["Rl"], ["Fl", "Xm"], ["Of", "Rl"], ["Au"], ["In", "Bs"], ["Sh"], ["Xf"]];
+  for (const s of S10) {
     const cand = U10.filter(e => !s.includes(e));
-    fullExc += cand.filter(e => !upperWith(s, CL, U10).has(e)).length;
-    posExc += cand.filter(e => !upperWith(s, POS, U10).has(e)).length;
-    banExc += cand.filter(e => !upperWith(s, BAN, U10).has(e)).length;
+    const f = cand.filter(e => !upperWith(s, CL, U10).has(e)).length;
+    const p = cand.filter(e => !upperWith(s, POS, U10).has(e)).length;
+    const b = cand.filter(e => !upperWith(s, BAN, U10).has(e)).length;
+    fullExc += f; posExc += p; banExc += b;
+    console.log(`  10-elem seed ${show(new Set(s))}: full ${f}, positive-only ${p}, bans-only ${b} of ${cand.length} candidates`);
   }
-  console.log(`same split on the F9 10-element vocabulary, 8 seeds: full ${fullExc}, positive-only ${posExc}, bans-only ${banExc}`);
-  console.log(`  (at 10 elements the positive theory excludes a great deal, because the truncated`);
-  console.log(`   vocabulary cannot satisfy the closure and warrant obligations at all.)`);
+  console.log(`same split on the F9 10-element vocabulary, ${S10.length} seeds: full ${fullExc}, positive-only ${posExc}, bans-only ${banExc}`);
+  console.log(`  Seeds {Pl} and {Uc} are the informative ones at 10 elements and they are informative`);
+  console.log(`  for a reason that does not survive: Pl and Uc are NOT IN the 10-element vocabulary,`);
+  console.log(`  so their closure obligations cannot be met by any subset of it and every candidate`);
+  console.log(`  is excluded vacuously (there are 0 admissible completions at all). That is an`);
+  console.log(`  artifact of vocabulary truncation, not derived hazard content.`);
 }
 
 console.log("\n#################### PART I - cost ####################");

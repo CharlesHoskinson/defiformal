@@ -1,0 +1,365 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1.15in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{booktabs}
+\usepackage[hidelinks]{hyperref}
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
+\theoremstyle{plain}
+\newtheorem{theorem}[definition]{Theorem}
+\newtheorem{proposition}[definition]{Proposition}
+\newtheorem{lemma}[definition]{Lemma}
+\newtheorem{corollary}[definition]{Corollary}
+\newtheorem{conjecture}[definition]{Conjecture}
+\theoremstyle{remark}
+\newtheorem{measurement}[definition]{Measurement}
+\newtheorem{remark}[definition]{Remark}
+
+\newcommand{\Adm}{\mathrm{Adm}}
+\newcommand{\Fix}{\operatorname{Fix}}
+\newcommand{\lfp}{\operatorname{lfp}}
+\newcommand{\gfp}{\operatorname{gfp}}
+\newcommand{\El}{\mathcal{E}}
+\newcommand{\Law}{\mathcal{R}}
+\newcommand{\Haz}{\mathcal{H}}
+\newcommand{\War}{\mathcal{W}}
+
+\title{An Algebra of Mechanism Composition\\
+\large Structure and obstruction in a vocabulary of on-chain financial mechanisms}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We study a finite vocabulary $\El$ of recurring on-chain financial mechanisms
+together with two families of constraints: \emph{requirements}, stating what a
+mechanism needs, and \emph{prohibitions}, stating which combinations are
+forbidden. We show that admissibility is the set of common fixed points of an
+inflationary operator $\Gamma$ and a deflationary operator $\Delta$; that this
+``diagonal'' structure obstructs three standard frameworks (interlaced
+bilattices, approximation fixpoint theory, and equalizers in $\mathbf{Pos}$);
+that reasoning over the full powerset collapses for reasons intrinsic to the
+constraint set rather than to any operator; and that a sound and empirically
+exact procedure exists on \emph{completion lattices} $[S,\top]$. We record what
+is proved, what is measured, and what remains open, and we are explicit about
+which is which.
+\end{abstract}
+
+\section*{Status conventions}
+
+This document is maintained incrementally. Every numbered item carries its
+epistemic status in its environment, and the distinction is load-bearing:
+
+\begin{itemize}
+  \item \textbf{Theorem} / \textbf{Proposition} / \textbf{Corollary} --- proved,
+    with the proof given or sketched. A sketch means the argument is complete and
+    the write-up is not.
+  \item \textbf{Measurement} --- established computationally against the corpus
+    or by exhaustive enumeration, with the instance and bound stated. Not proved
+    in general, and \emph{not} to be cited as if it were.
+  \item \textbf{Conjecture} --- believed, with the evidence named. Several items
+    here began as measurements and are awaiting proof; several began as claims we
+    made and were subsequently refuted.
+\end{itemize}
+
+Where a result of ours was later overturned, the overturning is recorded rather
+than the earlier claim silently removed. The running status of every item is
+tracked alongside this document in \texttt{algebra/THEOREM-LEDGER.md}.
+
+\section{Preliminaries}
+
+\begin{definition}[Vocabulary and protocols]
+Let $\El$ be a finite set of \emph{elements} (mechanisms), $|\El| = 58$. A
+\emph{protocol} is a subset $X \subseteq \El$. We write
+$L = (2^{\El}, \subseteq)$ for the resulting complete lattice, with
+$\bot = \emptyset$ and $\top = \El$.
+\end{definition}
+
+\begin{definition}[Requirements]
+A \emph{requirement} is a pair $(s, T)$ with $s \in \El$ a \emph{subject} and
+$T = \{T_1,\dots,T_k\}$ a finite family of \emph{terms}, each $T_j \subseteq \El$
+a nonempty set of \emph{alternatives}. It is \emph{satisfied} by $X$ when
+\[
+  s \in X \;\Longrightarrow\; \forall j \le k,\; T_j \cap X \neq \emptyset .
+\]
+Write $\Law$ for the set of requirements. In clause form a requirement is
+$\neg s \vee \bigvee_{e \in T_j} e$, which carries exactly one negative literal
+and is therefore \emph{dual-Horn}.
+\end{definition}
+
+\begin{definition}[Prohibitions]
+A \emph{prohibition} is a set $H \subseteq \El$, forbidden in the sense that
+$H \not\subseteq X$ is required. Write $\Haz$ for the family of prohibitions; we
+take $\Haz$ to be an antichain (a \emph{clutter}) of minimal forbidden sets. In
+clause form a prohibition is $\bigvee_{e \in H} \neg e$: purely negative, hence
+\emph{Horn}.
+\end{definition}
+
+\begin{definition}[Warrants]
+A \emph{warrant} is a pair $(e, C)$ with $e \in \El$ and $C \subseteq \El$ a set
+of \emph{consumers}. It is satisfied by $X$ when
+$e \in X \Rightarrow C \cap X \neq \emptyset$. Write $\War$ for the set of
+warrants. Where a requirement says what $e$ \emph{needs}, a warrant says what $e$
+is \emph{for}: an element present with no consumer is unwarranted.
+\end{definition}
+
+\begin{remark}
+$\War$ is not independent data. It is obtained as the residual (order-theoretic
+adjoint) of the requirement relation; the vocabulary as originally recorded
+contains $\Law$ and $\Haz$ only, and $|\War| = 27$.
+\end{remark}
+
+\section{The two operators}
+
+\begin{definition}[Closure and warrant operators]
+Define $\Gamma, \Delta : L \to L$ by
+\[
+  \Gamma(X) \;=\; X \cup \{\,\text{elements forced by requirements fired in } X\,\},
+  \qquad
+  \Delta(X) \;=\; X \setminus \{\,e \in X : \text{$e$ is unwarranted in } X\,\},
+\]
+each iterated where necessary to a fixed point of its own defining step.
+\end{definition}
+
+\begin{proposition}\label{prop:polarity}
+$\Gamma$ is \emph{inflationary} $(X \subseteq \Gamma(X))$, monotone and
+idempotent, hence a closure operator. $\Delta$ is \emph{deflationary}
+$(\Delta(X) \subseteq X)$ and monotone.
+\end{proposition}
+
+\begin{measurement}\label{meas:notidem}
+$\Delta$ is \emph{not} idempotent.
+\end{measurement}
+
+\begin{proposition}[Free repair]\label{prop:repair}
+$\Delta^{\omega} \coloneqq \Delta^{|\El|}$ is deflationary, monotone and
+idempotent --- a kernel operator --- and $\Fix(\Delta^{\omega}) = \Fix(\Delta)$.
+Consequently Measurement~\ref{meas:notidem} is immaterial to everything below,
+and we may take $\Delta$ idempotent without loss.
+\end{proposition}
+
+\begin{definition}[Admissibility]
+$X$ is \emph{admissible} iff $\Gamma(X) = X$, $\Delta(X) = X$, and no
+$H \in \Haz$ satisfies $H \subseteq X$. Write
+$\Adm = \Fix(\Gamma) \cap \Fix(\Delta) \cap \Haz^{c}$.
+\end{definition}
+
+\begin{proposition}\label{prop:moore}
+$\Fix(\Gamma)$ is a Moore family (closed under intersection) and $\Fix(\Delta)$
+is an interior system (closed under union). Neither conclusion requires
+idempotence of the generating operator.
+\end{proposition}
+
+\begin{remark}[The diagonal]
+Proposition~\ref{prop:moore} is the structural content of the whole paper:
+$\Adm$ is a \emph{Moore family intersected with a co-Moore family}. The two
+closure halves cancel exactly, and $\Adm$ is a diagonal --- the agreement set of
+two maps pointing in opposite directions relative to the identity. Every
+obstruction in Section~\ref{sec:obstructions} is an instance of a framework
+being unable to see a diagonal.
+\end{remark}
+
+\section{Polarity}
+
+\begin{theorem}[Polarity]\label{thm:polarity}
+The models of $\Law$ are closed under union; the models of $\Haz$ are closed
+under intersection; the models of $\Law \cup \Haz$ are in general closed under
+neither.
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+Requirement clauses are dual-Horn and prohibition clauses are Horn. By
+Schaefer's classification, dual-Horn constraint languages are exactly those
+preserved by $\vee$ (union) and Horn languages exactly those preserved by
+$\wedge$ (intersection). A conjunction of the two need be preserved by neither,
+and explicit witnesses exist in the present instance.
+\end{proof}
+
+\begin{measurement}\label{meas:arity}
+Of the $34$ element-expressible clauses ($31$ requirement, $3$ prohibition),
+exactly $17$ are \emph{bijunctive} (width $\le 2$); the widest has $5$ literals.
+Hence the system is not median-closed, though a $50\%$ fragment is.
+\end{measurement}
+
+\section{Obstructions}\label{sec:obstructions}
+
+\begin{theorem}[Bilattices]\label{thm:bilattice}
+No interlaced bilattice on $\Fix(\Gamma) \times \Fix(\Delta)$ has $\Adm$ as a
+definable object.
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+By Avron's representation theorem every interlaced bilattice is isomorphic to a
+componentwise product $L \odot R$, uniquely. Taking $L = \Fix(\Gamma)$ and
+$R = \Fix(\Delta)$ yields pairs with no constraint tying the coordinates, whereas
+$\Adm$ is precisely the diagonal $\{(x,x)\}$. A componentwise structure cannot
+distinguish it. Moreover a bilattice would make $\Adm$ a lattice under both
+orders, contradicting Theorem~\ref{thm:polarity}.
+\end{proof}
+
+\begin{theorem}[Approximation fixpoint theory]\label{thm:aft}
+There is no approximator $A$ on $L^2$ whose lower and upper components are
+$\Gamma$ and $\Delta$ respectively, other than the trivial one with
+$\Gamma = \Delta = \mathrm{id}$.
+\end{theorem}
+
+\begin{proof}
+Every approximator is required to preserve consistency: $A^1(x,y) \le A^2(x,y)$.
+Evaluating on the diagonal, $A(x,x) = (\Gamma(x), \Delta(x))$ gives
+$\Gamma(x) \le \Delta(x)$ for all $x$. But $\Gamma$ is inflationary, so
+$x \le \Gamma(x)$, and $\Delta$ is deflationary, so $\Delta(x) \le x$. Chaining,
+\[
+  \Gamma(x) \;\le\; \Delta(x) \;\le\; x \;\le\; \Gamma(x),
+\]
+whence $\Gamma(x) = \Delta(x) = x$ for every $x$. The argument uses neither
+exactness nor $\le_p$-monotonicity, and applies to any $A$, product-form or not.
+\end{proof}
+
+\begin{corollary}
+The assignment is backwards: an approximator's lower component must
+\emph{under}-approximate, while a closure operator \emph{over}-approximates.
+Exchanging the roles is admissible but vacuous, since $\lfp(\Delta) = \bot$
+identically, so the induced stable operator is constant.
+\end{corollary}
+
+\begin{remark}
+A common misdiagnosis should be recorded. It is \emph{not} the case that
+monotonicity of both $\Gamma$ and $\Delta$ obstructs $\le_p$-monotonicity of $A$:
+antitonicity in the second argument is satisfied vacuously by constancy, and for
+monotone $O$ the ultimate approximator is exactly the product
+$(O(x), O(y))$. The obstruction is consistency, as above.
+\end{remark}
+
+\section{Collapse over the powerset}
+
+\begin{proposition}\label{prop:collapse}
+Let $O$ be any operator on $L$ with $\Fix(O) = \Adm$. If
+\emph{(i)} $\emptyset \in \Adm$ and \emph{(ii)} $\bigcup \Adm = \El$, then the
+ultimate approximator satisfies $U_O(\bot,\top) = (\bot,\top)$; the
+Kripke--Kleene fixpoint is $(\bot,\top)$ and carries no information.
+\end{proposition}
+
+\begin{proof}
+$U_O(x,y) = \bigl(\bigwedge O([x,y]),\ \bigvee O([x,y])\bigr)$. The interval
+$[\bot,\top]$ contains $\emptyset$, and by (i) $O(\emptyset) = \emptyset$, so the
+lower bound is $\bot$. By (ii) the upper bound is $\top$. Hence
+$(\bot,\top)$ is a fixed point of the iteration at the first step.
+\end{proof}
+
+\begin{remark}
+Hypotheses (i) and (ii) hold for our vocabulary and are facts about the
+\emph{constraint set}, not about $O$: (i) because every requirement is an
+implication with a nonempty antecedent, so the empty protocol violates nothing;
+(ii) because every element occurs in some admissible set. Proposition
+\ref{prop:collapse} therefore rules out bottom-up reasoning over $2^{\El}$ for
+\emph{every} operator with the right fixpoints. The obstruction is the lattice.
+\end{remark}
+
+\section{Completion lattices}
+
+\begin{definition}[Completion lattice]
+For a seed $S \subseteq \El$, the \emph{completion lattice} is the interval
+$[S,\top] = \{X : S \subseteq X \subseteq \El\}$, and the associated question is
+\emph{which extensions of $S$ are admissible}.
+\end{definition}
+
+\begin{proposition}
+$\Gamma$ restricts to $[S,\top]$, with least fixed point $\Gamma(S)$ reached in
+one step. $\Delta$ does not restrict; the corrected operator
+$\Delta_S(X) \coloneqq \Delta(X) \cup S$ does.
+\end{proposition}
+
+\begin{definition}[Downward iteration]
+Set $x_0 = \top$ and $x_{n+1} = \Gamma\bigl(\Delta(x_n) \cup S\bigr)$, and let
+$x_\infty$ be the limit.
+\end{definition}
+
+\begin{conjecture}[Soundness and exactness]\label{conj:downward}
+Every admissible $X$ with $S \subseteq X$ satisfies $X \subseteq x_\infty$
+(soundness), and $x_\infty$ is the least such upper bound (exactness).
+\end{conjecture}
+
+\begin{measurement}
+On synthetic operators of the present shape, Conjecture~\ref{conj:downward} held
+with soundness $2000/2000$, exactness $2000/2000$ and zero slack. Verification
+against the actual $\Gamma,\Delta$ at $|\El| = 58$ is in progress.
+\end{measurement}
+
+\section{What the carrier cannot express}
+
+\begin{proposition}[No reflexivity over element types]\label{prop:dag}
+The requirement relation on $\El$, taking every alternative of every term, is a
+directed acyclic graph without self-loops. Consequently no $X \subseteq \El$
+contains a requirement cycle.
+\end{proposition}
+
+\begin{corollary}
+Reflexive failure modes are not expressible over element types. They become
+expressible over $\El \times \mathcal{A}$ for an asset set $\mathcal{A}$, under
+the relation $\mathrm{backs} \coloneqq \mathrm{reads} \mathbin{;} \mathrm{over}^{-1}$.
+\end{corollary}
+
+\begin{conjecture}[Fibre separation]\label{conj:fibre}
+There exist protocols $P \neq Q$ with identical element sets and materially
+different solvency. Hence no function of $2^{\El}$ separates them, and separation
+requires a party sort carrying obligor, attester and jurisdiction.
+\end{conjecture}
+
+\section{Composition}
+
+\begin{definition}
+$X \oplus Y \coloneqq \Gamma(X \cup Y)$.
+\end{definition}
+
+\begin{theorem}\label{thm:noncong}
+$\oplus$ preserves observational equivalence but does not preserve
+admissibility: there exist admissible $X, Y$ with $X \oplus Y \notin \Adm$.
+\end{theorem}
+
+\begin{remark}
+The two claims are frequently conflated. Observational equivalence is defined by
+quantification over all contexts, so its preservation is immediate; admissibility
+is a different predicate and fails.
+\end{remark}
+
+\begin{measurement}\label{meas:frag}
+A union-closed fragment $F \subseteq \Adm$ with $|F|/|\Adm| = 0.478$ certifies
+$59\%$ of live protocol pairs with no errors. $F$ is a join-semilattice, not a
+sublattice; maximality is open in $[11026,\,23055)$.
+\end{measurement}
+
+\begin{measurement}[Width dependence]\label{meas:width}
+Composition success depends on maximum disjunctive width $w$: rates
+$0.925, 0.710, 0.655, 0.684$ for $w = 1,\dots,4$, with union-closure falling from
+$0.75$ to $0.13$ between $w=1$ and $w=2$. The observed $59\%$ lies in the
+$w \in [2,4]$ band.
+\end{measurement}
+
+\begin{remark}
+Measurement~\ref{meas:width} suggests the recurring ``good fragment'' phenomenon
+--- distributivity, union-closure, bijunctivity and compositionality each holding
+on a fragment and failing globally --- is a single effect parameterised by
+disjunctive width, rather than four independent facts.
+\end{remark}
+
+\section{Open problems}
+
+\begin{enumerate}
+  \item \textbf{Invariance.} Does $\Delta(\Fix(\Gamma)) \subseteq \Fix(\Gamma)$
+    hold? It is strictly weaker than commutation (which fails here) and suffices
+    for Tarski's conclusion that the common fixed points form a nonempty complete
+    lattice.
+  \item \textbf{Maximal composable fragment.} Characterise the largest
+    $F \subseteq \Adm$ closed under $\oplus$; see Measurement~\ref{meas:frag}.
+  \item \textbf{Minimal repair.} Given $X$ arming $H \in \Haz$, compute the
+    minimal modifications restoring admissibility. Blocker duality for the
+    clutter $\Haz$ is the natural tool; the answer is an antichain, not a single
+    set.
+  \item \textbf{Independence.} Is the generating set $\El$ minimal, and which
+    elements are definable from the rest?
+\end{enumerate}
+
+\end{document}
