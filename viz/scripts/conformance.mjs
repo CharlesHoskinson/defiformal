@@ -159,10 +159,19 @@ const src = readFileSync(join(root, "src/main.ts"), "utf8");
 if (!/aria-live/.test(src)) fails.push("no polite live region found");
 if (!/showModal\(\)/.test(src)) fails.push("detail surface is not a focus-trapping dialog");
 if (!/prefers-reduced-motion/.test(src)) fails.push("reduced motion is not consulted in main.ts");
+/* The phrase may appear once, and only inside a sentence that denies it.
+   Test the sentence around the phrase for a negation rather than matching one
+   fixed wording — otherwise the check polices prose style, not the claim. */
 const disallowed = src.match(/periodic table/gi) || [];
-if (disallowed.length > 1) fails.push(`the phrase "periodic table" appears ${disallowed.length} times — only the disavowal is permitted`);
-if (disallowed.length === 1 && !/not a periodic table/i.test(src))
-  fails.push('the single use of "periodic table" is not inside its disavowal');
+if (disallowed.length > 1) {
+  fails.push(`the phrase "periodic table" appears ${disallowed.length} times — only the disavowal is permitted`);
+} else if (disallowed.length === 1) {
+  const i = src.search(/periodic table/i);
+  const sentence = src.slice(Math.max(0, i - 220), i + 220);
+  if (!/\b(not|isn't|is not|no periodic law)\b/i.test(sentence)) {
+    fails.push('the single use of "periodic table" is not inside a sentence that denies it');
+  }
+}
 
 /* -------------------------------------------------------------- report --- */
 
