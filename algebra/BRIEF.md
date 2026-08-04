@@ -1,288 +1,146 @@
-# Brief: a complete and composable algebra of DeFi
+# Build an algebra of DeFi composition
 
-You are one of nine mathematicians working independently on the same problem.
-Three of you share each of three model families; you will not see each other's
-work until adjudication. Disagreement between you is the point.
+You are one of nine mathematicians working independently. Your job is to
+**build a model** — a working algebra, stated formally, that classifies real
+protocols. Not an assessment of whether one is possible. Not a survey. A model.
 
----
-
-## 0. The problem, stated precisely
-
-We have an empirical vocabulary of **58 mechanisms** ("elements") observed
-across real DeFi protocols, **29 composition laws**, and **20 hazard rules**.
-It behaves like a taxonomy. We want to know whether it can be made into an
-**algebra**.
-
-Deliver a formal system in which:
-
-- **P1 — Protocols are terms.** Every one of the 60 decomposed real protocols
-  (§4) is expressible as a term over your signature.
-- **P2 — Composition is an operation.** There is at least one binary operation
-  combining protocols into protocols, with stated laws (associativity?
-  commutativity? identity? absorption?). Say which hold and *prove or refute*.
-- **P3 — Validity is decidable.** There is a predicate — well-typedness,
-  closure, satisfaction, whatever your framing — that separates admissible from
-  inadmissible terms, and it is decidable at realistic scale.
-- **P4 — The known deaths are inadmissible, or explicitly out of scope.** Three
-  protocols in the corpus died. Your system should either reject them or say
-  precisely why the failure is outside any algebra of this kind. **Both are
-  acceptable answers; pretending is not.**
-
-**Completeness** here means: *coverage of the corpus*, not a proof over all
-possible DeFi. Every precedent we found (§5) establishes completeness by
-benchmarking against an external corpus and extending the language when the
-corpus resists. That is the standard you are held to.
-
-**Composability** means: the validity predicate on `A ⊕ B` is computable from
-facts about `A` and `B` — you do not have to re-analyse the whole system. If
-that fails, say so; a proof that DeFi composition is *not* compositional in
-this sense would be a major result.
+Where you are uncertain, **make a choice and state it as a choice.** A crisp
+wrong answer is more useful to us than a hedged right one, because we can test
+it. Do not write "it depends", do not list alternatives you will not pick, and
+do not spend pages on limitations. One short section at the end for what breaks
+is enough.
 
 ---
 
-## 1. What the data actually is (read this before modelling)
+## 1. The data
 
-Each element has: a **family** (16 of them, defined as mutual substitutes), a
-**stratum** S0–S4 (asserted prerequisite depth), a **status**, and an
-**asynchrony** property (native / repairable / impossible — exactly one element
-is impossible).
+All paths under `/root/DefiElements`:
 
-The 29 laws have the shape
-
-```
-(subject₁ | subject₂ | …)  →  term₁ + term₂ + …
-```
-
-where each term is a disjunction of element symbols. A law fires when any
-subject is present; it is satisfied when every term has ≥1 alternative present.
-So the laws are **a conjunction of disjunctions over a set** — closer to a
-Horn-ish constraint system than to an edge relation.
-
-## 2. The measured defects — do not model the idealised version
-
-These are computed facts from two independent implementations (a TypeScript
-engine and a Quint model that agree):
-
-| Fact | Value |
+| File | What |
 |---|---|
-| Laws total | 29 |
-| Laws that can ever fire (element subject) | **25** — L14, L23, L25, L26 have prose subjects |
-| Requirement terms total | 77 |
-| Terms naming an element | **25** |
-| Terms that are prose ("exit-liquidity", "a terminal loss path") | **52** |
-| Hazard rows | 20 (19 numbered families) |
-| Hazard rules decidable from element membership | **1** (X2) |
-| Hazard rules that fire on any real protocol | **0** |
-| In-degree over laws | max 4, most 0–2 |
-| Requirement cycles in the corpus | **none** — reflexivity is not in the law graph |
+| `viz/src/data.ts` | 58 elements (mechanism, family, stratum S0–S4), 29 laws, 20 hazard rules |
+| `viz/src/laws.ts` | our reference parser + closure engine, in TypeScript |
+| `corpus50/lanes/*.json` | 72 real protocols decomposed, with residue and forced fits |
+| `corpus50/VERDICT.md` | what the corpus benchmark found |
+| `formal/atlas.qnt` | a Quint model of the same thing, 7 tests passing |
+| `algebra/blind-test-set.json` | **your test set — 144 element-sets** |
 
-**Two thirds of the requirement content is natural language.** Any algebra that
-assumes total formalisation is modelling a system we do not have. You may
-propose promoting prose terms to formal ones — that is a legitimate and
-probably necessary contribution — but say which, and what each promotion costs.
+An element is a recurring on-chain mechanism. A protocol is a set of elements.
+A law has the form `(subj₁|subj₂|…) → term₁ + term₂ + …`, each term a
+disjunction of elements; it fires if any subject is present and is satisfied if
+every term has at least one alternative present.
 
-## 3. Closure results on the 12-protocol corpus
+## 2. The observation map — fixed, not negotiable
 
-Closes: Aave v3, Uniswap v3, Maker/Sky, Liquity v1, GMX v2, CoW Protocol.
-Does not close: Lido v2, CCTP v2 Fast, Centrifuge, Terra ✝, Mango ✝, Euler ✝.
+You do not get to choose what counts as observable. We fix it, because an
+algebra that picks its own semantics can make anything equivalent:
 
-**Note the embarrassment and take it seriously:** three *live, working*
-protocols fail closure, and one dead protocol (Euler) fails for a reason
-unrelated to why it died. Any of these is possible:
-(a) the laws are overstated, (b) the element lists are incomplete,
-(c) closure is the wrong validity predicate. Rule on which.
+> **⟦t⟧ = the set of reachable net-payoff outcomes per agent class**
+> (depositor, borrower, liquidity provider, operator, governance),
+> quantified over an adversarial environment: all price paths, all transaction
+> orderings, and composition with any other term over the same signature.
+>
+> `t₁ ≃ t₂` iff no composition context `C[·]` built from the signature
+> distinguishes `⟦C[t₁]⟧` from `⟦C[t₂]⟧`.
 
-## 4. The corpus you must cover
+Contexts are restricted to terms over the signature itself. You may not appeal
+to a distinguishing environment that could not be built out of the vocabulary.
 
-60 protocols across 12 categories, decomposed into this vocabulary with
-residue and forced fits recorded per protocol. **Attached separately** — this
-is your benchmark and your completeness test.
+## 3. What you must deliver
 
-Categories: spot DEX · lending · CDP stablecoins · liquid staking & restaking ·
-perpetuals · yield & vaults · bridges · intents & aggregation · RWA & private
-credit · options & structured · fiat stablecoin issuers · prediction markets.
+**A signature and carrier.** Stated formally. Justify from the data, not from
+elegance.
 
-Pay attention to the residue column. Where the vocabulary failed is where the
-algebra must either extend or explicitly bound its scope.
+**At least one composition operation**, with its laws settled — associativity,
+commutativity, idempotence, identity, absorption. Prove or refute each. Do not
+leave one open.
 
-## 4b. What the corpus measurement already found — the hard part of your job
+**A decidable validity predicate**, with its complexity.
 
-The 60-protocol decomposition is not a formality we ran to hand you data. It
-returned three results that a candidate algebra must confront directly.
+**A classification of all 144 cases** in `algebra/blind-test-set.json` as
+`ADMISSIBLE` or `INADMISSIBLE`. Some are real deployed protocols; some are
+synthetic corruptions. You are not told which, or in what proportion. Write your
+answers to `algebra/verdicts/<your-id>.json` as
+`{"id":"T001","verdict":"ADMISSIBLE"}, …` — all 144, no omissions.
 
-### (i) The decomposition map is not injective, and its fibres are not semantically homogeneous
+**This is how you are scored.** Our own closure predicate accepts 50% of real
+protocols and 15% of random noise — a discrimination ratio of **3.3×**. Beat it.
+An algebra that accepts everything scores 1.0× and fails, no matter how elegant.
 
-Distinct protocols decompose to **identical element sets**:
+## 4. Five facts the corpus established. Do not model the idealised version.
 
-| Fibre | Members |
-|---|---|
-| `{Ps, Rd, At, Fz, Up}` | Tether USDT · World Liberty USD1 |
-| `{Ps, Rd, At, Fz, Xm, Xf, Up, Gp}` | Circle USDC · PayPal PYUSD |
-| `{Aw, Sh, At, Ex, Rd, Fz, Up, Gp}` | Circle USYC · BlackRock BUIDL |
-| options CLOB set | Derive · Aevo |
-| CTF+CLOB+UMA set | Polymarket · Predict.fun · OPINION · InsightX |
+1. **Two thirds of the law content is prose.** 52 of 77 requirement terms name
+   no element. 4 of 29 laws can never fire. 19 of 20 hazard rules are
+   undecidable from membership. You may promote prose to formal — say which and
+   what it costs.
+2. **Decomposition is not injective, and the fibres are not homogeneous.**
+   USDT ≡ USD1, USDC ≡ PYUSD, USYC ≡ BUIDL, SparkLend ⊂ Aave V3, and the top
+   three bridges by TVL ($17.8B) share an identical five symbols. USDT and USD1
+   are one point and are not one credit. **If your algebra cannot separate them,
+   say so explicitly and identify the generator that would.**
+3. **A strategy is a missing level.** A Yearn or Steakhouse vault is a *policy
+   over protocols* — "borrow against stETH to 80% LTV, unwind at 85%" — not a
+   mechanism. It has no on-chain machinery of its own. One sort will not hold
+   this. Decide whether your carrier is many-sorted, and commit.
+4. **Validity is non-monotone.** Adding an element can satisfy a law and arm a
+   hazard simultaneously. Most pleasant theorems assume monotonicity. Deal with
+   it.
+5. **There is an off-chain boundary and coverage falls off it monotonically** —
+   obligor, register of record, reserve, custody, legal recourse. It is
+   inversely correlated with capital held. Either bound your scope to on-chain
+   state machines and say so, or add an opaque-obligor generator with stated
+   assumptions. Choose one.
 
-Non-injectivity is not by itself a defect — a quotient is a legitimate
-abstraction. **The defect is that the quotient does not respect the property we
-care about.** USDT and USD1 are the same point in this space and are not
-remotely the same credit. So:
+## 5. Prior art — position against it, briefly
 
-> **Q9. Is decomposition a homomorphism onto anything?** State the semantic
-> function you claim your algebra preserves, then check it is constant on the
-> fibres above. If it is not, you have proved that no function of the element
-> set can predict solvency — which is a real theorem, and probably the most
-> important one available here. Prove it or exhibit the missing generators that
-> separate the fibres.
+**Interface automata** (de Alfaro & Henzinger 2001) — input assumptions, output
+guarantees, optimistic composition (compatible iff *some* environment works),
+decidable, with refinement. Closest existing analogue to our closure criterion.
+**Assume-guarantee contracts** (Benveniste et al. 2018) — composition,
+conjunction, quotient, refinement, already an algebra. **Feature models** — the
+same problem industrially, compiled to SAT. **Formal Concept Analysis** — the
+Duquenne–Guigues base is minimal and entails all implications; are our 29 laws
+reducible? **Financial contract algebras** — Peyton Jones & Eber, the semiring
+rework (FLOPS 2024), ACTUS, Marlowe. No completeness theorem exists for any
+financial contract language; claims are coverage claims.
 
-### (ii) Resolution is inversely correlated with capital at risk
+Two paragraphs of positioning. Not a literature review.
 
-The vocabulary spends **five symbols** (`Cp`, `Wg`, `St`, `Cl`, `Pm`)
-distinguishing algebraic variants of a scalar function on a two-asset pool, and
-**one symbol** (`Op`) for the entire options universe — collapsing at least six
-risk-relevant distinctions: European/American/perpetual exercise, cash vs
-physical settlement, peer-to-peer vs peer-to-pool underwriting, upfront vs
-streamed premium, isolated vs portfolio margin, model-priced vs book-priced.
+## 6. Answer these directly
 
-Measured coverage: RWA 39% · options 63% · fiat stablecoins **25%** ·
-prediction/other 44%. Lane-wide ≈41% unweighted. Weighted by *components that
-determine whether a holder gets paid*, fiat stablecoins fall to near zero.
+1. What is the carrier? Sets, multisets, terms, or something with more structure?
+2. Is composition a join? If so, is the structure a lattice, and are the laws a
+   closure operator in the Galois sense?
+3. Are the 58 elements independent, or is there a smaller generating set? Name
+   the redundant ones.
+4. Is stratum derivable as rank, or must it stay asserted? Where would a derived
+   rank disagree?
+5. Terra died of reflexivity and there is **no requirement cycle in the law
+   graph**. Define the relation in which its collapse *is* a cycle, or show none
+   exists.
 
-$183B of USDT resolves to five symbols, three of them forced fits, with an
-honest core of **two**: `Fz` and `Up`. Every symbol it uses is control-plane
-(`Fz`, `Up`, `Gp`, `At`, `Aw`), not mechanism.
+## 7. Your lens
 
-> **Q10. Is the signature's granularity principled or historical?** The
-> resolution appears to track *how many independent Ethereum codebases were
-> written for a thing*, not economic significance. If so, the vocabulary is a
-> census of implementations rather than a basis. Say whether your algebra
-> inherits that bias, and whether a **normal form** exists that would expose it.
+You have been assigned one of: **categorical** (monoidal categories, props,
+decorated cospans, open games), **order-theoretic** (lattices, closure
+operators, Galois connections, FCA), or **logical** (Horn theories, SAT/SMT,
+interface automata, assume-guarantee).
 
-### (iii) There is a boundary, and coverage degrades monotonically across it
+Start there. **Abandon it if it does not fit** — say so and switch. We assigned
+lenses to stop nine people converging on the same monoidal-category answer, not
+to constrain the result.
 
-Expressibility falls as the off-chain fraction of a protocol rises — and the
-off-chain fraction is *inversely* correlated with how much money the protocol
-holds. Fifteen named gaps, in priority order, all of them off-chain or
-institutional:
+## 8. Output
 
-obligor & recourse · register of record (is the chain authoritative or a mirror
-of a transfer agent's book?) · reserve composition & custody · bankruptcy
-remoteness & claim perfection · central counterparty / clearing & novation ·
-conditional-token split & merge · peer-to-pool payoff underwriting · delegated
-discretionary allocation mandate · portfolio/scenario margin · pricing model /
-volatility surface · instrument listing & expiry-cycle definition · rulebook
-(natural-language settlement criteria) · off-chain matching with on-chain
-settlement · terminal settlement-price fixing · investment discretion.
+Write to `algebra/reports/<your-id>.md`:
 
-Two of these deserve separate notice:
+1. Signature, carrier, operations, laws — formal, with proofs.
+2. The validity predicate and its complexity.
+3. Answers to §6, numbered.
+4. What you added to the vocabulary and what you cut.
+5. Your self-assessed discrimination ratio on the blind set.
+6. One short section: what breaks.
 
-- **Conditional-token split/merge** — deposit $1, receive one YES and one NO;
-  return both, get $1. A *state* partition of collateral. `Py` partitions along
-  **time**; nothing partitions along **state**. This is the founding primitive
-  of an entire sector and it is absent. If your algebra has a tensor or a
-  coproduct, this is the obvious thing for it to be.
-- **Delegated discretionary allocation mandate** — a named human party choosing
-  exposures for depositors' capital, for a fee, with no on-chain recourse.
-  DefiLlama's #9 and #12 categories by TVL, $16.5B combined, **zero coverage**.
-  The fastest-growing organisational form in DeFi has no symbol. Note this is
-  not a mechanism at all; it is an *agent with discretion*, and it may be
-  categorically outside anything a term algebra can express.
+And `algebra/verdicts/<your-id>.json` with all 144 classifications.
 
-> **Q11. Where do you draw the boundary, and can you draw it formally?** The
-> honest reading is that this is a vocabulary of **on-chain state machines**.
-> Options: (a) declare the boundary and bound your completeness claim to it —
-> respectable, and it makes the algebra provable; (b) add an *opaque obligor*
-> generator with stated assumptions and no internal structure, in the spirit of
-> interface automata's environment assumptions; (c) argue the boundary is
-> illusory. Pick one and defend it. **Do not quietly cover the gap with prose
-> terms — that is what produced the 52 prose requirement terms already.**
-
-### What this means for P1
-
-P1 said "every one of the 60 protocols is expressible as a term". Given the
-above, **weaken it honestly rather than satisfy it cheaply**: an algebra in
-which USDT is a term is trivial to build and worthless. The real target is an
-algebra in which USDT is a term *and the terms that differ from it are the ones
-that behave differently*. If that is impossible at this abstraction level, prove
-it — see Q9.
-
-## 5. Prior art you are expected to engage with
-
-Do not reinvent these. Position your system relative to them.
-
-- **Interface automata** — de Alfaro & Henzinger, ESEC/FSE 2001. Components
-  carry *input assumptions* and *output guarantees*; composition is
-  **optimistic** — compatible iff *there exists an environment* making them
-  work. Decidable, with a refinement relation. This is the closest existing
-  formal analogue to our closure criterion. **If you do not build on it, say
-  why not.**
-- **Feature models / software product lines.** A vocabulary plus cross-tree
-  `requires`/`excludes` constraints, compiled to SAT, with established analyses:
-  void model, dead feature, false-optional feature, redundant constraint. The
-  industrial version of our problem. Empirical warning (Nešić et al., ESEC/FSE
-  2019): practitioners avoid complex cross-tree constraints because they defeat
-  comprehension.
-- **Formal Concept Analysis.** Objects × attributes → concept lattice, plus the
-  **Duquenne–Guigues implication base**: a minimal set of implications entailing
-  all others. Directly relevant — *are our 29 laws reducible to a smaller
-  base?* And is stratum recoverable as lattice level rather than assertion?
-- **Zwicky's General Morphological Analysis / Cross-Consistency Assessment.**
-  Configurations grow factorially; pairwise consistency judgements grow only
-  quadratically, so a few hundred pairwise judgements constrain ~10⁵
-  configurations. Also distinguishes **logical** vs **empirical** vs
-  **normative** inconsistency. Our 29 laws almost certainly conflate all three —
-  this may be the actual explanation for §3.
-- **Financial contract algebras.** Peyton Jones & Eber (combinators with
-  denotational semantics; later reworked around a **semiring** — "Rigged
-  Contracts", FLOPS 2024); ACTUS (32 contract types, completeness by census);
-  Marlowe (five constructs, completeness claimed only as "a small number of
-  constructs that in combination can describe many contracts", and **extended
-  when benchmarked against ACTUS**); DAML (authorization closure checked per
-  transaction).
-- **Architectural mismatch** — Garlan, Allen & Ockerbloom 1995, restated 2009.
-  Component assumptions "are almost always implicit". Our 52 prose terms are
-  the expected result, not an anomaly. Thirty years of interface formalism did
-  not close this gap.
-- **Compositional MEV** — Bartoletti et al. 2026 propose **MEV
-  non-interference** as the safety criterion for composition: safe if it does
-  not increase extractable value from existing contracts. Note this is
-  deliberately *semantic and adversarial* rather than syntactic. Argue for or
-  against a syntactic criterion in light of it.
-
-## 6. Specific questions to answer
-
-1. **What is the carrier?** Sets of elements? Multisets? Terms over a signature?
-   Something with more structure (a lattice, a semiring, a monoidal category)?
-   Justify from the data, not from elegance.
-2. **Is the natural operation a join?** Protocol composition looks like set
-   union with side conditions. If it is a join, is the structure a lattice, and
-   do the laws form a closure operator in the Galois sense?
-3. **`|` alternatives:** nondeterministic choice, refinement, or a lattice of
-   legal configurations? This decides whether "the space of protocols satisfying
-   the same laws" is a real object.
-4. **Is closure a monotone operator?** If adding elements can *satisfy* a law
-   but also *arm* a hazard, validity is non-monotone — which breaks many
-   pleasant theorems. Confirm and deal with it.
-5. **Can stratum be derived** as rank/height rather than asserted, and where
-   would a derived rank disagree with the recorded S0–S4?
-6. **Reflexivity is not in the law graph.** Should it be a *derived* property (a
-   cycle in a suitably-defined dependency relation) rather than an asserted
-   hazard? If so, define the relation in which the loop is a cycle.
-7. **What is the minimal generating set?** Are all 58 elements independent, or
-   is there a smaller basis from which the rest are definable?
-8. **State the impossibility result if there is one.** A crisp theorem that some
-   desirable property cannot hold would be worth more than a workable system.
-
-## 7. Deliverable
-
-- The signature and carrier, stated formally.
-- The operations and their laws, with proofs or counterexamples.
-- The validity predicate and its decidability/complexity.
-- A **coverage table**: for each of the 60 protocols, expressible or not, and
-  what was needed.
-- What you had to **add** to the vocabulary, and what you would **cut**.
-- The **honest limits**: what your algebra cannot express, and what breaks.
-- If you conclude no useful algebra exists at this level of abstraction, say so
-  and prove it. That is a legitimate deliverable.
-
-Length: as long as it needs to be, but every claim either proved, cited, or
-labelled a conjecture.
+Be direct. State results as results.
