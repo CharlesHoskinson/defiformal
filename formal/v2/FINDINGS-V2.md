@@ -433,7 +433,7 @@ it.
 
 ---
 
-## F8 — the Approximation Fixpoint Theory gate. **The gate does NOT clear.**
+## F8 — the AFT gate, as originally posed. **Superseded in part by F9 — read them together.**
 
 Asked in a follow-up: can `A(x,y)` be defined from `Γ` and `Δ` that is monotone in the
 precision order `≤_p`? If yes, AFT's three semantics and the splitting theorem come
@@ -579,7 +579,14 @@ composition.
    constraint that one be chosen), not `a :- b`. That is precisely why `Γ` comes out
    union-closed in F4's attribution. The trap was not entered.
 
-### F8 verdict
+### F8 verdict (SUPERSEDED - see F9)
+
+**Recorded as originally written, and wrong in its reasoning.** The theorem below is
+true but does not bear on AFT, because an approximator never has to be built from the
+ingredients:  is non-empty for every operator and DMT Thm 4.5 gives the
+ultimate one in closed form. F9 runs the experiment properly. What survives from F8 is
+the narrow claim that  collapses to a componentwise
+product, plus the Delta-idempotence correction and the stratifiability witness.
 
 **A clean no.** AFT gives nothing here from `Γ` and `Δ`; the resemblance is cosmetic
 and it is cosmetic for the same reason bilattices are refuted. F6 stands as proved in
@@ -588,6 +595,163 @@ counterexamples over `2^20`, with maximality still open in `[11026, 23055)`. The
 salvageable idea is an approximator coupled through the *hazard* fragment, which is a
 new construction rather than an inherited theorem, and which F4's attribution
 independently says is where the structure actually is.
+
+---
+
+---
+
+## F9 — the ultimate approximator, computed. **`WF = (⊥, ⊥)`. `KK = (⊥, ⊤)`.**
+
+F8's "clean no" was reached by the wrong route and I withdraw the reasoning behind it,
+though not the verdict. The three corrections are accepted:
+
+- `Appx(O)` is non-empty for **any** `O`, and `U_O(x,y) = (glb O([x,y]), lub O([x,y]))`
+  (DMT Thm 4.5) needs no hypothesis on `O`. So F8's theorem — *no `≤_p`-monotone `A` is
+  constructible from `Γ` and `Δ`* — is true and **irrelevant**: nobody has to construct
+  one. It survives only as a statement about that particular construction.
+- The antitone slot is definitional to an approximator, not a demand on ingredients;
+  monotone envelopes supply it from an arbitrary operator.
+- Thm 3.5's splitting needs a product lattice and stratifiability, no approximator.
+
+So the experiment was run as specified: identify `O` whose fixpoints are exactly the
+admissible sets, brute-force `U_O`, compute Kripke–Kleene and well-founded.
+
+**Instance.** `U = {Fl, Xm, Xf, Rl, Of, Au, Sh, Ix, In, Bs}`, `|L| = 2^10 = 1024`,
+`|Adm| = 196` — computed exhaustively, so the answer is known independently. The
+approximator is tabulated over all `3^10` consistent pairs by enumerating each
+interval; no shortcuts.
+
+**Three operators**, so the result cannot be an artifact of one choice:
+
+| `O` | `|fix(O)|` | `fix(O) = Adm`? |
+|---|---|---|
+| `O_A(x) = x` if `Adm(x)`, else `⊥` | 196 | **yes, exactly** |
+| `O_R(x) = Δ(Cn(x))` — the natural repair | 378 | no (extra fixpoints, e.g. `{Xm,Xf,Of}`) |
+| `O_H` — identity on `Adm`, `Δ∘Cn` off it | 378 | no |
+
+```
+$ node f9.mjs
+instance: Fl Xm Xf Rl Of Au Sh Ix In Bs   |L| = 2^10 = 1024
+|Adm| = 196
+is the empty protocol admissible?  YES
+union of all admissible sets = {Fl,Xm,Xf,Rl,Of,Au,Sh,Ix,In,Bs}  == TOP? true
+
+================ O_A (identity on Adm, collapses to bottom off it) ================
+|fix(O)| = 196;  fix(O) == Adm ?  true
+Kripke-Kleene: ({}, {Fl,Xm,Xf,Rl,Of,Au,Sh,Ix,In,Bs})
+  KK = ({}, {Fl,...,Bs})   == (BOTTOM, TOP): TOTAL COLLAPSE
+  KK interval size = 1024 of 1024 candidates (100.0%)
+well-founded: ({}, {Fl,...,Bs})  ->  ({}, {})
+  WF = ({}, {})   fixpoint of U_O? true   exact (sx==sy)? true
+  atoms decided by WF: 10/10;  admissible sets inside the WF interval: 1 of 196
+```
+
+All three operators give **identical** `KK` and `WF`.
+
+### The values, stated exactly
+
+- **`KK = (⊥, ⊤)`** — the total collapse Denecker's 2025 example exhibits. Reached at
+  the *first* iteration: `U_O(⊥,⊤) = (⊥,⊤)`. The Kripke–Kleene interval is 100% of the
+  lattice; it excludes nothing.
+- **`WF = (⊥, ⊥) = ({}, {})`** — total and exact, a genuine fixpoint of `U_O`, and it
+  decides all 10 atoms. It names **the empty protocol**: 1 of the 196 admissible sets.
+
+So under the stated decision rule the answer is *literally* ambiguous — `WF ≠ (⊥,⊤)` —
+and I am not going to hide behind that. `WF` is exact and it is worthless: it selects
+the least admissible set and says nothing whatever about any protocol with an element
+in it. `KK`, the semantics that is supposed to be the safe conservative one, is the
+one that collapses to `(⊥,⊤)` outright.
+
+### Why this is forced — a theorem about the atlas, not a fact about one `O`
+
+```
+1. The empty protocol is admissible: no law fires, nothing is unwarranted,
+   no ban is armed, nothing is ungrounded.   ADM[{}] = 1
+2. Hence O({}) = {} for EVERY operator whose fixpoints are the admissible sets.
+3. KK starts at (BOTTOM, TOP), whose interval is all of L and so contains {}.
+   Its lower bound is glb O(L) <= O({}) = BOTTOM.
+4. Every atom occurs in some admissible set (union of Adm = TOP; atoms in no
+   admissible set: none), so the upper bound is lub O(L) >= union Adm = TOP.
+   => U_O(BOTTOM,TOP) = (BOTTOM,TOP), and KK = (BOTTOM,TOP), for ANY such O.
+```
+
+Both premises are properties of **the atlas**, checked and reported above, not of the
+operator. `∅ ∈ Adm` because admissibility is a conjunction of implications with
+non-empty antecedents — the empty protocol violates nothing. Every atom is in some
+admissible set because every element has at least one live-protocol-shaped
+neighbourhood. Given those two facts, the ultimate approximator has nothing to bite
+on at the bottom of the lattice, and no choice of `O` can change it.
+
+**This is the honest reason to drop AFT, and it is a different reason from F8's.** Not
+"the construction is impossible" — the construction is trivial and always exists. The
+problem is that the *lattice* is wrong: `2^E` ordered by `⊆` has an admissible bottom
+and a spanning `Adm`, so the greatest-lower-bound half of every approximation is pinned
+at `⊥` before any reasoning starts.
+
+### The one place it is not dead: `KK` on the completion lattice
+
+The collapse is caused by `⊥ ∈ Adm`. The question an integrator actually asks is
+bounded — *"I already have `S`; what follows?"* — and that lives in `[S, ⊤]`, where
+`∅` is absent. Re-run there:
+
+```
+================ salvage: AFT on the COMPLETION lattice [S, TOP] ================
+seed {Of}:    KK = ({Of},    {Xm,Xf,Rl,Of,Au,Sh,Ix,In,Bs})   informative
+              WF = ({Of},    {Of})           admissible completions inside WF: 0/18
+seed {Rl}:    KK = ({Rl},    {Xm,Xf,Rl,Of,Au,Sh,Ix,In,Bs})   informative
+              WF = ({Rl},    {Rl})           admissible completions inside WF: 0/62
+seed {Fl,Xm}: KK = ({Fl,Xm}, {Fl,Xm,Au,Sh,Ix,In,Bs})         informative
+              WF = ({Fl,Xm}, {Fl,Xm})        admissible completions inside WF: 0/12
+seed {Rl,Of}: KK = ({Rl,Of}, {Xm,Xf,Rl,Of,Au,Sh,Ix,In,Bs})   informative
+              WF = ({Rl,Of}, {Rl,Of})        admissible completions inside WF: 0/6
+```
+
+Two things happen, and they point in opposite directions.
+
+**`KK` becomes genuinely informative.** On seed `{Fl,Xm}` the ultimate Kripke–Kleene
+upper bound is `{Fl,Xm,Au,Sh,Ix,In,Bs}` — it has **excluded `Xf`, `Rl` and `Of`**,
+which is precisely `X21` (`Fl ∧ (Xf|Rl|Of)`), derived rather than looked up. That is a
+real, correct, cheap inference: three atoms ruled out of every admissible completion,
+computed without search.
+
+**`WF` gets worse, not better.** On every seed it returns `(S, S)` — it asserts the
+answer is the seed itself, which for all six seeds is **not admissible**: `0 of 18`,
+`0 of 62`, `0 of 12`, `0 of 6` admissible completions lie inside the well-founded
+interval. The well-founded fixpoint is not merely uninformative on completion queries;
+it is *disjoint from the answer set*. It is a fixpoint of `U_O` and it is sound as AFT
+defines soundness — `Adm ∩ [S,S] = ∅` is not a contradiction, it just means there is no
+admissible set equal to `S` — but as an answer to "what can this become" it is null.
+
+### F9 verdict
+
+**Drop the well-founded and stable semantics. Keep Kripke–Kleene, and only on
+completion lattices.**
+
+- `WF = (⊥,⊥)` globally and `(S,S)` on every completion lattice tested: a well-defined
+  answer carrying zero information, exactly the failure mode the task anticipated.
+- `KK = (⊥,⊤)` globally — the total collapse, provably, for every valid `O`.
+- `KK` on `[S,⊤]` **is** live and recovers real hazard content (`X21` on `{Fl,Xm}`).
+
+And the cost argument now runs the wrong way for the expensive half. Ultimate stable
+is `Σ^P_2`-complete against NP for the completion problem OP-ORD already characterised
+as NP-complete — so the exponentially harder semantics is the one that returns nothing,
+while the cheap conservative one is the one with content. There is no version of this
+where paying `Σ^P_2` is justified.
+
+**What I would keep from AFT, stated as work rather than as a result:** ultimate `KK`
+restricted to `[S,⊤]` is a sound, search-free, one-sided completion oracle. It is
+strictly weaker than the NP-complete exact answer and strictly cheaper. Whether it is
+strong enough to be useful is an empirical question over the 72-protocol corpus and I
+have not run it.
+
+### Accepted for the record
+
+The coordinator's note that the splitting paper's own example
+`{p ← ¬q,¬r ;  q ← ¬p,¬r ;  s ← p,q}` is stratifiable with stable models `{p}`, `{q}`
+whose union is not a fixpoint — and that `s ← p,q` has the shape of my `Pl ∧ Of → Ct`
+witness — is accepted and strengthens F8.4. Stratifiability and union-closure are
+independent, the canonical counterexample is in the literature, and F6's fragment
+therefore has to be proved on its own terms, which it is.
 
 ---
 

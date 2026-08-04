@@ -17,6 +17,43 @@ theorem makes every interlaced bilattice a componentwise product, blind to a
 diagonal. AFT: consistency forces `lower ≤ upper`, which chains to `Γ = Δ = id`.
 Any framework whose objects are componentwise fails here.
 
+## R1b — Work on completion lattices, not the powerset *(hard, and newly measured)*
+
+**This is a constraint on the LATTICE, not on the operator, and it is the one
+that actually bites.** Measured by exhaustive enumeration over a 10-element
+sublattice (`|L| = 2¹⁰`, `|Adm| = 196`), with three different operators — one
+whose fixpoints are *exactly* `Adm` — giving identical results:
+
+- **`KK = (⊥, ⊤)`** — the Kripke-Kleene fixpoint collapses totally, at the first
+  iteration, to 100% of the lattice.
+- **`WF = (⊥, ⊥)`** — well-founded is exact and names the empty protocol, 1 of 196.
+
+And the collapse is **forced by the atlas, not chosen by the operator**:
+
+1. `∅` is admissible — admissibility is a conjunction of implications with
+   non-empty antecedents, so the empty protocol violates nothing (verified).
+2. Hence `O(∅) = ∅` for **every** operator whose fixpoints are the admissible sets.
+3. KK starts at `(⊥,⊤)`, whose interval contains `∅`, so the lower bound is pinned
+   at `⊥`.
+4. Every atom occurs in some admissible set, so the upper bound is pinned at `⊤`.
+
+Both premises are facts about **`2^E` under `⊆`** — an admissible bottom and a
+spanning `Adm`. **Any framework that reasons bottom-up over the full powerset
+collapses before it starts.**
+
+> **Requirement: the carrier for reasoning is the completion lattice `[S, ⊤]`** —
+> "given what I already have, what may I add?" — which is also the only query a
+> user actually asks. On `[S,⊤]` the same machinery becomes informative: on seed
+> `{Fl, Xm}` the KK upper bound **excludes `Xf`, `Rl`, `Of`** — which is `X21`,
+> **derived search-free** rather than found by enumerating 5,038,954 subsets.
+
+**And it inverts the cost argument.** On completion lattices the cheap
+conservative semantics has content and the expensive one is empty: well-founded
+returns `(S,S)` on all six seeds tested, with **0 of 18, 0 of 62, 0 of 12 and 0 of
+6** admissible completions falling inside it — disjoint from the answer set.
+Paying `Σ^P_2` buys nothing. **Prefer Kripke-Kleene on `[S,⊤]`; drop well-founded
+and stable.** Whether this holds at corpus scale is unrun.
+
 ## R2 — Mixed clause polarity *(hard)*
 Requirements are **dual-Horn** (union-closed); prohibitions are **Horn**
 (intersection-closed). Their conjunction is provably a lattice under neither
