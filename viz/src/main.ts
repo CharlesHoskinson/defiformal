@@ -295,7 +295,7 @@ function applyProjection() {
    positions dragged in band padding, the hidden label column and the height of
    wrapped rows, which is what pushed the planes so far apart. Each stratum
    instead becomes a compact block, centred on its own plane. */
-const PLANE_STEP = 190;   // depth between planes
+const PLANE_STEP = 360;   // depth between planes: enough to actually see
 const BAND_GAP = 74;      // vertical breathing room between stratum blocks
 
 function layout3D(tw: number, th: number) {

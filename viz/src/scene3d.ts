@@ -16,9 +16,11 @@ import { CSS3DObject, CSS3DRenderer } from "three/examples/jsm/renderers/CSS3DRe
 
 export interface Box { x: number; y: number; w: number; h: number; z: number }
 
-const FOV = 16;                 // near-orthographic: no converging corridor
-const MAX_YAW = 0.20;           // ~11.5°, tiles stay effectively face-on
-const MAX_PITCH = 0.13;
+const FOV = 38;                 // real perspective: the depth has to be visible
+const MAX_YAW = 0.46;           // ~26°, still readable, no longer timid
+const MAX_PITCH = 0.30;
+const REST_YAW = 0.21;          // resting angle, so depth reads without input
+const REST_PITCH = 0.13;
 
 const ease = (t: number) => 1 - Math.pow(1 - t, 3);
 
@@ -29,8 +31,8 @@ export class Scene3D {
   objects = new Map<string, CSS3DObject>();
   private home = new Vector3();
   private target = new Vector3();
-  private yaw = 0; private pitch = 0;
-  private wantYaw = 0; private wantPitch = 0;
+  private yaw = REST_YAW; private pitch = REST_PITCH;
+  private wantYaw = REST_YAW; private wantPitch = REST_PITCH;
   private raf = 0;
   private tweens: { o: CSS3DObject; from: Vector3; to: Vector3; t0: number; d: number; delay: number }[] = [];
   private spin: { o: CSS3DObject; c: Vector3; r: number; a: number; sp: number; laps: number; max: number }[] = [];
@@ -130,11 +132,11 @@ export class Scene3D {
   focusOn(id: string) {
     const o = this.objects.get(id);
     if (!o) return;
-    this.wantYaw = 0; this.wantPitch = 0;
+    this.wantYaw = REST_YAW * 0.45; this.wantPitch = REST_PITCH * 0.45;
     this.target.set(o.position.x * 0.25, o.position.y * 0.25, this.home.z - o.position.z * 0.5);
   }
 
-  home_() { this.target.copy(this.home); this.wantYaw = 0; this.wantPitch = 0; }
+  home_() { this.target.copy(this.home); this.wantYaw = REST_YAW; this.wantPitch = REST_PITCH; }
 
   private bindDrag() {
     const d = this.host;
@@ -149,7 +151,7 @@ export class Scene3D {
       this.wantYaw = Math.max(-MAX_YAW, Math.min(MAX_YAW, y0 + (e.clientX - sx) * 0.0012));
       this.wantPitch = Math.max(-MAX_PITCH, Math.min(MAX_PITCH, p0 - (e.clientY - sy) * 0.0012));
     });
-    const end = () => { this.dragging = false; this.wantYaw = 0; this.wantPitch = 0; };
+    const end = () => { this.dragging = false; this.wantYaw = REST_YAW; this.wantPitch = REST_PITCH; };
     d.addEventListener("pointerup", end);
     d.addEventListener("pointercancel", end);
   }
