@@ -1,0 +1,449 @@
+{
+  "lane": "Spot DEX/AMM; Lending; CDP & collateral-backed stablecoins; Liquid staking & restaking",
+  "source": "DefiLlama /protocols API (https://api.llama.fi/protocols), fetched live 2026-08-04. TVL aggregated by parentProtocol within DefiLlama's own category tags: 'Dexs'; 'Lending'; 'CDP' (plus 'Basis Trading' for Ethena, which DefiLlama does not file as a CDP); and 'Liquid Staking' + 'Restaking' + 'Liquid Restaking' merged. Mechanism details for Fluid DEX, Raydium/OpenBook, Uniswap UNIfication, PancakeSwap veCAKE sunset, USDD 2.0 and Lista CDP verified by web search 2026-08-04. Marker convention used in the 'forced' arrays: CANDIDATE = candidate-register symbol, marked per contract; CONTESTED = contested-register symbol, used only with the note given; FORCED = core symbol that only approximately applies; NOT USED = symbol deliberately rejected, with reason.",
+  "categories": [
+    {
+      "category": "Spot DEX / AMM",
+      "why_a_category": "How do you price and settle a swap against passive inventory when there is no counterparty on the other side of the trade?",
+      "protocols": [
+        {
+          "name": "Uniswap",
+          "rank_basis": "$3,058.0M TVL (V3 $1,449.0M + V4 $821.9M + V2 $784.1M), DefiLlama 2026-08-04, rank 1 of category 'Dexs'",
+          "elements": ["Cp", "Sh", "Tp", "Fl", "Cl", "Fd", "Tg"],
+          "order_known": true,
+          "residue": [
+            "no element for a pluggable hook / extension point that executes third-party code inside the swap settlement path (V4 hooks: beforeSwap/afterSwap/beforeAddLiquidity...). This is the whole point of V4 and nothing names it.",
+            "no element for singleton-vault flash accounting: net balance deltas across many pools deferred to one settlement at end of transaction. Fl names borrow-and-repay inside one scope; it does not name 'run arbitrary operations, then settle the net'.",
+            "no element for non-fungible per-range LP position accounting. Cl names the curve shape and Sh names a pro-rata pool claim; neither names an individually-owned position with its own fee-growth checkpoint, which is what a V3/V4 position actually is.",
+            "no element for a fee-tier / pool-parameter registry (which curves are permitted to exist at all)",
+            "no element for supply destruction as a value-return channel (the 100M UNI burn executed 2025-12-28)"
+          ],
+          "forced": [
+            {"symbol": "Fd", "why": "CANDIDATE + FORCED: UNIfication routes protocol fees into a UNI buy-and-burn. Fd names distribution of surplus to a claim class; destroying the governance token is value return without any distribution event."},
+            {"symbol": "Tg", "why": "FORCED: the Governor+Timelock controls the fee switch, deployments and periphery, but the core pool contracts are immutable. Tg implies delayed authority over the mechanism; here the mechanism is beyond authority."},
+            {"symbol": "Tp", "why": "FORCED: V2/V3 expose cumulative-price observations that consumers turn into a TWAP. The protocol supplies the accumulator, not the time-weighted price; V4 removed the built-in oracle to a hook."}
+          ]
+        },
+        {
+          "name": "PancakeSwap",
+          "rank_basis": "$2,049.0M TVL (AMM v2 $1,684.2M + v3 $288.0M + Infinity $73.1M), DefiLlama 2026-08-04, rank 2",
+          "elements": ["Cp", "Sh", "Cl", "Fl", "Em", "Fd", "Tg", "Up"],
+          "order_known": true,
+          "residue": [
+            "no element for a MasterChef-style allocation table: Em says tokens are emitted, nothing says how the emission is split across pools by governance-set allocation points",
+            "same hook residue as Uniswap (PancakeSwap Infinity is a hooks + singleton architecture)",
+            "veCAKE, gauge voting, revenue sharing and farm boosting were all retired on 2025-04-23 under CAKE Tokenomics 3.0. The vocabulary can only record this as the absence of Ve — it has no way to express that a protocol removed a mechanism and compensated the holders of its derivative (the Cakepie settlement)."
+          ],
+          "forced": [
+            {"symbol": "Fd", "why": "CANDIDATE + FORCED: same buyback-and-burn problem as Uniswap. After Tokenomics 3.0 there is no revenue share to a class at all, only burn."}
+          ]
+        },
+        {
+          "name": "Curve",
+          "rank_basis": "$1,277.0M TVL (Curve DEX), DefiLlama 2026-08-04, rank 3",
+          "elements": ["St", "Sh", "Tp", "Em", "Ve", "Fd", "Tg", "Ag"],
+          "order_known": true,
+          "residue": [
+            "no element for the CryptoSwap repegging invariant (Curve V2): a concentrated curve whose center is an internal EMA that ratchets only when the repeg is profitable. St is constant-sum-near-parity, Cl is user-chosen static ticks, Pm is an externally-quoted oracle price — the mechanism is none of these, and its distinguishing feature (the profit-gated recentering) is unnamed by any of them.",
+            "no element for gauge weight voting: veCRV holders vote a weight vector that directs CRV emissions across pools. Ve names the lock; it does not name the vote.",
+            "no element for the boost multiplier: a veCRV balance multiplies an LP's emission rate up to 2.5x. This is a third mechanism sitting on the same lock.",
+            "no element for the external vote-rental market (Convex/Votium): the largest determinant of where Curve liquidity goes is a bribe auction that lives outside the protocol entirely and the vocabulary has no way to say a mechanism is rented by third parties.",
+            "no element for a permissionless pool factory / registry"
+          ],
+          "forced": [
+            {"symbol": "Ve", "why": "CONTESTED, used with note. Refusing it would silently delete the single largest determinant of Curve's liquidity distribution, and no core symbol substitutes: Em says emissions exist but is silent on direction, Fd covers only the fee stream, Tg covers only delay. So the contested symbol is load-bearing and I use it. But it under-resolves badly: Ve as defined names a non-transferable time-decaying lock and nothing else, while Curve runs four separable mechanisms on that lock (lock, gauge weight vote, LP boost, external bribe market), three of which are listed above as residue. Ve should be demoted from a symbol to a family."},
+            {"symbol": "St", "why": "FORCED: St covers the stableswap pools (the majority of TVL) but not the tricrypto/twocrypto pools, whose invariant is the unnamed repegging curve above."},
+            {"symbol": "Fd", "why": "CANDIDATE: admin fees are converted and distributed to veCRV lockers — one of the few genuine distributions to a claim class in this whole lane, so the fit is good; marked only because Fd is a candidate."},
+            {"symbol": "Ag", "why": "FORCED: the on-chain router/registry constructs multi-pool routes within Curve only. Ag says 'multi-venue', and Curve's router is single-venue."}
+          ]
+        },
+        {
+          "name": "Raydium",
+          "rank_basis": "$819.1M TVL (Raydium AMM), DefiLlama 2026-08-04, rank 4",
+          "elements": ["Cp", "Sh", "Cl", "Em", "Fd", "Up"],
+          "order_known": true,
+          "residue": [
+            "no element for launchpad bonding-curve issuance and graduation into a pool (LaunchLab). Only the contested Bc names it, so I record it as residue rather than use Bc.",
+            "no element for a Solana-style program upgrade authority (see forced Up below)",
+            "the OpenBook CLOB integration in AMM v4 is deactivated as of 2025 — the wiring survives as inert state. Ob was considered and NOT used: the pools no longer post or maintain resting orders. The vocabulary has no way to record a mechanism that exists in the bytecode but is switched off, which matters because $819M of TVL sits in a program that still contains it."
+          ],
+          "forced": [
+            {"symbol": "Up", "why": "FORCED: a Solana program is mutated by an upgrade authority replacing the bytecode wholesale. Up names a proxy delegating to a swappable implementation. The governance effect is identical; the mechanism, the failure modes and the ability to inspect what changed are not."},
+            {"symbol": "Fd", "why": "CANDIDATE: a share of trading fees buys RAY. Same burn/buyback ambiguity as Uniswap and PancakeSwap — three of the top four DEXs use this and the vocabulary names none of them cleanly."}
+          ]
+        },
+        {
+          "name": "Fluid",
+          "rank_basis": "$283.0M TVL (Fluid DEX component only; Fluid's lending arm is a separate $663.8M entry in 'Lending'), DefiLlama 2026-08-04, rank 5",
+          "elements": ["Cl", "Sh", "Pl", "Ct", "Li", "Ex", "Tg", "Up", "Gp"],
+          "order_known": false,
+          "residue": [
+            "no element for collateral or debt that is simultaneously AMM inventory. Fluid's smart collateral is a lending deposit that is also LP inventory; smart debt is borrowed principal that is also LP inventory, so trading fees pay down the borrow cost. The vocabulary partitions 'Pool pricing' and 'Credit' into disjoint registers and provides no way to say a single position occupies both. This is the reason the protocol exists (~$39 of quoted liquidity per $1 of TVL) and it is 100% residue.",
+            "no element for a shared liquidity layer that several distinct products (DEX, vaults, lending) draw balances from as a common pool",
+            "no element for an auto-rebalancing range that recenters on the pool's own price without an owner action — Cl presumes a user-chosen static range",
+            "no element for trading fees netting against interest expense inside one accounting unit"
+          ],
+          "forced": [
+            {"symbol": "Cl", "why": "FORCED: Fluid's curve is a single self-rebalancing moderate-width range that reproduces an x*y=k shape with V3-like efficiency. Cl names user-owned static ticks, which Fluid does not have — there are no per-user ranges to name."},
+            {"symbol": "Pl", "why": "FORCED: used because the debt side of the DEX is literally the lending pool's debt. But Pl describes lenders and borrowers meeting; here a third party (the swapper) is transacting against that debt, which Pl cannot express."}
+          ]
+        }
+      ],
+      "category_residue": "Three gaps span the whole category. (1) Extensibility: Uniswap V4, PancakeSwap Infinity and Fluid all build their differentiation on pluggable logic inside the settlement path and no symbol names a hook. (2) The value-return channel: three of the top four now route fees into a buyback-and-burn and Fd, the only nearby symbol, means distribution to a claim class. (3) Uniswap and PancakeSwap differ by exactly two symbols (Em, Up) — PancakeSwap decomposes as 'Uniswap with an emission schedule and a mutable admin', which is a fair summary of the products but erases everything about routing, chains and hook design. On the assigned Ve question: only one of the top five (Curve) still runs a vote-escrow gauge system. PancakeSwap retired veCAKE on 2025-04-23; Uniswap, Raydium and Fluid never had one. Balancer, named in the brief, is now $54.2M combined (V2 $26.7M + V3 $27.5M) — about 1/24th of Curve and nowhere near the top five — and the other live ve-gauge system, Aerodrome, is $247.5M at rank 7. So the contested symbol Ve is required by a shrinking minority of the category's TVL, which is itself an argument for leaving it contested and splitting it, not for promoting it.",
+      "identical_decompositions": []
+    },
+    {
+      "category": "Lending",
+      "why_a_category": "How do you let anonymous strangers borrow against posted collateral with no maturity, no underwriting and no recourse — and close them out before the collateral is worth less than the debt?",
+      "protocols": [
+        {
+          "name": "Aave V3",
+          "rank_basis": "$14,358.6M TVL (parent aggregate; Aave V3 alone $14,027.0M), DefiLlama 2026-08-04, rank 1 of category 'Lending'",
+          "elements": ["Pl", "Ix", "Rb", "Ct", "Ex", "Li", "Fl", "Im", "Em", "Bs", "Sl", "Cd", "Xm", "Fd", "Up", "Tg", "Gp"],
+          "order_known": true,
+          "residue": [
+            "no element for the utilization-indexed interest-rate curve. The kinked model (base rate, slope1, slope2, optimal utilization) is the single most consequential parameter in a $14B protocol and the vocabulary is silent: Ix says an index accrues, nothing says what sets the rate at which it accrues.",
+            "no element for correlated-asset margin relief (E-Mode raises LTV when collateral and debt track each other)",
+            "no element for supply caps, borrow caps and debt ceilings as risk primitives — the entire parameter layer that risk teams actually manage",
+            "credit delegation (granting another address the right to borrow against your collateral) is namable only by the contested Cg, so I record it as residue rather than use Cg",
+            "no element for the treasury's cut of the liquidation bonus (liquidationProtocolFee)",
+            "no element for the discretion in Bs: the Safety Module/Umbrella is slashed by a governance vote, not by a mechanical trigger, and nothing names 'the loss is realized when a committee says it is'"
+          ],
+          "forced": [
+            {"symbol": "Im", "why": "FORCED: Aave isolation mode fences a risky asset with a debt ceiling and a stablecoin-only borrow list, but the position stays inside the one shared pool and the reserves are common. Im names a market with its own risk perimeter, which Aave deliberately does not create."},
+            {"symbol": "Cd", "why": "FORCED: GHO is a separate minting facility attached to the pool, not a property of the pool. Including it makes Aave look like a CDP protocol; excluding it deletes a real liability."},
+            {"symbol": "Rb", "why": "FORCED: aTokens are scaled balances times an index — internally Ix, externally Rb. The vocabulary makes you spend two symbols on one mechanism and gives no way to say they are two views of the same thing."},
+            {"symbol": "Fd", "why": "CANDIDATE: the reserve factor routes interest to the treasury/collector."}
+          ]
+        },
+        {
+          "name": "Morpho",
+          "rank_basis": "$7,665.5M TVL (Morpho Blue $7,663.5M), DefiLlama 2026-08-04, rank 2",
+          "elements": ["Im", "Pl", "Sh", "Ix", "Ct", "Ex", "Li", "Fl", "Sl", "Aw", "Sv", "Em", "Tg", "Gp"],
+          "order_known": true,
+          "residue": [
+            "no element for delegated risk curation. A MetaMorpho curator chooses which isolated markets a depositor's funds enter, sets per-market caps, and takes a performance fee — an allocation mandate over other people's capital. DefiLlama now tracks this as its own category ('Risk Curators', $8,760M across Steakhouse $3,084M, Sentora $2,162M, Gauntlet $1,416M and others) and the vocabulary has no symbol for any of it. This is the largest single unnamed business in the lane.",
+            "no element for immutability as a positive commitment: Morpho Blue has no admin and cannot be upgraded. The vocabulary can only record this as the absence of Up and Gp, which is not the same claim — absence of a symbol means 'I did not observe it', not 'it cannot exist'.",
+            "no element for a permissionless market factory: anyone may instantiate {collateral, loan asset, LLTV, oracle, IRM} from a fixed template",
+            "no element for the IRM being a pluggable per-market contract — same rate-model gap as Aave, made worse because here the rate model is a chosen slot",
+            "no element for an oracle being an arbitrary per-market choice with no protocol-level validation (Ex names the feed, not 'the feed is whatever the market creator picked')"
+          ],
+          "forced": [
+            {"symbol": "Sv", "why": "CANDIDATE + FORCED: Sv is the closest thing in 58 symbols to a curator and it is still wrong. Sv names servicing and determination discretion over a loan — deciding whether a default occurred, granting a forbearance. A curator never touches a loan; the discretion is over allocation and caps, exercised before anything goes wrong."},
+            {"symbol": "Pl", "why": "FORCED: each Morpho Blue market is a shared pool of many lenders and one asset, so Pl is literally true, but the protocol's entire design claim is that it is NOT pooled — risk is fenced per market. Using both Im and Pl states the fact and loses the claim."},
+            {"symbol": "Aw", "why": "CANDIDATE-adjacent, core symbol, FORCED: used for the curator/allocator/guardian role structure on vaults, not for gating who may deposit."}
+          ]
+        },
+        {
+          "name": "SparkLend",
+          "rank_basis": "$3,636.9M TVL, DefiLlama 2026-08-04, rank 3",
+          "elements": ["Pl", "Ix", "Rb", "Ct", "Ex", "Li", "Fl", "Im", "Em", "Up", "Tg", "Gp"],
+          "order_known": true,
+          "residue": [
+            "no element for a protocol-to-protocol liquidity line. Sky's D3M / Spark Liquidity Layer mints USDS directly into SparkLend to hold the borrow rate at a governance-set target. The lender is the issuer of the borrowed asset, the supply is created on demand, and the objective is a rate not a yield. This is a central bank's discount window and the vocabulary has nothing: not Pl (no depositor), not Em (nothing is emitted), not Ps (no 1:1 reserve swap), not Cd (no per-position collateral).",
+            "same interest-rate-model residue as Aave V3 — and it bites harder here, because the whole protocol exists to peg one rate",
+            "no element for a fork's dependence on its upstream (Spark inherits Aave V3's security assumptions and patch cadence)"
+          ],
+          "forced": [
+            {"symbol": "Im", "why": "FORCED: inherited verbatim from Aave V3, with the same objection."}
+          ]
+        },
+        {
+          "name": "JustLend V1",
+          "rank_basis": "$3,385.2M TVL, DefiLlama 2026-08-04, rank 4",
+          "elements": ["Pl", "Sh", "Ix", "Ct", "Ex", "Li", "Em", "Up", "Gp"],
+          "order_known": true,
+          "residue": [
+            "no element for the TRX energy/bandwidth rental market JustLend also operates — renting a chain resource rather than capital. Pl assumes the lent thing is fungible value; here it is a per-account execution allowance.",
+            "same interest-rate-model residue (this is a Compound V2 fork, so it is the original kinked jump-rate model)",
+            "no element for the close factor — the cap on how much of an underwater position one liquidation may repay. This is a distinct solvency mechanism from Ct and Li and every Compound descendant has it."
+          ],
+          "forced": [
+            {"symbol": "Sh", "why": "FORCED: jTokens are pro-rata claims whose value moves via a rising exchange rate — the mechanism is Ix and the user-facing object is Sh. As with Aave's aTokens, the vocabulary charges two symbols for one design."},
+            {"symbol": "Li", "why": "FORCED: correct in substance, but silent on the close factor and the seize-vs-repay split that define how Compound-family liquidation actually behaves."}
+          ]
+        },
+        {
+          "name": "Maple",
+          "rank_basis": "$2,262.7M TVL, DefiLlama 2026-08-04, rank 5",
+          "elements": ["Pl", "Sh", "Ix", "Aw", "Uc", "Ft", "Ct", "Sv", "Wq", "At", "Ex", "Li", "Em", "Up", "Tg", "Gp"],
+          "order_known": true,
+          "residue": [
+            "no element for off-chain legal recourse. Uc bundles 'identity/underwriting/recourse' into one token, but there is no way to express that a default is resolved by a loan agreement and a court, that the borrower is a named legal entity, and that the on-chain contract records an outcome it did not produce.",
+            "no element for third-party qualified custody: the BTC/ETH collateral sits at BitGo/Anchorage/Copper and the contract holds a claim on a custodian, not the asset. At attests to a balance; it does not name the custodial relationship or its failure mode.",
+            "no element for an underwriting process — term sheet, borrower disclosure, credit committee, margin call issued by email",
+            "no element for management and performance fees charged on a lending pool by its operator",
+            "no element for the pool delegate's authority to refinance, impair or write down a loan (Sv is the only candidate and see below)"
+          ],
+          "forced": [
+            {"symbol": "Sv", "why": "CANDIDATE: the single best fit in the vocabulary for the pool-delegate role, and it is only a candidate. A $2.3B protocol's central mechanism rests on a symbol the framework has not committed to."},
+            {"symbol": "Ct", "why": "FORCED: Maple's secured loans do carry LTV and margin calls, but the call is computed and issued off-chain by the delegate. Ct names an on-chain margin computation, which is not where the decision is made."},
+            {"symbol": "Li", "why": "FORCED: liquidation runs through the custodian and OTC desks over hours or days. 'Third parties paid to close positions' describes almost none of that."},
+            {"symbol": "Uc", "why": "FORCED in the other direction: Maple's book is now largely overcollateralized institutional secured lending. Uc is still needed for the recourse dimension, but calling the loans undercollateralized is wrong."}
+          ]
+        },
+        {
+          "name": "Compound V3",
+          "rank_basis": "$1,126.4M TVL, DefiLlama 2026-08-04, rank 6 — below the top five, included because the brief asks whether Aave and Compound decompose identically",
+          "elements": ["Im", "Pl", "Ix", "Rb", "Ct", "Ex", "Li", "Sl", "Em", "Up", "Tg", "Gp"],
+          "order_known": true,
+          "residue": [
+            "no element for collateral that earns nothing and is never lent. Comet's collateral is inert and non-rehypothecated — an economically central choice (it is why Comet's liquidations are cheap) and the vocabulary cannot see it at all.",
+            "no element for a protocol reserve acting as buyer of last resort for seized collateral",
+            "no element for the two-threshold design (borrowCollateralFactor for opening, liquidateCollateralFactor for closing) — Ct names one line, Comet draws two and the gap between them is the design",
+            "same interest-rate-model residue as every other entry"
+          ],
+          "forced": [
+            {"symbol": "Li", "why": "FORCED, and this is the sharpest mis-fit in the category. absorb() transfers the underwater position into protocol reserves and pays the caller a small incentive; the collateral is only afterwards sold to anyone at a store-front discount. The liquidator never repays the debt. Li describes the outcome and gets the mechanism exactly backwards."},
+            {"symbol": "Sl", "why": "FORCED: the loss lands on protocol reserves, which is a balance sheet, not a claim class. Sl presumes there is a class of claimants to allocate to."},
+            {"symbol": "Im", "why": "FORCED: each Comet deployment fences one borrowable asset with many collaterals. That is a risk perimeter, so Im is defensible, but Im connotes a per-pair market and Comet is deliberately many-to-one."}
+          ]
+        }
+      ],
+      "category_residue": "The answer to the assigned question, plainly: Aave V3 and Compound V3 do not produce identical strings, but the differences the vocabulary records are peripheral facilities, and every difference that matters is invisible to it. Aave carries {Fl, Bs, Cd, Xm, Fd} that Compound lacks; Compound carries {Im, Sl} that Aave (mostly) lacks. Everything describing how a loan is opened, priced, monitored and closed — Pl, Ix, Rb, Ct, Ex, Li, Em, Up, Tg, Gp — is shared verbatim. Meanwhile the four things that actually distinguish these protocols in production (kinked-vs-per-market rate model; multi-asset shared pool vs single base asset; repay-liquidation vs absorb-then-sell; interest-bearing vs inert collateral) generate exactly zero symbol differences. So the vocabulary's resolution in lending is roughly 'is it a pool, and does it have a health check' — which every entry answers yes to. SparkLend is worse: its element set is a strict subset of Aave V3's, containing no symbol Aave lacks, because it is an Aave V3 fork. Across the category the dominant gaps are (1) the interest-rate model, absent and load-bearing in all six; (2) delegated risk curation, an $8.76B business with zero coverage; (3) the risk-parameter layer (caps, ceilings, e-mode, close factor); (4) credit delegation, reachable only via contested Cg; (5) protocol-to-protocol credit lines; (6) off-chain enforcement and custody for the Uc/institutional wing.",
+      "identical_decompositions": [["Aave V3", "SparkLend"]]
+    },
+    {
+      "category": "CDP / collateral-backed stablecoins",
+      "why_a_category": "How do you issue a unit that holds a peg when its backing is volatile, held by someone else, and can become worth less than the unit?",
+      "protocols": [
+        {
+          "name": "Sky (Sky Lending, ex-MakerDAO)",
+          "rank_basis": "$5,665.3M TVL (Sky Lending), DefiLlama 2026-08-04, rank 1 of category 'CDP'",
+          "elements": ["Cd", "Ct", "Ex", "Li", "Ix", "Ps", "Sl", "At", "Fd", "Em", "Xf", "Up", "Tg", "Gp"],
+          "order_known": true,
+          "residue": [
+            "no element for interest-rate-as-monetary-policy. The Stability Fee and the DSR/SSR are Sky's primary peg levers: raise the fee to contract supply, raise the savings rate to create demand. The only nearby symbol is As (algorithmic supply adjustment), which names quantity adjustment — the wrong instrument entirely. Every CDP in this category has this mechanism and none of them can express it.",
+            "no element for recapitalization by governance-token dilution: the flop/debt auction mints MKR/SKY to cover a deficit. Sl says a loss is assigned to a class; Bs says capital was pre-staked to be slashed. Neither says new equity is issued against the loss after the fact, which is a materially different promise to token holders.",
+            "no element for a surplus buffer with high/low water marks that mechanically triggers surplus or debt auctions",
+            "no element for an allocator/Star sub-entity receiving a credit line from the protocol to deploy off-protocol (the other half of the Spark D3M gap)",
+            "the descending-price clearing of Liquidations 2.0 is namable only by the contested Da, so I record it here rather than use Da"
+          ],
+          "forced": [
+            {"symbol": "Li", "why": "FORCED: Li covers the keeper incentive but not the clearing mechanism, which is a Dutch auction with a price descent, a cusp and a reset — and Da is contested."},
+            {"symbol": "Ix", "why": "FORCED: the chi/rho rate accumulator is index-based accrual in form, but the index moves because governance voted a number, not because yield was earned. Ix cannot distinguish an earned index from a policy index."},
+            {"symbol": "At", "why": "FORCED: RWA vault backing is attested in off-chain reports by named agents. At implies an on-chain attestation object; here the attestation is a PDF and a legal entity."},
+            {"symbol": "Fd", "why": "CANDIDATE: surplus auctions buy and burn the governance token — same burn-vs-distribute ambiguity as the DEX category."}
+          ]
+        },
+        {
+          "name": "Ethena (USDe / sUSDe)",
+          "rank_basis": "$3,872.9M TVL, DefiLlama 2026-08-04. DefiLlama files it under 'Basis Trading', not 'CDP' — included here because it is the second-largest collateral-backed synthetic dollar and is the assigned delta-neutral stress test",
+          "elements": ["Sh", "Ix", "Rd", "Aw", "At", "Ex", "Wq", "Tr", "Bs", "Dp", "Fz", "Xf", "Em", "Up", "Tg", "Gp"],
+          "order_known": false,
+          "residue": [
+            "no element for off-exchange settlement and custody mirroring. The spot backing sits with Copper/Ceffu/Fireblocks and is mirrored into a CEX margin account without ever moving. It is simultaneously the reason the design is safer than holding assets on an exchange and the largest single risk surface in a $3.9B protocol, and 58 symbols say nothing about it.",
+            "no element for capturing an off-protocol revenue stream. Pf names the funding transfer that a perp venue implements between its own longs and shorts. Ethena is the taker of someone else's Pf, on a venue it neither operates nor governs. There is no way in this vocabulary to write 'this protocol's entire yield is another protocol's mechanism, received as an external party.'",
+            "no element for delta-neutrality as a maintained invariant. The requirement is that net exposure stay at approximately zero, continuously, as spot moves, margin is rebalanced across venues, and positions are rolled. It is an operational obligation on an off-chain operator, checked by no contract.",
+            "no element for venue and counterparty concentration, or for what happens to the hedge when an exchange fails while holding it (the FTX case for this design)",
+            "no element for mint/redeem being restricted to a whitelist of market makers. Aw names a gate on access; Rf names a signed maker quote; neither names 'only these named parties may create or destroy the unit, and everyone else gets a secondary-market price.'",
+            "no element for yield that is switched off — sUSDe's yield can be zero or negative for extended periods while USDe holders get nothing at all, which is a two-instrument design the vocabulary treats as one"
+          ],
+          "forced": [
+            {"symbol": "Dp", "why": "CANDIDATE, and the direct answer to the assigned question: no, Dp does not cover Ethena. Dp reads 'directional position & hedge maintenance'. Ethena's defining property is that it is deliberately NON-directional — the whole design is the absence of direction. And the hedge is not an overlay protecting some other exposure; the hedge IS the reserve asset. Dp captures roughly one thing (a short position is opened and rebalanced) out of five: it is silent on where the position lives (a centralized venue), who maintains it (an off-chain operator), why it exists (to make the backing price-invariant rather than to protect a book), what it earns (funding), and what happens when the venue fails. Score it about 20% coverage of the mechanism it is being asked to name."},
+            {"symbol": "Pf", "why": "NOT USED — deliberately. Pf is 'perpetual funding transfer — payment tethering perp to index', i.e. a mechanism a perp exchange implements. Ethena implements no such transfer; it receives one from Binance, Bybit and OKX. Using Pf here would assert that Ethena runs a perpetual market, which is false. This is a clean directional gap in the vocabulary: every risk-transfer symbol is written from the issuer's side, and there is no way to name being the counterparty."},
+            {"symbol": "Bs", "why": "FORCED: the reserve fund absorbs negative funding before anyone else, so it is first-loss. But it is protocol-owned treasury, not staked third-party capital exposed to slashing. 'Slashable' is the operative word in Bs and it does not apply."},
+            {"symbol": "Tr", "why": "FORCED: sUSDe stands ahead of USDe in the declared loss order, which is a two-class waterfall in substance. But there are no attachment points, no separately priced tranche instruments, and the seniority is asserted in documentation rather than enforced by a settlement contract."},
+            {"symbol": "Rd", "why": "FORCED: 1:1 redemption is a right held only by whitelisted counterparties. For everyone else the peg is an arbitrage outcome, not a right. Rd as written implies a general right."},
+            {"symbol": "Fz", "why": "CANDIDATE, and an unusually exact fit: FULL_RESTRICTED_STAKER_ROLE can freeze a balance and redistribute it. One of the few candidate symbols in this lane that needed no stretching."},
+            {"symbol": "Ix", "why": "CANDIDATE-free but FORCED: sUSDe is share-price accrual (Sh + Ix), but the index moves from an off-chain operator transferring realized PnL into the contract, not from an on-chain accrual computation."}
+          ]
+        },
+        {
+          "name": "USDD",
+          "rank_basis": "$1,299.4M TVL, DefiLlama 2026-08-04, rank 2 of category 'CDP'",
+          "elements": ["Cd", "Ct", "Ex", "Li", "Ix", "Ps", "Sl", "At", "Em", "Xf", "Up", "Tg", "Gp"],
+          "order_known": true,
+          "residue": [
+            "no element for a foundation reserve subsidizing an advertised savings rate out of band — USDD's headline yield is not fully earned by the collateral, and Em (protocol-funded emissions of a token) is the wrong shape for 'the treasury tops up an interest rate in the stablecoin itself'",
+            "same Dutch-keeper-auction gap as Sky (contested Da only)",
+            "same interest-rate-as-policy gap (Stability Fees are explicitly described as the primary supply/demand lever)",
+            "no element for a discretionary reserve manager standing behind a nominally permissionless CDP system"
+          ],
+          "forced": [
+            {"symbol": "At", "why": "FORCED: the TRON DAO Reserve publishes a transparency dashboard, which is a website, not an on-chain attestation."},
+            {"symbol": "Em", "why": "FORCED: see residue — the yield is a subsidy paid in the stablecoin, not an emission of a protocol token."},
+            {"symbol": "Li", "why": "FORCED: same Dutch-auction objection as Sky."}
+          ]
+        },
+        {
+          "name": "Lista CDP",
+          "rank_basis": "$320.7M TVL, DefiLlama 2026-08-04, rank 3 of category 'CDP'",
+          "elements": ["Cd", "Ct", "Ex", "Li", "Ix", "Ps", "Sl", "Em", "Up", "Tg", "Gp"],
+          "order_known": true,
+          "residue": [
+            "no element for a protocol accepting its own liquid-staking receipt as the primary collateral for its own stablecoin. slisBNB (Lista's LST) backs lisUSD (Lista's stablecoin): one product's liability is the other product's asset. The vocabulary has Cd for the mint and nothing for the reflexivity, so the correlation between the collateral's solvency and the issuer's solvency is invisible.",
+            "same Dutch-auction gap (contested Da only)",
+            "same interest-rate-as-policy gap",
+            "no element for gas-compensation-only liquidation incentives (the liquidator's reward is a gas rebate, not a collateral discount, which changes who shows up)"
+          ],
+          "forced": [
+            {"symbol": "Li", "why": "FORCED twice over: Dutch auction clearing (contested Da) and an incentive structure Li's 'paid to close positions' does not describe."}
+          ]
+        },
+        {
+          "name": "Liquity (V1 + V2)",
+          "rank_basis": "$207.9M TVL (V1 $137.2M + V2 $70.6M), DefiLlama 2026-08-04, rank 4 of category 'CDP'",
+          "elements": ["Cd", "Ct", "Rd", "Bs", "Sl", "Li", "Ex", "Em", "Fd"],
+          "order_known": true,
+          "residue": [
+            "no element for borrower-set interest rates that determine redemption ordering. In V2 each borrower picks their own rate and redemptions consume the lowest-rate positions first, so the rate is simultaneously a cost and a queue position. This is a price mechanism for redemption priority and nothing in 58 symbols touches it.",
+            "no element for delegating a risk parameter to a third-party manager — V2 batch managers set interest rates on borrowers' behalf for a fee. This is the same shape as Morpho's curator gap, appearing in a completely different category.",
+            "no element for immutability and ungovernability as a positive commitment. Liquity V1 has no admin, no timelock, no pause and no upgrade path. The vocabulary records this only as the absence of Up, Tg and Gp — indistinguishable from 'I did not look'.",
+            "no element for directing protocol revenue to liquidity by stake-weighted vote (V2's Protocol Incentivized Liquidity). This is a gauge with no vote-escrow, so even the contested Ve does not name it.",
+            "no element for a dynamic minimum-collateral-ratio regime switch (V1's Recovery Mode raises the effective MCR system-wide when total collateralization drops)"
+          ],
+          "forced": [
+            {"symbol": "Bs", "why": "FORCED, and the mis-fit is instructive. The Stability Pool is first-loss capital: it absorbs liquidated debt before anyone else. But depositors are not slashed — they are paid. They receive the liquidated collateral at a discount and in normal conditions profit from the event. Bs says 'slashable first-loss capital' and the word 'slashable' inverts the incentive. The vocabulary has no symbol for first-loss capital that is compensated rather than penalized."},
+            {"symbol": "Sl", "why": "FORCED: V1's redistribution assigns a defaulted trove's debt AND its collateral pro rata to remaining borrowers, who never opted in and are not a claim class in any conventional sense. Sl names the socialization but cannot distinguish opt-in loss absorption (the Stability Pool) from conscripted loss absorption (redistribution), which are the two halves of Liquity's solvency design."},
+            {"symbol": "Rd", "why": "EXACT, noted for contrast: Liquity is the one protocol in this lane where Rd fits perfectly, which suggests the symbol was written from it."},
+            {"symbol": "Fd", "why": "CANDIDATE: V2 splits interest revenue between the Stability Pool and PIL."}
+          ]
+        },
+        {
+          "name": "crvUSD",
+          "rank_basis": "$72.9M TVL (crvUSD; plus Curve LlamaLend $61.4M filed under 'Lending'), DefiLlama 2026-08-04, rank 5 of category 'CDP'",
+          "elements": ["Cd", "Ct", "Tp", "Cl", "Li", "As", "Ve", "Fd", "Up", "Tg", "Gp"],
+          "order_known": true,
+          "residue": [
+            "no element for continuous soft liquidation. LLAMMA converts collateral into the debt asset gradually across price bands as price falls, and converts it back if price recovers. There is no liquidation event at all in the normal case — the position is de-risked and re-risked continuously, and the borrower's loss is realized as AMM impermanent loss rather than as a penalty. Li presumes a discrete close paid to a third party; nothing here matches.",
+            "no element for an automated open-market operations agent. A PegKeeper mints unbacked crvUSD one-sidedly into a stableswap pool when the peg is above 1 and burns it on the way back. As (algorithmic supply adjustment) is the closest symbol and it means rebase/seigniorage against holder balances, not a central bank buying its own bonds.",
+            "no element for a rate controller that reads the peg and outstanding PegKeeper debt and sets the borrow rate automatically. This is the same monetary-policy gap as Sky, but here it is a mechanical feedback loop rather than a governance vote, and the vocabulary can express neither.",
+            "no element for bands/ticks used as a solvency structure rather than as a trading venue"
+          ],
+          "forced": [
+            {"symbol": "Cl", "why": "FORCED, used structurally only. LLAMMA's bands are ticks and the math is concentrated-liquidity math, but LLAMMA is a liquidation engine that happens to be an AMM. No user chooses a range, no one supplies liquidity to earn fees, and the counterparty is an arbitrageur performing a liquidation. Cl names the geometry and gets the purpose entirely wrong."},
+            {"symbol": "As", "why": "FORCED: see PegKeeper residue. Used because leaving it out would delete the peg mechanism, and flagged because As means the wrong thing."},
+            {"symbol": "Ve", "why": "CONTESTED, used with note. veCRV governs crvUSD's collateral onboarding, its rate policy admin and its fee routing. Same justification and same objection as for Curve: it is load-bearing and no core symbol substitutes, but it compresses a lock, a vote and a fee claim into one token."},
+            {"symbol": "Tp", "why": "EXACT, noted for contrast: crvUSD reads EMA oracles from Curve pools. Tp fits with no stretching, which is rare in this lane — most 'oracle' usages in these protocols are committee reports or off-chain feeds, not on-chain time-weighted prices."}
+          ]
+        }
+      ],
+      "category_residue": "Two structural failures. (1) Monetary policy. Every protocol here sets a rate to defend a peg — Sky's Stability Fee and SSR, USDD's Stability Fees, Lista's, crvUSD's automatic controller, Liquity V2's borrower-chosen rates. The vocabulary's Stability register contains Rd, Ps and As: a redemption right, a 1:1 swap, and quantity adjustment. There is no price-of-credit instrument in it at all, and that is the instrument all five actually use. (2) The synthetic-dollar family is outside the register entirely. Ethena ($3,873M) + Falcon Finance ($1,253M) + Solstice ($507M) = $5,633M, which is larger than Sky, and none of them are CDPs: the backing is a hedged position on venues the protocol does not control. Expressing that family needs at minimum three new elements — off-exchange custody/mirroring, off-protocol revenue capture, and a maintained-neutrality invariant — none of which exist even as candidates. Separately: Sky, USDD and Lista CDP form a strict nesting (Lista subset-of USDD subset-of Sky, differing only by At, Xf and Fd), so three protocols and $7.3B collapse into one Maker skeleton the vocabulary cannot tell apart. The Dutch auction used by all three is reachable only through contested Da, which given 3-of-5 usage is the strongest promotion candidate in the contested register. And Frax, named in the brief as an exemplar, is now $42.6M and filed by DefiLlama under 'Algo-Stables' — the algorithmic design As was presumably written for has left the top of the market entirely.",
+      "identical_decompositions": []
+    },
+    {
+      "category": "Liquid staking & restaking",
+      "why_a_category": "How do you turn a locked, slashable, operationally-demanding consensus position into a transferable claim that someone else runs for you?",
+      "protocols": [
+        {
+          "name": "Lido",
+          "rank_basis": "$17,578.3M TVL, DefiLlama 2026-08-04, rank 1 of merged 'Liquid Staking'+'Restaking'+'Liquid Restaking'",
+          "elements": ["Vl", "Sh", "Rb", "Ex", "Ep", "Wq", "Sl", "Bs", "Fd", "Em", "Up", "Tg", "Gp"],
+          "order_known": true,
+          "residue": [
+            "no element for node-operator set curation: who is permitted to run validators, under what cap, with what onboarding and what removal process. Lido runs a permissioned Curated module, a Simple DVT module and a permissionless bonded module (CSM) side by side, with different trust models — and Vl compresses all three into one token.",
+            "no element for stake allocation and scheduling across operators. The Staking Router decides which module and which operator receives the next 32 ETH. This is a scheduler over a queue of heterogeneous counterparties and nothing names it.",
+            "no element for deposit front-running defence. The Deposit Security Committee exists solely to stop a griefing attack on the deposit path. It is a live, load-bearing, permissioned committee and no symbol covers it — Aw would call it a permission gate, which misses that it is a guard against a specific attack.",
+            "no element for validator exit signalling and the exit queue: oracle-published exit requests, operator compliance, EIP-7002 triggerable withdrawals. Wq covers the user's withdrawal request; nothing covers the validator-side exit that must complete first.",
+            "no element for a stakeholder veto chamber. Dual Governance lets stETH holders delay or escape an LDO vote — a second governance body with different collateral and a different objective. Tg names delay; it does not name a bicameral structure where one house can dissent by exiting."
+          ],
+          "forced": [
+            {"symbol": "Vl", "why": "CANDIDATE, and see the five residue entries above — this one symbol is standing in for at least five separable mechanisms. It is a category label, not an element."},
+            {"symbol": "Ex", "why": "FORCED: the Accounting Oracle is a permissioned committee publishing a quorum-signed report of beacon-chain balances, exits and slashings. Ex names a price feed (push/pull/medianizer). This reports state, not prices, and the failure modes are different."},
+            {"symbol": "Bs", "why": "FORCED: CSM operators post a slashable ETH bond, an exact fit — but Curated-module operators post nothing at all. Bs is true of one module and false of the majority of the stake, and the vocabulary has no way to scope a symbol to a subset of a protocol."},
+            {"symbol": "Sl", "why": "FORCED: slashing and penalty losses reach stETH holders as a negative rebase across the entire supply, regardless of which operator caused them. Sl names the socialization correctly but cannot express that the loss is not attributed to the party that caused it."},
+            {"symbol": "Fd", "why": "CANDIDATE: the 10% fee splits 5% to node operators and 5% to treasury."}
+          ]
+        },
+        {
+          "name": "Binance staked ETH (WBETH)",
+          "rank_basis": "$6,940.0M TVL, DefiLlama 2026-08-04, rank 2",
+          "elements": ["Sh", "Ix", "Rd", "Aw", "Up"],
+          "order_known": false,
+          "residue": [
+            "essentially the entire protocol. The staking, the validator set, the key management, the slashing exposure, the reward computation, the withdrawal path and the reserve all happen inside an exchange. What exists on-chain is an ERC-20 whose exchange rate an admin key increments on a schedule.",
+            "Vl IS NOT USABLE HERE. The second-largest liquid-staking position in DeFi does not touch the one candidate symbol this category was supposed to need, because there is no on-chain validator lifecycle to name. Any claim that Vl covers liquid staking has to survive the fact that $6.9B of it has no Vl at all.",
+            "no element for custodial backing: a claim on an off-chain balance sheet with no on-chain proof, no on-chain enforcement and no on-chain redemption guarantee. At would require a published attestation object and there is none.",
+            "no element for redemption executed at an operator's discretion under their own terms of service (Rd is a right; this is a product feature that can be suspended)",
+            "no element for the operator being able to halt, blacklist or unilaterally reprice the instrument"
+          ],
+          "forced": [
+            {"symbol": "Rd", "why": "FORCED: redemption is an exchange feature governed by exchange terms and KYC, not a right the contract enforces. Using Rd overstates the holder's position considerably."},
+            {"symbol": "Ix", "why": "FORCED: the exchange rate rises because an operator writes a new number, not because an accrual is computed from observable state. Ix implies the index is derived; here it is asserted."},
+            {"symbol": "Aw", "why": "FORCED: minting and redeeming require a Binance account. Aw names an on-chain permission gate; this gate is a login."}
+          ]
+        },
+        {
+          "name": "EigenCloud (EigenLayer)",
+          "rank_basis": "$5,000.8M TVL, DefiLlama 2026-08-04, rank 3",
+          "elements": ["Rs", "Sh", "Bs", "Sl", "Ep", "Wq", "Aw", "Vl", "Em", "Up", "Tg", "Gp"],
+          "order_known": true,
+          "residue": [
+            "no element for renting economic security to an arbitrary external service. Rs asserts that restaking exists; it does not name the AVS/operator-set contract, the slashing conditions an AVS is permitted to define, the allocation of a given operator's stake across many AVSs (unique stake / magnitudes), or the fact that the same collateral is simultaneously bonded to mutually-unaware slashing laws.",
+            "no element for stake delegation to an operator. The staker to operator to AVS graph is EigenLayer's core object. Au names delegated execution scope (session policy, account abstraction) and is about transaction authority, not about lending someone your slashing exposure. Vl names a validator lifecycle, which an operator is not.",
+            "no element for redistributive slashing: slashed stake can be paid to the harmed AVS as restitution rather than burned. Sl assigns loss to a claim class; this assigns it to a counterparty as a remedy, which is a categorically different act.",
+            "no element for intersubjective adjudication. EIGEN is forkable as a court of last resort for faults that are observable to humans but not provable on-chain. Oa (optimistic assertion oracle) is the nearest symbol and it describes an on-chain dispute game with a bonded challenger; a social fork of a token is not that.",
+            "no element for the allocation/deallocation delay as a security parameter distinct from the withdrawal escrow"
+          ],
+          "forced": [
+            {"symbol": "Vl", "why": "CANDIDATE, and equivocal. An EigenLayer operator registers, receives delegated stake, performs duties and can be slashed — the lifecycle shape rhymes with a validator's. But there is no consensus duty, no key in a beacon chain, and no protocol-defined job. Using Vl here and for Lido asserts a sameness that is not there."},
+            {"symbol": "Aw", "why": "FORCED: operator sets and AVS allowlists are permission gates, but the significant part is that each AVS writes its own gate AND its own slashing law. Aw carries the gate and drops the law."},
+            {"symbol": "Bs", "why": "EXACT and central, noted for contrast: the entire protocol is slashable first-loss capital rented out. Bs is the best-fitting symbol in this category."}
+          ]
+        },
+        {
+          "name": "ether.fi (eETH / weETH)",
+          "rank_basis": "$3,293.7M TVL (ether.fi Stake; ether.fi Liquid $276.4M is filed separately under 'Onchain Capital Allocator'), DefiLlama 2026-08-04, rank 4",
+          "elements": ["Vl", "Rs", "Rb", "Sh", "Wq", "Ex", "Ep", "Bs", "Sl", "Tr", "Em", "Up", "Tg", "Gp"],
+          "order_known": true,
+          "residue": [
+            "no element for a node-operator auction. Operators bid for the right to be assigned a validator. This is a market for the operator slot itself, priced and cleared on-chain, and no symbol names it — it is neither an emission, nor a fee, nor a permission gate.",
+            "no element for distributed validator technology: one validator key split across a committee with a signing threshold, so no single operator can sign or exit alone. This is the entire product of SSV Network ($9,257M TVL, DefiLlama 'Staking Pool') and Obol ($483M), it is used by ether.fi and by Lido's Simple DVT module, and the vocabulary has zero coverage of it. Measured by TVL, DVT is the single largest unnamed mechanism I encountered in this lane.",
+            "no element for restaking the same principal into several heterogeneous security markets at once (EigenLayer, Symbiotic, Karak) with slashing conditions written by parties who do not know about each other. Rs names restaking as a fact and stops.",
+            "no element for off-chain loyalty points later converted into a token. Em names emissions of an existing asset; points are a discretionary, revocable, off-chain promissory ledger with no on-chain representation. ether.fi, EigenLayer and Ethena all bootstrapped billions this way and the vocabulary cannot name the instrument."
+          ],
+          "forced": [
+            {"symbol": "Tr", "why": "FORCED: the T-NFT/B-NFT split puts the operator's bond in first-loss position against a validator's 32 ETH, which is a two-tier waterfall over a slashing event. But there is no tranche market, no attachment schedule and no separately priced senior instrument — it is a bond, described in tranche language."},
+            {"symbol": "Vl", "why": "CANDIDATE, with the same compression problem as Lido plus two extra layers (the auction and the DVT committee) that Vl does not even gesture at."},
+            {"symbol": "Rs", "why": "CANDIDATE: exact in name, thin in content — see residue."},
+            {"symbol": "Ex", "why": "FORCED: same oracle-committee-reporting-state objection as Lido."}
+          ]
+        },
+        {
+          "name": "Babylon Protocol",
+          "rank_basis": "$2,732.9M TVL, DefiLlama 2026-08-04, rank 5",
+          "elements": ["Rs", "Bs", "Sl", "Vl", "Ep", "Wq", "Xm", "Aw", "Em"],
+          "order_known": true,
+          "residue": [
+            "no element for stake that never leaves its own chain. The BTC stays in a self-custodial Bitcoin script (timelock plus covenant) on Bitcoin. The securing relationship is enforced by cryptography and script, not by a contract that holds the funds. Every other entry in this category assumes the protocol custodies the stake, and the vocabulary's Security-reuse register inherits that assumption.",
+            "no element for extractable-one-time-signature slashing. A finality provider that double-signs mathematically reveals its own private key, and anyone can then construct the slashing transaction that burns the delegated BTC. Sl names a loss being assigned; here the enforcement mechanism is that the key leaks. This is a genuinely novel enforcement primitive with no coverage.",
+            "no element for a covenant-emulation committee: a threshold signer set standing in for a script opcode Bitcoin does not have. Aw calls it a permission gate, which drastically understates it — this committee is a trusted party inside the security model, and if it colludes or vanishes the stake is affected.",
+            "no element for Bitcoin timestamping: checkpointing a PoS chain's state into Bitcoin to bound long-range attacks. Xm names verifying a message delivered from another domain; this is borrowing another chain's finality as a clock, with nothing delivered.",
+            "no element for the unbonding path being a race between a pre-signed transaction and a timelock"
+          ],
+          "forced": [
+            {"symbol": "Xm", "why": "FORCED: Babylon Genesis verifies Bitcoin headers and staking transactions, which is cross-domain verification. But the direction of trust is inverted — nothing is being sent, a foreign chain is being observed, and Bitcoin is unaware Babylon exists."},
+            {"symbol": "Aw", "why": "FORCED: see the covenant committee above."},
+            {"symbol": "Vl", "why": "CANDIDATE, and equivocal for the third time. A finality provider is not a validator of Bitcoin and not (necessarily) a validator of the chain it finalizes. The lifecycle (register, be delegated to, be jailed, unbond) rhymes; the object does not."},
+            {"symbol": "Bs", "why": "FORCED: the BTC is slashable first-loss capital, which fits — but it is slashable by burning a UTXO on another chain via a key leak, and Bs presumes the capital is inside the system that slashes it."}
+          ]
+        }
+      ],
+      "category_residue": "The direct answer on Vl: it is required by four of the five and adequate in none of them. In Lido it stands for at least five separable mechanisms (key registration and vetting; stake allocation across operator modules; deposit front-running defence; exit signalling and the validator-side exit queue; penalty attribution). In Binance staked ETH it is not usable at all, because $6.9B of liquid staking has no on-chain validator lifecycle to name. In EigenLayer and Babylon it is used equivocally, for an 'operator' and a 'finality provider' that are not validators — and using the same symbol for all three asserts a sameness that does not survive contact with the protocols. So no: Vl does not hold up across all five, and it should not be promoted from candidate to element. It should be split, at minimum into (a) validator key registration and vetting, (b) stake allocation/scheduling to operators, (c) exit and unbonding coordination, (d) operator-selection market (auction or curation), with a separate element for threshold/distributed key committees. Two further category-wide gaps: DVT (SSV $9,257M + Obol $483M, plus its use inside Lido and ether.fi — the largest unnamed mechanism by TVL in this lane) and off-chain points programmes, which are how three of these five actually acquired their deposits. Rocket Pool ($985.8M, rank 7) was excluded by TVL, but it is worth recording that its minipool bond, RPL collateral requirement and oDAO would have produced the same Vl overload plus a further gap for operator-posted collateral denominated in the governance token.",
+      "identical_decompositions": []
+    }
+  ],
+  "completeness_verdict": "22 protocols decomposed (top 5 by TVL in each of four categories, plus Compound V3 at rank 6 in Lending and Ethena from DefiLlama's 'Basis Trading' tag, both added because the brief names them as stress tests). Marker convention: 'forced' entries are prefixed CANDIDATE, CONTESTED, FORCED, NOT USED or EXACT. Rough accounting: of ~150 distinct mechanisms I could identify across the 22 protocols, about 110 (73%) took a symbol cleanly, about 20 (13%) took one only as a forced fit, and about 20 (13%) took none at all. But the failure is not evenly spread and the percentage flatters the vocabulary badly, because the residue is concentrated in exactly the mechanisms protocols compete on. It failed hardest in three places. FIRST, the price of credit. There is no element anywhere for a rate — not the utilization curve that every one of six lending protocols runs, not the stability fee and savings rate that every one of five CDPs uses as its primary peg lever, not crvUSD's automatic rate controller, not Liquity V2's borrower-chosen rates. The Stability register offers Rd, Ps and As — a redemption right, a 1:1 swap and quantity adjustment — and every protocol in the CDP category reaches for a price instrument instead. SECOND, everything off-chain or off-protocol. Ethena's off-exchange custody and its capture of another venue's funding stream; Maple's legal recourse and qualified custodians; Binance staked ETH's entire existence; points programmes; Sky's RWA agents. The vocabulary is a vocabulary of on-chain mechanism, and roughly $12B of this lane's TVL sits behind an on-chain wrapper around an off-chain promise it cannot describe. THIRD, delegated discretion over other people's capital — Morpho curators, Maple pool delegates, Liquity V2 batch managers, Aave risk stewards. Sv exists as a candidate and names the wrong discretion (loan servicing, not allocation). DefiLlama has already made this a $8.76B category of its own. Two smaller observations: the contested register is empirically bimodal — Da is used by three of the top five CDPs and should probably be promoted, while Ve is used by exactly one of the top five DEXs and is shrinking. And the vocabulary's resolution in Lending is coarse enough that SparkLend's element set is a strict subset of Aave V3's with no distinguishing symbol at all.",
+  "vocabulary_gaps": [
+    "Rate model and rate policy — a utilization-indexed or governance-set price of credit, and rate-setting as a peg-defence instrument. Absent and load-bearing in all 12 lending and CDP protocols. Highest priority by a wide margin.",
+    "Delegated allocation mandate — a curator/delegate choosing risk exposures for depositors, with caps and a performance fee. $8.76B DefiLlama 'Risk Curators' category, plus Maple delegates and Liquity V2 batch managers. Sv is a candidate and names a different discretion.",
+    "Split Vl into: validator key registration & vetting; stake allocation/scheduling across operators; exit & unbonding coordination; operator-selection market. As one symbol it is a category label, and it covers zero of the five liquid-staking protocols adequately.",
+    "Distributed validator / threshold-signing committee — SSV $9,257M, Obol $483M, plus Lido SDVT, ether.fi and (in a different form) Babylon's covenant committee. Largest unnamed mechanism by TVL in the lane.",
+    "Off-exchange custody and mirrored venue settlement — assets held by a custodian and mirrored to a trading venue without moving. Ethena + Falcon + Solstice = $5,633M.",
+    "Off-protocol revenue capture — being the counterparty to a mechanism another protocol implements. Every risk-transfer symbol is written from the issuer's side; nothing lets you say 'this protocol's yield is someone else's Pf'.",
+    "Extension hook / pluggable settlement logic — Uniswap V4, PancakeSwap Infinity, Morpho's IRM and oracle slots, Fluid.",
+    "Continuous soft liquidation with no liquidation event — crvUSD LLAMMA. Every solvency symbol presumes a discrete close.",
+    "Recapitalization by governance-token dilution after the loss (Sky's debt auction), as distinct from Sl (assign the loss) and Bs (pre-stake against it).",
+    "Protocol-to-protocol credit line — Sky's D3M minting into SparkLend to peg a rate. Not Pl, not Em, not Ps, not Cd.",
+    "Off-chain loyalty points as a pre-token incentive — ether.fi, EigenLayer, Ethena. Em names emissions of a real asset; points are a revocable promissory ledger.",
+    "A position that is simultaneously credit and AMM inventory — Fluid smart collateral / smart debt. The vocabulary's registers are disjoint by construction.",
+    "Off-chain legal recourse and qualified custody — Maple. Uc bundles recourse into a token and never unpacks the enforcement path.",
+    "Custodial backing with no on-chain proof — Binance staked ETH, $6.9B, decomposes to five symbols none of which are about staking.",
+    "First-loss capital that is compensated rather than penalized — Liquity's Stability Pool. Bs says 'slashable' and inverts the incentive.",
+    "Promote Da (descending-price auction) out of the contested register: used by 3 of the top 5 CDPs and by Sky's entire liquidation system.",
+    "Demote/split Ve: it names a lock, but Curve runs a lock, a gauge weight vote, an emission boost multiplier and an external bribe market on top of it — and only 1 of the top 5 DEXs still uses any of them.",
+    "Scoping — several symbols are true of one module of a protocol and false of the rest (Bs at Lido, St at Curve, Ob at Raydium). There is no way to qualify a symbol's extent."
+  ],
+  "most_surprising": "The one thing every lending protocol on earth actually competes on — the shape of the interest-rate curve — has no symbol at all, so $30B of Aave, SparkLend, JustLend and Compound V3 collapse into near-identical strings while the $8.8B risk-curation business that grew up around Morpho is equally invisible; the vocabulary is precise about the mechanics of a loan and silent about its price and its manager."
+}

@@ -1,0 +1,547 @@
+{
+  "lane": "Perpetuals/derivatives; Yield/vaults/aggregators; Bridges/cross-domain; Intents/aggregation/order flow",
+  "source": "DefiLlama, snapshot 2026-08-04. Perps ranked by Normalized Perp Volume 24h from https://defillama.com/perps (category totals: $17.309b 24h, $496.127b 30d, OI $17.406b). Intents/aggregation ranked by DEX Aggregator Volume 24h from https://defillama.com/dex-aggregators (category total $2.986b 24h, $78.26b 30d). Yield and Bridges ranked by TVL from https://api.llama.fi/protocols (DefiLlama categories 'Yield' + 'Yield Aggregator' and 'Bridge'). The paid-gated https://api.llama.fi/overview/derivatives endpoint returned HTTP 402, so perp volume was read off the rendered leaderboard via a stealth browser fetch. NOTE ON CONVENTION: candidate-register symbols (Sv, Dp, Fd, Gs, Rl, Of, Rs, Vl, Sd, Fz) and contested-register symbols (Zk, Ve, Da, Ua, Tw, ...) are each marked with an entry in that protocol's 'forced' array prefixed CANDIDATE-REGISTER or CONTESTED-REGISTER, since the schema provides no other marking channel. A CANDIDATE-REGISTER note is not by itself a claim of a bad fit; a CONTESTED-REGISTER note carries the required justification for use.",
+  "categories": [
+    {
+      "category": "Perpetuals / derivatives",
+      "why_a_category": "All members answer: how do you give a trader continuous leveraged exposure to an off-chain price with no expiry — specifically, where does the price come from, who is the counterparty, and what happens to a position that can no longer pay?",
+      "protocols": [
+        {
+          "name": "Hyperliquid",
+          "rank_basis": "#1 by perp volume: $7.611b normalized 24h, $54.207b 7d, $195.602b 30d, $10.713b open interest (DefiLlama /perps, 2026-08-04). 44% of all on-chain perp volume.",
+          "elements": ["Ob", "Ct", "Ex", "Pf", "Li", "Ad", "Sl", "Sh", "Bs", "Vl", "Xf", "Xm", "Wq", "Gp"],
+          "order_known": true,
+          "residue": [
+            "No element for the LOCUS of the matching engine. Hyperliquid's order book is executed inside its own L1 consensus (HyperBFT) — the book IS the state machine. 'Ob' says 'on-chain order book' and is equally true of a book in a smart contract on someone else's chain. The single most important architectural fact about the #1 protocol in the category is unnameable.",
+            "No element for an endogenous oracle — Hyperliquid's mark/index price is produced by a stake-weighted median of its own validators, not fetched from an external publisher. 'Ex' names an external data oracle and cannot distinguish 'the chain reports the price' from 'Chainlink reports the price', even though these have opposite trust arguments.",
+            "No element for protocol-owned market-making inventory. HLP is simultaneously (a) the primary maker, (b) the liquidator of last resort, and (c) a pro-rata LP claim. 'Sh' names only (c).",
+            "No element for permissionless market listing by auction (HIP-1/HIP-3 deployment auctions sell the right to create a market).",
+            "No element for builder codes — third-party front-ends attaching a fee to order flow they originate.",
+            "No element for the vault-lockup/leader-follower structure (user vaults where a leader trades on depositors' behalf and must retain skin in the game)."
+          ],
+          "forced": [
+            {"symbol": "Bs", "why": "only approximately applies because HLP absorbs liquidation and bankruptcy losses first, but it is not slashable and is not posted as a bond — it is profit-seeking capital that happens to sit in front of the loss waterfall. 'Bs' says 'slashable first-loss capital'; the slashing half is absent."},
+            {"symbol": "Vl", "why": "CANDIDATE-REGISTER. Used for HYPE staking, delegation, jailing and validator rotation, which genuinely exist here; flagged because the symbol is a candidate and because the validator set does double duty as the oracle and the bridge's verifier set, which the symbol does not express."},
+            {"symbol": "Ua", "why": "CONTESTED-REGISTER USE, and I ultimately DECLINE it. Hyperliquid runs one cross-margin balance across every perp and spot market, which is the closest thing to 'unified-balance ledger' in this lane. I am not using it in the element list because the contested register requires that it be doing work no other symbol does, and here 'Ct' already covers the margin computation; what 'Ua' would add is scope (one account, all markets), which is better reported as residue: there is no element for margin scope (cross vs isolated vs per-subaccount)."}
+          ]
+        },
+        {
+          "name": "ApeX Protocol (ApeX Omni)",
+          "rank_basis": "#2 by perp volume: $1.318b normalized 24h ($1.34b reported), $9.17b 7d, $33.875b 30d, $116.47m OI (DefiLlama /perps, 2026-08-04).",
+          "elements": ["Ob", "Ct", "Ex", "Pf", "Li", "Sh", "Bs", "Xf", "Xm", "Em", "Up", "Tg"],
+          "order_known": true,
+          "residue": [
+            "No element for off-chain matching with on-chain proof of settlement. ApeX runs a centralized matching engine and posts state transitions to Ethereum via StarkEx/zkLink validity proofs. The proof covers balances, not the match. 'Ob' asserts the book is on-chain, which is false here.",
+            "No element for an escape hatch / forced withdrawal — StarkEx's forced-trade and forced-withdrawal path is the entire censorship-resistance argument for trusting a single operator, and nothing names it.",
+            "No element for a data-availability committee (state posted off-chain to a named committee rather than to L1 calldata).",
+            "No element for the eAMM + protocol-controlled-value structure that seeds maker liquidity — it is neither a pool-pricing invariant nor an LP claim in the sense 'Sh' means."
+          ],
+          "forced": [
+            {"symbol": "Ob", "why": "only approximately applies because the vocabulary's only execution symbol for a limit order book asserts 'on-chain', and ApeX's book lives entirely off-chain in an operator-run engine. The symbol is right about the market microstructure (price-time-priority CLOB) and wrong about the trust model."},
+            {"symbol": "Zk", "why": "CONTESTED-REGISTER USE, justified: the validity proof is not decoration here, it is the only reason an off-chain operator's ledger is trustworthy, so omitting it would make the decomposition indistinguishable from a custodial exchange. I list it here rather than in 'elements' to keep the contested symbol visible."},
+            {"symbol": "Bs", "why": "only approximately applies — the insurance fund absorbs bankrupt-position losses but is protocol-owned and non-slashable; same defect as with Hyperliquid's HLP."}
+          ]
+        },
+        {
+          "name": "Aster",
+          "rank_basis": "#3 by perp volume: $1.251b normalized 24h, $11.584b 7d, $41.033b 30d, $1.933b OI (DefiLlama /perps, 2026-08-04).",
+          "elements": ["Ob", "Pm", "Sh", "Ct", "Ex", "Pf", "Li", "Xf", "Em", "Up", "Gp"],
+          "order_known": false,
+          "residue": [
+            "No element for hidden / dark orders. Aster's flagship differentiator is resting orders that share the matching engine and the liquidity of the public book but are invisible until filled. 'Sb' is a shielded BALANCE, not a shielded resting order; there is no privacy symbol for order state.",
+            "No element for a venue that runs two different price-formation regimes (CLOB Pro mode and oracle-priced ALP pool 1001x mode) under one collateral account — the vocabulary lets me write 'Ob' and 'Pm' side by side but not the fact that they are alternative routes for the same margin.",
+            "No element for yield-bearing collateral — Aster credits margin in asBNB (a liquid-staking receipt) and USDF (a basis-trading synthetic), so the collateral itself carries an exogenous strategy. Nothing names 'collateral that is itself a position in another protocol'.",
+            "No element for MEV-protected / private order submission as a stated execution property."
+          ],
+          "forced": [
+            {"symbol": "Pm", "why": "only approximately applies to the ALP pool. 'Pm' means an oracle-priced inventory curve, and ALP does quote off Pyth/Chainlink/Binance oracles with the pool as counterparty; but 'proactive market making' implies the curve reprices around inventory, whereas ALP's headline claim is zero-slippage oracle execution with risk managed by fees and caps rather than by a curve."},
+            {"symbol": "Ob", "why": "only approximately applies — matching is engine-side with on-chain settlement, not an on-chain book; same defect as ApeX."},
+            {"symbol": "Dp", "why": "CANDIDATE-REGISTER. Used implicitly for the USDF collateral leg (delta-neutral basis position needing hedge maintenance). Flagged as candidate and as out-of-scope: it describes a different protocol's mechanism that Aster consumes as collateral."}
+          ]
+        },
+        {
+          "name": "Lighter",
+          "rank_basis": "#4 by perp volume: $1.17b normalized 24h ($1.175b reported), $8.384b 7d, $34.221b 30d, $872.18m OI (DefiLlama /perps, 2026-08-04).",
+          "elements": ["Ob", "Ct", "Ex", "Pf", "Li", "Ad", "Sh", "Xf", "Xm", "Wq", "Em", "Up", "Gp"],
+          "order_known": true,
+          "residue": [
+            "No element for an EXECUTION-INTEGRITY proof, which is Lighter's entire thesis. Its custom circuits prove that price-time priority was actually followed and that no shadow fills or internalization occurred. The contested symbol 'Zk' names a verifiable STATE proof — that the balances are right — which is strictly weaker and is what ApeX and edgeX also have. The vocabulary cannot express 'the matching RULE was proven', so it cannot distinguish Lighter from any other validity-rollup venue.",
+            "No element for a zero-fee / rebate-inverted fee model as a design choice (retail pays nothing; the protocol earns elsewhere).",
+            "No element for an application-specific rollup as a deployment topology, as distinct from a general-purpose L2 or an L1.",
+            "No element for verifiable liquidation (liquidations proven correct rather than raced by third parties) — 'Li' presumes an incentivized external liquidator, which is not the primary mechanism here."
+          ],
+          "forced": [
+            {"symbol": "Ob", "why": "only approximately applies — the book is maintained by a sequencer off-chain and reconstructed under proof, not held in on-chain state. Same defect as ApeX and edgeX."},
+            {"symbol": "Zk", "why": "CONTESTED-REGISTER USE, justified: without it Lighter's decomposition is identical to a trusted off-chain exchange with a settlement contract, which misrepresents it completely. But see residue — even with 'Zk' allowed, it names the wrong thing (state validity, not matching fairness)."},
+            {"symbol": "Li", "why": "only approximately applies — Lighter's liquidations are executed and proven by the protocol under circuit constraints rather than sold to third-party keepers, so the 'incentivized third party' half of the symbol is absent."}
+          ]
+        },
+        {
+          "name": "edgeX",
+          "rank_basis": "#5 by perp volume: $966.24m normalized 24h ($268.11m reported), $6.986b 7d, $20.522b 30d (DefiLlama /perps, 2026-08-04).",
+          "elements": ["Ob", "Ct", "Ex", "Pf", "Li", "Sh", "Bs", "Xf", "Xm", "Em", "Up", "Gp"],
+          "order_known": true,
+          "residue": [
+            "Identical residue to ApeX: no element for off-chain matching under validity proof, no element for a data-availability committee, no element for forced-withdrawal escape hatch.",
+            "No element that separates a validium (DA off-chain, committee-held) from a rollup (DA on L1) — the difference is the entire liveness/exit risk of the venue.",
+            "No element for the maker-program / designated liquidity provider relationships that supply the book."
+          ],
+          "forced": [
+            {"symbol": "Ob", "why": "only approximately applies — StarkEx-settled off-chain CLOB, so the 'on-chain' qualifier is false."},
+            {"symbol": "Zk", "why": "CONTESTED-REGISTER USE, justified on the same grounds as ApeX: the validity proof is the trust argument, not an implementation detail."},
+            {"symbol": "Bs", "why": "only approximately applies — insurance fund is non-slashable protocol capital."}
+          ]
+        },
+        {
+          "name": "Jupiter Perpetual Exchange",
+          "rank_basis": "OUTSIDE the volume top 5, included deliberately as the oracle-priced-pool control: #1 in DefiLlama's 'Derivatives' category by TVL at $703.6m (api.llama.fi/protocols, 2026-08-04). Included because all five volume leaders are order-book venues, so a volume-only top 5 would have tested zero pool-based designs.",
+          "elements": ["Pm", "Sh", "Ex", "Ct", "Sr", "Li", "Up", "Gp"],
+          "order_known": true,
+          "residue": [
+            "No element for a BORROW-FEE tether. Jupiter has no funding rate: longs and shorts both pay a utilization-priced hourly borrow fee to the JLP pool, and there is no long-short transfer at all. 'Pf' is defined as a 'payment tethering perp to index' between position sides and simply does not describe this. A perp DEX in the category's TVL top spot has no 'Pf'.",
+            "No element for the LP being the involuntary counterparty to aggregate trader PnL — JLP holders are structurally short trader profit, which is the dominant risk in the design. 'Sh' names the claim, not the exposure.",
+            "No element for target-weight basket mint/redeem with fee skew (JLP is a weighted index of SOL/ETH/BTC/USDC/USDT that rebalances via minting fees).",
+            "No element for zero-slippage oracle execution as a distinct execution property (size does not move the price; risk is managed by caps instead)."
+          ],
+          "forced": [
+            {"symbol": "Ct", "why": "only approximately applies — there is a liquidation-price/leverage test, but with no order book and no maintenance-margin auction the 'margin/LTV/health computation' is closer to a per-position trigger against an oracle than to a portfolio solvency test."},
+            {"symbol": "Sr", "why": "only approximately applies — used for the continuously accruing hourly borrow fee. 'Sr' means streaming accrual of a claim; here it is a streaming LIABILITY charged against a position, which the symbol does not distinguish."}
+          ]
+        },
+        {
+          "name": "GMX V2 Perps",
+          "rank_basis": "OUTSIDE the volume top 5, included as the second pool-based control and because the brief specifically asks whether the vocabulary separates Hyperliquid from GMX: #3 in DefiLlama's 'Derivatives' category by TVL at $173.5m across 4 chains (api.llama.fi/protocols, 2026-08-04).",
+          "elements": ["Pm", "Sh", "Im", "Ex", "Ct", "Pf", "Sr", "Li", "Ad", "Em", "Tg", "Up", "Gp"],
+          "order_known": true,
+          "residue": [
+            "No element for open-interest-imbalance price impact. GM markets charge entry/exit price impact as a function of how much a trade skews the pool's net OI. This is neither an invariant ('Cp'/'Wg'/'St'/'Cl') nor pure oracle pricing ('Pm') — it is an inventory-skew penalty layered on top of an oracle. It is the core of GMX v2's redesign and it has no symbol.",
+            "No element for open-interest caps / reserve factors as a risk control.",
+            "No element for the long-token/short-token/index-token backing structure of a GM market (a market backed by two specific assets rather than by a shared pool).",
+            "No element for low-latency oracle-with-two-price (bid/ask oracle spread) execution."
+          ],
+          "forced": [
+            {"symbol": "Im", "why": "only approximately applies. 'Im' is defined as an ISOLATED LENDING market with a per-market risk fence. GM markets are exactly a per-market risk fence — a loss in the ETH market cannot touch the SOL market — but there is no lending. The fence concept is the right one and the credit framing is wrong, which suggests 'Im' is really two ideas glued together."},
+            {"symbol": "Sr", "why": "only approximately applies — used for continuously accruing borrowing fees, a streaming liability rather than a streaming claim."}
+          ]
+        }
+      ],
+      "category_residue": "The vocabulary resolves ONE axis of venue design well and is blind to the other two. It cleanly separates book venues from pool venues: Hyperliquid is 'Ob' and GMX/Jupiter are 'Pm'+'Sh', and those decompositions do not collide. It is completely blind to (1) WHERE the book lives and who is trusted to run it — Hyperliquid's in-consensus book, ApeX's and edgeX's operator-run StarkEx books, and Lighter's proven sequencer book all emit the same 'Ob', even though these are three different trust models with three different failure modes; and (2) the perp TETHER itself — 'Pf' assumes a long/short funding transfer, which Jupiter does not have at all (utilization borrow fee) and which GMX supplements with a separate borrowing fee. Also missing across the whole category: insurance funds as a thing distinct from slashable backstops ('Bs' was forced three times); escape hatches / forced withdrawal; open-interest caps and skew-based price impact; hidden order state; permissionless market listing; and margin scope (cross vs isolated). Note that the category as ranked by real volume in August 2026 contains no oracle-pool venue in the top five at all — pool-based perps now rank by TVL, not by volume, which is itself a structural fact the framework has no way to record.",
+      "identical_decompositions": [["ApeX Protocol (ApeX Omni)", "edgeX"], ["ApeX Protocol (ApeX Omni)", "edgeX", "Lighter"]]
+    },
+    {
+      "category": "Yield / vaults / aggregators",
+      "why_a_category": "All members answer: given a yield-bearing position that already exists somewhere else, how do you repackage it into a claim someone else wants to hold — and, critically, who is allowed to decide where the capital goes and under what constraints?",
+      "protocols": [
+        {
+          "name": "Pendle",
+          "rank_basis": "#1 by TVL in DefiLlama categories Yield + Yield Aggregator: $1,197.6m across 12 chains (api.llama.fi/protocols, 2026-08-04). Also $19.06m DEX volume 24h.",
+          "elements": ["Ix", "Py", "Ft", "Rd", "Ep", "Em", "Up", "Gp"],
+          "order_known": true,
+          "residue": [
+            "No element for a MATURITY-AWARE AMM. Pendle's v2 curve prices PT against SY in implied-rate space with a scalar and rate anchor that decay as time-to-expiry shrinks, so the same pool state means a different price on a different day. None of 'Cp', 'Wg', 'St', 'Cl' or 'Pm' describes an invariant that is a function of time. I explicitly considered and REJECTED the contested symbol 'Tw': 'Tw' is time-weighted AMM EXECUTION (spreading one order over time, TWAMM), which is a different mechanism entirely from a pricing curve that is parameterised by time-to-maturity. Using it here would be a bad fit, so this stays residue. This is the single clearest missing element in my lane.",
+            "No element for implied-rate/yield-space quotation — the pool quotes an interest rate, not a price ratio, and 'Py' names the SPLIT but not the market that prices it.",
+            "No element for the rollover lifecycle: at expiry a maturity dies and liquidity must migrate to a new one. Maturity-dated liquidity has a birth and a death that no time symbol ('Sr', 'Ep', 'Wq') covers.",
+            "No element for YT's decaying-notional property (a YT holder's claim shrinks to zero at maturity by construction, unlike any other claim in the vocabulary).",
+            "No element for gauge-directed emissions as a market (vote markets / bribes on top of vePENDLE)."
+          ],
+          "forced": [
+            {"symbol": "Ve", "why": "CONTESTED-REGISTER USE, justified: vePENDLE is not an optional governance garnish, it is the mechanism that directs emissions to pools and routes protocol fees to lockers, so a decomposition without it cannot explain where Pendle's LP yield comes from. Listed here rather than in 'elements' to keep the contested use visible."},
+            {"symbol": "Ft", "why": "only approximately applies. PT is a maturity-dated claim, which is what 'Ft' names, but 'Ft' is filed under Credit as 'fixed-term DEBT'. A PT is not a debt — nobody owes anything; it is a stripped principal claim on a yield-bearing token. The maturity concept is right, the liability framing is wrong."},
+            {"symbol": "Fd", "why": "CANDIDATE-REGISTER. Used for protocol fee routing to vePENDLE lockers."}
+          ]
+        },
+        {
+          "name": "Spark Savings (sUSDS / Sky Savings Rate)",
+          "rank_basis": "#2 by TVL: $1,132.5m across 8 chains (api.llama.fi/protocols, 2026-08-04).",
+          "elements": ["Sh", "Ix", "Sr", "Rd", "Ps", "Xf", "Tg", "Gp", "Up"],
+          "order_known": true,
+          "residue": [
+            "No element for an ADMINISTERED rate. The Sky Savings Rate is a number set by governance vote, not derived from a utilization curve, an auction, or a market. The vocabulary can express index accrual ('Ix') and streaming ('Sr') but has no way to say WHERE the rate number comes from — and 'set by a vote' versus 'set by utilization' versus 'set by a curve' are three entirely different risk objects that all decompose identically here.",
+            "No element for the SOURCE of yield. sUSDS pays from Sky's CDP interest and RWA/treasury revenue, and none of that appears in the decomposition. A protocol can be fully 'expressible' in this vocabulary while its solvency argument is entirely invisible.",
+            "No element for a rate that can exceed protocol revenue (a deficit-funded savings rate drawing on a surplus buffer).",
+            "No element for cross-chain sameness of a single savings claim (sUSDS on 8 chains is one economic claim, and 'Xf' only says value moved)."
+          ],
+          "forced": [
+            {"symbol": "Ps", "why": "only approximately applies — the Sky PSM is a genuine 1:1 reserve-backed peg swap, but it belongs to the Sky/USDS system that Spark Savings sits on top of, not to Spark Savings itself. I include it because sUSDS's redemption guarantee is meaningless without it, which itself shows the vocabulary has no way to mark 'element inherited from a dependency'."},
+            {"symbol": "Fd", "why": "CANDIDATE-REGISTER. The savings rate is funded from system surplus, which is what 'Fd' names, but as a governance-set payout rather than a pro-rata distribution of realized fees."}
+          ]
+        },
+        {
+          "name": "Convex Finance",
+          "rank_basis": "#3 by TVL: $456.4m across 4 chains (api.llama.fi/protocols, 2026-08-04).",
+          "elements": ["Sh", "Ix", "Em", "Ep", "Tg", "Up", "Gp"],
+          "order_known": true,
+          "residue": [
+            "No element for VOTE AGGREGATION / meta-governance. Convex's entire product is pooling other users' CRV into a permanently locked veCRV position and renting out the resulting gauge-voting power. Strip that and the decomposition ('Sh' + 'Ix' + 'Em') is indistinguishable from any staking-rewards contract. The #3 protocol in this category is essentially unnameable in this vocabulary.",
+            "No element for a LIQUID WRAPPER OF A LOCKED POSITION. cvxCRV is a tradable claim on a position that can never be unlocked; the peg is maintained by a secondary market, not by redemption. This pattern is everywhere in DeFi (liquid staking, liquid restaking, liquid lockers) and there is no symbol for it. Note 'Rd' explicitly does NOT apply — the absence of a redemption right is the whole point.",
+            "No element for a bribe / vote-incentive market (paying token holders to direct emissions elsewhere).",
+            "No element for boost mechanics — the nonlinear reward multiplier that makes pooling rational in the first place."
+          ],
+          "forced": [
+            {"symbol": "Ve", "why": "CONTESTED-REGISTER USE, justified: this is the strongest case for 'Ve' in my entire lane. Without it Convex has no decomposition at all — every remaining symbol it emits is shared with a generic reward staker. If the framework refuses 'Ve', it must accept that a $456m protocol is 100% residue."},
+            {"symbol": "Ep", "why": "only approximately applies — vlCVX's 16-week lock and the weekly gauge round are epochs, but 'Ep' means an epoch-GATED TRANSITION and here the epochs gate voting weight and reward eligibility rather than a state transition."},
+            {"symbol": "Fd", "why": "CANDIDATE-REGISTER. Used for the 3CRV/bribe revenue routed to vlCVX lockers."}
+          ]
+        },
+        {
+          "name": "CIAN Yield Layer",
+          "rank_basis": "#4 by TVL: $244.5m across 7 chains (api.llama.fi/protocols, 2026-08-04). Largest pure 'Yield Aggregator'-classified protocol.",
+          "elements": ["Sh", "Ix", "Fl", "Ct", "Ex", "Wq", "Em", "Up", "Gp"],
+          "order_known": true,
+          "residue": [
+            "No element for a STRATEGY: a standing, rebalancing allocation policy executed over other protocols' positions. CIAN's product is a leveraged LST/restaking loop with a target LTV maintained by flash-loan-assisted rebalancing. I can name the flash loan ('Fl') and the health test ('Ct'), but not the POLICY that decides when to fire them, what the target is, or what the mandate permits. See category_residue — I believe this is a missing LEVEL, not a missing element.",
+            "No element for keeper/automation dependency. These vaults do not maintain themselves; an off-chain agent must call rebalance, and if it stops, the vault drifts into liquidation. Nothing in the vocabulary records that a mechanism requires an external caller to be alive.",
+            "No element for recursive leverage (loop count, effective exposure multiple) — 'Ct' names the constraint but not the fact that the position is deliberately maximised against it.",
+            "No element for composition depth / dependency stacking (a vault whose collateral is a vault whose collateral is an LST)."
+          ],
+          "forced": [
+            {"symbol": "Ct", "why": "only approximately applies — the collateral test being consumed here belongs to the underlying lending market (Aave/Morpho), not to CIAN. CIAN maintains a self-imposed target LTV strictly inside it. The vocabulary has one symbol for 'a solvency test exists' and cannot distinguish being subject to one from operating against one."},
+            {"symbol": "Dp", "why": "CANDIDATE-REGISTER, considered and REJECTED for the element list. 'Dp' (directional position & hedge maintenance) is the nearest thing the vocabulary has to a strategy, but a levered stETH loop is delta-one by construction — there is no directional view and no hedge. Recording this as a rejection rather than a forced fit."}
+          ]
+        },
+        {
+          "name": "Huma Finance V2",
+          "rank_basis": "#5 by TVL: $219.3m on Solana (api.llama.fi/protocols, 2026-08-04).",
+          "elements": ["Uc", "Tr", "Sh", "Ix", "Ft", "Bs", "Ep", "Wq", "Aw", "At"],
+          "order_known": true,
+          "residue": [
+            "No element for the RECEIVABLE itself — a tokenized claim on a specific off-chain payment obligation from a named counterparty. 'Uc' says credit is undercollateralized; it does not say what stands behind it. The difference between 'unsecured' and 'secured by an invoice from a named payer' is the whole credit analysis.",
+            "No element for off-chain legal recourse / enforceability. What makes a PayFi pool solvent is a contract in a jurisdiction, and nothing in the vocabulary can reference the legal layer.",
+            "No element for a maximum leverage ratio between tranches (Huma caps senior:junior at 4:1). 'Tr' names the waterfall but not the thickness constraint that makes it safe.",
+            "No element for underwriting or borrower admission as an ongoing process (as opposed to 'Aw', a static gate)."
+          ],
+          "forced": [
+            {"symbol": "At", "why": "only approximately applies. 'At' is a reserve/NAV/financial attestation over a pool of assets. What Huma needs is an assertion that a SPECIFIC off-chain obligation exists and is performing — a per-claim attestation, not a portfolio-level one. Closest available symbol, clearly not the right one."},
+            {"symbol": "Bs", "why": "only approximately applies — the junior tranche and the explicit 'first-loss covers' are genuinely first-loss capital, but they are not slashed by a protocol rule; they simply sit lower in the 'Tr' waterfall. 'Tr' and 'Bs' overlap here and the vocabulary gives no guidance on which to prefer."},
+            {"symbol": "Sv", "why": "CANDIDATE-REGISTER, and the best fit in my whole lane for this candidate: an Evaluation Agent decides drawdown eligibility, declares defaults and applies losses. This is exactly 'servicing & determination discretion'. If any candidate deserves promotion on this evidence, it is 'Sv'."},
+            {"symbol": "Ft", "why": "only approximately applies — receivables have due dates, but the investor claim is an open-ended tranche position with epoch-based redemption, not a maturity-dated instrument."}
+          ]
+        },
+        {
+          "name": "Yearn Finance",
+          "rank_basis": "OUTSIDE the top 5 (#6 by TVL in Yield + Yield Aggregator: $176.2m across 7 chains, api.llama.fi/protocols, 2026-08-04). Included because the brief names it and because it is the canonical test of whether a strategy is an element.",
+          "elements": ["Sh", "Ix", "Sr", "Wq", "Em", "Tg", "Up", "Gp"],
+          "order_known": true,
+          "residue": [
+            "Same strategy-level gap as CIAN, in its purest form: a Yearn V3 vault IS a debt-allocation policy across a queue of strategies, each with a debt cap and a reporting cadence. Every noun in that sentence — strategy, debt cap, allocator, report, harvest — is unnameable.",
+            "No element for auto-compounding / harvest as distinct from index accrual. 'Ix' describes the effect (share price rises) but not the mechanism (a keeper sells reward tokens and reinvests), and the two have completely different failure modes.",
+            "No element for a performance fee / management fee taken by a manager out of a claim class.",
+            "No element for the profit-unlock schedule (Yearn drips realized profit into the share price linearly to prevent deposit-sandwiching). I used 'Sr' for it, but 'Sr' names streaming accrual, not an anti-MEV smoothing device."
+          ],
+          "forced": [
+            {"symbol": "Sr", "why": "only approximately applies — used for V3's linear profit-unlock, which is a deliberate delay mechanism disguised as accrual rather than genuine streaming of a claim."},
+            {"symbol": "Wq", "why": "only approximately applies — Yearn's 'withdrawal queue' is an ordering of STRATEGIES to pull from, not a queue of USERS waiting to exit. Same words, different object; the vocabulary collides them."}
+          ]
+        },
+        {
+          "name": "Beefy",
+          "rank_basis": "OUTSIDE the top 5 (#9 by TVL in Yield + Yield Aggregator: $104.2m across 40 chains, api.llama.fi/protocols, 2026-08-04). Included as the second strategy-aggregator control named in the brief.",
+          "elements": ["Sh", "Ix", "Em", "Up", "Gp"],
+          "order_known": true,
+          "residue": [
+            "Beefy emits five symbols, three of which are generic control-plane symbols. Everything that makes Beefy Beefy — ~1,000 auto-compounding vaults across 40 chains, each a bespoke harvest routine against a specific farm — is residue.",
+            "No element for auto-compounding as a mechanism (same gap as Yearn).",
+            "No element for breadth as a design property (a protocol whose product is the LONG TAIL of strategies rather than any particular one).",
+            "No element for the harvest-caller incentive (whoever calls harvest is paid a cut of the compounded amount) — a small but load-bearing keeper subsidy."
+          ],
+          "forced": []
+        },
+        {
+          "name": "Steakhouse Financial",
+          "rank_basis": "OUTSIDE the two Yield categories and OUTSIDE the top 5 as ranked, but the LARGEST vault operator in DeFi by TVL at $3,084.0m across 10 chains (DefiLlama files it under 'Risk Curators', a category holding $8.76b total; api.llama.fi/protocols, 2026-08-04). Included because excluding it would have hidden the category's real answer: the biggest 'vaults' in DeFi are curated Morpho/Euler vaults, and DefiLlama does not classify them as yield products.",
+          "elements": ["Sh", "Ix", "Im", "Ct", "Ex", "Tg", "Gp", "Up"],
+          "order_known": true,
+          "residue": [
+            "No element for the CURATOR: a named, reputationally-accountable third party with discretionary authority to allocate other people's deposits across markets, bounded by supply caps, subject to a timelock, and paid a performance fee. This is the defining object of the largest capital pool in my lane and there is no symbol within an order of magnitude of it. 'Sv' (servicing & determination discretion) is about determining outcomes on a credit claim, not about allocating a mandate.",
+            "No element for the role SPLIT that makes curated vaults safe (owner / curator / allocator / guardian, each with different powers and different timelocks). 'Tg' and 'Gp' name two of the four and cannot express that they constrain a specific third party.",
+            "No element for a supply cap as a risk-fencing primitive (the curator can allocate only up to N into market M).",
+            "No element for reputational rather than capital accountability — a curator can lose depositors' money and only loses future business."
+          ],
+          "forced": [
+            {"symbol": "Im", "why": "only approximately applies — the isolated markets belong to Morpho Blue, not to Steakhouse. Steakhouse's mechanism is the SELECTION of which isolated markets to enter and at what size. The vocabulary can name the fence but not the choice to stand inside it."},
+            {"symbol": "Ct", "why": "only approximately applies — inherited from the underlying markets, same defect as with CIAN."},
+            {"symbol": "Tg", "why": "only approximately applies — Morpho vault timelocks gate a CURATOR's cap increases, not a governance execution. 'Tg' says 'delayed-governance execution' and this is delayed-agent execution, which is a materially different accountability story."}
+          ]
+        }
+      ],
+      "category_residue": "This category exposes a missing LEVEL, not a missing element, and that is the most important finding in my lane. The vocabulary has elements (mechanisms) and, implicitly, molecules (protocols assembled from them). A STRATEGY is neither: it is a policy expressed OVER molecules — 'borrow USDC on Morpho against stETH up to 80% LTV, unwind if it exceeds 85%, and harvest weekly'. It has no on-chain mechanism of its own; it is a rule for consuming other people's mechanisms. Because the model has no third level, Yearn, Beefy and CIAN decompose to essentially the same two claim symbols ('Sh', 'Ix') plus control-plane furniture, and Steakhouse — with more TVL than the other three combined by a factor of eight — decomposes to the same plus a borrowed 'Im'. The answer to 'is a strategy an element, a molecule, or residue' is: it is residue TODAY, it should not be an element (it is not a mechanism), and the honest fix is a third level with its own primitives — mandate, cap, allocator, rebalancing trigger, performance fee, keeper. Secondary gaps across the category: no auto-compounding/harvest distinct from index accrual; no administered rate; no keeper-liveness dependency; no liquid-wrapper-of-a-locked-position; no maturity-aware pricing; and no way to mark an element as INHERITED from a dependency rather than implemented by the protocol (I hit this with Spark/Ps, CIAN/Ct and Steakhouse/Im/Ct).",
+      "identical_decompositions": [["Yearn Finance", "Beefy"], ["Yearn Finance", "Beefy", "CIAN Yield Layer"]]
+    },
+    {
+      "category": "Bridges / cross-domain",
+      "why_a_category": "All members answer: how does a claim on an asset in one domain become a spendable claim in another, and what exactly do you have to trust for the two to remain equal?",
+      "protocols": [
+        {
+          "name": "WBTC",
+          "rank_basis": "#1 in DefiLlama's 'Bridge' category by TVL: $7,300.5m (api.llama.fi/protocols, 2026-08-04).",
+          "elements": ["Xf", "At", "Aw", "Rd", "Gp", "Tg"],
+          "order_known": true,
+          "residue": [
+            "No element for CUSTODY BY AN OFF-CHAIN LEGAL ENTITY. WBTC exists because BitGo holds bitcoin and says so. There is no message, no proof, no verification — the entire mechanism lives outside every domain the vocabulary can describe. Note the striking consequence: WBTC gets 'Xf' but NOT 'Xm', and the vocabulary offers nothing to fill the hole where verification should be.",
+            "No element for the merchant/minter role (a permissioned set of firms that intermediate mint and burn requests and perform KYC on the requester).",
+            "No element for proof-of-reserve as an ongoing, falsifiable, addressable claim as opposed to a periodic attestation — 'At' covers the weaker reading only.",
+            "No element for the redemption FRICTION that determines whether the peg actually holds (who may redeem, on what timeline, at what minimum size). 'Rd' asserts a right exists and says nothing about who holds it — here, not the average holder."
+          ],
+          "forced": [
+            {"symbol": "Rd", "why": "only approximately applies — 'direct redemption right' is true for whitelisted merchants and false for ordinary holders, who can only sell into a secondary market. The symbol as written overstates the guarantee for ~everyone actually holding the token."},
+            {"symbol": "Fz", "why": "CANDIDATE-REGISTER. The custodian can pause minting and blacklist addresses, which is what 'Fz' names."}
+          ]
+        },
+        {
+          "name": "LayerZero V2",
+          "rank_basis": "#2 in 'Bridge' by TVL: $6,666.7m across 60 chains (api.llama.fi/protocols, 2026-08-04). Largest general messaging layer.",
+          "elements": ["Xm", "Xf", "Up", "Gp", "Tg"],
+          "order_known": true,
+          "residue": [
+            "No element for CONFIGURABLE VERIFICATION. LayerZero's actual product is that the APPLICATION picks its own verifier set (DVNs) and threshold, so two apps on the same messaging layer can have completely different security. 'Xm' is a single symbol asserting 'messages are verified' and cannot express who verifies, how many, whether the set is app-chosen, or that verification security is a per-application parameter rather than a protocol property. The #2 bridge's defining feature is invisible.",
+            "No element that distinguishes BURN-AND-MINT from LOCK-AND-MINT supply topology. OFT moves supply between chains (total supply conserved, no honeypot); a lock-mint bridge concentrates value in an escrow. These have opposite attack surfaces and both are 'Xf'.",
+            "No element for the executor/relayer role as an economic actor distinct from the verifier — the party that delivers the message and pays destination gas.",
+            "No element for a hub-and-spoke liquidity mesh (USDT0's two-hop routing through an Arbitrum hub combines a lock-mint pool with an OFT burn-mint leg in a single user-visible transfer)."
+          ],
+          "forced": [
+            {"symbol": "Xm", "why": "only approximately applies in the sense described in residue: it is technically correct and carries almost none of the information that matters. It is the single most over-loaded symbol I used in this lane."},
+            {"symbol": "Gs", "why": "CANDIDATE-REGISTER. Used for the Executor prepaying destination-chain gas on the sender's behalf, which is genuinely a sponsored-fee liability, though 'Gs' is written for account-abstraction paymasters rather than cross-domain delivery."}
+          ]
+        },
+        {
+          "name": "Coinbase Bridge (cbBTC and other wrapped assets)",
+          "rank_basis": "#3 in 'Bridge' by TVL: $6,150.9m, wrapping assets from Bitcoin, XRP, Doge, Cardano and Litecoin (api.llama.fi/protocols, 2026-08-04). DefiLlama description: 'Wrapped tokens backed 1:1 by assets held by Coinbase.'",
+          "elements": ["Xf", "At", "Aw", "Rd", "Gp", "Up"],
+          "order_known": true,
+          "residue": [
+            "Identical residue to WBTC: no element for off-chain custody, no element for legal recourse against the custodian, no element for the difference between an exchange-operated wrap and a consortium-operated one.",
+            "No element for 'the custodian is also the largest venue where the wrapped asset trades' — a concentration property with real depeg implications.",
+            "No element for the fact that this bridges five non-smart-contract source chains (Bitcoin, XRP, Doge, Cardano, Litecoin) where no verification mechanism is even possible. The vocabulary implicitly assumes both domains can run code."
+          ],
+          "forced": [
+            {"symbol": "Rd", "why": "only approximately applies — redemption runs through a Coinbase account subject to KYC and terms of service, not through a contract. Same overstatement as WBTC."},
+            {"symbol": "Fz", "why": "CANDIDATE-REGISTER. The issuer can freeze and can decline to redeem."},
+            {"symbol": "At", "why": "only approximately applies — reserve reporting is periodic and issuer-published, not a protocol mechanism."}
+          ]
+        },
+        {
+          "name": "Hyperliquid Bridge",
+          "rank_basis": "#4 in 'Bridge' by TVL: $5,893.6m between Hyperliquid L1 and Arbitrum (api.llama.fi/protocols, 2026-08-04).",
+          "elements": ["Xf", "Xm", "Vl", "Wq", "Gp", "Bs"],
+          "order_known": true,
+          "residue": [
+            "No element for ENDOGENOUS verification — the set that signs withdrawals is the same stake-weighted validator set that secures the destination chain, so bridge security equals chain security rather than being an additional independent assumption. This is the single most important property of a native L1 bridge and 'Xm' cannot express it.",
+            "No element for a dispute/finalization window on withdrawals as a security parameter (as opposed to 'Wq', which is about liquidity rationing).",
+            "No element for the composition where native issuance (USDC minted directly on Hyperliquid via CCTP) coexists with a legacy escrow bridge for the same asset — two supplies of the same token with different trust models.",
+            "No element for a cold-wallet lock as an emergency posture distinct from a contract pause."
+          ],
+          "forced": [
+            {"symbol": "Wq", "why": "only approximately applies — the withdrawal delay exists to give validators time to detect and block a fraudulent withdrawal, not to ration scarce liquidity among exiting claimants. 'Wq' names the queue and misses the purpose entirely."},
+            {"symbol": "Bs", "why": "only approximately applies — validator stake is slashable and does back the bridge, but it is not posted specifically as bridge first-loss capital, and there is no defined loss-allocation path from a bridge failure to that stake."},
+            {"symbol": "Vl", "why": "CANDIDATE-REGISTER. Used because the verifier set here is literally a staking/validator lifecycle with jailing and rotation."}
+          ]
+        },
+        {
+          "name": "Binance Bitcoin (BTCB)",
+          "rank_basis": "#5 in 'Bridge' by TVL: $4,363.3m (api.llama.fi/protocols, 2026-08-04).",
+          "elements": ["Xf", "At", "Aw", "Rd", "Gp"],
+          "order_known": true,
+          "residue": [
+            "Decomposes identically to WBTC and Coinbase Bridge. All residue items from those two apply unchanged.",
+            "No element for exchange-internal ledger transfer as the actual settlement mechanism (the 'bridge' is a database entry at an exchange plus a mint on BNB Chain)."
+          ],
+          "forced": [
+            {"symbol": "Rd", "why": "only approximately applies — redemption is an exchange withdrawal subject to account status, not a contract-enforced right."},
+            {"symbol": "Fz", "why": "CANDIDATE-REGISTER. Issuer can freeze."}
+          ]
+        },
+        {
+          "name": "Circle CCTP",
+          "rank_basis": "OUTSIDE the TVL top 5 and structurally UNRANKABLE by TVL — DefiLlama reports $0.0m locked, because burn-and-mint locks nothing. Included deliberately: the brief asks whether 'Xf'/'Xm' separates CCTP from a lock-mint bridge, and a TVL-ranked list would never surface it. Circle Gateway, the related instant-liquidity product, holds $56.8m (api.llama.fi/protocols, 2026-08-04).",
+          "elements": ["Xf", "Xm", "Aw"],
+          "order_known": true,
+          "residue": [
+            "No element for CANONICAL ISSUANCE — the issuer of the asset is also the operator of the bridge, so the destination token is not a claim on an escrow, it is the same asset re-issued. There is no wrapped representation and no bridge honeypot at all. 'Xf' says value crossed domains, which is true of CCTP, of WBTC, and of a lock-mint bridge, and those three have nothing in common in the property that matters.",
+            "No element for supply conservation as a safety property (burn-then-mint means a bridge exploit cannot exceed the burned amount).",
+            "No element for a finality-threshold TRADEOFF — CCTP v2 offers a fast path that attests before source-chain hard finality, backed by Circle's own capital, versus a standard path that waits. Choosing your own reorg-risk exposure is a mechanism and there is no symbol for it. 'Of' (optimistic fill & reimbursement) is the nearest and does not fit: there is no dispute period and no third-party filler being reimbursed — the issuer simply fronts its own balance sheet.",
+            "No element for the attestation service as a single centralized signer with no on-chain accountability."
+          ],
+          "forced": [
+            {"symbol": "Xm", "why": "only approximately applies — Circle's attestation is one company signing a burn event. Calling this 'cross-domain message verification' with the same symbol used for LayerZero's DVN sets, an optimistic oracle, and a validator-set multisig drains the symbol of all meaning."},
+            {"symbol": "Aw", "why": "only approximately applies — used to record that minting is permissioned to Circle's contracts. 'Aw' is written as a USER-facing permission/identity gate; here the gating is on the issuer side, which is a different kind of restriction."}
+          ]
+        },
+        {
+          "name": "Across",
+          "rank_basis": "OUTSIDE the TVL top 5 (#4 in DefiLlama's separate 'Cross Chain Bridge' category at $17.3m, api.llama.fi/protocols, 2026-08-04 — roughly 400x smaller than WBTC). Included because the brief names it and because it is the one bridge in this lane the vocabulary handles well.",
+          "elements": ["In", "Of", "Oa", "Pl", "Sh", "Ix", "Xm", "Xf"],
+          "order_known": true,
+          "residue": [
+            "No element for relayer INVENTORY economics — the relayer fronts capital on the destination chain and must be compensated for the time and rebalancing cost of holding it. The fee model is a capital-cost model and nothing names it.",
+            "No element for periodic net settlement (root bundles that batch and net many fills into one refund event across chains).",
+            "No element for a fee curve driven by pool utilization on the reimbursement side.",
+            "No element for the fill being economically final for the user BEFORE it is verified for the relayer — the user's risk and the relayer's risk are decoupled in time, which is the innovation."
+          ],
+          "forced": [
+            {"symbol": "Pl", "why": "only approximately applies. LPs supply single-sided pools that reimburse relayers, which does make LPs lenders. But there is no borrower with a debt position, no collateral, and no 'Ct' — the 'loan' is repaid by an optimistic settlement process, not by a counterparty. Closest available symbol and a visibly poor fit."},
+            {"symbol": "Of", "why": "CANDIDATE-REGISTER, and the best fit for this candidate anywhere in my lane — Across IS optimistic fill and reimbursement. Strong evidence for promoting 'Of' out of the candidate register."},
+            {"symbol": "Xm", "why": "only approximately applies — here verification is an UMA optimistic oracle over a settlement root, which 'Oa' already names better. Listing both shows the two symbols overlap without a rule for which to prefer."}
+          ]
+        }
+      ],
+      "category_residue": "The 'Xm'/'Xf'/'Of' split is far too coarse, and the evidence is that the top three bridges in DeFi by TVL — WBTC ($7.30b), Coinbase ($6.15b) and Binance Bitcoin ($4.36b), $17.8b combined — decompose to EXACTLY the same symbol set as each other, and that set contains no verification symbol at all, because there is nothing to verify: a company holds the asset. Specifically: 'Xf' conflates at least four supply topologies (custodial wrap, lock-and-mint escrow, burn-and-mint canonical issuance, and liquidity-network fill with no representation at all), and 'Xm' conflates at least five verification models (single-company attestation for CCTP, app-configurable DVN sets for LayerZero, an endogenous staked validator set for Hyperliquid, an optimistic assertion for Across, and light-client/validity proofs which nothing in the top five even uses). 'Of' is the one symbol that works — it is precisely Across — but it is a candidate and it applies to only one protocol in the set. Also missing across the category: proof-of-reserve with legal recourse; the relayer/executor as a paid economic role; source-chain finality and reorg exposure; fast-path-with-slow-backstop designs; and the fact that several of the biggest bridges connect chains that cannot run verification code at all (Bitcoin, XRP, Doge, Cardano, Litecoin), which the vocabulary implicitly assumes away.",
+      "identical_decompositions": [["WBTC", "Coinbase Bridge (cbBTC and other wrapped assets)", "Binance Bitcoin (BTCB)"]]
+    },
+    {
+      "category": "Intents / aggregation / order flow",
+      "why_a_category": "All members answer: the user does not pick a venue — they say what they want and someone else picks. Who is allowed to compete for that right, and how is the right to fill sold?",
+      "protocols": [
+        {
+          "name": "LiquidMesh",
+          "rank_basis": "#1 by DEX-aggregator volume: $657.73m 24h, $5.302b 7d, $13.426b 30d across 6 chains (DefiLlama /dex-aggregators, 2026-08-04).",
+          "elements": ["Ag"],
+          "order_known": true,
+          "residue": [
+            "The #1 protocol in this category by volume emits exactly ONE symbol. Everything about it is residue.",
+            "No element for routing computed OFF-CHAIN as a commercial API service and merely executed by a thin router contract. The vocabulary's 'Ag' reads as an on-chain route-construction mechanism; here the mechanism is a company's server and its latency.",
+            "No element for MEV-protected / private transaction broadcasting, which is half of what LiquidMesh actually sells.",
+            "No element for landing-rate / inclusion reliability as a product property.",
+            "No element for white-label distribution — being the routing engine INSIDE other people's wallets, which is why the volume is here and not at a consumer brand."
+          ],
+          "forced": []
+        },
+        {
+          "name": "Binance Wallet",
+          "rank_basis": "#2 by DEX-aggregator volume: $623.02m 24h, $5.133b 7d, $12.511b 30d across 12 chains (DefiLlama /dex-aggregators, 2026-08-04).",
+          "elements": ["Ag", "Rf"],
+          "order_known": false,
+          "residue": [
+            "No element for ORDER-FLOW ORIGINATION. Binance Wallet's economic position is that it owns the user, therefore it owns the right to decide where the trade goes and to monetize that decision. This is not a matching mechanism, it is a property-right over demand, and the vocabulary — which spends four symbols ('In','Ba','Rf','Ag') on how orders are matched — has zero symbols for who owns them.",
+            "No element for CEX-adjacent liquidity being routed into an on-chain settlement (the maker on the other side may be the exchange itself).",
+            "No element for wallet-embedded execution as a distribution channel.",
+            "No element for gasless/sponsored swap UX at this layer beyond the candidate 'Gs'."
+          ],
+          "forced": [
+            {"symbol": "Rf", "why": "only approximately applies and is partly INFERRED — wallet swap products of this type source firm maker quotes alongside AMM routes, but the quote-sourcing details are not publicly specified the way CoW's or DFlow's are. Flagging the inference rather than asserting it."},
+            {"symbol": "Gs", "why": "CANDIDATE-REGISTER. Used for fee-sponsored / gasless swap flows."}
+          ]
+        },
+        {
+          "name": "OKX DEX",
+          "rank_basis": "#3 by DEX-aggregator volume: $461.89m 24h, $1.876b 7d, $6.785b 30d across 35 chains (DefiLlama /dex-aggregators, 2026-08-04).",
+          "elements": ["Ag", "Rf"],
+          "order_known": false,
+          "residue": [
+            "Decomposes identically to Binance Wallet. All of its residue applies unchanged.",
+            "No element for cross-chain swap routing as a distinct product from same-chain routing (OKX runs both a DEX aggregator and a bridge aggregator over the same interface, and the vocabulary would give the second one 'Ag' + 'Xf' with nothing to say about the join).",
+            "No element for breadth of chain coverage (35 chains) as a competitive property."
+          ],
+          "forced": [
+            {"symbol": "Rf", "why": "only approximately applies, same inference caveat as Binance Wallet."},
+            {"symbol": "Gs", "why": "CANDIDATE-REGISTER. Fee-sponsored flows."}
+          ]
+        },
+        {
+          "name": "Jupiter",
+          "rank_basis": "#4 by DEX-aggregator volume: $371.99m 24h, $2.685b 7d, $15.163b 30d on Solana (DefiLlama /dex-aggregators, 2026-08-04). Highest 30d volume in the category.",
+          "elements": ["Ag", "Rf", "In"],
+          "order_known": true,
+          "residue": [
+            "No element for SCHEDULED / TIME-SLICED execution. Jupiter's DCA and limit/trigger products slice one user order into many keeper-executed fills over time. I explicitly considered and REJECTED the contested symbol 'Tw': 'Tw' is a time-weighted AMM invariant (TWAMM) in which the POOL executes continuously against a virtual order, whereas Jupiter's DCA is an off-chain keeper firing discrete swaps against ordinary venues. Same intent, different mechanism, so this stays residue.",
+            "No element for the router also owning the venues it routes to — Jupiter runs perps, lending, an LST and a launchpad, so it can internalize its own flow. Vertical order-flow capture has no symbol.",
+            "No element for keeper-executed conditional orders (the trigger exists off-chain; someone must watch and fire it).",
+            "No element for route-quality guarantees / price-improvement sharing."
+          ],
+          "forced": [
+            {"symbol": "In", "why": "only approximately applies — Jupiter's limit/trigger/DCA orders are signed outcome constraints filled by keepers, which is the shape of 'In', but there is no competitive solver auction, so the 'solver execution' half of the symbol is largely absent."}
+          ]
+        },
+        {
+          "name": "KyberSwap",
+          "rank_basis": "#5 by DEX-aggregator volume: $206.22m 24h, $1.333b 7d, $5.367b 30d across 24 chains (DefiLlama /dex-aggregators, 2026-08-04).",
+          "elements": ["Ag"],
+          "order_known": true,
+          "residue": [
+            "Decomposes identically to LiquidMesh — one symbol, everything else residue.",
+            "No element for the aggregator's own pools being one of the routed venues (KyberSwap Classic and Elastic are separate protocols in the same brand); the vocabulary cannot express a routing preference for related liquidity.",
+            "No element for gas-aware route optimization (choosing a worse price on a cheaper path)."
+          ],
+          "forced": []
+        },
+        {
+          "name": "DFlow",
+          "rank_basis": "OUTSIDE the top 5 (#6 by DEX-aggregator volume: $171.87m 24h, $876.84m 7d, $3.55b 30d on Solana, DefiLlama /dex-aggregators, 2026-08-04). Included because it is the only protocol in the category whose explicit product is the SALE of order flow, which is the gap the top three reveal.",
+          "elements": ["Ag", "Rf", "Aw"],
+          "order_known": true,
+          "residue": [
+            "No element for an ORDER-FLOW AUCTION — bidding for the exclusive right to fill a stream of future orders. I considered 'Ba' and rejected it: 'Ba' is batch-auction CLEARING, a uniform price computed over a batch of trades, whereas DFlow auctions a CONTRACT conveying fill rights over flow that does not exist yet. Different object, different timing, different bidders. I also considered contested 'Da' and rejected it — there is no descending price.",
+            "No element for ORDER-FLOW SEGMENTATION (classifying flow as toxic or non-toxic via endorsers, so that benign flow earns a better price). This is the protocol's founding idea and nothing in the vocabulary can express conditioning execution terms on the identity or behaviour class of the sender.",
+            "No element for a rebate flowing back to the order-flow SOURCE — the wallet or app, not the trader.",
+            "No element for the endorser role (a third party who vouches for flow quality and whose vouching is itself an economic act)."
+          ],
+          "forced": [
+            {"symbol": "Aw", "why": "only approximately applies — used to record that execution terms depend on an identity/behaviour classification of the sender. 'Aw' is a binary permission gate (in or out); segmentation is a graded pricing input. Closest available symbol and clearly the wrong shape."}
+          ]
+        },
+        {
+          "name": "1inch",
+          "rank_basis": "OUTSIDE the top 5 (#8 by DEX-aggregator volume: $83.23m 24h, $614.54m 7d, $2.388b 30d across 14 chains, DefiLlama /dex-aggregators, 2026-08-04). Included because the brief names it as a canonical intent system.",
+          "elements": ["Ag", "In", "Rf"],
+          "order_known": true,
+          "residue": [
+            "No element for resolver whitelisting/staking as a barrier to solver entry.",
+            "No element for partial fills of a single signed intent by multiple competing fillers.",
+            "No element for the cross-chain intent settlement pattern in Fusion+ (escrow on both sides released by a shared secret) beyond the candidate 'Rl'.",
+            "No element for the auction being a price DISCOVERY device for a single order rather than a matching device across orders."
+          ],
+          "forced": [
+            {"symbol": "Da", "why": "CONTESTED-REGISTER USE, justified: 1inch Fusion's entire execution model is a Dutch auction in which the acceptable rate descends until a resolver takes it. Without 'Da', Fusion is indistinguishable from an RFQ, which misstates how price is formed and who bears the timing risk. This is the strongest case for 'Da' in my lane."},
+            {"symbol": "Rl", "why": "CANDIDATE-REGISTER. Used for the Fusion+ cross-chain hashlock escrow, which is a genuine resource lock/reservation."},
+            {"symbol": "Gs", "why": "CANDIDATE-REGISTER. Gasless swaps where the resolver pays settlement gas."}
+          ]
+        },
+        {
+          "name": "CoW Swap",
+          "rank_basis": "OUTSIDE the top 5 (#9 by DEX-aggregator volume: $58.51m 24h, $597.65m 7d, $2.479b 30d across 8 chains, DefiLlama /dex-aggregators, 2026-08-04). Included because the brief names it and because it is the only true batch-auction system in the category.",
+          "elements": ["Ba", "In", "Ag", "Rf", "Fl", "Bs", "Em"],
+          "order_known": true,
+          "residue": [
+            "No element for COINCIDENCE OF WANTS — matching two opposing user orders directly against each other so that neither touches a venue and neither pays AMM fees or spread. 'Ba' gives uniform clearing over a batch, which is a necessary condition for CoWs but is not the same mechanism: you can run a batch auction with zero internal matching, and CoW's entire brand is the part 'Ba' does not name.",
+            "No element for solver competition as a repeated game with a ranking, a reward budget and a reputation — 'Em' names the token spend and misses the tournament.",
+            "No element for surplus attribution (measuring how much better than a reference price each solver did, and paying on that basis).",
+            "No element for MEV protection as a stated user guarantee rather than an emergent property."
+          ],
+          "forced": [
+            {"symbol": "Bs", "why": "only approximately applies — solvers post a slashable bond, which is genuinely first-loss capital, but it backs BEHAVIOUR (settling honestly) rather than absorbing a market loss on a claim class, which is how 'Bs' is written."},
+            {"symbol": "Em", "why": "only approximately applies — COW rewards to solvers are a protocol-funded payment for a service rendered, not liquidity-mining emissions to a claim holder."}
+          ]
+        }
+      ],
+      "category_residue": "The brief asks whether 'In'/'Ba'/'Rf'/'Ag' over-resolves this category. It does not — those four symbols genuinely separate the protocols that use them: CoW is the only 'Ba', 1inch Fusion is 'In'+contested 'Da', Jupiter is 'Ag'+'Rf'+'In', DFlow is 'Rf' plus an unnameable auction, and KyberSwap and LiquidMesh are bare 'Ag'. The failure is in the opposite direction and it is severe: the vocabulary spends four symbols on HOW an order is matched and zero on WHO OWNS THE ORDER and how the right to fill it is sold. Three of the top five by real volume — LiquidMesh ($657.73m/day), Binance Wallet ($623.02m/day) and OKX DEX ($461.89m/day), together 58% of the category's 24h volume — are order-flow owners whose entire economic position reduces to the single symbol 'Ag'. The four intent symbols do not begin to differentiate anything until rank 6 and below. Also missing: private/MEV-protected transaction broadcasting; order-flow segmentation and rebates; scheduled/time-sliced execution (and note that contested 'Tw' does NOT cover it); coincidence-of-wants internalization; solver bonding and tournament economics as distinct from emissions; and vertical integration where the router owns the venue.",
+      "identical_decompositions": [["LiquidMesh", "KyberSwap"], ["Binance Wallet", "OKX DEX"]]
+    }
+  ],
+  "completeness_verdict": "Across 27 protocols in four categories, every protocol received a partially correct skeleton and NOT ONE was fully expressible. My rough accounting: the vocabulary named about 60-70% of the mechanism surface in perps and bridges, about 45% in yield, and about 25% in intents/order flow — but that percentage is misleading, because in three of the four categories the UNNAMED part is the part that distinguishes the protocol from its competitors. The sharpest measure is collision: I recorded seven identical or near-identical decompositions, and they are not obscure pairs — they include the top three bridges by TVL ($17.8b combined, all custodial wraps reducing to 'Xf'+'At'+'Aw'+'Rd'+'Gp'), two of the top five perp venues (ApeX and edgeX, both StarkEx off-chain CLOBs), and two of the top three aggregators by volume (Binance Wallet and OKX DEX). Where it failed hardest, in order: (1) YIELD — a strategy/mandate is not an element, not a molecule, and not decomposable into elements; it is a policy over molecules and the model has no such level, which is why Yearn, Beefy and CIAN collapse onto each other and why the largest vault operator in DeFi (Steakhouse, $3.08b) has no symbol for the curator role that IS the product. (2) BRIDGES — 'Xf' and 'Xm' are each doing the work of four or five distinct trust models. (3) INTENTS — no symbol for order-flow ownership, which is what 58% of the category's volume actually is. (4) PERPS — 'Ob' is one symbol for three different matching-engine trust models, and 'Pf' does not describe the tether used by the category's TVL leader. Where the vocabulary genuinely succeeded: the book-versus-pool distinction in perps ('Ob' vs 'Pm'+'Sh') is real and holds up; 'Py' cleanly captures Pendle's split; 'Tr'+'Uc'+'Sv' handles Huma's credit structure well; and 'Of'+'Oa'+'In' describes Across almost exactly. Two candidate symbols earned promotion on this evidence — 'Sv' (Huma's Evaluation Agent) and 'Of' (Across, near-definitional). Two contested symbols proved load-bearing rather than optional: 'Ve' (without it Convex, $456m, is 100% residue) and 'Da' (without it 1inch Fusion is misdescribed as an RFQ). One contested symbol was offered by the brief and I decline it in both places it was tempting: 'Tw' does not describe Pendle's maturity-aware curve and does not describe Jupiter's DCA.",
+  "vocabulary_gaps": [
+    "Delegated allocation mandate — a named agent (curator/allocator/strategist) with discretionary authority over other people's deposits, bounded by supply caps, a timelock and a performance fee. Blocks the single largest capital object in my lane (Steakhouse, $3.08b) and every vault aggregator.",
+    "Strategy as a LEVEL, not a symbol — a standing rebalancing policy expressed over other protocols' mechanisms (target LTV, unwind trigger, harvest cadence). Adding it as an element would be wrong; the model needs a third level above the molecule.",
+    "Order-flow ownership and the sale of fill rights — origination, order-flow auctions, segmentation of toxic vs benign flow, and rebates to the flow source. 58% of the intents category's volume has no other explanation.",
+    "Verification-model differentiation under 'Xm' — split at minimum into single-attestor, app-configurable verifier set, endogenous chain validator set, optimistic assertion, and light-client/validity proof.",
+    "Supply-topology differentiation under 'Xf' — split at minimum into custodial wrap, lock-and-mint escrow, burn-and-mint canonical issuance, and liquidity-network fill with no representation.",
+    "Matching-engine locus and trust — in-consensus (Hyperliquid), operator-run under validity proof (ApeX, edgeX, Lighter), or in a smart contract. 'Ob' is currently one symbol for all three.",
+    "Off-chain custody with legal recourse — the mechanism behind the top three bridges by TVL, currently approximated by 'At' plus a false-strength 'Rd'.",
+    "Maturity-aware / time-parameterised pricing — an invariant that is a function of time-to-expiry (Pendle). Contested 'Tw' is a different mechanism and does not cover it.",
+    "Borrow-fee / utilization tether for perpetuals — a unilateral charge from position to pool, as opposed to 'Pf' which presumes a long-short transfer. Used by the category's TVL leader.",
+    "Vote aggregation and meta-governance, plus liquid wrappers of permanently locked positions — Convex, and the whole liquid-staking/locker pattern where 'Rd' explicitly does not apply.",
+    "Execution-integrity proof — proving a matching RULE was followed (price-time priority, no shadow fills), as distinct from contested 'Zk' which proves state validity. This is Lighter's whole thesis.",
+    "Keeper / automation liveness dependency — the fact that a mechanism requires an external caller to keep running, and degrades or liquidates if that caller stops.",
+    "Administered rate — a yield set by governance vote rather than by utilization, auction or market.",
+    "Auto-compounding / harvest as a mechanism distinct from index accrual ('Ix' names the effect, not the keeper that sells rewards and reinvests).",
+    "Coincidence-of-wants internalization — matching two user orders against each other without touching a venue, distinct from 'Ba' batch clearing.",
+    "Non-slashable insurance fund distinct from 'Bs' staked backstop (I was forced into 'Bs' five times for protocol-owned buffers that cannot be slashed).",
+    "Open-interest-imbalance price impact / inventory-skew pricing (GMX v2) — neither an invariant nor pure oracle pricing.",
+    "Escape hatch / forced withdrawal — censorship resistance under a trusted operator, and the related data-availability-committee vs on-chain-DA distinction.",
+    "Private / MEV-protected transaction submission as a stated execution property, and hidden or dark resting orders ('Sb' covers balances, not order state).",
+    "Inherited-element marking — a way to record that a protocol CONSUMES an element implemented by a dependency rather than implementing it ('Ct' for CIAN and Steakhouse, 'Ps' for Spark, 'Im' for Steakhouse).",
+    "Scheduled / time-sliced execution (DCA, keeper-fired conditional orders) — distinct from contested 'Tw'.",
+    "Margin scope — cross-margin versus isolated versus subaccount, currently invisible under 'Ct'.",
+    "Permissionless market listing / market creation rights, including listing auctions (Hyperliquid HIP-1/HIP-3).",
+    "Tokenized off-chain obligation with a named payer — 'Uc' says credit is undercollateralized without saying what stands behind it."
+  ],
+  "most_surprising": "Ranked by actual money rather than reputation, this vocabulary's worst failures land squarely on the biggest objects: the top three bridges by TVL ($17.8b combined) are custodial wrapped assets that decompose to an identical five symbols containing no verification symbol at all, and 58% of intent/aggregation volume comes from three wallet and exchange front-ends whose entire economic position — owning the order flow — reduces to the single symbol 'Ag', while the four carefully-drawn execution symbols the framework spends on that category only start to differentiate anything at rank six and below."
+}
