@@ -1,5 +1,7 @@
 # The model
 
+> **The running score lives in [`THEOREM-LEDGER.md`](THEOREM-LEDGER.md)** — proved, refuted, contested and open. Plain-English companion: [`PLAIN-ENGLISH.md`](PLAIN-ENGLISH.md).
+
 Nine mathematicians, three schools, one problem. The useful model is not any one
 of their answers — it is three of them stacked, and they stack cleanly because
 each solves what the one below it cannot express.
@@ -135,6 +137,51 @@ admits 57.9% of hybrids and correctly calls this "a structural consequence of
 union-closure, not a fixable bug". So the hybrid column ranks models by how
 union-closed they are, not by how honest they are. OP-CAT at 21% and OP-ORD at
 16% are not less contaminated than GR-LOG at 58%; they are less union-closed.
+
+## 4c. The fragments, reconciled — and one functor for two problems
+
+Three entrants said things that sound contradictory and are not. Sorted by
+fragment, they are one coherent picture:
+
+| fragment | clause shape | closure behaviour |
+|---|---|---|
+| definite productions (8 laws) | Horn, height 1 | up-sets of a poset — union **and** intersection closed, completely distributive |
+| disjunctive requirements | dual-Horn | union-closed only |
+| hazard exclusions | Horn (pure negative) | intersection-closed only |
+| all three together | mixed polarity | **neither** — and not a Moore family |
+
+So OP-LOG's beautiful distributive lattice is real *on the definite fragment*,
+and GR-CAT's finding that the full closed-set family is **not a Moore family** —
+hence admits no single-valued Galois closure operator, with Terra exhibiting four
+incomparable minimal completions — is also real, on the whole system. The
+well-behaved algebra lives in the Horn core; the disjunctions and the
+prohibitions are what break it, exactly as §4b's polarity argument predicts.
+
+**Design consequence, and it is the prescriptive one.** If you want a composable
+algebra, work in the definite fragment and treat disjunctive requirements and
+hazards as an outer filter. You get a real lattice with `⊓ = intersection`
+inside, and you pay for it precisely at the boundary — which is a bounded,
+nameable cost rather than a diffuse one.
+
+**One functor for two problems.** GR-CAT's cleanest result: the forgetful functor
+`U : DecProt → Sub(E)`, from instances typed by `(element, asset)` pairs down to
+flat element sets, has both of our headline failures **in its kernel**. USDT ≡
+USD1, and Terra's cycle is invisible — not two defects but one, the same
+information destroyed by the same forgetting. Anything you want to fix in either
+is fixed by refusing to apply `U`.
+
+This also explains the hazard failures. GR-CAT attempted four hazard promotions
+and **withdrew all four** after testing them against the 72 real decompositions:
+`{Fl,Xm}` (our own model checker's prize) flags Aave v3; X19 flags 14 of 72 live
+protocols. Every failure traces to the same root — a flat element-set carrier
+cannot say *which instance* co-occurs with which. Only X18 survived, with zero
+false positives.
+
+**`{Fl, Xm}` is dead as a membership predicate.** The council split 3–3, but the
+split is not symmetric: the three who promoted it did so because our FINDINGS
+recommended it, and the three who killed it had *tested it against the corpus*.
+Evidence beats provenance. The narrowing `Fl ∧ (Xf|Rl|Of)` survives; the flat
+version does not.
 
 ## 5. Theorems worth proving
 

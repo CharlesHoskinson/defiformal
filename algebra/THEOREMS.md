@@ -1,5 +1,7 @@
 # Proof obligations
 
+> **Status of every obligation below is tracked in [`THEOREM-LEDGER.md`](THEOREM-LEDGER.md).** Do not resolve a contested entry silently.
+
 What a candidate algebra must discharge before we say it exhibits completeness
 and composability. Stated schematically over any model `M = (G, A, ⊕, ⊨)`:
 
