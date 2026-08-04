@@ -209,23 +209,64 @@ recommended it, and the three who killed it had *tested it against the corpus*.
 Evidence beats provenance. The narrowing `Fl ∧ (Xf|Rl|Of)` survives; the flat
 version does not.
 
-## 4d. AFT: the gate came back NO
+## 4d. AFT: I closed this too early — it is live, and there is a decisive cheap test
 
-We considered building on Approximation Fixpoint Theory, because its splitting
-theorem would have handed us T2 with a citation. The gate was: *can we build an
-`A(x,y)` from `Γ` and `Δ` that is `≤_p`-monotone?*
+I reported the gate as "a clean no". Two independent literature lanes say the
+reasoning was too narrow. Recording the reversal rather than quietly editing it.
 
-**No.** `Γ` and `Δ` are **both monotone**, so neither can fill AFT's antitone
-slot, and any `A` assembled from them collapses to a componentwise product —
-**the identical failure that killed bilattices.** Twice now, from two unrelated
-directions, the obstruction is the same: our validity set is the *diagonal* of a
-product, and frameworks built on componentwise structure cannot see a diagonal.
+**What we found computationally, and it is still true:** building
+`A(x,y) = (Γ(x), Δ(y))` from our two monotone operators collapses to a
+componentwise product. That kills *that* construction.
 
-Also established: **stratifiability ≠ union-closure** (witness `Pl ∧ Of → Ct`),
-so even the splitting result would not have transferred cleanly.
+**Why it does not kill AFT.** Three verified results:
 
-This is a real result, not a dead end. It says the thing we are modelling is not
-a nonmonotonic-reasoning problem wearing an unusual hat.
+1. **`Appx(O)` is non-empty for ANY operator**, with a trivial witness, and under
+   `≤_p` it is a **complete lattice** — so a most-precise approximator always
+   exists. DMT Thm 4.5 gives it in closed form:
+   `U_O(x,y) = (glb(O([x,y])), lub(O([x,y])))`. **No hypothesis on `O` anywhere.**
+   So we were asking the wrong question. We do not need to *build* `A` out of `Γ`
+   and `Δ`; we need to identify the single operator `O` whose fixpoints are the
+   admissible sets, and take `U_O`.
+2. **The antitone slot is not a property demanded of the ingredients.** Unfolding
+   `≤_p`-monotonicity, an approximator *is definitionally* a coupled
+   opposite-polarity pair — `A¹` monotone in `x` and antitone in `y`, `A²` the
+   reverse. Monotone envelopes `f^u(x)=sup_{y≤x}f(y)`, `f^ℓ(x)=inf_{y≥x}f(y)`
+   construct it from an arbitrary operator; those envelopes *are* the borders of
+   `U_O`. Our operators being monotone is not the obstruction we took it for.
+3. **The splitting theorem needs no approximator at all.** Verified verbatim from
+   200 dpi page renderings (`pdftotext` mangles every restriction bar in that
+   paper): Thm 3.5's only hypotheses are a product lattice and stratifiability —
+   no monotonicity, no continuity, no approximator. And Prop 3.6/3.7 for least
+   fixpoints *require* the monotonicity we have.
+
+**Also verified, and better than reported:** Thm 3.5 is genuinely an **iff**, and
+the modularity results cover **stable and well-founded** semantics (Thm 3.11,
+Cor 3.12), not merely immediate-consequence fixpoints.
+
+**The real risk is different and worth respecting.** AFT guarantees an answer,
+not a useful one. Denecker's own 2025 paper exhibits a two-line theory where the
+ultimate approximator returns `KK = WF = (⊥,⊤)` — total information loss — and
+says plainly that AFT "is confronted by its limitations in other, relatively
+simple, examples." Precision also costs a polynomial-hierarchy level: ultimate
+stable is `Σ^P_2`-complete against NP.
+
+> **The decisive test, and it is cheap.** Brute-force `U_O` on our smallest
+> known-answer instance. **If `WF` is not `(⊥,⊤)`, AFT is live.** If it is, AFT
+> gives us a well-defined answer carrying no information, and *that* is the
+> honest reason to drop it — not the one I gave.
+
+**Stratifiability ≠ union-closure still stands, and is now canonical rather than
+ours.** The splitting paper's own example `E = {p←¬q,¬r; q←¬p,¬r; s←p,q}` is
+stratifiable with stable models `{p}`, `{q}` whose union is not even a fixpoint —
+and `s ← p,q` has exactly the shape of our `Pl ∧ Of → Ct`, sitting in the top
+stratum, perfectly stratified. Stratifiability constrains information flow
+*between* strata; union-closure is a closure property *of the solution set*. They
+cannot coincide.
+
+**And T2 does not fall out for free.** There is only a *check* for a given
+stratification, no construction of a maximal or coarsest one, and no decidability
+or complexity result. Przymusinski's tightest (dynamic) stratification is
+semantically circular — computing it requires the well-founded model first.
 
 ## 5. Theorems worth proving
 
