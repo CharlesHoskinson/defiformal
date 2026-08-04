@@ -170,6 +170,14 @@ R = [
                                  "Em", "Rd", "Bs", "Rf", "Ba"] + CURVE,
       "An order book matches orders against inventory or claims that some "
       "other element records."),
+    C("R33", [("Im",), ("Cd",), ("Pf",)], ["Li", "Ad", "Sl", "Bs"],
+      "L1 term 3 in the atlas's own unwidened form, kept alongside the widened "
+      "R3 because it costs nothing on the census: every Im/Cd/Pf-bearing "
+      "protocol carries a G06 terminal, so Rd and Ps in R3 were slack I did "
+      "not need to spend.", sort="M"),
+    C("R34", [("Rs",)], ["Vl"],
+      "L22 sharpened: restaked capital is validator capital by definition; "
+      "shared security reuses a stake that some element has to lifecycle."),
 ]
 
 # =============================================================== C stratum
@@ -183,9 +191,6 @@ COMPLETION = [
     C("C2", [("Sl",)], ["Ct", "Pl", "Im", "Cd", "Pf", "Op", "Uc", "Ft",
                         "Rs", "Vl", "Bs", "Tr", "Dp", "Ps"],
       "Completion: socialized loss presupposes a loss-bearing claim class."),
-    C("C3", [("Wq",)], CLAIM + ["Rd", "Vl", "Rs", "Pl", "Im", "Uc", "Ft",
-                                "Ep", "Ps", "Xf", "Op", "Tr", "Bs"],
-      "Completion: a withdrawal queue with no queued claim."),
     C("C4", [("Ep",)], CLAIM + ["Py", "Ft", "Vl", "Rs", "Wq", "Em", "Ba",
                                 "Op", "Sv", "Tr", "Sr", "Oa"],
       "Completion: an epoch boundary with nothing to roll over."),
@@ -215,10 +220,6 @@ COMPLETION = [
                                          "Ft", "Ps", "Rd", "Em", "Ct", "Sv",
                                          "Fl", "Xf"],
       "Completion: a residual-claimant rule with no surplus to allocate."),
-    C("C13", [("At",)], ["Rd", "Ps", "Xf", "Cd", "Uc", "Ft", "Tr", "Sh", "Ix",
-                         "Rb", "Sv", "Aw", "Pl", "Im", "As", "Fz", "Vl", "Rs",
-                         "Bs", "Ct", "Wq", "Dp", "Ep", "Xm", "Oa"],
-      "Completion: an attestation is always about a named subject."),
     C("C14", [("Rb",)], CLAIM + ["Pl", "Im", "Cd", "Vl", "Rs", "Ps", "Rd",
                                  "Sr", "Ep", "Xf", "Wq", "Em", "Tr", "Ct"],
       "Completion: rebasing rescales a claim that some other element records."),
@@ -250,12 +251,22 @@ COMPLETION = [
                          "Em", "Rl", "Of", "Aw", "Pm", "Ba"],
       "Completion: a signed maker quote is against inventory that some other "
       "element holds."),
-    C("C22", [("Aw",)], CLAIM + ["Rd", "Ps", "Xf", "Pl", "Im", "Uc", "Ft",
-                                 "Cd", "Fz", "Tr", "Sv", "At", "Ob", "Rf",
-                                 "In", "Ag", "Bs", "Vl", "Rs", "Wq", "Ep",
-                                 "Ct", "Op", "Xm", "Au", "Gs"],
-      "Completion: an eligibility gate must gate a claim, a transfer or a "
-      "venue. A credential check over an empty protocol is not a mechanism."),
+    C("C22", [("Aw",)], ["Fz", "At", "Uc", "Ft", "Xf", "Rd", "Ps", "Tr", "Sv",
+                         "Vl", "Rs", "Ob", "Rf", "In", "Ag", "Ct", "Pl", "Im"],
+      "Completion: an eligibility gate must gate a claim class, a transfer, an "
+      "obligor or a venue. A credential check over nothing but accounting and "
+      "governance is not a mechanism. (Sharpened from the CLAIM-permissive "
+      "form at zero cost on the census.)"),
+    C("C23", [("At",)], ["Rd", "Ps", "Xf", "Cd", "Uc", "Ft", "Tr", "Sv",
+                         "As", "Vl", "Rs", "Bs", "Aw", "Fz"],
+      "Completion, sharpened form of C13: a reserve or NAV attestation names "
+      "backing, an obligor, or a holder-restriction authority. An attestation "
+      "over a bare share ledger with no backing claim is a marketing "
+      "statement."),
+    C("C24", [("Wq",)], CLAIM + ["Rd", "Vl", "Rs", "Ps", "Ep", "Ft", "Uc",
+                                 "Pl", "Im", "Tr", "Op"],
+      "Completion, sharpened form of C3: a withdrawal queue is against a "
+      "*claim*, not against a bridge leg or a bond."),
 ]
 
 # =============================================================== W stratum
