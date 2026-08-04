@@ -336,8 +336,9 @@ All S3.
 
 Core: empty. Its sole occupant `Rs` is a candidate — see §4.1.
 
-**Core total: 48.** By stratum: S0 3 · S1 12 · S2 12 · S3 17 · S4 8 → wait, see
-the reconciliation table in §6. By group: 3+5+4+2+5+5+5+4+3+1+4+2+3+2 = 48.
+**Core total: 48.**
+By group: 3+5+4+2+5+5+5+4+3+1+4+2+3+2 = 48.
+By stratum: 3+9+11+18+7 = 48 (§6). The two decompositions reconcile.
 
 ### 4.1 Candidates (8) — usable in formulas, flagged
 
@@ -416,9 +417,9 @@ not recur down a column.
 | **S1** | Deterministic transformation inside one settlement domain | `Cp` `Wg` `St` `Cl` `Pm` `Ob` `Rf` `Ag` `Fl` |
 | **S2** | Externally measured or time-conditioned state | `Ba` `Ex` `Tp` `Oa` `At` `Sr` `Ep` `Wq` `Em` `Aw` `Sb` (+ candidates `Sd` `Fz` `Fd`) |
 | **S3** | Contingent obligation, solvency, risk transfer, stability | `Pl` `Im` `Cd` `Uc` `Ft` `Ct` `Li` `Ad` `Sl` `Bs` `Pf` `Op` `Tr` `Cv` `Py` `Rd` `Ps` `As` (+ candidates `Gs` `Sv`) |
-| **S4** | Multi-agent, cross-domain or mutable-control coordination | `In` `Tg` `Up` `Gp` `Xm` `Xf` (+ candidates `Rs` `Rl` `Of`) |
+| **S4** | Multi-agent, cross-domain or mutable-control coordination | `In` `Tg` `Up` `Gp` `Au` `Xm` `Xf` (+ candidates `Rs` `Rl` `Of`) |
 
-Core counts: 3 + 9 + 11 + 18 + 6 = 47, plus `Au` at S4 = 48.
+Core counts by stratum: 3 + 9 + 11 + 18 + 7 = 48.
 
 **Honest correction.** v0.1 called this axis "minimum dependency depth" and
 implied a graph computation. It is not one: `Ag` cannot exist without venues to
