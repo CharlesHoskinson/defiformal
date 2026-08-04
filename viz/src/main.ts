@@ -1,12 +1,15 @@
 import "./styles.css";
 import "./story.css";
 import "./packed.css";
+import "./three.css";
 import {
   ATLAS_REVIEWED, ATLAS_VERSION, ATOM_LABEL, BONDS, CHANGELOG, CONTESTED,
   ELEMENTS, GROUPS, HAZARDS, LAWS, STRATA, hazardsFor, lawsFor,
   type Atom, type Element, type Status,
 } from "./data";
 import { HOWTO, PROTOCOLS, type Protocol } from "./protocols";
+import { Scene3D } from "./scene3d";
+import { Vector3 } from "three";
 
 type Layout = "matrix" | "strata";
 type Order = "group" | "stratum" | "id";
@@ -31,7 +34,10 @@ const state = {
   rule: null as string | null,
   protocol: null as string | null,
   motion: !reduceMotion,
+  three: false,
 };
+
+let scene: Scene3D | null = null;
 
 const el = <K extends keyof HTMLElementTagNameMap>(t: K, c?: string, x?: string) => {
   const n = document.createElement(t);
@@ -283,6 +289,129 @@ function applyProjection() {
   });
 }
 
+/* ------------------------------------------------------------ 3D mode */
+
+function measure() {
+  const host = document.getElementById("table")!;
+  const hr = host.getBoundingClientRect();
+  const cx = hr.width / 2, cy = hr.height / 2;
+  const boxes = new Map<string, { el: HTMLElement; box: any }>();
+  tiles.forEach((t, id) => {
+    if (!t.isConnected) return;
+    const r = t.getBoundingClientRect();
+    const e = ELEMENTS.find((x) => x.id === id)!;
+    boxes.set(id, {
+      el: t,
+      box: {
+        x: r.left - hr.left + r.width / 2 - cx,
+        y: -(r.top - hr.top + r.height / 2 - cy),
+        w: r.width, h: r.height,
+        z: Scene3D.planeZ(e.stratum),
+      },
+    });
+  });
+  return { boxes, w: hr.width, h: hr.height, host };
+}
+
+function enter3D() {
+  const { boxes, w, h, host } = measure();
+  homeBoxes = new Map();
+  boxes.forEach((v, k) => homeBoxes.set(k, { x: v.box.x, y: v.box.y, z: v.box.z }));
+  host.classList.add("is3d");
+  host.style.height = `${h}px`;
+  scene = new Scene3D(host, !state.motion);
+  scene.onSpiralEnd = () => {
+    const ro = document.getElementById("readout");
+    ro?.classList.add("broke-done");
+    announce("The loop broke.");
+  };
+  scene.mount(boxes, w, h);
+  apply3D();
+  host.addEventListener("focusin", on3DFocus);
+  window.addEventListener("resize", re3D);
+}
+
+function exit3D() {
+  const host = document.getElementById("table")!;
+  host.removeEventListener("focusin", on3DFocus);
+  window.removeEventListener("resize", re3D);
+  scene?.dispose();
+  scene = null;
+  host.classList.remove("is3d");
+  host.style.height = "";
+  render();
+}
+
+function on3DFocus(ev: FocusEvent) {
+  const t = (ev.target as HTMLElement).closest(".tile") as HTMLElement | null;
+  if (t?.dataset.id) scene?.focusOn(t.dataset.id);
+}
+
+let reT = 0;
+function re3D() {
+  window.clearTimeout(reT);
+  reT = window.setTimeout(() => {
+    if (!scene) return;
+    const host = document.getElementById("table")!;
+    host.style.height = "";
+    host.classList.remove("is3d");
+    const { boxes, w, h } = measure();
+    homeBoxes = new Map();
+    boxes.forEach((v, k) => homeBoxes.set(k, { x: v.box.x, y: v.box.y, z: v.box.z }));
+    host.classList.add("is3d");
+    host.style.height = `${h}px`;
+    scene.mount(boxes, w, h);
+    apply3D();
+  }, 140);
+}
+
+/** The money shot: members lift out of the plane and assemble in order. */
+function apply3D() {
+  if (!scene) return;
+  const p = proto();
+  const next = new Map<string, Vector3>();
+
+  if (!p) {
+    scene.stopSpiral();
+    const { boxes } = measure3DHome();
+    boxes.forEach((b, id) => next.set(id, new Vector3(b.x, b.y, b.z)));
+    scene.moveTo(next, 8, 420);
+    scene.home_();
+    return;
+  }
+
+  const members = p.syms
+    .map((s) => ELEMENTS.find((e) => e.sym === s))
+    .filter(Boolean) as Element[];
+  const cols = Math.ceil(Math.sqrt(members.length));
+  const GX = 150, GY = 128;
+  members.forEach((e, i) => {
+    const c = i % cols, r = Math.floor(i / cols);
+    next.set(e.id, new Vector3(
+      (c - (cols - 1) / 2) * GX,
+      -(r - (Math.ceil(members.length / cols) - 1) / 2) * GY,
+      340
+    ));
+  });
+  const home = measure3DHome().boxes;
+  ELEMENTS.forEach((e) => {
+    if (next.has(e.id)) return;
+    const b = home.get(e.id);
+    if (b) next.set(e.id, new Vector3(b.x * 1.12, b.y * 1.12, b.z - 420));
+  });
+  scene.moveTo(next, 36, 560);
+  scene.home_();
+
+  if (p.broke?.cycle) {
+    const loopIds = members.filter((e) => ["As", "Rd", "Em"].includes(e.sym)).map((e) => e.id);
+    window.setTimeout(() => scene?.spiral(loopIds, 3), 900);
+  } else scene.stopSpiral();
+}
+
+/** Resting positions, captured from the document layout before lifting. */
+let homeBoxes = new Map<string, { x: number; y: number; z: number }>();
+function measure3DHome() { return { boxes: homeBoxes }; }
+
 /* ------------------------------------------------------------ selection */
 
 function select(id: string | null) {
@@ -383,7 +512,20 @@ function openDetail(e: Element) {
 function setProtocol(id: string | null) {
   state.protocol = state.protocol === id ? null : id;
   history.replaceState(null, "", state.protocol ? `#p=${state.protocol}` : " ");
-  render();
+  if (state.three && scene) {
+    // stay in the scene: update the readout in place, then fly the tiles
+    const old = document.getElementById("readout");
+    old?.remove();
+    const ro = readout();
+    if (ro) document.querySelector(".rail-protocols")!.after(ro);
+    document.querySelectorAll<HTMLButtonElement>(".proto").forEach((b, i) => {
+      const on = PROTOCOLS[i]?.id === state.protocol;
+      b.classList.toggle("on", on);
+      b.setAttribute("aria-pressed", String(on));
+    });
+    applyProjection();
+    apply3D();
+  } else render();
   const p = proto();
   announce(p ? `${p.name} projected onto the table: ${p.syms.length} elements.` : "Protocol cleared.");
   if (p) document.getElementById("readout")?.scrollIntoView({ behavior: state.motion ? "smooth" : "auto", block: "nearest" });
@@ -691,6 +833,15 @@ function render() {
           if (b.textContent === "By family") b.setAttribute("aria-pressed", String(v === "strata"));
         });
       }));
+    ctl.append(seg("Dimension", [["2d", "Flat"], ["3d", "3D"]],
+      () => (state.three ? "3d" : "2d"),
+      (v) => {
+        const want = v === "3d";
+        if (want === state.three) return;
+        state.three = want;
+        if (want) { enter3D(); announce("Three-dimensional view. Drag the background to tilt; it springs back."); }
+        else { exit3D(); announce("Flat view."); }
+      }));
     ctl.append(seg("Reading order", [["group", "By group"], ["stratum", "By stratum"], ["id", "By ID"]],
       () => state.order, (v) => { state.order = v as Order; announce(`Reading order: ${v}.`); render(); }));
     const sw = el("div", "ctl");
@@ -753,8 +904,12 @@ function render() {
 ELEMENTS.forEach((e) => tiles.set(e.id, buildTile(e)));
 
 const h = location.hash.slice(1);
-if (h.startsWith("p=") && PROTOCOLS.some((p) => p.id === h.slice(2))) {
-  state.protocol = h.slice(2);
+const parts = h.split("&");
+const pPart = parts.find((x) => x.startsWith("p="));
+if (pPart && PROTOCOLS.some((p) => p.id === pPart.slice(2))) {
+  state.protocol = pPart.slice(2);
 }
+if (parts.includes("3d")) state.three = true;
 render();
+if (state.three) requestAnimationFrame(() => enter3D());
 if (h && tiles.has(h)) { focusTile(h); select(h); }

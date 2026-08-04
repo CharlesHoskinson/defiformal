@@ -113,8 +113,30 @@ if (/(?:font-size:\s*(?:[0-9.]+)px[^}]*color:\s*var\(--hz-|color:\s*var\(--hz-[f
 
 const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
 const deps = { ...(pkg.dependencies || {}), ...(pkg.devDependencies || {}) };
-for (const banned of ["three", "@react-three/fiber", "babylonjs", "pixi.js"]) {
-  if (deps[banned]) fails.push(`banned scene-graph dependency present: ${banned}`);
+
+/* three.js is admitted by client directive, overriding an earlier council
+   ruling. The ban is therefore replaced by the contracts that ruling was
+   protecting: the DOM must survive, focus must drive the camera, and nothing
+   may move on its own. Renderers that would delete the accessible DOM stay
+   banned outright. */
+for (const banned of ["babylonjs", "pixi.js", "@react-three/fiber"]) {
+  if (deps[banned]) fails.push(`banned renderer present: ${banned} — would replace the accessible DOM`);
+}
+if (deps.three) {
+  const scenePath = join(root, "src/scene3d.ts");
+  if (!existsSync(scenePath)) {
+    fails.push("three is a dependency but src/scene3d.ts is missing");
+  } else {
+    const sc = readFileSync(scenePath, "utf8");
+    if (/WebGLRenderer/.test(sc)) fails.push("WebGLRenderer used — tiles must stay real DOM (CSS3DRenderer only)");
+    if (!/CSS3DRenderer/.test(sc)) fails.push("three present without CSS3DRenderer — the DOM contract is unmet");
+    if (!/focusOn/.test(sc)) fails.push("no focus-driven camera — focus silently vanishes behind planes");
+    if (!/setInterval|autoRotate/.test(sc) === false) fails.push("ambient auto-rotation present — cut by unanimous council ruling");
+    if (!/MAX_YAW|clamp|Math\.min/.test(sc)) fails.push("camera rotation is not clamped");
+    const mainSrc = readFileSync(join(root, "src/main.ts"), "utf8");
+    if (!/focusin/.test(mainSrc)) fails.push("scene not wired to focusin — keyboard focus can land off-camera");
+    notes.push("three.js admitted by client directive; DOM/focus/clamp contracts asserted");
+  }
 }
 
 /* ------------------------------------------------------------ payload ---- */
