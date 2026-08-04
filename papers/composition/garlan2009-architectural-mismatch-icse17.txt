@@ -1,0 +1,487 @@
+                                                     Architectural Mismatch
+                                                                 or
+                                        Why it’s hard to build systems out of existing parts
+                              David Garlan                                     Robert Allen                        John Ockerbloom
+                                                                Computer Science Department
+                                                                 Carnegie Mellon University
+                                                                 Pittsburgh, PA 15213, USA
+
+
+Abstract                                                                                         However, despite all of this effort systematic construction of
+                                                                                            large-scale software applications from existing parts remains an
+Many would argue that future breakthroughs in software productiv-                           elusive goal. Why is this? Clearly some blame can be attributed
+ity will depend on our ability to combine existing pieces of software                       to the lack of existing pieces to build on, or our inability to locate
+to produce new applications. An important step towards this goal                            the desired pieces when they do exist. Over time, we may expect
+is the development of new techniques to detect and cope with mis-                           progress in this area through the creation of more and better com-
+matches in the assembled parts. Some problems of composition are                            ponent libraries as well as improved mechanisms to access their
+due to low-level issues of interoperability, such as mismatches in                          contents.
+programming languages or database schemas. However, in this pa-                                  But even when the components are in hand, there remain other
+per we highlight a different, and in many ways more pervasive, class                        fundamental problems that arise because the chosen parts do not
+of problem: architectural mismatch. Specifically, we use our expe-                          fit together well. In many cases mismatches may be caused by
+rience in building a family of software design environments from                            low-level problems of interoperability, such as incompatibilities in
+existing parts to illustrate a variety of types of mismatch that center                     programming languages, operating platforms, or database schemas.
+around the assumptions a reusable part makes about the structure of                         These are hard problems to overcome, but recent research has been
+the application in which is to appear. Based on this experience we                          making good progress in addressing many of them.
+show how an architectural view of the mismatch problem exposes                                   In this experience report we highlight a different, and in many
+some fundamental, thorny problems for software composition and                              ways more pervasive, class of problem: architectural mismatch.
+suggests possible research avenues needed to solve them.                                    Specifically, we use our experience in building a family of software
+                                                                                            design environments from existing parts to illustrate a variety of
+1 Introduction                                                                              types of mismatch that center around the assumptions a reusable
+                                                                                            part makes about the structure of the application in which it is to
+Many would argue that future breakthroughs in software productiv-                           appear. Based on this experience we show how an architectural
+ity will depend on our ability to combine existing pieces of software                       view of the mismatch problem exposes some fundamental, thorny
+to produce new applications [BS92]. By constructing new systems                             problems for software composition and suggests possible research
+out of reusable building blocks it should be possible to create large,                      avenues needed to solve them.
+high-quality software applications much more rapidly than we now                                 In the next section we begin with a brief, motivating description
+do with the build-from-scratch techniques that dominate most soft-                          of the system that we developed. We then continue in section 2.2
+ware production.                                                                            by describing the approach that we took in attempting to reuse
+    Over the past decade the broad-based interest in supporting com-                        existing tools and components in the construction process. Section 3
+positional approaches to software has led to considerable investment                        describes the problems that we encountered. In section 4 we analyse
+in research and development in reuse [BP89, Kru92], industry stan-                          the underlying causes of those difficulties. In section 5 we conclude
+dards for component interaction (e.g., [Cor91]), domain-specific ar-                        by looking ahead to potential solutions.
+chitectures (e.g., [MG92]), toolkits (e.g., [SG86]), and many other
+related areas.                                                                              2 Wishful Thinking; Harsh Reality
+    This research was sponsored by the National Science Foundation under Grant
+Number CCR-9357792, by the Wright Laboratory, Aeronautical Systems Center, Air              In this section we briefly describe the Aesop system and our de-
+Force Materiel Command, USAF, and the Advanced Research Projects Agency (ARPA)              velopment approach. A complete description of Aesop is beyond
+under grant number F33615-93-1-1330, and by Siemens Corporate Research. The                 the scope of this paper. Here we describe just enough to mo-
+views and conclusions contained in this document are those of the authors and should
+not be interpreted as representing the official policies, either expressed or implied, of   tivate the problems of system composition that we encountered.
+Wright Laboratory, the U.S. Government, or Siemens Corporation. The U.S. Gov-               See [GAO94] for more details on Aesop itself.
+ernment is authorized to reproduce and distribute reprints for Government purposes
+notwithstanding any copyright notation thereon.
+                                                                                            2.1 Aesop
+To appear in Proceedings of the Seventeenth International Con-                              For the past five years, the ABLE Project at Carnegie Mellon Uni-
+ference on Software Engineering, Seattle WA, April 1995.                                    versity has been carrying out research aimed at developing a sound
+                                                                                            engineering discipline of software architecture. One component of
+                                                                                            this research is the construction of tools and environments to sup-
+                                                                                            port architectural design and analysis. The primary thrust of that
+                                                                              ponent repositories, etc.
+        Style                                             Fable
+     Description
+                                 Aesop
+                                                       Environment                The first prototype of the Aesop system was completed in Au-
+                                                                              gust 1993. A second prototype has recently been constructed.
+                                                                              While we are still in the experimental stages of learning how to
+                                                                              exploit architectural style, Aesop has been used to construct a num-
+                                                                              ber of distinct style-oriented environments, including environments
+                                                                              for several styles of pipe-filter system, one for real-time systems
+                                Shared
+                            Infrastructure
+                                                                              definition, and one for generic architectural construction.
+
+
+              Figure 1: Generating Fables with Aesop
+                                                                              2.2 Building Aesop from Existing Components
+                                                                              Two important challenges in building Aesop were (a) the design of
+                                                                              notations and mechanisms to support style definition, and (b) the
+            Tool 1             Tool 2                    Tool n               creation of the environment support infrastructure that would be
+            (GUI)                            ...                              reused to create each of the target environments. Here we focus on
+                                                                              the latter.
+    RPC + Events                                                                  Viewed abstractly, the infrastructure required by Aesop environ-
+                                                                              ments is hardly novel. Indeed, it is now commonplace to construct
+                                                                              environments in this fashion, as open, loosely-integrated collections
+                          Architectural                                       of tools accessing shared data [T + 88, Bam90]. Moreover, graphical
+                          Design Manager                                      editors are common components of drawing packages, case tools
+                                                                              and other user interfaces.
+                                                                                  We were optimistic, therefore, that it would be possible to obtain
+                                                                              most of the infrastructure needed for Aesop by building on existing
+        Figure 2: The Structure of an Aesop Environment                       software. Specifically we wanted to reuse four standard pieces of
+                                                                              software infrastructure:
+development effort has been finding effective mechanisms to ex-                   an object-oriented database
+ploit architectural style [AAG93, PW92]. An architectural style is
+a recurring pattern of system organization that provides an abstract              a toolkit for constructing graphical user interfaces
+framework for some family of applications. Architectural styles can
+                                                                                  an event-based tool integration mechanism
+be exploited, for example, by simplified analysis of critical system
+properties [JC94], by concise, understandable system design nota-                 a RPC mechanism
+tions [MG92], and by tools to aid in the design and implementation
+of complete systems [GAO94].                                                      There were numerous candidates for each of these classes of
+    The Aesop System [GAO94] is our implementation platform for               software. In making our selections we picked systems that a priori
+experimenting with style-oriented architectural development envi-             seemed to have promise for working well together and within our
+ronments. Aesop is, in fact, a kind of environment generator: given           development environment. These were:
+a description of an architectural style, Aesop produces an environ-
+ment tailored to that style. As illustrated in Figure 1, Aesop com-               an object-oriented database: OBST, a public domain OODB.
+bines a style definition with some shared infrastructure to produce               a toolkit for constructing graphical user interfaces: Inter-
+the target environment. The style definition consists of a description             Views, a UI toolkit, together with Unidraw, a reusable frame-
+of (a) the architectural design vocabulary (as a set of object types),             work for creating drawing editors [LVC89, VL90].
+(b) visualizations of design elements suitable for manipulation by
+a graphical editor, and (c) a set of architectural analysis tools to be           an event-based tool integration mechanism: Softbench, a
+integrated into the environment.                                                   commercial event-broadcast mechanism [Ger89].
+    Each Aesop environment—the output of the environment con-
+struction process—is organized in a similar fashion. As sketched in               a RPC mechanism: Mach RPC Interface Generator (MIG),
+Figure 2, an Aesop environment is structured as an open collection                 an RPC stub generator that was well targeted to our host
+of tools that access a central object-oriented database. (These tools              operating system [Dra87].
+may also access databases outside of Aesop, but we won’t discuss              All we had to do was put the subsystems together, a task consider-
+this aspect of the system here.) The database stores architectural            ably simplified by the fact they were all written in either C++ or C,
+designs and provides a high-level, object-oriented interface to the           had all been used in many projects, and we had source code for all
+tools. The database is responsible for providing transactional access         of the parts.
+to shared data, and for enforcing the architectural design constraints            A piece of cake? Unfortunately, no. Two years later, after
+specified by a particular style.                                              considerable effort (approximately 5 person-years), we managed to
+    The tools run as separate processes and access the database               get the pieces working together in our first Aesop prototype. But
+through an RPC mechanism that allows them to make method calls                even then, the size of the system was huge (although we contributed
+to the database. Additionally, the system includes a tool integration         a relatively small proportion of our own code), the performance was
+mechanism based on event broadcast [Rei90]. This allows tools to              sluggish, and many parts of the system were difficult to maintain
+register for changes to database objects and to announce significant          without detailed, low-level understanding of the implementations.
+events to other tools. Typical tools include a graphical editor for               What went wrong? One might argue that we were simply
+creating and browsing architectural designs, and other style-specific         poor systems builders, but we suspect that this experience is not
+tools for carrying out architectural analyses, such as architectural          unfamiliar to anyone who has tried to compose similar kinds of
+consistency checkers [AG94], code generators, architectural com-              software. In the remainder of this paper we examine these problems
+
+
+                                                                          2
+in more detail and then consider some of the root causes for them.            threads of computation simultaneously.
+Our basic conclusion is that many of the hardest problems are best            Error-prone construction process: As construction of the system
+understood as architectural mismatch problems. Each component                 progressed, it became increasingly costly to modify the system, both
+makes assumptions about the structure of the environment in which             because of the time it took to recompile it, and because seemingly
+it is to operate. Most if not all of these assumptions are implicit,          simple modifications (such as the introduction of a new procedure
+and many of them are in conflict with each other.                             call) would break the automated build routines. The recompilation
+                                                                              time was in part due to the code size. But more significantly, it
+3 Problems Encountered                                                        was also because of interlocking code dependencies that required
+                                                                              minor changes to propagate (in the form of required recompilations)
+Focusing on the most salient problems, we encountered six main                throughout a majority of the system.
+difficulties with integrating the four existing software subsystems
+into a new coherent system: excessive code size, poor performance,
+the need to significantly modify the reused subsystems just to get
+                                                                              4 Understanding the Causes of the Problems
+them to work together, the need to re-invent existing functionality           The creators of the reused subsystems that we imported were neither
+in order to match our intended use, unnecessary complexity of                 lazy, stupid, nor malicious. Nor were we using the pieces in ways
+applications built on top of the reused systems, and a complex,               inappropriate to their advertised scope of applicability. Therefore
+error-prone system construction process.                                      the root causes must lie at a deeper systemic level. Each of the
+Excessive code size: Our user interface code image alone was over             packages that we used to construct our system made assumptions
+3 MB, after stripping. Our database server’s code image was 2.3               about the structure of the system and, in particular, the nature of
+MB after stripping. Even small tools (of, say, 20 lines of code)              the environment in which they were to operate. Virtually all of
+interacting with our system were over 600K after stripping. In                our serious problems can be traced back to places where these
+an operating system without shared libraries, running the central             assumptions were in conflict.
+components plus the supporting tools (such as external structure                  To expose the nature of these mismatched assumptions, it is
+editors, specification checkers, and compilers) overwhelmed the               helpful to view the problem from an architectural perspective.
+resources of a moderate-sized workstation.                                    Through that lens a system is viewed abstractly as a configura-
+Poor performance: The system operated much more slowly than                   tion of components and connectors [GS93, PW92]. The compo-
+we wished. Some of the problems occurred through tool-database                nents are the primary computational and storage entities of the
+communication overhead. For example, to save the state of a sim-              system: tools, databases, filters, servers, etc. The connectors de-
+ple architectural diagram (containing, say, 20 design objects) took           termine the interactions between the components: client-server
+several minutes when we first tried it out. Even with performance             protocols, pipes, RPC links, etc. These abstractions are typi-
+tuning, it still took many seconds to perform such an operation.              cally expressed informally as box and line drawings, although re-
+                                                                              cently formal notations for architectural description have begun to
+                                                                              emerge [LAK+ 95, SDK+ 95, AG94, IW95].
+    Furthermore, the excessive code size also contributed to the
+performance problem. Under AFS, files are cached at the local
+workstation in total when they are opened. When tools are large,                  Figure 2 can be seen as an abstract, architectural rendering of an
+the start-up overhead is also large. For example, start-up time of            Aesop-generated environment. At this level of abstraction the main
+an Aesop environment containing a minimal configuration of tools              components are a collection of tools and the architectural design
+took approximately three minutes.                                             manager (which consists primarily of a persistent object base). The
+                                                                              main connectors are the RPC and event-broadcast mechanism com-
+Need to modify external packages: Despite the fact that the reused            munication links. The parts that we attempted to import provided
+packages seemed to run “out of the box” in our initial tests, we              an implementation basis for two components — the database (via
+discovered that once we combined them in a complete system they               OBST) and a graphical user interface tool (via InterViews) — and
+required significant modifications to make them work together at              two kinds of connectors — RPC (via MIG) and event-broadcast
+all. For example, we ended up having to significantly modify the              (via Softbench).
+Softbench client event loop (a critical piece of the functionality)               Turning now to the problem of system integration, we can iden-
+for it to work with the InterViews event mechanism. We also had               tify at least four main categories of architectural mismatch that
+to reverse engineer the memory allocation routines for the OBST               provide a taxonomic framework for understanding how conflicting
+database in order to communicate object handles to external tools.            assumptions arise.
+Need to re-invent existing functions: In some cases, modify-
+                                                                                 1. Assumptions about the nature of the components: Within
+ing the packages was not enough: in addition we had to augment
+                                                                                    this category there are three main areas: (1) infrastructure—
+the packages with different versions of the functions that they al-
+                                                                                    assumptions about the substrate on which the component is
+ready supplied. For example, (as detailed later) we were forced
+                                                                                    built; (2) control model—assumptions about which compo-
+to bypass InterViews’ support for hierarchical data structures be-
+                                                                                    nent(s) (if any) control overall the sequencing of computa-
+cause it did not allow direct, external access to hierarchically nested
+                                                                                    tions; (3) data model—assumptions about the way the envi-
+sub-visualizations. Similarly, we ended up rebuilding a separate
+                                                                                    ronment will manipulate data managed by a component.
+transaction mechanism on top of a serverized version of the OBST
+database software, even thought the original supported transactions.             2. Assumptions about the nature of the connectors: Within
+This was because it did not allow us to share transactions across                   this category we have two areas: (1) protocols—assumptions
+multiple address spaces.                                                            about the patterns of interaction characterized by a connector;
+Unnecessarily complicated tools: Many of the architectural tools                    (2) data model—assumptions about the kind of data that is
+that we wished to develop on top of the infrastructure were logically               communicated.
+simple sequential programs. However, in many cases it was difficult
+                                                                                 3. Assumptions about the global architectural structure:
+to build them as such. This was because the standard interface to
+                                                                                    These include assumptions about the topology of the sys-
+their environment required them to handle multiple, independent
+
+
+
+                                                                          3
+       tem communications and about the presence or absence of                            had originally seen this as an important way of providing modular
+       particular components and connectors.                                              control over the design data.
+   4. Assumptions about the construction process: In many                                 Data Model
+      cases the components and connectors are produced by in-                                 Another assumption made by the packages about components
+      stantiating a generic building block. For example, a database                       was the nature of the data that they would be manipulating. For ex-
+      is instantiated, in part, by providing a schema; an event broad-                    ample, Unidraw provided a hierarchical model for its visualization
+      cast mechanism is instantiated, in part, by providing a set of                      objects. One object could be part of another object, and any manip-
+      events and registrations. In such cases the building blocks                         ulation of the parent (such as changing its position on the screen)
+      frequently make assumptions about the order in which pieces                         would result in a corresponding change in the child. The critical
+      are instantiated and combined in an overall system.                                 assumption made by Unidraw, however, was that all manipulations
+                                                                                          would be of top-level objects. Thus, it was not possible to change
+    In the remainder of this section we show how our system exhib-                        a child object except by having the parent manipulate it. While the
+ited examples of mismatch in each of these categories.                                    data that we wanted to present and manipulate was strongly hier-
+                                                                                          archical, it was important that the user have direct control over the
+4.1 Assumptions about the Nature of Components                                            child objects as well as the root objects. Thus we were faced with
+                                                                                          two alternatives: either to modify Unidraw to support the direct ma-
+Infrastructure                                                                            nipulation of children, or to create a flat Unidraw data structure and
+     One kind of assumption that the packages made about compo-                           to build our own, parallel, hierarchy to support the correspondences
+nents was the nature of the underlying support that they needed                           that we wanted. For our purposes, it turned out to be less costly to
+to perform their operations. This support takes the form of addi-                         re-implement the hierarchy from scratch.
+tional infrastructure that is either provided by the packages or that
+is assumed to exist and therefore used by the packages.                                   4.2 Assumptions about the Nature of the Connec-
+     Each of the packages that we used assumed that they were re-                             tors
+sponsible for providing considerable infrastructure. Since we did
+not need much of this infrastructure, this contributed to our exces-                      Protocols
+sive code size. For example, OBST provided an extensive library of                             When we began the project, we expected to have two kinds
+standard object classes to make general purpose programming eas-                          of interactions between tools. The first interaction, a pure event
+ier. However, we only needed a small number of these classes, since                       broadcast, involved one tool informing others about the state of the
+we have a constrained, special-purpose, data model. (See [GAO94]                          world. For example, the database would announce notifications
+for a detailed description of that model.)                                                that a particular data object had changed. The second interaction, a
+     Additionally, some of the packages made assumptions about                            request/reply pair, would provide a simple means for multiple tools
+the kind of components that would be exist in the final system,                           to be combined to perform a complex manipulation. This connector
+and therefore used infrastructure that did not match our needs. For                       follows the model of a procedure call in that the requesting tool
+example, the Softbench Broadcast Message Server expected all of                           cannot generally continue usefully until the recipient of the message
+the components to have a graphical user interface and therefore used                      has completed its task.
+the X Server to provide communication primitives. This meant that                              The Softbench Broadcast Message Server provides both these
+even those tools that did not have their own user interface (such as                      kinds of interaction by having different kinds of messages. The
+compilers or automatic design manipulation utilities) were required                       first kind of interaction is handled by a “Notify” message, which
+to include the entire X library in their executables.                                     is announced and then forgotten (by the announcing tool). The
+Control Model                                                                             second interaction is handled by a pair of event kinds, “Request”
+    One of the most serious problems that we encountered is the                           and “Reply” messages.
+result of the assumptions made by the packages about what part of                              The problem that we encountered arises because the BMS at-
+the software held the main thread of control. Three of the packages,                      tempts to handle both of the interaction kinds uniformly. In order to
+Softbench, InterViews, and the Mach Interface Generator, used an                          receive any message, a tool registers a “callback” procedure for that
+event loop to deal with communication events. The event loop                              message. When the message arrives, the Softbench client library
+encapsulates the details of the communication substrate and allows                        invokes the callback procedure. This callback technique is used
+the developer to modularize the components’ structure as callbacks.                       for all three kinds of message. This means that when a tool makes
+    Unfortunately, in each of the three packages they used a different                    a request, it does not simply make the request, wait for the reply,
+event loop. Softbench based its main thread of control on the                             and then continue—as one would expect. Instead, the tool must
+X Intrinsics package. InterViews provided its own, object-based                           divide its manipulation into two callback routines, one to be done
+abstraction of an event loop implemented directly in terms of Xlib                        before the call and one to be done after the reply is received. This
+routines. MIG had a handcrafted loop for the server to wait for                           breaks up the natural structure of the tool and makes it difficult to
+Mach messages. In each case the control loop was provided as part                         understand.
+of the package, and in each case the control loop was not compatible                           More importantly, if any other messages (such as change noti-
+with the others. 1                                                                        fications) are received by the BMS before the reply message, then
+    This meant that we had to reverse engineer the InterViews event                       those will be delivered to the tool and their callbacks invoked be-
+loop and modify it to poll for Softbench events before we were able                       fore the reply is processed. This means, in effect, that if a tool
+                                                                                          wishes to delegate any part of its processing, then it must be able
+to have the user interface respond to events. In the time that we
+had available for the project, we were unable to modify the MIG                           to deal with multiple threads of control simultaneously, one for
+                                                                                          each different notification message that might be delivered before a
+control loop so that the server could receive events, although we
+                                                                                          reply is received. Thus, Softbench’s handling of the request/reply
+   1
+     Note that since the event loops were operating in the same process, it was not       protocol forces tools to handle concurrency even if they would be
+possible to use simple event gateways to bridge different event-control regimes.          much simpler to construct and understand as sequential programs.
+                                                                                          This led us to use Mach RPC instead of Softbench for the database
+
+
+                                                                                      4
+interaction since it is the most critical and heavily used request path
+in our system.                                                                                         Tool Specific
+                                                                                                       Description
+Data Model
+    Just as the packages made assumptions about the kind of data                                                  (depends on)
+that would be manipulated by the components, so did they make
+assumptions about the data that would be communicated over the                            Generic Application Specific Code
+connectors. In particular, the two communication mechanisms that                                (written in C)
+we used, Mach RPC and Softbench, made different assumptions
+about the data. Mach RPC is intended to support integration be-
+tween arbitrary C programs, and so it provides a C-based model:
+                                                                                                                  (depends on)
+data passed through procedure calls is based on C structs and arrays.
+Softbench, on the other hand, assumes that most communication
+would be about files and the data contained in them, and so all data                              Infrastructure
+                                                                                                  (Supplied by Package)
+to be communicated by Softbench is represented as ASCII strings.
+Since the main kind of data manipulated by our tools was database
+and C++ object pointers, we were required to develop a translation
+routines and intermediate interfaces between the different models.                      Figure 3: The Assumed Dependency Structure
+This also caused the most significant performance bottlenecks in the
+system due to translation overheads on every call to the database.                      Softbench           MIG                  OBST
+The problem occurred despite the fact that we were working in C
+and C++ exclusively, and that we had compatible data models in all
+of the components that we developed.
+
+4.3 Assumptions About Global Architectural Struc-
+    ture
+It turned out that OBST assumes that the communications in the
+system formed a star with the database at the center. Specifically,
+it assumed that all of the tools would be completely independent of
+each other. This assumption meant that there would be no direct
+interactions between tools, and so any concurrency among tools
+represented conflict rather than cooperation. Based on this assump-                      Figure 4: The Actual Dependency Structure
+tion, OBST selected a per tool, blocking transaction mechanism.
+Since, as we mentioned earlier, the tools in our environment could
+coordinate their efforts by delegating part of their computation to           categories of code: the three previous categories plus the code
+other tools, this model was unacceptable; either cooperating tools            generated by other tools. It was the integration of the code generated
+would deadlock by holding conflicting locks, or conflicting tools             by different tools that presented us the most difficulty in the build
+could create inconsistencies when a tool attempted to release the             process. This was because we had to take the generated code and
+database to a cooperating tool.                                               make it look like whatever “generic” structure the other tools were
+                                                                              expecting. (These dependencies are shown in figure 4.) So, for
+4.4 Assumptions about the Construction Process                                example, we had to take the output of the OBST pre-processor and
+                                                                              specify the resulting procedure calls in the notation of the Mach
+Several of the packages assumed that there were three categories              Interface Generator, run MIG to generate a serverized version of
+of code being combined in the system: first, existing infrastructure          the database, and then rebuild all of the tools (including rebuilding
+(such as the X libraries and the package’s own runtime libraries)             and linking the Softbench wrapper code) to recognize the new client
+that would not change; second, application code developed in a                interface. It was these conflicting assumptions about the steps in
+generic programming language that would use the infrastructure                the construction process that resulted in lengthy and complicated
+but otherwise be self-contained; third, code developed using the              builds.
+notations developed specifically for the package that would control
+and integrate the rest of the application.
+    These assumptions (shown graphically in figure 3) led to a
+                                                                              5 The Way Forward?
+particular process for building the system: First the generic parts           We believe that the kind of experiences we encountered are common
+of the application are built and possibly specified for the package’s         whenever large-scale components are assembled into a new system.
+build tool, and then the package specific sections are preprocessed,          And we are convinced that the really hard problems do not go away
+compiled, and then linked. Generally, a change to the interface of            once you solve low-level issues such as language interoperability,
+the generic section required both a respecification and rebuild of the        platform independence, and heterogeneous data manipulation. Fur-
+package specific section. This makes sense in isolation, because              ther, we have suggested that the root causes can best be understood
+we think of the packages as providing “glue” code to integrate the            in terms of architectural mismatches.
+parts of the generic application. For example, the Mach Interface                 What can be done about this? There seem to be two comple-
+Generator assumed that the rest of the code was a flat collection of          mentary approaches that can improve the situation. The first is to
+C procedures, and that its specification described the signature of           improve the way we build components that are intended to be com-
+all of these procedures.                                                      posed into larger systems. The second is to provide new notations,
+    In our case, however, we had multiple packages that made these            mechanisms, and tools that will enable designers to do a better job
+kinds of assumptions. This meant that there were in fact four                 of this. In particular, we would single out four necessary aspects of
+
+
+                                                                          5
+a long-term solution:                                                         in this paper: Mike Baumann, Steven Fink, Doron Gan, Huifen
+                                                                              Jiang, Curtis Scott, Brian Solganick, and Peter Su. Finally, we
+   1. Make architectural assumptions explicit. One of the most                thank Ralph Johnson and John Vlissides for their comments on an
+      significant problems is that architectural assumptions made             earlier draft of this paper.
+      by a reusable component are never documented. Part of the
+      problem is attributable to a culture in which documentation is
+      generally lacking. But it is also the case that we have lacked          References
+      the proper vocabulary and structuring techniques for express-
+      ing these assumptions. For example, while it may be common              [AAG93]    Gregory Abowd, Robert Allen, and David Garlan. Us-
+      for good documentation of an abstract datatype to explicitly                       ing style to understand descriptions of software archi-
+      list preconditions for calling the interface routines, we have no                  tecture. In Proceedings of SIGSOFT’93: Foundations
+      comparable conventions or theory for documenting many of                           of Software Engineering, Software Engineering Notes
+      the architectural assumptions listed in Section 4. While docu-                     18(5), pages 9–20. ACM Press, December 1993.
+      menting assumptions will not make mismatches disappear, at              [AG94]     Robert Allen and David Garlan. Formalizing architec-
+      least it will be possible to detect problems early on. Some ini-                   tural connection. In Proceedings of the Sixteenth Inter-
+      tial steps towards this goal can be seen in recent work on archi-
+      tecture description languages [AG94, LAK + 95, SDK+ 95].
+                                                                                         national Conference on Software Engineering, pages
+                                                                                         71–80, Sorrento, Italy, May 1994.
+   2. Construct large pieces of software using orthogonal sub-
+                                                                              [Bam90]    J. Bamberger. STARS/users workshop: Final re-
+      components. While most large reusable subsystems are them-
+                                                                                         port - issues for discussion groups. Technical Report
+      selves constructed out of smaller sub-components, it is rare
+                                                                                         CMU/SEI-90-TR-32 ADA235776, Software Engineer-
+      that one can separate the pieces or change the way in which
+                                                                                         ing Institute (Carnegie Mellon University), 1990.
+      those sub-components are combined. As Parnas has long
+      argued [Par72], each module should hide certain design as-              [BO92]     Don Batory and Sean O’Malley. The design and im-
+      sumptions. Unfortunately, the architectural design assump-                         plementation of hierarchical software systems with
+      tions of most systems are spread throughout the constituent                        reusable components. ACM Transactions on Software
+      modules. Ideally one would like to be able to tinker with the                      Engineering and Methodology, 1(4):355–398, October
+      architectural assumptions of a reused system by substituting                       1992.
+      different modules for the ones already there. An example of
+      such orthogonalization can be found in recent work aimed at             [BP89]     Ted J. Biggerstaff and Alan J. Perlis. Software Reusabil-
+      adopting a building-block approach to systems construction,                        ity. ACM Press, 1989.
+      such as [BO92, BSST93].
+                                                                              [BS92]     Barry Boehm and William Scherlis. Megaprogram-
+   3. Provide techniques for bridging mismatches. Even with good                         ming. In Proceedings of Software Technology Confer-
+      documentation and orthogonal modularization, mismatches                            ence, DARPA. ARPA, 1992.
+      will inevitably occur. Currently such mismatches must be
+      dealt with by brute force: hacking low-level communication              [BSST93] Don Batory, Vivek Singhal, Marty Sirkin, and Jeff
+      code, interposing special purpose data translators, etc. We                      Thomas. Scalable software libraries. In Proceedings
+      would like to see a much more scientifically based approach                      of SIGSOFT’93, pages 191–199, December 1993.
+      to this. At the very least it would be desirable to have a              [Cor91]    The Common Object Request Broker: Architecture
+      cookbook of standard techniques. Better still would be tools                       and specification. OMG Document Number 91.12.1,
+      to aid with wrapping, data translation, etc. Recent research                       December 1991. Revision 1.1 (Draft 10).
+      addressing this issue includes attempts to automate the use of
+      mediating protocols and wrapper construction [YS94].                    [Dra87]    R. R. Draves. MIG - the MACH interface genera-
+                                                                                         tor, August 1987. Comment 1 by schlenk, Sat Jul 2
+   4. Develop sources of architectural design guidance. Develop-
+                                                                                         15:08:47 1988 MIG seem very similiar to the SUN
+      ing good intuitions about what kinds of architectural com-                         rpcgen facility. Parameters are described in a formal
+      ponents work well together is not easy. Currently it is done
+                                                                                         language and compiled into stubs.
+      by trial and error, and it takes skilled designers many years
+      to acquire expertise at putting systems together from parts.            [GAO94]    David Garlan, Robert Allen, and John Ockerbloom. Ex-
+      Even then this expertise is typically confined to a specific                       ploiting style in architectural design environments. In
+      application domain (such as management information sys-                            Proceedings of SIGSOFT’94: Foundations of Software
+      tems, or signal processing). We need to find ways codify and                       Engineering. ACM Press, December 1994.
+      disseminate principles and rules for composition of software.
+      Progress towards this goal can be seen in the development               [Ger89]    Colin Gerety. HP Softbench: A new generation of
+      of handbooks for reuse of design patterns [GHJV94], archi-                         software development tools. Technical Report SESD-
+      tectural design environments [GAO94], and design tools for                         89-25, Hewlett-Packard Software Engineering Systems
+      certain application domains [Lan90].                                               Division, Fort Collins, Colorado, November 1989.
+                                                                              [GHJV94] Erich Gamma, Richard Helm, Ralph Johnson, and John
+Acknowledgements                                                                       Vlissides. Design Patterns: Elements of Reusable
+                                                                                       Object-Oriented Design. Addison-Wesley, 1994.
+Aesop embodies many ideas from collaborative work with fellow
+researchers. In particular, our work has been strongly influenced by          [GS93]     David Garlan and Mary Shaw. An introduction to soft-
+Daniel Jackson, Mary Shaw, and Jeannette Wing, whom we grate-                            ware architecture. In V. Ambriola and G. Tortora, edi-
+fully acknowledge. We would also like to thank the students and                          tors, Advances in Software Engineering and Knowledge
+staff who have contributed to the Aesop implementation described
+
+
+                                                                          6
+            Engineering, pages 1–39, Singapore, 1993. World Sci-          [VL90]   John M. Vlissides and Mark A. Linton. Unidraw:
+            entific Publishing Company. Also appears as SCS and                    A framework for building domain-specific graphical
+            SEI technical reports: CMU-CS-94-166, CMU/SEI-                         editors. ACM Transactions on Information Systems,
+            94-TR-21, ESC-TR-94-021.                                               8(3):237–268, July 1990.
+[IW95]      Paola Inverardi and Alex Wolf. Formal specification           [YS94]   Daniel M. Yellin and Robert E. Strom. Interfaces, pro-
+            and analysis of software architectures using the chem-                 tocols, and the semi-automatic construction of software
+            ical, abstract machine model. IEEE Transactions on                     adaptors. Proceedings of OOPSLA’94, October 1994.
+            Software Engineering, 1995. To appear.
+[JC94]      G.R. Ribeiro Justo and P.R. Freire Cunha. Deadlock-
+            free configuration programming. In Proceedings of
+            the Second International Workshop on Configurable
+            Distributed Systems, March 1994.
+[Kru92]     Charles W. Krueger. Software reuse. Computing Sur-
+            veys, 24(2):131–183, June 1992.
+[LAK+ 95] David C Luckham, Lary M. Augustin, John J. Kenney,
+          James Veera, Doug Bryan, and Walter Mann. Specifica-
+          tion and analysis of system architecture using Rapide.
+          IEEE Transactions on Software Engineering, 1995. To
+          appear.
+[Lan90]     Thomas G. Lane. A design space and design rules for
+            user interface software architecture. Technical Report
+            CMU/SEI-90-TR-22 ESD-90-TR-223, Carnegie Mel-
+            lon University, Software Engineering Institute, Novem-
+            ber 1990.
+[LVC89]     Mark A. Linton, John M. Vlissides, and Paul R. Calder.
+            Compusing user interfaces with interviews. IEEE Com-
+            puter, 22(2), February 1989.
+[MG92]      Erik Mettala and Marc H. Graham. The domain-
+            specific software architecture program. Technical Re-
+            port CMU/SEI-92-SR-9, Carnegie Mellon Software
+            Engineering Institute, June 1992.
+[Par72]     D. L. Parnas. On the criteria to be used in decomposing
+            systems into modules. Communications of the ACM,
+            15(12):1053–1058, December 1972.
+[PW92]      Dewayne E. Perry and Alexander L. Wolf. Founda-
+            tions for the study of software architecture. ACM SIG-
+            SOFT Software Engineering Notes, 17(4):40–52, Oc-
+            tober 1992.
+[Rei90]     Steven P. Reiss. Connecting tools using message pass-
+            ing in the field program development environment.
+            IEEE Software, July 1990.
+[SDK+ 95] Mary Shaw, Robert DeLine, Daniel V. Klein,
+          Theodore L. Ross, David M. Young, and Gregory Ze-
+          lesnik. Abstractions for software architecture and tools
+          to support them. IEEE Transactions on Software Engi-
+          neering, 1995. To appear.
+[SG86]      Robert W. Scheifler and Jim Gettys. The X window
+            system. ACM Transactions on Graphics, 5(2):79–109,
+            April 1986.
+[T+ 88]     Richard N. Taylor et al. Foundations for the Arca-
+            dia environment architecture. In Proceedings of the
+            ACM SIGSOFT/SIGPLAN Software Engineering Sym-
+            posium on Practical Software Development Environ-
+            ments, Boston, MA, November 1988. Published as
+            SIGPLAN NOTICES, 24(2).
+
+
+
+                                                                      7
+
