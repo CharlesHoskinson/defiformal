@@ -131,18 +131,52 @@ export const ELEMENTS: Element[] = [
   { id: "E059", sym: "Vl", name: "Staking & validator lifecycle", group: "G16", stratum: 3, atom: "N", status: "candidate", def: "Delegation, activation, exit, reward accrual and penalty attribution for consensus-securing capital.", note: "Added after review: decomposing a liquid-staking protocol left the entire staking mechanism as residue." },
 ];
 
-export const PROVISIONAL = [
-  { sym: "Bc", name: "Bonding-curve issuance", gate: "Primary-issuance semantics that resist AMM decomposition" },
-  { sym: "Tw", name: "Time-weighted AMM execution", gate: "Evidence it is not an AMM plus Ep" },
-  { sym: "Da", name: "Dutch-auction descent", gate: "Two lineages and one non-attributable failure mode" },
-  { sym: "Cg", name: "Credit delegation", gate: "Obligations not reconstructible from Pl/Uc plus Au" },
-  { sym: "Ir", name: "Insurance reserve fund", gate: "A state machine distinct from Bs and Sl" },
-  { sym: "Zk", name: "Verifiable state proof", gate: "Finance-specific proof semantics, not generic infrastructure" },
-  { sym: "Ve", name: "Vote-escrow allocation", gate: "A transition not decomposable into lock + checkpoint + Em + governance" },
-  { sym: "Kg", name: "Credential-gated transfer", gate: "Failure semantics distinct from Aw" },
-  { sym: "Ua", name: "Unified-balance ledger", gate: "A non-double-spendable reconcilable claim, not a dashboard total" },
-  { sym: "Sq", name: "Shared ordering commitment", gate: "Failures not reducible to consensus plus Xm" },
+/** The contested register. Not usable in a formula without a note.
+ *  Separation from the matrix means "note required" — it is not a pull-out
+ *  for layout convenience. */
+export const CONTESTED = [
+  { id: "P001", sym: "Bc", name: "Bonding-curve issuance", gate: "Primary-issuance semantics that resist AMM decomposition" },
+  { id: "P002", sym: "Tw", name: "Time-weighted AMM execution", gate: "Evidence it is not an AMM plus Ep" },
+  { id: "P003", sym: "Da", name: "Dutch-auction descent", gate: "Two lineages and one non-attributable failure mode" },
+  { id: "P004", sym: "Cg", name: "Credit delegation", gate: "Obligations not reconstructible from Pl/Uc plus Au" },
+  { id: "P005", sym: "Ir", name: "Insurance reserve fund", gate: "A state machine distinct from Bs and Sl" },
+  { id: "P006", sym: "Zk", name: "Verifiable state proof", gate: "Finance-specific proof semantics, not generic infrastructure" },
+  { id: "P007", sym: "Ve", name: "Vote-escrow allocation", gate: "A transition not decomposable into lock + checkpoint + Em + governance" },
+  { id: "P008", sym: "Kg", name: "Credential-gated transfer", gate: "Failure semantics distinct from Aw" },
+  { id: "P009", sym: "Ua", name: "Unified-balance ledger", gate: "A non-double-spendable reconcilable claim, not a dashboard total" },
+  { id: "P010", sym: "Sq", name: "Shared ordering commitment", gate: "Failures not reducible to consensus plus Xm" },
 ];
+
+/** Classification changes made during the atlas's own council review.
+ *  Surfaced per element and in an expandable log — never as marks on the
+ *  primary layout. */
+export const CHANGELOG: Record<string, { from: string; to: string; why: string }> = {
+  E048: { from: "core", to: "candidate", why: "The finance-specificity gate applied to Zk applies here too, and had not been applied symmetrically." },
+  E049: { from: "core", to: "candidate", why: "Sat in the core set while the open register conceded its recurrence evidence was outstanding." },
+  E051: { from: "core", to: "candidate", why: "Recurrence evidence thin; the original name was written around an execution-model construct." },
+  E053: { from: "core", to: "candidate", why: "Named in only one or two implementations against a three-team threshold." },
+  E054: { from: "core", to: "candidate", why: "Admitted on two named instantiations while the same criterion was used to reject another candidate." },
+  E056: { from: "absent", to: "candidate", why: "Added: the table could not distinguish a bearer token from a registered security." },
+  E057: { from: "absent", to: "candidate", why: "Added: no way to express what a waterfall does in a workout as opposed to in the offering memorandum." },
+  E058: { from: "absent", to: "candidate", why: "Added: adverse selection had nowhere to land as a transfer rule." },
+  E059: { from: "absent", to: "candidate", why: "Added: decomposing a liquid-staking protocol left the entire staking mechanism as residue." },
+  E060: { from: "absent", to: "candidate", why: "Added: a funding transfer is not a position; hedge maintenance was unexpressible." },
+};
+
+export const ATLAS_VERSION = "v1.0";
+export const ATLAS_REVIEWED = "2026-08-04";
+
+/** Laws naming an element, computed from the law text. */
+export function lawsFor(sym: string): Law[] {
+  const re = new RegExp(`\\b${sym}\\b`);
+  return LAWS.filter((l) => re.test(l.rule));
+}
+
+/** Hazard rules naming an element. Membership only — never a magnitude. */
+export function hazardsFor(sym: string): Hazard[] {
+  const re = new RegExp(`\\b${sym}\\b`);
+  return HAZARDS.filter((h) => re.test(h.combo));
+}
 
 export interface Law { id: string; rule: string; async: "yes" | "no"; isNew?: boolean }
 

@@ -29,6 +29,21 @@ worked example is Appendix A.
    [`council/COUNCIL-LOG.md`](council/COUNCIL-LOG.md); the change itself is
    `docs/v0.1-to-v1.0.patch`.
 
+## The visualisation
+
+ — a browser view of the atlas. Build with 
+in ; the result is a single self-contained 
+(**16.3 KB gzipped** against a 150 KB budget, no external requests).
+
+Its design brief was decided by a six-lane blinded design council — see
+ for the proposal, design
+decisions, five capability specs and task list, and
+ for the findings and preserved dissent.
+
+ runs the conformance harness that gates the build: colour-vision
+simulation over both themes, text contrast, payload budget, banned dependencies,
+and a data/document sync check.
+
 ## Layout
 
 ```
@@ -40,6 +55,11 @@ council/
   REVIEW-BRIEF.md           the review contract
   reports/                  raw per-lane verdicts (JSON)
   COUNCIL-LOG.md            findings register, dispositions, preserved dissent
+viz/                        the visualisation (vanilla TS, no framework)
+  src/data.ts               typed export, kept in sync with the document
+  scripts/conformance.mjs   the build gate
+openspec/changes/design-atlas-visualization/
+                            the decided design brief
 docs/
   UNIFIED-DEFI-ELEMENT-TABLE.md   <- v1.0, the deliverable
   unified-v0.1.md                  pre-council draft
