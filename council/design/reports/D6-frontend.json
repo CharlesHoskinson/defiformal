@@ -1,0 +1,69 @@
+I'll read the design brief first, then the full design bundle, and rule only on front-end architecture and performance.{
+  "lens": "Front-end architecture and performance",
+  "verdict": "changes_requested",
+  "summary": "Cut three.js CSS3D and the trackball. Build ~68 real DOM tiles in 2D with CSS transforms (or View Transitions) for TABLE/STRATA only; keep interaction on the DOM, not a camera.",
+  "tension_rulings": [
+    {
+      "tension": 1,
+      "ruling": "cut",
+      "why": "SPHERE/HELIX/GRID are the only layouts that justify a 3D engine; they assert nothing and force the wrong instrument for a static reference table."
+    },
+    {
+      "tension": 4,
+      "ruling": "cut",
+      "why": "Trackball 3D makes tile text non-parallel and unreadable; for 68 labeled tiles the right instrument is 2D DOM layout, not CSS3DRenderer."
+    }
+  ],
+  "findings": [
+    {
+      "id": "F1",
+      "severity": "high",
+      "section": "Part 2 — Proposed technical direction (three.js CSS3D); Part 3 tension 4",
+      "problem": "CSS3DRenderer for ~68 tiles is the wrong instrument: TABLE and STRATA are 2D arrangements; SPHERE/HELIX/GRID add camera weight without data meaning. Readers get heavier code, worse text, and no structural gain over plain DOM.",
+      "instruction": "Drop three.js and CSS3DRenderer. Implement tiles as ordinary focusable DOM (button/article) in a 2D layout engine: CSS grid/absolute positions plus transform-based moves between TABLE and STRATA. If motion is needed, use FLIP or the View Transitions API—not a scene graph.",
+      "basis": "principle"
+    },
+    {
+      "id": "F2",
+      "severity": "high",
+      "section": "Part 2 — three.js CSS3D + trackball; Part 3 tension 4",
+      "problem": "CSS3D applies matrix3d every frame under a trackball. Non-integer scale and off-axis planes blur glyph rasterisation; ~68 permanent composited layers stress GPU memory; mobile Safari is the first place continuous 3D-layer updates feel janky or drop frames.",
+      "instruction": "Do not run per-frame matrix updates on tiles. Keep transforms axis-aligned (or 2D only), animate layout in short bursts then park at identity/translate, and target one shared compositor path—not 68 live 3D layers.",
+      "basis": "principle"
+    },
+    {
+      "id": "F3",
+      "severity": "high",
+      "section": "Part 2 — Proposed technical direction (implied single-file / stack weight)",
+      "problem": "Inlining three.js plus React into one self-contained HTML file is a large payload for a reference atlas. Most of that weight is scene/camera/controls the semantic layouts do not need.",
+      "instruction": "Cap the deliverable at ≤150 KB transfer (gzipped), ideally ≤100 KB. Cut React and three.js entirely; vanilla DOM + CSS (+ optional <20 KB animation helper). If a framework stays, it must not pull a 3D library.",
+      "basis": "principle"
+    },
+    {
+      "id": "F4",
+      "severity": "high",
+      "section": "Part 2 — atlas-interaction (selection, camera); trackball + tiles",
+      "problem": "Trackball ownership of pointer drag conflicts with clickable, focusable, keyboard-navigable tiles. Expected failure: small pointer moves become orbit/pan so clicks miss; touch users cannot distinguish scroll/drag from activate; tab order stays document order while the camera reorders what looks adjacent.",
+      "instruction": "Remove trackball as the primary navigation model. Pan/zoom only if optional and gesture-scoped (e.g. background/chrome, not tiles), with click threshold and pointer capture rules; tiles remain normal buttons with stable DOM focus order and visible focus rings.",
+      "basis": "principle"
+    },
+    {
+      "id": "F5",
+      "severity": "medium",
+      "section": "Part 2 — atlas-accessibility (non-3D fallback); CSS3D claim",
+      "problem": "CSS3D needs no WebGL, so a WebGL fallback is the wrong gate. A 3D-transform/trackball path still fails reduced-motion users, off-axis readability, and rare missing preserve-3d—atlas-accessibility already admits a non-3D path but the brief leaves it secondary.",
+      "instruction": "Make the 2D DOM table the primary path, not a fallback. Do not gate on WebGL. If any 3D or large motion remains, respect prefers-reduced-motion with an immediate static 2D layout and no trackball.",
+      "basis": "principle"
+    },
+    {
+      "id": "F6",
+      "severity": "medium",
+      "section": "Part 2 — three.js CSS3D if retained",
+      "problem": "If three.js ships anyway, production will feel broken first from unreadable off-axis type, second from drag-vs-click/focus fights on tiles, third from mobile Safari compositing cost on ~68 live CSS3D layers under continuous camera updates.",
+      "instruction": "If three.js is kept despite F1: lock the camera to face-on for reading modes; disable trackball while focusing a tile; billboard tiles to the camera or freeze at orthographic face-on; hard-cap concurrent animated layers and test iOS Safari as a release gate.",
+      "basis": "principle"
+    }
+  ],
+  "what_to_keep": "Real DOM tiles that stay clickable, focusable, and keyboard-navigable—the brief’s only sound technical instinct.",
+  "dissent_note": "A visual or delight-first lens will defend the trackball demo aesthetic; that conflicts with readable reference-table performance."
+}

@@ -1,0 +1,233 @@
+export type Status = "core" | "candidate" | "provisional" | "limit";
+export type Atom = "N" | "R" | "I";
+
+export interface Element {
+  id: string;
+  sym: string;
+  name: string;
+  group: string;
+  stratum: 0 | 1 | 2 | 3 | 4;
+  atom: Atom;
+  status: Status;
+  def: string;
+  note?: string;
+  disc?: string;
+}
+
+export interface Group {
+  id: string;
+  name: string;
+  boundary: string;
+}
+
+export const GROUPS: Group[] = [
+  { id: "G01", name: "Claims & accounting", boundary: "How is a proportional claim recorded?" },
+  { id: "G02", name: "Pool pricing", boundary: "How is a price derived from inventory?" },
+  { id: "G03", name: "Execution", boundary: "How is a trade matched and cleared?" },
+  { id: "G04", name: "Liquidity catalysis", boundary: "How is transient liquidity sourced?" },
+  { id: "G05", name: "Credit", boundary: "How is an obligation created?" },
+  { id: "G06", name: "Solvency", boundary: "How is insolvency detected and resolved?" },
+  { id: "G07", name: "Risk transfer", boundary: "How is exposure moved between parties?" },
+  { id: "G08", name: "Truth", boundary: "Where does external fact enter?" },
+  { id: "G09", name: "Time & queueing", boundary: "How is a claim deferred?" },
+  { id: "G10", name: "Incentives", boundary: "How is participation paid for?" },
+  { id: "G11", name: "Control & authority", boundary: "Who may change what, and when?" },
+  { id: "G12", name: "Cross-domain", boundary: "How does state or value cross a trust boundary?" },
+  { id: "G13", name: "Stability", boundary: "How is a peg defended?" },
+  { id: "G14", name: "Access & privacy", boundary: "Who may hold, and who may see?" },
+  { id: "G15", name: "Security reuse", boundary: "How is slashable capital reused?" },
+  { id: "G16", name: "Staking", boundary: "How is consensus-securing capital committed and returned?" },
+];
+
+export const STRATA = [
+  { id: 0, label: "S0", name: "Ledger-local claims", desc: "Nothing outside the ledger is required." },
+  { id: 1, label: "S1", name: "Deterministic transformation", desc: "One settlement domain, no external fact." },
+  { id: 2, label: "S2", name: "Measured or time-conditioned", desc: "External measurement or the passage of time." },
+  { id: 3, label: "S3", name: "Obligation & solvency", desc: "Contingent claims that can fail." },
+  { id: 4, label: "S4", name: "Multi-agent & cross-domain", desc: "Coordination across parties or trust boundaries." },
+];
+
+export const ATOM_LABEL: Record<Atom, string> = {
+  N: "async-native",
+  R: "async-repairable",
+  I: "async-impossible",
+};
+
+export const ELEMENTS: Element[] = [
+  // G01
+  { id: "E001", sym: "Sh", name: "Pro-rata share accounting", group: "G01", stratum: 0, atom: "R", status: "core", def: "Shares represent a proportional pool claim.", disc: "record_authority (regulated instruments)" },
+  { id: "E002", sym: "Ix", name: "Index-based accrual", group: "G01", stratum: 0, atom: "R", status: "core", def: "A global exchange-rate or debt index changes claim value." },
+  { id: "E003", sym: "Rb", name: "Rebasing accounting", group: "G01", stratum: 0, atom: "R", status: "core", def: "Nominal balances change through global scaling." },
+  // G02
+  { id: "E004", sym: "Cp", name: "Constant-product invariant", group: "G02", stratum: 1, atom: "R", status: "core", def: "x·y = k." },
+  { id: "E005", sym: "Wg", name: "Weighted-geometric invariant", group: "G02", stratum: 1, atom: "R", status: "core", def: "Multi-asset weighted pricing." },
+  { id: "E006", sym: "St", name: "Stable-hybrid invariant", group: "G02", stratum: 1, atom: "R", status: "core", def: "Constant-sum near parity, constant-product away from it." },
+  { id: "E007", sym: "Cl", name: "Concentrated liquidity", group: "G02", stratum: 1, atom: "R", status: "core", def: "Range-specific position state and tick activation." },
+  { id: "E008", sym: "Pm", name: "Oracle-priced inventory curve", group: "G02", stratum: 1, atom: "R", status: "core", def: "Proactive market making against an external reference." },
+  { id: "CSM", sym: "CSM", name: "Constant sum", group: "G02", stratum: 1, atom: "R", status: "limit", def: "Degenerate limit of St. Not an element and not an isotope — an isotope must preserve the failure family, and at parity break this pool is fully drainable on one side.", note: "Carries drain_regime." },
+  // G03
+  { id: "E009", sym: "Ob", name: "On-chain order book", group: "G03", stratum: 1, atom: "R", status: "core", def: "Limit orders, sequencing, cancellation, settlement.", disc: "market_structure" },
+  { id: "E010", sym: "Rf", name: "Request for quote", group: "G03", stratum: 1, atom: "N", status: "core", def: "Signed maker quote against inventory.", disc: "market_structure" },
+  { id: "E011", sym: "Ba", name: "Batch-auction clearing", group: "G03", stratum: 2, atom: "N", status: "core", def: "Uniform clearing over a batch.", disc: "market_structure" },
+  { id: "E012", sym: "In", name: "Intent & solver execution", group: "G03", stratum: 4, atom: "N", status: "core", def: "Signed outcome constraints delegated to competing solvers.", disc: "market_structure" },
+  // G04
+  { id: "E039", sym: "Ag", name: "Aggregation & routing", group: "G04", stratum: 1, atom: "R", status: "core", def: "Multi-venue route construction." },
+  { id: "E040", sym: "Fl", name: "Atomic flash liquidity", group: "G04", stratum: 1, atom: "I", status: "core", def: "Borrow and repay within one settlement scope or revert.", note: "The only async-impossible element. Anything sold as cross-chain flash is really Of+Rl+(Bs|Sl)." },
+  // G05
+  { id: "E013", sym: "Pl", name: "Pooled lending", group: "G05", stratum: 3, atom: "R", status: "core", def: "Shared liquidity pool, many lenders and borrowers." },
+  { id: "E014", sym: "Im", name: "Isolated lending market", group: "G05", stratum: 3, atom: "R", status: "core", def: "Per-market risk isolation with its own oracle, LLTV and rate model." },
+  { id: "E015", sym: "Cd", name: "Collateralized-debt minting", group: "G05", stratum: 3, atom: "R", status: "core", def: "Mint a liability against locked collateral.", disc: "obligor (off-chain backing)" },
+  { id: "E016", sym: "Uc", name: "Undercollateralized credit", group: "G05", stratum: 3, atom: "N", status: "core", def: "Credit extended on identity, underwriting and recourse.", disc: "obligor" },
+  { id: "E017", sym: "Ft", name: "Fixed-term debt", group: "G05", stratum: 3, atom: "N", status: "core", def: "Maturity-dated claim with a discount factor.", disc: "obligor" },
+  // G06
+  { id: "E018", sym: "Ct", name: "Collateral-threshold test", group: "G06", stratum: 3, atom: "R", status: "core", def: "The margin/LTV/health computation and its threshold." },
+  { id: "E019", sym: "Li", name: "Incentivized liquidation", group: "G06", stratum: 3, atom: "R", status: "core", def: "Third parties repay unhealthy debt for discounted collateral." },
+  { id: "E020", sym: "Ad", name: "Auto-deleveraging", group: "G06", stratum: 3, atom: "R", status: "core", def: "Rank-ordered forced close when buffers are exhausted." },
+  { id: "E021", sym: "Sl", name: "Socialized-loss allocation", group: "G06", stratum: 3, atom: "N", status: "core", def: "Losses assigned to an explicit claim class." },
+  { id: "E022", sym: "Bs", name: "Staked backstop", group: "G06", stratum: 3, atom: "R", status: "core", def: "Slashable first-loss capital.", note: "Bs{trigger=non-fill} covers solver bonding — a separate element for it fails criterion F." },
+  // G07
+  { id: "E023", sym: "Pf", name: "Perpetual funding transfer", group: "G07", stratum: 3, atom: "R", status: "core", def: "Periodic payment tethering a perp to an index." },
+  { id: "E024", sym: "Op", name: "Option payoff", group: "G07", stratum: 3, atom: "N", status: "core", def: "Strike, expiry, collateralized contingent settlement." },
+  { id: "E025", sym: "Tr", name: "Tranche waterfall", group: "G07", stratum: 3, atom: "N", status: "core", def: "Declared seniority over a determined loss event." },
+  { id: "E026", sym: "Cv", name: "Mutual cover pool", group: "G07", stratum: 3, atom: "N", status: "core", def: "Adjudicated claims against pooled premium capital." },
+  { id: "E027", sym: "Py", name: "Principal/yield separation", group: "G07", stratum: 3, atom: "N", status: "core", def: "Split a yield-bearing claim into PT and YT." },
+  { id: "E057", sym: "Sv", name: "Servicing & determination discretion", group: "G07", stratum: 3, atom: "N", status: "candidate", def: "A named party's discretionary determination of loss, valuation, cure, waiver or suspension that alters others' claims.", note: "Added after review: the table could not express what a waterfall does in a workout, as opposed to in the offering memorandum." },
+  { id: "E060", sym: "Dp", name: "Directional position & hedge maintenance", group: "G07", stratum: 3, atom: "N", status: "candidate", def: "A held directional exposure and the rebalancing that maintains it.", note: "Added after review: decomposing a delta-neutral stablecoin left the short position itself as central residue — Pf is a funding transfer, not a position." },
+  // G08
+  { id: "E028", sym: "Ex", name: "External data oracle", group: "G08", stratum: 2, atom: "N", status: "core", def: "Imported off-chain value.", disc: "delivery = push | pull | medianizer" },
+  { id: "E029", sym: "Tp", name: "Time-weighted price", group: "G08", stratum: 2, atom: "R", status: "core", def: "Cumulative-price accumulator over a window." },
+  { id: "E030", sym: "Oa", name: "Optimistic assertion oracle", group: "G08", stratum: 2, atom: "N", status: "core", def: "Assert-then-dispute escalation game." },
+  { id: "E031", sym: "At", name: "Reserve / NAV attestation", group: "G08", stratum: 2, atom: "N", status: "core", def: "A named party's statement about backing or value.", disc: "subject + assurance" },
+  // G09
+  { id: "E032", sym: "Sr", name: "Streaming accrual", group: "G09", stratum: 2, atom: "N", status: "core", def: "Continuous per-second transfer from escrow." },
+  { id: "E033", sym: "Ep", name: "Epoch-gated transition", group: "G09", stratum: 2, atom: "N", status: "core", def: "Snapshot, cutoff, rollover." },
+  { id: "E034", sym: "Wq", name: "Withdrawal queue", group: "G09", stratum: 2, atom: "N", status: "core", def: "Request now, claim later, against future asset availability." },
+  // G10
+  { id: "E035", sym: "Em", name: "Protocol-funded emissions", group: "G10", stratum: 2, atom: "N", status: "core", def: "Newly issued tokens paid for measured actions." },
+  { id: "E058", sym: "Fd", name: "Surplus & fee distribution", group: "G10", stratum: 2, atom: "N", status: "candidate", def: "The rule naming the residual claimant of fees, spread and surplus.", note: "Added after review: without it, adverse selection named on an informational bond has nowhere to land as a transfer rule." },
+  // G11
+  { id: "E036", sym: "Tg", name: "Delayed-governance execution", group: "G11", stratum: 4, atom: "N", status: "core", def: "A timelock between authorization and executability." },
+  { id: "E037", sym: "Up", name: "Mutable implementation proxy", group: "G11", stratum: 4, atom: "N", status: "core", def: "Code replacement changes the reachable state machine." },
+  { id: "E038", sym: "Gp", name: "Guardian or pause", group: "G11", stratum: 4, atom: "N", status: "core", def: "Bounded suppression of reachable transitions." },
+  { id: "E050", sym: "Au", name: "Delegated execution scope", group: "G11", stratum: 4, atom: "N", status: "core", def: "Persistent policy bounding the calls, assets, destinations, values, chains and time windows a delegate may reach." },
+  { id: "E051", sym: "Gs", name: "Sponsored-fee liability", group: "G11", stratum: 3, atom: "N", status: "candidate", def: "A conditional fee liability with metering and reimbursement.", note: "Demoted from core: recurrence evidence thin, and the original name was written around an execution-model construct." },
+  // G12
+  { id: "E041", sym: "Xm", name: "Cross-domain message verification", group: "G12", stratum: 4, atom: "N", status: "core", def: "Decide whether a source-domain assertion is acceptable at the destination.", disc: "trust_domain — mandatory, non-defaultable" },
+  { id: "E042", sym: "Xf", name: "Cross-domain asset transfer", group: "G12", stratum: 4, atom: "N", status: "core", def: "Create a destination claim against an explicit source debit.", disc: "form = lock-mint | burn-mint | custodial-release" },
+  { id: "E053", sym: "Rl", name: "Resource lock / reservation", group: "G12", stratum: 4, atom: "N", status: "candidate", def: "Enforceable pre-commitment with exclusivity, expiry, fulfillment and release." },
+  { id: "E054", sym: "Of", name: "Optimistic fill & reimbursement", group: "G12", stratum: 4, atom: "N", status: "candidate", def: "A filler advances destination value before finality and holds a contingent reimbursement claim.", note: "The clean discriminator between a standard and a fast bridge transfer." },
+  // G13
+  { id: "E043", sym: "Rd", name: "Direct redemption right", group: "G13", stratum: 3, atom: "R", status: "core", def: "Redeem a liability against backing at a defined rate." },
+  { id: "E044", sym: "Ps", name: "Peg-swap module", group: "G13", stratum: 3, atom: "N", status: "core", def: "1:1 reserve-backed swap with mint/burn authority." },
+  { id: "E045", sym: "As", name: "Algorithmic supply adjustment", group: "G13", stratum: 3, atom: "N", status: "core", def: "Supply expansion/contraction driven by measured price." },
+  // G14
+  { id: "E046", sym: "Aw", name: "Permission / identity gate", group: "G14", stratum: 2, atom: "N", status: "core", def: "Credential-checked eligibility." },
+  { id: "E047", sym: "Sb", name: "Shielded-balance state", group: "G14", stratum: 2, atom: "R", status: "core", def: "Commitments and nullifiers hide ownership." },
+  { id: "E048", sym: "Sd", name: "Selective-disclosure proof", group: "G14", stratum: 2, atom: "N", status: "candidate", def: "Prove a policy predicate without revealing the underlying credential.", note: "Demoted from core: the finance-specificity gate applied to Zk applies here too, and was not applied symmetrically." },
+  { id: "E056", sym: "Fz", name: "Freeze / forced transfer", group: "G14", stratum: 2, atom: "N", status: "candidate", def: "Issuer- or authority-initiated immobilisation or reassignment of a holder claim without holder authorisation.", note: "Added after review: without it the table cannot distinguish a bearer token from a registered security.", disc: "authority_source" },
+  // G15
+  { id: "E049", sym: "Rs", name: "Restaking / shared security", group: "G15", stratum: 4, atom: "N", status: "candidate", def: "Slashable capital reused to secure additional services.", note: "Demoted from core: it sat in the core set while the register conceded its recurrence evidence was outstanding." },
+  // G16
+  { id: "E059", sym: "Vl", name: "Staking & validator lifecycle", group: "G16", stratum: 3, atom: "N", status: "candidate", def: "Delegation, activation, exit, reward accrual and penalty attribution for consensus-securing capital.", note: "Added after review: decomposing a liquid-staking protocol left the entire staking mechanism as residue." },
+];
+
+export const PROVISIONAL = [
+  { sym: "Bc", name: "Bonding-curve issuance", gate: "Primary-issuance semantics that resist AMM decomposition" },
+  { sym: "Tw", name: "Time-weighted AMM execution", gate: "Evidence it is not an AMM plus Ep" },
+  { sym: "Da", name: "Dutch-auction descent", gate: "Two lineages and one non-attributable failure mode" },
+  { sym: "Cg", name: "Credit delegation", gate: "Obligations not reconstructible from Pl/Uc plus Au" },
+  { sym: "Ir", name: "Insurance reserve fund", gate: "A state machine distinct from Bs and Sl" },
+  { sym: "Zk", name: "Verifiable state proof", gate: "Finance-specific proof semantics, not generic infrastructure" },
+  { sym: "Ve", name: "Vote-escrow allocation", gate: "A transition not decomposable into lock + checkpoint + Em + governance" },
+  { sym: "Kg", name: "Credential-gated transfer", gate: "Failure semantics distinct from Aw" },
+  { sym: "Ua", name: "Unified-balance ledger", gate: "A non-double-spendable reconcilable claim, not a dashboard total" },
+  { sym: "Sq", name: "Shared ordering commitment", gate: "Failures not reducible to consensus plus Xm" },
+];
+
+export interface Law { id: string; rule: string; async: "yes" | "no"; isNew?: boolean }
+
+export const LAWS: Law[] = [
+  { id: "L1", rule: "(Pl|Im|Cd|Pf|Op) → (Ex|Tp|At) + Ct + (Li|Ad|Sl|Bs)", async: "no" },
+  { id: "L2", rule: "Pl → (Sh|Ix) + exit-liquidity", async: "yes" },
+  { id: "L3", rule: "Uc → Aw + At{subject=borrower-financials} + (Bs|Tr) + obligor", async: "yes" },
+  { id: "L4", rule: "Pf → Ex + Ct + Li + (Ad|Sl|Bs)", async: "no" },
+  { id: "L5", rule: "Py → (Sh|Ix|Rb) + Ep + Rd", async: "yes" },
+  { id: "L6", rule: "Tr → (Sv | mechanical trigger) + declared seniority + dispute forum + recovery-timing assumption", async: "no", isNew: true },
+  { id: "L7", rule: "Cd → Rd | Ps | liquidation capacity", async: "yes" },
+  { id: "L8", rule: "Xf → Xm | named custodian, plus a global claim ledger", async: "yes" },
+  { id: "L9", rule: "Xf → debit(source) = credit(destination)", async: "yes" },
+  { id: "L10", rule: "Sb → proof verifier + nullifier set", async: "yes" },
+  { id: "L11", rule: "Sd → credential source + verifier + revocation", async: "yes" },
+  { id: "L12", rule: "In → signed constraints + settlement verifier + (solver|fallback) + timeout", async: "yes" },
+  { id: "L13", rule: "Ex → freshness validation; Gp preferred for high-value obligations", async: "yes" },
+  { id: "L14", rule: "illiquid backing → Wq | bounded liquidity reserve", async: "yes" },
+  { id: "L15", rule: "Up → Tg | bounded emergency process", async: "yes" },
+  { id: "L16", rule: "Aw → transfer-time enforcement where eligibility follows the holder", async: "no" },
+  { id: "L17", rule: "Au → bounded scope + revocation + expiry + nonce/domain separation", async: "yes" },
+  { id: "L18", rule: "Xm → explicit finality + chain/domain binding + replay protection", async: "yes" },
+  { id: "L19", rule: "Of → Xm + Xf + (Bs|Sl) + timeout", async: "yes" },
+  { id: "L20", rule: "Rl → Au + single-spend + expiry + fulfillment proof + release", async: "yes" },
+  { id: "L21", rule: "Gs → Au + metering + fee settlement", async: "yes" },
+  { id: "L22", rule: "Rs → attributed slash condition + non-reflexive capital + loss waterfall", async: "yes" },
+  { id: "L23", rule: "Sq → Xm + independent settlement finality", async: "yes" },
+  { id: "L24", rule: "(In|Rf|Ba) → an explicit informational edge with a catalog tag", async: "yes" },
+  { id: "L25", rule: "wrapped cross-domain collateral → haircut + cap + independent exit", async: "yes" },
+  { id: "L26", rule: "Aw + Xf → destination-enforced eligibility + revocation propagation + jurisdictional binding", async: "no", isNew: true },
+  { id: "L27", rule: "At → named attester + independence + stated assurance + staleness bound + recourse", async: "yes", isNew: true },
+  { id: "L28", rule: "Fz → named authority + enumerated triggers + appeal path + holder disclosure", async: "yes", isNew: true },
+  { id: "L29", rule: "(In|Ba|Rf|Of) → a declared surplus-allocation rule naming the residual claimant", async: "yes", isNew: true },
+];
+
+export interface Hazard { id: string; combo: string; cls: "F" | "H" | "U"; base: string; grounding: string }
+
+export const HAZARDS: Hazard[] = [
+  { id: "X1", combo: "As + reflexive junior token, with no hard redemption or exogenous capital", cls: "F", base: "unknown", grounding: "Terra/UST, 2022" },
+  { id: "X2", combo: "Fl* + manipulable Cp/Cl price + Pl/Cd, where manipulation cost < position value", cls: "H", base: "unknown — many survivors", grounding: "bZx; Mango; Cream" },
+  { id: "X3", combo: "Protocol token as collateral AND oracle market AND backstop", cls: "H", base: "unknown", grounding: "One shock impairs three defences" },
+  { id: "X4", combo: "Rb into a balance-invariant ledger with no adapter", cls: "F", base: "—", grounding: "Interface contradiction" },
+  { id: "X5", combo: "Illiquid backing + uncapped instant par redemption", cls: "H", base: "unknown", grounding: "Settlement-speed mismatch" },
+  { id: "X6", combo: "Borrowable voting power + immediate execution", cls: "H", base: "unknown", grounding: "Beanstalk, 2022" },
+  { id: "X7", combo: "Cross-domain mint whose verifier is present but unproven correct", cls: "H", base: "unknown", grounding: "Wormhole; Nomad" },
+  { id: "X8", combo: "Shared collateral across nominally isolated markets", cls: "H", base: "unknown", grounding: "Contagion escapes the boundary" },
+  { id: "X9", combo: "Up with immediate single-key control", cls: "H", base: "many survivors", grounding: "—" },
+  { id: "X10", combo: "Pm with a stale reference and unrestricted inventory", cls: "H", base: "unknown", grounding: "—" },
+  { id: "X11a", combo: "Uc with no Aw, At, collateral or reputation", cls: "F", base: "—", grounding: "Structural" },
+  { id: "X11b", combo: "Uc with all of them and weak underwriting", cls: "H", base: "unknown", grounding: "Maple, 2022 — paperwork is not underwriting" },
+  { id: "X12", combo: "Lock-mint wrapped asset as canonical collateral whose value at risk exceeds the bridge's economic security", cls: "F", base: "—", grounding: "Wormhole-wrapped; Multichain" },
+  { id: "X13", combo: "External-validator Xm securing value exceeding slashable stake", cls: "H", base: "unknown", grounding: "Ronin; Nomad" },
+  { id: "X14", combo: "Exclusive market structure plus a price-improvement claim with no named benchmark", cls: "U", base: "—", grounding: "Downgraded from 'impossible' — exclusivity removes live rivalry, not all competitive content" },
+  { id: "X15", combo: "Rs securing a bridge mostly with assets issued by that bridge", cls: "H", base: "unknown", grounding: "—" },
+  { id: "X16", combo: "Unbounded delegated authority, or unlimited token approvals", cls: "H", base: "many survivors", grounding: "BadgerDAO" },
+  { id: "X17", combo: "Passive protocol-token reserve backing protocol-token collateral", cls: "H", base: "unknown", grounding: "—" },
+  { id: "X18", combo: "Oa as sole truth for high-frequency liquidation", cls: "H", base: "—", grounding: "Dispute latency vs closeout" },
+  { id: "X19", combo: "Restricted claim bridged via Xf into a representation with no destination-side Aw", cls: "F", base: "—", grounding: "Permission laundering" },
+];
+
+export const BONDS = [
+  { sym: "—i→", name: "Interface", q: "Can these exchange the required calls, tokens, messages, proofs?", fail: "Integration breakage, silent accounting corruption" },
+  { sym: "—e→", name: "Economic", q: "Do combined incentives, liquidity and loss allocation stay solvent?", fail: "Bad debt, runs, unprofitable liquidation" },
+  { sym: "—t→", name: "Trust", q: "Who can attest, censor, upgrade, pause, mint, freeze?", fail: "Key compromise, malicious upgrade, false attestation" },
+  { sym: "—n→", name: "Informational", q: "Who observes the order before it settles?", fail: "Adverse selection, order-flow capture" },
+];
+
+export const SCREEN = [
+  { n: "−1", label: "Frame it", body: "What assets are at stake, what are the trust boundaries, and what is the maximum loss if every trust assumption fails at once?" },
+  { n: "0", label: "Implementation integrity", body: "Reentrancy, callbacks, delegatecall, share inflation, rounding, storage layout, signature parsing, compiler and build provenance. This document does not check code." },
+  { n: "1", label: "Authority", body: "Every Au, Up, Gp, Fz: scope bounded, revocation, expiry, domain separation. Enumerate the signer set and key concentration of every trust-bearing party, including Xm verifier sets." },
+  { n: "2", label: "Conservation & verification", body: "Every fee, slippage, delay, loss and advance assigned to a named claim class. Every verifier proven correct, not merely present." },
+  { n: "3", label: "Leverage", body: "Anything controlling more value than posted needs truth AND Ct AND a terminal loss path." },
+  { n: "4", label: "Truth manipulability", body: "Price the manipulation against pool depth, not the attacker's balance." },
+  { n: "5", label: "Catalyst re-pricing", body: "Re-price every economic and trust bond under zero-cost temporary capital and adversarial ordering." },
+  { n: "6", label: "Atomicity", body: "Place every cross-domain step on the spectrum. Anything marketed atomic below same-transaction must name its repair bond." },
+  { n: "7", label: "Disclosure & surplus", body: "Who observes the order before settlement, and who is the residual claimant?" },
+  { n: "8", label: "Reflexivity", body: "Does any element's price or solvency input read a market its own output dominates? Non-gating." },
+];
+
+export const SPECTRUM = [
+  { level: "Same transaction", repair: "none" },
+  { level: "Same block", repair: "batch clearing, commit-reveal, preconfirmation" },
+  { level: "Shared sequencer", repair: "Sq + accountability + later verification" },
+  { level: "Same-ecosystem finality", repair: "ecosystem-aligned Xm + timeout" },
+  { level: "Cross-ecosystem", repair: "Xm+Xf+(Rl|Of) + haircuts + loss allocation" },
+  { level: "Optimistic", repair: "Of+(Bs|Sl) + challenge + reimbursement timeout" },
+];
