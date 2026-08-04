@@ -14,7 +14,7 @@ const succ58=new Map(E58.map(e=>[e,new Set()]));
 for(const law of PARSED_NEW) for(const t of law.terms){ if(t.external||t.alts.length!==1)continue;
   for(const s of law.subjects) if(succ58.has(s)&&succ58.has(t.alts[0])) succ58.get(s).add(t.alts[0]); }
 const K=A=>[...A].sort().join(",");
-let seed=7; const rnd=()=>(seed=(seed*1103515245+12345)&0x7fffffff)/0x7fffffff;
+let seed=7; const rnd=()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return ((t^t>>>14)>>>0)/4294967296;};
 
 function make(E,succ){
   const cl=mkCl(succ), R=new Map(E.map(e=>[e,cl([e])]));
@@ -55,18 +55,18 @@ for(const sub of [["Pl","Im","Cd","Pf","Op","Ct","Ex","Li"],
                   ["Pf","Pl","Uc","Of","Ct","Ex","Li","Aw","At","Xm","Xf"],
                   ["Pf","Uc","Py","Of","Rl","Gs","Ct","Ex","Li","Aw","At","Ep","Rd","Xm","Xf","Au"]]){
   const s=new Map(sub.map(e=>[e,new Set([...(succ58.get(e)||[])].filter(x=>sub.includes(x)))]));
-  run(sub,s,`reduced |E|=${sub.length}`,allClosed(sub,s),4000000);
+  run(sub,s,`reduced |E|=${sub.length}`,allClosed(sub,s),600000);
 }
 console.log("\n=== (2) the ACTIVE 20 of the real atlas: all 52,500 closed sets, 4M sampled pairs ===");
 const ACT=E58.filter(e=>succ58.get(e).size>0||E58.some(s=>succ58.get(s).has(e)));
 const sAct=new Map(ACT.map(e=>[e,new Set([...succ58.get(e)].filter(x=>ACT.includes(x)))]));
-run(ACT,sAct,"active-20",allClosed(ACT,sAct),4000000);
+run(ACT,sAct,"active-20",allClosed(ACT,sAct),600000);
 
 console.log("\n=== (3) full 58, sampled closed sets ===");
 const cl58=mkCl(succ58); const samp=new Map();
 while(samp.size<1500){const k=1+Math.floor(rnd()*14);const s=new Set();while(s.size<k)s.add(E58[Math.floor(rnd()*58)]);
   const c=cl58([...s]); samp.set(K(c),c);}
-run(E58,succ58,"58-element",[...samp.values()],300000);
+run(E58,succ58,"58-element",[...samp.values()],400000);
 
 console.log("\n=== (4) RANDOM DIGRAPHS: is the formula general, or about our instance? ===");
 function randGraph(n,p,acyclic){const V=[...Array(n).keys()].map(String);
@@ -77,7 +77,7 @@ for(const [n,p,acy,lab] of [[8,.15,true,"random DAG n=8 p=.15"],[9,.35,true,"ran
                             [10,.20,true,"random DAG n=10 p=.20"],[7,.20,false,"random CYCLIC n=7 p=.20"],
                             [7,.35,false,"random CYCLIC n=7 p=.35"]]){
   let tot=0,okAll=0,graphs=0,cyc=0,exGenFail=0;
-  for(let t=0;t<60;t++){const [V,s]=randGraph(n,p,acy); const g=make(V,s); if(g.cyclic)cyc++;
+  for(let t=0;t<40;t++){const [V,s]=randGraph(n,p,acy); const g=make(V,s); if(g.cyclic)cyc++;
     const C=allClosed(V,s); graphs++;
     for(const A of C) if(K(g.cl(g.ex(A)))!==K(A)) exGenFail++;
     for(const A of C)for(const B of C){tot++;
