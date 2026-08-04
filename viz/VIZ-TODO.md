@@ -24,7 +24,7 @@ below is a thing to *draw*, not a caveat to footnote.
 | A8 | Contested register | 10 | [~] | **corpus now rules on 7 of them — §E4** |
 | A9 | Asynchrony property | 3 values | [ ] | exactly one element is "impossible" — never shown |
 | A10 | Element status | — | [~] | |
-| A11 | Derived vs asserted stratum | — | [ ] | blocked on Quint Q10 |
+| A11 | Derived vs asserted stratum | — | [ ] | **ANSWERED: not derivable.** Rank agrees with hand stratum on 3 of 58, all trivially 0=0; rank spans 0–2 against stratum 0–4. One real inversion, L21 `Gs`(S3)→`Au`(S4). FCA says the same independently — concept lattices are not graded. Draw the 55-element disagreement, not the agreement. |
 
 ## B. The 12 categories and 60 protocols
 
@@ -73,13 +73,18 @@ should be visible.
 |---|---|---|---|
 | C1 | Closure per protocol | [~] | computed; 6 of 12 close |
 | C2 | Seating order | [~] | computed, never rendered |
-| C3 | Requirement cycles | [~] | **there are none** — that absence must be shown, not hidden |
+| C3 | Requirement cycles | [~] | **there are none, and now provably so** — the requirement relation over all 58 elements taking every alternative is a DAG with no self-loops, so *no subset can contain a cycle*. Terra is a 2-cycle only over (element, asset) pairs under `backs`: (As,UST)→(Rd,LUNA)→(As,UST). Draw the pair-level loop; the element-level graph cannot hold it. |
 | C4 | In-degree / "Weight" | [~] | max 4, nearly flat — weak channel, say so |
 | C5 | Closure-of / shadow | [~] | |
 | C6 | Unfireable laws (L14, L23, L25, L26) | [ ] | prose subjects — can never fire |
 | C7 | 52 of 77 terms are prose | [ ] | **two thirds of the law content is natural language** |
 | C8 | Inevaluable hazards (19 of 20) | [ ] | |
-| C9 | Quint cross-check | [~] | 7 tests pass; model checking pending |
+| C10 | **Unlisted hazard `{Fl, Xm}`** | [ ] | closed under all 25 fireable laws, arms none of the 20 hazard rows, reachable. Flash atomicity — the vocabulary's ONLY async-impossible element — crossing a domain boundary. X2 covers flash-loan price manipulation and nothing covers this. Second witness `{Fl, Au, Rl}`. |
+| C11 | **The exhaustive bound** | [ ] | all 5,038,954 subsets of size ≤5 enumerated; 1,458,840 closed and hazard-free; minimal witness list complete within that space. **Nothing claimed at size ≥6** — the bound is the drawing, not a footnote. |
+| C12 | **Closure is a lattice, validity is not** | [ ] | closed sets are union-closed, contain ⊥ and ⊤, form a complete lattice — but **meet is not intersection** (`{Xm,Xf,Of,Bs} ∩ {Xm,Xf,Of,Sl}` is open) and **hazards destroy the join** (`{Xm,Xf} ∪ {Aw}` arms X19). |
+| C13 | **`Uc` is unrealizable** | [ ] | zero hazard-free completion — the hazard table forbids every way of building one of its own elements. A defect in the table, drawn as such. |
+| C14 | Minimal legal completions per protocol | [ ] | 1–6. Lido and Euler have exactly one, both `+Tg`; CCTP 2; Terra 4; Mango 6. |
+| C9 | Quint cross-check | [✓] | 8 tests pass; **model checking complete** — Apalache + exhaustive enumeration, Q10/Q12/Q13/Q14 all answered |
 
 ## D. Corpus findings — the strongest material, none of it drawn
 
@@ -100,6 +105,18 @@ should be visible.
 - **SparkLend ⊂ Aave V3** — a strict subset, no distinguishing symbol
 - ApeX ≡ edgeX ≡ Lighter · Yearn ≡ Beefy ≡ CIAN · Binance Wallet ≡ OKX DEX
 - Polymarket ≡ three clones · Derive ≡ Aevo
+
+### D8 — the negative corpus and the discrimination baseline [ ]
+84 synthetic negatives in five families (knockout, armed, inverted, hybrid,
+random) plus 72 real. Our own closure predicate accepts **50% of real protocols
+and 15% of random noise — 3.3×** — and **42% of hybrid protocols that do not
+exist**, which says it is reading shape rather than coherence. This is the
+single most honest number about the framework and nothing on screen says it.
+
+### D9 — blind test set, 156 cases [ ]
+Real and corrupted, shuffled, unlabelled; key held separately. The nine
+mathematicians classify, we score. Their verdict spread per case is itself a
+visual object — cases where all nine agree vs cases that split them.
 
 ## E. Structural findings that change the drawing, not just its contents
 
@@ -127,7 +144,7 @@ should be visible.
 | F10 | Coverage / residue view | [ ] |
 | F11 | Collision view | [ ] |
 | F12 | Corpus browser (60 protocols) | [ ] |
-| F13 | Algebra council results | [ ] — blocked, council not launched |
+| F13 | Algebra council results | [ ] — **council launched**, 9 mathematicians, 3 vendors × 3 schools |
 
 ## G. Known defects to fix
 
