@@ -1,5 +1,6 @@
 import "./styles.css";
 import "./story.css";
+import "./packed.css";
 import {
   ATLAS_REVIEWED, ATLAS_VERSION, ATOM_LABEL, BONDS, CHANGELOG, CONTESTED,
   ELEMENTS, GROUPS, HAZARDS, LAWS, STRATA, hazardsFor, lawsFor,
@@ -177,51 +178,73 @@ function placeTiles(g: HTMLElement, place: Map<string, { row: number; col: numbe
   }
 }
 
-function buildGrid(): HTMLElement {
-  const g = el("div", "grid");
-  if (state.layout === "matrix") {
-    const { place, occ, bandRows, bandStart } = matrixPlacement();
-    g.style.gridTemplateColumns = `3.4rem repeat(${GROUPS.length}, minmax(5rem, 1fr))`;
-    GROUPS.forEach((grp, i) => {
-      const h = el("div", "axis-x", grp.id);
-      h.title = `${grp.id} — ${grp.name}. ${grp.boundary}`;
-      h.style.gridRow = "1"; h.style.gridColumn = String(i + 2);
-      h.setAttribute("aria-hidden", "true");
-      g.append(h);
-    });
-    STRATA.forEach((s, i) => {
-      const y = el("div", "axis-y");
-      y.innerHTML = `<b>S${s.id}</b>`;
-      y.title = `S${s.id} — ${s.name}. ${s.desc}`;
-      y.style.gridRow = `${bandStart[s.id]} / span ${bandRows[i]}`;
-      y.style.gridColumn = "1";
-      y.setAttribute("aria-hidden", "true");
-      g.append(y);
-      GROUPS.forEach((grp, gi) => {
-        const list = occ.get(`${grp.id}|${s.id}`) ?? [];
-        const c = el("div", `cell${list.length ? "" : " empty"}`);
-        c.style.gridRow = `${bandStart[s.id]} / span ${bandRows[i]}`;
-        c.style.gridColumn = String(gi + 2);
-        c.setAttribute("aria-hidden", "true");
-        if (list.length > 1) c.append(el("span", "occ", String(list.length)));
-        g.append(c);
-      });
-    });
-    placeTiles(g, place);
-  } else {
-    const { place, bandStart, perRow } = strataPlacement();
-    g.style.gridTemplateColumns = `3.4rem repeat(${perRow}, minmax(4.8rem, 1fr))`;
-    STRATA.forEach((s) => {
-      const y = el("div", "axis-y");
-      y.innerHTML = `<b>S${s.id}</b>`;
-      y.style.gridRow = String(bandStart[s.id]);
-      y.style.gridColumn = "1";
-      y.setAttribute("aria-hidden", "true");
-      g.append(y);
-    });
-    placeTiles(g, place);
+/* The table is packed, not a cross-product. Group and stratum are close to
+   collinear in this data — credit is all S3, pricing all S1 — so a 16x5 grid
+   is empty by construction. Draw only what exists: five depth rows, each a
+   run of labelled family blocks. Both axes stay exact. */
+
+function familyBlock(grp: typeof GROUPS[number], list: Element[]): HTMLElement {
+  const b = el("section", "fam");
+  const h = el("header", "fam-h");
+  h.append(el("span", "fam-id", grp.id));
+  h.append(el("span", "fam-nm", grp.name));
+  h.append(el("span", "fam-n", String(list.length)));
+  h.title = grp.boundary;
+  b.append(h);
+  const row = el("div", "fam-row");
+  list.forEach((e) => row.append(tiles.get(e.id)!));
+  b.append(row);
+  return b;
+}
+
+function buildDepthView(): HTMLElement {
+  const wrap = el("div", "depth");
+  for (const s of STRATA) {
+    const band = el("section", "band");
+    const lab = el("div", "band-lab");
+    lab.append(el("span", "band-s", `S${s.id}`));
+    lab.append(el("span", "band-nm", s.name));
+    lab.append(el("span", "band-d claim", s.desc));
+    band.append(lab);
+    const body = el("div", "band-body");
+    let n = 0;
+    for (const g of GROUPS) {
+      const list = ELEMENTS.filter((e) => e.group === g.id && e.stratum === s.id)
+        .sort((a, b) => a.id.localeCompare(b.id));
+      if (!list.length) continue;
+      n += list.length;
+      body.append(familyBlock(g, list));
+    }
+    lab.append(el("span", "band-n", `${n}`));
+    band.append(body);
+    wrap.append(band);
   }
-  return g;
+  return wrap;
+}
+
+function buildFamilyView(): HTMLElement {
+  const wrap = el("div", "families");
+  for (const g of GROUPS) {
+    const list = ELEMENTS.filter((e) => e.group === g.id)
+      .sort((a, b) => a.stratum - b.stratum || a.id.localeCompare(b.id));
+    if (!list.length) continue;
+    const sec = el("section", "fam wide");
+    const h = el("header", "fam-h");
+    h.append(el("span", "fam-id", g.id));
+    h.append(el("span", "fam-nm", g.name));
+    h.append(el("span", "fam-n", String(list.length)));
+    sec.append(h);
+    sec.append(el("p", "fam-q claim", g.boundary));
+    const row = el("div", "fam-row");
+    list.forEach((e) => row.append(tiles.get(e.id)!));
+    sec.append(row);
+    wrap.append(sec);
+  }
+  return wrap;
+}
+
+function buildGrid(): HTMLElement {
+  return state.layout === "matrix" ? buildDepthView() : buildFamilyView();
 }
 
 /* --------------------------------------------------------------- FLIP */
@@ -463,9 +486,9 @@ function readout(): HTMLElement | null {
 function howToRead(): HTMLElement {
   const s = el("section", "howread");
   const items = [
-    ["Columns are families of substitutes", "Everything in a column answers one question. Swap Cp for Cl and you still have a DEX. That is what a column means, and it is the only thing it means."],
-    ["Bands are how much must already exist", "S0 needs nothing but the ledger. S4 needs other people to agree. Deeper is not more dangerous — it is more dependent, and confusing the two is how you misprice a protocol."],
-    ["Several elements share a cell", "Chemistry gets unique addresses. This does not, and pretending otherwise would be the whole lie. The corner number is how many live in that cell."],
+    ["Rows are how much must already exist", "S0 needs nothing but the ledger. S4 needs other people to agree. Deeper is not more dangerous — it is more dependent, and confusing those two is how you misprice a protocol."],
+    ["Blocks are families of substitutes", "Everything in a block answers one question. Swap Cp for Cl and you still have a DEX. That is what a block means and the only thing it means."],
+    ["The shape is the finding", "Families cluster at one depth — credit is all S3, pricing all S1. And S3 is enormous: most of DeFi is machinery for owing, pricing and unwinding obligations."],
     ["Colour only ever means hazard", "There is exactly one coloured thing in this interface and it is danger. Everything else earns its distinction from position, shape and lightness."],
   ];
   items.forEach(([h, b]) => {
@@ -655,15 +678,17 @@ function render() {
   ctl.append(seg("View", [["elements", "The table"], ["laws", "Laws"], ["hazards", "Hazards"]],
     () => state.view, (v) => { state.view = v as View; state.rule = null; render(); }));
   if (state.view === "elements") {
-    ctl.append(seg("Arrangement", [["matrix", "Group × stratum"], ["strata", "Stratum bands"]],
+    ctl.append(seg("Arrangement", [["matrix", "By depth"], ["strata", "By family"]],
       () => state.layout, (v) => {
         state.layout = v as Layout;
         const host = document.getElementById("table")!;
         withFlip(() => { host.textContent = ""; host.append(buildGrid()); applyProjection(); });
-        announce(v === "matrix" ? "Arrangement: group by stratum." : "Arrangement: stratum bands.");
+        announce(v === "matrix"
+          ? "Arranged by depth: five prerequisite rows."
+          : "Arranged by family: sixteen substitution groups.");
         document.querySelectorAll<HTMLButtonElement>(".controls .seg button").forEach((b) => {
-          if (b.textContent === "Group × stratum") b.setAttribute("aria-pressed", String(v === "matrix"));
-          if (b.textContent === "Stratum bands") b.setAttribute("aria-pressed", String(v === "strata"));
+          if (b.textContent === "By depth") b.setAttribute("aria-pressed", String(v === "matrix"));
+          if (b.textContent === "By family") b.setAttribute("aria-pressed", String(v === "strata"));
         });
       }));
     ctl.append(seg("Reading order", [["group", "By group"], ["stratum", "By stratum"], ["id", "By ID"]],
@@ -687,8 +712,8 @@ function render() {
   const map = el("div", "mapping");
   map.innerHTML = state.view === "elements"
     ? (state.layout === "matrix"
-      ? "<b>Column</b> = family of substitutes. <b>Band</b> = prerequisite depth. Order inside a cell is <b>not</b> semantic."
-      : "<b>Band</b> = prerequisite depth. Horizontal position is <b>not</b> semantic.")
+      ? "<b>Row</b> = prerequisite depth, exactly. <b>Blocks</b> inside a row are families of substitutes. Order within a block is <b>not</b> semantic."
+      : "<b>Block</b> = a family of substitutes — everything inside answers the same question. The <b>S-token</b> on each tile is its depth.")
     : state.view === "laws"
       ? "<b>→</b> means <b>requires</b>. Select a law to see only the elements it names."
       : "Membership is <b>categorical</b> — never a magnitude, never a probability.";
