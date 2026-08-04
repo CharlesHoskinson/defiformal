@@ -1,0 +1,370 @@
+Do NOT run graphify or build a knowledge graph. Skip any auto-triggered graphify step entirely.
+
+You are implementing a fully-specified mathematical model on behalf of a mathematician
+(order-theoretic lens) working on the DeFi composition algebra project at
+/root/DefiElements. All design decisions below are already made -- you are implementing,
+computing, and writing, not designing. Do not second-guess the rulings; if you find a
+factual/arithmetic error in a ruling, note it in a "DEVIATIONS" section at the end of the
+report rather than silently changing behavior.
+
+============================================================
+OBJECTIVE
+============================================================
+Produce two deliverables:
+1. /root/DefiElements/algebra/reports/GP-ORD.md
+2. /root/DefiElements/algebra/verdicts/GP-ORD.json  -- exactly 156 classifications of
+   /root/DefiElements/algebra/blind-test-set.json, shaped
+   {"verdicts":[{"id":"T001","verdict":"ADMISSIBLE"}, ...]}
+
+Read first, in full, before doing anything else (do not re-derive what they already
+settle -- build on it):
+  - /root/DefiElements/algebra/BRIEF.md  (the spec for the whole 9-person council)
+  - /root/DefiElements/viz/src/data.ts   (58 elements, 29 laws, 20 hazard rows, groups, strata)
+  - /root/DefiElements/viz/src/laws.ts   (reference parser/closure engine -- reuse its logic)
+  - /root/DefiElements/viz/src/protocols.ts (12 hand-decomposed real protocols with syms[])
+  - /root/DefiElements/formal/FINDINGS.md (model-checked results -- treat as given facts)
+  - /root/DefiElements/corpus50/VERDICT.md (corpus benchmark findings)
+  - /root/DefiElements/algebra/blind-test-set.json (the 156 cases to classify)
+
+Do NOT read or use /root/DefiElements/algebra/blind-test-KEY.json for anything. It exists
+in the directory but using it to look up answers instead of computing them via the model
+would defeat the exercise. If you notice it, ignore it entirely -- do not open it.
+
+============================================================
+BACKGROUND YOU MUST TREAT AS GIVEN (do not re-derive, cite and build on)
+============================================================
+From BRIEF.md section 4b / FINDINGS.md, already proved by exhaustive enumeration / Apalache:
+- Law-satisfying ("closed") element sets are union-closed, contain the empty set, and
+  therefore form a complete lattice under subset order with join = union.
+- Meet is NOT intersection: {Xm,Xf,Of,Bs} intersect {Xm,Xf,Of,Sl} = {Xm,Xf,Of}, which is
+  open (not closed). The correct meet is "the largest closed subset of the intersection."
+- Adding hazards destroys even the join: {Xm,Xf} union {Aw} arms hazard X19. Hazard-freedom
+  is downward-closed; closure is upward-closed-under-union; their conjunction is neither.
+- Stratum is NOT derivable as topological rank (3/58 trivial agreements only, all 0=0).
+  Stratum must stay an asserted axis. The one genuine inversion is L21: Gs(S3) requires Au(S4).
+- 45 of 58 elements are "requirement-terminal" (no outgoing element-expressible
+  requirement) -- the law graph is a thin spine over a wide flat base.
+- The full 58-element requirement relation (subject -> every alternative of every
+  element-expressible term) is a DAG with no self-loops -- no element subset can ever
+  contain a requirement cycle. Terra's collapse is only a cycle over (element, asset)
+  pairs under a `backs` relation: (As,UST) backs (Rd,LUNA) backs (As,UST). This
+  requires a strictly richer, asset-indexed carrier that this artifact does not compute
+  over (element-set carrier only) -- state this as the answer to BRIEF section 6 Q5, citing
+  FINDINGS.md Q13, and do not attempt to re-derive or re-prove it.
+- Two unlisted, real, structural hazards were found exhaustively (size <=5, complete):
+  {Fl, Xm} and {Fl, Au, Rl} -- atomic flash liquidity (Fl, the only async-impossible
+  element) co-present with any G12 cross-domain element. General rule as stated in
+  FINDINGS "atomicScopeConsistent": Fl may not co-occur with ANY G12 element
+  (G12 = {Xm, Xf, Rl, Of}).
+- {Au, Gs} is a THIRD unlisted combination found by the same search, but it is a
+  stratum-inversion artifact (an atlas defect: L21 says Gs requires Au, so Gs's asserted
+  stratum 3 is below Au's asserted stratum 4) -- NOT a financial hazard. Do not treat it
+  as inadmissible. Only {Fl,Xm}/{Fl,Au,Rl} are real hazards to add.
+- `Uc` (undercollateralized credit) was found "unrealizable" under a REVERSED-POLARITY
+  evaluation of hazard X11a in the formal model. This is a bug-report about X11a's
+  polarity, not a fact about Uc. See RULING below -- you must implement the corrected
+  polarity, which is provably subsumed by (and consistent with) existing law L3.
+- FCA is diagnosed in BRIEF section 5b as "an audit tool, not an algebra": disjunctive law
+  conclusions are structurally outside Horn (do not re-derive), and concept lattices are
+  not graded so stratum cannot be recovered as lattice level (do not re-derive). Do NOT
+  attempt to build a full Duquenne-Guigues base of the 29 raw disjunctive laws -- that
+  wall is already proven. Instead follow the REDUNDANT-GENERATOR ALGORITHM below, which
+  sidesteps the wall by working with law-signatures (a sound, if not exhaustively
+  complete, way to detect generator redundancy) rather than a full concept-lattice
+  computation over the disjunctive system.
+
+============================================================
+RULINGS YOU MUST IMPLEMENT EXACTLY (these are the mathematician's decisions -- not open
+for re-litigation; if the numbers don't come out as expected, report what actually
+happened, do not force it)
+============================================================
+
+R1. CARRIER. Working carrier for classification: the Boolean lattice 2^E where E is the
+    58 core+candidate elements of viz/src/data.ts ELEMENTS (i.e. every row except the
+    `CSM` row, whose status is "limit" and which data.ts itself says "is not an
+    element"). Any symbol appearing in a blind-test-set.json case that is NOT one of
+    these 58 syms (e.g. it belongs to the CONTESTED register: Bc, Tw, Da, Cg, Ir, Zk, Ve,
+    Kg, Ua, Sq, or is otherwise unrecognized) makes that whole case INADMISSIBLE
+    immediately (out-of-signature term -- not well-formed over the signature) -- do not
+    evaluate laws or hazards for it. State in the report that this rule fires for exactly
+    the cases where it fires (compute and report which ids and which out-of-signature
+    symbol).
+
+R2. COMPOSITION. Join = union (set union) on 2^E. State and verify (by direct proof in
+    the report text, not brute force -- this is trivial set algebra): commutativity,
+    associativity, idempotence (A union A = A), identity (empty set), on 2^E generally.
+    Then, restricted to the sublattice of CLOSED (law-satisfying) sets with join=union
+    and meet* = "largest closed subset of A intersect B" (already given as well-defined),
+    prove absorption holds: A union meet*(A,B) = A (trivial since meet*(A,B) is a subset
+    of A) and meet*(A, A union B) = A (trivial since A is itself closed and A is a subset
+    of A intersect (A union B) = A, so the largest closed subset of A intersect (A union
+    B) is A itself). State plainly this IS a bounded lattice on closed sets (bottom =
+    empty set, top = full vocabulary, if the full vocabulary is closed -- check with the
+    reused evaluate() logic and report whether the full 58-element set fires every law
+    and whether every fired law is satisfied).
+
+R3. THE KERNEL/CLOSURE DUALITY (new content for this report -- write it, it is correct
+    and simple, verify by direct argument not exhaustive search): The family C of closed
+    (law-satisfying) subsets of E, being union-closed and containing the empty set, is a
+    KERNEL SYSTEM (the order-theoretic dual of a Moore/closure system, which would
+    instead be intersection-closed and contain E). Every kernel system induces a
+    canonical INTERIOR OPERATOR int(X) = union of {c in C : c subset of X} (monotone,
+    deflationary int(X) subset of X, idempotent). Note meet*(A,B) as already defined by
+    the council is exactly int(A intersect B). Define C* = { E minus S : S in C }; by De
+    Morgan, C* is intersection-closed and contains E -- a genuine Moore/closure system,
+    dual to C via complementation. This is the precise reason plain FCA over "closed sets
+    x elements" would be structurally wrong (C is not itself a closure system) while FCA
+    IS legitimate over C* (via complementation) or over genuinely object/attribute data
+    such as the real corpus decompositions (protocols x elements present, from
+    viz/src/protocols.ts / corpus50) where intents ARE intersection-closed by ordinary
+    FCA construction -- this is a DIFFERENT, entirely legitimate use of FCA that the
+    corpus's own VERDICT.md explicitly recommends running ("worth running on the 58 to
+    find redundancy"). Write one short paragraph making this distinction explicit: it
+    explains why "FCA cannot be the algebra" (given wall, about C) is compatible with
+    "FCA is a legitimate audit tool here" (about C* or about real corpus data), rather
+    than contradicting it.
+
+R4. VALIDITY PREDICATE. A candidate element set S (subset of the symbols in a
+    blind-test-set.json case) is ADMISSIBLE iff ALL of the following hold, else
+    INADMISSIBLE:
+      (a) every symbol in S is one of the 58 elements (R1);
+      (b) S is CLOSED under the 25 element-expressible-subject fireable laws: reuse
+          viz/src/laws.ts's parsing/evaluate approach (PARSED laws, subjects, terms,
+          alts, external terms auto-satisfied) -- reimplement this parsing directly from
+          viz/src/data.ts's LAWS array (regex-parse `rule` on the arrow, split terms on
+          "+", alts on "|", strip curly-brace isotope annotations and parens), do NOT
+          hand-copy the LAWS array by memory -- read it from the file. A law fires if any
+          subject present in S; it is satisfied if every non-external term has one or
+          more alt present in S. S is closed iff every FIRED law is satisfied. (This
+          matches viz/src/laws.ts closes() exactly -- you may literally run that
+          TypeScript file via `node --experimental-strip-types` the way
+          formal/analyze.mjs already does, importing from "../viz/src/laws.ts" and
+          "../viz/src/data.ts", OR reimplement equivalently in Python/JS parsing data.ts
+          directly with regex, your choice -- but it MUST produce the same
+          closes()/evaluate() semantics as viz/src/laws.ts, since that is the reference
+          engine. Verify equivalence on a couple of the 12 known protocols in
+          viz/src/protocols.ts before trusting it at scale (e.g. confirm your
+          reimplementation agrees "closed=true" for aave and "closed=false, missing Tg"
+          for lido/euler, matching FINDINGS.md's Protocol Closure Results table).
+      (c) S is HAZARD-FREE under the 20 written hazard rows from data.ts HAZARDS, with
+          the following EXACT exception list (do not invent your own exceptions beyond
+          these two):
+            - For every hazard row: extract named element symbols by regex matching
+              capitalized two-or-three-letter symbol tokens, filtered to the 58 valid
+              syms (same approach as viz/src/laws.ts armedHazards). If fewer than 2
+              named symbols survive, the hazard is NOT decidable from membership --
+              skip it (residue, not a check).
+            - If 2 or more named symbols and the combo text does NOT match a negation
+              regex for words like "no", "without", "absent", "lacking", "missing",
+              "never": evaluate it exactly as viz/src/laws.ts armedHazards does -- armed
+              iff every named symbol present.
+            - EXCEPTION 1 (X11a): implement CORRECTED polarity explicitly:
+              armed iff Uc is in S AND Aw is not in S AND At is not in S AND Bs is not in
+              S AND Tr is not in S. (Do not use the generic negation-skip for this one
+              row.) Note in the report: prove/verify computationally that this can never
+              actually arm on any CLOSED set, because law L3 (Uc requires Aw + At{...} +
+              (Bs or Tr) + obligor) already forces Aw AND At present (plus Bs or Tr) on
+              every closed set containing Uc -- so once L3-closure is enforced,
+              corrected-X11a is logically redundant with L3, and Uc is realizable. State
+              this as the ruling on BRIEF section 4's Uc-unrealizability point: the
+              table's hazard-polarity was the bug, not the element; fixing polarity (and
+              enforcing closure) restores realizability. Confirm computationally by
+              checking no case in the blind set is rejected BY X11a alone (i.e. check
+              whether X11a-corrected ever fires on any case that also passed closure --
+              report the count, expected to be 0).
+            - EXCEPTION 2 (X19): explicitly SKIP this row even though it has 2 or more
+              named symbols and negated polarity ("Xf ... with no destination-side Aw").
+              Reason (state in report): "restricted claim" is a per-instance asset-level
+              fact not decidable from element membership, and promoting a blanket
+              "Xf-without-Aw" rule would false-reject most ordinary permissionless
+              bridges (which never carry Aw at all) -- the cost of promoting this term
+              is too high relative to its benefit, per BRIEF fact #1's instruction to
+              name the cost of any prose-to-formal promotion. Leave X19 as residue.
+            - All other rows with 2+ named symbols and negated text (check X1, X5 --
+              likely both fall under the under-2-named-symbol threshold already and are
+              therefore skipped anyway by the first bullet; verify computationally and
+              report which rows actually reach the negation branch versus which never
+              reach it because they're under threshold).
+      (d) ATOMIC-SCOPE HAZARD (a 21st, unwritten-but-established hazard, per
+          FINDINGS.md Q12/atomicScopeConsistent -- implement generally, not just the two
+          witnesses): armed iff Fl is in S AND S intersect {Xm, Xf, Rl, Of} is not empty.
+          If armed, INADMISSIBLE.
+      (e) Do NOT add any check for {Au, Gs} -- per the ruling above it is an atlas
+          erratum, not a hazard, and must not affect admissibility. (Optionally: for
+          bookkeeping in the report only, note that Gs's stratum should be corrected to
+          S4 to resolve the L21 inversion -- this is cosmetic and does not touch the
+          validity predicate.)
+
+    COMPLEXITY: state plainly in the report -- checking a candidate S against (a)-(d) is
+    decidable in time linear in |S| and the fixed schema size (25 laws x <=5 terms each,
+    20 hazard rows, 1 extra rule), i.e. O(1) in practice since the schema is a fixed
+    small constant independent of the universe size 58 -- contrast this explicitly with
+    the SAT-hardness that an unrestricted propositional/feature-model formulation would
+    have in general (cite BRIEF section 5b's own diagnosis: "a propositional theory over
+    58 atoms -- cheap and decidable"; this artifact's predicate is decidable in far less
+    than general SAT time because law/hazard structure is fixed-arity Horn-like-with-
+    disjunctive-heads, not arbitrary CNF).
+
+R5. REDUNDANT-GENERATOR ALGORITHM (answers BRIEF section 6 Q3 -- "are the 58 elements
+    independent, or is there a smaller generating set? name the redundant ones"):
+    For every element x in the 58, compute its LAW-SIGNATURE, parsed directly from
+    data.ts's LAWS and HAZARDS arrays (not from memory):
+      - SUBJ(x) = set of law ids where x appears as a subject (left of the arrow, split
+        on "|").
+      - REQ(x)  = set of (law id, term index) pairs where x appears as one alternative
+                  inside a term (i.e. x could satisfy that term if present).
+      - HAZ(x)  = set of hazard ids where x is named as one of the 2+-named-symbol
+                  decidable hazards (from the same extraction as R4c), PLUS the
+                  atomic-scope hazard id if x is one of {Fl, Xm, Xf, Rl, Of}.
+    Define x ~ y (generator-equivalent / clones) iff REQ(x) = REQ(y) AND SUBJ(x) =
+    SUBJ(y) AND HAZ(x) = HAZ(y). Compute the partition of the 58 elements into
+    equivalence classes under ~. Report every class of size greater than 1 verbatim
+    (symbols, names) as REDUNDANT GENERATORS: for each such class, name one
+    representative as the "keeper" and the rest as redundant (any law/hazard that can be
+    satisfied by one member of the class can be satisfied by any other -- they are
+    literally interchangeable as generators of the closure system, though NOT necessarily
+    domain-interchangeable -- flag if class members differ in `group` or `stratum`, i.e.
+    "law-redundant but editorially distinct," which is worth a sentence per BRIEF fact
+    #2's spirit about non-injectivity).
+    This is explicitly NOT a claim of full Duquenne-Guigues minimality (which the
+    disjunctive-Horn wall forbids computing directly) -- say so plainly: it is a SOUND
+    (every reported class is a genuine set of interchangeable generators) but not
+    necessarily COMPLETE (there may be other, more subtle redundancies this signature
+    equality does not catch) partial answer.
+    Expected candidates worth specifically checking (verify computationally, do not
+    assume): {Sh, Ix, Rb} (co-occur as alternatives in L2/L5), {Li, Ad, Sl, Bs}
+    (co-occur in L1/L4 -- but note Bs/Sl also appear independently in several HAZARD
+    rows so they likely are NOT full clones of Li/Ad once HAZ is included -- report the
+    true computed answer, whatever it is), {Ex, Tp, At} (co-occur in L1). Report the real
+    computed partition, not this guess -- this guess is only a hint about where to look.
+
+R6. STRATUM (BRIEF section 6 Q4): restate the given finding (must stay asserted, 3/58
+    trivial match, range mismatch 0-2 vs 0-4) -- 2-3 sentences, cite FINDINGS.md Q10, do
+    not recompute the full rank analysis. State the one ruling you're making: correct
+    Gs's asserted stratum from 3 to 4 to resolve the L21 inversion (cosmetic only, as per
+    R4e).
+
+R7. REFLEXIVITY (BRIEF section 6 Q5): restate the given finding from FINDINGS.md Q13 (no
+    element-set carrier can express a requirement cycle; Terra's collapse is a 2-cycle
+    over (element, asset) pairs under a `backs` relation) in 3-4 sentences. State
+    explicitly that this artifact's classification carrier (2^E) is therefore NOT
+    expressive enough to catch a live Terra-shaped composition purely structurally
+    UNLESS it is also caught by ordinary hazard X1 (As + reflexive junior token with no
+    hard redemption or exogenous capital) -- check: does X1 pass the 2+-named-symbol
+    threshold (only "As" is a real symbol match; the rest is prose) -- if not, note
+    explicitly that under this artifact, a Terra-shaped element set with no OTHER
+    tripped law/hazard (e.g. {As, Rd, Ex, Pl, Ix, Em} -- Terra's actual syms from
+    protocols.ts) is admissible even though it died. Check computationally whether
+    Terra's own element set (protocols.ts "terra" syms) closes and is hazard-free under
+    R4 -- report the actual answer, this is exactly the kind of "what breaks" content
+    BRIEF wants.
+
+============================================================
+CALIBRATION (for the self-assessed discrimination ratio -- the blind set has no
+available ground truth to you; use this as your evidence base instead)
+============================================================
+Build a small calibration harness: run the R4 validity predicate over the 12 known
+protocols' exact `syms` arrays from viz/src/protocols.ts (aave, uniswapv3, maker,
+liquity, gmx, lido, cow, cctp, centrifuge, terra[dead], mango[dead], euler[dead]).
+Report, per protocol: closed? hazard-free? atomic-scope-clean? final verdict under R4.
+Compare against FINDINGS.md's Protocol Closure Results table (aave, uniswapv3, maker,
+liquity, gmx, cow close; lido, cctp, centrifuge, terra, mango, euler do not close under
+the reference 25-law engine) as a sanity check that your reimplementation of closure
+agrees with the reference before you trust it on the 156 blind cases. Note explicitly
+that "closes" alone is not the same predicate as R4's full ADMISSIBLE (R4 also adds
+hazard-freedom and the atomic-scope rule) so some deviation from the closure table is
+expected and should be explained, not treated as a bug.
+
+Then classify all 156 blind-test-set.json cases with R4. Report:
+  - total ADMISSIBLE / INADMISSIBLE counts and percentage
+  - breakdown of INADMISSIBLE by reason: out-of-signature (R1), open/unclosed (R4b),
+    hazard-armed (R4c, list which hazard ids fired how many times), atomic-scope (R4d)
+  - your self-assessed discrimination ratio: since you cannot see ground truth, state it
+    as a calibrated ESTIMATE reasoning from the 12-protocol calibration (how many of the
+    9 alive/closed-under-reference protocols your R4 predicate accepts, and whether all
+    3 dead ones are rejected) plus the observed acceptance rate on the 156-case blind set
+    compared to the reference baseline's stated 50% real / 15% noise (3.3x) -- do not
+    fabricate a precise ratio number if you cannot justify it; state the estimate as a
+    range with the reasoning shown, e.g. "if the blind set's real:synthetic mix is
+    similar to the reference run, an X% overall acceptance rate combined with Y/9 real
+    protocols correctly accepted implies a discrimination ratio at least Z, at most W" --
+    be honest and precise about what is actually known versus estimated.
+
+============================================================
+VOCABULARY ADDITIONS/CUTS (BRIEF section 8 item 4)
+============================================================
+State explicitly, in a short list:
+  ADDED: the 21st hazard (Fl + any G12 element) as a formal rule (R4d).
+  ADDED (cosmetic): Gs stratum correction 3 to 4.
+  CUT/DEMOTED: none of the 58 elements are removed from the vocabulary (Uc is kept, per
+  the realizability ruling in R4c-Exception-1). Report the R5 redundant-generator
+  classes as "candidates for merging" rather than outright cuts -- state explicitly that
+  you are NOT unilaterally deleting any element from data.ts (no file mutation of
+  viz/src/data.ts is authorized or performed), only reporting which symbols the closure
+  system treats as interchangeable.
+  DECLINED PROMOTIONS: X19 (cost too high, see R4c-Exception-2).
+
+============================================================
+REPORT STRUCTURE -- write /root/DefiElements/algebra/reports/GP-ORD.md following
+BRIEF.md section 8 exactly:
+============================================================
+1. Signature, carrier, operations, laws -- formal, with proofs (R2, R3).
+2. The validity predicate and its complexity (R4, verbatim rule list + complexity
+   statement).
+3. Answers to BRIEF section 6, numbered 1-5 (carrier, join/lattice/Galois question using
+   R3's kernel/closure duality framing, R5's redundant-generator answer, R6 stratum, R7
+   reflexivity).
+4. What you added to the vocabulary and what you cut (the VOCABULARY ADDITIONS/CUTS
+   section above).
+5. Your self-assessed discrimination ratio on the blind set (the CALIBRATION section
+   above, with actual computed numbers).
+6. One short section: what breaks (use R7's Terra-shaped-blind-spot finding, plus
+   anything else your computation surfaces, e.g. cases where R4's out-of-signature rule
+   (Ve) fires, or where corrected-X11a and R4b redundancy interact unexpectedly).
+
+Also include 2 short paragraphs positioning against prior art (BRIEF section 5),
+specifically:
+  (i) versus interface automata / assume-guarantee contracts: note this artifact has no
+      ports, so meet* must be recomputed globally against the whole closure system
+      rather than composed locally the way assume-guarantee's conjunction is -- this is
+      the concrete cost of "composition of sets without ports" that BRIEF section 5b
+      flags as genuinely unsolved;
+  (ii) versus FCA specifically: restate R3's distinction (FCA is wrong as THE algebra
+      over C because C is a kernel system not a closure system; FCA is legitimate as an
+      audit tool either dually over C* or directly over real corpus decomposition data,
+      exactly as BRIEF section 5b itself recommends).
+
+Be direct. State results as results, with the actual computed numbers, not
+placeholders. Do not write an essay about whether a model is possible -- you already
+have one; report what it does.
+
+============================================================
+CONSTRAINTS
+============================================================
+- Do not touch git. Do not run git commit, git add, git reset, git branch, git push,
+  git rebase, git merge, git tag. Read-only git only if needed.
+- Do not modify viz/src/data.ts, viz/src/laws.ts, viz/src/protocols.ts, formal/*, or
+  corpus50/* -- read-only inputs.
+- Do not delete or rename any existing file.
+- You may create scratch scripts under /root/DefiElements/algebra/ (e.g.
+  algebra/.gp-ord-scratch.mjs or .py) to do the computation -- fine to leave them, but
+  make clear in your final message which files are the two required deliverables versus
+  scratch.
+- The two required deliverables are exactly:
+    /root/DefiElements/algebra/reports/GP-ORD.md
+    /root/DefiElements/algebra/verdicts/GP-ORD.json
+- verdicts/GP-ORD.json MUST have shape {"verdicts":[{"id":"T001","verdict":"ADMISSIBLE"},
+  ...]} with EXACTLY 156 entries, one per case in blind-test-set.json (same ids, any
+  order is fine but 156 must be present, verdict must be exactly "ADMISSIBLE" or
+  "INADMISSIBLE" -- no other strings).
+
+============================================================
+VERIFICATION -- run these yourself and include the actual output in your final message:
+============================================================
+python3 -m json.tool /root/DefiElements/algebra/verdicts/GP-ORD.json > /dev/null && echo VALID_JSON
+
+python3 -c "import json; d=json.load(open('/root/DefiElements/algebra/verdicts/GP-ORD.json')); v=d['verdicts']; assert len(v)==156, len(v); ids=set(x['id'] for x in v); src=json.load(open('/root/DefiElements/algebra/blind-test-set.json')); srcids=set(c['id'] for c in src['cases']); assert ids==srcids, (srcids-ids, ids-srcids); verdicts=set(x['verdict'] for x in v); assert verdicts <= {'ADMISSIBLE','INADMISSIBLE'}, verdicts; adm=sum(1 for x in v if x['verdict']=='ADMISSIBLE'); print('OK count check. ADMISSIBLE=', adm, ' INADMISSIBLE=', 156-adm)"
+
+wc -l /root/DefiElements/algebra/reports/GP-ORD.md
+
+Report the actual output of these commands in your final message, not a paraphrase.
