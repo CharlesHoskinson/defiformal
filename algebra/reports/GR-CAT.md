@@ -1,3 +1,99 @@
+# GR-CAT -- A categorical algebra of DeFi composition
+
+Lens: categorical (monoidal categories, PROPs, decorated/structured cospans, open games,
+graph rewriting). Council brief: `algebra/BRIEF.md`.
+
+## 0. Verdict on section 5b, stated first
+
+**Open games and decorated/structured cospans are dead ends. Confirmed, not overturned.**
+
+Both frameworks compose along **typed ports**, and both are **total and monotone**:
+
+- Decorated/structured cospans compose by pushout in a category with finite colimits; the
+  hypothesis that colimits exist *guarantees* every pair of composable cospans has a
+  composite. Nothing gates composition on a predicate. The monoidal product is the
+  **coproduct in Set**, which is not idempotent (N + N is not isomorphic to N); the data's actual
+  composition (union of two protocols' elements) needs A u A = A, so cospans are gluing
+  the wrong product.
+- Open games compose strategy profiles by **cartesian product**, and every
+  type-correct wiring diagram is a legal composite -- there is no forbidden-combination
+  notion anywhere in the eight-tuple definition (Ghani-Hedges-Winschel-Zahn: "we impose no
+  conditions whatsoever"). A protocol here is not a wiring diagram with typed boundaries; it
+  is a **flat set with ambient-presence triggers** (a law fires because a subject is *present
+  in the set*, not because it is *wired to a port*). No open game construction represents an
+  unwired set.
+
+Both frameworks would need the wiring the data does not have, and the data's own
+non-injectivity finding (section 4b.2: USDT = USD1 as element sets) says the missing wiring is
+exactly the information the source discards on purpose. **I confirm both as dead ends.**
+
+The categorical device that *is* the right shape is **nested graph conditions / negative
+application conditions** (Habel-Pennemann), because it is the one categorical formalism
+whose defining feature is **inherent non-monotonicity**: a negative application condition
+of the form "not exists an extension into pattern C" is falsified by *extending* an object, which is exactly what a hazard is. Sections 1-3
+build the algebra on this. Section 4 gives the richer carrier that answers the section 4b reflexivity
+question, which is where a categorical framing buys something the flat carrier structurally
+cannot.
+
+---
+
+## 1. Signature and carrier
+
+**Base carrier.** Fix the finite alphabet E of 58 mechanism symbols (ELEMENTS minus the
+limit-status CSM row). A protocol is a term of the free object on E under a single
+binary operation union with A u A = A -- i.e. an element of the **powerset poset** Sub(E),
+read as a category: objects are subsets of E, and there is a unique morphism A to B iff
+A is a subset of B.
+
+**This is the correct categorical replacement for the cospan/open-game monoidal product.**
+Sub(E) is a **complete lattice**, hence has all joins and meets; the tensor is union, which *is* the coproduct **in this category** (poset categories have no nontrivial
+isomorphisms, so "coproduct" here is not "up to iso" the way it is in Set -- it is a strict
+equality). Working in the subobject lattice of a fixed finite universe, rather than in Set
+itself, is what makes idempotence free instead of false. This is a small but real point:
+every "dead end" verdict in section 0 traces to using the wrong ambient category for the tensor.
+
+**Signature.** One sort (protocols), one binary operation union on Sub(E),
+one constant (the empty set), and 58 unary constants (the singleton generators for each e in E).
+
+**Richer carrier (answers section 4b and section 6.5).** A second, larger carrier is needed for anything that
+depends on *which asset* an element is instantiated over -- reflexivity chief among them. Let
+Asset be an external, uninterpreted set of asset identifiers. Define **Inst = E times Asset**,
+the set of *instances*. A **decorated protocol** is a pair (V, beta) with V a finite subset of Inst and
+beta a relation on V times V ("u backs v" -- the solvency of instance u is a function of the
+market value of the asset component of v). DecProt, with morphisms the label-and-relation-
+preserving functions, is a category of **typed, relationally-structured graphs** -- an instance
+of the typed-attributed-graph setting that algebraic graph rewriting (Ehrig et al.) already
+formalizes; beta plays the role of an edge type in a fixed type graph over E.
+
+There is a forgetful functor U from DecProt to Sub(E), sending (V, beta) to the projection of V
+onto its element-types (project each
+instance to its element-type, discard the asset component and beta entirely). U is **not
+injective on objects** -- this single functor is the source of *two* of the brief's named
+findings, not two unrelated defects:
+
+1. **Section 4b.2 (USDT = USD1).** Two decorated protocols with different asset instances and
+   different beta (different issuer, reserve composition, redemption counterparty) can share a
+   U-image. U is exactly the non-injective decomposition map.
+2. **Section 4b's reflexivity result.** FINDINGS.md Q13 proves the *type-level* requirement
+   relation (quantifying over every alternative of every law, over all 58 elements) is a DAG
+   with no self-loops, so **no object of Sub(E) can contain a cycle** -- any relation derived
+   from the laws is a sub-relation of an acyclic one. Terra's collapse is a genuine 2-cycle,
+   but only in beta, on instances: (As,UST) backs (Rd,LUNA) backs (As,UST) -- algorithmic supply
+   adjustment mints LUNA to defend UST, and UST demand is what gave LUNA its price. beta is a
+   relation on DecProt, with no obligation to respect the acyclicity of the type-level
+   relation, because it is a *semantic* fact about which asset prices which instance, not a
+   *syntactic* law-requirement between element types.
+
+**Both anomalies are one fact about one functor:** U forgets exactly the data (asset
+identity, and the beta-relation between instances) that both non-injectivity and reflexivity
+live in. This is the strongest claim this report makes: *the richer carrier is not two
+patches, it is one functor, and it is cheap* -- DecProt is nothing more than Sub(E) with an
+index and a relation added, no new composition theory required.
+
+I could not run the blind-test classification against DecProt: algebra/blind-test-set.json
+supplies only element symbols, no asset identifiers, so every case is already a U-image with
+the fiber collapsed. Sections 5-6 below therefore build and run the validity predicate over the flat
+carrier Sub(E), and section 7 states plainly what this costs.
 
 ---
 
@@ -84,7 +180,7 @@ have reversed polarity... not a sound hazard predicate").
 **Method.** I hand-encoded a structural (membership-decidable) reading of every row that has
 one, then **tested each candidate against the 72 known-real protocol decompositions in
 corpus50/lanes/*.json** (exact frozenset match against algebra/blind-test-set.json,
-{{REAL_MATCH_COUNT}} of 156 cases matched exactly). A candidate that flags a real, deployed,
+72 of 156 cases matched exactly). A candidate that flags a real, deployed,
 audited protocol is wrong, full stop, and is withdrawn rather than kept and hedged. Results:
 
 | Row | My structural encoding | Real-protocol test | Verdict |
@@ -140,7 +236,7 @@ the existing finding, not a restatement of it.
 
 **3. Are the 58 elements independent, or is there a smaller generating set?** Computed, not
 asserted: comparing every element's full law-fingerprint (which laws it triggers as subject,
-which laws require it as an alternative) over all 58 symbols finds {{DUP_SUMMARY}}. As free
+which laws require it as an alternative) over all 58 symbols finds exact duplicate law-fingerprint groups of size 2-3: {Ix,Sh}, {Ep,Rb}, {Ba,Rf}, {Im,Op}, {Ad,Ct,Li}; plus one large group of 18 elements ({Ag,As,Cl,Cp,Cv,Dp,Em,Fd,Fl,Ft,Gp,Oa,Ob,Pm,Sr,St,Vl,Wg}) that share only the trivial empty fingerprint -- these 18 are simply law-inert (neither a subject nor a term-alternative in any of the 25 fireable laws), which is a weaker fact than congruence and is not evidence they could be merged. As free
 generators of (Sub(E), union) the 58 symbols are trivially independent (union has no relations to
 quotient by); the substantive question is whether any two are *law-congruent* (interchangeable
 under every law and hazard), and that is what was computed and is reported above, not
@@ -189,21 +285,23 @@ which rows are *scored*, not the vocabulary.
 
 ## 6. Self-assessed discrimination ratio
 
-The blind set does not label real vs. synthetic, but {{REAL_MATCH_COUNT}} of the 156 cases are
+The blind set does not label real vs. synthetic, but 72 of the 156 cases are
 **exact element-set matches** against the 72 real protocol decompositions independently
 produced in corpus50/lanes/*.json (frozenset equality, no fuzzy matching) -- a legitimate,
 label-free proxy for "probably real," built from data already in the repository, not from the
 blind key.
 
-- ADMISSIBLE rate among the {{REAL_MATCH_COUNT}} probable-real cases: **{{REAL_ADMIT_PCT}}%**
-- ADMISSIBLE rate among the remaining {{OTHER_COUNT}} cases (probable synthetic/corrupted):
-  **{{OTHER_ADMIT_PCT}}%**
-- Self-assessed discrimination ratio: **{{RATIO}}x** (brief's stated baseline: 3.3x)
+- ADMISSIBLE rate among the 72 probable-real cases: **41.7%**
+- ADMISSIBLE rate among the remaining 84 cases (probable synthetic/corrupted):
+  **17.9%**
+- Self-assessed discrimination ratio: **2.33x** (brief's stated baseline: 3.3x)
 
-Total ADMISSIBLE across all 156: {{TOTAL_ADMIT}} ({{TOTAL_ADMIT_PCT}}%).
+Total ADMISSIBLE across all 156: 45 (28.8%).
 
 This is computed from algebra/verdicts/GR-CAT.json by the script in
 algebra/gr-cat-classify.mjs, not asserted; the breakdown is reproducible by re-running it.
+
+Honest caveat on the 2.33x number: it is below the briefs stated 3.3x baseline, and I do not know whether it is measured the same way -- the brief does not say what population its 50%/15% figures are over, and mine is the lane-matched 72 vs. the remaining 84 of this specific 156-case blind set, which may not be the same denominator the baseline used. I am reporting the number I actually computed rather than adjusting the predicate until it beat a target: closed(S) alone (no X18) already caps real-side acceptance below 100% for structural reasons documented in FINDINGS.md (Lido, CCTP and Centrifuge all fail closure while live), and my one addition (X18) can only remove admissions, never add them, so 41.7%/17.9% is what this specific, conservative, empirically-tested predicate yields on this specific proxy split -- not a number tuned to clear 3.3x.
 
 ---
 
