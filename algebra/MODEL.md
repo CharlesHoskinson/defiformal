@@ -103,15 +103,48 @@ theorem that mechanism inventory does not determine credit.
 
 ---
 
+## 4b. Why validity is non-monotone: a proof, not an observation
+
+GR-LOG's result, and it is the deepest thing the council produced. Read the laws
+as clauses and the polarities are opposite:
+
+| | clause shape | model class |
+|---|---|---|
+| requirement (`subject → alternatives`) | at most one negative literal — **dual-Horn** | **union**-closed |
+| hazard (exclusion) | pure negative — **Horn** | **intersection**-closed |
+
+`ADMISSIBLE = CLOSURE ∩ HAZARD-FREE` mixes the two, so by Schaefer/Post duality
+it is provably a lattice under **neither** operation.
+
+This is the reason, not the symptom. I had recorded non-monotonicity as an
+empirical fact from the model checker and asked the council to "deal with it";
+it is a theorem about clause polarity, and it was derivable from the shape of the
+law language without running anything. It also settles T1 below: `γ` and `Δ` do
+not commute, because they are closure operators of opposite polarity.
+
+It sharpens §5b too. Feature models were rated a near-exact structural fit —
+`requires` constraints are dual-Horn, `excludes` constraints are Horn, and that
+split is precisely why feature-model validity moves in both directions at once.
+The fit was closer than the survey knew.
+
+**And it corrects my own benchmark.** I built the HYBRID family as a
+contamination probe, on the reasoning that spliced protocols cannot have been
+memorised. It is also — and mostly — a **union-closure detector**: a union-closed
+model class must accept splices, because a splice of closed sets is closed. GR-LOG
+admits 57.9% of hybrids and correctly calls this "a structural consequence of
+union-closure, not a fixable bug". So the hybrid column ranks models by how
+union-closed they are, not by how honest they are. OP-CAT at 21% and OP-ORD at
+16% are not less contaminated than GR-LOG at 58%; they are less union-closed.
+
 ## 5. Theorems worth proving
 
 Ordered by what I would actually want to know.
 
-**T1 — Do `γ` and `Δ` commute?**
-`γΔ = Δγ`? If yes, the admissible sets form a lattice and composition is
-well-behaved. If no, the failure is precisely the non-monotone pathology, and the
-obstruction is a finite, computable set. **Either answer is a result**, and this
-is the single highest-value open question the model raises.
+**T1 — ANSWERED, by GR-LOG. They do not commute, and the reason is polarity.**
+See §4b above. What remains is the quantitative version: the obstruction is a
+finite computable set, so *enumerate it*. Which admissible sets fail to be fixed
+points of both operators, and how many are there? That converts a structural
+impossibility into a bounded list of exceptions.
 
 **T2 — The congruence fragment.**
 OP-LOG refuted X3: `⊕` is not a congruence for validity, with witnesses on all
