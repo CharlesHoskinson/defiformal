@@ -128,6 +128,15 @@ visual object — cases where all nine agree vs cases that split them.
 | E4 | **Register rulings from evidence** | promote `Da`, `Of`, `Sv`(narrowed); split `Ve`, `Vl`; reject `Tw`; `Zk` insufficient. Show the *evidence*, not the verdict. | [ ] |
 | E5 | **Non-injective decomposition** | fibres are not semantically homogeneous — USDT and USD1 are one point and not one credit | [ ] |
 
+## E6-E9. The model, and it changes what the atlas is for
+
+| # | Object | Status |
+|---|---|---|
+| **E6** | **The warrant half — the single biggest addition.** The 29 laws say what each element *requires*; nothing says what it is *for*. The Galois adjoint yields **27 warrant rows** (`Li → Ct`, `As → (Ex\|Tp\|Oa\|At)`). Every element needs a second edge type drawn in the opposite direction. Ablation: closure alone 2.45×, warrant alone 2.37×, **together 10.83×**. | [ ] |
+| **E7** | **Unwarranted mechanism — the new diagnostic.** Validity is now *two* fixed points: requirement-closure (what am I missing) **and** warrant-interior (what am I carrying that nothing justifies). The second has never been drawable because the atlas had no vocabulary for purpose. An unwarranted element is attack surface with no compensating function — it should read as a defect on the tile, not a neutral state. | [ ] |
+| **E8** | **The polarity split.** Requirements are dual-Horn (union-closed); prohibitions are Horn (intersection-closed); their mixture is provably neither. Requirements and hazards are not two flavours of rule — they pull in **opposite directions**, and that is why validity is non-monotone. They must not share a visual register. | [ ] |
+| **E9** | **The 54-point poset (T3).** If the definite fragment's closed sets are up-sets of a poset, the law list should be redrawn as a **Hasse diagram** — orderable, layerable, and an honest replacement for the stratum column that two methods now say was never a rank. **This may supersede F7's DSM**: a partial order is drawable in a way 29 disjunctive laws never were. Decide between them before building either. | [ ] |
+
 ## F. Views and mechanisms
 
 | # | View | Status |
@@ -149,6 +158,8 @@ visual object — cases where all nine agree vs cases that split them.
 | F15 | **The settled band** | [ ] — S1–S5 are results, not obligations: closure is a complete lattice, meet is not intersection, validity is non-monotone, stratum is not derivable, reflexivity is not expressible over element types. Draw them as a fixed floor the nine models sit on, so a model that contradicts one reads as an anomaly rather than an opinion. |
 | F17 | **Strict-vs-broad: the model trade-off** | [ ] — the scoreboard is **not a ranking, it is a 2D scatter**, and every entrant so far sits at one extreme. GP-CAT/GP-ORD reject every knockout, armed hazard and inversion — and throw away ~60% of the real corpus. OP-CAT accepts 96% of real protocols and no random noise at all — and misses 27% of knockouts, cases that differ from a working protocol by one symbol. Plot recall against knockout rejection; the empty top-right corner is the finding. A one-number ranking would hide it entirely. |
 | F18 | **The ratio diverges** | [ ] — accept(REAL)/accept(RANDOM) goes to infinity at zero random acceptance, so a merely-very-strict model looks infinitely good. Never render the headline number alone; the knockout gate is the binding constraint and must sit beside it. |
+| F20 | **The council convergence graph** | [ ] — 162 nodes, 655 edges, 10 communities over the nine reports; the communities *are* the disputes. Three hyperedges worth drawing directly: unanimous 9/9 that Terra sits outside element types, unanimous 9/9 that X11a's polarity is the defect, and **Aave v3 as the shared falsifying witness** against `{Fl,Xm}` — three reports overturn it, a fourth keeps it while conceding the same false positive. Built at `algebra/graphify-out/graph.html`. |
+| F21 | **Where the lone dissenter was right** | [ ] — the vote split 8–1 twice, with a *different* dissenter each time, and both times the minority was correct: OP-CAT alone derived stratum from a typing functor, OP-LOG alone recovered meet as intersection. This is the argument for nine over three and it belongs on screen — majority position is not evidence. |
 | F19 | **Effective generating set: 56, not 58** | [ ] — OP-CAT reports `St`/`Wg` collapse under observational equivalence, plus one further pair. If it holds, two tiles in the table are not elements and the packed form is drawing a distinction that does not exist. Verify against the other order-theoretic entrants before redrawing. |
 | F16 | **The four wanted impossibilities** | [ ] — D1–D4 are the outcomes we most want proved, not failures to hide. D2 especially: that no function of element sets separates USDT from USD1, i.e. **solvency is not a function of mechanism inventory**. If it lands it is the project's strongest claim and needs the loudest object on screen. |
 
