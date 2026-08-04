@@ -71,7 +71,7 @@ should be visible.
 
 | # | Result | Status | Note |
 |---|---|---|---|
-| C1 | Closure per protocol | [~] | computed; 6 of 12 close |
+| C1 | Closure per protocol | [~] | **9 of 12 close, not 6.** The old figure was a parser bug: mixed terms (`Tg | bounded emergency process`) were read as hard element requirements. Lido, Centrifuge and Euler close once fixed; only CCTP, Terra and Mango stay open. Draw the corrected result and the correction. |
 | C2 | Seating order | [~] | computed, never rendered |
 | C3 | Requirement cycles | [~] | **there are none, and now provably so** — the requirement relation over all 58 elements taking every alternative is a DAG with no self-loops, so *no subset can contain a cycle*. Terra is a 2-cycle only over (element, asset) pairs under `backs`: (As,UST)→(Rd,LUNA)→(As,UST). Draw the pair-level loop; the element-level graph cannot hold it. |
 | C4 | In-degree / "Weight" | [~] | max 4, nearly flat — weak channel, say so |
@@ -157,7 +157,7 @@ visual object — cases where all nine agree vs cases that split them.
 | # | Defect | Status |
 |---|---|---|
 | G1 | `protocols.ts` holds 12 protocols; we have 60 | [ ] |
-| G2 | Three dead protocols shown; **Euler fails closure for a reason unrelated to why it died** (has `Up` without `Tg`, violating L15) — the Lock-Up's best moment is built on a coincidence | [ ] |
+| G2 | ~~Euler fails closure for an unrelated reason~~ — **RESOLVED, and worse than a coincidence: it was our bug.** Euler had a bounded emergency process, just not a timelock, and L15 permits either. Euler closes. The Lock-Up's climax must be rebuilt on something real. | [✓] diagnosed |
 | G3 | Hazard layer renders as if decidable; only X2 is, and it fires on nothing | [ ] |
 | G4 | Weight/in-degree channel has almost no dynamic range | [ ] |
 | G5 | "Periodic table" disavowal — exactly one permitted instance, gated by conformance | [✓] |

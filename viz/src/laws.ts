@@ -17,7 +17,8 @@ const SYMS = new Set(ELEMENTS.map((e) => e.sym));
 export interface Term {
   alts: string[];      // element symbols that would satisfy it
   prose: string;       // the raw text, for terms with no element (e.g. "exit-liquidity")
-  external: boolean;   // true when nothing in the table can satisfy it
+  external: boolean;   // true when membership alone cannot decide the term
+  mixed: boolean;      // an element alternative sits beside a prose one
 }
 
 export interface ParsedLaw {
@@ -35,11 +36,15 @@ function parseSide(side: string): Term[] {
   // split on + at top level; the laws never nest parentheses
   return side.split("+").map((chunk) => {
     const raw = chunk.trim();
-    const alts = raw
-      .split("|")
-      .map((a) => bare(a))
-      .filter((a) => SYMS.has(a));
-    return { alts, prose: raw, external: alts.length === 0 };
+    const parts = raw.split("|").map((a) => bare(a));
+    const alts = parts.filter((a) => SYMS.has(a));
+    // A term like "Tg | bounded emergency process" is a DISJUNCTION. An earlier
+    // version dropped the prose alternative and hard-required Tg, which turned
+    // five permissive terms into mandatory ones and made L15 alone reject 25 of
+    // 72 live protocols. If any alternative is prose we cannot decide the term
+    // from membership, so it becomes residue - exactly as a fully-prose term does.
+    const mixed = alts.length > 0 && alts.length < parts.length;
+    return { alts, prose: raw, external: alts.length === 0 || mixed, mixed };
   });
 }
 

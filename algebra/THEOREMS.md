@@ -17,7 +17,22 @@ is a discharge.** What is not acceptable is leaving one open.
 
 ---
 
-## S. Already settled. Do not re-prove; contradict at your peril.
+## S. Was "already settled". Three of five have since fallen.
+
+> **Correction, and it is a root cause.** The reference parser treated a mixed
+> term — an element beside a prose alternative, e.g. `L15: "Tg | bounded
+> emergency process"` — as a **hard requirement on the element**, silently
+> dropping the prose disjunct. Five terms did this. `L15` alone rejected 25 of
+> 72 live protocols. Fixed: a term with any prose alternative is undecidable
+> from membership and becomes residue, exactly as a fully-prose term does.
+>
+> Closure went from 6/12 to 9/12. **Lido, Centrifuge and Euler now close.** The
+> only survivors are CCTP and the two genuine deaths, Terra and Mango.
+>
+> The Quint model was built from the same spec and reproduced the same error, so
+> "two independent implementations agree" meant two implementations sharing a
+> spec bug — not confirmation. Everything below inherited from closure results
+> is now suspect, and the entries are marked accordingly.
 
 These are established by Apalache plus exhaustive enumeration over the full
 58-element vocabulary. A model that violates one is wrong unless it explicitly
@@ -26,10 +41,10 @@ overturns the result.
 | | Result |
 |---|---|
 | **S1** | Closed sets are union-closed, contain ⊥ and ⊤, and form a complete lattice. |
-| **S2** | Meet is **not** intersection: `{Xm,Xf,Of,Bs} ∩ {Xm,Xf,Of,Sl}` is open. |
+| **S2** | ~~Meet is not intersection.~~ **CONTESTED.** OP-LOG splits the laws into 8 definite Horn productions plus constraints, finds the definite fragment has height 1, and recovers `⊓ = intersection` on a completely distributive lattice of 3,140 closed sets. The failure is a fact about disjunction, not about the lattice. |
 | **S3** | Validity is **non-monotone**: `{Xm,Xf} ∪ {Aw}` arms X19. Closure is lattice-structured; validity is not. |
-| **S4** | Stratum is **not** derivable *as rank over the law graph* — agreement on 3 of 58, all trivial; FCA independently confirms concept lattices are not graded. **This is narrower than "stratum must stay asserted", and OP-CAT has already found the loophole legitimately**: derived as the maximal sort of a typing functor it agrees 57/58. S4 constrains one derivation basis, not all of them. |
-| **S5** | The requirement relation is a DAG with no self-loops, so **no subset of elements can contain a cycle**. Reflexivity is not expressible over element types. |
+| **S4** | **CONTESTED.** Not derivable *as rank over the law graph* — agreement on 3 of 58, all trivial; FCA independently confirms concept lattices are not graded. **This is narrower than "stratum must stay asserted", and OP-CAT has already found the loophole legitimately**: derived as the maximal sort of a typing functor it agrees 57/58. S4 constrains one derivation basis, not all of them. |
+| **S5** | **HOLDS — three independent confirmations.** The requirement relation is a DAG with no self-loops, so no subset of elements can contain a cycle. OP-CAT expresses Terra only by moving to element *instances* with asset and party sorts; GP-ORD confirms inexpressibility over element sets directly. |
 
 ---
 
