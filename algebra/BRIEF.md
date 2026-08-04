@@ -1,5 +1,8 @@
 # Build an algebra of DeFi composition
 
+> **Note.** Identity claims between protocol decompositions are false against the arrays in corpus50/lanes. Of 10 claimed identical groups only 3 hold: USDT/USD1, LiquidMesh/KyberSwap, Binance Wallet/OKX DEX. Use containment (80 strict pairs, computed by viz/scripts/check-collisions.py) rather than identity.
+
+
 You are one of nine mathematicians working independently. Your job is to
 **build a model** — a working algebra, stated formally, that classifies real
 protocols. Not an assessment of whether one is possible. Not a survey. A model.

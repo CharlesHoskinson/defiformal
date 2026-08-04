@@ -1,5 +1,8 @@
 # The completeness benchmark: what 69 protocols did to the vocabulary
 
+> **Note.** Identity claims between protocol decompositions are false against the arrays in corpus50/lanes. Of 10 claimed identical groups only 3 hold: USDT/USD1, LiquidMesh/KyberSwap, Binance Wallet/OKX DEX. Use containment (80 strict pairs, computed by viz/scripts/check-collisions.py) rather than identity.
+
+
 Three lanes, briefed identically, run independently, never shown each other's
 work. Rankings pulled live from DefiLlama and rwa.xyz on 2026-08-04 — none from
 memory. Each lane was told that a finding of FAILURE was worth more than a

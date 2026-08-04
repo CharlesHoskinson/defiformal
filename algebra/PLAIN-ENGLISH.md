@@ -1,5 +1,8 @@
 # What this is actually for
 
+> **Note.** Identity claims between protocol decompositions are false against the arrays in corpus50/lanes. Of 10 claimed identical groups only 3 hold: USDT/USD1, LiquidMesh/KyberSwap, Binance Wallet/OKX DEX. Use containment (80 strict pairs, computed by viz/scripts/check-collisions.py) rather than identity.
+
+
 No mathematics in this file. If anything below stops being true of the model,
 this file is wrong and must be fixed — it is maintained alongside `MODEL.md` and
 `LEDGER.md`, not written once.

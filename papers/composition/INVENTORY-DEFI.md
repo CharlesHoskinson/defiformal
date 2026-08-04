@@ -244,6 +244,47 @@ finance")` returned **0 hits**; UC has not reached the DeFi-protocol-composition
 
 ---
 
+---
+
+## E. Addendum — financial-contract DSLs (composition *of payoffs*, not *of protocols*)
+
+Retrieved into `papers/composition/` by the parallel contract-theory sweep; recorded here for
+completeness because they are the one place where "composition" and "finance" already meet.
+
+- **Peyton Jones, Eber, Seward — "Composing Contracts: An Adventure in Financial Engineering"
+  (ICFP 2000)** — `peytonjones2000-composing-contracts.pdf`. A combinator algebra for financial
+  contracts: primitives (`zero`, `one`, `give`, `and`, `or`, `scale`, `when`, `anytime`) with a
+  compositional denotational semantics into value processes. **Genuinely a composition algebra
+  over financial primitives, and the strongest structural precedent for the atlas.** But it is
+  **NO** on the interface-theory question: every combination is well-formed by construction —
+  there are no admissibility constraints, no requirements, no prohibitions, no compatibility
+  condition that composition can violate. Precisely the contrast the atlas exists to draw.
+- **Biryukov, Khovratovich, Tikhomirov — "Findel: Secure Derivative Contracts for Ethereum"
+  (FC 2017 Workshops)** — `biryukov2017-findel.pdf`. Peyton Jones combinators ported to
+  Ethereum. **NO** — same well-formed-by-construction property, now on-chain.
+- **Lamela Seijas, Thompson et al. — Marlowe (ISoLA 2018; WTSC 2020; static analysis 2020)** —
+  `lamelaseijas2018-marlowe-isola.pdf`, `lamelaseijas2020-marlowe-wtsc.pdf`,
+  `lamelaseijas2020-marlowe-static-analysis.pdf`. A domain-specific language for financial
+  contracts on Cardano, with formal semantics and SMT-based static analysis of a *single*
+  contract. **NO** — no cross-protocol composition, no admissibility lattice.
+- **Bernauer et al. — DAML / Digital Asset (2023)** — `bernauer2023-daml.pdf`; **ACTUS
+  technical specification** — `actus-techspecs.pdf`. Industrial contract-modelling standards:
+  ACTUS is in fact a *taxonomy of ~32 financial contract types* with parameter and state
+  constraints, making it the closest industrial analogue of the atlas's 58-element vocabulary.
+  **NO** on interface theory — ACTUS constrains parameters *within* a contract type; it has no
+  notion of composing two contract types and asking whether the result is admissible.
+- **Van den Broucke et al. — "Rigged Contracts" (2024)** — `vandenbroucke2024-rigged-contracts.pdf`.
+  **NO** — adversarial-contract detection, not composition.
+
+**Bearing on the verdict.** This line strengthens rather than weakens the negative result. The
+financial-DSL tradition composes *payoff descriptions* in a setting where composition is total
+(any two contracts combine), and the smart-contract tradition composes *protocols* in a setting
+where composition is partial and can fail — but nobody has supplied the partiality with an
+interface-theoretic account. The atlas's requirement/prohibition admissibility is exactly the
+missing middle: an algebra over financial mechanisms in which composition can be *inadmissible*.
+
+---
+
 ## VERDICT
 
 **The authors' claim is essentially TRUE, with one qualification that must be stated explicitly

@@ -1,5 +1,8 @@
 # Proof obligations
 
+> **Note.** Identity claims between protocol decompositions are false against the arrays in corpus50/lanes. Of 10 claimed identical groups only 3 hold: USDT/USD1, LiquidMesh/KyberSwap, Binance Wallet/OKX DEX. Use containment (80 strict pairs, computed by viz/scripts/check-collisions.py) rather than identity.
+
+
 > **Status of every obligation below is tracked in [`THEOREM-LEDGER.md`](THEOREM-LEDGER.md).** Do not resolve a contested entry silently.
 
 What a candidate algebra must discharge before we say it exhibits completeness
