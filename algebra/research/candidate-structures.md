@@ -1216,3 +1216,250 @@ order). Non-monotone validity is not expressible without leaving the structure.
 > residual/quotient" is a theorem rather than a definition.
 
 ---
+
+## Cross-cutting: the four questions, answered side by side
+
+### Can it express NON-MONOTONE validity?
+
+| Candidate | Non-monotone? | Mechanism |
+|---|---|---|
+| **4. Feature models** | **Yes, native, both directions** | `excludes` gives `{a}` valid, `{a,b}` invalid; or-groups give `{a}` invalid, `{a,b}` valid. `⟦FM⟧` is an arbitrary subset of `2^F`. |
+| **3. A/G contracts** | **Yes, with the right encoding** | `A = ⟦hazard⟧, G = ∅` saturates to `¬hazard`; composing in `C₃` shrinks `G` and can make the composite inconsistent (`G ∪ ¬A = ∅`). |
+| **3′. Interface automata** | Yes, but useless here | Optimistic composition + only **sub-associative** (Bujtor & Vogler); *n*-ary composition is not built from binary. Needs ports you lack. |
+| **5. FCA** | **Partly** | `X → M` is valid iff `X′ = ∅` — expresses "this combination cannot occur" with no extension. But the closure operator is monotone and Horn; disjunctive heads are structurally impossible. |
+| **7b. c-semirings** | **No** | The order is *defined* by `+`; combination is monotone in it. Hazard-as-annihilator degenerates to a hard constraint. |
+| **1. Cospans / PROPs** | **No** | Composition is total and functorial. (The fix lives next door, in nested application conditions.) |
+| **2. Open games** | **No, not the right kind** | Non-monotone in *equilibria*, never in *well-formedness*. Every type-correct composite is legal. |
+| **6. Institutions** | **No, and it is forced** | Satisfaction Condition + `and` = intersection of reduct-preimages. No operator's model class grows on adding a component. |
+
+### Can it carry a DISJUNCTIVE head (`X → t1 ∨ t2`)?
+
+**Yes, natively:** feature models (arbitrary propositional cross-tree constraints — Batory's
+explicit design decision), A/G contracts (`G` is an arbitrary assertion).
+**No, structurally:** FCA — Horn theories are exactly those whose model sets are
+intersection-closed, and intents are intersection-closed by construction; the only fix is the
+doubled 116-attribute alphabet.
+**Not applicable:** cospans, open games, institutions, semirings — they have no notion of a
+guarded clause over a set at all.
+
+### Is validity DECIDABLE, and at what cost, at your scale?
+
+Every candidate that actually fits reduces to propositional logic over 58 atoms:
+**SAT / NP-complete for validity, #SAT / #P-complete for counting — both milliseconds here,
+with full enumeration of the configuration space plausibly feasible.** The expensive results
+in this document (coNP-completeness of pseudo-intent recognition; non-r.e. conservativity in
+FOL; 2EXPTIME conservative extensions in ALC; undecidability of open-game equilibrium) all
+concern the *general* case and are irrelevant at n=58. **Do not let the complexity theory
+scare anyone off — but do not let anyone claim these problems are easy in general either.**
+
+### Does it have working tooling?
+
+**Real and current:** flamapy + UVL + FeatureIDE (§4); Pacti (§3, ACM TCPS 2025); conexp-clj
+and LinCbO (§5); Catlab.jl / AlgebraicRewriting.jl (§1).
+**Alive but static:** OCRA (last release 2021), FAMILIAR (reference only), open-game-engine
+(self-described work in progress).
+**Effectively dead:** Hets (barely), SPLOT, Clafer, OBJ3, Specware.
+
+---
+
+## Ranked verdict
+
+Ranked by fit to *this* data — 58 elements, protocol-as-set, 29 guarded CNF laws, 20 hazards,
+non-monotone validity, non-injective decomposition.
+
+**1. Feature models / software product lines (§4) — near-exact fit. Adopt.**
+Your object *is* a feature model. Families are xor/or-groups; strata are `requires`-chains;
+the 29 laws are literally the case Batory introduced arbitrary propositional cross-tree
+constraints for; hazards are `excludes`; non-monotone validity is native in *both* directions.
+It brings a catalogue of ~30 analyses you have not yet run (dead elements, core elements,
+false-optionals, redundant laws, MUS explanations per hazard, edit classification), live
+tooling (flamapy, UVL, FeatureIDE), and a genuine composition algebra (FAMILIAR `∩`/`∪`/`∖`/
+`×`/`slice`, associative and commutative up to semantic equivalence). Its honest content is
+"compile to propositional logic and call SAT", which at n=58 is the right engineering answer.
+
+**2. Assume-guarantee contract algebra (§3) — the best *algebra*, but only its lattice
+fragment. Adopt selectively.**
+The richest law-set in the survey and the sources are precise: `∧`, `∨`, `⊗`, `•` are all
+**idempotent commutative monoids with identity** (Incer Prop. 6.10.1); the poset is a
+**bounded distributive lattice**; there are **exactly four semirings**; quotient is a **true
+residual** via a Galois adjunction. Three things transfer directly: the **assumption/guarantee
+split with saturation**, which reproduces "law relieved when no subject is present" for free
+and carries disjunctive heads natively; the **refinement preorder** `C₂ ≼ C₁ iff A₂ ⊇ A₁ and
+G₂ ⊆ G₁` as a rigorous test for redundant and subsumed laws; and the **`A = hazard, G = ∅`
+encoding** — the highest-value single result in this document, because the naive
+`(⊤, ¬hazard)` encoding provably destroys the conditional structure of every law under
+conjunction. But `⊗` presupposes interacting components with ports, which you do not have, and
+killing `⊗` kills quotient, merging and separation — **you lose six of eight operations.**
+Also brief the nine explicitly on two traps: **⊗-over-∧ distributes with equality in the
+concrete Boolean AG algebra but only sub-distributes (a four-contract interchange law) in the
+abstract meta-theory**; and **refinement-monotone ≠ extension-monotone** (independent
+implementability is about refining a *fixed* component set).
+
+**3. Formal Concept Analysis (§5) — the right *audit* tool, not the algebra. Adopt for the
+law set only.**
+Objects = protocols, attributes = elements is a textbook formal context, and the DG base is
+the correct notion of "the smallest complete set of laws" (minimum in *number* of
+implications, canonical, though **not** minimum in total size). Hazards are already
+expressible with no extension as `X → M`. Subposition gives the one clean composition law,
+`Th(K₁/K₂) = Th(K₁) ∩ Th(K₂)`. Two hard limits, both verified: **disjunctive conclusions are
+structurally outside Horn**, so the 29 laws cannot all be fed to a DG-base computation without
+either dropping them or paying the 116-attribute doubled alphabet; and **stratum is not
+recoverable as lattice level** — concept lattices are not graded (every complete lattice is a
+concept lattice), so encode strata by ordinal scaling. Expect **|DG base| ≤ |split set|**, a
+guaranteed non-increase but not a guaranteed decrease.
+
+— **Line of real candidacy. Everything below is either wrong for this data or too heavy.** —
+
+**4. Semiring / c-semiring grading (§7) — not a candidate, but the only principled answer to
+your non-injectivity problem.**
+Every framework above is denotational and will faithfully report USDT ≡ USD1. c-semirings
+(Bistarelli, Montanari & Rossi, JACM 1997) give a well-studied way to make the decomposition
+**graded rather than Boolean**, with real tractability theory (Kolmogorov–Krokhin–Rolinek).
+"Rigged Contracts" (Vandenbroucke & Schrijvers, FLOPS 2024) is the template for the move: make
+the evaluator a **semiring homomorphism** and instantiate at different rigs. Worth one
+mathematician, not nine. It gives you no composition and it is monotone.
+
+**5. Institution theory / CASL (§6) — too heavy, and monotone in exactly the wrong way. Reject,
+steal one idea.**
+Bringing category theory to a SAT fight, and you would inherit a framework whose central
+theorem (**amalgamation**) *fails in its own flagship language* because of subsorts. Steal only
+the **three-way model-theoretic / consequence-theoretic / proof-theoretic split of
+conservativity** and the Hets `Cons/Mono/Def` grading, as design vocabulary for "does adding
+this generator change what was derivable". The literature's own answer is discouraging:
+conservativity is **not r.e. in first-order logic**, and model-theoretically **undecidable
+already in ALC**.
+
+**6. Open games / categorical cybernetics (§2) — fashionable and genuinely deployed, and wrong
+for you. Reject.**
+Real work exists (Lido Dual Governance via the Open Games Engine × HEVM), so this is not
+vapourware — but open games compose by **wiring typed boundaries** with strategy sets combined
+by **cartesian product**, and a component never reacts to the *ambient presence* of another.
+Your 29 laws are ambient-presence triggers over an unstructured set. The framework has no slot
+for hazards at all (the `B = ∅` trick is a global poison that cannot localise the fault). And
+the non-injectivity observation says precisely that **the wiring is the information your data
+is missing** — so this framework demands as input the thing you do not have. It answers "is
+this mechanism incentive-compatible", not "is this set of mechanisms legal".
+
+**7. Symmetric monoidal categories / structured & decorated cospans (§1) — the most fashionable
+and the worst fit. Reject the PROP; take one thing from next door.**
+Cospan composition is **total, gluing-only, monotone by functoriality, and associative only up
+to iso**; the monoidal product is coproduct, which is **not idempotent**, while your set union
+is. There is essentially **no finance or smart-contract application** in this literature. The
+one genuinely valuable pointer is adjacent, not in the cospan papers: **nested graph conditions
+/ negative application conditions** (Habel–Pennemann; Ehrig et al.), which are
+**expressively equivalent to first-order graph formulas**, inherently non-monotone, come with
+theorems translating global constraints into local application conditions and weakest
+preconditions, and are **implemented in AlgebraicRewriting.jl**. If anyone on the team wants to
+do category theory, point them there.
+
+### What to actually tell the nine
+
+The blunt synthesis: **you have a propositional theory — 29 guarded CNF implications and 20
+negative clauses over 58 atoms — and three independent literatures (§3, §4, §5) converge on
+that same diagnosis from different directions.** That is decidable, cheap, and has mature
+tooling. The genuinely open and mathematically interesting questions are the two that *no*
+framework in this survey answers:
+
+1. **What is the right notion of composition when protocols are sets with no ports?** Every
+   candidate either assumes interfaces (§1, §2, §3's `⊗`) or offers only lattice operations on
+   configuration sets (§4's merge, §5's subposition). Nobody has an algebra of
+   *set-of-mechanisms* composition with a validity predicate. **This is the actual research
+   question and it should be stated as such in the brief.**
+2. **How do you defeat the non-injectivity?** `α(USDT) = α(USD1)` means the element set is not
+   a complete invariant, and every denotational framework will faithfully report them as equal.
+   No algebra recovers information the abstraction discarded. Either add discriminating
+   elements, or go graded (§7b). **Frame this as a modelling defect to be fixed before the
+   algebra is designed, not a problem the algebra will solve** — otherwise nine mathematicians
+   will spend a month building machinery on top of a lossy abstraction.
+
+One process note: on current evidence the three fashionable categorical framings (§1, §2, and
+§6) will each independently look attractive to at least one mathematician, and each will burn a
+month before hitting the same wall — *no ports in the data*. Say so explicitly in the brief.
+
+---
+
+## What I could not verify
+
+**Method note.** This survey was assembled from primary papers via seven parallel research
+lanes. The session's web-search budget (200 calls) was exhausted partway through, so later
+lanes worked from direct fetches and, where noted, recall. Several PDFs (JACM, Springer,
+Simons slide decks, Cohen–Kozen–Smith) returned unparseable binary. Nothing below was made up;
+it is listed so nobody quotes it as established.
+
+**Laws I could not confirm from a source:**
+- Whether the A/G contract lattice is **complete** (as opposed to bounded) — arXiv:2402.12514
+  states bounded distributive; completeness would inherit from completeness of `B`.
+- Whether "**residuated lattice**" or "**quantale**" is applied to A/G contracts verbatim
+  anywhere. The inference is well supported (commutative idempotent monoid + bounded
+  distributive lattice + Property 7 residual), and the closest quoted claim is "bounded
+  three-valued Sugihara monoid". **This is a good problem to hand to one of the nine.**
+- The residuation adjunction for quantales (`x*y ≤ z ⟺ y ≤ x\z ⟺ x ≤ z/y`) — standard, but
+  the Wikipedia source did not state it.
+- Idempotence and unit claims for the cospan monoidal product — **derived** from "monoidal
+  product = coproduct", not quoted.
+- Whether Rigged Contracts' `Or` is claimed idempotent. The code states **no laws in
+  comments**, and the paper text was unreachable (Springer paywall, no README, search budget
+  gone). The reading of the pearl's thesis — that `worth` is a semiring homomorphism and the
+  **max-plus tropical rig** recovers Peyton Jones & Eber's intended semantics — is **my
+  inference from `Contract.hs`**, not a quotation.
+- The **c-semiring axiom list**, in full. Three separate PDF fetches failed. The standard
+  statement is given in §7b explicitly marked "do not quote". **Have someone check it against
+  JACM 44(2):201–236.**
+- The **Höfner/Khedri/Möller product-family-algebra axioms as printed** (hoefner-online.de
+  unreachable, Springer gated). The commutative-idempotent-semiring reading is from a secondary
+  summary. *(By contrast, the Apel et al. AMAST 2008 axioms in §4 were read in full and are
+  quoted verbatim.)*
+- Explicit associativity/commutativity **law-list theorems** for CASL union — derived from the
+  Fig. 4 rule, not quoted.
+
+**Complexity figures I could not verify — do not put numbers in the brief without checking:**
+- **Any** complexity figure for interface-automaton compatibility. The monograph defers to a
+  citation and gives no numbers. The folklore (safety games polynomial in the product, product
+  exponential in component count, alternating simulation in PTIME) is **not** re-verified.
+- Any complexity figure for LTL/temporal contracts. The commonly cited 2EXPTIME is the LTL
+  *realizability* bound and is not obviously the right number for contract refinement.
+- Pacti provides **no explicit complexity bounds** (confirmed absent, not merely unfound).
+- **PSPACE-completeness of the KAT equational theory** — the Cohen–Kozen–Smith PDF failed to
+  parse. Widely believed; not confirmed here.
+- The exact **BLP-tightness / fractional-polymorphism dichotomy statement** for VCSP — only the
+  abstract-level claim was retrieved.
+- **NP-hardness of minimum covers** in the functional-dependency setting (Ausiello/D'Atri/Saccà)
+  — recall.
+
+**Claims I expected to find and did not:**
+- A **verbatim theorem** stating "adding a third interface can break a compatible pair". It
+  follows from the existential-over-environments definition and from the associativity
+  counterexamples, but it is an **inference**, not a quotation. Given that this is the exact
+  property you care about, it is worth someone finding the citation.
+- Any **extension of FCA implications carrying disjunctive conclusions**. Searches returned
+  nothing standard. **This is a negative search result, not a proof of nonexistence** — though
+  the intersection-closure argument makes it a theorem for FCA *implications* proper.
+- Any **decorated/structured-cospan application to finance or smart contracts**. None found.
+- A published artifact for the **PBS/MEV compositional-game-theory work** — EthCC talk only.
+- Any **AMM security result** from the open-games line; `amm.act` is an example file.
+- A paper by "Cadiou", or "Master, open systems with conditions" — **could not confirm this
+  reference exists.**
+- **"Higher Categorical Cryptoeconomics"** appears only on ResearchGate — treat as
+  non-credible.
+
+**Sources unreachable or unread:**
+- Hedges' 2016 QMUL thesis (full text); Czarnecki & Wąsowski SPLC'07; Schobbens/Heymans/Trigaux
+  FFD; Thüm et al. ICSE'09 edit-classification details; Benavides et al. IS 2010 full
+  30-operation table verbatim (obtained secondhand plus the live flamapy operation list); FODA
+  (1990) — reachable at the SEI URL but not read.
+- Exact numbered definitions and the associativity clause in Baez–Courser 1911.04630 — PDF text
+  extraction failed; abstracts plus nLab were used.
+- Ganter & Wille's book statements on apposition/subposition — the extent/intent
+  characterisations in §5 were **derived from the derivation operators**, not quoted. Wille's
+  subdirect (1983) and tensorial (1985) decomposition citations are recall.
+- Bertet & Monjardet's exact list of coinciding bases; Selman & Kautz Horn approximation.
+- **Tool status for Ticc, MICA, MIO Workbench, Chase, AGREE** (§3) and Maude (§6) — nothing was
+  verified; assert nothing about them.
+
+**Open in the literature (not a gap in this survey):**
+- Whether the **Duquenne–Guigues base can be computed in output-polynomial time** is **open**.
+  Distel, ICFCA 2011, verbatim: *"no output-polynomial algorithm has been found, and it is also
+  not known whether such an algorithm exists."* Still described as unsettled in 2022. Related:
+  whether pseudo-intents can be generated with polynomial delay in *arbitrary* order is
+  explicitly flagged by Babin & Kuznetsov as "an important open problem". Irrelevant at n=58,
+  but do not let anyone state it as easy.
