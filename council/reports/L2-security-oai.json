@@ -1,0 +1,81 @@
+{
+  "lens": "Security auditor / risk engineer",
+  "verdict": "changes_requested",
+  "summary": "The table is useful for classifying financial-architecture hazards, but §17.2 is not an exploit screen: it would have missed Wormhole, Nomad, Ronin, Euler, Curve/Vyper, and The DAO. Short-circuiting on an unvalidated reflexivity heuristic and citing post-hoc count coverage can create the false confidence the scope disclaimer tries to avoid.",
+  "findings": [
+    {
+      "id": "F1",
+      "severity": "high",
+      "section": "§11 X1–X18 and §17.2",
+      "claim": "The ordered checklist is a pre-audit screen whose checks have killed real protocols.",
+      "problem": "Incident testing shows sharply limited recall. It would flag Terra through X1/X3/X17, bZx and Cream through truth manipulation, and Mango through the broad truth check, although not literal X2. It would miss Wormhole and Nomad because both nominally had verification but contained implementation/configuration defects; Euler because the donate transition omitted a health check despite the required elements being present; Curve/Vyper and The DAO because compiler/control-flow reentrancy is absent; and Ronin because the authority step enumerates Au/Up/Gp but not Xm signer quorum or key concentration. Beanstalk is named by X6, yet the literal authority checklist omits flash-borrowed governance and Tg. Badger's approval blast radius might be flagged, but the compromised-front-end initiating cause would not.",
+      "fix": "Publish an incident-by-incident validation matrix showing whether each control would have produced a mandatory finding before the exploit. Add implementation integrity, governance voting, Xm verifier security, signer concentration, and operational compromise as mandatory companion screens. Do not claim exploit-screen coverage from post-incident classification.",
+      "status": "verified"
+    },
+    {
+      "id": "F2",
+      "severity": "high",
+      "section": "§17.2 Screen a design",
+      "claim": "The checks should run in the stated order, with reflexivity permitting the reviewer to stop and redesign.",
+      "problem": "The short-circuit is unsafe. Stopping on reflexivity leaves independent authority, verifier, conservation, atomicity, disclosure, and implementation defects unrecorded. Removing the reflexive feature can therefore produce a design that appears remediated while retaining a catastrophic key, mint, accounting, or cross-domain flaw. The order also prioritizes a financially interesting but unvalidated signal ahead of controls associated with the largest loss severity.",
+      "fix": "Make every checklist row mandatory and non-short-circuiting. Begin with assets, trust boundaries, maximum loss, authority and verification; then test state/accounting invariants, conservation, leverage/truth, finality/atomicity, disclosure, and reflexivity. Require the entire screen to be rerun after redesign.",
+      "status": "verified"
+    },
+    {
+      "id": "F3",
+      "severity": "high",
+      "section": "§15 Failure overlay and the honest bound",
+      "claim": "The unified table explains most incidents by count, although it explains a minority of 2025 losses by value.",
+      "problem": "The dollar limitation is candid, but the count claim is not a control-effectiveness measure. The corpus contains only 24 incidents, its selection and coding rules are not supplied, the 0–4 range permits flexible reclassification, and describing a loss's propagation through Au or an informational edge does not mean the table could predict or prevent its initiating cause. A team can therefore mistake post-hoc explanatory coverage for pre-incident detection coverage.",
+      "fix": "Publish the complete corpus, inclusion criteria, blinded coding decisions, disagreements, and false-negative/false-positive rates. Report initiation prediction, propagation description, incident count, and loss value as four separate metrics. Label the current number retrospective taxonomy coverage, not risk-control coverage.",
+      "status": "verified"
+    },
+    {
+      "id": "F4",
+      "severity": "high",
+      "section": "§11 X2, X7, X11, X14 and X16",
+      "claim": "The listed incidents empirically ground these forbidden or impossible bonds.",
+      "problem": "Several mappings are materially inaccurate or overclaimed. X2 requires flash liquidity plus a Cp/Cl price, but Mango used a thin endogenous market and did not require that literal combination. Wormhole and Nomad nominally possessed verification and supply-accounting mechanisms, so X7 would pass at design-label level while their verification implementations failed. Maple had permissioning, underwriting information and legal counterparties, so its defaults do not demonstrate X11's absence condition. X14 is not impossible: an exclusive solver can improve execution against a defined external benchmark, although exclusivity prevents a live competitive counterfactual. X16 captures approval blast radius but only partially describes Badger, whose initiating failure was compromised front-end delivery rather than bearer transfer of authority.",
+      "fix": "Separate architectural preconditions from implementation and operational causes. Generalize X2 to any attacker-influenceable valuation venue; rewrite X7 as verifier correctness plus independent invariant enforcement; ground X11 in underwriting, concentration and recovery adequacy; narrow X14 to claims of improvement caused by live competition; and describe Badger as compromised order/signing presentation combined with overbroad persistent approval.",
+      "status": "verified"
+    },
+    {
+      "id": "F5",
+      "severity": "high",
+      "section": "§11 X1, X3, X5, X9, X10, X12, X13, X15 and X18",
+      "claim": "These rules identify forbidden or unstable designs.",
+      "problem": "They lack executable thresholds and contain unsafe escape clauses. Undefined terms include hard redemption, exogenous capital, domination, illiquid, immediate, stale, unrestricted, high-value, mostly and high-frequency. X9 lets correlated or low-threshold multisigs pass. X12 treats issuer anointing as curative even though endorsement cannot secure a bridge. X13 lets any bonded slashing pass even when the bond is tiny, reflexive, inaccessible or cheaper than theft. X1 permits nominal redemption or inadequate exogenous capital. A real design can satisfy these words while remaining economically unsecured.",
+      "fix": "Turn each rule into a measurable predicate: redemption capacity under stress, liquidity horizon, collateral and reserve correlations, oracle manipulation cost, inventory limits, signer threshold and administrative-domain independence, verifier economic security relative to value at risk, slash attribution and collectability, dispute latency, and bridge caps/haircuts/exits. Remove issuer anointing as a safety condition.",
+      "status": "verified"
+    },
+    {
+      "id": "F6",
+      "severity": "high",
+      "section": "§§2–4, §7, §15–§17",
+      "claim": "Coverage consists of financial state transitions, typed bonds, authority policy, information exposure and reaction conditions, with defective element instances handled as category (a).",
+      "problem": "Adversarial program-execution and state-integrity risk has no inspectable representation. Reentrancy and callbacks, arbitrary external calls or delegatecall, initialization and storage-layout faults, arithmetic and rounding, signature parsing, compiler defects, and build/deployment integrity are neither elements nor required bond properties nor reaction conditions. Residue has no required schema for them. Calling an incident a defective element instance afterward is a diagnosis bucket, not an ex-ante control.",
+      "fix": "Add a mandatory companion execution-integrity layer with explicit state invariants, external-call and callback analysis, asset-semantic assumptions, arithmetic/precision checks, initialization and upgrade invariants, cryptographic verification requirements, compiler/build provenance, and deployment checks. Require unresolved items to appear as typed residue before risk acceptance.",
+      "status": "verified"
+    },
+    {
+      "id": "F7",
+      "severity": "high",
+      "section": "§15 scope statement, §17 How to use the table, and §18",
+      "claim": "Operational compromise is outside predictive scope, while the table remains usable as a pre-audit design screen.",
+      "problem": "The disclaimer is honest but operationally insufficient. Key custody, signer coercion, malicious front ends, dependency and build compromise, deployment errors, monitoring failure, and incident response dominate severe outcomes, yet §17 provides no mandatory handoff to controls covering them. Presenting the seven rows as a pre-audit checklist invites standalone adoption despite the document's own loss-weighted evidence against that use.",
+      "fix": "Rename §17.2 a financial-architecture pre-screen and state that it cannot support launch or risk acceptance alone. Require completion of smart-contract assurance, key/signer operations, front-end and supply-chain security, deployment verification, monitoring, incident response, and recovery reviews.",
+      "status": "verified"
+    },
+    {
+      "id": "F8",
+      "severity": "medium",
+      "section": "§15 Reflexivity and §17.2 step 1",
+      "claim": "Reflexivity is an unproven hypothesis with no measured false-positive rate, yet it is the strongest ex-ante screen and warrants the first mandatory stop.",
+      "problem": "Using a hypothesis early is not inherently contradictory, but making it the only short-circuiting rejection criterion is operationally inconsistent with its stated evidentiary status. Without sensitivity, specificity, materiality thresholds or matched controls, the rule can reject viable systems, anchor reviewers on token loops, and divert attention from better-established authority and implementation hazards.",
+      "fix": "Treat reflexivity as a scored stress-test hypothesis, not an automatic stop. Define materiality and correlation thresholds, record overrides, test it retrospectively against failures and non-failures, and promote it to a blocking gate only after measuring false positives and false negatives.",
+      "status": "verified"
+    }
+  ],
+  "strongest_thing_in_the_document": "The explicit admission that operational and key compromise dominate loss-weighted outcomes is the most security-honest part of the draft.",
+  "dissent_note": "Architecture-focused reviewers may accept the scope disclaimer; I do not, because §17.2 is presented as a pre-audit screen and its stopping rule converts a taxonomy into an apparent risk gate."
+}

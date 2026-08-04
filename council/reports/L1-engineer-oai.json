@@ -1,0 +1,81 @@
+{
+  "lens": "Protocol engineer / implementer",
+  "verdict": "changes_requested",
+  "summary": "The atlas is useful review vocabulary but not an operable integration language. Three ordinary protocols leave central mechanisms as residue, element detection is nondeterministic, and the notation lacks a grammar, instance model, and enforceable semantics. A parser could validate punctuation, not whether a formula correctly describes deployed code.",
+  "findings": [
+    {
+      "id": "F1",
+      "severity": "high",
+      "section": "§4 and §10 — Core elements and molecules",
+      "claim": "A deployed protocol-version can be expressed using the 53 core elements, parameters, typed bonds, reaction conditions, and residue.",
+      "problem": "Three attempts expose material gaps. Pendle v2 approximates as `Py+Sh+Ep+Rd`, but its time-to-expiry-dependent AMM fits none of `Cp/Wg/St/Cl/Pm`; `Wg{curve=time-dependent}` would invent an isotope that changes pricing semantics. Lido approximates as `Sh+Rb+Ex+Wq+Sl+Tg+Gp+Up`, leaving ordinary PoS delegation, validator activation/exit, rewards, and penalty attribution unexplained. Ethena approximates as `Cd+Rd+Ex+Pf+Ct+Sh+At+Tg+Gp+Up`, but `Pf` represents funding transfer, not the short-perpetual position, hedge rebalancing, venue margin, or custody exposure. Bonds cannot repair absent node semantics, so all three leave central rather than incidental residue.",
+      "fix": "Add candidate mechanisms for ordinary staking/validator lifecycle, generic derivative positions and hedge maintenance, and time-dependent AMM pricing. Define a typed residue syntax and a promotion threshold based on residue centrality, not merely protocol count.",
+      "status": "verified"
+    },
+    {
+      "id": "F2",
+      "severity": "high",
+      "section": "§3 — Atomicity test; §4 — Core elements",
+      "claim": "Element membership is determined if and only if all seven atomicity criteria hold, including implementation observability.",
+      "problem": "Membership is not decidable from contracts. `R` requires external lineage research; `S` requires a subjective counterfactual about protocol class; `F` depends on decomposition granularity; and `D` depends on causal attribution. The worst deployment-level overlaps are `Sh/Ix/Rb`, `Pl/Im`, `Rf/In/Ba/Ag`, `Bs/Sl/Tr/Cv`, `Ex/At/Oa`, and `Au/Gp/Up`. Two competent engineers can classify the same scaled-balance token, isolated pool, solver path, reserve, oracle pipeline, or privileged role differently while satisfying the prose definitions.",
+      "fix": "Separate catalog admission from deployment detection. For every element, publish required transition signatures, required and forbidden observables, precedence rules for overlaps, positive and negative contract examples, and an explicit multi-label policy.",
+      "status": "verified"
+    },
+    {
+      "id": "F3",
+      "severity": "high",
+      "section": "§7, §9, §10, and L24",
+      "claim": "Bare `Xm` and an informational edge without a named consequence are mechanically ill-formed.",
+      "problem": "Only superficial presence checks are mechanical. The `Xm` enumeration in §4 conflicts with the general `trust_domain` enumeration in §9, and worked formulas use positional `Xm{native-consensus}` despite §10 defining `A{k=v}`. A parser cannot determine whether the chosen trust domain matches a proxy graph and external verifier dependencies. Likewise, `[enables: ...]` is unrestricted prose: a parser cannot establish that it names a real, complete economic consequence. L24 additionally requires who observes what, which the §7 well-formedness rule does not encode.",
+      "fix": "Use one canonical form such as `Xm{trust_domain=native-consensus}` backed by a single enum. Represent informational edges with structured fields for observer, observable data, observation phase, enabled action, and economic consequence. Validate syntax mechanically and require a separately auditable evidence manifest for semantic correctness.",
+      "status": "verified"
+    },
+    {
+      "id": "F4",
+      "severity": "medium",
+      "section": "§10 and §12 — Catalyst notation",
+      "claim": "`Fl` is coherently both a P1 element and a catalyst, represented as `Fl*` when catalytic.",
+      "problem": "The conceptual dual role is coherent, but the current parsing model is not. Catalyst is introduced as a separate construct, while `*` appears to modify an element occurrence. Nothing says whether `Fl` and `Fl*` are distinct nodes, whether the star is mandatory, or whether it changes conformance. The inconsistency is visible because `Fl*` is starred in the Uniswap formula while `Ag` and `Xm`, also listed as catalysts, are unstarred in worked formulas.",
+      "fix": "Keep `Fl`, `Ag`, and `Xm` as elements and model catalytic use as a typed occurrence attribute or bond role. Define whether that annotation is required and specify canonical normalization so `Fl` and `Fl*` cannot be interpreted as different mechanisms.",
+      "status": "verified"
+    },
+    {
+      "id": "F5",
+      "severity": "high",
+      "section": "§17.1 — Four-pass decomposition",
+      "claim": "The four passes provide an operational procedure for decomposing a protocol.",
+      "problem": "Walking Lido shows that termination depends on an unstated reviewer choice. Pass 1 yields `Sh`, `Rb`, `Ex`, `Wq`, `Sl`, and authority elements, while staking and validator lifecycle remain residue. Pass 2 needs reporter sets, node operators, pooled backing, withdrawal credentials, governance, and Ethereum consensus as endpoints, although endpoint and external-actor syntax is undefined. Pass 3 needs quantified finality, validator churn, exit capacity, oracle quorum, slashing, and withdrawal-demand ranges, but only questions are supplied. Pass 4 records residue. Recursively following required counterparties expands into consensus, validators, relays, governance, and external infrastructure without a system boundary or stopping rule.",
+      "fix": "Require a protocol-version boundary, chain and deployment snapshot, dependency-expansion policy, maximum externalization rule, and finite fixed-point algorithm with cycle detection. Define which external actors and infrastructure become nodes versus trust attributes, reaction conditions, or residue.",
+      "status": "verified"
+    },
+    {
+      "id": "F6",
+      "severity": "high",
+      "section": "§10 and §11 — Notation and bonding laws",
+      "claim": "The four bond types and molecule operators form a usable formula language.",
+      "problem": "The laws introduce undeclared terminals such as `exit-liquidity`, `global claim ledger`, `named custodian`, `signed constraints`, `settlement verifier`, `solver/fallback`, `timeout`, `freshness validation`, and `replay protection`. They also use an untyped `→` that is not one of the four bonds. Operator precedence, bond direction, cardinality, and the scope of alternatives are undefined, while `+` conflates shared state machine, balance sheet, and settlement invariant. Consequently the supplied laws cannot be parsed into the language they allegedly constrain.",
+      "fix": "Publish an EBNF and typed AST separating elements, element instances, actors, resources, predicates, conditions, and evidence. Define precedence, direction, cardinality, and named relationship types instead of overloading `+`; rewrite every law into that normative grammar.",
+      "status": "verified"
+    },
+    {
+      "id": "F7",
+      "severity": "high",
+      "section": "§7, §8, §10, and §17.5",
+      "claim": "Typed bonds, valence, and formula diffs can localize integration requirements and protocol differences.",
+      "problem": "Symbols represent element classes, not deployed instances. A protocol with several markets, collateral policies, oracle feeds, proxies, or liquidation paths collapses repeated occurrences into one symbol. There are no instance IDs, ports, chain/address/version anchors, bond payloads, call or message schemas, preconditions, postconditions, or action ordering. Section 8 also supplies no normative valence table. Two formulas can therefore compare equal while requiring incompatible integrations.",
+      "fix": "Add instance labels and role-qualified ports, permit repeated elements with explicit cardinality, and attach deployment evidence such as chain, address, implementation version, functions, events, and state predicates. Publish required and optional valence per element and include temporal or causal ordering in the integration representation.",
+      "status": "verified"
+    },
+    {
+      "id": "F8",
+      "severity": "high",
+      "section": "§2, §9, §10, and §16",
+      "claim": "Attributes, isotope parameters, and reaction conditions complete a molecule sufficiently for operational use.",
+      "problem": "There are no schemas, types, units, defaults, or requiredness rules. Although three attributes supposedly exist on every element, worked formulas omit them almost universally. Examples such as `{feeTier,tickSpacing}`, `{push}`, `{auction}`, `{DSR}`, and `{stability-pool}` do not follow the declared `A{k=v}` form. Reaction conditions are qualitative questions, and every worked formula omits both conditions and explicit residue despite the molecule definition requiring them. Arbitrary isotope text can conceal a genuinely new mechanism.",
+      "fix": "Ship a versioned machine-readable package on day one: JSON Schema or equivalent, per-element parameter registries, units and bounds, canonical serialization, required attributes, reaction-condition fields, residue categories, validation fixtures, and conformance tests. Require evidence that an isotope preserves the parent state space and failure family.",
+      "status": "verified"
+    }
+  ],
+  "strongest_thing_in_the_document": "Requiring explicit residue and separating interface, economic, trust, and informational dependencies is a useful pre-audit discipline.",
+  "dissent_note": "Taxonomy reviewers may accept human judgment and free-text residue; an implementer cannot because those choices prevent reproducible detection, parsing, and conformance testing."
+}

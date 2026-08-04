@@ -1,0 +1,81 @@
+I'll read the review brief first, then the blinded bundle, and answer only through the security/risk lens you specified.{
+  "lens": "Security auditor / risk engineer",
+  "verdict": "changes_requested",
+  "summary": "As a pre-incident risk process, 17.2 plus X1–X18 would miss major exploit classes (implementation defects, reentrancy, ops/key compromise) and still create false confidence: reflexivity is first despite being a hypothesis, while 2025 dollar losses sit outside the table's predictive reach.",
+  "findings": [
+    {
+      "id": "F1",
+      "severity": "high",
+      "section": "11 (X1–X18) + 17.2",
+      "claim": "Running the 17.2 checklist (grounded by X1–X18) before deployment would have flagged real exploits of the forbidden-bond class.",
+      "problem": "Would likely have flagged design-level disasters already named in the table: Terra/UST (X1/reflexivity), Iron-style reflexive stables (X1/X3/X17), Mango/bZx/Harvest-style oracle manip via thin markets + leverage/flash liquidity (X2 + leverage/truth checks), Beanstalk-style flash governance if cast as unbounded Au/Up (X6/authority), and advertised isolation that shares collateral (X8). Would have MISSED or only post-hoc labelled: Euler (missing health check on a new transition — pure (a) implementation defect; 17.2 never inspects code paths); Nomad (initialized/trusted root bug — Xm present on paper, verification defective); Wormhole signature-verification bug (X7/conservation can be checked as a design claim while a broken verifier still mints); Ronin (validator key compromise — X13 complains about unbonded external validators, but compromised bonded keys still empty the bridge; authority check targets Au/Up/Gp, not operator key hygiene); The DAO / Rari-style reentrancy and read-only reentrancy (no bond or checklist item); first-depositor/share-inflation vault attacks (Sh exists, no forbidden pattern); classic unlimited-approve + malicious front-end harvesting when not modelled as Au (Badger-adjacent ops); pure access-control and arithmetic bugs. Pre-incident use of 17.2 is a design-bond screen, not an exploit catcher for (a) or (d).",
+      "fix": "State explicitly that 17.2 is necessary but not sufficient: require a parallel implementation-defect program (reentrancy/CEI/external-call, access control, formal invariants, fuzzing) and an operational/key-compromise program. Add missed forbidden patterns: reentrancy-enabled state transition, share-inflation on empty Sh pools, verification-presence ≠ verification-correctness for Xm/Xf.",
+      "status": "verified"
+    },
+    {
+      "id": "F2",
+      "severity": "high",
+      "section": "17.2",
+      "claim": "Screen in order: reflexivity → leverage → truth-manipulability → authority → conservation → atomicity → disclosure; stop and redesign on reflexivity hit.",
+      "problem": "Wrong order for risk engineering if the goal is residual loss. Early stop on reflexivity is fine when positive, but the default path puts an unproven hypothesis first and buries authority, conservation (bridges), and disclosure. A team that green-lights after 'not reflexive / has Ct / truth not flash-manipulable' can skip or rush authority and conservation — exactly the paths that dominate real catastrophic loss. Ordering also causes tunnel vision: reflexivity/leverage/truth are endogenous-market screens; they do not force Xm trust_domain, L18 replay/finality, L9 supply conservation quality, or operator/signing topology. Stopping after step 3 systematically under-weights Au/Up/Gp, bridge mint authority, and —n→ order-flow.",
+      "fix": "Reorder by loss severity and residual: (1) authority + signing/upgrade topology, (2) conservation + Xm/Xf verification assumptions, (3) leverage + truth manipulability, (4) atomicity/finality, (5) disclosure, (6) reflexivity as a cheap but non-gating screen. Remove 'stop' language except as 'must redesign this loop'; never imply the screen is complete.",
+      "status": "verified"
+    },
+    {
+      "id": "F3",
+      "severity": "high",
+      "section": "1 D11, 15 Failure overlay, 18",
+      "claim": "Report both axes: majority of incidents by count (0–4/24 residue ≈ 16.7% unexplained); minority by 2025 dollars (ops/key compromise dominate).",
+      "problem": "Framing is partially honest in prose but still manufactures false confidence as a risk process. (1) 'Majority by count' is over a small, hand-curated corpus of 24, not an unbiased sample of DeFi failures. (2) Coverage inflated by reclassification (Wormhole/Nomad into Xm defects; Ronin into Xm—t→Au; Badger into —n→ + Au) — taxonomy expansion is not predictive power. (3) Admitting dollar-minority while leading with count-majority is the classic safety-theatre pattern: teams adopt the checklist, pass X1–X18, and under-invest in the loss class the document itself says owns 2025 dollars. (4) 'Models the propagation path of Au/—n→ losses' does not mean it would have prevented Bybit-class signing compromise or phishing. For a risk process, the honest headline is: weak on the loss-weighted distribution that matters.",
+      "fix": "Lead with loss-weighted scope, not count. Require any adoption statement: 'This table does not gate operational security, key management, or implementation correctness; count-coverage on a 24-incident set is not a risk appetite metric.' Ban single-number marketing; if used in process, pair with mandatory (a)/(d) controls with equal or higher weight.",
+      "status": "verified"
+    },
+    {
+      "id": "F4",
+      "severity": "high",
+      "section": "11 X1–X18",
+      "claim": "X1–X18 are empirically grounded forbidden/unstable bonds.",
+      "problem": "Several rules are loose enough that unsafe designs pass, or are over-stated relative to grounding. X7: requires 'independent verification and supply accounting' — a protocol with a defective verifier (Wormhole) or mis-initialized root (Nomad) still claims both and passes a design checklist. X13: 'external-validator Xm … without bonded slashing' — Ronin had a validator set; key compromise of a threshold set is not cured by the rule as written; 'high-value' is undefined. X11: grounds on Maple, but Maple-like systems can have Aw/At/reputation theatre and still take credit losses — the rule forbids absence of paperwork, not bad underwriting. X2: ties manip to Fl* + Cp/Cl + Pl/Cd — misses large-capital or push-oracle / permissioned Ex corruption without flash liquidity. X16: Badger framed as Au bearer transfer — real pattern is often unlimited ERC-20 allowance + compromised UI; a design with 'bounded Au' elsewhere can still ship infinite approvals. X3/X14/X15 use 'highly reflexive' / 'Impossible' / 'Radioactive' without thresholds — hard to falsify in review. X6 only forbids flash voting + immediate execution, not slow accumulation governance capture.",
+      "fix": "Rewrite X7/X13 as 'verification correctness + independent supply invariant + threshold operator compromise model', not presence of a verifier. Define quantitative gates (value at risk vs slashable stake, max approval scope, oracle depth vs position size). Split X11 into 'no identity/attestation' vs 'residual credit risk remains even with Aw/At'. Broaden X2 beyond Fl*. Add allowance/permit surface to X16. Replace unfalsifiable adjectives with testable predicates.",
+      "status": "verified"
+    },
+    {
+      "id": "F5",
+      "severity": "high",
+      "section": "2–16 (elements, bonds, reaction conditions, residue) + 17.2",
+      "claim": "Coverage = financial state transitions + typed bonds + authority policy + information exposure + reaction conditions; residue is reported.",
+      "problem": "Entire failure class with no real representation: smart-contract control-flow safety — reentrancy, read-only reentrancy, ERC-777/callback hooks, unsafe external calls mid-state, CEI violations. Not an element, not a bond type, not a reaction condition, not a forbidden X-rule, not named in category (d) examples (which stress ops/phishing/legal). Adjacent missing classes also absent as first-class screens: share-inflation/first-depositor attacks on Sh, precision/rounding exploits, storage-collision/proxy layout bugs, pure access-control coding errors distinct from Au policy. Category (a) admits 'defective element instance' only as post-incident diagnosis — 17.2 never searches for it. A team can fully pass the atlas and still ship The-DAO-class or Euler-class loss.",
+      "fix": "Add an explicit 'implementation integrity' overlay or X-rules: no external call with unfinalized accounting; no callback into privileged state; empty-pool share mint invariant; checked arithmetic on claim indices. Wire 17.2 step 0/8 as mandatory control-flow and access-control review so (a) is pre-incident work, not only taxonomy after the fact.",
+      "status": "verified"
+    },
+    {
+      "id": "F6",
+      "severity": "medium",
+      "section": "15 Reflexivity + 1 carried unanimously + 17.2 step 1",
+      "claim": "Reflexivity is a hypothesis, not a theorem; yet it is 'the strongest available ex-ante screen' and the FIRST mandatory check with stop-and-redesign.",
+      "problem": "Epistemic demotion and operational promotion contradict each other, and it matters. If it is unproven (no matched controls, no false-positive rate — document's own words), putting it first with hard stop overweights a screen that can both false-positive (kill non-catastrophic endogenous-token uses) and false-negative (non-reflexive designs that still die on Au/Xm/code). Operationally, 'first + stop' trains reviewers to treat reflexivity clearance as the main gate. That is process hazard, not mere naming inconsistency.",
+      "fix": "Either promote reflexivity only after evidence (then keep early) or keep it hypothesis-status and demote it in 17.2 to a non-gating parallel check without stop-the-line priority over authority/conservation. State false-positive risk explicitly.",
+      "status": "verified"
+    },
+    {
+      "id": "F7",
+      "severity": "medium",
+      "section": "12 Catalysts + 17.2",
+      "claim": "A catalyst is never itself the vulnerability; the vulnerability is always the bond it catalyzes.",
+      "problem": "Operationally half-true and dangerous. Fl removes capital scarcity as an attack barrier (document admits this) but 17.2 has no dedicated 'catalyst surface' step — truth-manipulability mentions borrowed capital only under X2. Governance acquisition via Fl (X6) is easy to miss if authority is reviewed as static Au scopes without flash-loanable temporary power. Claiming catalysts are never the vulnerability encourages reviewers to under-weight enabling mechanisms that change the threat model of every economic bond.",
+      "fix": "Add 17.2 subcheck: enumerate catalysts (Fl, Ag, solvers) and re-price every economic/trust bond under zero-cost temporary capital and adversarial ordering. Bind X6 into the authority step explicitly.",
+      "status": "verified"
+    },
+    {
+      "id": "F8",
+      "severity": "medium",
+      "section": "15 Failure overlay (unified residue 0–4/24)",
+      "claim": "Unified residue 0–4 of 24 (conservative 16.7%); table explains the majority of incidents by count.",
+      "problem": "From a risk-process view this is an unfalsifiable comfort metric. Moving incidents from (d) to (a)/(b) by richer vocabulary reduces residue without proving that a pre-incident 17.2 run would have blocked them. Wormhole/Nomad as 'Xm defects' is post-hoc labelling of implementation failure; count-majority then overstates preventive power. Unverified: exact 24-incident set membership and dollar figures cited (TRM/Hacken/Bybit) were not re-audited here; treat magnitudes as document claims.",
+      "fix": "Publish the 24-incident list with pre-registered (a)/(b)/(c)/(d) labels and a retrospective: would 17.2 as written, applied only to public design docs before the incident, have failed the design? Report that hit rate separately from post-hoc classify rate.",
+      "status": "unverified"
+    }
+  ],
+  "strongest_thing_in_the_document": "Explicit dual-axis honesty that the table does not predict operational/key-compromise losses and that unassigned loss is a modelling error — rare and necessary scope discipline if actually enforced.",
+  "dissent_note": "Mechanism-design and taxonomy lenses will defend count-coverage and X-rules as composition theory; this lens rejects theory without pre-incident catch-rate on (a)/(d) loss."
+}
