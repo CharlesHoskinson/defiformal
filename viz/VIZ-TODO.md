@@ -145,6 +145,9 @@ visual object — cases where all nine agree vs cases that split them.
 | F11 | Collision view | [ ] |
 | F12 | Corpus browser (60 protocols) | [ ] |
 | F13 | Algebra council results | [ ] — **council launched**, 9 mathematicians, 3 vendors × 3 schools |
+| F14 | **The discharge matrix** | [ ] — 20 proof obligations × 9 models. Each cell is one of three states, *not two*: **proved** · **refuted with witness** · **left open**. A refutation is a discharge; only the third column is a failure. This is the honest ranking and it is mechanical rather than a matter of taste — and it is a matrix, so it goes where F7's DSM goes. |
+| F15 | **The settled band** | [ ] — S1–S5 are results, not obligations: closure is a complete lattice, meet is not intersection, validity is non-monotone, stratum is not derivable, reflexivity is not expressible over element types. Draw them as a fixed floor the nine models sit on, so a model that contradicts one reads as an anomaly rather than an opinion. |
+| F16 | **The four wanted impossibilities** | [ ] — D1–D4 are the outcomes we most want proved, not failures to hide. D2 especially: that no function of element sets separates USDT from USD1, i.e. **solvency is not a function of mechanism inventory**. If it lands it is the project's strongest claim and needs the loudest object on screen. |
 
 ## G. Known defects to fix
 
