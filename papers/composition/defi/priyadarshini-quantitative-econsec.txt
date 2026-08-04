@@ -1,0 +1,1868 @@
+                                             A quantitative notion of economic security for
+                                                     smart contract compositions
+
+                                                          Emily Priyadarshini1 and Massimo Bartoletti2
+                                                                          1
+                                                                             IISER Pune, India
+                                                                     2
+                                                                         University of Cagliari, Italy
+
+
+
+
+arXiv:2505.19006v1 [cs.CR] 25 May 2025
+                                               Abstract. Decentralized applications are often composed of multiple in-
+                                               terconnected smart contracts. This is especially evident in DeFi, where
+                                               protocols are heavily intertwined and rely on a variety of basic building
+                                               blocks such as tokens, decentralized exchanges and lending protocols. A
+                                               crucial security challenge in this setting arises when adversaries target in-
+                                               dividual components to cause systemic economic losses. Existing security
+                                               notions focus on determining the existence of these attacks, but fail to
+                                               quantify the effect of manipulating individual components on the overall
+                                               economic security of the system. In this paper, we introduce a quantita-
+                                               tive security notion that measures how an attack on a single component
+                                               can amplify economic losses of the overall system. We study the funda-
+                                               mental properties of this notion and apply it to assess the security of key
+                                               compositions. In particular, we analyse under-collateralized loan attacks
+                                               in systems made of lending protocols and decentralized exchanges.
+
+
+                                         1    Introduction
+                                         Developing decentralized applications nowadays involves suitably designing, as-
+                                         sembling and customizing a multitude of smart contracts, resulting in complex
+                                         interactions and dependencies. In particular, recent DeFi applications are highly
+                                         interconnected compositions of smart contracts of various kinds, including to-
+                                         kens, derivatives, decentralized exchanges (DEX), and lending protocols [15,16].
+                                             This complexity poses significant security risks, as adversaries targeting one
+                                         of the components may compromise the security of the overall application. Note
+                                         that, for this to happen, the attacked component does not even need to have a
+                                         proper vulnerability to exploit. For example, in an application composed of a
+                                         lending protocol and a DEX serving as a price oracle, adversaries could target the
+                                         DEX in order to artificially inflate the price of an asset that they have previously
+                                         deposited to the lending pool. This manipulation would allow adversaries to
+                                         borrow other assets with an insufficient collateral, circumventing the intended
+                                         economic mechanism of the lending protocol [12,21,5,20,1].
+                                             The first step to address these risks is to formally define when a system of
+                                         smart contracts is secure. In recent years, a few security notions have emerged,
+                                         starting from Babel, Daian, Kelkar and Juels’ “Clockwork finance” [3]. Broadly,
+                                         these definitions try to characterise the economic security of smart contract
+                                         systems based on the extent of economic damage that adversaries can inflict
+on them. In this context, adversaries are typically assumed to have the powers
+of consensus nodes. Namely, they can reorder, drop or insert transactions in
+blocks. Accordingly, the economic damage on a system S can be quantified in
+terms of the Maximal Extractable Value (MEV) that adversaries can extract
+from S by leveraging these powers [10]. To provide a more concrete formulation
+of the existing notions, consider a set of contracts ∆ to be deployed in a system
+S . We denote by S | ∆ the system composed of S and ∆. The security criterion
+in [3] requires that MEV(S | ∆) ≤ (1+ε) MEV(S ): namely, the MEV extractable
+from S | ∆ does not exceed the MEV extractable from S by more than a factor
+of ε. This notion does not capture our intuition of assessing the security of ∆ in
+terms of the economic losses that ∆ could incur due to adversaries interacting
+with the context S . For example, an airdrop contract ∆ that gives away tokens
+would be deemed insecure, while in reality its interactions with S are irrelevant.
+    In a different security setting, a similar intuition was the basis of Goguen
+and Meseguer’ non-interference [11], which was originally formulated as follows:
+    “One group of users, using a certain set of commands, is noninterfer-
+    ing with another group of users if what the first group does with those
+    commands has no effect on what the second group of users can see”.
+    In the setting of smart contract compositions, this notion can be reinterpreted
+by requiring that adversaries interacting with S do not inflict economic damage
+to ∆. The notion of MEV non-interference introduced by [6] is based on this
+idea, using MEV as a measure of economic damage. The approaches in [14,24] are
+also based on the idea of non-interference, but replacing MEV with an explicit
+tagging of contract variables as high-level or low-level variables.
+    A common aspect of these approaches to economic non-interference is their
+qualitative nature: namely, these definitions classify a composition as either se-
+cure or insecure, in a binary fashion. While a qualitative evaluation is sufficient
+when a composition is deemed secure, in that case that it is not, it does not pro-
+vide any meaningful estimate of the degree of interference. For example, in the
+insecure composition between a lending protocol and a DEX mentioned above, a
+quantitative measure could provide insights into the extent to which the system
+state (e.g., the liquidity reserves in the DEX) and the contract parameters (e.g.,
+the collateralization threshold) contribute to increasing the economic loss.
+
+Contributions This paper introduces a quantitative notion of economic security
+for smart contract compositions. Our MEV interference, which we denote by
+I(S ⇝ ∆), measures the increase of economic loss of contracts ∆ that adversaries
+can achieve by manipulating the context S . We apply our notion to assess the
+security of some notable contract compositions, including a bet on a token price,
+and a lending protocol relying on a DEX as a price oracle. We prove some
+fundamental properties of our notion: more specifically, I(S ⇝ ∆) increases when
+S is extended with contracts that are not in the dependencies of ∆ (Theorem 1);
+I(S ⇝ ∆) does not depend on the token balances of users except adversaries
+(Theorem 2); I(S ⇝ ∆) is preserved when extending S with contracts Γ that
+enjoy some specific independency conditions with respect to ∆ (Theorem 3).
+
+
+                                        2
+                          Table 1: Summary of notation.
+ A, B      User accounts             A, B           Sets of [user|contract] accounts
+ C, D      Contract accounts         C, D           Sets of contract accounts
+ T, T′     Token types               $1T            Price of T
+ X, X′     Transaction names         A: C.f(args)   Transaction
+ S, S′     Blockchain states         $C (S )        Wealth of contracts C in S
+ W, W ′    Wallet states             deps(C)        Dependencies of contracts C
+ Γ,∆       Contract states           †Γ             Contract accounts in Γ
+
+
+2    Smart contracts model
+We consider a contract model inspired by account-based platforms such as
+Ethereum. The basic building blocks of our model are a set T of token types
+(T, T′ , . . .), representing crypto-assets (e.g., ETH), and a set A of accounts. We
+partition accounts into user accounts A, B, . . . ∈ Au (representing the so-called
+externally owned accounts in Ethereum) and contract accounts C, D, . . . ∈ Ac .
+    The state of a user account is a map w ∈ T → N from token types to non-
+negative integers, representing a wallet of tokens. The state of a contract account
+is a pair (w, σ), where w is a wallet and σ is a key-value map, representing the
+contract storage. A blockchain state S is a map from accounts to their states. We
+write an account state in square brackets, wherein we denote by n: T a balance
+of n units of token T in the wallet, and by x = v, the association of value v to
+the storage variable x. For example, C[1: T, owner = A] represents a state where
+the contract C stores 1 unit of T, and the variable owner contains the address A.
+We write a blockchain state as the composition of its account states, using the
+symbol | as a separator. For example, S = A[1: T, 2: ETH] | C[1: T, owner = A] is a
+state composed by a user account and a contract account.
+    Contracts are made up of a finite set of functions, which can be called by
+transactions sent by users. A function can: (i) receive parameters and tokens from
+the caller, (ii) transfer tokens to user accounts (including the caller), (iii) update
+the contract state, (iv) call other functions (possibly of other contracts, and
+possibly transferring tokens along with the call), (v) return values to the caller.
+Functions can only manipulate tokens as described above: in particular, they
+cannot mint or burn tokens, or drain tokens from other accounts. Transactions
+X, X′ , . . . are calls to contract functions, written A: C.f(args), where A is the
+user signing the transaction, C is the called contract, f is the called function,
+and args is the list of actual parameters. Parameters can also include transfers of
+tokens T from A to C, written A pays n: T. Invalid transactions are reverted (i.e.,
+they do not update the blockchain state). We remark that our security definition
+and results do not rely on a particular language for functions: we just assume
+a deterministic transition relation −     → between blockchain states, where state
+transitions are triggered by transactions. To write examples, however, we will
+instantiate this abstract model using a contract language inspired by Solidity.
+    We assume that a contract D can call a function of a contract C only if C was
+deployed before D. Formally, defining C ≺ D (read: “C is called by D”) when some
+
+
+                                          3
+function in D calls some function in C, we require that the transitive and reflexive
+closure ⊑ of ≺ is a partial order. We define the dependencies of a contract C as
+deps(C) = {C′ | C′ ⊑ C}, and extend this notion to sets of contracts C. We assume
+that blockchain states S enjoy the following conditions: (i) S contains all its
+dependencies, i.e. if C is a contract in S , then also the contracts deps(C) are in S ;
+(ii) S contains finite tokens. All states mentioned in our results are assumed to
+enjoy these well-formedness assumption.3 We write S = W | Γ for a blockchain
+state S composed of user wallets W and contract states Γ . We can deconstruct
+wallets, writing S = W | W ′ | Γ when the accounts in W and W ′ are disjoint,
+as well as contract states, writing S = W | Γ | ∆. We denote by †Γ the set of
+contract accounts in Γ , i.e. †Γ = dom Γ . For example, †(C[· · · ] | D[· · · ]) = {C, D}.
+Given X = A: C.f(args), we write callee(X) for the target contract C.
+
+
+3    Threat model
+To define economic security of smart contract compositions, following [3] we
+consider the Maximal Extractable Value (MEV) that can be extracted when
+new contracts C are deployed in a blockchain state S = W | Γ , leading to a new
+state S | Γ | ∆ where ∆ contains the initial state of the new contracts C. Since
+our goal is measuring the loss of the new contracts ∆ caused by attacking their
+dependencies Γ , rather than considering the overall MEV of S | ∆, we isolate the
+MEV extractable from ∆ and compare it to the MEV that could be extracted
+from ∆ without exploiting the dependencies Γ . To this purpose, we leverage the
+adversary model and the notion of local MEV introduced in [6].
+    We start by designating a finite subset M of user accounts as adversaries.
+We assume that adversaries have full control of the selection and ordering of
+transactions — a standard assumption in definitions of MEV [3]. Then, to mea-
+sure the economic loss of a set of contracts C, we consider the wealth of C in
+a blockchain state before and after the attack. The wealth of C in S , written
+$C (S ), is given by the amount of tokens in each contract C ∈ C in S weighted by
+their prices. Recalling that a contract state is a pair (w, σ) whose first element is
+a wallet, and denoting by $1T thePprice of a token type T, the wealth of a single
+contract state C[w, σ] is given by T w(T) · $1T , i.e. the summation, for all token
+types T, of the number of tokens T in the wallet of C, times the price of T.4 By
+extending this to the set C, we obtain the following general definition of wealth:
+                                     X
+                          $C (S ) =      fst(Γ (C))(T) · $1T                     (1)
+                                      C∈C,T
+
+    Building on the definition of wealth, we now revisit the notion of local MEV
+introduced in [6]. The local MEV extractable by a set of contracts C in a
+3
+  Note that well-formedness rules out some problematic features like reentrancy, which
+  instead is present in Ethereum. However, reentrancy can always be removed by using
+  suitable programming patterns, so we do not consider this as a limitation.
+4
+  Here we implicitly assume that the prices of native crypto-assets are constant, since
+  they do not depend on the blockchain state. We discuss this assumption in Section 6.
+
+
+                                              4
+blockchain state S , denoted by MEV(S , C), is the maximum loss that adversaries
+can inflict to C by performing an arbitrary sequence of transactions crafted using
+their knowledge. By denoting with κ(M) the set of transactions craftable by M,
+this amounts to the maximum loss $C (S ) − $C (S ′ ) over all possible states S ′
+reachable through a sequence ⃗ X of transactions in κ(M). In symbols:
+                                                                       
+                                              ′            ∗     ⃗
+                                                                 X    ′
+                                                 ⃗
+           MEV(S , C) = max $C (S ) − $C (S ) X ∈ κ(M) , S −     →S            (2)
+
+    In MEV(S , C), adversaries are allowed to call any contract in S , including the
+dependencies of C not defined in C itself. This follows from the fact that κ(M)
+does not pose any restriction on the callee of the transactions craftable by M.
+To estimate the MEV extractable from ∆ without exploiting the dependencies
+Γ , we introduce an additional parameter D to local MEV, representing the set
+of contracts callable by M. We denote by κD (M) = {X ∈ κ(M) | callee(X) ∈ D}
+the set of transactions craftable by M and targeting contracts in D. We define:
+                                                                           
+                                              ′              ∗      ⃗
+                                                                    X     ′
+                                                 ⃗
+         MEVD (S , C) = max $C (S ) − $C (S ) X ∈ κD (M) , S −      →S           (3)
+
+    Note that by the finite token assumption in Section 2, the wealth is always
+finite, and so also the local MEV.
+
+
+4   A quantitative notion of economic security
+In this section we introduce our notion of quantitative security for smart contract
+compositions, and study its theoretical properties. In Section 5 we will apply it
+to analyse some archetypal compositions and attacks.
+    Let S be a blockchain state, formed by users’ wallets W and contract states Γ ,
+where we want to deploy new contracts with an initial state ∆. Note that, by
+the well-formedness assumption introduced in Section 2, the dependencies of ∆
+must be included in Γ | ∆, i.e. any function call made by a contract in ∆ must
+target some contracts in Γ or in ∆. We want to measure the security of the
+composition S | ∆ by analysing the additional loss that an adversary can inflict
+to the contracts in ∆ by manipulating the dependencies Γ . To this purpose, our
+definition will compare:
+ – MEV(S | ∆, †∆), the maximal loss of the contracts in ∆, where adversaries
+   are able to send transactions to any contract in S | ∆;
+ – MEV†∆ (S | ∆, †∆), the maximal loss of the contracts in ∆, where adver-
+   saries can only send transactions to contracts in ∆. Note that interactions
+   between ∆ and Γ are still possible, as contracts in ∆ can invoke functions of
+   contracts in Γ (“contract dependencies”), and adversaries can extract tokens
+   from Γ to play them in calls to contracts in ∆ (“token dependencies”).
+   Our security notion, called MEV interference, measures how leveraging the
+dependencies in S can amplify the loss caused to ∆. We denote with I(S ⇝ ∆)
+the MEV interference caused by a blockchain state S to ∆.
+
+
+                                         5
+                       Listing 1.1: A simple airdrop contract.
+  contract Airdrop {
+    fund ( pay x : T ) { } // any user can deposit x : T to the contract
+    withdraw (x) {         // any user can withdraw any amount x : T
+      require ( balance ( T ) >= x ) ; // check that the contract has at least x : T
+      transfer ( sender , x : T ) ;    // transfer x : T to the caller
+    }
+  }
+
+
+
+
+                 Listing 1.2: A simple airdrop contract with fees.
+  contract AirdropFee {
+    fund ( pay x : T ) { } // any user can deposit x : T to the contract
+    withdraw (x) {               // any user can withdraw any amount x : T ( minus fee )
+        require ( balance ( T ) >= x ) ;
+        fee = floor (( FeeManager . getFee () * x ) / 100) ; // integer division
+        transfer ( sender , x - fee : T ) ;
+        transfer ( FeeManager . g e t O w n e r () , fee : T ) ;
+    }
+  }
+  contract FeeManager {
+    c o n s t r u c t o r () { owner = sender ; feeRate =1; }
+    g e t O w n e r () { return owner ; }
+    getFee ()             { return feeRate ; }
+    setFee ( r ) { require (r >=0 && r <=100) ; feeRate = r ; }
+  }
+
+
+
+
+Definition 1 (MEV interference). For a blockchain state S and a contract
+state ∆, we quantify the MEV interference caused by S on ∆ as:
+
+                    1 − MEV†∆ (S | ∆, †∆) if MEV(S | ∆, †∆) ̸= 0
+                    
+
+      I(S ⇝ ∆) =           MEV(S | ∆, †∆)
+                       0                       otherwise
+                    
+
+    Our notion is consistent with the notion of MEV non-interference in [6], which
+classifies S and ∆ as non-interferent if MEV†∆ (S | ∆, †∆) = MEV(S | ∆, †∆).
+Namely, I(S ⇝ ∆) = 0 iff S and ∆ are non-interferent according to [6].
+
+Example 1 (Any/Airdrop). Consider an instance ∆ = Airdrop[n: T] of the air-
+drop contract in Listing 1.1, to be deployed in an arbitrary blockchain state S .
+Note that MEV(S | ∆, {Airdrop}) = n · $1T , since the adversary can craft a
+transaction M: Airdrop.withdraw(n) to extract all the tokens from the contract.
+The restricted MEV{Airdrop} (S | ∆, {Airdrop}) is equal to the unrestricted one,
+since the adversary just needs to interact with Airdrop. Therefore, if n > 0:
+
+                                  MEV{Airdrop} (S | ∆, {Airdrop})
+              I(S ⇝ ∆) = 1 −                                      =0
+                                    MEV(S | ∆, {Airdrop})
+
+The same holds if n = 0. This is consistent with our intuition, since the adversary
+does not need to exploit the dependencies in S to extract MEV from ∆.             ⋄
+
+
+
+                                             6
+Example 2 (FeeManager/Airdrop). Consider a variant of the airdrop contract,
+where each withdrawal requires the user to pay a proportional fee (Listing 1.2).
+To obtain the fee rate, the AirdropFee contract calls the FeeManager contract.
+Assume that we want to deploy ∆ = AirdropFee[n: T] in a blockchain state S
+containing FeeManager[feeRate = r]. The unrestricted MEV is n · $1T , since
+an adversary can set the fee to 0 by calling FeeManager.setFee(0) and then
+withdraw the full balance of n: T from AirdropFee. Instead, the restricted MEV
+only amounts to (n − ⌊r·n/100⌋) · $1T , since the adversary cannot call FeeManager
+to manipulate the fee rate. Therefore, if n > 0:
+
+                                        n − ⌊r·n/100⌋    r
+                      I(S ⇝ ∆) = 1 −                  ≤
+                                             n          100
+This is coherent with our intuition: the closer the fee rate is to 100, the greater
+the difference between restricted and unrestricted MEV, and so the possibility
+for the attacker to inflict more damage to the contract.                          ⋄
+
+    We now study the theoretical properties of MEV interference. Because of
+space constraints, we relegate the proofs of our statements to a technical report
+on ArXiV. Lemma 1 establishes a few basic properties of MEV interference:
+its value is zero when the context S has no contracts and when ∆ is empty;
+furthermore, the interference is always comprised between 0 and 1.
+
+Lemma 1. (i) I(S ⇝ ∅) = 0; (ii) I(W | ∅ ⇝ ∆) = 0; (iii) 0 ≤ I(S ⇝ ∆) ≤ 1.
+
+    Note that I(S ⇝ ∆) ranges from a minumum 0, representing the case where
+the context S is not useful to extract MEV from ∆, to a maximum 1, correspond-
+ing to the case where the economic loss that can be inflicted to ∆ is purely due
+to the interactions of the adversary with S . Enclosing MEV interference into an
+interval is a design choice, which we illustrate with an example. Let S be a state
+with an airdrop contract releasing 1: T, where we want to deploy a new contract
+∆ that, upon the payment of 1: T, releases all its balance of n: ETH. Assume that
+the adversary has no tokens T, so that she needs to extract 1: T from the airdrop
+in order to extract MEV from ∆. If we measured the interference from S to ∆
+as the difference between unrestricted and restricted MEV, i.e.:
+                          ?
+             I(S ⇝ ∆) = MEV(S | ∆, †∆) − MEV†∆ (S | ∆, †∆)
+
+then we would obtain that I(S ⇝ ∆) = n · $1ETH , i.e. the interference would be
+proportional to the ETH balance in ∆. We do not find this measure particularly
+insightful: after all, what we observe is just that all the MEV extractable from ∆
+is due to the interaction with the context S . In general, under these conditions,
+our intuition is that the interference should take its maximum value.
+    Lemma 2 states that when the newly deployed contracts ∆ have no wealth
+(i.e., when $†∆ (∆) = 0), then they have no MEV interference with the context.
+
+Lemma 2. If $†∆ (∆) = 0, then I(S ⇝ ∆) = 0.
+
+
+                                        7
+    Of course, if ∆ has zero wealth, no loss can be inflicted to ∆, regardless of
+any potential manipulation of its dependencies in S . This also underscores a
+fundamental aspect of our definition — namely, that it measures what happens
+in specific contract states, rather than in arbitrary reachable states of a given
+contract. For this reason, our intuition is to have I(S ⇝ ∆) = 0 whenever ∆ has
+zero wealth, while not ruling out the possibility of having I(S ′ ⇝ ∆′ ) > 0 in a
+state ∆′ where the contracts have been funded.
+     Theorem 1 says that widening a blockchain state S potentially increases MEV
+interference to newly deployed contracts ∆. Formally, this amounts to showing
+that I is monotonic w.r.t. the operation of adding contracts Γ to the context,
+i.e. I(S ⇝ ∆) ≤ I(S | Γ ⇝ ∆). Note that by the well-formedness assumption,
+the statement implicitly assumes that ∆ has no dependencies in Γ .
+
+Theorem 1. I(S ⇝ ∆) ≤ I(S | Γ ⇝ ∆)
+
+    For illustration, consider a state S where we want to deploy new contracts ∆,
+with an interference estimated as I(S ⇝ ∆). Assume now that the deployment
+of ∆ is front-run by that of another set of contracts Γ . Of course ∆ cannot have
+dependencies in Γ , since otherwise it would not be possible to deploy ∆ in S
+(as this would violate the well-formedness assumption). Now, the interference
+I(S | Γ ⇝ ∆) could either be equal to I(S ⇝ ∆), or possibly increase when the
+adversary can drain tokens from Γ to inflict more loss to ∆. Theorem 1 states
+that, in any case, the interference should not decrease.
+    The following example shows a case where the inequality given by Theorem 1
+is strict. This is because, even if ∆ has no contract dependencies in Γ , the
+adversary may exploit their token dependencies, i.e. extract tokens from Γ and
+leverage them to extract more tokens from ∆.
+
+Example 3. Let S = M[0: T] be a state where the adversary has no tokens, and
+there are no contracts. Consider a contract Doubler with a function that, upon
+receiving as input n: T, returns to the sender 2n: T, and let ∆ = Doubler[2: T].
+By Lemma 1, S does not interfere with ∆. Instead, adding Γ = Airdrop[1: T]
+to S yields I(S | Γ ⇝ ∆) = 1, since MEV{Doubler} (S | Γ | ∆, {Doubler}) = 0
+while MEV(S | Γ | ∆, {Doubler}) = 2·$1T . This increase is caused by the ability
+of M to leverage the token dependencies between the newly deployed Airdrop
+contract to extract more MEV from Doubler than previously possible.            ⋄
+
+   The previous example also shows that wealthier adversaries not always cause
+greater interference. Indeed, if S = M[1: T], then M does not need to exploit
+the Airdrop to extract MEV from the Doubler contract, since she has enough
+tokens in her wallet. Of course there are also cases where wealthier adversary can
+cause more MEV interference: we will see this in Example 5, where a sufficiently
+wealthy M can win a bet by producing a price fluctuation in an AMM.
+    Theorem 2 shows that users’ wallets are irrelevant to the evaluation of MEV
+interference. Namely, I(S ⇝ ∆) is preserved when removing from S all the
+wallets except those of adversaries. Recall that a wallet state W is a map from
+
+
+                                        8
+accounts to wallets. Then, in a state S = W | Γ , we just need to consider the
+restriction of W to the domain M.
+
+Theorem 2. If dom WM = M, then I(WM | W | Γ ⇝ ∆) = I(WM | Γ ⇝ ∆).
+
+   Here the intuition is that the adversary does not have any control of the
+tokens in users’ wallets, and therefore these tokens play no role in the extraction
+of MEV from ∆. This assumption highlights a simplification in our attacker
+model, namely that the mempool of users’ transactions is not known by the
+adversary. Formally, this assumption is visible in the definition of MEV in (3),
+where the set κD (M) of transactions craftable by the adversary does not take the
+mempool as a parameter. Were mempool transactions playable by the adversary,
+then their success would also depend on the users’ wallet, and consequently the
+MEV interference would possibly depend on them. We discuss this in Section 6.
+    Theorem 3 provides sufficient conditions under which an adversary M gains
+no advantage by front-running the newly deployed contracts ∆ with malicious
+contracts Γ M . Condition (i) requires the contracts in deps(∆) to be sender-
+agnostic, i.e. their functions are unaware of the identity of the sender, only being
+able to use it as a recipient of token transfers. Condition (ii) requires that the
+contracts in deps(∆) are token independent with those in the other contracts (not
+in deps(∆)) which could be possibly exploited by M. Note that since Definition 1
+assumes that states are well-formed, Theorem 3 implicitly assumes that contracts
+in ∆ do not call contracts in Γ M . Before stating Theorem 3, we formalise sender-
+agnosticism and token independence.
+
+Definition 2 (Sender-agnosticism). A contract C is sender-agnostic if, for
+all states S and for all transitions that involve an (external or internal) call to
+C, replacing the caller’s address a with any other address b results in the same
+post-transition state, up to the substitution of a with b.
+
+     In practice, the effect of calling a function of a sender-agnostic contract C
+can be decomposed into: (i) updating the states of contracts (either directly
+or through internal calls); (ii) transferring tokens between users and contracts;
+(iii) transferring tokens to the sender of the call to C. Any call to C with the
+same arguments and origin, but distinct sender, has exactly the same effect,
+except for item (iii), where tokens are transferred to the new sender.
+     Token independence relies on two auxiliary notions: the token types that can
+be received by contracts Γ from other contracts in S , denoted by in S (Γ ), and
+those that can be sent from Γ to other contracts, written out S (Γ ).
+
+Definition 3 (Token independence). Let S = W | Γ , and let ∆ ⪯ Γ be a
+subset of the contract states in Γ . We define:
+
+ – in S (∆) as the set of token types T for which there exists a state S ′ reachable
+   from S through a sequence of steps, containing a transaction that causes an
+   inflow of tokens T from outside ∆ to one of the contracts in ∆.
+
+
+                                         9
+                              Listing 1.3: An exchange contract.
+    contract Exchange {
+      c o n s t r u c t o r ( pay x : tout_ , tin_ , rate_ ) { // receive x : tout_ from sender
+          require rate_ >0 && tin_ != tout_ ;
+          rate = rate_ ; tout = tout_ ; tin = tin_ ; owner = sender ;
+      }
+      g e t T o k e n s () { return ( tin , tout ) ; }
+      getRate ( tout ) { return rate ; } // 1: tin for getRate ( tout ) : tout
+      setRate ( r ) { require sender == owner ; rate = r ; } // sender can update rate
+
+        swap ( pay x : tin ) {               //   sender sells x units of token tin
+          y = x * getRate ( tout ) ;         //   units of token tout sold to sender
+          require balance ( tout ) >= y ;    //   Exchange has enough tout tokens
+          transfer ( sender , y : tout ) ;   //   send y units of token tout to sender
+        }
+    }
+
+
+
+
+ – out S (∆) as the set of token types T for which there exists a state S ′ reachable
+   from S through a sequence of steps, containing a transaction that causes an
+   outflow of tokens T from ∆ to one of the contracts outside ∆.
+Let now ∆0 ⪯ Γ and ∆1 ⪯ Γ . We say that ∆0 and ∆1 are token independent
+in S = W | Γ when in S (∆0 ) ∩ out S (∆1 ) = ∅ = in S (∆1 ) ∩ out S (∆0 ).
+Theorem 3. I(S ⇝ ∆) = I(S | Γ M ⇝ ∆) holds if (i) the contracts in deps(∆)
+are sender-agnostic, and (ii) deps(∆) and deps(S | Γ M ) \ deps(∆) are token
+independent in S | Γ M | ∆.
+    Note that I(S ⇝ ∆) is zero when the contract dependencies and the token
+dependencies of ∆ in S are irrelevant to the ability of inflicting a loss to ∆.
+E.g., consider an arbitrary state S where we want to deploy an airdrop contract
+∆ (see Listing 1.1). In this scenario, the adversary cannot gain any advantage
+from the contracts in S , since she can extract the full MEV from the airdrop by
+interacting with ∆, only. Therefore, the MEV interference from S to ∆ is zero.
+
+5       Use cases
+We now illustrate MEV interference through a set of use cases. For simplicity, we
+assume the values in these use cases are real numbers and that all computations
+are performed using exact arithmetic. We note that adapting our results to smart
+contract platforms, that, like Ethereum, operate on integers, requires several
+modifications, such as applying flooring to arithmetic operations and replacing
+equalities with inequalities. We refer to Appendix B for details.
+Example 4 (Airdrop/Exchange). Consider an instance of the Exchange contract
+in Listing 1.3, to be deployed in a blockchain state S containing an instance of
+the Airdrop contract in Listing 1.1. More specifically, let:
+           S = M[nM : T] | Airdrop[nA : T]
+          ∆ = Exchange[nE : ETH, tin = T, tout = ETH, rate = r, owner = A]
+
+
+                                                    10
+The Exchange contract allows any user to swap tokens of type tin with tokens
+of type tout (in the instance, T and ETH, respectively), at an exchange rate of 1
+unit of tin for rate units of tout. For simplicity, assume that $1T = $1ETH = 1.
+We evaluate the MEV interference from S to ∆. When the exchange rate is
+favourable, i.e. r > 1, the adversary M can extract MEV from ∆ by exchanging
+T for ETH. This is possible as far as Exchange has enough ETH balance. The MEV
+can be further increased by draining nA : T from Airdrop, and swapping these
+tokens through the Exchange. More precisely, we have:
+                                            (
+                                              nM · r if nM < nE/r
+     MEV{Exchange} (S | ∆, {Exchange}) =
+                                              nE     otherwise
+                                            (
+                                              (nM + nA ) · r if nM < nE/r − nA
+              MEV(S | ∆, {Exchange}) =
+                                              nE             otherwise
+
+Therefore, the MEV interference from S on ∆ is given by:
+                           
+                           nA/(nM +nA ) if nM < nE/r − nA
+                           
+             I(S ⇝ ∆) = 1 − nM ·r/nE if nE/r − nA ≤ nM < nE/r
+                           
+                             0           otherwise
+                           
+
+When M is sufficiently rich, she can drain the Exchange without invoking the
+Airdrop. Instead, when M’s wealth is limited, she is able to inflict a greater loss
+of Exchange by leveraging the Airdrop. So, the interference caused to Exchange
+in this case has a dual dependence on the adversary’s and the Airdrop’s wealth.
+Furthermore, the interference is inversely proportional to M’s wealth, i.e. richer
+adversaries have less need to exploit the context, resulting in lower interference
+from S to ∆. This is coherent with our intuition, since we would expect a poorer
+adversary to benefit more from exploiting the Airdrop than a richer one.          ⋄
+
+Example 5 (AMM/Bet). The Bet contract in Listing 1.4 allows a player to
+bet on the exchange rate between a token and ETH. It is parameterized over an
+oracle that is queried for the token price. To enter the bet, the player must
+match the initial pot set upon deployment. Before the deadline, the player can
+win a fraction potShare of the pot if the oracle exchange rate exceeds or equals
+potShare times the rate. The remaining fraction is taken by the owner. Consider
+an instance of Bet using the AMM in Listing 1.5 as a price oracle:
+
+          S = M[m: ETH] | AMM[r0 : ETH, r1 : T] | block.num = d − k | · · ·
+         ∆ = Bet[b: ETH, owner = A, tok = T, rate = r, deadline = d]
+
+When M is allowed to leverage Bet’s dependency, she can manipulate the AMM to
+influence the internal exchange rate. If M has sufficient funds to enter the bet, she
+can fire the following sequence of transactions, where, in the swap transaction,
+x = m − b ≥ 0 is the number of ETH units sent to the AMM and y = xr1/r0 +x is
+the number of T units received (we omit M’s wallet for brevity):
+
+
+                                          11
+       M:Bet.bet(M pays b:ETH,p)
+S | ∆ −−−−−−−−−−−−−−−−→             AMM[r0 : ETH, r1 : T] | Bet[2b: ETH, potShare = p, · · · ] | · · ·
+       M:AMM.swap(M pays x:ETH,0)
+      −−−−−−−−−−−−−−−−→             AMM[r0 + x: ETH, r1 − y: T] | Bet[2b: ETH, · · · ] | · · ·
+       M:Bet.win()
+      −−−−−−−→                      AMM[r0 + x: ETH, r1 − y: T] | Bet[2b − 2bp: ETH, · · · ] | · · ·
+       M:AMM.swap(M pays y:T,0)
+      −−−−−−−−−−−−−−−→              AMM[r0 : ETH, r1 : T] | Bet[2b − 2bp: ETH, · · · ] | · · ·
+The bet value that maximizes the loss caused to Bet depends on M’s wealth, and
+is given by p = r0 +x/r(r1 −y). Assuming M enters the bet only for p ≥ 1/2 (since a
+smaller proportion makes the bet irrational for her), by Equation (2) we have:
+                                                    2
+                                                              
+                  MEV(S | ∆, {Bet}) = 2(r0 +m−b) /rr0 r1 − 1 b
+If M can only interact with Bet, she is limited to settle on a lower bet value:
+                                      (
+                                         2br0/rr1 − b − 1 if r0/rr1 ≥ 1/2
+          MEV{Bet} (S | ∆, {Bet}) =
+                                         0                 otherwise
+
+Accordingly, MEV interference is estimated through Definition 1 as follows:
+                                  2br02 −rr0 r1 (b+1)
+                         (
+                           1 − 2b(r0 +m−b)              if r0/rr1 ≥ 1/2
+             I(S ⇝ ∆) =
+                                              2 −brr r
+                                                    0 1
+
+                           1                            otherwise
+We observe maximum interference when M exploits the Bet by manipulating the
+AMM, which would be impossible by interacting exclusively with Bet. Further-
+more, the interference value is proportional to the adversarial wealth, as one
+would anticipate. By contrast, even if M was able to empty a portion of the Bet
+by fair play, she can always increase this loss by manipulating the AMM (pro-
+vided she owns adequate funds). Note that in the composition between Bet and
+Exchange, the MEV interference is zero, as the adversary cannot manipulate the
+exchange rate (unless she is the Exchange owner).                             ⋄
+
+Example 6 (AMM/Lending Pool). The contract LP in Listing 1.6 implements a
+simplified lending protocol, where users can deposit and borrow tokens. Borrow-
+ing requires users to have a sufficient collateralization [13,5]. This value, defined
+as the ratio between the value of their deposits and that of their debits, is a
+measure of the borrowing capacity (full versions of lending protocols include a
+function that allows liquidators to repay loans of under-collateralized borrow-
+ers in exchange for part of their collateral). The contract LP is parameterized
+over an oracle that is queried for the token prices. Below we analyze a well-
+known attack where the underlying oracle is an AMM, which is manipulated by
+an adversary to increase her borrowing capacity [12,21,5,20,1].
+    More specifically, consider the following instance, where $1ETH = 1 = $1T , the
+AMM is balanced, and the adversary M has not deposited or borrowed tokens yet:
+    S = M[n: ETH] | AMM[r: ETH, r: T]        ∆ = LP[a: ETH, b: T, Cmin = Cmin , · · · ]
+
+
+                                             12
+                                    Listing 1.4: A Bet contract.
+  contract Betoracle {
+    c o n s t r u c t o r ( pay x : ETH , tok_ , deadline_ , rate_ ) {
+        require tok_ != ETH && oracle . g e t T o k e n s () ==( ETH , tok_ ) ;
+        tok = tok_ ; deadline = deadline_ ; rate = rate_ ; owner = sender ;
+    }
+    bet ( pay x : ETH , p_ ) { // sender gives x : ETH to Bet and chooses potShare
+        require player == null && x == balance ( ETH ) && p_ >=0 && p_ <=1;
+        potShare = p_ ; player = sender ;
+    }
+    win () { // only callable by player before the deadline
+        require block . num <= deadline && sender == player ;
+        if ( oracle . getRate ( ETH ) >= potShare * rate )
+            transfer ( player , potShare * balance ( ETH ) : ETH ) ;
+    }
+    close () { // after the deadline , transfer the ETH balance to the owner
+        require block . num > deadline ;
+        transfer ( owner , balance ( ETH ) : ETH ) ;
+    }
+  }
+
+
+                      Listing 1.5: A constant-product AMM contract.
+  contract AMM {
+    c o n s t r u c t o r ( pay x0 : T0 , pay x1 : T1 ) { require x0 >0 && x1 >0; }
+
+      g e t T o k e n s () { return ( T0 , T1 ) ; }   // token pair
+
+      getRate ( tout ) { // 1: tin for getRate ( tout ) : tout
+        if ( tout == T0 ) { tin = T1 } else { tin = T0 };
+        return balance ( tout ) / balance ( tin ) ;
+      }
+      swap ( pay x : tin , ymin ) { // sell x : tin to buy at least ymin : tout
+        if ( tin == T0 ) { tout = T1 } else { tout = T0 };
+        y = x * getRate ( tout ) ;         // units of token tout sold to sender
+        require ymin <= y < balance ( tout ) ; // the AMM has enough tout tokens
+        transfer ( sender , y : tout ) ; // send y units of token tout to sender
+      }
+  }
+
+
+
+
+   If M can interact with the AMM, she has the following attack strategy: deposit
+(n − x): ETH to the LP, and use the remaining x: ETH to inflate the price of T in
+the AMM. This allows M to increase the amount of T she can borrow, since the LP
+now uses an artificially inflated price to determine her borrowing capacity.
+   To implement this strategy, M fires the following sequence of transactions,
+where we denote by y the amount of T units that M receives from the swap, and
+with t the amount of T units that M manages to borrow from the LP (below, we
+omit M’s wallet, and the parts of the state that do not change upon a transition):
+
+         M:LP.deposit(M pays (n−x):ETH)
+S | ∆ −−−−−−−−−−−−−−−−−−−−→ AMM[r: ETH, r: T] | LP[a + n − x: ETH, b: T, · · · ] | · · ·
+         M:AMM.swap(M pays x:ETH,0)
+        −−−−−−−−−−−−−−−−→                        AMM[r + x: ETH, r − y: T] | · · ·
+         M:LP.borrow(t,T)
+        −−−−−−−−−−→                               · · · | LP[a + n − x: ETH, b − t: T, · · · ] | · · ·
+         M:AMM.swap(M pays y:T,0)
+        −−−−−−−−−−−−−−−→                         AMM[r: ETH, r: T] | · · ·
+
+
+                                                      13
+                   Listing 1.6: A Lending Pool contract (simplified).
+  contract LPoracle {
+    c o n s t r u c t o r ( Cmin_ ) { Cmin = Cmin_ ; } // c o l l a t e r a l i z a t i o n threshold
+
+      c o l l a t e r a l ( a ) { // return a ’ s c o l l a t e r a l i z a t i o n
+          val_minted = 0;
+          for c in minted : val_minted += minted [ t ][ a ] * oracle . getRate ( t ) ;
+          val_debts = 0;
+          for c in debts : val_debts += debt [ t ][ a ] * oracle . getRate ( t ) ;
+          return val_minted / val_debts ;
+      }
+      deposit ( a pays x : t ) { // a deposits x units of token t in the LP
+          minted [ t ][ a ] += x ; // record the deposited units in the minted map
+      }
+      borrow ( a sig , x , t ) { // a borrows x units of token t in the LP
+          require balance ( t ) >= x ;
+          debts [ t ][ a ] += x ;         // record the borrowed units in the debts map
+          require c o l l a t e r a l ( a ) >= Cmin ; // a is over - co llateral ized
+          transfer (a , x : t ) ;
+      }
+  }
+
+
+
+
+                                                                                              2
+The amount that M can borrow (as a function of x) is t = (n−x)(r+x) /Cmin (r−y)2 .
+Its maximum is obtained for x = 4n−r/5 when M benefits from the manipulation
+(i.e., when 4n ≥ r), and for x = 0 otherwise.
+    Assuming that the LP has sufficient funds, the unrestricted MEV is given by:
+
+                                     (n − x)(r + x)2
+        MEV(S | ∆, {LP}) =                            +x−n
+                                      Cmin (r − y)2
+                                                           4     
+                                      n+r
+                                                1     4(n+r)
+                                                                 − 1                   if 4n ≥ r
+                                     
+                                         5      Cmin     5r
+                                   =              
+                                            1
+                                          Cmin − 1
+                                     n
+                                     
+                                                                                       otherwise
+
+On the contrary, if M was restricted to interact with the LP only, she suffers a
+reduced borrowing allowance. By Equation (3) we have:
+                                                         
+                                                   1
+                    MEV{LP} (S | ∆, {LP}) = n          −1
+                                                 Cmin
+
+Accordingly, MEV interference is estimated through Definition 1 as follows:
+                       (             5 4
+                         1 − (n+r)(45 4r(n+r)
+                                          n(1−Cmin )
+                                                             if 4n ≥ r
+          I(S ⇝ ∆) =
+                                             4 −(5r)4 C
+                                                       min )
+
+                         0                                   otherwise
+
+In accordance with our expectations, the interference is indeed proportional to
+the attack capital n of the adversary. Naturally, adversaries with higher manipu-
+lation capital experience an increased borrowing capacity. Moreover, the degree
+of interference is influenced by the AMM reserves since the profitability of the
+attack rests on the cost of manipulating and de-manipulating the AMM.           ⋄
+
+
+
+                                                    14
+6   Conclusions
+We have proposed a notion of economic security for smart contract compositions,
+which quantifies the potential economic loss an adversary can inflict on a contract
+by targeting its dependencies. Below, we discuss some limitations of our approach
+and directions for future work.
+
+Limitations To keep our theory manageable, we have made a few simplifying
+assumptions in our model. A first assumption is that the prices of native crypto-
+assets are constant. Consequently, the amount of MEV interference is not af-
+fected by fluctuations of these prices (while they could depend on the prices
+provided by DEXes, like in Examples 5 and 6). Handling price updates would
+require to extend blockchain states with a function mapping tokens to their
+prices. Another assumption is that the local MEV in Equation (3) does not al-
+low adversaries to exploit their knowledge of pending users’ transactions (the
+public mempool ). The rationale underlying this choice is that, in our vision,
+MEV interference should be the basis for a static analysis of smart contracts,
+where dynamic data such as the mempool transactions are not known. Assuming
+an over-approximation of users’ transactions, we could extend our MEV inter-
+ference by making the mempool a parameter of local MEV, similarly to what
+done for the theory of MEV in [7].
+
+Future work While some tools exist for detecting price manipulation attacks in
+DeFi protocols [23,18,22], and others for estimating MEV opportunities [3,4],
+there remains a gap in addressing general economic attacks on smart contract
+compositions. A common analysis technique underlying the detection of price
+manipulation attacks — also employed by some of the tools mentioned above —
+is taint analysis, which aims at identifying potential data flows from low-level
+to high-level data. In the DeFi setting, this typically corresponds to flows from
+to functions that influence token prices to functions that transfer tokens. While
+this technique could potentially be generalised to analyse qualitative MEV non-
+interference, capturing our notion of quantitative interference seems to require
+more advanced techniques. Some inspiration could be drawn from static analysis
+techniques for information-theoretic interference [9,19,17,2]. We plan to explore
+this research line in future work. Our blockchain model represents crypto-assets
+as token types with primitive transfer operations and built-in linearity guar-
+antees preventing asset creation or destruction. In practice, several blockchains
+including Ethereum do not have native support for custom tokens, but rather
+require to implement them as smart contracts exposing standard interfaces. This
+opens the door for attackers to exploit potential discrepancies between these im-
+plementations and the standards, possibly leading to MEV [8]. Applying our
+MEV interference analysis to such compositions is left as future work.
+
+Acknowledgments Work partially supported by project SERICS (PE00000014)
+under the MUR National Recovery and Resilience Plan (NRRP) funded by
+the European Union – NextGenerationEU, and by PRIN 2022 NRRP project
+DeLiCE (F53D23009130001).
+
+
+                                        15
+References
+ 1. Arora, S., Li, Y., Feng, Y., Xu, J.: SecPLF: Secure protocols for loanable funds
+    against oracle manipulation attacks. In: ACM Asia Conference on Computer and
+    Communications Security (ASIA CCS). ACM (2024). https://doi.org/10.1145/
+    3634737.3637681
+ 2. Assaf, M., Naumann, D.A., Signoles, J., Totel, E., Tronel, F.: Hypercollecting se-
+    mantics and its application to static analysis of information flow. In: ACM SIG-
+    PLAN Symposium on Principles of Programming Languages (POPL). pp. 874–887.
+    ACM (2017). https://doi.org/10.1145/3009837.3009889
+ 3. Babel, K., Daian, P., Kelkar, M., Juels, A.: Clockwork finance: Automated analysis
+    of economic security in smart contracts. In: IEEE Symposium on Security and
+    Privacy. pp. 622–639. IEEE Computer Society (2023). https://doi.org/10.1109/
+    SP46215.2023.00036
+ 4. Babel, K., Javaheripi, M., Ji, Y., Kelkar, M., Koushanfar, F., Juels, A.: Lanturn:
+    Measuring economic security of smart contracts through adaptive learning. In:
+    ACM SIGSAC Conference on Computer and Communications Security (CCS).
+    pp. 1212–1226. ACM (2023). https://doi.org/10.1145/3576915.3623204
+ 5. Bartoletti, M., Chiang, J.H., Lluch-Lafuente, A.: SoK: Lending Pools in Decentral-
+    ized Finance. In: Workshop on Trusted Smart Contracts. LNCS, vol. 12676, pp.
+    553–578. Springer (2021). https://doi.org/10.1007/978-3-662-63958-0_40
+ 6. Bartoletti, M., Marchesin, R., Zunino, R.: DeFi composability as MEV non-
+    interference. In: Financial Cryptography and Data Security (FC 2024). LNCS,
+    vol. 14745. Springer (2025), https://doi.org/10.1007/978-3-031-78679-2_20
+ 7. Bartoletti, M., Zunino, R.: A theoretical basis for MEV. In: Financial Cryptogra-
+    phy and Data Security. LNCS, Springer (2025), to appear
+ 8. Chen, T., Zhang, Y., Li, Z., Luo, X., Wang, T., Cao, R., Xiao, X., Zhang, X.: To-
+    kenscope: Automatically detecting inconsistent behaviors of cryptocurrency tokens
+    in Ethereum. In: ACM SIGSAC Conference on Computer and Communications Se-
+    curity (CCS). pp. 1503–1520. ACM (2019). https://doi.org/10.1145/3319535.
+    3345664
+ 9. Clark, D., Hunt, S., Malacaria, P.: A static analysis for quantifying information
+    flow in a simple imperative language. J. Comput. Secur. 15(3), 321–371 (2007).
+    https://doi.org/10.3233/JCS-2007-15302
+10. Daian, P., Goldfeder, S., Kell, T., Li, Y., Zhao, X., Bentov, I., Breidenbach, L.,
+    Juels, A.: Flash boys 2.0: Frontrunning in decentralized exchanges, miner ex-
+    tractable value, and consensus instability. In: IEEE Symp. on Security and Privacy.
+    pp. 910–927. IEEE (2020). https://doi.org/10.1109/SP40000.2020.00040
+11. Goguen, J.A., Meseguer, J.: Security policies and security models. In: IEEE Sym-
+    posium on Security and Privacy. pp. 11–20. IEEE Computer Society (1982).
+    https://doi.org/10.1109/SP.1982.10014
+12. Gudgeon, L., Pérez, D., Harz, D., Livshits, B., Gervais, A.: The decentralized
+    financial crisis. In: Crypto Valley Conference on Blockchain Technology (CVCBT).
+    pp. 1–15. IEEE (2020). https://doi.org/10.1109/CVCBT50464.2020.00005
+13. Gudgeon, L., Werner, S., Perez, D., Knottenbelt, W.J.: DeFi protocols for loan-
+    able funds: Interest rates, liquidity and market efficiency. In: ACM Conference on
+    Advances in Financial Technologies (AFT). pp. 92–112 (2020). https://doi.org/
+    10.1145/3419614.3423254
+14. Guesmi, S., Piazza, C., Rossi, S.: Noninterference analysis for smart contracts:
+    Would you bet on it? In: Distributed Ledger Technology Workshop (DLT). CEUR
+    Workshop Proceedings, vol. 3791. CEUR-WS.org (2024)
+
+
+                                          16
+15. Kitzler, S., Victor, F., Saggese, P., Haslhofer, B.: A systematic investigation of
+    DeFi compositions in Ethereum. In: Financial Cryptography and Data Security
+    Workshops. LNCS, vol. 13412, pp. 272–279. Springer (2022). https://doi.org/
+    10.1007/978-3-031-32415-4_18
+16. Kitzler, S., Victor, F., Saggese, P., Haslhofer, B.: Disentangling Decentralized Fi-
+    nance (DeFi) compositions. ACM Trans. Web 17(2), 10:1–10:26 (2023). https:
+    //doi.org/10.1145/3532857
+17. Klebanov, V.: Precise quantitative information flow analysis - a symbolic approach.
+    Theoretical Computer Science 538, 124–139 (2014). https://doi.org/https://
+    doi.org/10.1016/j.tcs.2014.04.022
+18. Kong, Q., Chen, J., Wang, Y., Jiang, Z., Zheng, Z.: DeFiTainter: Detecting price
+    manipulation vulnerabilities in DeFi protocols. In: ACM SIGSOFT International
+    Symposium on Software Testing and Analysis. p. 1144–1156 (2023). https://doi.
+    org/10.1145/3597926.3598124
+19. Köpf, B., Rybalchenko, A.: Automation of quantitative information-flow analysis.
+    In: International School on Formal Methods for the Design of Computer, Com-
+    munication, and Software Systems (SFM). LNCS, vol. 7938, pp. 1–28. Springer
+    (2013). https://doi.org/10.1007/978-3-642-38874-3_1
+20. Mackinga, T., Nadahalli, T., Wattenhofer, R.: TWAP oracle attacks: Easier
+    done than said? In: IEEE International Conference on Blockchain and Cryp-
+    tocurrency (ICBC). pp. 1–8. IEEE (2022). https://doi.org/10.1109/ICBC54727.
+    2022.9805499
+21. Qin, K., Zhou, L., Livshits, B., Gervais, A.: Attacking the DeFi ecosystem with
+    Flash Loans for fun and profit. In: Financial Cryptography. LNCS, vol. 12674, pp.
+    3–32. Springer (2021). https://doi.org/10.1007/978-3-662-64322-8_1
+22. Wu, K.W.: Strengthening DeFi security: A static analysis approach to Flash Loan
+    vulnerabilities. CoRR abs/2411.01230 (2025). https://doi.org/10.48550/
+    arXiv.2411.01230
+23. Wu, S., Wang, D., He, J., Zhou, Y., Wu, L., Yuan, X., He, Q., Ren, K.: DeFiRanger:
+    Detecting price manipulation attacks on defi applications. CoRR abs/2104.15068
+    (2021), https://arxiv.org/abs/2104.15068
+24. Yao, S., Ni, H., Myers, A.C., Cecchetti, E.: SCIF: A language for compositional
+    smart contract security. CoRR abs/2407.01204 (2024), https://arxiv.org/
+    abs/2407.01204
+
+
+
+
+                                          17
+A    Proofs: properties of MEV interference
+
+We start by recalling from [6] a few useful properties of local MEV. We define
+the relation ⪯ between contract states as follows:
+
+          Γ ⪯∆      ⇐⇒      ∀C ∈ dom Γ . C ∈ dom ∆ ∧ Γ (C) = ∆(C)
+
+Therefore, the condition Γ ⪯ ∆ in Item 3 of Lemma A.1 means that ∆ is a
+widening of the state Γ with other arbitrary contract states.
+
+Lemma A.1 (Basic properties of MEV [6]). For all S , C, D ⊆ Ac :
+
+1. MEVD (S , ∅) = MEV∅ (S , C) = 0, MEVAc (S , Ac ) ≥ MEV(S )
+2. if D ⊆ D′ , then MEVD (S , C) ≤ MEVD′ (S , C)
+3. MEVD (W | Γ , C) ≤ MEVD (W | ∆, C) if Γ ⪯ ∆
+4. MEVD (W | Γ , C) = MEVD (W | Γ , C ∩ †Γ ) = MEVD∩†Γ (W | Γ , C)
+5. 0 ≤ MEVD (S , C) ≤ $C (S )
+
+   Lemma A.2 states that the only user wallets that need to be taken into
+account to estimate the MEV are those of the adversary. This is because M has
+no way to force other users to spend their tokens in the attack sequence.
+
+Lemma A.2 (MEV and adversaries’ wallets [6]). If dom WM = M, then
+
+                MEVD (WM | W | Γ , C) = MEVD (WM | Γ , C)
+
+
+Proof of Lemma 1
+
+For Item (i), by Item 1 of Lemma A.1 we have that MEV(S | ∅, †∅) = 0. The
+thesis follows by Definition 1.
+For Item (ii), by Item 4 of Lemma A.1 we have:
+
+                MEV(W | ∅ | ∆, †∆) = MEV†∆ (W | ∅ | ∆, †∆)
+
+which gives us I(W | ∅ ⇝ ∆) = 0, and hence we have our thesis.
+For Item (iii), there are two cases. If MEV(S | ∆, †∆) = 0, then I(S ⇝ ∆) = 0
+holds by definition. Otherwise, by Items 2 and 5 of Lemma A.1:
+
+                    0 ≤ MEV†∆ (S | ∆, †∆) ≤ MEV(S | ∆, †∆)
+                       MEV†∆ (S | ∆, †∆)
+                =⇒ 0 ≤                    ≤1
+                         MEV(S | ∆, †∆)
+                           MEV†∆ (S | ∆, †∆)
+                =⇒ 0 ≤ 1 −                   ≤1
+                            MEV(S | ∆, †∆)
+
+which implies 0 ≤ I(S ⇝ ∆) ≤ 1, giving us our thesis.                       ⊔
+                                                                            ⊓
+
+
+                                     18
+Proof of Lemma 2
+From Items 2 and 5 of Lemma A.1, we have:
+              0 ≤ MEV†∆ (S | ∆, †∆) ≤ MEV(S | ∆, †∆) ≤ $†∆ (∆)
+By hypothesis, $†∆ (∆) = 0. So, by the inequalities above, MEV(S | ∆, †∆) = 0.
+Definition 1 gives the thesis.                                              ⊔
+                                                                            ⊓
+Definition A.1 (Gain). The gain of C ⊆ Ac when a transaction sequence ⃗     X
+                                                                ⃗
+                                                                X
+                                  ⃗ = $C (S ′ ) − $C (S ) if S −
+is fired in S is given by γC (S , X)                            → S ′.
+Dually, the loss of C ⊆ Ac when a transaction sequence X       ⃗ is fired in S is given
+                                         ⃗
+                                         X
+            X) = $C (S ) − $C (S ′ ) if S −
+by −γC (S , ⃗                             → S ′.
+
+    Lemma A.3 states that widening the contract state Γ preserves the MEV
+extractable from the target contracts. This is because the contracts allowed
+to be targeted by the adversary, i.e. D, are not widened. This refines Item 3
+of Lemma A.1, giving an equality under the additional assumption D ⊆ †Γ .
+Lemma A.3. MEVD (W | Γ , C) = MEVD (W | ∆, C) when D ⊆ †Γ and Γ ⪯ ∆.
+Proof. The inequality ≤ follows directly from Item 3 of Lemma A.1. For the
+inequality ≥, assume that ∆ is the composition of the contracts Γ with some
+other contracts Γ̄ , i.e. Γ ⪯ ∆, Γ̄ ⪯ ∆, and ∆ ⪯ Γ | Γ̄ . Let X⃗ ∈ κD (M)∗ be a
+valid sequence of transactions that maximizes the loss −γC (W | ∆, X).⃗ Since X ⃗
+consists of transactions targeting contracts in D ⊆ †Γ and since, by the well-
+formedness assumption, there are no internal calls from Γ to Γ̄ , the contracts
+                           ⃗ Hence, executing X
+in Γ̄ are not affected by X.                   ⃗ yields a transition of the form:
+                                          ⃗
+                                          X
+                                     → W ′ | ∆′
+                                 W|∆ −                                     where Γ̄ ⪯ ∆′
+As noted above, ⃗ X does not include any direct/indirect calls to †Γ̄ , and so ⃗
+                                                                               X is
+also valid in W | Γ . Therefore, we also have some Γ ′ such that:
+                                          ⃗
+                                          X
+                                     → W′ | Γ′
+                                 W|Γ −
+To prove that the loss is constant, observe that:
+                            ⃗ = $C (W ′ | Γ ′ ) − $C (W | Γ )
+                γC (W | Γ , X)
+                               = $C (Γ ′ ) − $C (Γ )
+                               = $C (∆′ ) − $C (Γ̄ ) − $C (∆) + $C (Γ̄ )
+                               = $C (∆′ ) − $C (∆)
+                               = $C (W ′ | ∆′ ) − $C (W | ∆)
+                               = γC (W | ∆, ⃗X)
+This implies that:
+                       MEVD (W | ∆, C) ≤ MEVD (W | Γ , C)
+which gives our thesis.                                                               ⊔
+                                                                                      ⊓
+
+
+                                          19
+Proof of Theorem 1
+
+By Definition 1, we have two cases.
+
+If MEV(S | ∆, †∆) = 0, then I(S ⇝ ∆) = 0. From Lemma 1(iii), we have
+I(S | Γ ⇝ ∆) ≥ 0. This implies the thesis, I(S ⇝ ∆) ≤ I(S | Γ ⇝ ∆).
+
+Otherwise, assume that MEV(S | ∆, †∆) > 0. Then, by Definition 1:
+
+                                         MEV†∆ (S | ∆, †∆)
+                      I(S ⇝ ∆) = 1 −
+                                          MEV(S | ∆, †∆)
+
+Now, by Item 3 of Lemma A.1, we have that:
+
+                  0 < MEV(S | ∆, †∆) ≤ MEV(S | Γ | ∆, †∆)
+
+Therefore, by Definition 1:
+
+                                         MEV†∆ (S | Γ | ∆, †∆)
+                  I(S | Γ ⇝ ∆) = 1 −
+                                          MEV(S | Γ | ∆, †∆)
+
+From Lemma A.1, we have that:
+
+    MEV†(S |∆) (S | ∆, †∆) ≤ MEV†(S |∆) (S | Γ | ∆, †∆)          by Item 3
+                              ≤ MEV†(S |Γ |∆) (S | Γ | ∆, †∆)    by Item 2   (4)
+
+We know from (4),
+
+                    MEV(S | ∆, †∆) ≤ MEV(S | Γ | ∆, †∆)
+
+Taking the reciprocal on both sides gives us:
+
+                         1                   1
+                                   ≥
+                    MEV(S | ∆, †∆)   MEV(S | Γ | ∆, †∆)
+
+By Lemma A.3, we have MEV†∆ (S | ∆, †∆) = MEV†∆ (S | Γ | ∆, †∆). Then:
+
+                  MEV†∆ (S | ∆, †∆)   MEV†∆ (S | Γ | ∆, †∆)
+                                    ≥
+                   MEV(S | ∆, †∆)      MEV(S | Γ | ∆, †∆)
+
+which finally gives us:
+
+                  MEV†∆ (S | ∆, †∆)     MEV†∆ (S | Γ | ∆, †∆)
+             1−                     ≤1−
+                   MEV(S | ∆, †∆)        MEV(S | Γ | ∆, †∆)
+
+which gives our thesis, i.e. I(S ⇝ ∆) ≤ I(S | Γ ⇝ ∆).                         ⊔
+                                                                              ⊓
+
+
+                                         20
+Proof of Theorem 2
+
+By Lemma A.2 we have that, for all C, D and for all Γ ′ :
+
+      dom WM = M =⇒ MEVD (WM | W | Γ ′ , C) = MEVD (WM | Γ ′ , C)
+
+In particular, by choosing Γ ′ = Γ | ∆ and C = †∆, this implies that:
+
+           MEV(WM | W | Γ | ∆, †∆) = MEV(WM | Γ | ∆, †∆)
+           MEV†∆ (WM | W | Γ | ∆, †∆) = MEV†∆ (WM | Γ | ∆, †∆)
+
+which gives us our thesis, i.e. I(WM | W | Γ ⇝ ∆) = I(WM | Γ ⇝ ∆)                 ⊔
+                                                                                  ⊓
+    Lemma A.4 gives sufficient conditions under which we can strip D from all
+the non-dependencies of C while preserving MEVD (S , C). Condition 1 is that
+contract functions are sender-agnostic, i.e. they are not aware of the identity of
+the sender, being only able to use it as a recipient of token transfers. Condition 2
+ensures that D contains enough contracts to reproduce attacks in the stripped
+state. Condition 3 requires that the dependencies and the non-dependencies of C
+in D are token independent in S . In other words, there are no token dependencies
+between D ∩ deps(C) and D \ deps(C), which could have potentially be exploited
+by non-wealthy adversaries.
+
+Lemma A.4. The equality:
+
+                      MEVD (S , C) = MEVD∩deps(C) (S , C)
+
+holds if all the following conditions, where C′ = deps(C) ∩ deps(D \ deps(C)),
+are satisfied:
+
+1. the contracts in C′ are sender-agnostic;
+2. C′ ⊆ D;
+3. deps(D) ∩ deps(C) and deps(D) \ deps(C) are token independent in S .
+
+Proof. First, note that the inequality MEVD∩deps(C) (S , C) ≤ MEVD (S , C) fol-
+lows from Item 2 of Lemma A.1, so we just need to show that:
+
+                      MEVD (S , C) ≤ MEVD∩deps(C) (S , C)
+
+              ⃗ ∈ κD (M)∗ be a sequence of transactions that maximizes the loss
+To do so, let X
+of C when executed in state S . We show that there exists Y⃗ ∈ κD∩deps(C) (M)∗
+                                                   ⃗ i.e.:
+that causes a loss to C equal to the one caused by X,
+
+                 ⃗                  ∗
+                 Y ∈ κD∩deps(C) (M)          γC (S , ⃗
+                                                     Y) = γC (S , ⃗
+                                                                  X)            (5)
+
+W.l.o.g. we assume that all the transactions in ⃗
+                                                X are valid: indeed, invalid trans-
+actions in ⃗
+           X are reverted, so they can be removed without affecting the loss.
+
+
+                                        21
+Note that each transaction Xi = Mi : Ci,1 .fi,1 (argsi,1 ) in ⃗
+                                                              X can trigger a sequence
+of internal contract-to-contract function calls:
+
+   Ci,1 : Ci,2 .fi,2 (argsi,2 ) Ci,2 : Ci,3 .fi,3 (argsi,3 ) · · · Ci,k−1 : Ci,k .fi,k (argsi,k )
+
+Let ⃗x be the sequence of all function calls (either external or internal) that are
+performed upon the execution of ⃗    X in state S . To construct ⃗ Y, we start by
+considering the subsequence ⃗y of ⃗x containing all and only the calls of the form:
+(a) Mi : Ci,1 .fi,1 (argsi,1 ) where Ci,1 ∈ deps(C), or
+(b) Ci,j−1 : Ci,j .fi,j (argsi,j ), where Ci,j−1 ̸∈ deps(C) and Ci,j ∈ deps(C).
+Claim (1). If Ci,j−1 : Ci,j .fi,j (argsi,j ) ∈ ⃗y , then Ci,j ∈ C′ .
+Proof of Claim (1). By hypothesis, Ci,j ∈ deps(C). Let Xi ∈ X ⃗ be the transaction
+that originated the call. Since Xi ∈ κD (M), then Ci,1 ∈ D. Since deps(C) is closed
+downward and Ci,j−1 ̸∈ deps(C), then Ci,1 ̸∈ deps(C). So, Ci,1 ∈ D \ deps(C),
+and therefore Ci,j ∈ deps(D \ deps(C)). This completes the proof of Claim (1).
+                                    ⃗ let the meta-variables ai range over user
+   To describe the construction of Y,
+and contract addresses, so to rewrite the sequence ⃗y as follows:
+
+            a1 : C1 .f1 (args1 ) a2 : C2 .f2 (args2 ) · · · an : Cn .fn (argsn ) · · ·
+
+We translate ⃗y into the sequence of transactions ⃗Y by preserving the senders ai
+that are user accounts (i.e., ai = Mi ), and by replacing the ai that are contract
+accounts into the user account that originated the corresponding call. Namely,
+if ai = Ci,j−1 is a contract account corresponding to the following call in ⃗y :
+
+                                  Ci,j−1 : Ci,j .fi,j (argsi,j )
+
+                                           ⃗ is Mi , i.e. the originator of the call.
+then the sender of the i-th transaction in Y
+Note that each transaction Yi in ⃗Y can be funded by the adversary:
+ – if ai = Mi , then the fact that the corresponding transaction Xi in ⃗
+                                                                       X was valid
+   implies that Mi has the tokens needed to fund the call;
+ – if ai = Ci,j−1 , then there is no token transfer from Ci,j−1 to Ci,j , and so Yi
+   does not need to be funded. This is because:
+     • Ci,j−1 ∈ deps(D) \ deps(C): indeed, Ci,j−1 ∈ deps(D) since Xi ∈ κD (M),
+        and Ci,j−1 ̸∈ deps(C) by definition of case (b);
+     • Ci,j ∈ deps(D) ∩ deps(C): indeed, Ci,j ∈ deps(D) since Xi ∈ κD (M), and
+        Ci ∈ deps(C) by definition of case (b);
+     • deps(D) ∩ deps(C) and deps(D) \ deps(C) are token independent in S
+        by assumption (3).
+                                        ∗
+Claim (2). ⃗
+           Y ∈ κD∩deps(C) (M)
+
+Proof of Claim (2). Consider a transaction Yi in ⃗
+                                                 Y. We have two cases, depending
+on whether Yi is due to conditions (a) or (b):
+
+
+                                                22
+(a) in this case, Yi corresponds to some Xi = Mi : Ci,1 .fi,1 (argsi,1 ) in ⃗
+                                                                            X where
+    Ci,1 ∈ deps(C). Since Xi ∈ κD (M), then Yi ∈ κD∩deps(C) (M).
+(b) by Claim (1), the callee of Yi is in C′ = deps(C) ∩ deps(D \ deps(C)), which
+    is included in D by assumption 2. Note that M is able to craft the actual
+    arguments of that call by simulating the execution of X.   ⃗ This implies that
+    Yi ∈ κD∩deps(C) (M). This completes the proof of Claim (2).
+
+     We now show that Y   ⃗ and X  ⃗ modify the state of contracts in C in exactly the
+ same way. Note that the transactions Yi that are in Y     ⃗ due to condition (b) have
+ callee in C by Claim (1), and so their functions are sender-agnostic by assump-
+            ′
+
+ tion 1. So, the fact that in the execution of Yi they are called directly from a user
+ address, while in the execution of Xi they are called from a contract address, does
+ not affect the execution of these calls. Note that a call Ci,j−1 : Ci,j .fi,j (argsi,j )
+ in Xi could send tokens to the sender Ci,j−1 , thus affecting its gain, while the
+ corresponding call Mi : Ci,j .fi,j (argsi,j ) would send these tokens to Mi . This dif-
+ ference however do not affect the gains and losses of C, since Ci,j−1 is not in
+ deps(C) by condition (b).
+     Note that the sequence ⃗h of calls performed upon the execution of Y   ⃗ contains
+⃗y but does not coincide with it, since it also includes all the internal calls that
+ are performed by functions in ⃗y . In fact, ⃗h is the subsequence of ⃗x that contains
+ every call to functions of contracts in deps(C). For this reason, both ⃗x and ⃗h
+ modify the state of contracts deps(C) in the same way — and, in particular, they
+ cause exactly the same losses to the contracts in C. This implies that Y     ⃗ is valid
+                        ⃗              ⃗
+ in S and that γC (S , Y) = γC (S , X). Since we have proved (5) for all possible X,  ⃗
+ we obtain the thesis.                                                                 ⊔
+                                                                                       ⊓
+
+Example A.1. To illustrate Lemma A.4, consider the contracts:
+  contract     C0   {   f(a    pays 1: T )     { transfer (M ,2: T ) } }
+  contract     C1   {   f ()   { C0 . f ( C1   pays 1: T ) ; } }
+  contract     C2   {   f ()   { require       sender == C3 ; C1 . f () ; } }
+  contract     C3   {   f ()   { C2 . f () ;   C1 . f () ; } }
+Let M = {M}, D = {C0, C1, C3}, C = {C0, C1}, and let:
+
+                 S = M[0: T] | C0[2: T] | C1[2: T] | C2[0: T] | C3[0: T]
+
+Let ⃗
+    X ∈ κD (M) be the following sequence of transactions:
+
+                                       ⃗ = M: C3.f()
+                                       X
+
+             ⃗ in S , we have that:
+By executing X
+                 M:C3.f()
+              S −−−−−→ M[4: T] | C0[0: T] | C1[0: T] | C2[0: T] | C3[0: T]
+
+                                     ⃗ clearly maximises the loss of C, hence:
+Since there are no tokens left in C, X
+
+                                  MEVD (S , C) = 4 · $1T
+
+
+                                               23
+We first check that the conditions of Lemma A.4 are satisfied. Let:
+
+ C′ = deps(C) ∩ deps(D \ deps(C)) = {C0, C1} ∩ deps({C0, C1, C3} \ {C0, C1})
+    = {C0, C1} ∩ deps({C3}) = {C0, C1} ∩ {C0, C1, C2, C3}
+    = {C0, C1}
+
+The conditions of Lemma A.4 are then satisfied, since:
+(1) the contracts C0, C1 ∈ C′ is sender-agnostic. Note that C2 is not sender-
+    agnostic, but this does not violate assumption 1 since sender-agnosticism is
+    only required on C′ ;
+(2) C′ = {C0, C1} ⊆ D. Note that this inclusion is stricter than necessary: indeed,
+    in this example, choosing D = {C1, C3} would have violated assumption 2,
+    but it would have still preserved the MEV (see Y  ⃗ below).
+(3) token independence of the parts of S related to contracts:
+
+            deps(D) ∩ deps(C) = {C0, C1, C2, C3} ∩ {C0, C1} = {C0, C1}
+             deps(D) \ deps(C) = {C0, C1, C2, C3} \ {C0, C1} = {C2, C3}
+
+    Note instead that token independence is not required between C0 and C1:
+    actually, these two contracts are token dependent, since C1 sends 1: T along
+    with the internal call to C0.
+We now construct the sequence of transactions ⃗Y following the proof of Lemma A.4.
+The sequence ⃗x of calls induced by ⃗
+                                    X, the subsequence ⃗y obtained by filtering ⃗x,
+and the sequence of transactions ⃗Y are the following:
+
+⃗x =    M: C3.f()    C3: C2.f()    C2: C1.f()    C1: C0.f()     C3: C1.f()    C1: C0.f()
+⃗y =                               C2: C1.f()                   C3: C1.f()
+ ⃗ =
+ Y                                 M: C1.f()                    M: C1.f()
+
+          ⃗ ∈ κD∩deps(C) (M) = κ{C0,C1} (M). By executing Y
+Note that Y                                               ⃗ in S , we have that:
+
+                 M:C1.f()
+             S −−−−−→ M[2: T] | C0[1: T] | C1[1: T] | C2[0: T] | C3[0: T]
+                 M:C1.f()
+                 −−−−−→ M[4: T] | C0[0: T] | C1[0: T] | C2[0: T] | C3[0: T]
+
+Hence, we have that:
+
+                            MEVD∩deps(C) (S , C) = 4 · $1T
+
+which confirms the preservation of MEV stated by Lemma A.4.                            ⋄
+
+Example A.2. To illustrate the need of the token independence assumption in
+Lemma A.4, consider the contracts:
+  contract C0 { f ( a pays 2: T ) { transfer (M ,4: T ) } }
+  contract C1 {
+
+
+                                           24
+        f () { C0 . f ( C1 pay 2: T ) ; }
+        receive ( a pays n : T ) { }
+  }
+  contract C2 {
+    f () { C1 . receive ( C2 pays 1: T ) ; }
+        // transfer ( C1 ,1: T ) is forbidden in our model
+        // transfer recipients must be user accounts
+  }
+  contract C3 { f () { C2 . f () ; C1 . f () ; } }
+Let M = {M}, C = {C0, C1}, D = {C0, C1, C3}, and let:
+                  S = M[0: T] | C0[2: T] | C1[1: T] | C2[1: T] | C3[0: T]
+Note that M has no tokens in S , to the only way to extract MEV is to pass
+through C3. Let ⃗
+                X ∈ κD (M) be the following sequence of transactions:
+                                      ⃗ = M: C3.f()
+                                      X
+             ⃗ in S , we have that:
+By executing X
+                  M:C3.f()
+              S −−−−−→ M[4: T] | C0[0: T] | C1[0: T] | C2[0: T] | C3[0: T]
+
+Since there are no tokens left in C, ⃗
+                                     X clearly maximises the loss of C. Since C
+contained 3: T in S , then:
+                                 MEVD (S , C) = 3 · $1T
+Similarly to Example A.1, we have that C′ = {C0, C1}, which satisfies conditions
+(1) and (2). For condition (3) (token independence), we have that:
+           deps(D) ∩ deps(C) = {C0, C1, C2, C3} ∩ {C0, C1} = {C0, C1}
+           deps(D) \ deps(C) = {C0, C1, C2, C3} \ {C0, C1} = {C2, C3}
+Now, token independence between {C0, C1} and {C2, C3} is not satisfied, since
+C2 sends 1: T to C1. More formally, we have that:
+in S (Γ C0,C1 ) = {T}   out S (Γ C2,C3 ) = {T}   in S (Γ C2,C3 ) = ∅   out S (Γ C0,C1 ) = {T}
+By Definition 3, since:
+                    in S (Γ C0,C1 ) ∩ out S (Γ C2,C3 ) = {T} ∩ {T} ̸= ∅
+then, Γ C0,C1 and Γ C2,C3 are not token independent.
+Since the conditions of Lemma A.4 are not satisfied, we are not guaranteed to
+have the preservation of MEV:
+                                            ?
+                  MEVD∩deps(C) (S , C) = MEVD (S , C) = 3 · $1T
+Indeed, the maximum loss that M can inflict to C using κD∩deps(C) (M) =
+κ{C0,C1} (M) is zero. This is because:
+
+
+                                            25
+ – calling C0 fails, since C0 has not the required 4: T to transfer;
+ – calling C1 fails, since C1 does not have the 2: T required to call C0.
+
+Note also that requiring the milder condition that D ∩ deps(C) and D \ deps(C)
+are token independent would not be enough to guarantee MEV preservation. In
+our example, we would have:
+
+               D ∩ deps(C) = {C0, C1, C3} ∩ {C0, C1} = {C0, C1}
+               D \ deps(C) = {C0, C1, C3} \ {C0, C1} = {C3}
+
+where Γ C0,C1 and Γ C3 are token independent.                                    ⋄
+
+Example A.3. To illustrate the need of the sender-agnosticism assumption in
+Lemma A.4, consider the contracts:
+  contract C0 { f () { require sender == C1 ; transfer (M ,1: T ) }}
+  contract C1 { f () { C0 . f () ; } }
+
+Let M = {M}, C = {C0}, D = {C0, C1}, and let:
+
+                         S = M[0: T] | C0[1: T] | C1[0: T]
+
+    ⃗ ∈ κD (M) be the following sequence of transactions:
+Let X
+
+                                    ⃗
+                                    X = M: C1.f()
+
+By executing ⃗
+             X in S , we have that:
+                         M:C1.f()
+                      S −−−−−→ M[1: T] | C0[0: T] | C1[0: T]
+
+                                     ⃗ clearly maximises the loss of C, hence:
+Since there are no tokens left in C, X
+
+                             MEVD (S , C) = 1 · $1T
+
+We have that C′ = {C0}, which satisfies condition (2). Note that condition (3)
+(token independence) is trivially satisfied, since there are no token transfers
+among the contracts. Instead, the contract C0 ∈ C′ is not sender-agnostic, thus
+violating condition (1). Indeed, MEV preservation does not hold, since:
+
+                 MEVD∩deps(C) (S , C) = MEV{C0} (S , {C0}) = 0
+
+This is because the adversary is restricted to calling C0, but the transaction
+would revert since the require condition in C0 is violated.                  ⋄
+
+Example A.4. To illustrate the need of the assumption (2) in Lemma A.4, con-
+sider the contracts:
+  contract C0 { f () { transfer (M ,1: T ) } }
+  contract C1 { f () { C0 . f () ; } }
+
+
+                                         26
+Let M = {M}, C = {C0}, D = {C1}, and let:
+
+                         S = M[0: T] | C0[1: T] | C1[0: T]
+    ⃗ ∈ κD (M) be the following sequence of transactions:
+Let X
+                                    ⃗
+                                    X = M: C1.f()
+             ⃗ in S , we have that:
+By executing X
+                         M:C1.f()
+                      S −−−−−→ M[1: T] | C0[0: T] | C1[0: T]
+
+                                     ⃗ clearly maximises the loss of C, hence:
+Since there are no tokens left in C, X
+
+                             MEVD (S , C) = 1 · $1T
+
+We have that C′ = deps({C0}) ∩ deps({C1} \ deps({C0})) = {C0} ̸⊆ D, thus
+violating condition (2). We have that:
+
+     MEVD∩deps(C) (S , C) = MEV{C1}∩{C0} (S , {C0}) = MEV∅ (S , {C0}) = 0
+
+Therefore, MEV preservation does not hold.                                        ⋄
+
+Proof of Theorem 3
+We show the following two equalities, which imply the thesis:
+
+                   MEV(S | ∆, †∆) = MEV(S | Γ M | ∆, †∆)                         (6)
+                MEV†∆ (S | ∆, †∆) = MEV†∆ (S | Γ M | ∆, †∆)                      (7)
+
+Observe that (7) follows directly from Lemma A.3, since S | ∆ ⪯ S | Γ M | ∆ and
+†∆ ⊆ †(S | ∆) = †S ∪†∆. Note instead that (6) does not follow from Lemma A.3,
+since to equate MEV†(S |Γ M |∆) (S | ∆, †∆) and MEV†(S |Γ M |∆) (S | Γ M | ∆, †∆),
+the lemma would require †(S | Γ M | ∆) ⊆ †(S | ∆), which is false.
+In order to prove (6), we pass through two auxiliary results. We start by proving
+the following equality:
+
+  MEV†(S |Γ M |∆) (S | Γ M | ∆, †∆) = MEV†(S |∆)∩deps(†∆) (S | Γ M | ∆, †∆)      (8)
+
+In order to apply Lemma A.4, let:
+
+                        C = †∆         D = †(S | Γ M | ∆)
+
+and let:
+
+                C′ = deps(C) ∩ deps(D \ deps(C))
+                   = deps(∆) ∩ deps(†(S | Γ M | ∆) \ deps(∆))
+
+Note that the conditions of Lemma A.4 are satisfied:
+
+
+                                         27
+(1) C′ are sender-agnostic, since C′ ⊆ deps(∆) and, by assumption of Theorem 3,
+    the contracts in deps(∆) are sender-agnostic;
+(2) C′ ⊆ D holds since C′ ⊆ deps(∆) ⊆ D;
+(3) Since the state S | ∆ is well-formed by assumption, then deps(∆) ⊆ †(S | ∆),
+    and so we have that:
+
+    deps(D) ∩ deps(C) = deps(S | Γ M | ∆) ∩ deps(∆) = deps(∆)
+    deps(D) \ deps(C) = deps(S | Γ M | ∆) \ deps(∆) = deps(S | Γ M ) \ deps(∆)
+                       ⊆ †(S | Γ M ) \ deps(∆)
+
+    Since S | Γ M | ∆ is well-formed and deps(∆) and †(S | Γ M ) \ deps(∆) are
+    disjoint, then Condition (ii) of Theorem 3 ensures that these sets are token
+    independent.
+
+Therefore, by Lemma A.4 it follows that:
+
+  MEV†(S |Γ M |∆) (S | Γ M | ∆, †∆) = MEV†(S |Γ M |∆)∩deps(†∆) (S | Γ M | ∆, †∆)
+
+To obtain (8), just note that, since deps(†∆) ⊆ †(S | ∆):
+
+                †(S | Γ M | ∆) ∩ deps(†∆) = †(S | ∆) ∩ deps(†∆)
+
+which is equal to deps(†∆).
+The second auxiliary result is the equality:
+
+    MEV†(S |∆) (S | Γ M | ∆, †∆) = MEV†(S |∆)∩deps(†∆) (S | Γ M | ∆, †∆)       (9)
+
+This time, in order to apply Lemma A.4 we let:
+
+       C = †∆       D = †(S | ∆)      C′ = deps(∆) ∩ deps(D \ deps(C))
+
+In order to apply Lemma A.4, let us first compute:
+
+                   C′ = deps(C) ∩ deps(D \ deps(C))
+                      = deps(∆) ∩ deps(†(S | ∆) \ deps(∆))
+
+Again, note that the assumptions of Lemma A.4 are satisfied:
+
+(1) C′ are sender-agnostic, since C′ ⊆ deps(∆) and assumption (i);
+(2) C′ ⊆ D holds since C′ ⊆ deps(∆) ⊆ D;
+(3) Since the state S | ∆ is well-formed by assumption, then deps(∆) ⊆ †(S | ∆),
+    and so we have that:
+
+         deps(D) ∩ deps(C) = deps(S | ∆) ∩ deps(∆) = deps(∆)
+         deps(D) \ deps(C) = deps(S | ∆) \ deps(∆) = deps(S ) \ deps(∆)
+
+    Condition (ii) ensures that these sets are token independent.
+
+
+                                       28
+Therefore, Lemma A.4 gives the equality (8).
+Now, by putting together (8) and (9), we obtain:
+
+         MEV†(S |Γ M |∆) (S | Γ M | ∆, †∆) = MEV†(S |∆) (S | Γ M | ∆, †∆)                   (10)
+
+Now we can prove (6) by observing the following chain of equalities:
+
+
+                                      by (10)
+    MEV†(S |∆) (S | Γ M | ∆, †∆) ====== MEV†(S |Γ M |∆) (S | Γ M | ∆, †∆)
+
+                     by Lemma A.3
+
+    MEV†(S |∆) (S | ∆, †∆)                      MEV†(S |Γ M |∆) (S | Γ M | ∆, †∆)
+
+                     by Lemma A.1(4)                              by Lemma A.1(4)
+
+    MEV(S | ∆, †∆)                                MEV(S | Γ M | ∆, †∆)
+
+Now, the thesis directly follows from Equations (6) and (7).                                   ⊔
+                                                                                               ⊓
+
+
+B     Proofs: use cases
+AMM/Bet (Example 5)
+Consider the starting state:
+
+          S = M[m: ETH] | AMM[r0 : ETH, r1 : T] | block.num = d − k | · · ·
+          ∆ = Bet[b: ETH, owner = A, tok = T, rate = r, deadline = d]
+
+When M is allowed to manipulate the AMM, she can inflate the exchange rate of
+ETH, provided that she possesses sufficient funds. Formally, if M swaps x: ETH for
+y: T, then according to the criterion specified in Bet.win(), the winner receives
+an amount ⌊2bp⌋ only if AMM.getRate(ETH) = r0 +x/r1 −y ≥ p · r. Assuming that
+M enters the bet only when she can choose x sufficiently high to satisfy this
+condition, and for p ≥ 1/2 (since a smaller proportion makes the bet irrational
+for her), she fires the following sequence of transactions: where, in the swap
+transaction, x = m − b ≥ 0 is the number of ETH units sent to the AMM, y =
+⌊xr1/r0 +x⌋ is the number of T units received, and the value that M bets on is
+p = r0 +x/r(r1 −y):
+       M:Bet.bet(M pays b:ETH,p)
+S | ∆ −−−−−−−−−−−−−−−−→             AMM[r0 : ETH, r1 : T] | Bet[2b: ETH, potShare = p, · · · ] | · · ·
+       M:AMM.swap(M pays x:ETH,0)
+       −−−−−−−−−−−−−−−−→            AMM[r0 + x: ETH, r1 − y: T] | Bet[2b: ETH, · · · ] | · · ·
+       M:Bet.win()
+       −−−−−−−→                     AMM[r0 + x: ETH, r1 − y: T] | Bet[2b − ⌊2bp⌋: ETH, · · · ] | · · ·
+       M:AMM.swap(M pays y:T,0)
+       −−−−−−−−−−−−−−−→             AMM[r0 : ETH, r1 : T] | Bet[2b − ⌊2bp⌋: ETH, · · · ] | · · ·
+
+
+                                             29
+By Equation (2) we have:
+
+                                                                                2b(r0 + x)
+MEV(S | ∆, {Bet}) = b − (2b − ⌊2bp⌋) = ⌊2bp⌋ − b ≤ 2bp − b =                               −b
+                                                                                r(r1 − y)
+                          2b(r0 + x)            2b(r + x)
+                    =         j      k − b ≤  0           −b
+                                                       xr1
+                        r r1 − rxr  1
+                                 0 +x
+                                              r  r1 − r0 +x
+
+
+
+                        2b(r0 + x)2                  2(r0 + m − b)2
+                                                                     
+                    =               −b=                             −1 b
+                           rr0 r1                         rr0 r1
+
+Whereas, if M was restricted to interact with Bet only, there are two cases: if
+AMM.getRate = r0/r1 ≥ p · r, then M wins the bet. Otherwise, she loses (and,
+therefore, Bet does not suffer an economic loss). Even in this case, M enters the
+bet only for p ≥ 1/2. Therefore Equation (3) gives us:
+                                     (            j      k
+                                                                   r0
+                                       b − 2b − 2br  rr1
+                                                        0
+                                                                if rr  ≥ 1/2
+          MEV{Bet} (S | ∆, {Bet}) =                                  1
+
+                                       0                        otherwise
+                                     (j       k
+                                         2br0             r0
+                                         rr1    − b if rr1 ≥ 1/2
+                                   =
+                                       0              otherwise
+                                     (
+                                       2br0                 r0
+                                             − b − 1 if rr      ≥ 1/2
+                                   > rr1                      1
+
+                                       0               otherwise
+
+Hence MEV interference is estimated through Definition 1 as follows:
+                                         2br0
+                             1 −         rr1 −b−1              r0
+                                       2(r0 +m−b)2
+                                                             if rr  ≥ 1/2
+              I(S ⇝ ∆) <                  rr0 r1   −1 b            1
+
+                             
+                                 1                            otherwise
+                             (
+                                       (2br0 −brr1 −rr1 )r0         r0
+                                 1 − b(2(r         2
+                                           0 +m−b) −rr0 r1 )
+                                                                 if rr  ≥ 1/2
+                         =                                            1
+
+                                 1                               otherwise
+                                        2br02 −rr0 r1 (b+1)
+                             (
+                                                                   r0
+                                 1−   2b(r0 +m−b)2 −brr0 r1     if rr  ≥ 1/2
+                         =                                           1                     ⋄
+                                 1                              otherwise
+
+
+AMM/Lending Pool (Example 6)
+
+For simplicity, we make the following assumptions: (i) $1ETH = 1 = $1T , (ii) the
+AMM is balanced, (iii) M has not deposited or borrowed tokens from the LP yet.
+(iv) the LP has sufficient reserves of T to satisfy any borrow request. Note also
+that our simplified LP contract only offers two functions, deposit and borrow.
+Calling deposit does not extract tokens from the LP, so the only action through
+which M could cause a loss to the LP is borrow.
+
+
+                                            30
+   Consider the following blockchain state:
+
+    S = M[n: ETH] | AMM[r: ETH, r: T]     ∆ = LP[a: ETH, b: T, Cmin = Cmin , · · · ]
+
+    We start by estimating the unrestricted local MEV, i.e. MEV(S | ∆, {LP}).
+When M can interact with the AMM, she can maximize the loss caused to LP by
+maximizing her loan amount, or in other words, by inflating her collateralization
+ratio. There is only one way to do so: by depositing a portion of her ETH to the LP
+and by inflating the exchange rate of ETH provided by the AMM. To this purpose,
+M partitions its funds as follows:
+ – x: ETH to perform a swap in the AMM in exchange for y: T, where y = xr/r+x
+ – (n − x): ETH to deposit in the LP
+We denote by t(x) the number of units of token T that M can borrow from the
+LP as a function of x.
+    We first note that in order to satisfy the require constraint within borrow
+function of LP, M must be over-collateralized in the new LP state. Recall that the
+collateralization of a user is given by the ratio between the value of her minted
+tokens and that of her debts. Regarding M, the value vminted of her minted tokens
+and the value vdebt of her debts in the new state are given by:
+
+                                AMM.getRate(ETH)             r−y
+            vminted = (n − x) ·                  = (n − x) ·
+                                 AMM.getRate(T)              r+x
+                              AMM.getRate(T)           r+x
+              vdebt = t(x) ·                  = t(x) ·
+                             AMM.getRate(ETH)          r−y
+
+Therefore, M is over-collateralized, and so her call to borrow does not revert, if:
+
+                      vminted   (n − x)(r + x)2
+                              =                 ≥ Cmin
+                       vdebt      t(x)(r − y)2
+
+This gives us the maximum value of t(x) that M can choose, which is:
+
+                                        (n − x)(r + x)2
+                              t(x) =
+                                         Cmin (r − y)2
+
+To find the value of x that maximizes t(x), we study the function t(x) that
+gives the loan amount as a function of the deposited amount x, subject to the
+constraint 0 ≤ x ≤ n. Since we working with real-valued amounts, we have that
+t(x) is continuous. Thus, we compute its derivative w.r.t. x and set it to 0:
+
+                 d (n − x)(r + x)4        4(n − x)(r + x)3 − (r + x)4
+                                  
+      dt(x)
+             =                 4
+                                      =                                 = 0
+       dx       dx      Cmin r                      Cmin r4
+
+Since r + x > 0, we can simplify the above as:
+
+                  4(n − x) = r + x                     if 0 ≤ x ≤ n
+
+
+                                          31
+Therefore, the x that maximizes t(x) is given by:
+
+                                         (
+                                             4n−r
+                                               5      if 4n ≥ r
+                                    x=
+                                          0           otherwise
+
+
+In other words, when 4n < r, M does not need to interact with the AMM to
+maximize her borrowing capacity.
+
+
+
+We can check that x = 4n−r5  maximizes t(x) by performing the double derivative
+test. We compute the double derivative of t(x) w.r.t x, plugging in x = 4n−r
+                                                                           5 ,
+and check if it is < 0. Accordingly:
+
+
+               d2 t(x)                4(n − x)(r + x)3 − (r + x)4
+                                                                       
+                          d
+                       =
+                dx2      dx                    Cmin · r4
+
+
+                              12(n − x)(r + x)2 − 4(r + x3 ) − 4(r + x)3
+                          =
+                                              Cmin · r4
+
+                              12(n − x)(r + x)2 − 8(r + x)3
+                          =
+                                        Cmin · r4
+
+
+Substituting 4(n − x) = r + x we get:
+
+
+               d2 t(x)   3(r + x)3 − 8(r + x)3     5(r + x)3
+                       =                       = −           <0
+                dx2            Cmin · r4           Cmin · r4
+
+
+As a result, M fires the following sequence of transactions with a loan amount
+              2
+t = (n−x)(r+x) /Cmin (r−y)2 and the amount received on swap y = xr/r+x:
+
+
+       M:LP.deposit(M pays (n−x):ETH)
+S | ∆ −−−−−−−−−−−−−−−−−−−−→ AMM[r: ETH, r: T] | LP[a + n − x: ETH, b: T, · · · ] | · · ·
+       M:AMM.swap(M pays x:ETH,0)
+      −−−−−−−−−−−−−−−−→                      AMM[r + x: ETH, r − y: T] | LP[a + n − x: ETH, b: T, · · · ] | · · ·
+       M:LP.borrow(t,T)
+      −−−−−−−−−−→                            AMM[r + x: ETH, r − y: T] | LP[a + n − x: ETH, b − t: T, · · · ] | · · ·
+       M:AMM.swap(M pays y:T,0)
+      −−−−−−−−−−−−−−−→                       AMM[r: ETH, r: T] | LP[a + n − x: ETH, b − t: T, · · · ] | · · ·
+
+
+                                                 32
+By Equation (2) we get:
+
+                                               (n − x)(r + x)2
+       MEV(S | ∆, {LP}) = t + x − n =                          +x−n
+                                                Cmin (r − y)2
+
+                                                                !
+                                             (r + x)2
+                          = (n − x)                  xr 2 − 1
+                                          Cmin (r − r+x )
+
+
+                                          (r + x)4
+                                                       
+                          = (n − x)                −1
+                                          r4 Cmin
+
+                                                     4
+                                                           
+                                        (r+ 4n−r    )
+                             n − 4n−r
+                                                5
+                                                         −1         if 4n ≥ r
+                                    5       r 4 Cmin
+                          =              
+                                  1
+                                 Cmin − 1
+                            n
+                            
+                                                                    otherwise
+
+                                             4
+                                                    
+                                   ( 4(n+r) )
+                             n+r
+                                         5
+                                                 − 1        if 4n ≥ r
+                                5     r 4 Cmin
+                          =               
+                                  1
+                                 Cmin − 1                   otherwise
+                            n
+                            
+
+
+                                                  4   
+                             n+r
+                                      1      4(n+r)
+                                                        −1          if 4n ≥ r
+                            
+                                5     Cmin      5r
+                          =              
+                                  1
+                                 Cmin − 1                           otherwise
+                            n
+                            
+
+
+    We note two key aspects of the transaction sequence fired by M. Firstly, the
+ordering of deposit and the (initial) swap transactions is irrelevant. Hence,
+they can be interchanged without causing a difference to the loss caused to LP.
+Secondly, firing the (final) swap, i.e. de-manipulating the AMM only affects the
+wealth of M and not the LP. Hence, it does not affect the MEV extractable from
+LP. Nevertheless, we include it in the transaction sequence to reflect the attack
+execution employed in practice.
+    We now calculate the restricted local MEV, i.e. MEV{LP} (S | ∆, {LP}). In this
+case, the only way M can maximize her borrowing capacity is by depositing her
+total available capital to the LP. Hence, M deposits n: ETH. The collateralization
+of M after a call to borrow for t′ units of T is given by:
+
+          vminted   n · AMM.getRate(ETH)/AMM.getRate(T)   n · r/r   n
+                  = ′ AMM.getRate(T)                    = ′ r = ′
+           vdebt    t ·               /AMM.getRate(ETH)   t · /r  t (x)
+
+Thus, the call to borrow does not revert iff:
+                                    n
+                                       ≥ Cmin
+                                    t′
+
+                                          33
+From this, we obtain that the maximum amount that M can borrow is given by:
+                                                    n
+                                        t′ =
+                                               Cmin
+By Equation (3), we have that:
+                                                                                    
+                                    ′                    n                   1
+       MEV{LP} (S | ∆, {LP}) = t − n =                         −n = n              −1
+                                                        Cmin                Cmin
+
+To conclude, we estimate MEV interference through Definition 1 as follows:
+                                          
+                               n C 1 −1
+                    1 − n+r         min
+                                                     if 4n ≥ r
+                  
+                                               4
+                                                  
+                                      ( 4(n+r)
+                  
+                  
+                  
+                        ( 5 ) Cmin
+                                  1
+                                          5r   ) −1
+     I(S ⇝ ∆) =
+                                  
+                  
+                        n C 1 −1
+                  1 −  1  min
+                                                     otherwise
+                  
+                                   
+                           n   Cmin −1
+
+
+
+
+                                                 (5r)4 Cmin
+                   (
+                    1 − n(1−C min )
+                           Cmin
+                                       5
+                                    · n+r · (4(n+r)) 4 −(5r)4 C                  if 4n ≥ r
+               =                                                min
+
+                     0                                                           otherwise
+
+                   (            5 4
+                    1 − (n+r)(45 4r(n+r)
+                                     n(1−Cmin )
+                                        4 −(5r)4 C
+                                                  min )
+                                                                 if 4n ≥ r
+               =                                                                             ⋄
+                     0                                           otherwise
+
+
+
+
+                                               34
+

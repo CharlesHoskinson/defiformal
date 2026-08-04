@@ -1,0 +1,1022 @@
+                                        Theorem-Carrying Transactions: Runtime Verification to Ensure
+                                              Interface Specifications for Smart Contract Safety
+                                                         Thomas Ball                               Nikolaj S. Bjørner                             Ashley J. Chen
+                                                     tball@microsoft.com                         nbjorner@microsoft.com                      ashley.chen@nyu.edu
+                                                      Microsoft Research                            Microsoft Research                    New York University Shanghai
+                                                      Redmond, WA, USA                             Redmond, WA, USA                              Shanghai, CN
+
+                                                          Shuo Chen                                     Yang Chen                                 Zhongxin Guo
+                                                  shuochen@microsoft.com                          yachen@microsoft.com                    zhongxin.guo@microsoft.com
+                                                     Microsoft Research                             Microsoft Research                        Microsoft Research
+                                                     Redmond, WA, USA                              Redmond, WA, USA                           Redmond, WA, USA
+
+
+
+
+arXiv:2408.06478v2 [cs.CR] 6 Aug 2025
+                                                        Tzu-Han Hsu                                      Peng Liu                                  Nanqing Luo
+                                                     tzuhan@msu.edu                                 pxl20@psu.edu                               nqluo@psu.edu
+                                                  Michigan State University                   Pennsylvania State University               Pennsylvania State University
+                                                   East Lansing, MI, USA                        University Park, PA, USA                    University Park, PA, USA
+
+                                        Abstract                                                                To systematically tackle these issues, researchers have developed
+                                        Security bugs and trapdoors in smart contracts have been impact-        formal methods to ensure safety specifications for smart contracts.
+                                        ing the Ethereum community since its inception. Conceptually, the           Overview. In this paper, we present a technique named Theorem-
+                                        1.45-million Ethereum’s contracts form a single “gigantic program”      Carrying Transactions (TCT). It offers a faithful and scalable verifi-
+                                        whose behaviors are determined by the complex compositions of           cation approach for the Ethereum community to complement the
+                                        contracts. Can programmers be assured that this gigantic program        assurance that existing (primarily static and compile-time) verifi-
+                                        conforms to high-level safety specifications, despite unforeseeable     cation techniques can provide. Before explaining TCT’s assurance,
+                                        code-level intricacies? Static code verification cannot be faithful     we first present our “worldview” about smart contracts that differ-
+                                        to this gigantic program due to its scale and high polymorphism.        entiates TCT from existing techniques.
+                                        In this paper, we present a viable approach to achieve this goal.           Our “worldview” about smart contracts. Smart contracts
+                                        Our technology, called Theorem-Carrying Transactions (TCT), com-        represent a unique programming paradigm. Conceptually, the whole
+                                        bines the benefits of concrete execution and symbolic proofs. Under     community is co-developing a single gigantic “program", as in Fig-
+                                        the TCT protocol, every transaction carries a theorem that proves       ure 1: everyone, even an attacker, can be a programmer of it; every
+                                        its adherence to the specified properties in the invoked contracts,     contract is an OO object with a cryptographically strong identity
+                                        and the runtime system checks the theorem before executing the          called the “contract address”, essentially an object reference. Any in-
+                                        transaction. Once a theorem is proven, it will be reused for fu-        teraction between two objects is made by a cross-object method call
+                                        ture transactions, so TCT’s runtime overhead is minimal. As case        via a reference. The platform (Ethereum VM, or EVM) sequentially
+                                        studies, we demonstrate that TCT secures token contracts with-          (i.e., without concurrency) executes transactions, each triggered by
+                                        out foreseeing code-level intricacies, such as integer overflow and     a user-invocation of a public method in an object. In 2022, the num-
+                                        reentrancy. TCT is also successfully applied to a Uniswap codebase,     ber of contracts on Ethereum’s mainnet had reached 1.45 million [1].
+                                        showcasing a complex decentralized finance (DeFi) scenario. Our         We emphasize that they are not 1.45 million individual programs,
+                                        evaluation shows a negligible runtime overhead, two orders of mag-      but a single program with 1.45 million objects interconnected!
+                                        nitude lower than a state-of-the-art approach for runtime checking
+                                        of contract code safety.                                                    Programmer                                         Contract,
+                                                                                                                    and/or user                                        i.e., OO object
+                                        1   Introduction                                                                                                               Public method
+                                        High assurance for smart contracts (i.e., application code executed                                                            Object
+                                        on a blockchain platform like Ethereum) is crucial for the decen-                                                              reference
+                                        tralized computing technology. The importance is evidenced by nu-                                                              Transaction
+                                        merous high-profile incidents due to unintentional vulnerabilities                                 The gigantic “program”
+                                                                                                                                                                       invocation
+                                        and deliberate trapdoors in smart contracts [25, 26, 28]. These inci-
+                                        dents caused substantial financial losses, which were irreversible      Figure 1: Smart contracts on Ethereum form a single gigantic
+                                        due to the principle of code-is-law in decentralized computing [5].     “program” with millions of OO objects.
+
+                                        Conference, USA
+                                        2025. ACM ISBN 978-x-xxxx-xxxx-x/YYYY/MM                                  For brevity, we refer to this gigantic program, consisting of OO
+                                        https://doi.org/10.1145/nnnnnnn.nnnnnnn                                 objects and the references between them, as 𝐺𝑃. The 𝐺𝑃 has been
+Conference, Aug 2025, USA                                                                                                               Ball et al.
+
+
+self-evolving since 2015 and is highly polymorphic: (1) the behavior
+of every cross-contract transaction is determined by the references          (∀𝑥 : 𝑎𝑑𝑑𝑟𝑒𝑠𝑠 | 0 ≤ 𝑡ℎ𝑖𝑠.𝑏𝑎𝑙𝑎𝑛𝑐𝑒𝑠 [𝑥] ≤ 𝑡ℎ𝑖𝑠.𝑡𝑜𝑡𝑎𝑙𝑆𝑢𝑝𝑝𝑙𝑦)
+held in the contracts; (2) a transaction can create new contracts
+                                                                                                                                               (1)
+                                                                                      ∑︁
+and references. The reference topology is the result of real-world                 ∧ ( (𝑡ℎ𝑖𝑠.𝑏𝑎𝑙𝑎𝑛𝑐𝑒𝑠 [𝑥]) = 𝑡ℎ𝑖𝑠.𝑡𝑜𝑡𝑎𝑙𝑆𝑢𝑝𝑝𝑙𝑦)
+business and trust relationships, not implied by static code. In other                  𝑥
+words, the reference topology is the runtime data essential to the            TCT ensures that: (1) a contract invariant holds before the con-
+𝐺𝑃. When one talks about code-is-law of smart contracts, it is really     tract is entered and after it exits; (2) a method postcondition holds
+the 𝐺𝑃 one is referring to.                                               at the method’s exit. As mentioned earlier, these specifications can
+    Our problem formulation. With this worldview, the problem             be much more complex than checking basic values. They may con-
+we formulate is: how to ensure safety properties faithfully w.r.t.        tain quantifiers, set/map operations, relations between encrypted
+the entire 𝐺𝑃? This is very different from how a smart contract           variables, code-reflection properties (e.g., “no variable except x can
+verification problem is typically formulated. Usually, a verification     be modified”), real-number arithmetic with infinite precision, etc.
+technique considers “the program” to be one or a few “contracts of        All of these require symbolic reasoning about contract code, which
+interest”, denoted 𝐶. 𝐶 is examined within a hypothetical environ-        is traditionally done by static verification.
+ment of “external contracts”, which is an enormous simplification of          The TCT technology. TCT empowers symbolic verification of
+the huge (𝐺𝑃 − 𝐶) code in reality. It also makes assumptions about        interface specifications to be scalable, efficient and faithful to the
+the reference topology (whose ground truth is only available at           entire 𝐺𝑃. It is inspired by Proof-Carrying Authentication [2] and
+runtime) and a hypothetical attacker to invoke 𝐶 with the attempt         the concolic testing methodology (e.g., SAGE [9]). In TCT, every
+to violate safety specifications.                                         transaction must carry a theorem that proves its adherence to the
+    Static verification serves as a helpful advisory to programmers       properties in every contract to be executed in the transaction. The
+because it flags potential issues at compile time. However, with the      runtime platform checks the validity of the theorem before allowing
+environment code, reference topology and attacker all hypothetical,       the transaction to be executed. The concolic nature of TCT means
+the verification is not faithful w.r.t. the 𝐺𝑃. For soundness, it needs   that it performs a symbolic verification on the concrete straight-line
+to err by assuming all possibilities of these hypothetical elements,      code trace of a transaction, which makes the corresponding theorem
+which lead to false alarms, a well-known issue with static analysis.      efficiently provable. Because all variables are symbolic, a proven
+    Unlike static verification, a simple runtime assertion is actu-       theorem has the generality to cover all future transactions that
+ally faithful to the 𝐺𝑃. Consider an assertion assert(x==y) in the        follow the same code trace. This enables TCT to achieve near-zero
+source code. It is concretely checked when the line is reached, re-       amortized runtime overhead via a theorem reuse mechanism.
+gardless of the aforementioned assumptions for static verification.           The interface specifications are defined using the NatSpec no-
+TCT is designed to achieve the same faithfulness as runtime assertions.   tation of Solidity [31]. TCT’s verifier consists of the techniques
+On the other hand, safety specifications that programmers want to         to obtain a runtime EVM-code trace, to insert the specifications
+ensure are more complex than checking concrete values. They usu-          into the trace and to convert the trace into a straight-line code in a
+ally specify contract invariants or method postconditions, which          verification-amenable language (i.e., Boogie language [13] in our
+require symbolic reasoning. We refer to these as interface spec-          implementation). In addition to the verifier, TCT has its runtime
+ifications as they specify properties at the method and contract          mechanism, which is implemented in Go-Ethereum (Geth) [20].
+levels rather than the individual statement level. TCT is designed to         TCT’s trusted computing base (TCB) is entirely at the infrastruc-
+have the same symbolic-reasoning capability as static verification.       ture level, i.e., the VM, the compiler, and the code verifier. It makes
+    Interface specifications. The goal of TCT is to enable pro-           no assumptions at the contract-code level, e.g., about the (static)
+grammers to specify and ensure safety properties at the design            code, the (dynamic) object references, or any party who claims
+level. This is different from detecting specific code-level patterns.     that a contract has been formally verified. Of course, TCT shares
+For example, the 2016 DAO attack [25] exploits an “integer over-          the same caveat as all verification techniques – safety is only as
+flow” pattern, and the 2018 BeautyChain attack [28] exploits an           high as the safety specifications go. We hope TCT motivates the
+“reentrancy” pattern. Researchers have developed techniques to            community to shift focus from examining code-level intricacies to
+detect these patterns.                                                    defining safety specifications.
+    Imagine traveling back to 2016 when the two patterns are still            Results. To show the uniqueness of TCT, we begin with classi-
+unknown. Suppose that the designers of the ERC20 token standard           cal scenarios of ERC20 contracts. We show how TCT differs from
+[33] (which specifies the interface for fungible-token currencies)        existing techniques when tackling integer overflow and reentrancy
+want to ensure that all ERC20 token contracts are secure against          attacks. TCT only requires programmers to define intuitive guard
+these unforeseen attacks, what can they do? It turns out that the         conditions for contracts’ entry methods, without examining code
+contract invariant in Property 1 is sufficient to thwart both the DAO     patterns of non-intentions. The TCT infrastructure ensures (1) these
+and BeautyChain attacks. It asserts that every account balance (i.e.,     conditions logically imply the interface specifications; (2) these con-
+balances[x]) should be non-negative, and the sum of all balances          ditions are true at runtime. To show generality, our approach is
+should equal the total supply of this currency (i.e., totalSupply).       applied on the top-5 real-world ERC20 tokens.
+It simply states the designers’ intention, as opposed to enumerating          A crucial part of our evaluation is the case study of a highly com-
+all non-intentions as code-level anti-patterns. Section 3 will explain    plex real-world scenario – decentralized finance (DeFi). We showcase
+how this straightforward property defeats the two attacks.                Uniswap-V2, which implements the core algorithm of Ethereum’s
+                                                                          top DeFI application – Uniswap. To the best of our knowledge, this
+Theorem-Carrying Transactions: Runtime Verification to Ensure Interface Specifications for Smart Contract Safety                          Conference, Aug 2025, USA
+
+
+is the first faithful code-level verification for Uniswap’s essential                     2.2     Natures of smart contract computations
+properties – inverse proportionality for swap operations and pro-                         Smart contracts are mainly used for record-keeping, trading and
+portionality for liquidity operations. We define them as interface                        arbitration purposes. Although the 𝐺𝑃 is gigantic, the computation
+specifications. Each transaction executes about 7000 ∼ 9000 EVM                           in each transaction has to be made much simpler than a typical com-
+instructions across five different contracts. On one hand, the proven                     putation in a traditional program, because it is orders-of-magnitude
+theorems explicate the precise cross-contract conditions that guard                       slower and more costly. In particular, the complexity due to loops
+these properties. On the other hand, they expose subtle conditions                        and branches is much more manageable – Section 7.1 presents data
+under which the properties fail to hold. Accomplishing formal veri-                       on hundreds of real-world cases covering a substantial diversity in
+fication at this scale, we believe we are contributing a significant                      transactions between years 2022 and 2024. In nearly all these cases,
+case study to the smart contract verification community.                                  loops are used to bundle a set of otherwise individual transactions
+   The runtime overhead of TCT is negligible. For the token contract                      into a batched transaction (for gas-saving and transactional guar-
+and the Uniswap-V2 system, the overhead measurements are only                             antee). The majority of branches only cause a case split that is easy
+0.20% and 0.57% on Geth 1.13.0, respectively. The former is two                           to verify jointly as a single theorem.
+orders of magnitude lower than a state-of-the-art approach, which                            The main source of complexity, however, comes from the fact
+inserts runtime checks into contracts via code instrumentation [14].                      that cross-contract calls are made by object references, i.e. addresses.
+                                                                                          Essentially, the semantics of a contract code containing such a call
+2 Background                                                                              is undefined until the address value is concretized at runtime.
+2.1 The Ethereum system and transactions                                                  /// @custom : invariant forall x : address :: (0 <= this .
+As shown in Figure 2, a user interacts with Ethereum via a trans-                               balances [ x ] && this . balances [ x ] <= this . totalSupply )
+                                                                                          /// @custom : invariant sum ( this . balances ) == this . totalSupply
+action (TX) issuer (e.g., the MetaMask browser extension [11]).                           contract ERC20 {
+Ethereum consists of a peer-to-peer network that runs a consensus                              address public owner ;
+                                                                                               uint256 public totalSupply
+protocol. Any machine can join the network to become a node. All                               mapping ( address = > uint256 ) balances ;
+nodes form the world-wide consensus community. The purpose of                                  Declarations of transfer (...) , allowance (...) ,
+the protocol is to conceptually create a single VM (i.e., EVM) that                                 transferFrom (...) , ...
+                                                                                          }
+is trustworthy if the compliant nodes constitute a majority in the
+community. This is achieved by replicating the EVM on every node.                         Code 1: Specifying Property 1 as the invariants for ERC20.
+    The EVM is similar to the Java Virtual Machine (JVM). It runs
+bytecode, usually compiled from an object-oriented (OO) language
+like Solidity. However, there are a few differences: (1) a JVM runs                       2.3     The NatSpec notation in Solidity
+many programs, each consisting of many objects, but an EVM runs                          TCT uses the NatSpec notation of Solidity [31] to specify inter-
+a single program (i.e. the GP) consisting of all objects (i.e. contracts).               face specifications. A contract invariant is specified using the tag
+It is important to note that the GP is not distributed across the                        @custom:invariant above the contract’s definition, and a method
+nodes, but fully replicated on each and every node. (2) Executing a                      postcondition is specified using the tag @custom:postcondition
+transaction on an EVM costs a certain amount of ether, referred to as                    above the method’s definition. For example, Code 1 specifies Prop-
+gas. (3) Transactions are sequentially executed. Also, a transaction                     erty 1 as invariants for the ERC20 contract. The Solidity compiler
+is either completed or reverted. Reversion means that the program                        exports these contents as meta-data for the compiled bytecode.
+state remains unchanged, but the attached gas is consumed.
+                                                                                          3     Motivating Example
+      TX issuer       Pre-exec service      The Ethereum                                 To motivate our work, this section describes a token contract that
+  (e.g., MetaMask)    (e.g., infura.io)       network                                    combines two vulnerabilities – the first is exploitable via integer
+                                          Nodes                                          overflow, similar to the one described in reference [23]; the second
+                                                                                         is exploitable via reentrancy, similar to the DAO attack [25]. In Fig-
+                        API
+                                                                                         ure 3, the middle portion shows the contract code MultiVulnToken.
+                                                                                         The require statement checks a condition: if it is false, the execu-
+                                                                                         tion is reverted. The Solidity keyword for method is function, so
+                                                                                         we use the terms “method” and “function” interchangeably.
+          Figure 2: Overview of the Ethereum system.
+                                                                                          3.1     Vulnerabilities and attacks
+   To help a user foresee a possible reversion and estimate the gas                      In Attack 1, the attacker issues a transaction by calling transferProxy
+amount, the Ethereum system provides some free pre-execution                             with arguments _𝑣𝑎𝑙𝑢𝑒 = 2255 + 1 and _𝑓 𝑒𝑒 = 2255 (in transition A).
+services, such as infura.io [12]. It is common for a TX issuer to send                   In the line require(balances[_from] >= _fee + _value), the
+a transaction to such a service via its API, receive the pre-execution                   two values are added, which equals 1 due to integer overflow, so
+outcome, and let the user confirm if the transaction should be sent                      the require statement is satisfied. Address msg.sender is the at-
+to the Ethereum network for real. The service deploys a node in                          tacker’s address, and address _to is specified by the attacker. When
+the network, but no pre-execution result is actually committed.                          the function returns, the balances of the two addresses become
+Conference, Aug 2025, USA                                                                                                                 Ball et al.
+
+
+enormous (as transition B). This causes extreme inflation, so the            A dilemma for static verification. Consider the perspective
+attacker gets almost the entire asset of this token ecosystem.           of a static verifier at compile time. The behavior of clear is not
+   Attack 2 results in the attacker receiving 50 tokens in one of his    fully defined because it calls into another contract using an address
+accounts by clearing his other account that has only 5 tokens. It is     (i.e. msg.sender). The verifier can perhaps err by conservatively
+achieved by making reentrant calls 10 times. The steps are as fol-       flagging all such calls as “potentially unsafe”. However, calling
+lows. First, the attacker creates a contract to call function clear in   a contract via an address is a norm in smart contracts. Imagine
+MultiVulnToken. Inside the function, msg.sender refers to the at-        another call businessPartner.foo(), where businessPartner
+tacker’s contract. Therefore, the function call msg.sender.receive-      is a variable only writable by the contract owner. Treating it as an
+Notification (transition C) calls into the attacker’s contract, who      arbitrary address, thus flagging the code as “potentially unsafe”,
+calls function clear again (transition D). This unexpected code          is problematic because all cross-contract calls would similarly be
+sequence causes balances[_to]+=bal to be executed 10 times.              flagged “potentially unsafe”, which are false alarms. TCT is not
+                                                                         subject to this dilemma because it is faithful to the 𝐺𝑃 at runtime.
+
+                                                                         3.2     Theorem to prove safety of a transaction
+                                                        Attack 1
+          Transaction issued:                                            The notion of theorem is important in TCT. We explain it using the
+ A        Call transferProxy with (_value = 2^255+1, _fee = 2^255)       code paths in the two attacks. For Attack 1, the code path of the
+                                                                         transaction is shown in Code 2 using the Boogie language [13]. A
+          Consequence:
+          balances[msg.sender] = 2^255  balances[_to] = 2^255+1         require check in Solidity corresponds to an assume in Boogie. The
+                                                                         operators + and - are modeled as functions evmadd and evmsub,
+   contract ERC20 {                    Token contract                    correspond to opcodes ADD and SUB. TCT has a Boogie library to
+       address public owner;                                             define axioms about these opcodes based on the Ethereum yellow
+       uint256 public totalSupply                                        paper [39]. Axioms relevant to Code 2 are shown in Appendix A.1.
+       mapping(address => uint256) balances;
+       Function declarations such as transfer(...),                      tmp1 := evmadd ( _fee , _value ) ;
+            allowance(...), transferFrom(...), ...                       assume balances [ _from ] >= tmp1 ;
+   }                                                                     tmp2 := evmadd ( balances [ _to ] , _value ) ;
+                                                Integer                  assume tmp2 >= balances [ _to ];
+   contract MultiVulnToken is ERC20 {          overflow                  tmp3 := evmadd ( balances [ msg . sender ] , _fee ) ;
+      function transferProxy(address _from,                              assume tmp3 >= balances [ msg . sender ];
+B     address _to, uint256 _value, uint256 _fee){                        balances [ _to ] := evmadd ( balances [ _to ] , _value ) ;
+         require(balances[_from] >= _fee + _value);                      balances [ msg . sender ]:= evmadd ( balances [ msg . sender ], _fee );
+         require(balances[_to] + _value >=                               balances [ _from ] := evmsub ( balances [ _from ] , tmp1 );
+                    balances[_to]);
+         require(balances[msg.sender] + _fee >=                             Code 2: Code path of Attack 1 in the Boogie language.
+                          balances[msg.sender]);
+         balances[_to] += _value;                                           Let’s assume Property 1 is specified for ERC20 as in Code 1. TCT
+         balances[msg.sender] += _fee;                                   ensures behavioral subtyping [15], so the derived MultiVulnToken
+         balances[_from] -= _value + _fee;                               contract must obey all properties of its base classes. Code 3 rep-
+      }                                                                  resents the proof obligation in this case. The first two inv lines
+ D    function clear(address _to) {
+                                                                         assume the invariants, and the last two inv lines assert them. The
+         uint256 bal = balances[msg.sender];
+         balances[_to]+=bal;                                             grd line (i.e., “guard”) specifies a condition 𝜑 (𝑠, 𝑓 .𝑝), where 𝑠 repre-
+         msg.sender.receiveNotification(bal);        C                   sents the blockchain storage states and 𝑓 .𝑝 represents parameters
+         balances[msg.sender] = 0;                                       of the entry function 𝑓 . The guard is a condition under which the
+       }                            Reentrancy                           invariants will hold.
+     }
+                                                                         grd : assume 𝜑 (𝑠, 𝑓 .𝑝 ) ;
+     Suppose: balances[msg.sender] = 5                                   inv : assume sum ( balances ) == totalSupply ;
+                                                          Attack 2       inv : assume forall x : address :: 0 <= balances [ x] &&
+     Transaction issued: Call clear(_to)                                       balances [ x ] <= totalSupply ;
+
+               MultiVulnToken public multiVulnToken;                            tmp1 := evmadd ( _fee , _value ) ;
+               address _to;                                                     assume balances [ _from ] >= tmp1 ;
+                                                                                tmp2 := evmadd ( balances [ _to ] , _value ) ;
+               uint count = 0;
+                                                                                assume tmp2 >= balances [ _to ];
+               function receiveNotification(uint256)                            tmp3 := evmadd ( balances [ msg . sender ] , _fee );
+               {   if (count < 10) {                                            assume tmp3 >= balances [ msg . sender ];
+                       count++;                                                 balances [ _to ] := evmadd ( balances [ _to ] , _value );
+                       multiVulnToken.clear(_to);                               balances [ msg . sender ] := evmadd ( balances [ msg . sender ],
+                   }                                                                  _fee ) ;
+               }                     Attacker’s contract                        balances [ _from ] := evmsub ( balances [ _from ] , tmp1 );
+
+     Consequence: balances[_to] = 50                                     inv : assert sum ( balances ) == totalSupply ;
+                                                                         inv : assert forall x : address :: 0 <= balances [ x] &&
+                                                                               balances [ x ] <= totalSupply ;
+
+   Figure 3: Attacks via integer overflow and reentrancy.                      Code 3: Proof obligation of the code path in Code 2.
+Theorem-Carrying Transactions: Runtime Verification to Ensure Interface Specifications for Smart Contract Safety                                     Conference, Aug 2025, USA
+
+
+    Suppose 𝜑 (𝑠, 𝑓 .𝑝) is (0 ≤ totalSupply < 2255 ) ∧ (0 ≤ _value                       discovers this unintended code path, it is the attacker’s obligation
+< 2255 ) ∧ (0 ≤ _fee < 2255 ), which consists of the contract                            to prove the corresponding theorem. The aforementioned 𝜑 (𝑠, 𝑓 .𝑝)
+variable totalSupply in 𝑠 and the parameters _value and _fee in                          will fail the proof. The attacker can define the guard 𝜑 (𝑠, 𝑓 .𝑝) :=
+𝑓 .𝑝 of the entry function transferProxy. With the guard, Boogie                         (balances[msg.sender] = 0) to prove the theorem, but it makes
+successfully verifies Code 3, i.e. theorem 𝜏 in Code 4 is valid.                         the attack harmless as it is basically a no-op repeated 10 times.
+𝜏 := ( f = multiVulnToken :: transferProxy ,                                              grd : assume 𝜑 (𝑠, 𝑓 .𝑝 ) ;
+       𝜑 (𝑠, 𝑓 .𝑝 ) = (0 ≤ totalSupply < 2255 ) ∧ (0 ≤ _value <                           inv : assume sum ( balances ) == totalSupply ;
+                      2255 ) ∧ (0 ≤ _fee < 2255 ) ,                                       inv : assume forall x : address :: 0 <= balances [ x] &&
+       ph = 0 xf222eb3c699342dcf8f4f64a86ba0862e29fc8d5d2                                       balances [ x ] <= totalSupply ;
+                8 e21940ee0b32cf3eb06ca
+     )                                                                                             bal := balances [ msg . sender ];
+                                                                                           *       tmp1 := evmadd ( balances [ _to ] , bal ) ;
+       Code 4: An example theorem for transferProxy.                                       *       balances [ _to ] := tmp1 ;
+                                                                                                   /* Start of reentrancy */
+   In theorem 𝜏, the first part 𝑓 specifies the entry function of the                              tmp2 := evmadd ( balances [ _to ] , bal ) ;
+transaction that the theorem pertains to. For readability of this                                  balances [ _to ] := tmp2 ;
+                                                                                                    --- repeat ---
+paper, we use the name multiVulnToken::transferProxy, but in                                       tmp10 := evmadd ( balances [ _to ] , bal ) ;
+reality, the contract is identified by its address, and the function is                            balances [ _to ] := tmp10 ;
+                                                                                                   /* End of reentrancy */
+identified by a 4-byte hexical value called “function selector” [30].                              balances [ msg . sender ] := 0;
+The second part is the guard 𝜑 (𝑠, 𝑓 .𝑝). The third part is the path
+hash, which is a Keccak-256 hash identifying an EVM code trace.                           inv : assert sum ( balances ) == totalSupply ;
+                                                                                          inv : assert forall x : address :: 0 <= balances [ x] &&
+Section 5.3 will describe how it is computed in our current prototype.                          balances [ x ] <= totalSupply ;
+In summary, the general form of a theorem is 𝜏 := (𝑓 , 𝜑 (𝑠, 𝑓 .𝑝), 𝑝ℎ),
+which means: for every transaction invoked by calling 𝑓 when 𝜑                                   Code 5: Proof obligation corresponding to Attack 2.
+is satisfied, if it is completed (i.e., not reverted by EVM) and its
+path hash equals 𝑝ℎ, then all the assertions along the code path are                      4      The TCT Protocol
+guaranteed to hold. Obviously, this theorem is not applicable to the                     TCT does not make any contract-level assumption (e.g. the reference-
+transaction in Attack 1 because it violates (0 ≤ _value < 2255 ) ∧                       topology, the dichotomy about “contracts of interest” vs. “environ-
+(0 ≤ _fee < 2255 ).                                                                      ment contracts”, or claims that certain contracts have been formally
+   The generality of the theorem can be understood in three ways.                        verified by an auditing company). The trusted computing base
+First, the guard not only constrains the referenced variables, but                       (TCB) is entirely at the infrastructure level. It includes Ethereum’s
+also implicitly states that nothing else matters, such as other param-                   existing TCB and TCT-additional TCB. The former includes the
+eters in the call or other storage variables. For example, addresses                     Ethereum protocol, EVM, and the verified compilation to attest
+msg.sender, _from and _to can be arbitrarily aliased to each other,                      a contract’s EVM code to its claimed source code [7]. The latter
+and the assertions will still hold. Second, the guard is a fairly gen-                   includes the TCT protocol (in this section), the Boogie verifier, and
+eral (i.e., weak) precondition to ensure the safety property, but it is                  an EVM-to-Boogie translator (in Section 5).
+much simpler than the weakest precondition (WP). For example, the
+WP will have to cover the situation (2255 ≤ totalSupply < 2256 ),
+                                                                                         Algorithm 1 The TCT protocol.
+which is very complicated for integer-overflow reasoning. How-
+                                                                                                                                          function FindTheorem(𝑡𝑥 : TX)
+ever, this is really unnecessary because it is hard to imagine why a                          Ethereum 𝐸 (𝑝𝑟𝑒, 𝑛𝑒𝑡, 𝑠,𝑇 )                     return ChooseOne( {𝜏 ∈ 𝐸.𝑇 | Ap-
+cryptocurrency needs a total supply greater than 2255 (equivalent                             ⊲ pre-executor 𝑝𝑟𝑒 , executor 𝑛𝑒𝑡 , storage     ply(𝐸.𝑝𝑟𝑒, 𝑡𝑥, 𝜏 ) } )
+to 7 ∗ 1066 per person in the world). Unlike a static verifier, TCT only                      𝑠 , theorem repo 𝑇                          function AddTheorem(𝑐𝑡 : EVM-trace,
+                                                                                              type TX ( 𝑓 , 𝑣) ⊲ entry 𝑓 and values 𝑣 for
+requires programmers to focus on conditions within the boundary                                                                           𝜑 : guard)
+                                                                                              parameters 𝑓 .𝑝;
+                                                                                                                                              𝑝ℎ ← 𝐸.𝑛𝑒𝑡 .𝑐𝑜𝑚𝑝𝑢𝑡𝑒𝐻𝑎𝑠ℎ (𝑐𝑡 )
+of their intentions. Third, we will explain that TCT utilizes guards                          ⊲ Execution of a TX yields (𝑜𝑘 , EVM-trace      if 𝐸.𝑛𝑒𝑡 .𝑝𝑟𝑜𝑣𝑒 (𝜑 ⇒ 𝑉 𝐶 (𝑐𝑡 ) )
+to reuse theorems, which is crucial for TCT’s near-zero runtime                               𝑐𝑡 , path-hash 𝑝ℎ ).                            then
+overhead.                                                                                     type Hyp (𝑓 , 𝜑 (𝑠, 𝑓 .𝑝 ), 𝑝ℎ) ⊲ entry,            𝜏 ← (𝑐𝑡 .𝑓 , 𝜑, 𝑝ℎ) ⊲ we have a
+                                                                                                                                                  theorem 𝜏
+   Theorem about the reentrant code path. We now do a similar                                 guard, path-hash
+                                                                                                                                                  𝐸.𝑇 ← 𝐸.𝑇 ∪ {𝜏 }
+                                                                                              Theorem repo 𝐸.𝑇 : set of Hyp
+exercise about a transaction entering via clear(...). If it does not                              ⊲ theorems of 𝐸 , replicated everywhere         return {𝜏 }
+exploit the reentrancy pattern (i.e. if transition D in Figure 3 be-                          function Apply(𝑒𝑥𝑒𝑐𝑡𝑟 : executor, 𝑡𝑥 :
+                                                                                                                                              return { }
+
+comes a return), then a guard like 𝜑 (𝑠, 𝑓 .𝑝) := (0 ≤ totalSupply <                          TX, ℎ : Hyp)                                function Launch(𝑡𝑥 : TX)
+                                                                                                                                              𝐴 ← FindTheorem(𝑡𝑥 ) ⊲ Empty if
+2255 ) ∧ (_to ≠ msg.sender) is sufficient to ensure the invariants.                                 if ℎ.𝑓 = 𝑡𝑥 .𝑓 ∧ (𝑡𝑥 .𝑣, 𝐸.𝑠 ) |= ℎ.𝜑
+                                                                                                                                              nothing is found.
+                                                                                                    then
+However, if the transaction exploits the reentrancy pattern as in At-                                   (𝑜𝑘, 𝑐𝑡, 𝑝ℎ) ← 𝑒𝑥𝑒𝑐𝑡𝑟 (𝑡𝑥 )           if 𝐴 ≠ { } then
+tack 2, the code path is different, as shown in Code 5. The two lines                                   return 𝑜𝑘 && ℎ.𝑝ℎ = 𝑝ℎ                    Execute(𝑡𝑥 , 𝐴)
+                                                                                                                                                  return
+marked with “*” are repeated 9 more times. Hence the theorem for                                    return 𝑓 𝑎𝑙𝑠𝑒
+                                                                                                                                              𝜑 ← ...      ⊲ guard comes from user
+the non-reentrancy transaction is not appliable to the reentrancy                             function Execute(𝑡𝑥 : TX, ℎ : Hyp)              (𝑜𝑘, 𝑐𝑡, 𝑝ℎ) ← 𝐸.𝑛𝑒𝑡 (𝑡𝑥 )
+                                                                                                    if ℎ ∈ 𝐸.𝑇 then
+one, because of the path hash mismatch. The programmer is un-                                           𝑜𝑘 ← Apply(𝐸.𝑛𝑒𝑡, 𝑡𝑥, ℎ )
+                                                                                                                                              if 𝑜𝑘 then
+                                                                                                                                                  𝐵 ← AddTheorem(𝑐𝑡 , 𝜑 )
+likely to anticipate the reentrancy code path before the year 2016,                                     if 𝑜𝑘 then                                if 𝐵 ≠ { } then
+but it is fine because security of TCT does not require the program-                                        𝐸.𝑛𝑒𝑡 .commitStorageUpdates()             𝐸.𝑛𝑒𝑡 .commitStorageUpdates()
+mer to anticipate every non-intention. Since it is the attacker who
+Conference, Aug 2025, USA                                                                                                                                      Ball et al.
+
+
+
+                                   The Ethereum network                                      the type of theorem as Hyp. Theorem repository 𝐸.𝑇 , replicated on
+   TX issuer
+                                        (i.e., E.net)                                        every node, contains all theorems that have been proven by 𝑛𝑒𝑡.
+                                                                                                 Anybody can call AddTheorem(𝑐𝑡, 𝜑) to try to add a theorem to
+                                                                                             𝐸.𝑇 , which proves the safety of EVM-trace 𝑐𝑡 under the condition
+                                                 T       T                                   𝜑. The EVM-to-Boogie translator and the Boogie verifier consti-
+                                     T                                 T
+                                             T                 T
+                                                                                             tute 𝐸.𝑛𝑒𝑡 .𝑝𝑟𝑜𝑣𝑒 (...), which symbolically verifies that 𝜑 implies the
+                                                                                             verification condition (VC) of 𝑐𝑡. The protocol flow is illustrated
+         (ct, )
+                                                                                             in Figure 4 (upper). We expect that most theorems are added to
+                                     ph ← E.net.computeHash(ct)                              𝐸.𝑇 during the testing phase of a contract, as the programmers are
+                                          Boogie proves “ ensures                           supposed to test the scenarios they can imagine. Via AddTheorem,
+                                          all properties along ct”,                          the theorems corresponding to the test traces are pre-populated
+                                          i.e., φ ⇒ VC(ct)                                   in 𝐸.𝑇 before the contract starts to process real user transactions.
+                                         Add a theorem into repo,                            Note that Ethereum provides a feature to obtain the code trace of a
+                                         i.e., τ ← (tx.f, φ, ph)
+                   {τ}
+                                                                                             given transaction (see Section 5.1).
+                                               E.T ← E.T ∪ { τ }
+                                                                                                 The TX issuer’s procedure to submit a transaction is described
+                                                                                             in Launch(𝑡𝑥), illustrated in Figure 4 (lower). It calls FindTheo-
+                         Pre-exec service            The Ethereum network
+   TX issuer
+                         (i.e., E.pre)
+                                                                                             rem(𝑡𝑥), which consults the pre-executor 𝑝𝑟𝑒 to find a theorem
+                                                          (i.e., E.net)
+                                                                                             applicable to 𝑡𝑥. Applicability means that (1) the theorem is about
+                                                                                             the entry function (i.e., ℎ.𝑓 = 𝑡𝑥 .𝑓 ), (2) the theorem’s guard is satis-
+                                                                            T
+                                                                                             fied (i.e., 𝑡𝑥 .𝑣, 𝐸.𝑠 |= ℎ.𝜑), and (3) the code trace of the pre-execution
+                             API                                   T
+                                                     T                                       matches the code trace of the theorem (i.e., ℎ.𝑝ℎ = 𝑝ℎ). There can be
+                                         T
+                                                                       T
+    tx
+                                                             T                               multiple applicable theorems. Function ChooseOne chooses any of
+                                    A= FindTheorem(tx)
+                                                                                             them or return { } when the set is empty. Note that the pseudo code
+                         A                                                                   of FindTheorem shows its concise functional specification, but the
+   Execute (tx, A)                                                                           actual code is very efficient: pre-execution is an existing step today,
+                                                                       Check (A  E.T)       so the only additional work is to use (𝑓 , 𝑝ℎ) for a dictionary lookup
+                                                                       Apply(E.net, tx, A)   in 𝐸.𝑇 , then check 𝜑. The first applicable theorem is returned. Once
+                                                                       returns true.         such a theorem 𝐴 is found, Launch(𝑡𝑥) calls Execute(𝑡𝑥, 𝐴) to
+                                                                                             execute the transaction by the Ethereum network 𝑛𝑒𝑡. We call this
+                                                                       commitStorage
+                                                     Success           Updates()             a repo hit. Most transactions should be repo hits, because the pro-
+                                                                                             grammers should have tested these scenarios and pre-populated
+                                                                                             the theorems. The runtime overhead is just the applicability check,
+Figure 4: (Upper) A protocol flow of adding a theorem to the                                 which is near zero as we will show in Section 7.4.
+repo; (Lower) A protocol flow of the repo hit scenario.                                          When there is no applicable theorem (i.e.., a repo miss), it means
+                                                                                             a real user issues a 𝑡𝑥 that goes through a code path unseen in
+                                                                                             all test cases. It is likely an attack, e.g., the reentrancy attack in
+   The TCT protocol piggybacks on the existing Ethereum pro-                                 Section 3. However, if 𝑡𝑥 is not an attack, the user needs to provide
+tocol. The system is the same as the one in Figure 2, except that                            a guard 𝜑. Launch(𝑡𝑥) executes 𝑡𝑥 and tries to add the theorem
+every node has three additional components: the EVM-to-Boogie                                about 𝜑 into the repo (if the theorem is proven). The protocol flow
+translator, the Boogie verifier, and a theorem repository that stores                        is shown in Appendix A.2.
+all verified theorems. Note that the protocol is orthogonal to the                               Optimizations for low storage and communication over-
+underlying consensus mechanism, because theorem-proving is a                                 heads. To store theorems efficiently in the repository, all theorems
+stateless deterministic computation.                                                         that share the same entry function and guard but differ in their
+   The protocol is modeled in Algorithm 1 with Figure 4 illustrating                         path hashes can be combined as a multi-path theorem, which states
+two example flows. The system with which the TX issuer inter-                                that, if the guard is satisfied, then any code path in this multi-path
+acts is 𝐸 (𝑝𝑟𝑒, 𝑛𝑒𝑡, 𝑠,𝑇 ). As explained in Section 2, the consensus                         set is safe. The amortized cost to store a new code path is only
+mechanism abstracts the whole network as a single VM, denoted                                one Keccak-256 value, i.e., 32 bytes. The instructions in a code
+as the executor 𝑛𝑒𝑡. The storage of 𝑛𝑒𝑡 is 𝑠. A particular node in                           path do not need to be stored, because they are only used during
+the network acts as the pre-executor 𝑝𝑟𝑒, which also operates on 𝑠.                          theorem-proving time. Once it is done, the path hash suffices. Once
+Theorem repo 𝑇 will be explained later. A transaction 𝑡𝑥 consists                            a theorem is stored in the repository, a Keccak-256 hash can be
+of the entry function 𝑓 and the values 𝑣 for parameters 𝑓 .𝑝. Both                           computed for it. We call it theorem hash. Because most transac-
+𝑛𝑒𝑡 and 𝑝𝑟𝑒 can execute 𝑡𝑥 (denoted as 𝐸.𝑛𝑒𝑡 (𝑡𝑥) and 𝐸.𝑝𝑟𝑒 (𝑡𝑥)),                           tions are repo hits, we can conclude that the network overhead
+but only 𝑛𝑒𝑡 has the ability to commit the storage updates. An ex-                           of TCT is 64 bytes per transaction, due to the messages “𝐴” and
+ecution without a subsequent commit makes no persistent effect                               “𝐸𝑥𝑒𝑐𝑢𝑡𝑒 (𝑡𝑥, 𝐴)”.
+on 𝑠. Executing 𝑡𝑥 results in a triple (𝑜𝑘, EVM-trace 𝑐𝑡, path-hash
+𝑝ℎ). The Boolean 𝑜𝑘 indicates whether any revert instruction is
+encountered. Because theorems are proven hypotheses, we refer to
+Theorem-Carrying Transactions: Runtime Verification to Ensure Interface Specifications for Smart Contract Safety                             Conference, Aug 2025, USA
+
+
+5 Implementation                                                                          this case, the top element after the operation points to the tree with
+                                                                                          the root EVMADD and children a and b. For readability, we denote
+5.1 Overview
+                                                                                          the tree as EVMADD(a, b).
+Figure 5 shows how a theorem about a transaction is proven. We
+use Remix IDE [4] as the transaction issuer. The node consists of a
+                                                                                                    2     ADD                          ADD
+Go-Ethereum (Geth) [20] executable and other components. From                                       1               3            “b”
+                                                                                                                                                      EVMADD
+Remix, we deploy a contract and issue a transaction. Geth returns                                  ……              ……   ……    “a”             ……     “a”   “b”
+a TX-hash that identifies the transaction. Note that TX-hash is an
+Ethereum concept, not to be confused with our TCT concept path
+                                                                                              Figure 6: Concrete execution vs. symbolic execution.
+hash. Based on the debug_traceTransaction feature of Geth, we
+build a trace fetcher, which uses TX-hash to get the EVM code trace.                         Figure 7 shows a code trace segment, as well as the initial stack
+                                                                                          and the stack before 925 JUMPI. The code pushes two elements onto
+   Transaction
+                                                                                          the stack top: one is 0x03a3 (i.e., jump destination 931); the other is
+                                                 Node                                     ISZERO (LT (SLOAD (MapElement (MultiVulnToken.balances,
+      issuer
+                    1. Deploy a                                                           Partial32B((12, 31), _from))), EVMADD(_fee, _value))).
+   Remix IDE           contract                          4. TX-hash     Trace             Note that an Ethereum address is 20 bytes, which is denoted by the
+                                      Go-Ethereum
+                                                                       Fetcher
+                    2. Issue a TX        (Geth)                                           node Partial32B((12, 31), ...), i.e., the lower 20 bytes of a
+                                                                                          32-byte value. More details are given in Appendix A.3, which are
+                    3. Get TX-hash                                                        not necessary for the rest of this section.
+                                         5. EVM trace
+                                                                                          tmp1 := MultiVulnToken . balances [ entry_contract ][ _from ];
+      Theorem                       Concolic                          Boogie              tmp2 := evmadd ( _fee , _value ) ;
+                                   Executor      6. Boogie code      Verifier            tmp3 := ( tmp1 < tmp2 ) ;
+                                                                                          assume ! tmp3 ;
+                                        …      Solidity compilation symbol info
+                                                                                                Code 6: The Boogie code generated from Figure 7.
+
+         Figure 5: Components of the implementation.                                         Boogie code generation. When the concolic executor gets to
+                                                                                         925 JUMPI, which is a branch, it calls the code generation function-
+                                                                                         ality (a.k.a. CodeGen). The fact that the next instruction is not 926,
+   The main component we built is the concolic executor. The                             but 931 (i.e., the first stack element 0x03a3) indicates that the branch
+execution result of it is a straight-line Boogie code like the one in                    is taken, so the branch condition (i.e., the second stack element)
+Code 3. The input includes the EVM code trace, the theorem, and                          should be assumed true. CodeGen performs a post-order traversal
+Solidity compilation symbol information. The properties specified                        of the SVT to generate the Boogie code in Code 6. Note that Boogie
+in the NatSpec notation are in the symbol information. When TCT                          does not use the object-oriented (OO) notation “obj.var” to repre-
+is deployed in production, the symbol information should come                            sent a variable in an object. Instead, it is modeled as a dictionary
+from a verified-compilation service, such as the Etherscan service                       item ClassName.var[objRef], as described in reference [13]. Thus,
+named Verify & Publish Contract Source Code [7]. The service attests                     the first line would mean entry_contract.balances[_from] if
+that a contract’s EVM code is compiled from the claimed source                           an OO notation was used. With Code 6, we can see that the EVM
+code by an official Solidity compiler. Note that the NatSpec contents                    code segment in Figure 7 is exactly the Solidity statement require
+are contained in the symbol information.                                                 (balances[_from] >= _fee + _value) in Figure 3.
+                                                                                             It is important to note that our task is not “de-compilation”. It
+5.2     Concolic executor                                                                is not to reverse-engineer high-level code from low-level instruc-
+The concolic executor requires a very substantial amount of effort                       tions using heuristics. As explained earlier, we have the Solidity
+to implement. Due to space constraints, we can only describe it in                       source code and complete symbol info. The SVT-based Boogie code
+this short subsection. It is an EVM instruction executor with only one                   generation is a deterministic algorithm without heuristic guessing.
+difference from the executor in a classical EVM – the computation of                         For a function postcondition, a Boogie assert is added at the
+each instruction is performed symbolically. The data structure that                      return point of the function in the trace. For a contract invariant,
+we define to hold a symbolic value is named symbolic value tree, or                      an asssume is added at the entry and an assert is added at the exit
+SVT. EVM is a stack-based machine. Unlike a classical EVM whose                          of the contract.
+stack holds concrete values, our concolic executor’s stack holds SVT                         Inter-contract calls. A crucial ability of TCT is to handle a trans-
+references. The implementation requires thorough understanding                           action involving multiple contracts. The reentrancy transaction in
+about the Solidity specification [30] and the EVM specification [39].                    Section 3 is a simple example. In Section 6, we will show that a
+    EVM is a stack-based machine: operands are pushed to the top                         Uniswap transaction usually involves five contracts. We implement
+of the stack, a computation is performed, the operands are popped,                       three components to support inter-contract calls. First, we give
+then the result is pushed back in. Figure 6 shows an ADD instruction,                    every contract its own stack and memory like in a classical EVM.
+assuming arguments named a and b holding concrete values 1 and                           Second, we follow the Ethereum yellow paper [39] to implement
+2, respectively. The left side shows the concrete computation 1+2=3.                     call instructions (e.g., CALL, STATICCALL) and return instructions
+On the right side, each box with round corners is an SVT node. The                       (e.g., RETURN, STOP). This requires correctly modeling EVM’s mar-
+stack does not hold concrete values, but references to SVT nodes. In                     shalling and unmarshalling mechanisms for call arguments. Third,
+Conference, Aug 2025, USA                                                                                                                                 Ball et al.
+
+
+               Stack before
+                                 1                      “_fee”                          representative of most ERC20 contracts. The observation supports
+             instruction 873     2                                 “_value”             our premise – although the static code of the GP is gigantic, each
+                                 3                      “_to”
+                                 4                                “_from”               transaction at runtime is usually short and simple, which gives TCT
+                                         …
+                                                                                        a unique advantage to scale to sophisticated scenarios.
+    873 PUSH1 00   883 PUSH20 [ff]*20          911 DUP2                920 LT               To leapfrog from the classical territory to a level of significant
+    875 DUP3       904 AND                     912 MSTORE              921 ISZERO
+    876 DUP3       905 DUP2                    913 PUSH1 20            922 PUSH2 03a3
+                                                                                        complexity, we apply TCT to a codebase of the Uniswap decentral-
+    877 ADD        906 MSTORE                  915 ADD                 925 JUMPI        ized exchange. Uniswap is the most extensively used DeFi applica-
+    878 PUSH1 02   907 PUSH1 20                916 PUSH1 00            931 JUMPDEST
+    880 PUSH1 00   909 ADD                     918 SHA3
+                                                                                        tion on Ethereum based on the amount of gas burnt [34]. Uniswap is
+    882 DUP8       910 SWAP1                   919 SLOAD                                at the high end of complexity, using more Solidity language features
+                                                                                        than those in the studied ERC20 contracts, including loops, libraries,
+               Stack before
+             instruction 925
+                                                  ISZERO                                two-dimensional mappings and dynamic arrays. Every liquidity or
+                                                        LT                              swap transaction makes inter-contract calls across many contracts.
+                                          SLOAD                                         Our concolic executor correctly converts these complex EVM traces
+                                         MapElement                EVMADD               into Boogie programs. Section 7 will explain that the theorems and
+                                                                                        the underlying mathematics for the proofs are more complex.
+                               “MultiVulnToken.          Paritial32B
+                                  balances”
+                                                         12,31
+               1                         0x03a3                                         6.1    Concise explanation of Uniswap’s design
+               2
+               3                “_fee”                                                  We now give a very concise explanation about Uniswap’s basic
+               4                             “_value”                                   mechanism, based on which we define the interface specifications.
+               5                “_to”
+               6                             “_from”                                        Uniswap’s core design is an automatic market maker (AMM)
+                     …                                                                  algorithm to allow users holding different ERC20 tokens to form a
+                                                                                        market, which dynamically and automatically sets prices for these
+      Figure 7: Execution of an EVM code trace segment.                                 tokens. Assuming most users want to maximize their gains from
+                                                                                        the trades, the prices will reach an equilibrium that represents the
+                                                                                        fair market prices. Uniswap has evolved to version V3 [37], with
+the call stack also needs to hold symbolic values, because a callee                     version V4 in development [35]. We study version V2 [3] because
+contract address is often a result of the caller contract’s computa-                    it already contains the essentials in the AMM mechanism, whereas
+tion. Like the data stack in Figure 7, we implement the call stack                      V3’s focus is to add a notion of “concentrated liquidity” to augment
+which stores every element as a SVT reference as well.                                  the AMM, and V4’s focus is to make Uniswap customizable.
+                                                                                            There are two types of users: liquidity providers (LPs) and traders.
+                                                                                        LPs create pairs (a.k.a. pools in V3) as reserves to facilitate trading of
+5.3     Runtime mechanisms added to Geth
+                                                                                        two different ERC20 tokens. Figure 8 shows a pair for TokenA and
+In the TCT protocol, whether a theorem is applicable to a transac-                      TokenB reserves. Suppose, at the current moment, the pair holds
+tion requires concretely checking guard 𝜑 (𝑠, 𝑓 .𝑝) and computing a                     𝑥 1 amount of TokenA and 𝑦1 amount of TokenB in reserve. This is
+path hash 𝑝ℎ. We implemented the mechanism in Geth 1.13.0. The                          denoted as a black dot at (𝑥 1, 𝑦1 ). LPs can add or remove amounts
+checking code is hooked into the beginning of function applyTrans-                      of TokenA and TokenB to and from a created pair. These operations
+action in the Geth core. We follow the Solidity documentation [29]                      are add liquidity and remove liquidity. The algorithm requires the
+to get the layout of variables in a contract. We use the Geth function                  amounts to be changed proportionally, as shown by the dashed line
+StateDB::GetState to read contract variables.                                           𝑥 2 /𝑥 1 = 𝑦2 /𝑦1 . When an LP adds liquidity to the pair, the system
+   To compute the path hash, we add a byte buffer to the Interpreter                    mints an amount of liquidity token, not shown in Figure 8, as the
+struct in the EVM module. We then modify the file instructions.go                       reward for contributing to this pair. The liquidity token is also
+so that a branch instruction (i.e., JUMPI) records the target program                   an ERC20 token. The amount is proportional to the total liquidity
+counter, and a call instruction (e.g., CALL, STATICCALL) records                        contribution. Thus, if its amounts before and after are 𝑧 1 and 𝑧 2 ,
+the callee address. The path hash, which is the Keccak-256 hash of                      respectively, then the proportionality 𝑥 2 /𝑥 1 = 𝑦2 /𝑦1 = 𝑧 2 /𝑧 1 holds.
+the buffer, is computed at the end of function applyTransaction.                        For the reverse direction, when an LP removes liquidity, the system
+   For a TX to carry theorem 𝜏, we add a theorem_hash field in the                      burns the specified amount of liquidity token and transfers the
+Transaction struct in the Geth core. The hash is described in the                       proportional amounts of TokenA and TokenB from the pair back
+last paragraph in Section 4.                                                            to the LP. Again, 𝑥 2 /𝑥 1 = 𝑦2 /𝑦1 = 𝑧 2 /𝑧 1 holds.
+                                                                                            The other user type is trader. Traders do not swap tokens with
+6     Scaling up from ERC20 to Uniswap                                                  each other, but with the corresponding pair. For example, if traders
+ERC20 token is a major application on Ethereum, and thus repre-                         want to swap TokenA for TokenB or vice versa, they invoke the
+sents the classical territory for existing verification techniques. To                  swap operation with the TokenA-TokenB pair in Figure 8. The
+show TCT’s generality, we have applied it to the transfer trans-                        AMM algorithm requires the reserve amounts to maintain inverse
+actions of the top-5 ERC20 contracts according to Etherscan [6],                        proportionality, which is also known as the constant-product relation.
+namely USDT, BNB, USDC, stETH and TONCOIN. These transfers                              Suppose the current point is (𝑥 1, 𝑦1 ). A swap operation can move
+are not more complex than what we show in Section 3, and are                            the point to (𝑥 1′ , 𝑦1′ ) along the hyperbola 𝑥 1 × 𝑦1 = 𝑥 1′ × 𝑦1′ . From
+Theorem-Carrying Transactions: Runtime Verification to Ensure Interface Specifications for Smart Contract Safety                             Conference, Aug 2025, USA
+
+
+    TokenB                                                                                  /// @custom : postcondition tokenB . balanceOf [ pair ]/ old (
+                                               LP-line: 𝑥2 / 𝑥1 = 𝑦2 / 𝑦1                         tokenB . balanceOf [ pair ]) == pair . totalSupply / old ( pair .
+                                                                                                  totalSupply )
+                                                                                            function addLiquidity ( address tokenA , address tokenB ,
+                                                                                                  uint256 amountADesired , uint256 amountBDesired ,
+                                                                                                  uint256 amountAMin , uint256 amountBMin , address to
+                                                                                            ) { ... }
+                                 (𝑥2 , 𝑦2 )
+                                                                                            /// @custom : declaration var pair : address ;
+                                                         LP-line: 𝑥2′ / 𝑥1′ =𝑦2′ / 𝑦1′
+                                                                                            /// @custom : assignment pair := this . factory . getPair [ tokenA ][
+                                                 (𝑥2′ , 𝑦2′ )                                     tokenB ];
+                                                                                            /// @custom : postcondition old ( tokenA . balanceOf [ pair ]) *
+      (𝑥1 , 𝑦1 )                                                                                  old ( tokenB . balanceOf [ pair ]) == tokenA . balanceOf [ pair
+                                                    Trader-line: 𝑥2  𝑦2 = 𝑥2′  𝑦2′              ]* tokenB . balanceOf [ pair ]
+                                                                                            function swap ( uint256 amountIn , uint256 amountOutMin ,
+                                              Trader-line: 𝑥1  𝑦1 = 𝑥1′  𝑦1′                    address tokenA , address tokenB , address to ) { ... }
+                       (𝑥1′ , 𝑦1′ )
+                                                                                   TokenA    Code 7: The properties for liquidity and swap operations.
+  (* Swap operations are described from the user’s angle, not the pool’s.)
+                                                                                               The dilemma for static verification. Although these postcon-
+      Figure 8: The design of Uniswap’s AMM algorithm.                                      ditions are defined for Uniswap functions, they are across three
+                                                                                            external contracts: tokenA, tokenB and pair (i.e., the pair-contract
+                                                                                            to swap TokenA and TokenB). The same dilemma discussed in Sec-
+the trader’s perspective, they give Δ𝑥 1 = 𝑥 1′ − 𝑥 1 amount of TokenA                      tion 3 also exists if we ask “whether the code of Uniswap (i.e.,
+to the pair and gets Δ𝑦1 = 𝑦1 − 𝑦1′ amount of TokenB from the pair.                         pair, factory and router alone) satisfies the proportionality and
+The relative price is Δ𝑥 1 /Δ𝑦1 . If all traders try to profit from trading,                inverse-proportionality”. The answer depends on the concrete code
+the pair’s reserve (i.e., the black dot) will settle in an equilibrium                      of the specific token contracts out of the Uniswap programmers’
+representing the market’s consensus on the relative price between                           control. Even reading a state variable inside an external contract re-
+the two tokens. When the market is in action, the operations of LPs                         lies on the implementation of a getter function in the contract. Thus,
+and traders interleave, so the dot can move to any point inside the                         the question is only meaningful w.r.t. each and every transaction
+quadrant, e.g., along the path (𝑥 1, 𝑦1 ) → (𝑥 2, 𝑦2 ) → (𝑥 2′ , 𝑦2′ ).                     that operates concrete tokenA and tokenB contracts at runtime.
+   The proportionality and inverse proportionality are the foun-
+dation of Uniswap’s design. The founders of Uniswap contracted                              7     Evaluation
+a company to formally analyze the mathematical design and pub-                              We now analyze and measure TCT’s practicality and performance.
+lished the analysis report [36, 41]. The analysis did not contain code
+verification, which we perform in this paper.                                               7.1    Branches and loops in real-world contracts
+                                                                                            As explained in Section 2.2, although there are millions of contracts
+6.2      Applying TCT on Uniswap                                                            in the 𝐺𝑃, the complexity of each contract is quite low, meaning
+We target the UniswapV2-Solc0.8 implementation [21], which                                  that a small number of traces are sufficient to cover all the behavior
+consists of four contracts: the pair contract implements a token-                           of a contract.
+pair as described above; the UniswapERC20 contract implements                                   We performed a quantitative study to support this observation,
+the liquidity token for a pair; the factory contract implements                             analyzing code complexity in terms of the loops and branches found
+the whole market, which creates and stores all pairs; the router                            in practice. We download 1760, randomly selected, real transactions
+contract provides entry functions for the user. Because a liquidity                         on Ethereum between years 2022 and 2024 with the criterion that
+token is specific to a pair, the code derives the pair contract from                        the entry contract of each transaction makes 3 ∼ 10 inter-contract
+the UniswapERC20 contract. Thus, an instance of the pair contract                           calls, which represents the typical complexity range: we consider
+behaves both as a reserve of two tradable tokens, and as its own                            a transaction too simple if the entry contract makes fewer than 3
+liquidity token.                                                                            such calls, whereas an entry contract with more than 10 such calls
+   Code 7 shows the properties defined as postconditions for func-                          often corresponds to a batch transaction, which bundles several
+tions addLiquidity and swap in the router contract. The postcon-                            operations that could otherwise be individual transactions. After
+dition of removeLiquidity is identical to that of addLiquidity,                             grouping and de-duplicating similar transactions, the set contains
+so it is not shown. The declaration and assignment lines are used to                        275 cases. We will make this dataset public.
+make the postconditions concise. The operator old is a notation of                              For each case, we take the entry function. If the function code
+Boogie. TCT uses it to represent the value of a variable at the begin-                      is less than 5 lines, we include its most significant callee so that
+ning of the transaction execution. Note that pair.totalSupply is                            the function code is non-trivial. The average lines-of-code (LoC)
+the amount of liquidity token that this pair contract has minted.                           of these functions, which includes comment lines inside function
+/// @custom : declaration var pair : address ;
+                                                                                            bodies, is 41.10, shown in Table 1.
+/// @custom : assignment pair := this . factory . getPair [ tokenA ][                           Loops. There are 54 functions containing loops. Among them,
+      tokenB ];                                                                             52 functions use loops to iterate through an array of contracts
+/// @custom : postcondition tokenA . balanceOf [ pair ]/ old (
+      tokenA . balanceOf [ pair ]) == tokenB . balanceOf [ pair ]/                          (usually token contracts) and apply the same operations to each
+      old ( tokenB . balanceOf [ pair ])                                                    one. These are batching scenarios: every iteration could be its own
+Conference, Aug 2025, USA                                                                                                                Ball et al.
+
+
+transaction, but the loop batches all iterations into one transaction     Note that tx.origin is a well-defined EVM variable, which repre-
+for two main reasons: transactional guarantees and gas saving. In         sents the address of the transaction issuer, i.e., the msg.sender of
+the remaining two cases, loops are simple: one calculates the sum         the transaction’s entry function.
+of an integer array; the other initializes every array element to a          Each of these guards contains the condition pair.token0 ==
+constant. Note that although the dataset contains entry functions,        tokenB && pair.token1 == tokenA. Due to the aforementioned
+we also search for loops in the entire contracts, and conclude that       duality, there are three dual-guards, not shown in Table 3. They
+loops are significantly more scarce in non-entry functions.               contain the condition pair.token0 == tokenA && pair.token1
+                                                                          == tokenB. Hence, each pair contract needs six theorems to cover
+  Table 1: Study about smart contract loops and branches.                 normal liquidity and swap transactions.
+                                                                             People may ask why the proportionality (i.e., 𝑥 2 /𝑥 1 = 𝑦2 /𝑦1 ) and
+      # of      Avg.       # of “non-         Avg.     Avg. “harder-to-   inverse-proportionality (i.e., 𝑥 1 × 𝑦1 = 𝑥 1′ × 𝑦1′ ) cannot be checked
+   functions    LoC     batching” loops     branches   merge” branches
+                                                                          concretely. There are two discrepancies between the design and
+       275      41.10       2 (out of 54)    1.301          0.298
+                                                                          the code. First, the formulas in Table 3 contain many divisions.
+                                                                          The equality holds for real-number arithmetic, but the code per-
+    Branches. Branches include if-statements and question-mark-
+                                                                          forms fixed-point arithmetic. Concrete checks Figure 8 will not
+expressions. However, “if (...) revert” is not a branch, as
+                                                                          work due to the accumulated imprecision of fixed-point opera-
+it is equivalent to a require-statement. The average number of
+                                                                          tions. Second, for every swap transaction, a small processing fee
+executed branches is 1.301 per function, which already is very
+                                                                          is charged by the pair as the incentive for the LPs. The rate is set
+low. We further classify branches as follows: (1) for a branch if
+                                                                          by factory.swapFeeRate, which is usually set to 3 to specify a
+(...) {B1} else {B2}, if both B1 and B2 make one or more
+                                                                          0.3% rate. The inverse-proportionality holds only when the fee rate
+function calls (either inter-contract or cross-contract), we say that
+                                                                          equals 0. Therefore, the common wisdom that “Uniswap’s swap
+it is “harder-to-merge”. Otherwise the branch is “easy-to-merge”;
+                                                                          transaction obeys the inverse-proportionality” is not precise. The
+(2) branches without the else-clause are also “easy-to-merge”. The
+                                                                          actual meaning is the conjunction of two trace properties: (1) the
+average number of harder-to-merge branches per function is 0.298.
+                                                                          code trace of the transaction is identical to the code trace of a zero-
+    Consider two traces that only diverge at 𝑛 easy-to-merge branches.
+                                                                          fee-rate transaction, (2) the latter trace, when assuming the real
+It is easy to merge the two traces into one Boogie code (using Boo-
+                                                                          number arithmetic, implies the precise equality 𝑥 1 × 𝑦1 = 𝑥 1′ × 𝑦1′ .
+gie’s if-statements), so the theorem of the code will cover 2𝑛 paths.
+                                                                          TCT successfully ensures both properties – the first is checked
+In other words, the number of needed theorems (traces) do not
+                                                                          by the path-hash mechanism, and the second is proven by Boogie
+grow exponentially with the number of easy-to-merge branches.
+                                                                          using the data type real.
+Although our current prototype has not implemented the merging
+mechanism, the purpose of this study is to show that the complexity
+of branches is low in real-world contracts.                               7.4    Runtime overhead
+                                                                          The measurements in Table 4 and Table 5 are made using an HP
+7.2    Transaction traces verified by TCT                                 Z4 G4 Workstation with a 3.80 GHz CPU and 32 GB RAM. Table 4
+Table 2 shows 11 transaction traces. The first five rows are the          shows the runtime overhead on Geth 1.13. The Rntrcy transaction
+tranfer transactions of the top-5 ERC tokens. Next, TrfrProxy de-         is not included because we intentionally make a false theorem
+notes the transaction calling MultiVulnToken::transferProxy               for this case. We use the Golang utility time.Now().UnixNano()
+(see Section 3). Rntrcy and NoRntrcy call MultiVulnToken::clear,          for the measurement. The baseline is the unmodified Geth. Every
+both containing cross-contract calls. The former exploits the reen-       measurement is repeated using 20 transactions. Each cell reports
+trancy pattern and the latter does not (also see Section 3) The last      the average and the percentage of the standard deviation.
+three traces correspond to Uniswap transactions addLiquidity,                The runtime overhead consists of the guard checking and the
+removeLiquidity and swap, which are much more complex. For                path hash computation. For each transaction, these two computa-
+example, Swap contains 9495 EVM instructions involving 5 different        tions are repeated 106 times for higher precision of the measure-
+contracts. It makes 10 cross-contract calls. The Boogie code con-         ment. The overhead is the sum of these two numbers divided by the
+sists of 299 lines, excluding variable declarations and axioms. The       baseline. TrfrProxy and NoRntrcy are simple token transactions.
+“harder-to-merge” branch is a case-split on the condition address         The overheads are both 0.20%. As a comparison, Solythesis [14] is
+(TokenA) ≤ address(TokenB). From the perspective of the TokenA-           a Solidity code instrumentation technique to insert runtime checks
+TokenB-pair contract, swapping TokenA for TokenB and swapping             to enforce token properties similar to Property 1. It reports 24%
+TokenB for TokenA are dual cases. The loop is used for batching.          slowdown in transaction processing.
+                                                                             Table 5 reports the concolic execution time and the Boogie proof
+7.3    Complexity of the guards and math                                  time. Compared to typical formal verification tasks, these numbers
+Table 3 shows the guards for the Uniswap traces. They are much            are quite low because the reasoning is only about a straight-line
+more complex than that of TrfrProxy explained earlier. However,           code. On the other hand, they are five orders of magnitude higher
+none of these individual conditions should be counterintuitive to         than those in Table 4. The theorem repo turns them into a one-time
+the Uniswap programmers. The TCT approach simply explicates               cost rather than a per-transaction cost. For normal transactions
+their intentions. Under the guards, the traces go through non-trivial     that the programmers anticipate, this one-time cost is paid at the
+computations, equivalent to the math equations shown in the table.        testing time before the contracts process real user transactions.
+Theorem-Carrying Transactions: Runtime Verification to Ensure Interface Specifications for Smart Contract Safety                                        Conference, Aug 2025, USA
+
+
+                                                   Table 2: Stats of the transaction traces in our case studies.
+                                                    LoC of         # of         # of cross-       # of       # of         # of “harder-to-    LoC of
+                                        Trace
+                                                   EVM code      contracts     contract calls    loops     branches       merge” branches     Boogie
+                                   USDTTrfr              904           1               0            0          2                 0              72
+                                    BNBTrfr              686           1               0            0          0                 0              64
+                                   USDCTrfr              736           1               0            0          0                 0              46
+                                    stEthTrfr           1119           1               0            0          0                 0              60
+                                  TONCOINTrfr            683           1               0            0          0                 0              32
+                                    TrfrProxy            704           1               0            0          0                 0              47
+                                     Rntrcy             1385           2               3            0          0                 0              52
+                                    NoRntrcy             628           2               1            0          0                 0              21
+                                    AddLqdty            7592           5              10            0          4                 1             223
+                                   RmvLqdty             6985           5              10            0          2                 1             199
+                                      Swap              9495           5              10            1          4                 1             299
+
+
+Table 3: Guards for AddLqdty, RmvLqdty and Swap, as well as                                              Table 5: Concolic execution time and proof time.
+the underlying math computations.
+                                                                                                           Trace         Concolic execution time     Boogie proof time
+                    tokenA != tokenB && pair.totalSupply > 0 && tx.                                       TrfrProxy              3.83 sec                 0.94 sec
+                    origin != pair && pair.token1 == tokenA && pair.                                       Rntrcy                3.77 sec                 0.80 sec
+                                                                                                          NoRntrcy               4.07 sec                 1.07 sec
+
+         AddLqdty
+                    token0 == tokenB && tokenA.balanceOf[pair] > 0 &&
+                                                                                                          AddLqdty               4.42 sec                 2.16 sec
+                    tokenB.balanceOf[pair] > 0 && tokenA.totalSupply <                                    RmvLqdty               4.59 sec                 5.70 sec
+                     2255 && tokenB.totalSupply < 2255 && pair.reserve0                                     Swap                 4.92 sec                 1.35 sec
+                    == tokenB.balanceOf[pair] && pair.reserve1
+                    == tokenA.balanceOf[pair]
+                    𝑦 + 𝑎 𝑥 + 𝑎 (𝑥/𝑦)
+                          =             =
+                                          𝑠 + 𝑠 ( (𝑦 + 𝑎) − 𝑦)/𝑦                                swapped-out token from the pair must not be the pair itself. When
+                      𝑦          𝑥                    𝑠                                         the conditions are violated, the inverse proportionality will not hold.
+                    tokenA != tokenB &&                                                         To show this, we issue six consecutive swap transactions to Geth.
+                    tx.origin != pair && pair.totalSupply > 0 &&                                The reserves of the pair (i.e., 𝑥 and 𝑦) are shown in Table 6. The first
+                    to != pair && tokenA.balanceOf[pair] > 0 &&                                 three transactions conform to to != pair, and the last three violate
+
+         RmvLqdty
+                    tokenB.balanceOf[pair] > 0 &&                                               it. The deviation is the current 𝑥 × 𝑦 divided by the previous 𝑥 × 𝑦
+                    pair.balanceOf[pair] + liquidity > 0 &&                                     then subtracting 1. A perfect inverse proportionality implies zero
+                    tokenA.totalSupply<2255 && tokenB.totalSupply<2255
+                                                                                                deviation. Because of the 0.3% fee, the deviations of the first three
+                    && pair.reserve0 == tokenB.balanceOf[pair] &&
+                                                                                                transactions are [0.0008, 0.0010], which are reasonable. However,
+                    pair.reserve1 == tokenA.balanceOf[pair] &&
+                    pair.token0 == tokenB && pair.token1 == tokenA
+                                                                                                for the last three transaction, 𝑦 becomes unchanged because the
+                    𝑥 − ( (𝑏+𝑞) ×𝑥 )/𝑠   𝑦− ( (𝑏+𝑞) ×𝑦)/𝑠   𝑠 − (𝑏+𝑞)                           amount of the swapped-out token goes back to the pair. This
+                                       =                  =
+                             𝑥                   𝑦               𝑠                              makes the deviation very large (in fact, arbitrarily large). Hence,
+                    factory.swapFeeRate == 0 &&                                                 if an investment strategy depends on Uniswap unconditionally
+                    to != pair && tx.origin != pair &&                                          ensuring inverse proportionality, it can be dangerous.
+         Swap
+                    pair.token1 == tokenA && pair.token0 == tokenB &&                              Table 6: Inverse proportionality violated when to=pair.
+                    pair.reserve0 == tokenB.balanceOf[pair] &&
+                    pair.reserve1 == tokenA.balanceOf[pair] &&                                                     condition    𝑥       𝑦     𝑥×𝑦        Deviation
+                    tokenB. totalSupply<2 255 && tokenA.totalSupply<2255
+                                                                                                             to ≠ pair       2000    1000   2000000      N/A
+                    𝑥 × 𝑦 = 𝑥 − (𝑎×1000) ×𝑥
+                                (𝑦+𝑎) ×1000 × (𝑦 + 𝑎)
+                                                                                                               to ≠ pair       2010    996    2001960     0.0010
+                                                                                                               to ≠ pair       2030    987    2003610     0.0008
+                                                                                                               to = pair       2050    987    2023350     0.0099
+                                                                                                               to = pair       2070    987    2043090     0.0098
+      Table 4: Overhead on Geth 1.13 (in nanoseconds).                                                         to = pair       2190    987    2161530     0.0580
+
+      Trace
+                        Unmodified         Hypothesis     Path hash
+                                                                           Overhead             8       Roadmap Ahead
+                       Geth (baseline)     checking       computing
+                                                                                                Our prototype shows that TCT points to a promising direction for
+   TrfrProxy              548675 ± 7%       267 ± 16%      839 ± 15%        0.20%
+   NoRntrcy              608630 ± 11%       185 ± 17%      1005 ± 9%        0.20%               faithful and scalable runtime verification, but there are future work
+   AddLqdty             1517825 ± 17%       4735 ± 7%      3180 ± 8%        0.52%               items to be discussed when we consider the real-world deployment.
+   RmvLqdty             1398780 ± 20%       5242 ± 6%     2832 ± 10%        0.58%
+     Swap               1289805 ± 18%       3742 ± 6%      3627 ± 7%        0.57%               8.1      Consensus of theorem-proving
+                                                                                                The Ethereum nodes need to have a consensus about which theo-
+                                                                                                rems have been proven. Boogie’s underlying SMT prover is Z3 [40],
+7.5     Insightful violation conditions                                                         which is deterministic (unless timeout-based proving tactics are en-
+TCT’s process explicates insightful conditions at the detailed code                             abled). Z3 gives three possible results: “sat”, “unsat” and “timeout”.
+level, such as “tx.origin != pair” and “to != pair” for Swap.                                   Determinism implies that a group of honest nodes will not have
+The former states that the swap transaction must not be issued by                               a “sat vs. unsat” split, although some nodes may time out. Note
+the pair itself, and the latter states that the account receiving the                           that some slow nodes falling behind the pace of the majority is a
+Conference, Aug 2025, USA                                                                                                                    Ball et al.
+
+
+normal situation in Ethereum’s operation, which does not prevent              a decidable proof-checker. PCA emphasizes its logic extensibility.
+the consensus to be formed. Alternatively, we can design an explicit          Anyone can define operations and prove lemmas about them. Once
+prover-gas mechanism, similar to the existing gas mechanism, to               the proofs are confirmed, the server accepts the lemmas into the
+calculate the amount of Z3 computation. It ensures that all honest            logic for future proofs. This can be analogous to TCT’s theorem
+nodes will yield an identical result: “sat”, “unsat” or “out of prover        repository mechanism. Between PCC and PCA, the TCT concept is
+gas”. Yet another mechanism to consider is to create a dedicated              closer to the latter – a theorem attests to the safety of every runtime
+prover-node consortium, which forms the consensus about which                 request rather than a code module.
+theorems have been proven. Normal Ethereum nodes no longer                       Static verification for smart contracts. Oyente [16] and Mythril
+need to run Z3. Their theorem repositories only need to sync with             [17] are symbolic verifiers for EVM bytecode. Solidity SMT Checker
+the latest published snapshot of the consortium’s repository.                 [32] is a feature built into the Solidity compiler to check assertions
+                                                                              and alert possibilities of reentrant calls. Halmos [22] is a recent
+8.2     Specifying and reasoning about summaries
+                                                                              symbolic analyzer for EVM bytecode compiled from Solidity. In our
+Reference [8] introduces the notion of summaries for symbolic                 prototype, we consulted the Halmos code for the EVM semantics.
+execution. Basically, a trace does not need to get into a piece of            VerX [24] is a static verifier to prove temporal properties for a set of
+code (e.g., a branch, a loop or a function) if a postcondition of             contracts, with certain assumptions about the “external” contracts
+the code is sufficient to prove a property. For example, the branch           that they interact with. The temporal logic is focused on properties
+“if (b) a=1; else a=2;” can be summarized as “modifies(a);                    that correlate contract states across different transactions. It can
+assume(a==1 || a==2);”, meaning that no variable other than                   reason about liveness properties, which TCT is unable to. Annotary
+a is modified, and a is set to either 1 or 2. Similarly, a loop that          [38] is a Mythril-based verifier that can examine cross-contract
+calculates the sum of an array or initialize an array’s elements can          transactions. To tackle the state explosion problem, Annotary uses
+be summarized so that the loop can be skipped. We believe that                different strategies to treat different variables as either concrete or
+summaries are particularly useful for basic library functions.                symbolic, depending on their data types. The authors refer to this
+8.3     Carrying multiple theorems                                            approach as “concolic execution”, very different from ours.
+Currently, every transaction only carries one theorem. It can be                 Static verification considers one or a few “contracts of interest”
+extended to multiple theorems for a transaction shown in Figure 9.            as the program, and makes assumptions about all other contracts
+Consider a batch transaction in which ContractA::BatchFoo has a               and hypothetical malicious users. TCT is a runtime verification that
+loop to call Foo in callee contracts (e.g., tokens). The transaction can      treats all contracts as a single GP without these assumptions.
+carry theorem2, theorem3 and theorem4 to prove the postconditions                Runtime verification for smart contracts. OpenZeppelin of-
+of the three functions. Based on our case-studies, it is not very             fers the SafeMath library [19] to throw runtime exceptions upon
+obvious what safety properties are meaningful to define for the               integer overflows. The Solidity compiler v0.8.0+ generates these
+entire batch (because the simple act of batching does not seem to             assertions in the EVM code by default, but also introduces the
+introduce a safety concern). However, in case a postcondition is              unchecked statement to selectively omit these assertions. We ob-
+defined for ContractA::BatchFoo, the symbolic execution can use the           serve that the unchecked statement is used fairly often, perhaps
+postconditions of the callee functions as their summaries to skip             mainly for gas-saving. However, there are scenarios where an over-
+the function bodies to prove theorem1. Essentially, the entire trace          flow is intentional. About the reentrancy bugs, Grossman et al.
+is treated as four traces to avoid the combinatorial complexity.              observe that “callbacks are not esoteric” in real-world contracts
+                                                                              [10], so a precise notion should be defined to tell which callbacks
+    ContractA::BatchFoo(){                           }    theorem1            are “bugs”. They define a notion Effectively Callback Free (ECF), anal-
+                                                                              ogous to serializability of concurrent systems. A commutativity-
+
+       theorem2                                                    theorem4
+                  ContractB::Foo()          ContractD::Foo()                  check mechanism is built into EVM, which determines whether a
+                                                                              nested-call trace intrinsically needs to be nested, or it is serializable
+                    theorem3    ContractC::Foo()
+                                                                              because the nested calls are logically commutative. Rodler et al. de-
+                                                                              velop another mechanism called Sereum [27]. It taint-tracks storage
+Figure 9: A transaction to be proven by multiple theorems.                    variables that affect the control flow, and locks them to prohibit
+                                                                              further updates when the victim contract is entered again deeper
+                                                                              in the call stack. The motivation of TCT is complementary to these
+9     Related Work                                                            techniques. We target interface specifications, intentionally agnos-
+PCC and PCA. Proof-Carrying Code (PCC) [18] is a technology for               tic to low-level bug patterns. On the other hand, the assertions in
+a code module from an untrusted producer (e.g. a device driver) to            SafeMath, the serializability-like ECF checking and the taint-based
+carry its own safety proof, so that a trusted party (e.g.OS kernel) can       Sereum checking are all about trace properties, which should be
+accept the module with confidence. Proof-Carrying Authentication              verifiable symbolically. In this sense, TCT does not exclude the
+(PCA) [2] is an authentication mechanism inspired by PCC. Real-               ability to verify low-level properties.
+world authentication policies, such as those involving “certificate              The Solythesis approach [14] is more related to our goal toward
+authority”, “delegate”, the “speaks-for” relation, etc., are essentially      interface specifications. It targets aggregation properties, such as
+statements about statements, so the authentication logic is higher-           sum-of-map, count-of-subset, etc. It instruments Solidity code to
+order, which is undecidable. PCA requires every request to carry a            insert incremental updates so that aggregations can be calculated
+proof of its legitimacy based on the policies, so the server only needs       with much lower cost than naive computations. The instrumented
+Theorem-Carrying Transactions: Runtime Verification to Ensure Interface Specifications for Smart Contract Safety                                       Conference, Aug 2025, USA
+
+
+code adds auxiliary arrays and maps to keep track of the incremental                       [16]   Loi Luu, Duc-Hiep Chu, Hrishi Olickel, Prateek Saxena, and Aquinas Hobor.
+updates. It is unclear whether Solythesis handles multi-contract                                  2016. Making smart contracts smarter. In Proceedings of the 2016 ACM SIGSAC
+                                                                                                  conference on computer and communications security, 254–269.
+situations, as the evaluation is only conducted on 23 individual                           [17]   Bernhard Mueller. 2018. Smashing Ethereum smart contracts for fun and real
+token contracts. The instrumented contracts show a 24% slowdown,                                  profit. HITB SECCONF Amsterdam, 9, 54.
+                                                                                           [18]   George C Necula and Peter Lee. 1996. Safe kernel extensions without run-time
+two orders of magnitude higher than that of TCT.                                                  checking. In OSDI number 16. Vol. 96, 229–243.
+                                                                                           [19]   OpenZeppelin. 2018. The SafeMath library. https://github.com/ConsenSysMes
+10     Conclusion                                                                                 h/openzeppelin-solidity/blob/master/contracts/math/SafeMath.sol. (2018).
+                                                                                           [20]   Ethereum Organization. 2024. The Go-Ethereum repository. https://github.co
+The uniqueness of our work is to view the entire set of smart con-                                m/ethereum/go-ethereum. (2024).
+tracts as a polymorphic gigantic program 𝐺𝑃, and make the 𝐺𝑃                               [21]   Uniswap Organization. 2024. The UniswapV2-Solc0.8 repository. https://githu
+                                                                                                  b.com/islishude/uniswapv2-solc0.8/. (2024).
+the subject of verification. TCT combines the benefits of runtime                          [22]   Daejun Park. 2024. Halmos. https://github.com/a16z/halmos. (2024).
+checking and symbolic verification – it is faithful to the 𝐺𝑃 like                         [23]   PeckShield. 2018. An integer overflow vulnerability in the MESH token. https:
+runtime checking, but enables interface specifications to be sym-                                 //peckshield.medium.com/integer-overflow-i-e-proxyoverflow-bug-found-i
+                                                                                                  n-multiple-erc20-smart-contracts-14fecfba2759. (2018).
+bolically verified. Because of its concolic nature, programmers only                       [24]   Anton Permenev, Dimitar Dimitrov, Petar Tsankov, Dana Drachsler-Cohen,
+need to explicate guard conditions according to their intentions,                                 and Martin Vechev. 2020. VerX: Safety verification of smart contracts. In 2020
+                                                                                                  IEEE symposium on security and privacy (SP). IEEE, 1661–1677.
+while leaving attackers obligated to prove whether unexpected con-                         [25]   Zubin Pratap. 2022. Reentrancy attacks and the DAO hack. https://blog.chain.l
+ditions and code paths also maintain the interface specifications.                                ink/reentrancy-attacks-and-the-dao-hack/. (2022).
+This greatly reduces the proof obligation, making TCT significantly                        [26]   REKT News. 2022. Investigation report about Agave DAO and Hundred Finance
+                                                                                                  attacks. (2022). https://rekt.news/agave-hundred-rekt/.
+scalable. The Uniswap scenario exemplifies a scale of ∼10,000 EVM                          [27]   Michael Rodler, Wenting Li, Ghassan Karame, and Lucas Davi. 2019. Sereum:
+instructions per transaction. Faithful symbolic verification for smart                            Protecting Existing Smart Contracts Against Re-Entrancy Attacks. In Proceed-
+contract code at this complexity level has not been achieved before.                              ings of the 2019 Network and Distributed System Security Symposium (NDSS).
+                                                                                           [28]   SECBIT Labs. 2018. A disastrous vulnerability found in smart contracts of
+The near-zero runtime overhead is crucial for TCT’s practicality.                                 BeautyChain (BEC). (2018). https://medium.com/secbit-media/a-disastrous-vu
+   TCT’s goal is complementary to compile-time static verification.                               lnerability-found-in-smart-contracts-of-beautychain-bec-dbf24ddbc30e.
+                                                                                           [29]   Soliditylang.org. 2024. Layout of state variables in storage. https://docs.solidity
+With the faithfulness, interface specifications are an inseparable                                lang.org/en/latest/internals/layout_in_storage.html. (2024).
+part “engraved” in the source code, i.e. people can treat them as                          [30]   Soliditylang.org. 2024. Solidity language documentation. https://docs.solidityla
+contractual promises in the same manner as the rest of the source                                 ng.org. (2024).
+                                                                                           [31]   Soliditylang.org. 2024. The NatSpec Format. https://docs.soliditylang.org/en/la
+code. We hope this strong assurance will incentivize the Ethereum                                 test/natspec-format.html. (2024).
+community to shift the focus from detecting code-level intricacies                         [32]   soliditylang.org. 2023. SMT checker and formal verification. https://docs.solidi
+to defining interface specifications.                                                             tylang.org/en/v0.8.20/smtchecker.html. (2023).
+                                                                                           [33]   The Ethereum Foundation. 2024. ERC20 token standard. https://ethereum.org
+                                                                                                  /en/developers/docs/standards/tokens/erc-20/. (2024).
+References                                                                                 [34]   Ultrasound Money. 2024. Burn Leaderboard. https://ultrasound.money/. (2024).
+ [1]   Alchemy.com. 2022. Ethereum Statistics (2022). https://www.alchemy.com/ove          [35]   Uniswap Docs. 2024. Uniswap V4 Protocol Overview. https://docs.uniswap.org
+       rviews/ethereum-statistics. (2022).                                                        /contracts/v4/overview. (2024).
+ [2]   Andrew Appel and Edward Felten. 1999. Proof-carrying authentication. In             [36]   Uniswap Labs. 2019. A short history of Uniswap - formalized model. https://bl
+       Proceedings of the ACM Conference on Computer and Communications Security                  og.uniswap.org/uniswap-history#formalized-model. (2019).
+       (CCS). ACM.                                                                         [37]   Uniswap.org. 2021. Uniswap v3 Core. https://uniswap.org/whitepaper-v3.pdf.
+ [3]   Uniswap Docs. 2021. Protocol overview for Uniswap V2. https://docs.uniswap                 (2021).
+       .org/concepts/overview. (2021).                                                     [38]   Konrad Weiss and Julian Schütte. 2019. Annotary: A concolic execution system
+ [4]   Ethereum.org. 2024. The Remix Ethereum IDE. https://remix.ethereum.org/.                   for developing secure smart contracts. In Computer Security–ESORICS 2019: 24th
+       (2024).                                                                                    European Symposium on Research in Computer Security, Luxembourg, September
+ [5]   EthereumClassic.org. 2022. Code is Law. https://ethereumclassic.org/why-clas               23–27, 2019, Proceedings, Part I 24. Springer, 747–766.
+       sic/code-is-law. (2022).                                                            [39]   Gavin Wood et al. 2014. Ethereum: A secure decentralised generalised transac-
+ [6]   Etherscan.com. 2022. Token Tracker (ERC-20). https://etherscan.io/tokens.                  tion ledger. Ethereum project yellow paper, 151, 2014, 1–32.
+       (2022).                                                                             [40]   Z3 Theorem Prover Group. 2024. The Z3 Theorem Prover. https://github.com
+ [7]   Etherscan.io. 2022. Verify and publish contract source code. https://etherscan.i           /Z3Prover/z3. (2024).
+       o/verifyContract. (2022).                                                           [41]   Yi Zhang, Xiaohong Chen, and Daejun Park. 2018. Specification of Constant
+ [8]   Patrice Godefroid. 2007. Compositional dynamic test generation. In ACM SIG-                Product (x × y = k) Market Maker Model and Implementation. https://github.c
+       PLAN Notices, Volume 42, Issue 1. ACM.                                                     om/runtimeverification/verified-smart-contracts/blob/master/uniswap/x-y-
+ [9]   Patrice Godefroid, Michael Y Levin, David A Molnar, et al. 2008. Automated                 k.pdf. (2018).
+       whitebox fuzz testing. In NDSS. Vol. 8, 151–166.
+[10]   Shelly Grossman, Ittai Abraham, Guy Golan-Gueta, Yan Michalevsky, Noam
+       Rinetzky, and Yoni Sagiv Mooly Zohar. 2018. Online detection of effectively
+       callback free objects with applications to smart contracts. In Proceedings of the
+       2018 Symposium on Principles of Programming Languages (POPL).
+[11]   ConsenSys Software Inc. 2023. MetaMask: The crypto wallet for Defi, Web3
+       Dapps and NFTs. https://metamask.io/. (2023).
+[12]   Infura. 2024. Infura API documentation. https://docs.infura.io/api. (2024).
+[13]   K. Rustan M. Leino. 2023. This is Boogie 2. https://www.microsoft.com/en-us
+       /research/wp-content/uploads/2016/12/krml178.pdf. (2023).
+[14]   Ao Li, Jemin Andrew Choi, and Fan Long. 2020. Securing smart contract with
+       runtime validation. In Proceedings of the 41st ACM SIGPLAN Conference on
+       Programming Language Design and Implementation, 438–453.
+[15]   Barbara H Liskov and Jeannette M Wing. 1994. A behavioral notion of subtyp-
+       ing. ACM Transactions on Programming Languages and Systems (TOPLAS), 16,
+       6, 1811–1841.
+Conference, Aug 2025, USA                                                                                                                                        Ball et al.
+
+
+A Appendix                                                                                • In the code, [ff]*20 denotes twenty bytes of 0xff, which is
+                                                                                            used to mask a 32-byte value representing a 20-byte Ethereum
+A.1 Axioms of mathematical operations
+                                                                                            address (see instructions 882-904). The SVT subtree is Partial32B((12,31)
+Code 8 lists some axioms in TCT’s basic library. They are not specific                      _from), denoting the lowest 20 bytes of the 32-byte value
+to the discussed case. In the axioms, m is a map from address to                            _from.
+int. Notation m[a:=v] denotes a map that is almost identical to m,                        • The EVM storage is a key-value pair. Both the key and
+but its index a contains the value v.                                                       the value are 32-byte. The key is obtained by computing
+function sum (m: [ address ] int ) returns ( int ) ;                                        a SHA3 over the slot number of the map variable and the
+axiom forall m: [ address ] int , a : address , v : int :: sum ( m [ a
+     := v ]) == sum ( m ) -m [ a ]+ v ;
+                                                                                            index of the element according to reference [29]. In our
+axiom forall m: [ address ] int :: (( forall a : address :: 0                               example, the slot number is 2 (i.e., 878 PUSH1 02), which
+     <= m[a ]) == > ( forall a : address :: m [ a ] <= sum ( m ) ) ) ;                      corresponds to the map variable balances based on the
+function evmadd (a , b : int ) returns ( int ) ;                                            compilation symbol info of MultiVulnToken. The index
+axiom forall a ,b: uint256 :: a + b < 2^256 && a + b >= 0 == >                              is Partial32B((12,31), _from). Hence, the MapElement
+     evmadd (a ,b) == a + b ;                                                               subtree is equivalent to balances[_from] at the Solidity
+axiom forall a ,b: uint256 :: a + b >= 2^256 == > evmadd (a , b )
+      == a+b -2^256;                                                                        level.
+                                                                                          • SLOAD loads a value from the EVM storage using a key. LT is
+function evmsub (a , b : int ) returns ( int ) ;
+axiom forall a ,b: uint256 :: a - b < 2^256 && a >= b == >
+                                                                                            the less-then comparison. ISZERO(LT(x,y)) is equivalent
+     evmsub (a ,b) == a - b ;                                                               to ¬(𝑥 < 𝑦).
+axiom forall a ,b: uint256 :: a < b == > evmsub (a , b ) == a - b
+     +2^256;
+                                                                                                  Stack before                             “_fee”
+                                                                                                                    1
+            Code 8: Axioms of mathematical operations.                                          instruction 873     2                                 “_value”
+                                                                                                                    3                      “_to”
+                                                                                                                    4                                “_from”
+A.2       The protocol flow of the repo miss scenario                                                                       …
+
+Similar to the protocol flows in Figure 4, the flow corresponding to                   873 PUSH1 00   883 PUSH20 [ff]*20          911 DUP2                920 LT
+                                                                                       875 DUP3       904 AND                     912 MSTORE              921 ISZERO
+the theorem-repo miss scenario is shown in Figure 10.                                  876 DUP3       905 DUP2                    913 PUSH1 20            922 PUSH2 03a3
+                                                                                       877 ADD        906 MSTORE                  915 ADD                 925 JUMPI
+                  Pre-exec service                                                     878 PUSH1 02   907 PUSH1 20                916 PUSH1 00            931 JUMPDEST
+                                        The Ethereum network
+TX issuer                                                                              880 PUSH1 00   909 ADD                     918 SHA3
+                  (i.e., E.pre)              (i.e., E.net)
+                                                                                       882 DUP8       910 SWAP1                   919 SLOAD
+
+                                                                                                  Stack before                       ISZERO
+                       API                        T           T                                 instruction 925
+                                        T                                                                                                  LT
+                               T
+                                              T        T
+ tx                                                                                                                          SLOAD
+                             A= FindTheorem(tx)                                                                             MapElement                EVMADD
+               A={ }
+
+                                                                                                                  “MultiVulnToken.          Paritial32B
+   ← … //Guard comes from the user
+                                                                                                                     balances”
+                                                                                                                                            12,31
+(tx, )                                               (ok, ct, ph) ← E.net(tx)
+                                                                                                  1                         0x03a3
+                                                                                                  2
+                                                                                                  3                “_fee”
+                                                           Boogie proves “ ensures               4                             “_value”
+                                                           all properties along ct”,              5                “_to”
+                                                           i.e., φ ⇒ VC(ct)                       6                             “_from”
+                                                                                                        …
+                                                        Add a theorem into repo,
+                                                        i.e., τ ← (tx.f, φ, ph)
+                                                              E.T ← E.T ∪ { τ }
+                                                                                          Figure 11: Execution of an EVM code trace segment.
+                                                      commitStorageUpdates()
+                                        Success
+
+
+   Figure 10: The protocol flow of the repo miss scenario.
+
+
+A.3       Additional details about concolic execution
+          and SVT
+In Section 5.2, we show an EVM code segment with its initial stack
+and final stack, which is shown again in Figure 11. Some clarifi-
+cations are helpful in understanding the EVM code and the SVT
+nodes.
+

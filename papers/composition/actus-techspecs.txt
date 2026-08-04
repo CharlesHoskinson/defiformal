@@ -1,0 +1,2660 @@
+                          ACTUS: The algorithmic representation of financial contracts
+                                          VERSION v1.1-843f7a3-2020-06-08
+
+
+                                                    NILS BUNDI
+                                       ACTUS FINANCIAL RESEARCH FOUNDATION
+                                                INFO@ACTUSFRF.ORG
+
+
+
+
+                                                 About this document
+This document provides the technical specifications of the Algorithmic Contract Types Unified Standards (ACTUS). It
+is developed, maintained, and released by the ACTUS Financial Research Foundation and provided by the same to the
+ACTUS Users Association under the terms of the open source license with which the document is published from time
+to time.
+
+                                                        Versions
+This document is versioned according to the following pattern: [major].[minor]-[revision]-[date] where [major] and [minor]
+are integers marking major and minor release, [revision] indicates the current revision in form of the respective git commit
+hash (short form), and [date] gives the respective date of the revision. Releases are recorded in the following table.
+
+ Date           Version        Description
+ 2018-11-01     1.0-RC         First draft version of the technical specifications covering the ”initial” 18 contracts.
+ 2019-10-23     1.0            Stable release streamlined with dictionary. Specifically, this release includes following
+                               improvements to the draft version:
+                                     • Fixed various naming conventions
+                                     • Aligned state variable names with dictionary
+                                     • Added ContractStructure and ”Composition”-section
+                                     • Added settlementCurrency attribute and updated POF accordingly
+                                     • Added exerciseDate and exerciseAmount terms and states for contracts with
+                                       contingent payments
+                                     • Removed default convention and updated POF accordingly
+                                     • Moved Taxonomy, Event, State, Contract Role definitions to dictionary
+                                     • Fixed various bugs and inconsistencies
+
+ 2020-06-08     1.1            Minor udpates and fixes for alignment with dictionary-v1.2
+
+                                                  Acknowledgements
+We would like to acknowledge all members of the ACTUS Users Association who contribute a lot of their time and
+expertise to the development, review, and testing of the ACTUS standards, in general, and this document, in particular.
+Without their valuable contributions the ACTUS standards would not exist in the form as they currently do.
+
+
+
+
+                                                             1
+ACTUS: The algorithmic representation of financial contracts        2
+
+                                                    Contents
+  About this document                                               1
+  Versions                                                          1
+  Acknowledgements                                                  1
+  1. Introduction                                                   3
+  2. Notations                                                      3
+  2.1. Contract Attributes                                          3
+  2.2. ∅-Operator                                                   3
+  2.3. t0 -Time                                                     4
+  2.4. State Variables                                              4
+  2.5. Contract Events                                              4
+  2.6. State Transition Functions                                   4
+  2.7. Payoff Functions                                             4
+  2.8. Date/Time                                                    4
+  2.9. Event Sequence                                               4
+  2.10. Contract Lifetime                                           4
+  3. Utility Functions                                              5
+  3.1. Schedule                                                     5
+  3.2. Array Schedule                                               5
+  3.3. End Of Month Shift Convention                                5
+  3.4. Business Day Shift Convention                                5
+  3.5. Business Day Calendar                                        5
+  3.6. Year Fraction Convention                                     6
+  3.7. Contract Role Sign Convention                                6
+  3.8. Annuity Amount Function                                      6
+  3.9. Canonical Contract Payoff Function                           6
+  3.10. Settlement Currency FX Rate                                 6
+  4. Contract Composition                                           7
+  5. Risk Factor Observer                                           7
+  6. Child Contract Observer                                        7
+  7. Contract Types                                                 9
+  7.1. PAM: Principal At Maturity                                   9
+  7.2. LAM: Linear Amortizer                                       12
+  7.3. LAX: Exotic Linear Amortizer                                15
+  7.4. NAM: Negative Amortizer                                     18
+  7.5. ANN: Annuity                                                19
+  7.6. CLM: Call Money                                             20
+  7.7. UMP: Undefined Maturity Profile                             21
+  7.8. CSH: Cash                                                   22
+  7.9. STK: Stock                                                  22
+  7.10. COM: Commodity                                             23
+  7.11. FXOUT: Foreign Exchange Outright                           23
+  7.12. SWPPV: Plain Vanilla Interest Rate Swap                    24
+  7.13. SWAPS: Swap                                                25
+  7.14. CAPFL: Cap-Floor                                           26
+  7.15. OPTNS: Option                                              27
+  7.16. FUTUR: Future                                              28
+  7.17. CEG: Credit Enhancement Guarantee                          29
+  7.18. CEC: Credit Enhancement Collateral                         31
+
+
+
+
+Copyright c 2018–present by ACTUS Financial Research Foundation   v1.1
+ACTUS: The algorithmic representation of financial contracts                                                              3
+
+
+                    1. Introduction                             underlying reference instrument. Similarly, for analytical
+                                                                purposes, given some assumption of the evolution of this
+Financial contracts are legal agreements between two
+                                                                reference instrument the cash flow obligations conditioned
+(or more) counterparties on the exchange of future cash
+                                                                on this assumption can be derived unabiguously.
+flows. Such legal agreements are defined unambiguously
+                                                                The properties of financial contracts described above build
+by means of a set of contractual terms and logic. As a re-
+                                                                the foundation for a standardized, deterministic algorith-
+sult, financial contracts can be described mathematically
+                                                                mic description of the cash flow obligations arising from
+and represented digitally as machine readable algorithms.
+                                                                such agreements. Thereby, this description is technology
+The benefits of representing financial contracts digitally
+                                                                agnostic and supports all use cases necessary for this very
+are manifold; Traditionally, transaction processing has
+                                                                standard to be used throughout all finance functions from
+been a field in which tremendous efficiency gains could
+                                                                front office to back office and covering pricing, deal orig-
+be realized by the introduction of machines and machine
+                                                                ination, transaction processing, as well as analytics, in
+readable contracts. Or, financial analytics by nature of the
+                                                                general, and liquidity projections, valuation, P&L calcu-
+domain builds on the availability of computable represen-
+                                                                lations and projections, and risk measurement and aggre-
+tations of these agreements where for reasons of tractabil-
+                                                                gation, in particular. Furthermore, this standard builds a
+ity often times analytical approximations are used. Re-
+                                                                formidable basis for distributed ledger-powered, natively
+cently, the rise of distributed ledger and blockchain tech-
+                                                                digital financial state machines or smart contracts, in
+nologies and the various use cases for smart contracts has
+                                                                other words.
+opened up new possibilities for natively digital financial
+                                                                In this document, we provide the technical specification
+contracts.
+                                                                of the ACTUS standards or the mathematical description
+In general, the exchange of cash flows between coun-
+                                                                of financial contracts, in other words. We start by provid-
+terparties follows certain patterns. A typical cash flow
+                                                                ing some basic notations used throughout the document
+exchange pattern is a bullet loan contract where principal
+                                                                followed by an introduction of the generic functions upon
+is exchanged initially followed by cyclical interest pay-
+                                                                which financial contracts build. We continue in the fol-
+ments and the principal is paid back (in a lump sum)
+                                                                lowing sections with an introduction of some additional
+at maturity of the contract. While the principal pay-
+                                                                foundational concepts Composition, and Risk Factor Ob-
+ments are fixed a variety of flavours exist for how the
+                                                                server and Child Contract Observer. Finally, we define
+cyclical interest payments are determined and/or paid.
+                                                                the various ACTUS contracts in the last section.
+As an example, interest payments may be due monthly,
+annually or according to arbitrary periods, they may
+                                                                                      2. Notations
+be determined based on fixed or variable rates, differ-
+ent year fraction calculation methods may be used or            2.1. Contract Attributes. Contract Attributes (at-
+there might be no interest due at all. Another pop-             tributes) represent the legal contractual terms
+ular pattern is that of amortizing loans for which, as          that define the exchange of cash-flows of a fi-
+opposed to bullet loans, principal may be paid out and          nancial contract.         These attributes are defined
+paid back in portions of fixed or variable amounts and ac-      and described in the ACTUS dictionary (https:
+cording to cyclical or custom schedules. Other types            //github.com/actusfrf/actus-dictionary/blob/
+of financial contracts include but are not limited to           master/actus-dictionary-terms.json).          Throughout
+shares, forwards, options, swaps, credit enhancements,          this document attributes are referenced by their short
+repurchase agreements, securitization, etc. By focusing         name according to the dictionary. Further, vector-type
+on the main distinguishing features, ACTUS describes            attributes may be indexed with a subscript indicating
+the vast majority of all financial contracts with a set of      that a specific vector-element is referenced.
+about 32 generalized cash flow exchange patterns or Con-
+tract Types (CTs), respectively. The ACTUS taxonomy             Example 1 (Contract Attribute). The ACTUS attribute
+(https://github.com/actusfrf/actus-dictionary/                  Initial Exchange Date is referenced in short form IED.
+blob/master/actus-dictionary-taxonomy.json) pro-                Example 2 (Element of Vector-Type Attribute). The
+vides a classification system organizing financial contracts    ACTUS attribute Array Cycle Anchor Date of Principal
+according to their distinguishing cash flow patterns. Apart     Redemption is a vector-type attribute and referenced as
+from this classification system the taxonomy also includes      ARPRANX. The i-th element of the vector is represented by
+a description of and real-world instruments covered for         ARPRANXi .
+each contract.
+On the other hand, the legal agreements in financial con-       2.2. ∅-Operator. The ∅-operator is used to indicate
+tracts represent purely deterministic logic or the mechan-      that a certain property is undefined or, in other words,
+ics of finance, in other words. That is, a financial contract   that no value has been assigned to the respective property.
+defines a fixed set of rules and conditions under which,        In particular, for optional contract attributes it means
+given any external variables, the cash flow obligations can     that the attribute is not defined and for schedule times
+be determined unambiguously. For instance, in a fixed rate      (see section 3.1) it means that the respective schedule is
+loan the cash flow obligations are defined explicitly. At the   empty, i.e. no schedule time defined.
+same time, a variable rate loan defines explicitly the rules    Example 3 (Undefined Attribute). IPANX = ∅ indicates
+under which the variable rate is fixed going forward such       that attribute IPANX is undefined.
+that the cash flow obligations can be derived unambigu-
+ously going forward. The same holds true for derivative         Example 4 (Empty Schedule). t~IP = ∅ means the same
+contracts where the cash flow obligations arise given some      as t~IP = {}, with {} the empty set, and states that the IP
+                                                                schedule t~IP does not contain a schedule time.
+
+Copyright c 2018–present by ACTUS Financial Research Foundation                                                        v1.1
+ACTUS: The algorithmic representation of financial contracts                                                               4
+
+
+2.3. t0 -Time. t0 represents SD of a contract and marks         Example 7 (State Transition Functions). The STF
+the time as per which the terms and implied state of a          for an IP event and PAM contract is written as
+contract is represented. In general, from the contractual       STF IP PAM() and maps e.g. state Accrued Interest from
+logic we are able to derive any contractual events and re-      a pre-event state Ipact− to post-event state Ipact+ .
+sulting states for any time t > t0 but not for times s < t0 .
+                                                                2.7. Payoff Functions. Payoff Functions (POF) define
+2.4. State Variables. State Variables (states) de-              how the cash flow c ∈ R for a certain event ekt is being
+scribe the state of a contract at a certain point               derived from current states and from the contract terms.
+in time t during its lifetime.           Examples of such       If necessary, the resulting cash flow can be indexed with
+states are the (outstanding) Notional Principal, the            the event time ct . These functions are specific to a cer-
+applicable Nominal Interest Rate, or the current                tain event and contract. POFs are written according to
+Contract Performance.            The ACTUS dictionary           the following pattern POF [event type] [contract type]()
+(https://github.com/actusfrf/actus-dictionary/                  where [event type] and [contract type] refer to the respec-
+blob/master/actus-dictionary-states.json) defines               tive event and contract to which the STF belongs.
+all states and provides further information on their data
+type, format, etc.                                              Example 8 (Payoff Functions). The POF for an IP event
+In general, states represent certain terms of a contract        eIP
+                                                                 t   and PAM contract is written as POF IP PAM() with
+that change along the contract lifetime according to ei-        f (eIP
+                                                                    t ) = P OF IP P AM ().
+
+ther scheduled events or unscheduled events. Therefore,         2.8. Date/Time. ACTUS builds on the ISO 8601
+states representing a contractual term carry the exact          date/time format. Hence, dates are generally expressed in
+same names as their term-counterpart.                           the following format: [YYYY]-[MM]-[DD]T[hh]:[mm]:[ss].
+States are written in their short form representation with      Time zone information is currently not supported.
+first letter capitalized, printed in bold, and indexed with     A special case is midnight. ISO 8601 recognizes both times
+time.                                                           00:00:00 and 24:00:00 each referring to midnight. Yet,
+Example 5 (State Variables). Ntt refers to the state No-        while 24:00:00 refers to the end of one day, 00:00:00 refers
+tional Principal observed at time t.                            to the beginning of the following day. In ACTUS the in-
+                                                                terpretation is the same why the time period (measured in
+2.5. Contract Events. A Contract Event (event) ekt
+                                                                any time unit) between the two points in time will always
+refers to any contractually scheduled or unscheduled event
+                                                                be zero.
+at a certain time t and of a certain type k. Contract
+                                                                For brevity, we use the term time for a specific date-time
+events mark specific points in time during the lifetime of
+                                                                variable.
+a contract at which a cash flow is being exchanged (see
+                                                                A note on implementation: As many implementations
+section 2.7) or the states of the contract are being up-
+                                                                of the ISO 8601 format do not support the 24:00:00 format
+dated (see section 2.6). The dictionary lists and describes
+                                                                we interpret the timestamp 23:59:59 as midnight.
+all the event types k defined by the ACTUS standards
+(https://github.com/actusfrf/actus-dictionary/                  2.9. Event Sequence. Contract Events of different
+blob/master/actus-dictionary-event-types.json).                 types may occur at the same time, i.e. exactly the same
+Throughout this document event types k are written              point in time. In this case, the sequence of evaluating their
+in the short form as defined in the dictionary.                 STF and POF is decisive for the resulting cash flows and
+As an event always has an associated event time t and           state transitions. Hence, we use an event sequence indica-
+payoff c ∈ R we define two operators allowing to retrieve       tor that can be found for each event in the event-dictionary
+these quantities for any single event ekt or set of events      and implies the order of executing different events at the
+{ekt , ejs , ...}
+             ( as follows;                                      exact same time.
+                t              if x = ekt
+τ (x) =
+                {t, s, ...} else if x = {ekt , ejs , ...}       2.10. Contract Lifetime. The lifetime of an ACTUS
+             (                                                  contract is the time period of its existence from the per-
+                c                if x = ekt                     spective of the analyzing user. For every point in time
+f (x) =
+                {c1 , c2 , ...} else if x = {ekt , ejs , ...}   during its lifetime, an ACTUS contract can be analyzed
+with c1 = f (ekt ), c2 = f (ejs ), ....                         in terms of current state and future cash flows.
+Example 6 (Contract Events). The Initial Exchange
+                                                                The lifetime of a contract starts with its SD and ends with
+Date event with event time s is written as eIED   with
+                                             s                  min(M D, AM D, P R∗ , ST D, T D, tmax ).
+τ (eIED
+    s   ) = s and f (eIED
+                      s   ) = c where for any contract
+CT c = P OF IED CT().
+                                                                Note that P R∗ refers to the PR event of a maturity con-
+2.6. State Transition Functions. State Transition               tract after which Nt=0.0 (i.e. at which the remaining
+Functions (STF) define the transition of states from a pre-     outstanding principal is redeemed). Further, MD, AMD, and
+event to a post-event state when a certain event ekt applies.   PR(Nt=0.0) in the definition above do only apply for ma-
+Thereby, the pre-event and post-event times are indexed         turity contracts but have to be considered infinity in all
+with t− and t+ , respectively.                                  other cases. Similarly, STD only applies for certain con-
+These functions are specific to a certain event and con-        tracts and is considered infinity for all others. Finally,
+tract. STFs are written according to the following pat-         tmax is a parameter that may be used to restrict the con-
+tern STF [event type] [contract type]() where [event type]      sidered lifetime in an analysis. In particular, this param-
+and [contract type] refer to the respective event type and      eter is used for contracts that do not have a natural end
+contract to which the STF belongs.                              to their lifetime such as STK.
+
+Copyright c 2018–present by ACTUS Financial Research Foundation                                                         v1.1
+ACTUS: The algorithmic representation of financial contracts                                                                           5
+
+
+                    3. Utility Functions                                 3.3. End Of Month Shift Convention. For schedules
+                                                                        ~tk starting at time s which marks the end of a month
+3.1. Schedule. A schedule is a function S mapping times
+                                                                         with 30 or less days, e.g. April 30, and with a cycle c
+s, T with s < T and cycle c onto a sequence ~t of cyclic
+                                                                         being a multiple of 1M- attribute EOM defines whether the
+times
+                                                                         schedule times are to fall on the 30th of all months (same
+                                                                        day) or the 31st (end of month).
+                   {}                          if s = ∅ ∧ T = ∅
+                                                                        More specifically, EOM has an effect on a schedule t~k only
+                   
+                   
+                   s                           else if T = ∅
+S(s, c, T ) = t~ =                                                      if:
+                   
+                   (s, T )                     else if c = ∅
+                                                                              s is the last day of a month with less than 31 days
+                   
+                   
+                    (s = t1 , ..., tn = T )     else
+                                                                                (Feb, April etc.)
+with ti < ti+1 , i = 1, 2, ....      While the schedule                       c = N P S with P ∈ (M, Q, HorY )
+function can be used to create arbitrary sequences                      As per the DD EOM can take one of the following values:
+of times, it is usually used to generate sequences of
+cyclic events t~k of a certain type k, e.g.        k =                   EOM (EndOfMonth): times ti , i = 1, 2, ..., n − 1 are
+IP for interest payment events (see dictionary for                           moved to the end of the respective months
+a list of all events https://github.com/actusfrf/actus-                   SD (SameDay): times ti , i = 1, 2, ..., n − 1 remain un-
+dictionary/blob/master/actus-dictionary-event.json) and                      changed except in February, where it will go to the
+the following build inputs to the function                                   last day if the day of month of time s is higher
+                                                                             than the number of days of February
+      s = kANX with kANX attribute cycle anchor date of
+        event type k
+                                                                        3.4. Business Day Shift Convention. In general, con-
+      c = kCL with kCL event type k’s schedule cycle
+                                                                        tract events are scheduled for business days only. There-
+      T is the schedule end date (in many cases the con-
+                                                                        fore, the BDC convention defines how scheduled times
+        tract’s maturity date)
+                                                                        ti , i = 1, 2, ..., n − 1 are shifted in case they fall on a non-
+Thereby, cycles kCL have format N P S where                             business day:
+     N is an integer                                                    NULL: No shift
+     P is a time period unit (D=Day, W=Week,                              SCF: Shift/Calculate following: The event is shifted to
+       M=Month, Q=Quarter, H=Half Year, Y=Year)                                the following non working day. Calculation of the
+     S is a stub information (+=long last stub, −=short                        event happens after the shift
+       last stub)                                                       SCMF: Shift/Calculate modified following: The event is
+and with the stub defined as follows                                           shifted to the following non working day. How-
+       if tn−1 + c = T ∨ S =’-’ then no stub correction                        ever, if the following day happens to fall into the
+          applies                                                              next month, then take preceeding non-working
+    else tn is removed from the schedule                                       day. Calculation of the event happens after the
+                                                                               shift
+Further, the schedule function takes a fourth, optional                   CSF: Calculate/Shift following: Same like SCF however
+boolean argument B, i.e. S(s, c, T, B) indicating whether                      calculation of the event happens before the shift
+the schedule end date T belongs to the schedule or not.                 CSMF: Calculate/Shift modified following: Same like
+More specifically:                                                             SCMF however calculation of the event happens
+ B = T indicates that T is part of the schedule                                before the shift
+B = F means that T is not part of the schedule                           SCP: Shift/Calculate preceding: The event is shifted to
+The sequence of schedule times t~k may also be influenced                      the last preceding non working day. Calculation
+by the EOF and BDC conventions and the full function syn-                      of the event happens after the shift
+tax becomes S(s, c, T, EOMC, BDC). Due to such effects the              SCMP: Shift/Calculate modified preceding: The event is
+sequence of schedule times can be non-equidistant or, in                       shifted to the last preceding non working day.
+other words, tki − tki−1 6= tkj − tkj−1 , i 6= j.                              However, if the preceding day happens to fall into
+                                                                               the previous month, then take next non-working
+Note that for brevity we will omit the EOMC and BDC func-                      day. Calculation of the event happens after the
+tion arguments throughout this document.                                       shift
+                                                                         CSP: Calculate/Shift preceding: Same like SCP how-
+3.2. Array Schedule. Array Schedules are defined by                            ever calculation of the event happens before the
+vector-valued inputs ~s = (s0 , s1 , ..., sm ) and ~c =                        shift
+(c0 , c1 , ..., cm ) to the array schedule function                     CSMP: Calculate/Shift modified preceding: Same like
+                                                                               SCMP however calculation of the event happens
+                                                                               before the shift
+  ~ s, ~c, T ) = (S(s0 , c0 , s1 − c0 ),
+  S(~
+                         S(s1 , c1 , s2 − c1 ), ..., S(sm , cm , T ))   3.5. Business Day Calendar. Whether a specific day is
+                                                                        a business day (cf. previous section) is defined by attribute
+Hence, array schedules are a generalization for regular                 CLDR. Such conventions generally depend on regional offi-
+schedules which coincide for m = 1. In accordance with                  cial holiday calendars. The Business Day Function inter-
+regular schedules EOMC and BDC conventions also apply                   face allows determining for some CLDR whether any time t
+here.                                                                   is a business day or not
+
+Copyright c 2018–present by ACTUS Financial Research Foundation                                                                     v1.1
+ACTUS: The algorithmic representation of financial contracts                                                                   6
+
+                                                                     Value            Meaning                        R
+                                                                     RPA              Real position asset            +1
+                  B : t 7→ {true, f alse}
+                                                                     RPL              Real position liability        -1
+where true indicates that t is a business day and f alse             LG               Long position                  +1
+that it is a holiday.                                                ST               Short position                 -1
+                                                                     BUY              Protection buyer               +1
+Example 9. Two standard CLDR implementations are the
+                                                                     SEL              Protection seller              -1
+following
+                                                                     RFL              Receive first (or fixed) leg   +1
+      • NoHoliday (default): every calendar day is a busi-           PFL              Pay first (or fixed) leg       -1
+        ness day                                                     COL              Collateral instrument          +1
+      • MondayToFriday: all weekdays Monday, Tues-                   CNO              Close-out netting instru-      +1
+        day, Wednesday, Thursday, and Friday are busi-                                ment
+        ness days                                                    GUA              The guarantor in a Guar-       -1
+                                                                                      antee
+3.6. Year Fraction Convention. Interest income and
+                                                                     OBL              The obligee in a Guarantee     +1
+other calculations are based on per annum interest rates.
+Therefore, the year-fraction function interface Y is used            UDL              The underlying to a com-       +1
+to calculate the fraction of a year between any two times                             posed contract
+s and t with t > s for which e.g. an (per annum) interest            UDLP             The underlying to a com-       +1
+rate applies according to some day count convention DCC                               posed contract with posi-
+                                                                                      tive sign
+                                                                     UDLM             The underlying to a com-       -1
+                     Y : s, t, DCC 7→ R                                               posed contract with nega-
+Note, the year fraction function interface only defines the                           tive sign
+structure of year fraction functions but not an actual im-
+plementation thereof, or the respective DCC, respectively.                Table 1. Contract Role definitions.
+Therefore, any DCC can be implemented according to the
+interface above supporting user-defined year fraction func-    3.8. Annuity Amount Function. In an Annuity con-
+tions.                                                         tract (ANN) the annuity amount is paid regularly from
+                                                               the borrower to the lender. Thereby, the annuity amount
+For brevity we will omit the DCC function argument wher-       is comprised of a principal repayment portion and an in-
+ever this does not lead to confusion.                          terest portion and and dimensioned such that the total
+                                                               nominal amount n at time t is fully repaid at maturity T
+3.7. Contract Role Sign Convention. The two par-               of the annuity. The Annuity Amount function A computes
+ties to a contract are defined through attributes CRID and     the annuity amount as follows
+CPID. The first is the party initially creating the contract
+                                                                                                   Qm−1
+and the second is the counterparty, respectively. Thereby,                                          i=1 1 + rY (ti , ti+1 , )
+both CRID/CPID can take any role in the contract or, more      A(s, T, n, a, r) = (n + a)         Pm−1 Qm−1
+                                                                                               1 + i=1   j=i 1 + rY (tj , tj+1 )
+specifically, they can be the lender or borrower in a loan
+(PAM), fixed receiver or payer in an interest rate swap         with a the accrued interest as per time s, r the ac-
+(SWAPS), etc.                                                   tual interest rate, ti , i = 1, 2, ..., m the schedule times
+                                                                inf t, t ∈ t~P R ∧ t > s, m the number of times ti , and
+The role of the CRID is defined through attribute CNTRL.       t~P R the PR-event schedule times of the Annuity contract
+The role of CPID is derived as the opposite side to the         as described in section 7.5.
+contract. Apart from CNTRL the attributes are neutral to
+                                                               3.9. Canonical Contract Payoff Function. The
+the role of CRID (or CPID).
+                                                               canonical payoff of a contract x is defined as the sum of
+                                                               all future event payoffs evaluated under current risk factor
+On the other hand, contractual cash flows generated by
+                                                               conditions, or
+the POFs and certain states are role-sensitive. That is,
+from the perspective of the CRID these quantities represent                                               X
+                                                                                             F (x, t) =         c
+either claims or obligations. Contract Role Sign function
+                                                                                                          c∈C
+R maps the CNTRL attribute into +1 indicating a claim or
+−1 indicating an obligation                                    with C = f (U ev (x, t | {Orf (i, s) = Orf (i, t)∀i ∧ s > t})).
+
+                                                               3.10. Settlement Currency FX Rate. Sometimes fi-
+                  R : CNTRL → {−1, +1}                         nancial contracts are settled in a different currency (i.e.
+                                                               the settlement currency) CURS than the denomination cur-
+When multiplying with a cash flow x the Contract Role
+                                                               rency CUR. Hence, payoffs are multiplied by the respective
+Sign function thereby defines the direction of that flow:
+                                                               fx-rate which is derived by the following
+x > 0: x flows from CPID to CRID
+x < 0: x flows from CRID to CPID                                                 (
+                                                                    CURS             1        if CURS == ∅ ∨ CURS == CUR
+Table 1 defines the domain of the Contract Role Sign func-         XCUR  (t) =
+                                                                                     f (t)    else
+tion, i.e. the range of attribute CNTRL, with meaning and
+Contract Role Sign to which the function maps.                 with f (t) = Orf (concat(CUR,’/’,CURS), t).
+
+Copyright c 2018–present by ACTUS Financial Research Foundation                                                             v1.1
+ACTUS: The algorithmic representation of financial contracts                                                                 7
+
+
+               4. Contract Composition                           accounted for when evaluating the payoff of financial con-
+                                                                 tracts. Therefore, we consider a standardized interface
+The payoff of Combined Contracts, see the taxonomy, is
+                                                                 Oo (i, t, S, M ) that allows for observing; (1) the state of a
+derived from certain quantities of child contracts (also
+                                                                 certain risk factor i at any time t if o =’rf’
+called underlying instruments or simply underlyers). In
+general, such child contracts can be any ACTUS contract
+- Basic or Combined - as well as any number of contracts                              Orf : i, t, S, M 7→ R
+- a single contract or a set of contracts. Indeed, in reality    and (2) contractual but non-scheduled events if o =’ev’
+this is what Option, Swap, Swaption, but also any kind of
+Asset/Mortgage/etc. backed securities represent; a hier-                       Oev : i, k, t, S, M 7→ {ekt , eks , ...}
+archical composition of different contracts linked by means
+                                                                 The parameters to the Risk Factor Observer interface are
+of functional reationships. This compositional approach
+                                                                 as follows:
+provides maximum flexibility and, hence, allows capturing
+any real world use case. We here refer to a referenced (i.e.          i : the identifier of the risk factor observed
+of lower hierarchical level) contract as a child contract and         k : the type of events observed
+to a referencing (i.e. of higher hierarchical level) contract         t : the time (post) which to observe the risk factor
+as a parent contract.                                                S : the inner states of the contract at time t
+                                                                     M : the contract terms of the contract as per time t
+The ACTUS dictionary defines attribute CTST which cap-           Note that the observer interface only defines the structure
+tures the child contract(s) as part of the parent con-           of an actual observer function but not the actual imple-
+tract’s set of attributes. Thereby, attribute CTST is of type    mentation. Thus, the interface allows for user-defined im-
+ContractReference[] with ContractReference a refer-              plementations of observer functions allowing e.g. for rep-
+ence to a child contract (in JSON notation)                      resenting arbitrary assumptions on the evolution of future
+{                                                                risk factor states which is key for any type of forward-
+"object": ,                                                      looking analysis.
+"type": ,                                                        Example 12 (’rf’-Observer). The market-driven 3-month
+"role":                                                          USD-Libor reference rate used as the variable rate in
+}                                                                a variable rate loan contract is observed at any time t
+Consult the dictionary for more information (cf.                 through Orf (MarketObjectCodeRateReset, t).
+https://github.com/actusfrf/actus-dictionary/
+blob/6e84435c70e1325e114c931badaa7e80b01a9a0d/                   Example 13 (’rf’-Observer). Unscheduled (pre-) repay-
+actus-dictionary.json#L776.                                      ments of outstanding notional in a mortgage contract is
+We will use the following notation to query reference ob-        observed at any time t through Oev (CID, PR, t).
+jects from the CTST attribute                                    For brevity we will omit the S and M function arguments
+                                                                 wherever this does not lead to confusion.
+                         CTSTtype
+                             role (i)
+where role and type filter the reference objects in CTST                      6. Child Contract Observer
+according to the respective values of fields type and role.      In order to evaluate the derived payoff of combined con-
+For brevity, we will omit the index parameter i which indi-      tracts, we consider a standardized interface U o that allows
+cates that we address the first (and usually only) reference     for observing on the parent level; (1) all future events,
+object queried.                                                  w.r.t. time t, if o =’ev’
+Example 10 (Underlying MarketObject-reference).
+The MarketObject reference of a simple Underly-                                   U ev : i, t, a 7→ {ekv , elw , ...}
+ing e.g.      to an Option contract is referenced as             with v, w > t and event types k, l according to the sched-
+CTSTM arketObjectIdentif ier
+    U nderlying              (1) or, in short form, as           ule of the child contract, (2) a certain state variable x if
+    M arketObjectIdentif ier
+CTSTU nderlying              .                                   o =’sv’
+Example 11 (FirstLeg Contract-reference). The Con-
+tract object representing the first leg e.g. to a Swaps con-                          U sv : i, t, x, a 7→ R,
+tract is referenced as CTSTContract
+                           F irstLeg (1) or, in short form, as   or (3) a particular contract attribute x of the child con-
+CTSTContract
+     F irstLeg .                                                 tract if o =’ca’
+
+               5. Risk Factor Observer                                                    U ca : i, x 7→ y
+The payoff of financial contracts always depends on the          with y a variable of value type of the respective attribute
+context in which it is evaluated and which is comprised          as per DD.
+of the following dimensions; counterparties, markets, and
+behavioral factors. We refer to these as the risk factors to     The parameters to the Child Contract Observer interface
+which financial contracts are exposed to. This indicates         are as follows:
+that these factors are source of uncertainty because finan-            i : the identifier of the child contract observed
+cial contracts only reference the factors but their dynamics           t : for o ∈ {ev,sv} the time for which the respective
+is outside the control of any contractual agreement. Thus,               quantity should be evaluated
+such factors have to be observed and their changing states             x : for o ∈ {sv,ca} the quantity to be evaluated
+
+Copyright c 2018–present by ACTUS Financial Research Foundation                                                           v1.1
+ACTUS: The algorithmic representation of financial contracts                                                                8
+
+
+      a : for o ∈ {ev,sv} a set of contract attributes to            Example 15 (’sv’-Observer). The current state, w.r.t.
+        which the evaluated quantity should be condi-                time t, of state variable Nt of the first leg (i.e. child
+        tioned                                                       contract with Role=FirstLeg) of a SWAPS contract with
+Note that the observer interface only defines the structure          CNTRL=RFL (i.e. receive first leg) can be evaluated as
+of an actual observer function but not the actual imple-             U sv (CTSTContract
+                                                                               F irstLeg , t, Nt | {CNTRL = RP A}).
+mentation. Thus, the interface allows for user-defined im-
+plementations of observer functions allowing e.g. for using          Example 16 (’ca’-Observer). The contract attribute MOC
+arbitrary data structures.                                           of the child contract Child (i.e. child contract with
+Example 14 (’ev’-Observer). The future events, w.r.t.                Role=Underlying) of an OPTNS contract can be eval-
+time t, of the first leg (i.e.           child contract with         uated as U ca (CTSTContract
+                                                                                        U nderlying , MOC).
+Role=FirstLeg) of a SWAPS contract with CNTRL = P F L
+(i.e. pay first leg) can be evaluated as U ev (CTSTContract
+                                                   F irstLeg , t |   For brevity we will omit the x and a function arguments
+{CNTRL = RP L}).                                                     wherever this does not lead to confusion.
+
+
+
+
+Copyright c 2018–present by ACTUS Financial Research Foundation                                                          v1.1
+ACTUS: The algorithmic representation of financial contracts                                                            9
+
+
+                                                   7. Contract Types
+7.1. PAM: Principal At Maturity.
+                                                PAM: Contract Schedule
+ Event    Schedule                                                 Comments
+ AD      t~AD = (t0 , t1 , ..., tn )                               With ti , i = 1, 2, ... a custom input
+ IED      tIED = IED
+ MD       tM D = (
+                 Mdt0
+                  ∅            if PPEF = ’N’
+ PP      ~tP P =                                                        with
+                  (~u, ~v ) else                                                              if OPANX = ∅ ∧ OPCL = ∅
+                                                                            ∅
+                                                                            
+          where
+                                                                        s = IED + OPCL        else if OPANX = ∅
+          u = S(s, OPCL, T M D )
+          ~                                                                 
+                                                                              OPANX           else
+                                                                            
+          ~v = Oev (CID, PP, t)
+                 (
+            P Y     ∅     if PYTP = ’O’
+ PY      t~     = PP
+                   t~     else
+                 (
+                    ∅                  if FER = ∅ ∨ FER = 0
+ FP      t~F P =                                                        with
+                    S(s, FECL, T M D ) else                                                   if FEANX = ∅ ∧ FECL = ∅
+                                                                            ∅
+                                                                            
+                                                                        s = IED + FECL        else if FEANX = ∅
+                                                                            
+                                                                              FEANX           else
+                                                                            
+ PRD      tP RD = PRD
+ TD       tT D = (
+                 TD
+                  ∅                    if IPNR = ∅
+ IP      t~IP =                                                         with
+                  S(s, IPCL, T M D )   else                                  ∅               if IPANX = ∅ ∧ IPCL = ∅
+                                                                            
+                                                                            
+                                                                            IPCED            else if IPCED 6= ∅
+                                                                        s=
+                                                                            
+                                                                            
+                                                                             IED + IPCL      else if IPANX = ∅
+                                                                            
+                                                                              IPANX           else
+                     (
+                      ∅                    if IPCED = ∅
+ IPCI    t~IP CI =                                                      with
+                      S(s, IPCL, IPCED)    else                                               if IPANX = ∅ ∧ IPCL = ∅
+                                                                            ∅
+                                                                            
+                                                                        s = IED + IPCL        else if IPANX = ∅
+                                                                            
+                                                                              IPANX           else
+                                                                            
+                 
+                 ∅
+                             if RRANX = ∅ ∧ RRCL = ∅
+ RR      t~RR = t~ \ tRRY else ifRRNXT 6= ∅                             with      (
+                                                                                      IED + RRCL   if RRANX = ∅
+                 
+                 ~
+                   t          else                                           s=
+          where ~t = S(s, RRCL, T M D )                                               RRANX        else
+                                                                        tRRY = inf t ∈ t~ | t > SD
+                     (
+                    ∅                     if RRANX = ∅ ∧ RRCL = ∅
+ RRF     tRRF =                                                         with(
+                    inf t ∈ ~t | t > SD else                                    IED + RRCL    if RRANX = ∅
+          where t~ = S(s, RRCL, T M D )                                 s=
+                                                                                RRANX         else
+                 (
+           SC      ∅                    if SCEF = ’000’
+ SC      t~ =                                                           with
+                   S(s, SCCL, T M D ) else                                                    if SCANX = ∅ ∧ SCCL = ∅
+                                                                            ∅
+                                                                            
+                                                                        s = IED + SCCL        else if SCANX = ∅
+                                                                            
+                                                                              SCANX           else
+                                                                            
+ CE      t~CE = t(ek )|Prft− 6= Prft+ , ∀k
+
+
+
+                                      PAM: State Variables Initialization
+ State   Initialization per t0                               Comments
+ Md      Mdt0 =(MD
+                   0.0           if IED > t0
+ Nt      Ntt0 =
+                   R(CNTRL) × NT else
+                   (
+                     0.0  if IED > t0
+ Ipnr    Ipnrt0 =
+                     IPNR else
+                                                                                                     Continued on next page
+
+Copyright c 2018–present by ACTUS Financial Research Foundation                                                      v1.1
+ACTUS: The algorithmic representation of financial contracts                                                           10
+
+                                                 Continued from previous page
+ State   Initialization per t0                                         Comments
+                   
+                   
+                    0.0                            if  IPNR = ∅
+ Ipac    Ipact0 = IPAC                              else if IPAC 6= ∅ with t− = sup t ∈ ~tIP | t < t0
+                         −
+                   
+                     Y (t , t0 ) × Ntt0 × Ipnrt0 else
+                   
+                   
+                   
+                    0.0                           if FER = ∅
+                                                                            tF P − = sup t ∈ ~tF P | t < t0
+                   
+                                                   else if FEAC 6= ∅
+                   
+                   FEAC
+ Feac    Feact0 =                                                      with F P +
+                   
+                    Y (tF P − , t0 ) × Ntt0 × FER else if FEB = ’N’        t      = inf t ∈ ~tF P | t > t0
+                           FP−
+                       Y (t      ,t   )
+                                    0
+                                        × FER
+                   
+                                                  else
+                  ( Y (tF P − ,tF P + )
+                    SCIXSD if SCEF = ’[x]N[x]’
+ Nsc     Nsct0 =
+                    1.0         else
+                 (
+                   SCIXSD if SCEF = ’I[x][x]’
+ Isc     Isct0 =
+                   1.0        else
+ Prf     Prft0 = PRF
+ Sd      Sdt0 = t0
+
+
+
+                              PAM: State Transition Functions and Payoff Functions
+ Event Payoff Function                                   State Transition Function
+                                                         Ipact+ = Ipact− + Y (Sdt− 1 , t)Ipnrt− Ntt−
+ AD      0.0
+                                                                    Sdt+ = t
+                                                                    Ntt+ = R(CNTRL)NT
+                                                                           (
+                                                                             0.0  if IPNR = ∅
+                                                                  Ipnrt+ =
+                                                                             IPNR else
+          CURS
+ IED     XCUR  (t)R(CNTRL)(−1)(NT + PDIED)
+                                                                           
+                                                                           IPAC
+                                                                                         if IPAC 6= ∅
+                                                                  Ipact+ = yNtt+ Ipnrt+ if IPANX 6= ∅ ∧ IPANX < t
+                                                                           
+                                                                             0.0          else
+                                                                           
+
+                                                                    Sdt+ = t
+                                                                  with
+                                                                  y = Y (IPANX, t)
+                                                                    Ntt+ = 0.0
+          CURS
+                                                                  Ipact+ = 0.0
+ MD      XCUR  (t)(Nsct− Ntt− + Isct− Ipact− + Feact− )
+                                                                  Feact+ = 0.0
+                                                                    Sdt+ = t
+                                                                  Ipact+ = Ipact− + Y (Sdt− , t)Ipnrt− Ntt−
+                                                                           (
+                                                                             Feact− + Y (Sdt− , t)Ntt− FER if FEB = ’N’
+                                                                  Feact+ =      Y (tF P − ,t)
+ PP       CURS
+         XCUR  (t)f (Oev (CID, PP, t))                                       Y (tF P − ,tF P + )
+                                                                                                 R(CNTRL)FER else
+                                                                    Ntt+ = Ntt− − f (Oev (CID, PP, t))
+                                                                     Sdt+ = t
+                                                                  with
+                                                                  tF P − = sup t ∈ t~F P | t < t0
+                                                                  tF P + = inf t ∈ t~F P | t > t0
+          CURS
+                                                                  Ipact+ = Ipact− + Y (Sdt− , t)Ipnrt− Ntt−
+         XCUR  (t)R(CNTRL)PYRT                  if   PYTP = ’A’              (
+                                                                                Feact− + Y (Sdt− , t)Ntt− FER if FEB = ’N’
+ PY      cPYRT                                  if   PYTP = ’N’   Feact+ =         Y (tF P − ,t)
+                                rf                                              Y (tF P − ,tF P + )
+                                                                                                    R(CNTRL)FER else
+         c max(0, Ipnrt− − O (RRMO, t))      if PYTP = ’I’
+         with                                                        Sdt+ = t
+               CURS
+         c = XCUR   (t)R(CNTRL)Y (Sdt− , t)Ntt−                   with
+                                                                  tF P − = sup t ∈ ~tF P | t < t0
+                                                                  tF P + = inf t ∈ ~tF P | t > t0
+                                         Continued on next page
+
+
+
+
+Copyright c 2018–present by ACTUS Financial Research Foundation                                                      v1.1
+ACTUS: The algorithmic representation of financial contracts                                                             11
+
+            Continued from previous page
+ Event Payoff Function                                         State Transition Function
+                                                               Ipact+ = Ipact− + Y (Sdt− , t)Ipnrt− Ntt−
+         R(CNTRL)c                      if   FEB = ’A’
+ FP                                                            Feact+ = 0.0
+         cY (Sdt− , t)Ntt− + Feact−     if   FEB = ’N’
+         with                                                    Sdt+ = t
+               CURS
+         c = XCUR   (t)FER
+                                                               Ipact+ = Ipact− + Y (Sdt− , t)Ipnrt− Ntt−
+                                                                        (
+          CURS
+                                                                          Feact− + Y (Sdt− , t)Ntt− FER if FEB = ’N’
+ PRD     XCUR  (t)R(CNTRL)(−1)(PPRD + Ipact− +                 Feact+ =      Y (tF P − ,t)
+                   Y (Sdt− , t)Ipnrt− Ntt− )                              Y (tF P − ,tF P + )
+                                                                                              R(CNTRL)FER else
+                                                                  Sdt+ = t
+                                                               with
+                                                               tF P − = sup t ∈ ~tF P | t < t0
+                                                               tF P + = inf t ∈ ~tF P | t > t0
+                                                                 Ntt+ = 0.0
+                                                               Ipact+ = 0.0
+          CURS                                                 Feact+ = 0.0
+ TD      XCUR  (t)R(CNTRL)(PTD + Ipact− +
+                   Y (Sdt− , t)Ipnrt− Ntt− )                   Ipnrt+ = 0.0
+                                                                 Sdt+ = t
+                                                               Ipact+ = 0.0
+                                                                        (
+          CURS
+                                                                          Feact− + Y (Sdt− , t)Ntt− FER     if     FEB = ’N’
+ IP      XCUR  (t)Isct− (Ipact− +                              Feact+ =      Y (tF P − ,t)
+                   Y (Sdt− , t)Ipnrt− Ntt− )                              Y (tF P − ,tF P + )
+                                                                                              R(CNTRL)FER   else
+                                                                  Sdt+ = t
+                                                               with
+                                                               tF P − = sup t ∈ t~F P | t < t0
+                                                               tF P + = inf t ∈ t~F P | t > t0
+                                                                 Ntt+ = Ntt− + Ipact− + Y (Sdt− , t)Ntt− Ipnrt−
+                                                               Ipact+ = 0.0
+                                                                        (
+ IPCI    0.0                                                              Feact− + Y (Sdt− , t)Ntt− FER     if     FEB = ’N’
+                                                               Feact+ =      Y (tF P − ,t)
+                                                                          Y (tF P − ,tF P + )
+                                                                                              R(CNTRL)FER   else
+                                                                  Sdt+ = t
+                                                               with
+                                                               tF P − = sup t ∈ ~tF P | t < t0
+                                                               tF P + = inf t ∈ ~tF P | t > t0
+                                                               Ipact+ = Ipact− + Y (Sdt− , t)Ipnrt− Ntt−
+                                                                          (
+                                                                             Feact− + Y (Sdt− , t)Ntt− FER if FEB = ’N’
+                                                               Feact+ =         Y (tF P − ,t)
+ RR      0.0                                                                 Y (tF P − ,tF P + )
+                                                                                                 R(CNTRL)FER else
+                                                               Ipnrt+ = min(max(Ipnrt− + ∆r, RRLF), RRLC)
+                                                                 Sdt+ = t
+                                                               with
+                                                                 ∆r = min(max(Orf (RRMO, t)RRMLT + RRSP − Ipnrt− , RRPF), RRPC)
+                                                               tF P − = sup t ∈ ~tF P | t < t0
+                                                               tF P + = inf t ∈ ~tF P | t > t0
+                                                               Ipact+ = Ipact− + Y (Sdt− , t)Ipnrt− Ntt−
+                                                                          (
+                                                                             Feact− + Y (Sdt− , t)Ntt− FER if FEB = ’N’
+                                                               Feact+ =         Y (tF P − ,t)
+ RRF     0.0                                                                 Y (tF P − ,tF P + )
+                                                                                                 R(CNTRL)FER else
+                                                               Ipnrt+ = RRNXT
+                                                                  Sdt+ = t
+                                                               with
+                                                               tF P − = sup t ∈ t~F P | t < t0
+                                                               tF P + = inf t ∈ t~F P | t > t0
+                                    Continued on next page
+
+
+
+Copyright c 2018–present by ACTUS Financial Research Foundation                                                        v1.1
+ACTUS: The algorithmic representation of financial contracts                                                              12
+
+            Continued from previous page
+ Event Payoff Function                                           State Transition Function
+                                                                 Ipact+ = Ipact− + Y (Sdt− , t)Ipnrt− Ntt−
+                                                                          (
+                                                                            Feact− + Y (Sdt− , t)Ntt− FER if FEB = ’N’
+                                                                 Feact+ =      Y (tF P − ,t)
+                                                                            Y (tF P − ,tF P + )
+                                                                                                R(CNTRL)FER      else
+                                                                          (
+                                                                            Nsct−                  if SCEF = [x]0[x]
+ SC      0.0                                                      Nsct+ = Orf (SCMO,t)−SCIED
+                                                                                   SCIED
+                                                                                                   else
+                                                                          (
+                                                                            Isct−                  if SCEF = 0[x][x]
+                                                                   Isct+ = Orf (SCMO,t)−SCIED
+                                                                                   SCIED
+                                                                                                   else
+                                                                    Sdt+ = t
+                                                                 with
+                                                                 tF P − = sup t ∈ t~F P | t < t0
+                                                                 tF P + = inf t ∈ t~F P | t > t0
+ CE      0.0                                                     STF AD PAM()
+
+7.2. LAM: Linear Amortizer.
+                                                  LAM: Contract Schedule
+ Event Schedule                                                      Comments
+ AD                                                                  Same as PAM
+ IED                                                                 Same as PAM
+ PR    tP R = S(s, PRCL, T M D , F )                                 with
+                                                                         ∅
+                                                                                                  if PRANX = ∅ ∧ PRCL = ∅
+                                                                     s = IED + PRCL                else if PRANX = ∅
+                                                                         
+                                                                           PRANX                   else
+                                                                         
+ MD      tM D = Mdt0
+ PP                                                                         Same as PAM
+ PY                                                                         Same as PAM
+ FP                                                                         Same as PAM
+ PRD                                                                        Same as PAM
+ TD                                                                         Same as PAM
+ IP                                                                         Same as PAM
+ IPCI                (                                                      Same as PAM
+                      ∅                      if IPCB 6= ’NTL’
+ IPCB    ~tIP CB =                                                          with
+                      S(s, IPCBCL, T M D )   else                                                    if IPCBANX = ∅ ∧ IPCBCL = ∅
+                                                                                ∅
+                                                                                
+                                                                            s = IED + IPCBCL         else if IPCBANX = ∅
+                                                                                
+                                                                                  IPCBANX            else
+                                                                                
+ RR                                                                         Same as PAM
+ RRF                                                                        Same as PAM
+ SC                                                                         Same as PAM
+ CE                                                                         Same as PAM
+
+
+
+                                             LAM: State Variables Initialization
+ State   Initialization
+                  (     per t0                                      Comments
+                   MD                         if MD 6= ∅
+ Md      Mdt0 = −             NT
+                                                                    where
+                   t + ceil( PRNXT )PRCL                                                                if PRANX 6= ∅ ∧ PRANX ≥ t0
+                                                                          PRANX
+                                                                          
+                                                                    t− = IED + PRCL                     else if IED + PRCL ≥ t0
+                                                                          
+                                                                            sup t ∈ t~P R | t < t0      else
+                                                                          
+ Nt                                                                      Same as PAM
+ Ipnr                                                                    Same as PAM
+ Ipac                                                                    Same as PAM
+ Feac                                                                    Same as PAM
+ Nsc                                                                     Same as PAM
+ Isc                                                                     Same as PAM
+                                                                                                        Continued on next page
+
+
+Copyright c 2018–present by ACTUS Financial Research Foundation                                                         v1.1
+ACTUS: The algorithmic representation of financial contracts                                                             13
+
+                                              Continued from previous page
+ State   Initialization per t0                                      Comments
+ Prf                                                                Same as PAM
+ Sd                                                                 Same as PAM
+                 (
+                  PRNXT                        if PRNXT 6= ∅
+ Prnxt Prnxtt0 =              (s,T M D )                            with
+                  NT(ceil( YY(s,s+PRCL)  ))−1 else                                    if PRANX 6= ∅ ∧ PRANX > t0
+                                                                        PRANX
+                                                                        
+                                                                    s = IED + PRCL else if PRANX = ∅ ∧ IED + PRCL > t0
+                                                                        −
+                                                                        
+                                                                          t           else
+                                                                    and where t− = sup t ∈ t~P R | t < t0
+               
+               0.0
+                                     if t0 < IED
+ Ipcb Ipcbt0 = R(CNTRL)NT             else if IPCB = ’NT’
+               
+                 R(CNTRL)IPCBA else
+               
+
+
+
+                           LAM: State Transition Functions and Payoff Functions
+ Event Payoff Function                                State Transition Function
+ AD    POF AD PAM()                                   STF AD PAM()
+                                                        Ntt+ = R(CNTRL)NT
+                                                               Ipnrt+ = IPNR
+                                                                        
+                                                                        IPAC
+                                                                                                if IPAC 6= ∅
+                                                               Ipact+ = yNtt+ Ipnrt+             if IPANX 6= ∅ ∧ IPANX < t
+ IED     POF IED PAM()                                                  
+                                                                          0.0                    else
+                                                                        
+
+                                                                 Sdt+ = t
+                                                                        (
+                                                                          R(CNTRL)NT             if IPCB = ’NT’
+                                                               Ipcbt+ =
+                                                                          R(CNTRL)IPCBA else
+                                                                 Ntt+ = Ntt− − R(CNTRL)Prnxtt−
+                                                                        (
+                                                                          Feact− + Y (Sdt− , t)Ntt− FER if FEB = ’N’
+                                                               Feact+ =      Y (tF P − ,t)
+          CURS                                                            Y (tF P − ,tF P + )
+                                                                                              R(CNTRL)FER     else
+ PR      XCUR  (t)R(CNTRL)Nsct− Prnxtt−                                 (
+                                                                          Ipcbt− if IPCB 6= ’NT’
+                                                               Ipcbt+ =
+                                                                          Ntt+          else
+                                                                  Sdt+ = t
+                                                               with
+                                                               tF P − = sup t ∈ t~F P | t < t0
+                                                               tF P + = inf t ∈ t~F P | t > t0
+                                                                 Ntt+ = 0.0
+                                                               Ipact+ = 0.0
+ MD      POF MD PAM()                                          Feact+ = 0.0
+                                                               Ipcbt+ = 0.0
+                                                                 Sdt+ = t
+                                                               Ipact+ = Ipact− + Y (Sdt− , t)Ipnrt− Ipcbt−
+                                                                        (
+                                                                          Feact− + Y (Sdt− , t)Ntt− FER if FEB = ’N’
+                                                               Feact+ =      Y (tF P − ,t)
+                                                                          Y (tF P − ,tF P + )
+                                                                                              R(CNTRL)FER else
+ PP      POF PP PAM()                                            Ntt+ = Ntt− − f (Oev (CID, PP, t))
+                                                                        (
+                                                                         Ipcbt− if IPCB 6= ’NT’
+                                                               Ipcbt+ =
+                                                                         Ntt+      else
+                                                                  Sdt+ = t
+                                                               with
+                                                               tF P − = sup t ∈ t~F P | t < t0
+                                                               tF P + = inf t ∈ t~F P | t > t0
+                                   Continued on next page
+
+
+
+
+Copyright c 2018–present by ACTUS Financial Research Foundation                                                         v1.1
+ACTUS: The algorithmic representation of financial contracts                                                             14
+
+            Continued from previous page
+ Event Payoff Function                                         State Transition Function
+                                                               Ipact+ = Ipact− + Y (Sdt− , t)Ipnrt− Ipcbt−
+                                                                        (
+                                                                          Feact− + Y (Sdt− , t)Ntt− FER if FEB = ’N’
+ PY      POF PY PAM()                                          Feact+ =      Y (tF P − ,t)
+                                                                          Y (tF P − ,tF P + )
+                                                                                              R(CNTRL)FER else
+                                                                  Sdt+ = t
+                                                               with
+                                                               tF P − = sup t ∈ t~F P | t < t0
+                                                               tF P + = inf t ∈ t~F P | t > t0
+                                                               Ipact+ = Ipact− + Y (Sdt− , t)Ipnrt− Ipcbt−
+ FP      POF FP PAM()                                          Feact+ = 0.0
+                                                                 Sdt+ = t
+                                                               Ipact+ = Ipact− + Y (Sdt− , t)Ipnrt− Ipcbt−
+                                                                        (
+          CURS
+                                                                          Feact− + Y (Sdt− , t)Ntt− FER if FEB = ’N’
+ PRD     XCUR  (t)R(CNTRL)(−1)(PPRD + Ipact− +                 Feact+ =      Y (tF P − ,t)
+                   Y (Sdt− , t)Ipnrt− Ipcbt− )                            Y (tF P − ,tF P + )
+                                                                                              R(CNTRL)FER else
+                                                                  Sdt+ = t
+                                                               with
+                                                               tF P − = sup t ∈ t~F P | t < t0
+                                                               tF P + = inf t ∈ t~F P | t > t0
+          CURS
+ TD      XCUR  (t)R(CNTRL)(PTD + Ipact− +                      STF TD PAM()
+                   Y (Sdt− , t)Ipnrt− Ipcbt− )
+          CURS
+ IP      XCUR  (t)Isct− (Ipact− +                              STF IP PAM()
+                   Y (Sdt− , t)Ipnrt− Ipcbt− )
+                                                                 Ntt+ = Ntt− + Ipact− + Y (Sdt− , t)Ipnrt− Ipcbt−
+                                                               Ipact+ = 0.0
+                                                                        (
+                                                                          Feact− + Y (Sdt− , t)Ntt− FER     if     FEB = ’N’
+                                                               Feact+ =      Y (tF P − ,t)
+ IPCI    POF IPCI PAM()                                                   Y (tF P − ,tF P + )
+                                                                                              R(CNTRL)FER   else
+                                                                        (
+                                                                          Ipcbt− if IPCB 6= ’NT’
+                                                               Ipcbt+ =
+                                                                          Ntt+          else
+                                                                  Sdt+ = t
+                                                               with
+                                                               tF P − = sup t ∈ ~tF P | t < t0
+                                                               tF P + = inf t ∈ ~tF P | t > t0
+                                                               Ipcbt+ = Ntt−
+                                                               Ipact+ = Ipact− + Y (Sdt− , t)Ipnrt− Ipcbt−
+                                                                        (
+ IPCB    0.0                                                              Feact− + Y (Sdt− , t)Ntt− FER if FEB = ’N’
+                                                               Feact+ =      Y (tF P − ,t)
+                                                                          Y (tF P − ,tF P + )
+                                                                                              R(CNTRL)FER else
+                                                                  Sdt+ = t
+                                                               with
+                                                               tF P − = sup t ∈ t~F P | t < t0
+                                                               tF P + = inf t ∈ t~F P | t > t0
+                                                               Ipact+ = Ipact− + Y (Sdt− , t)Ipnrt− Ipcbt−
+                                                                          (
+                                                                             Feact− + Y (Sdt− , t)Ntt− FER if FEB = ’N’
+                                                               Feact+ =         Y (tF P − ,t)
+ RR      POF RR PAM()                                                        Y (tF P − ,tF P + )
+                                                                                                 R(CNTRL)FER else
+                                                               Ipnrt+ = min(max(Ipnrt− + ∆r, RRLF), RRLC)
+                                                                 Sdt+ = t
+                                                               with
+                                                                 ∆r = min(max(Orf (RRMO, t)RRMLT + RRSP − Ipnrt− , RRPF), RRPC)
+                                                               tF P − = sup t ∈ t~F P | t < t0
+                                                               tF P + = inf t ∈ t~F P | t > t0
+                                    Continued on next page
+
+
+
+
+Copyright c 2018–present by ACTUS Financial Research Foundation                                                        v1.1
+ACTUS: The algorithmic representation of financial contracts                                                                         15
+
+            Continued from previous page
+ Event Payoff Function                                                State Transition Function
+                                                                      Ipact+ = Ipact− + Y (Sdt− , t)Ipnrt− Ipcbt−
+                                                                               (
+                                                                                 Feact− + Y (Sdt− , t)Ntt− FER if FEB = ’N’
+                                                                      Feact+ =      Y (tF P − ,t)
+ RRF      POF RRF PAM()                                                          Y (tF P − ,tF P + )
+                                                                                                     R(CNTRL)FER else
+                                                                      Ipnrt+ = RRNXT
+                                                                         Sdt+ = t
+                                                                      with
+                                                                      tF P − = sup t ∈ ~tF P | t < t0
+                                                                      tF P + = inf t ∈ ~tF P | t > t0
+                                                                      Ipact+ = Ipact− + Y (Sdt− , t)Ipnrt− Ipcbt−
+                                                                                 (
+                                                                                    Feact− + Y (Sdt− , t)Ntt− FER if FEB = ’N’
+                                                                      Feact+ =         Y (tF P − ,t)
+                                                                                    Y (tF P − ,tF P + )
+                                                                                                        R(CNTRL)FER      else
+                                                                                 (
+                                                                                    Nsct−                  if SCEF = [x]0[x]
+ SC       POF SC PAM()                                                 Nsct+ = Orf (SCMO,t)−SCIED
+                                                                                            SCIED
+                                                                                                           else
+                                                                                 (
+                                                                                    Isct−                  if SCEF = 0[x][x]
+                                                                        Isct+ = Orf (SCMO,t)−SCIED
+                                                                                            SCIED
+                                                                                                           else
+                                                                         Sdt+ = t
+                                                                      with
+                                                                      tF P − = sup t ∈ ~tF P | t < t0
+                                                                      tF P + = inf t ∈ ~tF P | t > t0
+ CE       POF CE PAM()                                                STF AD PAM()
+
+7.3. LAX: Exotic Linear Amortizer.
+                                                         LAX: Contract Schedule
+ Event Schedule                                                                     Comments
+ AD                                                                                 Same as PAM
+ IED           (                                                                    Same as PAM
+                 {t1 , t2 , ..., ti , ...}        if ARPRCL = ∅
+ PR    t~P R =                                                                      with (
+                 s1 ∪ s2 ∪ ... ∪ si ∪ ... else                                                                  if | ARPRCL |=| ARPRANX |
+        with                                                                        ~ = ARPRCL
+                                                                                    C
+                                   ~ i , ARPRANXi+1 ), i ∈ {1, 2, ..., | ARINCDEC |        {c  ,
+                                                                                             1 2 c  , ..., cn } else
+        si = S(ARPRANXi , C
+                                                                                    where
+        } | ARINCDECi = ’DEC’
+                                                                                    n =| ARPRANX |, ck = ARPRCL1 ∀k
+ MD            (                                                                    Same as PAM
+                {t 1 , t 2 , ..., t i , ...}     if   ARPRCL  =  ∅
+ PI    ~tP I =                                                                      with (
+                s1 ∪ s2 ∪ ... ∪ si ∪ ... else                                                                   if | ARPRCL |=| ARPRANX |
+        with                                                                        ~ = ARPRCL
+                                                                                    C
+                                   ~ i , ARPRANXi+1 ), i ∈ {1, 2, ..., | ARINCDEC |        {c  ,
+                                                                                             1 2 c  , ..., cn } else
+        si = S(ARPRANXi , C
+                                                                                    where
+        } | ARINCDECi = ’INC’
+                                                                                    n =| ARPRANX |, ck = ARPRCL1 ∀k
+ PRF   t~P RF = ARPRANX
+ PP                                                                                 Same as PAM
+ PY                                                                                 Same as PAM
+ FP                                                                                 Same as PAM
+ PRD                                                                                Same as PAM
+ TD                                                                                 Same as PAM
+ IP    t~IP = ~S(ARIPANX, ARIPCL, Mdt0 )
+ IPCI                                                                               Same as PAM
+ IPCB          (                                                                    Same as LAM
+                 {t   ,
+                    1 2 t   , ..., t i , ...}     if   ARRRCL  =  ∅
+ RR    ~tRR =                                                                       with (
+                 s1 ∪ s2 ∪ ... ∪ si ∪ ... else                                                                  if | ARRRCL |=| ARRRANX |
+        with                                                                        ~ = ARRRCL
+                                                                                    C
+                                   ~ i , ARRRANXi+1 ), i ∈ {1, 2, ..., | ARFIXVAR |        {c1 , c2 , ..., cn } else
+        si = S(ARRRANXi , C
+                                                                                    where
+        } | ARFIXVARi = ’V’
+                                                                                    n =| ARRRANX |, ck = ARRRCL1 ∀k
+                                                        Continued on next page
+
+
+Copyright c 2018–present by ACTUS Financial Research Foundation                                                                   v1.1
+ACTUS: The algorithmic representation of financial contracts                                                                                16
+
+                   Continued from previous page
+ Event Schedule (                                                                  Comments
+         RRF      {t1 , t2 , ..., ti , ...}    if ARRRCL = ∅
+ RRF   t~     =                                                                    with (
+                  s1 ∪ s2 ∪ ... ∪ si ∪ ... else                                             ARRRCL                     if | ARRRCL |=| ARRRANX |
+        with                                                                       ~ =
+                                                                                   C
+                               ~ i , ARRRANXi+1 ), i ∈ {1, 2, ..., | ARFIXVAR |             {c1 , c2 , ..., cn }       else
+        si = S(ARRRANXi , C
+                                                                                   where
+        } | ARFIXVARi = ’F’
+                                                                                   n =| ARRRANX |, ck = ARRRCL1 ∀k
+ SC                                                                                Same as PAM
+ CE                                                                                Same as PAM
+
+
+
+                                        LAX: State Variables Initialization
+ State Initialization
+                (       per  t0                                 Comments
+                  MD                     if MD 6= ∅
+ Md    Mdt0 =                                                   where (
+                  inf t > t0 | N (t) = 0 else                            sup k ∈ N | ARPRANXk < t if t < max(ARPRANX)
+       with                                                     n(t) =
+                    Pn(t)                                                | ARPRANX |                      else
+       N (t) = NT + i=1 (−1)k ARPRNXTi | si |                          (
+                                                                         0 if ARINCDECi = ’INC’
+                                                                   k=
+                                                                         1 else
+                                                                       (
+                                                                         {ARPRANXi }                 if ARPRCL = ∅
+                                                                  si =
+                                                                                            ~
+                                                                         S(ARPRANXi , Ci , Ti ) else
+                                                                       (
+                                                                         ARPRANXi+1 if i <| ARPRANX |
+                                                                  Ti =
+                                                                         t                   else
+                                                                       (
+                                                                   ~ = ARRRCL                   if | ARRRCL |=| ARRRANX |
+                                                                  C
+                                                                         {c1 , c2 , ..., cn } else
+ Nt                                                             Same as PAM
+ Ipnr                                                           Same as PAM
+ Ipac                                                           Same as PAM
+ Feac                                                           Same as PAM
+ Nsc                                                            Same as PAM
+ Isc                                                            Same as PAM
+ Prf                                                            Same as PAM
+ Sd                (                                            Same as PAM
+                     0.0          if t0 ≥ ARPRANX1
+ Prnxt Prnxtt0 =                                                where
+                     ARPRNXTi else                              i = sup k ∈ N | ARPRANX < t                        k      0
+ Ipcb                                                                             Same as LAM
+
+
+
+                                LAX: State Transition Functions and Payoff Functions
+ Event    Payoff Function                                   State Transition Function
+ AD       POF AD PAM()                                      STF AD PAM()
+ IED      POF IED PAM()                                     STF IED LAM()
+ PR       POF PR LAM()                                      STF PR LAM()
+ MD       POF MD PAM()                                      STF MD LAM()
+                                     Continued on next page
+
+
+
+
+Copyright c 2018–present by ACTUS Financial Research Foundation                                                                           v1.1
+ACTUS: The algorithmic representation of financial contracts                                                        17
+
+            Continued from previous page
+ Event Payoff Function                                         State Transition Function
+                                                                 Ntt+ = Ntt− + R(CNTRL)Prnxtt−
+                                                               Ipact+ = Ipact− + Y (Sdt− , t)Ipnrt− Ipcbt−
+                                                                        (
+                                                                          Feact− + Y (Sdt− , t)Ntt− FER if FEB = ’N’
+          CURS
+                                                               Feact+ =      Y (tF P − ,t)
+ PI      XCUR  (t)R(CNTRL)(−1)Nsct− Prnxtt−                               Y (tF P − ,tF P + )
+                                                                                              R(CNTRL)FER else
+                                                                        (
+                                                                          Ipcbt− if IPCB 6= ’NT’
+                                                               Ipcbt+ =
+                                                                          Ntt+          else
+                                                                  Sdt+ = t
+                                                               with
+                                                               tF P − = sup t ∈ ~tF P | t < t0
+                                                               tF P + = inf t ∈ ~tF P | t > t0
+                                                               Prnxtt+ = ARPRNXTi
+                                                                   Ipact+ = Ipact− + Y (Sdt− , t)Ipnrt− Ipcbt−
+                                                                            (
+                                                                              Feact− + Y (Sdt− , t)Ntt− FER if FEB = ’N’
+                                                                   Feact+ =      Y (tF P − ,t)
+ PRF     0.0                                                                  Y (tF P − ,tF P + )
+                                                                                                  R(CNTRL)FER else
+                                                                            (
+                                                                              Ipcbt− if IPCB 6= ’NT’
+                                                                   Ipcbt+ =
+                                                                              Ntt+          else
+                                                                   Sdt+ = t
+                                                               with
+                                                                   i = sup k ∈ N | ARPRANXk = t
+                                                               tF P − = sup t ∈ ~tF P | t < t0
+                                                               tF P + = inf t ∈ t~F P | t > t0
+ PP      POF PP PAM()                                          STF PP LAM()
+ PY      POF PY PAM()                                          STF PY LAM()
+ FP      POF FP PAM()                                          STF FP LAM()
+ PRD     POF PRD LAM()                                         STF PRD LAM()
+ TD      POF TD LAM()                                          STF TD PAM()
+ IP      POF IP LAM()                                          STF IP PAM()
+ IPCI    POF IPCI PAM()                                        STF IPCI LAM()
+ IPCB    POF IPCB LAM()                                        STF IPCB LAM()
+                                                               Ipact+ = Ipact− + Y (Sdt− , t)Ipnrt− Ipcbt−
+                                                                          (
+                                                                             Feact− + Y (Sdt− , t)Ntt− FER if FEB = ’N’
+                                                               Feact+ =         Y (tF P − ,t)
+ RR      POF RR PAM()                                                        Y (tF P − ,tF P + )
+                                                                                                 R(CNTRL)FER else
+                                                               Ipnrt+ = min(max(Ipnrt− + ∆r, RRLF), RRLC)
+                                                                 Sdt+ = t
+                                                               with
+                                                                 ∆r = min(max(Orf (RRMO, t)RRMLT + ARRATEi − Ipnrt− , RRPF), RRPC)
+                                                                     i = sup k ∈ N | ARPRANXk = t
+                                                                   FP−
+                                                               t         = sup t ∈ ~tF P | t < t0
+                                                                   FP+
+                                                               t    = inf t ∈ ~tF P | t > t0
+                                                               Ipact+ = Ipact− + Y (Sdt− , t)Ipnrt− Ipcbt−
+                                                                        (
+                                                                           Feact− + Y (Sdt− , t)Ntt− FER if FEB = ’N’
+                                                               Feact+ =       Y (tF P − ,t)
+ RRF     POF RRF PAM()                                                     Y (tF P − ,tF P + )
+                                                                                               R(CNTRL)FER else
+                                                               Ipnrt+ = ARRATEi
+                                                                 Sdt+ = t
+                                                               with
+                                                                   i = sup k ∈ N | ARRRANXk = t
+                                                               tF P − = sup t ∈ ~tF P | t < t0
+                                                               tF P + = inf t ∈ ~tF P | t > t0
+ SC      POF SC PAM()                                          STF SC LAM()
+ CE      POF CE PAM()                                          STF AD PAM()
+
+
+Copyright c 2018–present by ACTUS Financial Research Foundation                                                   v1.1
+ACTUS: The algorithmic representation of financial contracts                                                        18
+
+
+7.4. NAM: Negative Amortizer.
+                                                 NAM: Contract Schedule
+ Event Schedule                                                     Comments
+ AD                                                                 Same as PAM
+ IED                                                                Same as PAM
+ PR                                                                 Same as LAM
+ MD                                                                 Same as PAM
+ PP                                                                 Same as PAM
+ PY                                                                 Same as PAM
+ FP                                                                 Same as PAM
+ PRD                                                                Same as PAM
+ TD                                                                 Same as PAM
+ IP    ~tIP = (~
+               u, ~v )                                              with 
+        where
+                                                                        
+                                                                          IPCED           if IPCED 6= ∅
+                                   if IPANX = ∅ ∧ IPCL = ∅
+                                                                         
+            ∅
+                                                                        IPANX            else if IPANX 6= ∅
+                                                                     r=
+        ~
+        u= ∅                       if IPCED 6= ∅ ∧ IPCED ≥ T             
+                                                                          IED + IPCL      else if IPCL 6= ∅
+                                                                        
+              S(r, IPCL, T )       else
+                                                                        
+                                                                           ∅               else
+         ~v = S(s, PRCL, T M D )                                       T = s − PRCL
+                                                                           (
+                                                                             IED + PRCL    if PRANX = ∅
+                                                                       s=
+                                                                             PRANX         else
+ IPCI                                                                  Same as PAM
+ IPCB                                                                  Same as LAM
+ RR                                                                    Same as PAM
+ RRF                                                                   Same as PAM
+ SC                                                                    Same as PAM
+ CE                                                                    Same as PAM
+
+
+
+                                           NAM: State Variables Initialization
+ State Initialization
+                (      per   t0                                   Comments
+                 MD               if MD 6= ∅
+ Md    Mdt0 = −                                                   where
+                 t + nPRCL else                                                                   if PRANX 6= ∅ ∧ PRANX ≥ t0
+                                                                        PRANX
+                                                                        
+       with n = ceil( PRNXT−NTY (t−NT,t− +PRCL)IPNR )             t− = IED + PRCL                 else if IED + PRCL ≥ t0
+                                                                        
+                                                                          sup t ∈ tP R | t < t0   else
+                                                                        
+ Nt                                                               Same as PAM
+ Ipnr                                                             Same as PAM
+ Ipac                                                             Same as PAM
+ Feac                                                             Same as PAM
+ Nsc                                                              Same as PAM
+ Isc                                                              Same as PAM
+ Prf                                                              Same as PAM
+ Sd                                                               Same as PAM
+ Prnxt Prnxtt0 = R(CNTRL)PRNXT
+ Ipcb                                                             Same as LAM
+
+
+
+                              NAM: State Transition Functions and Payoff Functions
+ Event Payoff Function                                   State Transition Function
+ AD    POF AD PAM()                                      STF AD PAM()
+ IED   POF IED PAM()                                     STF IED LAM()
+                                  Continued on next page
+
+
+
+
+Copyright c 2018–present by ACTUS Financial Research Foundation                                                   v1.1
+ACTUS: The algorithmic representation of financial contracts                                                       19
+
+            Continued from previous page
+ Event Payoff Function                                         State Transition Function
+                                                                 Ntt+ = Ntt− − (Prnxtt− − Ipact+ )
+                                                               Ipact+ = Ipact− + Y (Sdt− , t)Ipnrt− Ipcbt−
+                                                                        (
+                                                                          Feact− + Y (Sdt− , t)Ntt− FER if FEB = ’N’
+          CURS
+                                                               Feact+ =      Y (tF P − ,t)
+ PR      XCUR  (t)Nsct− (Prnxtt− − Ipact− −                               Y (tF P − ,tF P + )
+                                                                                              R(CNTRL)FER else
+                   Y (Sdt− , t)Ipnrt− Ipcbt− )                          (
+                                                                          Ipcbt− if IPCB 6= ’NT’
+                                                               Ipcbt+ =
+                                                                          Ntt+          else
+                                                                  Sdt+ = t
+                                                               with
+                                                               tF P − = sup t ∈ ~tF P | t < t0
+                                                               tF P + = inf t ∈ ~tF P | t > t0
+ MD      POF MD PAM()                                          STF MD LAM()
+ PP      POF PP PAM()                                          STF PP LAM()
+ PY      POF PY PAM()                                          STF PY LAM()
+ FP      POF FP PAM()                                          STF FP LAM()
+ PRD     POF PRD LAM()                                         STF PRD LAM()
+ TD      POF TD LAM()                                          STF TD PAM()
+ IP      POF IP LAM()                                          STF IP PAM()
+ IPCI    POF IPCI PAM()                                        STF IPCI LAM()
+ IPCB    POF IPCB LAM()                                        STF IPCB LAM()
+ RR      POF RR PAM()                                          STF RR LAM()
+ RRF     POF RRF PAM()                                         STF RRF LAM()
+ SC      POF SC PAM()                                          STF SC LAM()
+ CE      POF CE PAM()                                          STF AD PAM()
+
+7.5. ANN: Annuity.
+                                                 ANN: Contract Schedule
+ Event Schedule                                                     Comments
+ AD                                                                 Same as PAM
+ IED                                                                Same as PAM
+ PR                                                                 Same as LAM
+ MD                                                                 Same as PAM
+ PP                                                                 Same as PAM
+ PY                                                                 Same as PAM
+ FP                                                                 Same as PAM
+ PRD                                                                Same as PAM
+ TD                                                                 Same as PAM
+ IP                                                                 Same as NAM
+ IPCI                                                               Same as PAM
+ IPCB                                                               Same as LAM
+ RR                                                                 Same as PAM
+ RRF                                                                Same as PAM
+ SC                                                                 Same as PAM
+ CE                                                                 Same as PAM
+
+
+
+                                        ANN: State Variables Initialization
+ State   Initialization per t0                                 Comments
+ Md                                                            Same as NAM
+ Nt                                                            Same as PAM
+ Ipnr                                                          Same as PAM
+ Ipac                                                          Same as PAM
+ Feac                                                          Same as PAM
+ Nsc                                                           Same as PAM
+ Isc                                                           Same as PAM
+ Prf                                                           Same as PAM
+                                                                                                 Continued on next page
+
+Copyright c 2018–present by ACTUS Financial Research Foundation                                                  v1.1
+ACTUS: The algorithmic representation of financial contracts                                                        20
+
+                                             Continued from previous page
+ State   Initialization per t0                                     Comments
+ Sd              (                                                 Same as PAM
+                  R(CNTRL)PRNXT          if PRNXT 6= ∅
+ Prnxt Prnxtt0 =                                                   where n = |t~| with |a| indicating the cardinality of
+                  (NT + Ipact0 ) todo
+                                 todo
+                                         else                      set a
+ Ipcb                                                                  Same as LAM
+
+
+
+                         ANN: State Transition Functions and Payoff Functions
+ Event   Payoff Function                            State Transition Function
+ AD      POF AD PAM()                               STF AD PAM()
+ IED     POF IED PAM()                              STF IED LAM()
+ PR      POF PR NAM()                               STF PR NAM()
+ MD      POF MD PAM()                               STF MD LAM()
+ PP      POF PP PAM()                               STF PP LAM()
+ PY      POF PY PAM()                               STF PY LAM()
+ FP      POF FP PAM()                               STF FP LAM()
+ PRD     POF PRD LAM()                              STF PRD LAM()
+ TD      POF TD LAM()                               STF TD PAM()
+ IP      POF IP LAM()                               STF IP PAM()
+ IPCI    POF IPCI PAM()                             STF IPCI LAM()
+ IPCB    POF IPCB LAM()                             STF IPCB LAM()
+                                                      Ipact+ = Ipact− + Y (Sdt− , t)Ipnrt− Ipcbt−
+                                                               (
+                                                                 Feact− + Y (Sdt− , t)Ntt− FER if FEB = ’N’
+                                                      Feact+ =      Y (tF P − ,t)
+                                                                 Y (tF P − ,tF P + )
+                                                                                     R(CNTRL)FER else
+ RR      POF RR PAM()
+                                                      Ipnrt+ = min(max(Ipnrt− + ∆r, RRLF), RRLC)
+                                                               Prnxtt+ = A(t, Mdt+ , Ntt+ , Ipact+ , Ipnrt+ )
+                                                                   Sdt+ = t
+                                                               with
+                                                                 ∆r = min(max(Orf (RRMO, t)RRMLT + RRSP − Ipnrt− , RRPF), RRPC)
+                                                               tF P − = sup t ∈ t~F P | t < t0
+                                                               tF P + = inf t ∈ t~F P | t > t0
+                                                                 Ipact+ = Ipact− + Y (Sdt− , t)Ipnrt− Ipcbt−
+                                                                             (
+                                                                               Feact− + Y (Sdt− , t)Ntt− FER if FEB = ’N’
+                                                                 Feact+ =         Y (tF P − ,t)
+                                                                               Y (tF P − ,tF P + )
+                                                                                                   R(CNTRL)FER else
+ RRF     POF RRF PAM()
+                                                                 Ipnrt+ = RRNXT
+                                                               Prnxtt+ = A(t, Mdt+ , Ntt+ , Ipact+ , Ipnrt+ )
+                                                                    Sdt+ = t
+                                                               with
+                                                               tF P − = sup t ∈ t~F P | t < t0
+                                                               tF P + = inf t ∈ t~F P | t > t0
+ SC      POF SC PAM()                                          STF SC LAM()
+ CE      POF CE PAM()                                          STF AD PAM()
+
+7.6. CLM: Call Money.
+                                            CLM: Contract Schedule
+ Event Schedule                                                Comments
+ AD                                                            Same as PAM
+ IED                                                           Same as PAM
+ PR                                                            Same as PAM
+ FP                                                            Same as PAM
+ IP    tIP = Mdt0
+                                            Continued on next page
+
+
+
+
+Copyright c 2018–present by ACTUS Financial Research Foundation                                                    v1.1
+ACTUS: The algorithmic representation of financial contracts                                                       21
+
+                   Continued from previous page
+ Event Schedule  (                                                    Comments
+         IP CI    ∅                 if IPNR = ∅
+ IPCI  t~      =                                                      where
+                  S(s, IPCL, Mdt0 ) else
+                                                                         (
+                                                                           IPANX         if IPANX 6= ∅
+                                                                      s=
+                                                                           IED + IPCL    else
+ RR                                                                   Same as PAM
+ RRF                                                                  Same as PAM
+ CE                                                                   Same as PAM
+
+
+
+                                        CLM: State Variables Initialization
+ State   Initialization per t0                                  Comments
+                  
+                  
+                   MD    if   MD 6
+                                  = ∅
+ Md      Mdt0 = s         else if Oev (CID, t0 ) 6= {}          where
+                                                                s = sup t ∈ τ (Oev (CID, t0 ))
+                  
+                   max
+                    t     else
+ Nt                                                             Same as PAM
+ Ipnr                                                           Same as PAM
+ Ipac                                                           Same as PAM
+ Feac                                                           Same as PAM
+ Prf                                                            Same as PAM
+ Sd                                                             Same as PAM
+
+
+
+                            CLM: State Transition Functions and Payoff Functions
+ Event   Payoff Function                               State Transition Function
+ AD      POF AD PAM()                                  STF AD PAM()
+          CURS
+ IED     XCUR  (t)R(CNTRL)(−1)NT                       STF IED PAM()
+ PR      POF PR PAM()                                  STF PR PAM()
+ FP      POF FP PAM()                                  STF FP PAM()
+          CURS
+                                                       Ipact+ = 0.0
+ IP      XCUR (t)(Ipact− + Y (Sdt− , t)Ipnrt− Ntt− )
+                                                         Sdt+ = t
+ IPCI    POF IPCI PAM()                                STF IPCI PAM()
+ RR      POF RR PAM()                                  STF RR PAM()
+ RRF     POF RRF PAM()                                 STF RRF PAM()
+ CE      POF CE PAM()                                  STF AD PAM()
+
+7.7. UMP: Undefined Maturity Profile.
+                                             UMP: Contract Schedule
+ Event Schedule                                                 Comments
+ AD                                                             Same as PAM
+ IED                                                            Same as PAM
+ PR    t~P R = Oev (CID, i, t0 )                                with i ∈ {PR, PI}
+ FP              (                                              Same as PAM
+         IP CI     ∅                   if IPNR = ∅
+ IPCI  t~      =                                                where
+                   S(s, IPCL, Mdt0 )   else
+                                                                    (
+                                                                      IPANX              if IPANX 6= ∅
+                                                                s=
+                                                                      IED + IPCL         else
+ RR                                                             Same as PAM
+ RRF                                                            Same as PAM
+ CE                                                             Same as PAM
+
+
+                                                                                                 Continued on next page
+
+
+
+
+Copyright c 2018–present by ACTUS Financial Research Foundation                                                  v1.1
+ACTUS: The algorithmic representation of financial contracts                                                 22
+
+                                               Continued from previous page
+ State   Initialization per t0                                       Comments
+
+                                       UMP: State Variables Initialization
+ State   Initialization
+                  (     per t0                                Comments
+                   s     if Oev (CID, t0 ) 6= {}
+ Md      Mdt0 = max                                           where
+                   t     else                                 s = sup t, t ∈ τ (Oev (CID, i, t ))
+                                                                                              0
+                                                                        i ∈ {PR, PI}
+ Nt                                                                     Same as PAM
+ Ipnr                                                                   Same as PAM
+ Ipac                                                                   Same as PAM
+ Feac                                                                   Same as PAM
+ Prf                                                                    Same as PAM
+ Sd                                                                     Same as PAM
+
+
+
+                                UMP: State Transition Functions and Payoff Functions
+ Event Payoff Function                                     State Transition Function
+ AD    POF AD PAM()                                        STF AD PAM()
+ IED   POF IED CLM()                                       STF IED PAM()
+                                                           Ipact+ = Ipact− + Y (Sdt− , t)Ipnrt− Ntt−
+                                                                    (
+                                                                      Feact− + Y (Sdt− , t)Ntt− FER if FEB = ’N’
+                                                           Feact+ =    Y (t− ,t)
+ PR      f (eP R
+             t )                                                      Y (t− ,t+ )
+                                                                                  FER                else
+                                                                Ntt+ = Ntt− − f (eP R
+                                                                                  t )
+
+                                                                 Sdt+ = t
+ FP      POF FP PAM()                                          STF FP PAM()
+ IPCI    POF IPCI PAM()                                        STF IPCI PAM()
+ RR      POF RR PAM()                                          STF RR PAM()
+ RRF     POF RRF PAM()                                         STF RRF PAM()
+ CE      POF CE PAM()                                          STF AD PAM()
+
+7.8. CSH: Cash.
+                                               CSH: Contract Schedule
+ Event Schedule                                                    Comments
+ AD                                                                Same as PAM
+
+
+
+                                          CSH: State Variables Initialization
+ State   Initialization per t0                                    Comments
+ Nt      Ntt0 = R(CNTRL)NT
+ Sd                                                                     Same as PAM
+
+
+
+                                CSH: State Transition Functions and Payoff Functions
+ Event Payoff Function                                     State Transition Function
+ AD    POF AD PAM()                                        Sdt+ = t
+
+7.9. STK: Stock.
+                                               STK: Contract Schedule
+ Event Schedule                                                    Comments
+ AD                                                                Same as PAM
+ PRD                                                               Same as PAM
+ TD                    (                                           Same as PAM
+    (f ix) DV (f ix)    ∅        if DVNP = ∅
+ DV        t         =
+                        DVANX    else
+                                               Continued on next page
+
+
+
+Copyright c 2018–present by ACTUS Financial Research Foundation                                             v1.1
+ACTUS: The algorithmic representation of financial contracts                                              23
+
+                  Continued from previous page
+ Event Schedule
+              (                                                      Comments
+         DV     ∅                 if DVANX = ∅ ∧ DVCL = ∅
+ DV    t~   =                                                        where
+                S(s, DVCL, tmax ) else
+                                                                        (
+                                                                          DVANX            if DVNP = ∅
+                                                                     s=
+                                                                          DVANX + DVCL     else
+ CE                                                                  Same as PAM
+
+
+
+                                        STK: State Variables Initialization
+ State   Initialization per t0                                  Comments
+ Prf                                                            Same as PAM
+ Sd                                                             Same as PAM
+
+
+
+                               STK: State Transition Functions and Payoff Functions
+ Event Payoff Function                                         State Transition Function
+ AD       POF AD PAM()                                         Sdt+ = t
+            CURS
+ PRD      XCUR   (t)R(CNTRL)(−1)PPRD                           Sdt+ = t
+            CURS
+ TD       XCUR   (t)R(CNTRL)PTD                                Sdt+ = t
+ DV(f ix) XCUR
+            CURS
+                 (t)R(CNTRL)DVNP                               Sdt+ = t
+ DV         CURS
+          XCUR   (t)R(CNTRL)Orf (concat(CID,”-DV”), t)         Sdt+ = t
+          with concat(x, y, z) indicates the string concatena-
+          tion function
+ CE       POF CE PAM()                                         STF AD STK()
+
+7.10. COM: Commodity.
+                                            COM: Contract Schedule
+ Event Schedule                                                Comments
+ AD                                                            Same as PAM
+ PRD                                                           Same as STK
+ TD                                                            Same as STK
+
+
+
+                                        COM: State Variables Initialization
+ State   Initialization per t0                                 Comments
+ Sd                                                            Same as STK
+
+
+
+                           COM: State Transition Functions and Payoff Functions
+ Event   Payoff Function                              State Transition Function
+ AD      POF AD PAM()                                 STF AD STK()
+ PRD     POF PRD STK()                                STF PRD STK()
+ TD      POF PRD STK()                                STF PRD STK()
+
+7.11. FXOUT: Foreign Exchange Outright.
+                                           FXOUT: Contract Schedule
+ Event Schedule                                                Comments
+ AD                                                            Same as PAM
+ PRD                                                           Same as PAM
+ TD              (                                             Same as PAM
+          ST D     ∅      if DS = ’D’
+ STD    t      =
+                   Mdt0   else
+                 (
+                   ∅      if DS = ’S’
+ STD(1) tST D =
+                   Mdt0   else
+                 (
+                   ∅      if DS = ’S’
+ STD(2) tST D =
+                   Mdt0   else
+                                            Continued on next page
+
+Copyright c 2018–present by ACTUS Financial Research Foundation                                          v1.1
+ACTUS: The algorithmic representation of financial contracts                                                  24
+
+                       Continued from previous page
+ Event Schedule                                                      Comments
+ CE                                                                  Same as PAM
+
+
+
+                                          FXOUT: State Variables Initialization
+ State      Initialization
+                     (     per t0                                 Comments
+                      MD    if STD = ∅
+ Md         Mdt0 =
+                      STD else
+ Prf                                                               Same as PAM
+ Sd                                                                Same as PAM
+
+
+
+                          FXOUT: State Transition Functions and Payoff Functions
+ Event  Payoff Function                                     State Transition Function
+ AD     POF AD PAM()                                        STF AD STK()
+ PRD    POF PRD STK()                                       STF PRD STK()
+ TD     POF TD STK()                                        STF TD STK()
+ STD      CURS
+        XCUR   (t)R(CNTRL)(NT − Orf (i, Mdt )NT2)           Sdt+ = t
+        where
+        i = concat(CUR2,”/”,CUR)
+        and concat(x, y, z) indicates the string concatena-
+        tion function
+ STD(1) XCUR
+          CURS
+               (t)R(CNTRL)NT                                Sdt+ = t
+ STD(2) XCUR
+          CURS
+               (t)R(CNTRL)(−1)NT2                           Sdt+ = t
+ CE     POF CE PAM()                                        STF CD STK()
+
+7.12. SWPPV: Plain Vanilla Interest Rate Swap.
+                                                SWPPV: Contract Schedule
+ Event Schedule                                                     Comments
+ AD                                                                 Same as PAM
+ PRD                                                                Same as PAM
+ TD                                                                 Same as PAM
+ IED                                                                Same as PAM
+ PR                                                                 Same as PAM
+            
+            ∅
+                                       if DS = ’D’
+       ~IP
+ IP    t = Mdt0                         else ifIPCL = ∅             where
+                                                                       (
+                                                                          IPANX        if IPANX 6= ∅
+            
+             S(s, IPCL, Mdt0 )          else
+            
+                                                                    s=
+                                                                          IED + IPCL   else
+                         
+                         ∅
+                                            if DS = ’S’
+                 (f ix)
+ IP(f ix)   t~IP        = Mdt0               else ifIPCL = ∅
+                         
+                           S(s, IPCL, Mdt0 ) else
+                         
+                         
+                         ∅
+                                            if DS = ’S’
+                 (var)
+ IP(var)    t~IP        = Mdt0               else ifIPCL = ∅
+                         
+                           S(s, IPCL, Mdt0 ) else
+                         
+ RR         ~tRR = S(s, RRCL, Mdt0 )                                 where
+                                                                        (
+                                                                          RRANX        if RRANX 6= ∅
+                                                                     s=
+                                                                          IED + RRCL   else
+ CE                                                                  Same as PAM
+
+
+
+                                          SWPPV: State Variables Initialization
+ State      Initialization per t0                                 Comments
+ Md                                                               Same as PAM
+ Nt                                                               Same as PAM
+                                                                                            Continued on next page
+
+
+
+Copyright c 2018–present by ACTUS Financial Research Foundation                                             v1.1
+ACTUS: The algorithmic representation of financial contracts                                                   25
+
+                                               Continued from previous page
+ State   Initialization
+                   (      per   t0                                   Comments
+                     0.0       if IED > t0
+ Ipnr    Ipnrt0 =
+                     IPNR2 else
+                   (
+                     IPAC                             if IPAC 6= ∅
+ Ipac    Ipact0 =        −
+                                                                     with t− = sup t, t ∈ tIP , t < t0
+                     Y (t , t0 )Ntt0 (IPNR − Ipnrt0 ) else
+ Ipac1   Ipac1t0 = Y (t− , t0 )Ntt0 IPNR                             with t− = sup t, t ∈ tIP , t < t0
+                         −
+ Ipac2   Ipac2t0 = Y (t , t0 )Ntt0 Ipnrt0                            with t− = sup t, t ∈ tIP , t < t0
+ Prf                                                                 Same as PAM
+ Sd                                                                  Same as PAM
+
+
+
+                      SWPPV: State Transition Functions and Payoff Functions
+ Event Payoff Function                           State Transition Function
+                                                  Ipact+ = Y (Sdt− , t)Ntt0 (IPNR − Ipnrt0 )
+                                                               Ipac1t+ = Y (Sdt− , t)Ntt0 IPNR
+ AD      POF AD PAM()
+                                                               Ipac2t+ = Y (Sdt− , t)Ntt0 Ipnrt0
+                                                                  Sdt+ = t
+                                                                  Ntt+ = R(CNTRL)NT
+                                                                 Ipact+ = 0.0
+                                                               Ipac1t+ = 0.0
+ IED     0.0
+                                                               Ipac2t+ = 0.0
+                                                                Ipnrt+ = IPNR2
+                                                                  Sdt+ = t
+                                                                 Ntt+ = 0.0
+ PR      0.0                                                   Ipnrt+ = 0.0
+                                                                  Sdt+ = t
+                                                                 Ipact+ = Y (Sdt− , t)Ntt0 (IPNR − Ipnrt0 )
+                                                               Ipac1t+ = Y (Sdt− , t)Ntt0 IPNR
+ PRD     POF PRD STK()
+                                                               Ipac2t+ = Y (Sdt− , t)Ntt0 Ipnrt0
+                                                                  Sdt+ = t
+                                                                  Ntt+ = 0.0
+                                                                 Ipact+ = 0.0
+                                                               Ipac1t+ = 0.0
+ TD      POF TD STK()
+                                                               Ipac2t+ = 0.0
+                                                                Ipnrt+ = 0.0
+                                                                  Sdt+ = t
+           CURS
+                                                               Ipact+ = 0.0
+ IP      XCUR   (t)R(CNTRL)(Ipact− + Y (Sdt− , t)(IPNR −
+                                                                 Sdt+ = t
+         Ipnrt− )Ntt− )
+                                                               Ipac1t+ = 0.0
+ IP(f ix ) XCUR
+            CURS
+                 (t)R(CNTRL)(Ipac1t− +Y (Sdt− , t)IPNRNtt− )
+                                                                  Sdt+ = t
+                                                               Ipac2t+ = 0.0
+ IP(var) XCUR
+           CURS
+                (t)R(CNTRL)(Ipac2t−                        −
+                                                                   Sdt+ = t
+         Y (Sdt− , t)Ipnrt− Ntt− )
+                                                                 Ipact+ = Y (Sdt− , t)Ntt0 (IPNR − Ipnrt0 )
+                                                               Ipac1t+ = Y (Sdt− , t)Ntt0 IPNR
+ RR      POF RR PAM()                                          Ipac2t+ = Y (Sdt− , t)Ntt0 Ipnrt0
+                                                                Ipnrt+ = RRMLTOrf (RRMO, t) + RRSP
+                                                                 Sdt+ = t
+ CE      POF CE PAM()                                          STF AD SWPPV()
+
+7.13. SWAPS: Swap.
+
+
+
+
+Copyright c 2018–present by ACTUS Financial Research Foundation                                               v1.1
+ACTUS: The algorithmic representation of financial contracts                                                                      26
+
+                                             SWAPS: Contract Schedule
+ Event Schedule                                                  Comments
+ AD                                                              Same as PAM
+ PRD                                                             Same as PAM
+ TD             (                                                Same as PAM
+         k       {ek,1     l,2
+                   t } ∪ {es }       if DS = ’D’
+ k     {et } =     k,1                                           with
+                 {et } + {el,2
+                           s }       else                        {ek,1    ev    Contract                    (1)
+                                                                   t } = U (CTSTF irstLeg , t0 | {CNTRL = r     })
+       with
+       {ek,1      l,2                                                         {el,2     ev    Contract
+                                                                                s } = U (CTSTSecondLeg , t0 | {CNTRL = r
+                                                                                                                         (2)
+                                                                                                                             })
+         t } + {es } = U ∪ V                                                           (
+       and                                                                               RP A if CNTRL = RF L
+       U = {ek,1       l,2
+               t }4{es }                                                        r(1) =
+                                                                                         RP L else
+         V = {xm        m
+                  τ + yτ }                                                             (
+         where for any two events xkt ∈ {ek,1      l      l,2                            RP L if CNTRL = RF L
+                                             t }, ys ∈ {es } we have            r(2) =
+           k    l                                                                        RP A else
+         xt = ys ⇐⇒ t = s∧k = l, 4 is the distinct union-operator,
+         and xkt + ysl = zτm with τ = t = s, m = k = l ∈ {IED,IP,PR}
+         indicates that any two congruent events of type IED, IP, or
+         PR are merged into a new aggregate event (see payoff and
+         state transition function below).
+ CE                                                                           Same as PAM
+
+
+
+                                          SWAPS: State Variables Initialization
+ State   Initialization per t0                                            Comments
+                                                          sv     Contract
+ Md      Mdt0 = max(U sv (CTSTContract
+                                  F irstLeg , t0 , Tmd), U (CTSTSecondLeg , t0 , Tmd))
+                                                               (1)
+ Ipac    Ipact0 = U sv (CTSTContract
+                            F irstLeg , t0 , Ipac | {CNTRL = r     }) + with (
+           sv     Contract
+         U (CTSTSecondLeg , t0 , Ipac | {CNTRL = r }) (2)                          RP A      if CNTRL = RF L
+                                                                          r(1) =
+                                                                                   RP L      else
+                                                                                  (
+                                                                                   RP L      if CNTRL = RF L
+                                                                          r(2) =
+                                                                                   RP A      else
+ Prf                                                                      Same as PAM
+ Sd                                                                       Same as PAM
+
+
+
+                      SWAPS: State Transition Functions and Payoff Functions
+ Event Payoff Function                           State Transition Function
+                                                  Ipact+ = U sv (CTSTContract
+                                                                     F irstLeg , t, Ipac | {CNTRL = r
+                                                                                                      (1)
+                                                                                                          })
+                                                                           + U sv (CTSTContract
+                                                                                          SecondLeg , t, Ipac | {CNTRL = r
+                                                                                                                           (2)
+                                                                                                                               })
+                                                                             (
+ AD      POF AD PAM()                                                          Feact− + Y (Sdt− , t)Ntt− FER if FEB = ’N’
+                                                                    Feact+ =     Y (t− ,t)
+                                                                                Y (t− ,t+ )
+                                                                                            FER                      else
+                                                                      Sdt+ = t
+                                                                    Ipact+ = U sv (CTSTContract
+                                                                                       F irstLeg , t, Ipac | {CNTRL = r
+                                                                                                                        (1)
+                                                                                                                            })
+           CURS
+ PRD     XCUR   (t)((−1)PPRD                                                + U sv (CTSTContract
+                                                                                        SecondLeg , t, Ipac | {CNTRL = r
+                                                                                                                         (2)
+                                                                                                                             })
+               +U sv (CTSTContract
+                          F irstLeg , t, Ipac | {CNTRL = r
+                                                           (1)
+                                                               })     Sdt+ = t
+                   sv     Contract
+               +U (CTSTSecondLeg , t, Ipac | {CNTRL =
+         r(2) }))
+           CURS
+                                                                    Ipact+ = 0.0
+ TD      XCUR   (t)(PTD
+                                                                      Sdt+ = t
+               +U sv (CTSTContract
+                          F irstLeg , t, Ipac | {CNTRL = r
+                                                           (1)
+                                                               })
+                   sv     Contract
+               +U (CTSTSecondLeg , t, Ipac | {CNTRL =
+         r(2) }))
+                                                                    Ipact+ = U sv (CTSTContract
+                                                                                       F irstLeg , t, Ipac | {CNTRL = r
+                                                                                                                        (1)
+                                                                                                                            })
+ zτm     f (xm         m
+             τ ) + f (yτ )                                                  + U sv (SecondLeg, t, Ipac | {CNTRL = r(2) })
+                                                                     Sdt+ = t
+ CE      POF CE PAM()                                               STF AD SWAPS()
+
+7.14. CAPFL: Cap-Floor.
+
+
+Copyright c 2018–present by ACTUS Financial Research Foundation                                                                  v1.1
+ACTUS: The algorithmic representation of financial contracts                                                                 27
+
+                                           CAPFL: Contract Schedule
+ Event Schedule                                                      Comments
+ AD                                                                  Same as PAM
+ PRD                                                                 Same as PAM
+ TD                                                                  Same as PAM
+ k     {ekt } = {xkt + ysl }
+       for all events xkt ∈ U ev (CTSTContract
+                                        U nderlying , t0 | {CNTRL =
+       RP A}), ysl ∈ U ev (CTSTContract
+                                    U nderlying , t0    | {CNTRL =
+       RP A, RRLC = RRLC, RRLF = RRLF}) with t = s ∧ k = l = IP .
+       That is, any two congruent events of the child-contract
+       schedule, evaluated once without RRLC, RRLF defined and
+       once with the attributes defined, which are of type IP are
+       merged into a new aggregate event (see payoff and state tran-
+       sition function below).
+ CE                                                                  Same as PAM
+
+
+
+                                            CAPFL: State Variables Initialization
+ State   Initialization per t0                                         Comments
+ Md      Mdt0 = max(U sv (CTSTContract
+                                     U nderlying , t0 , Tmd | {CNTRL =
+         RP A}),
+             U sv (CTSTContract
+                       U nderlying , t0 , Tmd          |   {CNTRL    =
+         RP A, RRLC = RRLC, RRLF = RRLF}))
+ Ipac    Ipact0 = R(CNTRL)abs(
+             U sv (CTSTContract
+                       U nderlying , t0 , Ipac | {CNTRL = r
+                                                             (1)
+                                                                 })
+                 sv      Contract
+             −U (CTSTU nderlying , t0 , Ipac             | {CNTRL    =
+         RP A, RRLC = RRLC, RRLF = RRLF}))
+ Prf                                                                   Same as PAM
+ Sd                                                                    Same as PAM
+
+
+
+                      CAPFL: State Transition Functions and Payoff Functions
+ Event Payoff Function                           State Transition Function
+                                                 Ipact+ = R(CNTRL)abs(U sv (CTSTContract
+                                                                                U nderlying , t, Ipac | {CNTRL = RP A})
+
+                                                                        − U sv (CTSTContract
+                                                                                    U nderlying , t, Ipac | {CNTRL = RP A,
+ AD      POF AD PAM()
+                                                                             RRLC = RRLC, RRLF = RRLF}))
+                                                                   Sdt+ = t
+                                                                 Ipact+ = R(CNTRL)abs(U sv (CTSTContract
+                                                                                                U nderlying , t, Ipac | {CNTRL = RP A})
+
+          CURS                                                          − U sv (CTSTContract
+                                                                                    U nderlying , t, Ipac | {CNTRL = RP A,
+ PRD     XCUR  (t)((−1)PPRD + R(CNTRL)abs(
+              U sv (CTSTContract                 | {CNTRL =                  RRLC = RRLC, RRLF = RRLF}))
+                        U nderlying , t, Ipac
+         RP A})−                                                  Sdt+ = t
+              U sv (CTSTContract
+                        U nderlying , t, Ipac | {CNTRL = RP A,
+                    RRLC = RRLC, RRLF = RRLF})))
+          CURS
+                                                                 Ipact+ = 0.0
+ TD      XCUR  (t)(PTD + R(CNTRL)abs(
+                                                                  Sdt+ = t
+              U sv (CTSTContract
+                        U nderlying , t, Ipac    | {CNTRL =
+         RP A})−
+              U sv (CTSTContract
+                        U nderlying , t, Ipac | {CNTRL = RP A,
+                    RRLC = RRLC, RRLF = RRLF})))
+                                                                 Ipact+ = 0.0
+ zτm     R(CNTRL)abs(f (xm         m
+                         τ ) − f (yτ ))
+                                                                  Sdt+ = t
+         where abs(u) defines that the absolute value of u
+         is taken.
+ CE      POF CE PAM()                                            STF AD CAPFL()
+
+7.15. OPTNS: Option.
+                                               Continued on next page
+
+
+
+
+Copyright c 2018–present by ACTUS Financial Research Foundation                                                         v1.1
+ACTUS: The algorithmic representation of financial contracts                                                                      28
+
+                            Continued from previous page
+ Event Schedule                                                                   Comments
+
+                                                    OPTNS: Contract Schedule
+ Event Schedule                                                         Comments
+ AD                                                                     Same as PAM
+ PRD                                                                    Same as PAM
+ TD                                                                     Same as PAM
+ MD    tM D = MD
+              
+              Xdt0
+                                      if Xdt0 6= ∅
+         XD
+ XD    t    = inf τ (eXD )             else if τ (eXD ) 6= ∅ ∧ OPXT 6=0 E 0       with
+                                                                                  eXD = e ∈ Oev (i, XD, t0 )|τ (e) ≤ Mdt0
+              
+                                       else
+              
+               ∅
+                                                                                  and
+                        (                                                         i = CTSTContract
+                                                                                          CoveredContract (i)
+
+             ST D           ∅          if XD = ∅
+ STD     t          =
+                            XD + STD   else
+ CE                                                                               Same as PAM
+
+
+
+                                               OPTNS: State Variables Initialization
+ State   Initialization per t0                                         Comments
+ Xd      Xdt0 = XD
+ Xa      Xat0 = XA
+ Prf                                                                           Same as PAM
+ Sd                                                                            Same as PAM
+
+
+
+                            OPTNS: State Transition Functions and Payoff Functions
+ Event   Payoff Function                               State Transition Function
+ AD      POF AD PAM()                                  Sdt+ = t
+           CURS
+ PRD     XCUR   (t)(−1)PPRD                            STF PRD STK()
+           CURS
+ TD      XCUR   (t)PTD                                 STF TD STK()
+                                                               
+                                                               Xdt− if Xdt− 6= ∅
+                                                               
+                                                       Xdt+ = ∅         else if x = 0.0
+ MD      0.0                                                   
+                                                                 t     else
+                                                               
+
+                                                                        Sdt+ = t
+                                                                        with 
+                                                                             
+                                                                             max(St − OPS1, 0)             if OPTP = ’C’
+                                                                             
+                                                                             max(OPS1 − S , 0)
+                                                                                          t                 else if OPTP = ’P’
+                                                                         x=
+                                                                             
+                                                                             max(St − OPS1, 0)             else
+                                                                             
+                                                                                 + max(OPS2 − St , 0)
+                                                                             
+
+                                                                        St = Orf (U ca (CTSTContract
+                                                                                             U nderlying , M OC), t)
+                                                                                
+                                                                                
+                                                                                 max(St − OPS1, 0)              if OPTP = ’C’
+                                                                                
+                                                                                max(OPS1 − S , 0)
+                                                                                                   t             else if OPTP = ’P’
+                                                                        Xat+ =
+ XD      0.0                                                                    
+                                                                                
+                                                                                 max(S   t −  OPS1, 0)          else
+                                                                                        + max(OPS2 − St , 0)
+                                                                                
+
+                                                                        Sdt+ = t
+                                                                        with
+                                                                        St = Orf (U ca (CTSTContract
+                                                                                            U nderlying , M OC), t)
+
+          CURS
+                                                                        Xat+ = 0.0
+ STD     XCUR  (t)R(CNTRL)Xat−
+                                                                        Sdt+ = t
+ CE      POF CE PAM()                                                   STF AD OPTNS()
+
+7.16. FUTUR: Future.
+                                                      Continued on next page
+
+
+
+
+Copyright c 2018–present by ACTUS Financial Research Foundation                                                                  v1.1
+ACTUS: The algorithmic representation of financial contracts                                                    29
+
+                           Continued from previous page
+ Event Schedule                                                            Comments
+
+                                                 FUTUR: Contract Schedule
+ Event Schedule                                                      Comments
+ AD                                                                  Same as PAM
+ PRD                                                                 Same as PAM
+ TD                                                                  Same as PAM
+ MD                                                                  Same as OPTNS
+ XD                                                                  Same as OPTNS
+ STD                                                                 Same as OPTNS
+ CE                                                                  Same as PAM
+
+
+
+                                            FUTUR: State Variables Initialization
+ State   Initialization per t0                                      Comments
+ Xd                                                                 Same as OPTNS
+ Xa                                                                 Same as OPTNS
+ Prf                                                                Same as PAM
+ Sd                                                                 Same as PAM
+
+
+
+                        FUTUR: State Transition Functions and Payoff Functions
+ Event   Payoff Function                           State Transition Function
+ AD      POF AD PAM()                              STF AD OPTNS()
+ PRD     POF PRD OPTNS()                           STF PRD STK()
+ TD      POF TD OPTNS()                            STF TD (STK()
+                                                            ∅ if x = 0.0
+                                                   Xdt+ =
+ MD      0.0                                                t else
+                                                                 Sdt+ = t
+                                                                 with
+                                                                  x = St − PFUT
+                                                                 St = Orf (U ca (CTSTContract
+                                                                                     U nderlying , M OC), t)
+                                                                 Xat+ = St − PFUT
+ XD      0.0
+                                                                 Sdt+ = t
+                                                                 with
+                                                                 St = Orf (U ca (CTSTContract
+                                                                                     U nderlying , M OC), t)
+ STD     POF STD OPTNS()                                         STF STD OPTNS()
+ CE      POF CE PAM()                                            STF AD FUTUR()
+
+7.17. CEG: Credit Enhancement Guarantee.
+                                                  CEG: Contract Schedule
+ Event Schedule                                                      Comments
+ AD                                                                  Same as PAM
+ PRD                                                                 Same as PAM
+ TD           (                                                      Same as PAM
+         FP     ∅                      if FER = ∅ ∨ FER = 0
+ FP    ~
+       t    =                                                        with
+               S(s, FECL, T )          else                                           if FEANX = ∅ ∧ FECL = ∅
+                                                                         ∅
+                                                                         
+                                                                     s = PRD + FECL else if FEANX = ∅
+                                                                         
+                                                                           FEANX      else
+                                                                         
+                                                                         (
+                                                                           MD    if tXD = ∅
+                                                                     T = XD
+                                                                           t     else
+                      (
+             MD           Mdt0   if tXD = ∅
+ MD      t        =
+                          ∅      else
+                                                  Continued on next page
+
+
+
+
+Copyright c 2018–present by ACTUS Financial Research Foundation                                                v1.1
+ACTUS: The algorithmic representation of financial contracts                                                                         30
+
+                Continued from previous page
+ Event Schedule                                                                Comments
+             
+             Xdt0
+                         if Xdt0 6= ∅
+         XD
+ XD    t    = inf τ (e ) else if τ (eCE ) 6= ∅
+                      CE
+                                                                               with
+                                                                               eCE = e ∈ Oev (i, CE, t0 )|Prfτ (e)+ == CET∧
+             
+                          else
+             
+              ∅
+                                                                                    τ (e) ≤ Mdt0
+                                                                               and
+                                                                               i = CTSTContract
+                                                                                         CoveredContract (i)
+ STD                                                                           Same as OPTNS
+ CE                                                                            Same as PAM
+
+
+
+                                                CEG: State Variables Initialization
+ State   Initialization
+                  (     per t0                                          Comments
+                   MD                      if MD 6= ∅
+ Md      Mdt0 =                                                         with
+                   max(τ ({ekt }))         else                          {ekt } = {ek,1     k,2           k,n
+                                                                                    t } ∪ {et } ∪ ... ∪ {et }
+                                                                                     ev    Contract
+                                                                            {ek,i
+                                                                              t } = U (CTSTCoveredContract (i), t0 | {
+
+                                                                               })n =| CTSTContract
+                                                                                          CoveredContract |
+               
+               0.0
+                                                 if t0 ≥ Mdt0
+ Nt      Ntt0 = CECVR(CNTRL)NT                    else if NT 6= ∅           with 
+               
+                 CECVR(CNTRL) |I|
+                             P                                                     U sv (I(i), t0 , Nt | {x})           if CEGE = N O
+                               i=1 ni             else
+                                                                                
+                                                                                 
+                                                                                 U sv (I(i), t , Nt | {x})
+                                                                                 
+                                                                                                                        else if CEGE = N I
+                                                                                                0
+                                                                            ni =          sv
+                                                                                 
+                                                                                 
+                                                                                     +U     (I(i),  t0 , Ipac | {x})
+                                                                                  rf ca
+                                                                                   O (U (I(i), M OC), t0 )              else
+                                                                            where
+                                                                           I = CTSTContract
+                                                                                    CoveredContract
+                  
+                   0.0                                 if FER = ∅
+                  
+                                                        else if FEAC 6= ∅
+                  
+                  FEAC
+ Feac    Feact0 =                                                         with
+                  
+                   Ntt0 Y (t− , t0 )FER                else if FEB = ’N’ tF P − = sup t ∈ t~F P | t < t0
+                   Y (tF P − ,t0 ) R(CNTRL)FER
+                  
+                  
+                                                        else
+                     Y (tF P − ,tF P + )                                  tF P + = inf t ∈ ~tF P | t > t0
+ Xd                                                                       Same as OPTNS
+ Xa                                                                       Same as OPTNS
+ Prf                                                                      Same as PAM
+ Sd                                                                       Same as PAM
+
+
+
+                               CEG: State Transition Functions and Payoff Functions
+ Event Payoff Function                                    State Transition Function
+                                                                   (
+                                                                     Feact− + Y (Sdt− , t)Ntt− FER                      if     FEB = ’N’
+                                                          Feact+ =      Y (tF P − ,t)
+ AD      POF AD PAM()                                                Y (tF P − ,tF P + )
+                                                                                         R(CNTRL)FER                    else
+                                                                       Sdt+ = t
+                                                                    with
+                                                                    tF P − = sup t ∈ t~F P | t < t0
+                                                                    tF P + = inf t ∈ t~F P | t > t0
+                                           Continued on next page
+
+
+
+
+Copyright c 2018–present by ACTUS Financial Research Foundation                                                                    v1.1
+ACTUS: The algorithmic representation of financial contracts                                                                            31
+
+            Continued from previous page
+ Event Payoff Function                                          State Transition
+                                                                         (       Function
+                                                                           Ntt−         if NT 6= ∅
+                                                                  Ntt+ =       P|I|
+                                                                           CECV i=1 ni else
+ PRD     POF PRD STK()
+                                                                Feact+ = Feact0
+                                                                  Sdt+ = t
+                                                                with     sv
+                                                                        
+                                                                        U (I(i), t, Nt | {})                      if CEGE = N O
+                                                                        U sv (I(i), t, Nt | {})
+                                                                        
+                                                                                                                   else if CEGE = N I
+                                                                   ni =
+                                                                        
+                                                                        
+                                                                           +U sv (I(i), t, Ipac | {})
+                                                                         rf ca
+                                                                         O (U (I(i), M OC), t)                     else
+                                                                    FP−              ~F P
+                                                                t         = sup t ∈ t       | t < t0
+                                                                    FP+             ~F P
+                                                                t    = inf t ∈ t  | t > t0
+                                                                where
+                                                                I = CTSTContract
+                                                                        CoveredContract
+                                                                         (
+                                                                            Ntt−           if NT 6= ∅
+          CURS                                                    Ntt+ =         P|I|
+         XCUR  (t)R(CNTRL)FER                      if   FEB = A             CECV i=1   ni else
+ FP       CURS                         −       
+         XCUR  (t)   Feact− + Ntt− Y (t , t)FER             else Feact+ = 0.0
+                                                                  Sdt+ = t
+                                                                with     sv
+                                                                        
+                                                                        U (I(i), t, Nt | {})                      if CEGE = N O
+                                                                        U sv (I(i), t, Nt | {})
+                                                                        
+                                                                                                                   else if CEGE = N I
+                                                                   ni =
+                                                                        
+                                                                        
+                                                                           +U sv (I(i), t, Ipac | {})
+                                                                         rf ca
+                                                                         O (U (I(i), M OC), t)                     else
+                                                                    FP−              ~F P
+                                                                t         = sup t ∈ t       | t < t0
+                                                                    FP+             ~F P
+                                                                t    = inf t ∈ t  | t > t0
+                                                                where
+                                                                I = CTSTContract
+                                                                        CoveredContract
+                                                                Ntt+ = 0.0
+ MD      0.0
+                                                                Sdt+ = t
+                                                                              (
+                                                                                  Ntt−                 else if   NT 6= ∅
+                                                                    Ntt+ =
+                                                                                  CECV |I|
+                                                                                      P
+                                                                                       i=1 ni          else
+                                                                              (
+                                                                                  Feact− + Y (Sdt− , t)Ntt− FER            if     FEB = ’N’
+ XD      POF XD OPTNS()                                         Feact+ =             Y (tF P − ,t)
+                                                                                  Y (tF P − ,tF P + )
+                                                                                                      R(CNTRL)FER          else
+                                                                    Xat+ = CECVNtt−
+                                                                  Sdt+ = t
+                                                                with     sv
+                                                                        
+                                                                        U (I(i), t, Nt | {})                      if CEGE = N O
+                                                                        U sv (I(i), t, Nt | {})
+                                                                        
+                                                                                                                   else if CEGE = N I
+                                                                   ni =
+                                                                        
+                                                                        
+                                                                           +U sv (I(i), t, Ipac | {})
+                                                                         rf ca
+                                                                         O (U (I(i), M OC), t)                     else
+                                                                    FP−              ~F P
+                                                                t         = sup t ∈ t       | t < t0
+                                                                    FP+             ~F P
+                                                                t    = inf t ∈ t  | t > t0
+                                                                where
+                                                                I = CTSTContract
+                                                                        CoveredContract
+                                                                  Ntt+ = 0.0
+          CURS                                                  Feact+ = 0.0
+ STD     XCUR  (t) (Xat− + Feact− )
+                                                                  Sdt+ = t
+ CE      POF CE PAM()                                           STF AD CEG()
+
+7.18. CEC: Credit Enhancement Collateral.
+
+
+
+
+Copyright c 2018–present by ACTUS Financial Research Foundation                                                                       v1.1
+ACTUS: The algorithmic representation of financial contracts                                                                            32
+
+                                                CEC: Contract Schedule
+ Event Schedule                                                    Comments
+ AD                                                                Same as PAM
+ XD                                                                Same as CEG
+ STD                                                               Same as CEG
+ MD                                                                Same as CEG
+
+
+
+                                           CEC: State Variables Initialization
+ State   Initialization
+                  (     per t0                                     Comments
+                   MD                 if MD 6= ∅
+ Md      Mdt0 =                                                    with
+                   max(τ ({ekt }))    else                          {ekt } = {ek,1     k,2           k,n
+                                                                               t } ∪ {et } ∪ ... ∪ {et }
+                                                                                    ev    Contract
+                                                                           {ek,i
+                                                                             t } = U (CTSTCoveredContract (i), t0 | {
+
+                                                                                })n =| CTSTContract
+                                                                                           CoveredContract |
+                  (
+                      0.0                            if     t0 ≥ Mdt0
+ Nt      Ntt0 =            P|J|           P|I|                            with 
+                      min   j=1 vj , CECV  i=1 ni     else                        U sv (I(i), t0 , Nt | {})                if CEGE = N O
+                                                                                
+                                                                                
+                                                                                U sv (I(i), t , Nt | {})
+                                                                                
+                                                                                                                           else if CEGE = N I
+                                                                                               0
+                                                                           ni =          sv
+                                                                                
+                                                                                
+                                                                                    +U     (I(i),  t0 , Ipac | {})
+                                                                                 rf ca
+                                                                                  O (U (I(i), M OC), t0 )                  else
+                                                                                       rf    ca
+                                                                           vj = O (U (J(j), M OC), t0 )
+                                                                            I = CTSTContract
+                                                                                    CoveredContract
+
+                                                                            J = CTSTContract
+                                                                                    CoveringContract
+ Sd                                                                        Same as PAM
+
+
+
+                               CEC: State Transition Functions and Payoff Functions
+ Event Payoff Function                                    State Transition Function
+                                                                 (
+                                                                   0.0                                               if     t ≥ Mdt0
+                                                          Ntt+ =        P|J|            P|I|    
+ AD      POF AD PAM()                                              min    j=1 vj , CECV  i=1 ni                       else
+                                                                   Sdt+ = t
+                                                                   with 
+                                                                        
+                                                                         U sv (I(i), t0 , Nt | {})           if CEGE = N O
+                                                                        U sv (I(i), t , Nt | {})
+                                                                        
+                                                                                                              else if CEGE = N I
+                                                                                       0
+                                                                   ni =          sv
+                                                                        
+                                                                        
+                                                                            +U (I(i), t0 , Ipac | {})
+                                                                         rf ca
+                                                                          O (U (I(i), M OC), t0 )             else
+                                                                           rf     ca
+                                                                   vj = O (U (J(j), M OC), t0 )
+                                                                    I = CTSTContract
+                                                                            CoveredContract
+
+                                                                   J = CTSTContract
+                                                                           CoveringContract
+                                                                                                    
+                                                                                |J|           |I|
+                                                                                X             X
+                                                                   Ntt+ = min      vj , CECV     ni 
+ XD      POF XD OPTNS()                                                                j=1        i=1
+
+                                                                   Sdt+ = t
+                                                                   with 
+                                                                        
+                                                                         U sv (I(i), t0 , Nt | {})           if CEGE = N O
+                                                                        U sv (I(i), t , Nt | {})
+                                                                        
+                                                                                                              else if CEGE = N I
+                                                                                       0
+                                                                   ni =          sv
+                                                                        
+                                                                        
+                                                                            +U     (I(i),  t0 , Ipac | {})
+                                                                         rf ca
+                                                                          O (U (I(i), M OC), t0 )             else
+                                                                           rf     ca
+                                                                   vj = O (U (J(j), M OC), t0 )
+                                                                    I = CTSTContract
+                                                                            CoveredContract
+
+                                                                    J = CTSTContract
+                                                                            CoveringContract
+                                      Continued on next page
+
+
+
+Copyright c 2018–present by ACTUS Financial Research Foundation                                                                     v1.1
+ACTUS: The algorithmic representation of financial contracts                                33
+
+            Continued from previous page
+ Event Payoff Function                                         State Transition Function
+          CURS
+                                                               Ntt+ = 0.0
+ STD     XCUR  (t)Ntt−
+                                                               Sdt+ = t
+                                                               Ntt+ = 0.0
+ MD      0.0
+                                                               Sdt+ = t
+
+
+
+
+Copyright c 2018–present by ACTUS Financial Research Foundation                            v1.1
+

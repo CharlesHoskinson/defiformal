@@ -1,0 +1,986 @@
+                        Interface-based Design?
+
+                     Luca de Alfaro1 and Thomas A. Henzinger2,3
+              1                    2                  3
+                  UC Santa Cruz        UC Berkeley        EPFL Switzerland
+
+
+
+        Abstract. Surveying results from [5] and [6], we motivate and intro-
+        duce the theory behind formalizing rich interfaces for software and hard-
+        ware components. Rich interfaces specify the protocol aspects of compo-
+        nent interaction. Their formalization, called interface automata, permits
+        a compiler to check the compatibility of component interaction protocols.
+        Interface automata support incremental design and independent imple-
+        mentability. Incremental design means that the compatibility checking of
+        interfaces can proceed for partial system descriptions, without knowing
+        the interfaces of all components. Independent implementability means
+        that compatible interfaces can be refined separately, while still main-
+        taining compatibility.
+
+
+1     Introduction
+
+Interfaces play a central role in the component-based design of software and
+hardware systems. We say that two or more components are compatible if they
+work together properly. Good interface design is based on two principles. First,
+an interface should expose enough information about a component as to make it
+possible to predict if two or more components are compatible by looking only at
+their interfaces. Second, an interface should not expose more information about
+a component than is required by the first principle.
+    The technical realization of these principles depends, of course, on what it
+means for two or more components to “work together properly.” A simple inter-
+pretation is offered by typed programming languages: a component that imple-
+ments a function and a component that calls the function are compatible if the
+function definition and the function call agree on the number, order, and types
+of the parameters. We discuss richer notions of compatibility, which specify in
+addition to type information, also protocol information about how a component
+must be used. For example, the interface of a file server with the two methods
+open-file and read-file may stipulate that the method read-file must not
+be called before the method open-file has been called. Symmetrically, the in-
+terface of a client specifies the possible behaviors of the client in terms of which
+orderings of open-file and read-file calls may occur during its execution.
+?
+    This research was supported in part by the ONR grant N00014-02-1-0671 and by
+    the NSF grants CCR-0234690, CCR-9988172, and CCR-0225610. A version of this
+    paper appeared in Engineering Theories of Software-Intensive Systems (edited by
+    Manfred Broy et al.), NATO Science Series, Volume 195, Springer-Verlag, 2005.
+Given such server and client interfaces, a compiler can check statically if the
+server and the client fit together.
+    Interfaces that expose protocol information about component interaction can
+be specified naturally in an automaton-based language [5]. In this article, we give
+a tutorial introduction to such interface automata.
+
+2     Interface Languages
+We begin by introducing two requirements on interface languages. An interface
+language should support incremental design and independent implementability.
+With each interface language we present, we will verify that both of these re-
+quirements are met.
+
+2.1    Incremental design
+A component is typically an open system, i.e., it has some free inputs, which
+are provided by other components. Incremental design is supported if we can
+check the compatibility of two or more component interfaces without specifying
+interfaces for all components, i.e., without closing the system. The unspecified
+component interfaces may later be added one by one, as long as throughout
+the process, the set of specified interfaces stays compatible. More precisely, the
+property of incremental design requires that if the interfaces in a set F (repre-
+senting the complete, closed design) are compatible, then the interfaces in every
+subset G ⊆ F (representing a partial, open design) are compatible. This yields
+an existential interpretation of interface compatibility: the interfaces in an open
+set G of interfaces (i.e., a set with free inputs) are compatible if there exists
+an interface E (representing an environment that provides all free inputs to the
+interfaces in G) such that the interfaces in the closed set G ∪ {E} (without free
+inputs) are compatible.1
+    Incremental design suggests that we model compatibility as a symmetric bi-
+nary relation ∼ between interfaces, and composition as a binary partial function
+|| on interfaces. If two interfaces F and G are compatible, that is, F ∼ G, then
+F ||G is defined and denotes the resulting composite interface. Now the property
+of incremental design reads as follows:
+      For all interfaces F , G, H, and I, if F ∼ G and H ∼ I and F ||G ∼
+      H||I, then F ∼ H and G ∼ I and F ||H ∼ G||I.
+This property ensures that the compatible components of a system can be put
+together in any order.2
+1
+  It is important to emphasize the existential interpretation of the free inputs of in-
+  terfaces, because this deviates from the standard, universal interpretation of free
+  inputs in specifications [5]. While a specification of an open system is well-formed if
+  it can be realized for all input values, an interface is well-formed if it is compatible
+  to some environment. In other words, for interfaces, the environment is helpful, not
+  adversarial.
+2
+  We could formalize the property of incremental design, instead, as associativity of
+  interface composition [5]. We chose our formalization, because it does not require an
+2.2     Independent implementability
+Recall the first principle of interface design, namely, that the information con-
+tained in interfaces should suffice to check if two or more components are com-
+patible. This principle can be formalized as follows: if F and G are compatible
+interfaces, and F 0 is a component that conforms to interface F , and G0 is a
+component that conforms to interface G, then F 0 and G0 are compatible com-
+ponents, and moreover, the composition F 0 ||G0 of the two components conforms
+to the composite interface F ||G. We call this the property of independent im-
+plementability, because it enables the outsourcing of the implementation of the
+components F 0 and G0 to two different vendors: as long as the vendors conform
+to the provided interfaces F and G, respectively, their products will fit together,
+even if the vendors do not communicate with each other.
+    For simplicity, in this article we gloss over the differences between interfaces
+and components, and express both in the same language; that is, we consider
+components to be simply more detailed interfaces.3 For this purpose, we use a
+refinement preorder between interfaces: if F  F 0 , then the interface F 0 refines
+the interface F . An interface may be refined into an implementation in several
+steps. As the refinement relation is a preorder, it is transitive. The property of
+independent implementability reads as follows:
+      For all interfaces F , F 0 , G, and G0 , if F ∼ G and F  F 0 and G  G0 ,
+      then F 0 ∼ G0 and F ||G  F 0 ||G0 .
+This property ensures that compatible interfaces can always be refined sepa-
+rately.4
+
+
+3     Assume/Guarantee Interfaces
+We illustrate the properties of incremental design and independent implementabil-
+ity through a simple, stateless interface language called assume/guarantee (A/G,
+for short) interfaces [6]. Assume/guarantee interfaces have input and output
+variables. An A/G interface puts a constraint on the environment through a
+predicate φI on its input variables: the environment is expected to provide in-
+puts that satisfy φI . In return, the interface communicates to the environment
+  explicit notion of equality or equivalence between interfaces. Implicitly, according to
+  our formalization, two interfaces F and G are equivalent if they are compatible with
+  same interfaces, that is, if for all interfaces H, we have F ∼ H iff G ∼ H. It can
+  be shown that if the property of incremental design holds, then for all interfaces F ,
+  G, and H, if F ∼ G and F ||G ∼ H, then G ∼ H and F ∼ G||H and the two
+  interfaces (F ||G)||H and F ||(G||H) are equivalent in the specified sense.
+3
+  A discussion about interfaces versus components can be found in [6].
+4
+  The property of independent implementability is a compositionality property [6].
+  It should be noted that the “direction” of interface compositionality is top-down,
+  from more abstract to more refined interfaces: if F ∼ G and F  F 0 and G  G0 ,
+  then F 0 ∼ G0 . This is in contrast to the bottom-up compositionality of many other
+  formalisms: if F 0 ∼ G0 and F 0  F and G0  G, then F ∼ G.
+a constraint φO on its output variables: it vouches to provide only outputs that
+satisfy φO . In other words, the input assumption φI represents a precondition,
+and the output guarantee φO a postcondition.
+
+Definition 1. An A/G interface F = hX I , X O , φI , φO i consists of
+ – two disjoint sets X I and X O of input and output variables;
+ – a satisfiable predicate φI over X I called input assumption;
+ – a satisfiable predicate φO over X O called output guarantee.
+
+     Note that input assumptions, like output guarantees, are required to be sat-
+isfiable, not valid. An input assumption is satisfiable if it can be met by some
+environment. Hence, for every A/G interface there is a context in which it can
+be used. On the other hand, in general not all environments will satisfy the input
+assumption; that is, the interface puts a constraint on the environment.
+
+Example 1. A division component with two inputs x and y, and an output z,
+might have an A/G interface with the input assumption y 6= 0 and the output
+guarantee true (which is trivially satisfied by all output values). The input
+assumption y 6= 0 ensures that the component is used only in contexts that
+provide non-zero divisors. 2
+
+   In the following, when referring to the components of several interfaces, we
+use the interface name as subscript to identify ownership. For example, the input
+assumption of an interface F is denoted by φIF .
+
+3.1   Compatibility and composition
+We define the composition of A/G interfaces in several steps. First, two A/G
+interfaces are syntactically composable if their output variables are disjoint. In
+general, some outputs of one interface will provide inputs to the other interface,
+and some inputs will remain free in the composition. Second, two A/G interfaces
+F and G are semantically compatible if whenever one interface provides inputs
+to the other interface, then the output guarantee of the former implies the input
+assumption of the latter. Consider first the closed case, that all inputs of F are
+outputs of G, and vice versa. Then F and G are compatible if the closed formula
+
+                      (∀XFO ∪ XG
+                               O
+                                 )(φO    O     I    I
+                                    F ∧ φG ⇒ φ F ∧ φG )                       (ψ)
+
+is true. In the open case, where some inputs of F and G are left free, the formula
+(ψ) has free input variables. As discussed above, to support incremental design,
+the two interfaces F and G are compatible if they can be used together in some
+context, i.e., if there is a environment that makes (ψ) true by providing helpful
+input values. Thus, in the open case, the A/G interfaces F and G are compatible
+if the formula (ψ) is satisfiable. Then, the formula (ψ) is the input assumption
+of the composite interface F ||G, because it encodes the weakest condition on the
+environment of F ||G that makes F and G work together.
+Definition 2. Two A/G interfaces F and G are composable if XFO ∩ XG O
+                                                                      =
+∅. Two A/G interfaces F and G are compatible, written F ∼ G, if they are
+composable and the formula
+
+                       (∀XFO ∪ XG
+                                O
+                                  )(φO    O     I    I
+                                     F ∧ φG ⇒ φ F ∧ φG )                          (ψ)
+
+is satisfiable. The composition F ||G of two compatible A/G interfaces F and G
+is the A/G interface with
+ – XFI ||G = (XFI ∪ XGI
+                         )\XFO||G;
+ – XFO||G = XFO ∪ XG O
+                        ;
+    I
+ – φF ||G = ψ;
+ – φO         O    O
+    F ||G = φF ∧ φG .
+
+   Note that the compatibility relation ∼ is symmetric.
+
+Example 2. Let F be the A/G interface without input variables, the single out-
+put variable x, and the output guarantee true. Let G be the A/G interface with
+the two input variables x and y, the input assumption x = 0 ⇒ y = 0, and no
+output variables. Then F and G are compatible, because the formula
+
+                        (∀x)(true ⇒ (x = 0 ⇒ y = 0))
+
+simplifies to y = 0, which is satisfiable. Note that the predicate y = 0 expresses
+the weakest input assumption that the composite interface needs to make in
+order to ensure that the input assumption x = 0 ⇒ y = 0 of G is satisfied.
+This is because F makes no guarantees about x; in particular, it might provide
+outputs x that are 0, and it might provide outputs x that are different from 0.
+   The composition F ||G has the input variable y, the input assumption y = 0,
+the output variable x, and the output guarantee true. 2
+
+   The following theorem shows that the A/G interfaces support incremental
+design.
+
+Theorem 1. For all A/G interfaces F , G, H, and I, if F ∼ G and H ∼ I and
+F ||G ∼ H||I, then F ∼ H and G ∼ I and F ||H ∼ G||I.
+
+Proof sketch. Note that from the premises of the theorem it follows that (1) the
+                 O
+four sets XFO , XG    O
+                   , XH , and XIO are pairwise disjoint; and (2) the formula
+
+    (∀XFO ∪ XG
+             O    O
+               ∪ XH ∪ XIO )(φO    O    O    O     I    I    I    I
+                             F ∧ φG ∧ φH ∧ φI ⇒ φ F ∧ φG ∧ φH ∧ φI )
+
+is satisfiable. To prove from this that, say, the formula
+
+                       (∀XFO ∪ XH
+                                O
+                                  )(φO    O     I    I
+                                     F ∧ φH ⇒ φ F ∧ φH )
+
+                                                                  O
+is satisfiable, choose the values for the variables in XFI ||H ∩ XG||I so that φO    O
+                                                                                G ∧ φI
+is true. 2
+3.2   Refinement
+
+Besides composition, the second operation on interfaces is refinement. Refine-
+ment between A/G interfaces is, like subtyping for function types, defined in an
+input/output contravariant fashion: an implementation must accept all inputs
+that the specification accepts, and it may produce only outputs that the speci-
+fication allows. Hence, to refine an A/G interface, the input assumption can be
+weakened, and the output guarantee can be strengthened.
+
+Definition 3. An A/G interface F 0 refines an A/G interface F , written F 
+F 0 , if
+
+  (1) XFI ⊆ XFI 0 and XFO ⊇ XFO0 ;
+  (2) φIF ⇒ φIF 0 and φO    O
+                       F ⇐ φF 0 .
+
+
+    Refinement between A/G interfaces is a preorder (i.e., reflexive and transi-
+tive). The following theorem shows that the A/G interfaces support independent
+implementability.
+
+Theorem 2. For all A/G interfaces F , G, and F 0 , if F ∼ G and F  F 0 , then
+F 0 ∼ G and F ||G  F 0 ||G.
+
+Proof sketch. From XFO ∩ XGO
+                             = ∅ and XFO ⊇ XFO0 , it follows that XFO0 ∩ XG
+                                                                          O
+                                                                            = ∅.
+                                          I
+Choose values for the input variables in XF ||G so that
+
+                      (∀XFO ∪ XG
+                               O
+                                 )(φO    O    I    I
+                                    F ∧ φG ⇒ φF ∧ φG ).
+
+
+From XFI ⊆ XFI 0 and XFO ⊇ XFO0 , it follows that XFI ||G ⊆ XFI 0 ||G . Choose
+arbitrary values for all variables not in XFI ||G . Then φO      O     I      I
+                                                          F 0 ∧ φG ⇒ φ F 0 ∧ φG
+              O       O        O    O        I       I      I      I
+follows from φF 0 ⇒ φF and φF ∧ φG ⇒ φF ∧ φG and φF ⇒ φF 0 . This proves
+that F 0 ∼ G. The proof that F ||G  F 0 ||G is straight-forward. 2
+
+    Note that the contravariant definition of refinement is needed for Theorem 7
+to hold, as input assumptions and output guarantees occur on two different sides
+of the implication in the formula (ψ).
+    We have not fixed the types of variables, nor the theory in which input as-
+sumptions or output guarantees are written. Checking the compatibility of A/G
+interfaces, and checking refinement between A/G interfaces, requires a procedure
+that decides the satisfiability of universal formulas in that theory. For example,
+if all variables are boolean, then the input assumptions and output guarantees
+are quantifier-free boolean formulas. In this case, compatibility checking requires
+the evaluation of ∃∀ boolean formulas (namely, satisfiability checking of the uni-
+versal formula (ψ)), and refinement checking requires the evaluation of ∀ boolean
+formulas (namely, validity checking of the two implications of Definition 6).
+4    Automaton Interfaces
+
+We now present the stateful interface language called interface automata [5]. An
+interface automaton is an edge-labeled digraph whose vertices represent interface
+states, whose edges represent interface transitions, and whose labels represent ac-
+tion names. The actions are partitioned into input, output, and internal actions.
+The internal actions are “hidden”: they cannot be observed by the environment.
+The syntax of interface automata is identical to the syntax of I/O automata [8],
+but composition will be defined differently.
+
+Definition 4. An interface automaton F = hQ, q 0 , AI , AO , AH , δi consists of
+
+ – a finite set Q of states;
+ – an initial state q 0 ∈ Q;
+ – three pairwise disjoint sets AI , AO , and AH of input, output, and hidden
+   actions;
+ – a set δ ⊆ Q × A × Q of transitions, where A = AI ∪ AO ∪ AH is the set of
+   all actions.
+
+We require that the automaton F be input-deterministic, that is, for all states
+q, q 0 , q 00 ∈ Q and all input actions a ∈ AI , if (q, a, q 0 ) ∈ δ and (q, a, q 00 ) ∈ δ, then
+q 0 = q 00 .
+
+    An action a ∈ A is enabled at a state q ∈ Q if there exists a state q 0 ∈ Q such
+that (q, a, q 0 ) ∈ δ. Given a state q ∈ Q, we write AI (q) (resp. AO (q); AH (q))
+for the set of input (resp. output; hidden) actions that are enabled at q. Unlike
+I/O automata, an interface automaton is not required to be input-enabled; that
+is, we do not require that AI (q) = AI for all states q ∈ Q. Rather, we use
+the set AI (q) to specify the input actions that are accepted at state q; that is,
+an interface automaton encodes the assumption that, when F is in state q, the
+environment does not provide an input action that is not enabled at q.
+
+Example 3. We model a software component that implements a message-trans-
+mission service. The component has a method “send” for sending messages.
+When this method is called, the component returns either “ok ” or “fail .” To
+perform this service, the component relies on a communication channel that
+provides the method “trnsmt” for transmitting messages. The two possible re-
+turn values are “ack ,” which indicates a successful transmission, and “nack ,”
+which indicates a failure. When the method “send” is called, the component
+tries to transmit the message, and if the first transmission fails, it tries again. If
+both transmissions fail, the component reports failure. The interface automaton
+modeling this component is called TryTwice and shown in Figure 1.
+    The interface automaton TryTwice has the three input actions “send ,” “ack ,”
+and “nack ”; the three output actions “trnsmt,” “ok ,” and “fail ”; and no hidden
+actions. It has seven states, with state 0 being initial (marked by an arrow
+without source). On the transitions, we append to the name of the action label
+the symbol “?” (resp. “!”; “;”) to indicate that the transition is input (resp.
+     send                     ok                          fail
+
+
+
+                              5
+                  ok!                                ack?
+
+                                       ack?
+
+0   send?     1     trnsmt!   2        nack?   3     trnsmt!     4
+
+
+
+                  fail!       6                      nack?
+
+
+
+
+     trnsmt                   ack                         nack
+
+    Fig. 1. The interface automaton TryTwice.
+
+
+
+
+                              send!
+
+
+                          0              1
+
+
+                              ok?
+
+
+
+
+                  send            ok               fail
+
+     Fig. 2. The interface automaton Client.
+output; hidden). Note how the automaton expresses in a straight-forward manner
+the above informal description of the message-passing service. The input “send”
+is accepted only in state 0; that is, the component expects a client to send a
+second message only after it has received an “ok ” or “fail ” response.
+    The interface automaton Client of Figure 2 shows a possible client of the
+message-passing service. It has the input actions “ok ” and “fail ,” the output
+action “send,” and again no hidden actions. This particular client expects mes-
+sages to be sent successfully, and makes no provisions for handling failures: after
+calling the method “send,” it accepts the return value “ok ,” but does not accept
+the return value “fail .” The expectation that the return value is always “ok ”
+is an assumption by the component Client about its environment; that is, the
+component Client is designed to be used only with message-transmission services
+that cannot fail. 2
+
+     An interface automaton F is closed if it has no input and output actions;
+that is, if AI = AO = ∅. Closed interface automata do not interact with the
+environment.
+     An execution of the interface automaton F is a finite alternating sequence
+q0 , a0 , q1 , a1 , . . . , qn of states and actions such that (qi , ai , qi+1 ) ∈ δ for all 0 ≤
+i < n. The execution is autonomous if all its actions are output or hidden actions;
+that is, if ai ∈ AO ∪ AH for all 0 ≤ i < n. Autonomous executions do not depend
+on input actions. The execution is invisible if all its actions are hidden; that is, if
+ai ∈ AH for all 0 ≤ i < n. A state q 0 ∈ Q is (autonomously; invisibly) reachable
+from a state q ∈ Q if there exists an (autonomous; invisible) execution whose
+first state is q, and whose last state is q 0 . The state q 0 is reachable in F if q 0 is
+reachable from the initial state q 0 . In the definition of interface automata, it is
+not required that all states be reachable. However, one is generally not interested
+in states that are not reachable, and they can be removed.
+
+4.1    Compatibility and composition
+We define the composition of two interface automata only if their actions are
+disjoint, except that an input action of one automaton may coincide with an
+output action of the other automaton.
+Definition 5. Two interface automata F and G are composable if
+                             H
+   (1) AH
+        F ∩ AG = ∅ and AF ∩ AG = ∅;
+        I    I
+   (2) AF ∩ AG = ∅;
+   (3) AO    O
+        F ∩ AG = ∅.
+
+    For two interface automata F and G, we let shared (F, G) = AF ∩ AG be
+the set of common actions. If F and G are composable, then shared (F, G) =
+               I    O
+(AIG ∩AOF )∪(AF ∩AG ). We define the composition of interface automata in stages,
+first defining the product automaton F ⊗ G. The two automata synchronize
+on the actions in shared (F, G), and asynchronously interleave all other actions.
+Shared actions become hidden in the product.
+Definition 6. For two composable interface automata F and G, the product
+F ⊗ G is the interface automaton with
+ – QF ⊗G = QF × QG ;
+ – qF0 ⊗G = (qF0 , qG     0
+                            );
+ – AF ⊗G = (AF ∪ AIG )\shared (F, G);
+      I                I
+                       O       O
+ – AO F ⊗G = (AF ∪ AG )\shared (F, G);
+      H              H        H
+ – AF ⊗G = AF ∪ AG ∪ shared (F, G);
+ – ((q, r), a, (q 0 , r0 )) ∈ δF ⊗G iff
+         a 6∈ shared (F, G) and (q, a, q 0 ) ∈ δF and r = r0 , or
+         a 6∈ shared (F, G) and q = q 0 and (r, a, r0 ) ∈ δG , or
+         a ∈ shared (F, G) and (q, a, q 0 ) ∈ δF and (r, a, r0 ) ∈ δG .
+
+    Let δFI = {(q, a, q 0 ) ∈ δ | a ∈ AIF } denote the set of input transitions of an
+interface automaton F , and let δFO and δFH be defined similarly as the output and
+hidden transitions of F . Then according to the definition of product automata,
+each input transition of F ⊗ G is an input transition of either F or G; that is,
+((q, r), a, (q 0 , r0 )) ∈ δFI ⊗G iff
+    (q, a, q 0 ) ∈ δFI and a 6∈ AO           0
+                                 G and r = r ; or
+           O              0           0    I
+    a 6∈ AF and q = q and (r, a, r ) ∈ δG .
+Each output transitions of F ⊗ G is an output transition of F or G; that is,
+((q, r), a, (q 0 , r0 )) ∈ δFO⊗G iff
+    (q, a, q 0 ) ∈ δFO and a 6∈ AIG and r = r0 ; or
+    a 6∈ AIF and q = q 0 and (r, a, r0 ) ∈ δG
+                                            O
+                                              .
+Each hidden transition of F ⊗ G is either an input transition of F that is an
+output transition of G, or vice versa, or it is a hidden transition of F or G; that
+is, ((q, r), a, (q 0 , r0 )) ∈ δFH⊗G iff
+    (q, a, q 0 ) ∈ δFI and (r, a, r0 ) ∈ δG
+                                          O
+                                            ; or
+             0       O             0      I
+    (q, a, q ) ∈ δF and (r, a, r ) ∈ δG     ; or
+    (q, a, q 0 ) ∈ δFH and r = r0 ; or
+    q = q 0 and (r, a, r0 ) ∈ δGH
+                                   .
+
+Example 4. The product TryTwice ⊗ Client of the interface automata TryTwice
+and Client from Figures 1 and 2 is shown in Figure 3. Each state of the product
+consists of a state of TryTwice together with a state of Client. Only the reachable
+states of the product automaton are shown. Each transition of the product is
+either a joint “send” transition, which represents the call of the method “send”
+by Client, or a joint “ok ” transition, which represents the termination of the
+method “send” with return value “ok ,” or a transition of TryTwice calling the
+method “trnsmt” of the (unspecified) communication channel, or a transition of
+TryTwice receiving the return value “ack ” or “nack ” from the channel.
+    Consider the following sequence of events. The component Client calls the
+method “send ”; then TryTwice calls twice the method “trnsmt” and receives
+                                  5
+                       ok;                          ack?
+
+                                        ack?
+
+    0   send;      1    trnsmt!   2     nack?   3   trnsmt!   4
+
+
+
+
+                                  6                 nack?
+
+
+
+
+          trnsmt                  ack                  nack
+
+    Fig. 3. The product automaton TryTwice ⊗ Client.
+
+
+
+
+                                  5
+                       ok;                          ack?
+
+                                        ack?
+
+    0   send;      1    trnsmt!   2     nack?   3   trnsmt!   4
+
+
+
+
+          trnsmt                  ack                  nack
+
+Fig. 4. The composite interface automaton TryTwice||Client .
+twice the return value “nack ,” indicating transmission failure. This sequence
+of events brings us to state 6 of the product automaton, which corresponds to
+state 6 of TryTwice and state 1 of Client . In state 6, the component TryTwice
+tries to report failure by returning “fail ,” but not expecting failure, the com-
+ponent Client does not accept the return value “fail ” in state 1. Hence the
+product state 6 has no outgoing edges; it is called an error state, because at
+product state 6, the component TryTwice violates the assumption made by the
+component Client about the inputs that Client receives. 2
+
+   This example illustrates that, as interface automata are not necessarily input-
+enabled, in the product of two interface automata, one of the automata may
+produce an output action that is in the input alphabet of the other automaton,
+but is not accepted.
+
+Definition 7. Given two composable interface automata F and G, a product
+state (q, r) ∈ QF × QG is an error state of the product automaton F ⊗ G if there
+exists an action a ∈ shared (F, G) such that either a ∈ AO                I
+                                                          F (q) and a 6∈ AG (r), or
+       I               O
+a 6∈ AF (q) and a ∈ AG (r). We write error (F, G) for the set of error states of
+the product automaton F ⊗ G.
+
+    If the product F ⊗G contains no reachable error states, then the two interface
+automata F and G satisfy each other’s input assumptions and are thus compat-
+ible. On the other hand, if F ⊗ G is closed and contains a reachable error state,
+then F and G are incompatible. The interesting case arises when F ⊗ G contains
+reachable error states, but is not closed. The fact that a state in error (F, G) is
+reachable does not necessarily indicate an incompatibility, because by providing
+appropriate inputs, the environment of F ⊗G may be able to ensure that no error
+state is encountered in the product. We therefore define the set of incompatible
+states of F ⊗ G as those states from which no environment can prevent that an
+error state may be entered. First, the error states of F ⊗ G are incompatible.
+Second, all states from which a sequence of output or hidden actions of F ⊗ G
+leads to an error state are also incompatible, because the product automaton
+may choose to traverse that sequence in every environment. On the other hand,
+if an error state is only reachable via an input action, then a helpful environment
+can choose not to provide that action, thus avoiding the error state.
+
+Definition 8. Given two composable interface automata F and G, a product
+state (q, r) ∈ QF × QG is a compatible state of the product automaton F ⊗ G if
+there exists no error state (q 0 , r0 ) ∈ error (F, G) that is autonomously reachable
+from (q, r). Two interface automata F and G are compatible, written F ∼ G,
+if they are composable and the initial state of the product automaton F ⊗ G is
+compatible.
+
+   Note that the compatibility relation ∼ is symmetric.
+   If two composable interface automata F and G are compatible, then there is
+an environment E such that
+    (1) E is composable with F ⊗ G;
+    (2) (F ⊗ G) ⊗ E is closed;
+    (3) for all states ((q, r), s) ∈ (QF × QG ) × QE that are reachable in (F ⊗
+        G)⊗E, we have (q, r) 6∈ error (F, G) and ((q, r), s) 6∈ error (F ⊗G, E).
+The third condition ensures that (3a) E prevents the error states of F ⊗ G from
+being entered, and (3b) E accepts all outputs of F ⊗ G and does not provide
+inputs that are not accepted by F ⊗ G. An interface automaton that satisfies
+the conditions (1)–(3) is called a legal environment for F ⊗ G. The existence of
+a legal environment shows that two compatible interfaces can be used together
+in some context.
+    For compatible interface automata F and G, there is always a trivial legal
+environment, which provides no inputs to F ⊗ G. Formally, empty closure of F
+and G is the interface automaton close(F, G) with
+    Qclose(F,G) = {0};
+     0
+    qclose(F,G)  = 0;
+    Aclose(F,G) = AO
+      I
+                      F ⊗G ;
+    AOclose(F,G) =  A I
+                      F ⊗G ;
+      H
+    Aclose(F,G) = ∅;
+    δclose(F,G) = {(0, a, 0) | a ∈ AIclose(F,G) }.
+
+The empty closure close(F, G) has a single state (arbitrarily named 0), which
+is its initial state. It accepts all output actions of F ⊗ G as inputs, but does
+not issue any outputs. All states that are reachable in (F ⊗ G) ⊗ close(F, G) are
+reachable solely by output and hidden actions of F ⊗ G. Thus, if the initial state
+of F ⊗ G is compatible, then each state that is reachable in (F ⊗ G) ⊗ close(F, G)
+must not correspond to an error state of F ⊗ G. On the other hand, if the initial
+state of F ⊗ G is not compatible, then some error state of F ⊗ Q is reachable in
+every environment that does not constrain the outputs of F ⊗ G, in particular,
+in (F ⊗ G) ⊗ close(F, G). Consequently, two interface automata F and G are
+compatible iff for all states (q, r) ∈ QF × QG such that ((q, r), 0) is reachable in
+(F ⊗ G) ⊗ close(F, G), we have (q, r) 6∈ error (F, G).
+    The composition of two compatible interface automata is obtained by re-
+stricting the product of the two automata to the set of compatible states.
+
+Definition 9. Given two compatible interface automata F and G, the compo-
+sition F ||G is the interface automaton that results from the product F ⊗ G by
+removing all transitions (q, a, q 0 ) ∈ δF ⊗G such that
+  (1) q is a compatible state of the product F ⊗ G;
+  (2) a ∈ AIF ⊗G is an input action of the product;
+  (3) q 0 is not a compatible state of F ⊗ G.
+
+Example 5. In the product automaton TryTwice ⊗ Client from Figure 3, state 6
+is an error state, and thus not compatible. However, the product TryTwice ⊗
+Client is not closed, because its environment —the communication channel—
+provides “ack ” and “nack ” inputs. The environment that provides input “ack ”
+(or no input at all) at the product state 4 ensures that the error state 6 is not
+entered. Hence, the product states 0, 1, 2, 3, 4, and 5 are compatible. Since
+the initial state 0 of the product is compatible, the two interface automata
+TryTwice and Client are compatible. The result of removing from TryTwice ⊗
+Client the input transition to the incompatible state 6 is the interface automaton
+TryTwice||Client shown in Figure 4.
+    Note that restricting TryTwice ⊗ Client to its compatible states corresponds
+to imposing an assumption on the environment, namely, that calls to the method
+“send” never return twice in a row the value “nack .” Hence, when the two
+interface automata TryTwice and Client are composed, the assumption of Client
+that no failures occur is translated into the assumption of TryTwice||Client that
+no two consecutive transmissions fail. The illustrates how the composition of
+the interface automata TryTwice and Client propagates to the environment of
+TryTwice||Client the assumptions that are necessary for the correct interaction
+of TryTwice and Client . 2
+
+    The definition of composition removes only transitions, not states, from the
+product automaton. The removal of transitions, however, may render some states
+unreachable, which can then be removed also. In particular, as far as reachable
+states are concerned, the composition F ||G results from the product F ⊗ G by
+removing all incompatible states; if the result is empty, then F and G are not
+compatible. In general, the removal of input transitions from a product automa-
+ton may render even some compatible states unreachable. Hence, the relevant
+states of the composite automaton F ||G are those states of the product automa-
+ton F ⊗ G which remain reachable after all incompatible states are removed.
+Those states of the product automaton can be found in linear time, by forward
+and backward traversals of the underlying graph [5]. Thus the compatibility of
+two interface automata with m1 and m2 reachable transitions, respectively, can
+be checked, and their composition constructed, in time O(m1 · m2 ).
+    The following theorem shows that interface automata support incremental
+design.
+Theorem 3. For all interface automata F , G, H, and I, if F ∼ G and H ∼ I
+and F ||G ∼ H||I, then F ∼ H and G ∼ I and F ||H ∼ G||I.
+Proof sketch. For composability, note that from the premises of the theorem
+it follows that AH                                                    I
+                     i is disjoint from Aj for all j 6= i, that all Ai ’s are pairwise
+                          O
+disjoint, and that all Ai ’s are pairwise disjoint. Consider the product automaton
+F ⊗ G ⊗ H ⊗ I; the associativity of ⊗ implies that parentheses do not matter.
+Define a state (p1 , p2 , p3 , p4 ) to be an error state of F ⊗ G ⊗ H ⊗ I if some pair
+(pi , pj ) is an error state of the corresponding subproduct; e.g., if (p1 , p3 ) is an
+error state of F ⊗H. Define a state p to be an incompatible state of F ⊗G⊗H ⊗I
+if some error state of F ⊗ G ⊗ H ⊗ I is autonomously reachable from p, that is,
+reachable via hidden and output transitions. For ` ≥ 0, define a state p to be a
+rank-` incompatible state if some error state is autonomously reachable from p
+in at most ` transitions.
+    We show that under the premises of the theorem, the composition F ||G||H||I
+is achieved, for any insertion of parentheses, by removing the incompatible states
+from the product F ⊗ G ⊗ H ⊗ I. The proof proceeds in two steps. First, we show
+that if some projection of a product state p = (p1 , p2 , p3 , p4 ) is an incompatible
+state of the corresponding subproduct (say, F ⊗ G), then p is an incompatible
+state of the full product F ⊗ G ⊗ H ⊗ I. Second, we show that if p is an in-
+compatible state of F ⊗ G ⊗ H ⊗ I, and some input transitions are removed by
+constructing the composition of any subproduct (say, F ||H), then even in the
+product without the removed transitions, there remains an autonomous path
+from p to an error state.
+    (1) Consider a state p of the product F ⊗ G ⊗ H ⊗ I, and a projection p0 of p
+which is a rank-` incompatible state of the corresponding subproduct. We show
+that p is a rank-`0 incompatible state of F ⊗ G ⊗ H ⊗ I for some `0 ≤ `. Consider
+a shortest autonomous path from p0 to an error state in the subproduct. There
+are three cases. First, if p0 is an error state of the subproduct (rank 0), then p is
+an error state of the full product. Second, if the first transition of the error path
+from p0 in the subproduct corresponds to an output or hidden transition of the
+full product, then the rank of the successor state is ` − 1 and the claim follows
+by induction. Third, if the first transition of the error path from p0 is an output
+transition of the subproduct which does not have a matching input transition in
+the full product, then p is an error state of the full product and has rank 0.
+    (2) Consider an incompatible state p of the product F ⊗ G ⊗ H ⊗ I. Suppose
+that some input transitions are removed by constructing the composition of a
+subproduct, and remove the corresponding transitions in the full product F ⊗
+G ⊗ H ⊗ I. The only kind of transition that might be removed in this way is a
+hidden transition (q, a, r) of the product whose projection onto the subproduct is
+an input transition (q 0 , a, r0 ), which is matched in the full product by an output
+transition. Once (q, a, r) is removed, the input action a is no longer enabled at
+the state q 0 , because interface automata are input-deterministic. Hence in the
+full product, the state q is an error state. Therefore even after the removal of
+the transition (q, a, r) from the product F ⊗ G ⊗ H ⊗ I, there is an autonomous
+path from p to an error state, namely, to q. 2
+     As a consequence of Theorem 17, we can check whether k > 0 interface au-
+tomata F1 , . . . , Fk are compatible by computing their composition F1 || · · · ||Fk
+incrementally, by adding one interface automaton at a time. The potential ef-
+ficiency of the incremental product construction lies in the fact that product
+states can be pruned as soon as they become either incompatible, or unreachable
+through the pruning of incompatible states. Thus, in some cases the exponential
+explosion of states inherent in a product construction may be avoided.
+
+
+4.2   Refinement
+
+In the stateful input-enabled setting, refinement is usually defined as trace con-
+tainment or simulation; this ensures that all output behaviors of the imple-
+mentation are allowed by the specification. However, such definitions are not
+appropriate in a non-input-enabled setting, such as interface automata: if one
+were to require that the set of accepted inputs of the implementation is a sub-
+set of the inputs allowed by the specification, then the implementation would
+make stronger assumptions about the environment, and could not be used in all
+contexts in which the specification is used.
+
+
+                once                    send               ok                 fail
+
+
+
+                   9’                                      5’
+                         ok!                    ok!                        ack?
+
+        ack?                                                    ack?
+
+   8’     trnsmt! 7’     once?      send?      1’ trnsmt! 2’    nack?   3’ trnsmt! 4’
+                                   0’
+
+        nack?
+
+                         fail!                  fail!      6’              nack?
+                  10’
+
+
+
+                        trnsmt                    ack                         nack
+
+                        Fig. 5. The interface automaton OnceOrTwice.
+
+
+
+
+Example 6. Consider the interface automaton OnceOrTwice of Figure 5. This
+automaton represents a component that provides two services: the first is the try-
+twice service “send” provided also by the automaton TryTwice of Figure 1; the
+second is a try-once-only service “once” designed for messages that are useless
+when stale. Clearly, we would like to define refinement so that OnceOrTwice is
+a refinement of TryTwice, because the component OnceOrTwice implements
+all services provided by the component TryTwice, and it is consistent with
+TryTwice in their implementation. Hence, in all contexts in which TryTwice
+is used, OnceOrTwice can be used instead. The language of OnceOrTwice, how-
+ever, is not contained in the language of TryTwice; indeed, “once” is not even
+an action of TryTwice. 2
+
+    Therefore, for interface automata we define refinement in a contravariant
+fashion: the implementation must accept more inputs, and provide fewer out-
+puts, than the specification. For efficient checkability of refinement, we choose a
+contravariant refinement relation in the spirit of simulation, rather than in the
+spirit of language containment. This leads to the definition of refinement as al-
+ternating simulation [1]. Roughly, an interface automaton F 0 refines an interface
+automaton F if each input transition of F can be simulated by F 0 , and each
+output transition of F 0 can be simulated by F . The precise definition must take
+into account the hidden transitions of F and F 0 .
+    The environment of an interface automaton F cannot see the hidden transi-
+tions of F . Consequently, if F is at a state q, and state r is invisibly reachable
+from q (by hidden actions only), then the environment cannot distinguish be-
+tween q and r. Given a state q ∈ Q, let ε-closure(q) be the set of states that are
+invisibly reachable from q. The environment must be able to accept all output
+actions in the set
+
+               obsAO (q) = {a ∈ AO | (∃r ∈ ε-closure(q))(a ∈ AO (r))}
+
+of outputs that may follow after some sequence of hidden transitions from q.
+Conversely, the environment can safely issue all input actions in the set
+
+                obsAI (q) = {a ∈ AI | (∀r ∈ ε-closure(q))(a ∈ AI (r))}
+
+of inputs that are accepted after all sequences of hidden transitions from q. For
+an implementation state q 0 to refine a specification state q we need to require
+that obsAI (q) ⊆ obsAI (q 0 ) and obsAO (q) ⊇ obsAO (q 0 ). Alternating simulation
+propagates this requirement from q and q 0 to their successor states.
+    To define alternating simulation formally, we use the following notation.
+Given a state q ∈ Q and an action a ∈ A of an interface automaton, let
+post(q, a) = {r ∈ Q | (q, a, r) ∈ δ} be the set of a-successors of q.
+
+Definition 10. Given two interface automata F and F 0 , a binary relation  ⊆
+QF × QF 0 is an alternating simulation by F of F 0 if q  q 0 implies
+
+   (1) for all input actions a ∈ AI (q) and states r ∈ post(q, a), there is a state
+    r0 ∈ post(q 0 , a) such that r  r 0 ;
+   (2) for all output actions a ∈ AO (q 0 ) and states r 0 ∈ post(q 0 , a), there is a
+    state p ∈ ε-closure(q) and a state r ∈ post(p, a) such that r  r 0 ;
+   (3) for all hidden actions a ∈ AH (q 0 ) and states r 0 ∈ post(q 0 , a), there is a
+    state r ∈ ε-closure(q) such that r  r 0 .
+
+    Conditions (1) and (2) express the input/output duality between states q  q 0
+in the alternating simulation relation: every input transition from q must be
+matched by an input transition from q 0 , and every output transition from q 0 must
+be matched by a sequence of zero or more hidden transitions from q followed
+by an output transition. Condition (3) stipulates that every hidden transition
+from q 0 can be matched by a sequence of zero or more hidden transitions from q.
+In all three cases, matching requires that the alternating-simulation relation
+is propagated co-inductively. Since interface automata are input-deterministic,
+condition (1) can be rewritten as (1a) AI (q) ⊆ AI (q 0 ) and (1b) for all input
+transitions (q, a, r), (q 0 , a, r0 ) ∈ δ I , we have r  r 0 . It can be checked that if q  q 0
+for some alternating simulation , then obsAI (q) ⊆ obsAI (q 0 ) and obsAO (q) ⊇
+obsAO (q 0 ).
+Definition 11. An interface automaton F 0 refines an interface automaton F ,
+written F  F 0 , if
+  (1) AIF ⊆ AIF 0 and AO      O
+                        F ⊇ AF 0 ;
+  (2) there is an alternating simulation  by F of F 0 such that qF0  qF0 0 .
+    Note that unlike in standard simulation, the “typing” condition (1) is con-
+travariant on the input and output action sets. This captures a simple kind of
+subclassing: if F  F 0 , then the implementation F 0 is able to provide more ser-
+vices than the specification F , but it must be consistent with F on the shared
+services. Condition (2) relates the initial states of the two automata.
+Example 7. In the example of Figures 1 and 5, there is an alternating simu-
+lation that relates q with q 0 for all q ∈ {0, 1, 2, 3, 4, 5, 6}. Hence OnceOrTwice
+refines TryTwice. 2
+
+    It can be shown that refinement relation between interface automata is a
+preorder. Refinement can be checked in polynomial time. More precisely, if F
+has n1 reachable states and m1 reachable transitions, and F 0 has n2 reachable
+states and m2 reachable transitions, then it can be checked in time O((m1 +
+m2 ) · (n1 + n2 )) whether F  F 0 [1].
+    The following theorem shows that interface automata support independent
+implementability: we can always replace an interface automaton F with a more
+refined version F 0 such that F  F 0 , provided that F and F 0 are connected to
+the environment by the same inputs. The side condition is due to the fact that if
+the environment were to provide inputs for F 0 that are not provided for F , then
+it would be possible that new incompatibilities arise in the processing of these
+inputs. For software components, independent implementability is a statement
+of subclass polymorphism: we can always substitute a subclass for a superclass,
+provided no new methods of the subclass are used.
+Theorem 4. Consider three interface automata F , G, and F 0 such that F and
+G are composable and shared (F 0 , G) ⊆ shared (F, G). If F ∼ G and F  F 0 ,
+then F 0 ∼ G and F ||G  F 0 ||G.
+Proof sketch. The typing conditions are straight-forward to check. Note in par-
+ticular that shared (F 0 , G) ⊆ shared (F, G) implies both AH   F 0 ∩ AG = ∅ and
+(AIF 0 \AIF ) ∩ AO
+                 G = ∅.
+    To prove that F 0 ∼ G under the premises of the theorem, we show that
+every autonomous path leading from the initial state to an error state of F 0 ⊗ G
+can be matched, transition by transition, by an autonomous path leading from
+the initial state to an error state of F ⊗ G. The interesting case is that of an
+input transition of F 0 in the product F 0 ⊗ G, say on action a. Since the path
+is autonomous, the input action a of F 0 must be an output action of G, and
+because shared (F 0 , G) ⊆ shared (F, G), the action a must also be an input action
+of F . If a is not enabled in F , then we have already hit an error state of F ⊗ G;
+otherwise, there are unique a-successors in both F and F 0 , and the path matching
+can continue.
+    Finally, to prove that F ||G  F 0 ||G under the premises of the theorem,
+consider an alternating simulation  by F of F 0 such that qF0  qF0 0 . Then
+an alternating simulation 0 by F ||G of F 0 ||G can be defined as follows: let
+(p, r) 0 (p0 , r0 ) iff (1) p  p0 , (2) r = r0 , and (3) (p, r) is not an error state
+of F ⊗ G. 2
+    The property of independent implementability implies that refinement is
+compositional: in order to check if F ||G  F 0 ||G0 , it suffices to check both
+F  F 0 and G  G0 . This observation allows the decomposition of refine-
+ment proofs. Decomposition is particularly important in the case of interface
+automata, where the efficiency of refinement checking depends on the number
+of states.
+
+
+5    Discussion
+An interface automaton represents both assumptions about the environment,
+and guarantees about the specified component. The environment assumptions
+are twofold: (1) each output transition incorporates the assumption that the cor-
+responding action is accepted by the environment as input; and (2) each input
+action that is not accepted at a state encodes the assumption that the envi-
+ronment does not provide that input. The component guarantees correspond to
+possible sequences and choices of input, output, and hidden actions, as usual.
+When two interface automata are composed, the composition operator || com-
+bines not only the component guarantees, as is the case in other component
+models, but also the environment assumptions.
+    Whenever two interface automata F and G are compatible, there is a par-
+ticularly simple legal environment, namely, the empty closure close(F, G). This
+points to a limitation of interface automata: while the environment assumption
+of an automaton can express which inputs may occur, it cannot express which
+inputs must occur. Thus, the environment that provides no inputs is always the
+best environment for showing compatibility. There are several ways of enriching
+interface automata to specify inputs that must occur, among them, synchronic-
+ity [3, 6], adding fairness [4], or adding real-time constraints [7]. In these cases,
+no generic best environment exists, and a legal environment must be derived as
+a winning strategy in a two-player game. Recall that two interfaces F and G are
+compatible iff the environment has a strategy to avoid incompatible states of the
+product F ⊗ G. In this game, player-1 is the environment, which provides inputs
+to the product F ⊗ G, and player-2 is the “team” {F, G} of interfaces, which
+choose internal transitions and outputs of F ⊗ G. The game aspect of compati-
+bility checking is illustrated by the following example of a stateful, synchronous
+extension of assume/guarantee interfaces [3].
+
+Example 8. Suppose that F and G are two generalized A/G interfaces, which
+receive inputs and issue outputs in a sequence of rounds and may change, in
+each round, their input assumptions and output guarantees. The interface F has
+no inputs and the single output variable x; the interface G has the two input
+variables x and y, and no outputs. In the first round, the interface F either
+goes to state q0 and outputs x = 0, or it goes to state q1 and outputs x 6= 0.
+Also in the first round, on input y = 0 the interface G goes to state r0 , and on
+input y 6= 0 it goes to state r1 . In the second round, in state q0 the interface F
+outputs x = 0, and in state q1 it outputs x 6= 0, after which it goes back to the
+initial state. Also the second round, in state r0 the interface G has the input
+assumption x = 0, and in state r1 it has the input assumption x 6= 0. After
+the second round, also G returns to its initial state and the process repeats ad
+infinitum.
+    Note that the state q0 of interface F is compatible with the state r0 of
+interface G, and q1 is compatible with r1 , but q0 is not compatible with r1 , and q1
+is not compatible with r0 . The environment provides the input y to the interface
+G in every round. The environment can avoid incompatibilities by copying, in
+each (odd) round, the value of x into y. In this way the environment can ensure
+that F and G are always in compatible states. Hence the two interfaces F and
+G are compatible. The helpful strategy of the environment can be synthesized
+as a winning strategy of the two-player game “environment” versus “interfaces.”
+In this simple example, it is a game with complete information, because at all
+times the environment, by observing the output x of F , can deduce the internal
+state of F . 2
+
+
+     In the presence of hidden transitions, interface languages must be designed
+carefully. This is because if the state of an interface is not visible to the envi-
+ronment, then a legal environment corresponds to a winning strategy in a game
+with partial information. The derivation of such strategies requires, in general,
+exponential time, by involving a subset construction that considers all sets of
+possible interface states [9]. Any model with an exponential cost for binary com-
+position, however, is unlikely to be practical. This is why we have focused, in
+this article, on the asynchronous case with hidden transitions, and elsewhere [3,
+6, 7], on more general, synchronous and real-time interfaces but without hidden
+transitions. Another interesting direction is to investigate stronger but more ef-
+ficient compatibility checks, which consider only restricted sets of strategies for
+the environment. Such checks would be conservative (i.e., sufficient but not nec-
+essary) yet might still achieve the desired properties of incremental design and
+independent implementability.
+     Rich, stateful interfaces as games have been developed further in [2, 4]. In the
+former article, multiple instances of a component, such as a recursive software
+module, may be active simultaneously. Compatibility checking for the corre-
+sponding interface language is based on solving push-down games. In the latter
+article, the notion of error state is generalized to handle resource constraints
+of a system: an error occurs if two or more components simultaneously access
+or overuse a constrained resource. Critical resources may include power, buffer
+capacity, or cost. While the basic set-up of the game “environment” versus “in-
+terfaces” remains the same, the objective function of the game changes and may
+include quantitative aspects, such as minimizing resource use.
+Acknowledgment. We thank Mariëlle Stoelinga for pointing out errors in a
+previous version of this article.
+
+
+References
+[1] R. Alur, T.A. Henzinger, O. Kupferman, and M. Vardi. Alternating refinement
+    relations. In Proc. Concurrency Theory, Lecture Notes in Computer Science 1466,
+    pages 163–178. Springer-Verlag, 1998.
+[2] A. Chakrabarti, L. de Alfaro, T.A. Henzinger, M. Jurdziński, and F.Y.C. Mang.
+    Interface compatibility checking for software modules. In Proc. Computer-Aided
+    Verification, Lecture Notes in Computer Science 2404, pages 428–441. Springer-
+    Verlag, 2002.
+[3] A. Chakrabarti, L. de Alfaro, T.A. Henzinger, and F.Y.C. Mang. Synchronous and
+    bidirectional component interfaces. In Proc. Computer-Aided Verification, Lecture
+    Notes in Computer Science 2404, pages 414–427. Springer-Verlag, 2002.
+[4] A. Chakrabarti, L. de Alfaro, T.A. Henzinger, and M. Stoelinga. Resource inter-
+    faces. In Proc. Embedded Software, Lecture Notes in Computer Science 2855, pages
+    117–133. Springer-Verlag, 2003.
+[5] L. de Alfaro and T.A. Henzinger. Interface automata. In Proc. Foundations of
+    Software Engineering, pages 109–120. ACM Press, 2001.
+[6] L. de Alfaro and T.A. Henzinger. Interface theories for component-based design. In
+    Proc. Embedded Software, Lecture Notes in Computer Science 2211, pages 148–165.
+    Springer-Verlag, 2001.
+[7] L. de Alfaro, T.A. Henzinger, and M. Stoelinga. Timed interfaces. In Proc. Embed-
+    ded Software, Lecture Notes in Computer Science 2491, pages 108–122. Springer-
+    Verlag, 2002.
+[8] N.A. Lynch. Distributed Algorithms. Morgan-Kaufmann, 1996.
+[9] J. Reif. The complexity of two-player games of incomplete information. J. Com-
+    puter and System Sciences, 29:274–301, 1984.
+

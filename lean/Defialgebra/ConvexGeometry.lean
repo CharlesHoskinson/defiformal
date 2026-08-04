@@ -26,6 +26,12 @@ Machine-checked counterparts of Theorems `R` and `U`.
   reachability preorder is antisymmetric (all strongly connected components are trivial).
 -/
 
+-- The ambient carrier is a *finite* ground set with decidable equality throughout; several
+-- individual statements do not need one or the other, but the uniform signature is deliberate.
+set_option linter.unusedFintypeInType false
+set_option linter.unusedDecidableInType false
+set_option linter.unusedSectionVars false
+
 namespace Defialgebra
 
 namespace ConvexGeometry
@@ -106,7 +112,7 @@ theorem maximal_closed_gap (c : ClosureOperator (Finset E)) (hae : AntiExchange 
     exact hCne (Finset.Subset.antisymm hCA hAC)
   have hcard : (A \ C).card ≤ 1 := by
     by_contra hgt
-    push_neg at hgt
+    rw [not_le] at hgt
     obtain ⟨x, hx, y, hy, hxy⟩ := Finset.one_lt_card.mp hgt
     have hxC : x ∉ C := (Finset.mem_sdiff.mp hx).2
     have hyC : y ∉ C := (Finset.mem_sdiff.mp hy).2
@@ -299,7 +305,81 @@ theorem reachCl_antiExchange_iff :
       ∀ x y : E, Relation.ReflTransGen r x y → Relation.ReflTransGen r y x → x = y :=
   ⟨antisymm_of_reachCl_antiExchange r, reachCl_antiExchange_of_antisymm r⟩
 
+/-! ### The extreme points of a reachability closure are the minimal elements -/
+
+/-- For the reachability closure, `ex` computes the `≤`-**minimal** elements of `A`, where
+`≤` is the reachability preorder. (Antisymmetry is not needed for this identification; under
+antisymmetry `≤` is a genuine partial order and these are minimal in the usual sense.) -/
+theorem ex_reachCl (A : Finset E) :
+    ex (reachCl r) A =
+      A.filter (fun a => ∀ b ∈ A, Relation.ReflTransGen r b a → b = a) := by
+  ext a
+  rw [mem_ex, Finset.mem_filter, reachCl_apply]
+  constructor
+  · rintro ⟨haA, h⟩
+    refine ⟨haA, fun b hbA hba => ?_⟩
+    by_contra hne
+    exact h ((mem_reachSet r).mpr ⟨b, Finset.mem_erase.mpr ⟨hne, hbA⟩, hba⟩)
+  · rintro ⟨haA, h⟩
+    refine ⟨haA, fun hmem => ?_⟩
+    obtain ⟨b, hb, hba⟩ := (mem_reachSet r).mp hmem
+    obtain ⟨hbne, hbA⟩ := Finset.mem_erase.mp hb
+    exact hbne (h b hbA hba)
+
+/-- Composition law: the extreme points of a union are the extreme points of the two pieces,
+filtered down to those still minimal in the union. -/
+theorem ex_reachCl_union (A B : Finset E) :
+    ex (reachCl r) (A ∪ B) =
+      (ex (reachCl r) A ∪ ex (reachCl r) B).filter
+        (fun a => ∀ b ∈ A ∪ B, Relation.ReflTransGen r b a → b = a) := by
+  ext a
+  simp only [ex_reachCl, Finset.mem_filter, Finset.mem_union]
+  constructor
+  · rintro ⟨haAB, hmin⟩
+    refine ⟨?_, hmin⟩
+    rcases haAB with h | h
+    · exact Or.inl ⟨h, fun b hb hba => hmin b (Or.inl hb) hba⟩
+    · exact Or.inr ⟨h, fun b hb hba => hmin b (Or.inr hb) hba⟩
+  · rintro ⟨(⟨h, _⟩ | ⟨h, _⟩), hmin⟩
+    · exact ⟨Or.inl h, hmin⟩
+    · exact ⟨Or.inr h, hmin⟩
+
 end Reach
+
+/-! ## Axiom audit
+
+Every named result above depends only on Lean's three standard axioms (in fact several depend
+on strictly fewer). No `sorry`, no new axioms.
+-/
+
+section AxiomAudit
+
+#print axioms Defialgebra.ConvexGeometry.mem_ex
+#print axioms Defialgebra.ConvexGeometry.ex_subset
+#print axioms Defialgebra.ConvexGeometry.cl_mono
+#print axioms Defialgebra.ConvexGeometry.subset_cl
+#print axioms Defialgebra.ConvexGeometry.ex_subset_of_generates
+#print axioms Defialgebra.ConvexGeometry.maximal_closed_gap
+#print axioms Defialgebra.ConvexGeometry.maximal_closed_gap'
+#print axioms Defialgebra.ConvexGeometry.closure_ex
+#print axioms Defialgebra.ConvexGeometry.unique_minimum_generator
+#print axioms Defialgebra.ConvexGeometry.ex_isMinimumGenerator
+#print axioms Defialgebra.ConvexGeometry.mem_reachSet
+#print axioms Defialgebra.ConvexGeometry.reachSet_mono
+#print axioms Defialgebra.ConvexGeometry.subset_reachSet
+#print axioms Defialgebra.ConvexGeometry.reachSet_idem
+#print axioms Defialgebra.ConvexGeometry.reachCl
+#print axioms Defialgebra.ConvexGeometry.reachCl_apply
+#print axioms Defialgebra.ConvexGeometry.reachSet_empty
+#print axioms Defialgebra.ConvexGeometry.reachSet_insert
+#print axioms Defialgebra.ConvexGeometry.mem_reachSet_insert_of_closed
+#print axioms Defialgebra.ConvexGeometry.reachCl_antiExchange_of_antisymm
+#print axioms Defialgebra.ConvexGeometry.antisymm_of_reachCl_antiExchange
+#print axioms Defialgebra.ConvexGeometry.reachCl_antiExchange_iff
+#print axioms Defialgebra.ConvexGeometry.ex_reachCl
+#print axioms Defialgebra.ConvexGeometry.ex_reachCl_union
+
+end AxiomAudit
 
 end ConvexGeometry
 
