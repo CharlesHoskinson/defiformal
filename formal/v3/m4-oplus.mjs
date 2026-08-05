@@ -47,9 +47,9 @@ for (const [k, v] of [...soleTally].sort((a, b) => b[1] - a[1])) console.log(`  
 console.log(`\npolarity of the shipped bansCond rows (paper calls all of these 'prohibitions'):`);
 const rows = [
   ["X11a*", "Uc & !(Aw & At)", "Uc -> Aw ; Uc -> At", "DUAL-HORN (a requirement written negatively): union-closed"],
-  ["X19*", "Aw & Xf & !(At|Fz|Xm)", "!Aw v !Xf v At v Fz v Xm", "MIXED, 2 negative literals: neither Horn nor dual-Horn"],
+  ["X19*", "Aw & Xf & !(At|Fz|Xm)", "!Aw v !Xf v At v Fz v Xm", "MIXED: >=2 positive so not Horn, >=2 negative so not dual-Horn"],
   ["X2", "Fl & (Cp|Cl) & (Pl|Cd|Im)", "!Fl v !c v !d  for each c,d", "PURELY NEGATIVE (Horn): a genuine prohibition"],
-  ["X18", "Oa & Li & !(Ex|Tp)", "!Oa v !Li v Ex v Tp", "MIXED, 2 negative literals: neither Horn nor dual-Horn"],
+  ["X18", "Oa & Li & !(Ex|Tp)", "!Oa v !Li v Ex v Tp", "MIXED: >=2 positive so not Horn, >=2 negative so not dual-Horn"],
   ["X21", "Fl & (Xf|Rl|Of)", "!Fl v !Xf ; !Fl v !Rl ; !Fl v !Of", "PURELY NEGATIVE (Horn): a genuine prohibition"],
 ];
 for (const r of rows) console.log(`  ${r[0].padEnd(7)} ${r[1].padEnd(26)} => ${r[2].padEnd(34)} ${r[3]}`);
