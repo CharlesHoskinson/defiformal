@@ -1,0 +1,205 @@
+{
+  "app": "Babylon Protocol",
+  "category": "04-liquid-staking",
+  "source": "C:\\defiformal-work\\04-liquid-staking\\01-research.md",
+  "construction": [
+    "Ix",
+    "Rs",
+    "Bs",
+    "Sl",
+    "Ep",
+    "Em",
+    "Fd",
+    "Aw",
+    "Xm"
+  ],
+  "functionalObligations": [
+    {
+      "id": "F1",
+      "text": "A Bitcoin holder locks BTC on Bitcoin, in a Taproot output it constructs itself with the NUMS point as internal key so that key-path spending is disabled, and never surrenders custody and never bridges the coin; the protocol holds nothing.",
+      "elements": [],
+      "evidence": "https://github.com/babylonlabs-io/babylon/blob/main/docs/staking-script.md (accessed 2026-08-04)",
+      "note": "RESIDUE, and the assumption break for the whole Security-reuse register. Every other protocol in this category custodies the stake and Bs presumes it. Here the securing relationship is a set of pre-signatures held by third parties, not a balance held by a contract. The sharper statement is that the stake never enters the system that slashes it."
+    },
+    {
+      "id": "F2",
+      "text": "The output carries exactly three spending paths: a pure timelock returning the coin to the staker after at most 65,534 blocks, an unbonding path requiring the staker plus a threshold of lexicographically sorted covenant keys, and a slashing path requiring the staker plus the named finality provider plus that same covenant threshold.",
+      "elements": [],
+      "evidence": "https://github.com/babylonlabs-io/babylon/blob/main/docs/staking-script.md (accessed 2026-08-04)",
+      "note": "RESIDUE. A security relationship expressed as a disjunction of script conditions on a foreign chain has no representation in the carrier, which models positions as balances in ledgers."
+    },
+    {
+      "id": "F3",
+      "text": "[Vl sub-mechanism 2 of 5: stake allocation and scheduling] The staker names its finality provider inside its own Bitcoin output at the moment of locking; there is no scheduler, no allocation authority and no reassignment.",
+      "elements": [],
+      "evidence": "https://github.com/babylonlabs-io/babylon/blob/main/docs/staking-script.md (accessed 2026-08-04); https://github.com/babylonlabs-io/babylon/blob/main/x/btcstaking/README.md (accessed 2026-08-04)",
+      "note": "Not residue: allocation is closed by construction, because it is user-directed at output creation and immutable thereafter. Recording that is a different act from recording an unnamed mechanism, and the vocabulary cannot distinguish the two, which is the same defect the options lane recorded in FINDINGS-STAGE1. Babylon is the second of the five here to close one of Vl's sub-mechanisms by construction rather than by mechanism."
+    },
+    {
+      "id": "F4",
+      "text": "The staking transaction is registered on Babylon Genesis by submitting a Bitcoin inclusion proof, verified against a Bitcoin light client the chain runs itself; Bitcoin is entirely unaware that Babylon exists.",
+      "elements": [
+        "Xm"
+      ],
+      "evidence": "https://github.com/babylonlabs-io/babylon/blob/main/x/btcstaking/README.md (accessed 2026-08-04); https://github.com/babylonlabs-io/babylon/blob/main/README.md (accessed 2026-08-04)",
+      "note": "Xm is FORCED and retained. Law L18 asks Xm for explicit finality, chain binding and replay protection, and the confirmation-depth and light-client machinery supply them. What Xm cannot express is that the direction of trust is inverted: nothing is being sent, a foreign chain is being observed, and the observed chain has no counterparty role."
+    },
+    {
+      "id": "F5",
+      "text": "A delegation becomes ACTIVE only once 6 of 9 covenant committee members submit pre-signatures for the unbonding, slashing and unbonding-slashing transactions; the committee runs a daemon that watches for pending registrations and signs, and it is mutable by governance.",
+      "elements": [
+        "Aw"
+      ],
+      "evidence": "https://babylon-api.polkachu.com/babylon/btcstaking/v1/params (accessed 2026-08-04); https://github.com/babylonlabs-io/networks/blob/main/bbn-1/covenant-committee/README.md (accessed 2026-08-04)",
+      "note": "Aw is FORCED and retained, and the corpus is right that it drastically understates the object. This is covenant emulation: a threshold signer set standing in for an opcode Bitcoin does not have. The committee is a trusted party inside the security model, load-bearing for both exit and enforcement; its absence breaks on-demand unbonding and its collusion is a live risk. Two facts no gate symbol can carry: Babylon Labs holds 3 of the 9 seats against a quorum of 6, and Babylon's own docs warn the published key list may be outdated because the node parameters are the source of truth."
+    },
+    {
+      "id": "F6",
+      "text": "The unbonding and slashing transactions exist fully signed before the events that would justify them, and are merely waiting to be broadcast.",
+      "elements": [],
+      "evidence": "https://github.com/babylonlabs-io/babylon/blob/main/x/btcstaking/README.md (accessed 2026-08-04)",
+      "note": "RESIDUE. A conditional obligation that has already been executed and is waiting for someone to publish it is not a queue, not an escrow and not an option. This is the primitive that makes the rest of the protocol work and nothing in the 58 names it."
+    },
+    {
+      "id": "F7",
+      "text": "[Vl sub-mechanism 1 of 5: registration] A finality provider registers by BIP-340 public key with a description and a commission rate of at least 3%, and only a registered provider may be named in a staking output.",
+      "elements": [
+        "Aw",
+        "Fd"
+      ],
+      "evidence": "https://github.com/babylonlabs-io/babylon/blob/main/x/btcstaking/README.md (accessed 2026-08-04); https://babylon-api.polkachu.com/babylon/btcstaking/v1/params (accessed 2026-08-04)",
+      "note": "Fd is a CANDIDATE symbol, used with the required mark, and names the minimum commission. Vl is not used. The registered object is not a validator: it validates nothing on Bitcoin, it does not necessarily produce blocks on the chain it finalises, its key for the actual duty is a per-height one-time signature key rather than a persistent consensus key, and Babylon Genesis carries a second, separate validator-like population, the CometBFT validators staked in BABY. One symbol cannot distinguish two validator-like populations on one chain, which is why Vl is equivocal here for a third distinct reason."
+    },
+    {
+      "id": "F8",
+      "text": "At most 60 finality providers are active, selected as the top providers by delegated value that have BTC-timestamped public randomness for the height in question.",
+      "elements": [],
+      "evidence": "https://babylon-api.polkachu.com/babylon/finality/v1/params (accessed 2026-08-04); https://github.com/babylonlabs-io/babylon/blob/main/x/finality/README.md (accessed 2026-08-04)",
+      "note": "RESIDUE, and absent from the corpus. Aw names a gate on identity; this is a competitive ranking with a hard cap, which makes the provider population bounded and rivalrous rather than open. Nothing names a capped, value-ranked, per-height active set."
+    },
+    {
+      "id": "F9",
+      "text": "A provider commits Merkle-tree public randomness for future heights, and the commitment takes effect only after it has been timestamped into Bitcoin; a block is final once providers holding more than two thirds of voting power have cast one-time-signature votes, in a second round on top of the chain's ordinary consensus.",
+      "elements": [],
+      "evidence": "https://github.com/babylonlabs-io/babylon/blob/main/x/finality/README.md (accessed 2026-08-04)",
+      "note": "RESIDUE on both halves. A protocol whose votes are valid only if a foreign chain has already witnessed the commitment is unlike anything Ex or Xm names. And the duty the stake secures is a second finality round after consensus has concluded, which is not the duty of a validator and is what makes Vl equivocal here rather than merely compressed."
+    },
+    {
+      "id": "F10",
+      "text": "[What the staked collateral secures] The locked BTC secures the finality of Babylon Genesis, and by first-party framing of Bitcoin Supercharged Networks beyond it.",
+      "elements": [
+        "Rs"
+      ],
+      "evidence": "https://docs.babylonlabs.io/guides/overview/babylon_genesis/ (accessed 2026-08-04); https://docs.babylonlabs.io/guides/overview/bitcoin_staking/ (accessed 2026-08-04)",
+      "note": "Rs is a CANDIDATE, used with the mark. UNKNOWN, and this is the single most important open question for this application: whether one BTC delegation can secure several networks simultaneously and how slashing is scoped across them. If the answer is yes with per-network slashing conditions, Babylon inherits exactly the problem EigenLayer solved with magnitudes, and that is the difference between Rs being adequate here and being empty. The BSN documentation section exists but the page returned 404 on direct fetch."
+    },
+    {
+      "id": "F11",
+      "text": "[Who may write a slashing condition over the collateral] No third party may. The only slashable fault is equivocation at a single height, defined by the chain's own finality module; there is no analogue of an external service authoring its own slashing predicate.",
+      "elements": [],
+      "evidence": "https://github.com/babylonlabs-io/babylon/blob/main/x/finality/README.md (accessed 2026-08-04)",
+      "note": "The answer is negative and the carrier cannot state a negative. This is the exact converse of EigenLayer F9, where any AVS may author the predicate, and the two protocols occupy opposite ends of an axis the vocabulary does not have: who is permitted to define the fault. Both ends read as an empty array."
+    },
+    {
+      "id": "F12",
+      "text": "[Whether the same collateral can be committed twice] It cannot without a new Bitcoin transaction: a staking output names its finality provider at creation and the covenant pre-signs against that exact output, so the same satoshis cannot be re-committed while locked.",
+      "elements": [],
+      "evidence": "https://github.com/babylonlabs-io/babylon/blob/main/docs/staking-script.md (accessed 2026-08-04); https://github.com/babylonlabs-io/babylon/blob/main/x/btcstaking/README.md (accessed 2026-08-04)",
+      "note": "RESIDUE. Exclusivity here is obtained from UTXO uniqueness on a foreign chain; EigenLayer obtains the same property from a conserved magnitude budget. Two protocols achieve the same guarantee by wholly unrelated means and the vocabulary names neither the guarantee nor either mechanism."
+    },
+    {
+      "id": "F13",
+      "text": "[Vl sub-mechanism 5 of 5, trigger: penalty attribution] A provider that signs two conflicting blocks at one height mathematically reveals its own private key through the extractable one-time signature scheme; the module records the equivocation evidence such that anyone can extract the key, after which anyone may complete and broadcast the pre-signed slashing transaction.",
+      "elements": [],
+      "evidence": "https://github.com/babylonlabs-io/babylon/blob/main/x/finality/README.md (accessed 2026-08-04)",
+      "note": "RESIDUE, and stage 1 found no analogue anywhere in the twelve categories. Sl names a loss being assigned; here nothing is assigned. A secret becomes public and an already-authorised transaction becomes broadcastable by the general public. The enforcement primitive is cryptographic disclosure, not allocation."
+    },
+    {
+      "id": "F14",
+      "text": "[Vl sub-mechanism 5 of 5, effect] The slashing transaction destroys slashing_rate = 0.001, one tenth of one percent, of the delegation, paying it to an OP_RETURN output tagged with the string 'babylon' so that the destruction is provable and self-identifying on the securing chain.",
+      "elements": [
+        "Sl",
+        "Bs"
+      ],
+      "evidence": "https://babylon-api.polkachu.com/babylon/btcstaking/v1/params (accessed 2026-08-04); https://github.com/babylonlabs-io/babylon/blob/main/docs/staking-script.md (accessed 2026-08-04)",
+      "note": "CORRECTION OF MAGNITUDE, and it changes what the construction claims. The corpus treats the BTC as first-order slashable first-loss capital. On mainnet a double-sign burns 0.1%. Any construction that models Babylon slashing as materially loss-bearing models the wrong magnitude. Bs is retained only because slashable capital demonstrably exists and Sl only because the loss lands on a named class, the delegators of the faulty provider; both carry near-zero economic content here, and the dominant consequence for the staker is F15, not this. The corpus also does not record that the burn is provable and tagged, which is arguably the most interesting fact about it. Live chain parameters are authoritative over the repository's parameter file."
+    },
+    {
+      "id": "F15",
+      "text": "A provider that equivocates loses its voting power, and one whose missed blocks exceed the threshold over a 10,000-block window at a 0.2 minimum signed ratio is marked sluggish and jailed for 600 seconds.",
+      "elements": [
+        "Ep"
+      ],
+      "evidence": "https://babylon-api.polkachu.com/babylon/finality/v1/params (accessed 2026-08-04); https://github.com/babylonlabs-io/babylon/blob/main/x/finality/README.md (accessed 2026-08-04)",
+      "note": "RESIDUE recorded alongside a used symbol. Ep names the window and the jail duration. What has no symbol is that the dominant sanction in this protocol is the loss of future income rather than the loss of principal: the stake stops earning and the provider is removed from the active set. Nothing in the 58 expresses a sanction that is entirely opportunity cost. Permanence of the removal after equivocation (tombstoning) is UNCONFIRMED at first-party source: the module README confirms voting-power removal and evidence recording, and stage 1 could not confirm permanence."
+    },
+    {
+      "id": "F16",
+      "text": "[Vl sub-mechanism 4 of 5: exit] Exit is a race between two paths: wait out the 64,000-block staking timelock, or broadcast the covenant-pre-signed unbonding transaction and then wait a further 301 blocks, during which the coin is out of the staking output and still slashable because the slashing timelock equals the unbonding time.",
+      "elements": [
+        "Ep"
+      ],
+      "evidence": "https://babylon-api.polkachu.com/babylon/btcstaking/v1/params (accessed 2026-08-04); https://github.com/babylonlabs-io/babylon/blob/main/docs/staking-script.md (accessed 2026-08-04)",
+      "note": "CORRECTION: Wq is DROPPED from the corpus construction. There is no queue. No ordering exists, no shared exit liquidity exists, no finalisation step exists, and each delegation unbonds independently on its own Bitcoin timelock; the lifecycle is a per-delegation state machine, PENDING to VERIFIED to ACTIVE to UNBONDED or EXPIRED. RESIDUE: a post-exit window during which capital has left the securing position but remains liable is an object nothing names. Stage 1 also records a trap: networks/bbn-1/parameters/global-params.json states unbonding_time 1008, which is the Phase-1 regime; the live chain value is 301 and the live value governs."
+    },
+    {
+      "id": "F17",
+      "text": "At each block the incentive module intercepts the fee collector and creates a BTC-staking gauge; the finality module's end-blocker then splits it across delegations by voting power, net of each provider's commission, with the BTC-staking portion strictly less than one so the remainder goes to the chain's own CometBFT validators and their delegations.",
+      "elements": [
+        "Em",
+        "Fd"
+      ],
+      "evidence": "https://github.com/babylonlabs-io/babylon/blob/main/x/incentive/README.md (accessed 2026-08-04)",
+      "note": "Em is retained: BABY rewards are protocol-funded through the chain's minting and fee machinery, unlike the AVS-funded rewards of EigenLayer where Em is dropped. Fd is a CANDIDATE symbol, used with the required mark, and is ADDED for the commission and the portion split. UNKNOWN: the live mainnet value of the BTC-staking portion parameter."
+    },
+    {
+      "id": "F18",
+      "text": "A per-stakeholder reward gauge accrues against a cumulative reward figure recorded at the stakeholder's start period, and tracks what has already been withdrawn.",
+      "elements": [
+        "Ix"
+      ],
+      "evidence": "https://github.com/babylonlabs-io/babylon/blob/main/x/incentive/README.md (accessed 2026-08-04); https://github.com/babylonlabs-io/babylon/blob/main/x/costaking/README.md (accessed 2026-08-04)",
+      "note": "Ix is ADDED. This is the standard cumulative-index accrual pattern and it is the one place in this protocol where a core accounting symbol fits without qualification. Sh is deliberately not used: the claim is on a stream of emitted rewards, not on a pool balance."
+    },
+    {
+      "id": "F19",
+      "text": "A user who holds both an active BTC delegation to an active finality provider and a BABY delegation to a CometBFT validator earns an additional reward computed from a score over active satoshis and active BABY jointly.",
+      "elements": [],
+      "evidence": "https://github.com/babylonlabs-io/babylon/blob/main/x/costaking/README.md (accessed 2026-08-04)",
+      "note": "RESIDUE, and NEW: the costaking module did not exist when the corpus was written. A reward keyed on the holder occupying two different positions in two different consensus systems at once is neither an emission of a schedule nor a distribution of a fee; it prices a conjunction of holdings. It also links the BTC staking system to the chain's own proof-of-stake system in a way the corpus model does not contain."
+    },
+    {
+      "id": "F20",
+      "text": "An allow-list restricts which staking transactions may register at all, and it expires at block height 139,920, after which registration is open.",
+      "elements": [
+        "Aw",
+        "Ep"
+      ],
+      "evidence": "https://babylon-api.polkachu.com/babylon/btcstaking/v1/params (accessed 2026-08-04); https://github.com/babylonlabs-io/babylon/blob/main/x/btcstaking/README.md (accessed 2026-08-04)",
+      "note": "RESIDUE recorded alongside used symbols: Aw has no temporal dimension. A permission gate that switches itself off at a scheduled block is a gate with an expiry, and combining Aw with Ep expresses the two facts side by side without expressing that one governs the other."
+    },
+    {
+      "id": "F21",
+      "text": "Babylon aggregates its own state into succinct checkpoints written into Bitcoin, so that its proof-of-stake history is bounded by Bitcoin's, and separately runs epoched staking over its CometBFT validator set.",
+      "elements": [
+        "Ep"
+      ],
+      "evidence": "https://github.com/babylonlabs-io/babylon/blob/main/README.md (accessed 2026-08-04); https://api.github.com/repos/babylonlabs-io/babylon/contents/x (accessed 2026-08-04)",
+      "note": "RESIDUE. Xm is retained in the construction for F4, reading Bitcoin, and is deliberately not claimed here for writing to it: Xm names verifying a message delivered from another domain, and here nothing is delivered, nothing is addressed, and the destination chain has no notion of the sender. Borrowing another chain's finality as a clock has no symbol, and it is one of the two protocols Babylon is, the other being the staking protocol."
+    },
+    {
+      "id": "F22",
+      "text": "[Vl sub-mechanism 3 of 5: deposit front-running defence] There is none and none is needed: the staker constructs the output, holds its own key and never hands the coin to a third party, so there is no deposit for an operator to front-run.",
+      "elements": [],
+      "evidence": "https://github.com/babylonlabs-io/babylon/blob/main/docs/staking-script.md (accessed 2026-08-04)",
+      "note": "Closed by construction, not residue. Three of Vl's five sub-mechanisms are present here in some form (F7 registration, F16 exit, F13 and F14 penalty); allocation (F3) and front-running defence (this entry) do not arise. WBETH and Babylon are the two members of this category that do not have the front-running problem, and they lack it for opposite reasons: WBETH because no validator action happens on chain at all, Babylon because the depositor never parts with the coin."
+    }
+  ],
+  "paper": {
+    "title": "Babylon",
+    "label": "cat:lsd:babylon",
+    "blurb": "A Bitcoin holder locks BTC on Bitcoin, in a Taproot output it constructs itself, and never bridges the coin or surrenders the key; the protocol holds nothing. No transferable claim is issued: the position is a delegation registered on a separate chain against a Bitcoin inclusion proof, naming a finality provider chosen at the moment of locking and never reassigned, and rewards accrue in that chain's own token through a per-stakeholder gauge, net of the provider's commission. Exit is a race between paths written into the output --- wait out the staking timelock, or broadcast an unbonding transaction the covenant committee has already pre-signed and then wait again, during which the coin has left the staking output and remains liable. What the stake secures is the finality of that chain, and no third party may define the fault: the only slashable event is a provider signing conflicting blocks at the same height, and the same satoshis cannot be committed elsewhere while the output stands. When a provider does equivocate, the signature scheme discloses its own key, and anyone may then complete and broadcast the pre-signed slashing transaction, which destroys a fraction of the delegation into an output tagged with the protocol's name.",
+    "witnessReason": "The withdrawal-queue element is dropped from the corpus construction, because there is no queue: no ordering, no shared exit liquidity and no finalisation step exists, and each delegation unbonds independently on its own Bitcoin timelock as a per-delegation state machine. Slashable capital and loss allocation are retained but on a different magnitude from the one the record assumes: the live mainnet rate destroys far less of a delegation than a first-loss framing implies, so both symbols carry almost no economic content here, and the sanction that bites is the provider's removal from the active set and the stake's consequent failure to earn. Cross-domain verification is claimed for reading Bitcoin, where a light client and an inclusion proof supply the chain binding and finality its warrant asks for, and deliberately not claimed for writing checkpoints into Bitcoin, because nothing is delivered, nothing is addressed, and the destination chain has no notion of a sender. Protocol-funded emission is retained here where it is dropped elsewhere in this category, because these rewards come from the chain's own minting and fee machinery rather than from a service that submits them.",
+    "residueNote": "The vocabulary presumes that a protocol holds the stake it slashes, and here nothing is \\emph{held}. The securing relationship is a disjunction of script conditions on a chain that does not know this protocol exists, together with a set of transactions signed before the events that would justify them and waiting only to be broadcast; a conditional obligation already executed is neither a queue nor an escrow nor an option. Enforcement is stranger still: nothing is assigned to anyone, a secret becomes public, and a stranger finishes the job. Where the candidate symbol for this category would compress allocation and deposit defence, neither arises --- the staker names its provider inside its own output, and never parts with the coin --- and the carrier writes an obligation that cannot arise exactly as it writes one it could not name. Its answer to who may author the fault is likewise negative, and a negative is the one answer the carrier has no way to record."
+  }
+}

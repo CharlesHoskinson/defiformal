@@ -1,0 +1,163 @@
+{
+  "app": "USDD",
+  "category": "03-cdp-stablecoins",
+  "source": "C:\\defiformal-work\\03-cdp-stablecoins\\01-research.md",
+  "construction": [
+    "Cd",
+    "Ct",
+    "Ex",
+    "Ix",
+    "Sh",
+    "Li",
+    "Sl",
+    "Ps",
+    "Gp"
+  ],
+  "functionalObligations": [
+    {
+      "id": "F1",
+      "text": "a user opens a vault under one of a small set of named collateral types and mints the stablecoin against it in a ledger whose operations are slip, frob, grab, fold and file",
+      "elements": [
+        "Cd"
+      ],
+      "evidence": "https://docs.usdd.io/developers/core-contracts/vat.md (accessed 2026-08-04)",
+      "note": "A near-verbatim Multi-Collateral Dai fork: Vat, Dog, Clip, Spot, Jug, Median, OSM, a user Proxy, PSM and Migrate, with DSS's own function signatures. Live collateral types on TRON are TRX-A, TRX-B, TRX-C, sTRX-A, USDT-A, PSM-USDT and SA001-A. UNKNOWN: SA001-A appears in the published collateral address list (TXdYNjXaHn3c1whomRpzCkaFbjfCffMFGf, https://docs.usdd.io/introduction/collateral-asset-contract-addresses.md, accessed 2026-08-04) with no explanation anywhere in the documentation, so the collateral set cannot be asserted complete."
+    },
+    {
+      "id": "F2",
+      "text": "a vault must stay above a minimum collateralisation the documentation says varies with the volatility of the asset",
+      "elements": [
+        "Ct"
+      ],
+      "evidence": "https://docs.usdd.io/introduction/core-features.md (accessed 2026-08-04)",
+      "note": "The test is DSS's art x rate <= ink x spot with spot written by Spot from the OSM. The per-asset ratios themselves are not published as a table at any page reached: UNKNOWN, which means a construction can assert the test exists and cannot assert its calibration."
+    },
+    {
+      "id": "F3",
+      "text": "each collateral type is priced by a three-stage pipeline: a medianiser computes a price from a list of supported feeds, a delay contract holds a current and a next price, and a third contract writes the safety-margined price into the ledger",
+      "elements": [
+        "Ex"
+      ],
+      "evidence": "https://docs.usdd.io/developers/oracle.md (accessed 2026-08-04)",
+      "note": "Underlying feeds are Chainlink and WinkLink. This is a TIGHTER Ex fit than Sky's, because the medianiser is itself an on-chain contract and Ex explicitly admits 'push/pull/medianizer'. UNKNOWN: the OSM delay length is not stated in the documentation, so L13's freshness bound cannot be checked."
+    },
+    {
+      "id": "F4",
+      "text": "debt accrues by a stability fee accumulated per collateral type and folded across the ledger by a permissionless call",
+      "elements": [
+        "Ix"
+      ],
+      "evidence": "https://docs.usdd.io/developers/core-contracts/jug.md (accessed 2026-08-04)",
+      "note": "Jug carries a per-ilk duty; the entry point is documented as rip(ilk) rather than DSS's drip(ilk), calling Vat.fold to update rate, debt and surplus. A renamed function on an otherwise identical accumulator is the kind of fact that makes source-level identity claims checkable and vocabulary-level identity claims useless."
+    },
+    {
+      "id": "F5",
+      "text": "the level of the borrow rate is a written number set by an authority the documentation does not name",
+      "elements": [],
+      "evidence": "https://docs.usdd.io/developers/core-contracts/jug.md (accessed 2026-08-04)",
+      "note": "RESIDUE, and weaker than Sky's version of the same gap in an instructive way. Sky at least publishes who may write the number and inside what band (sky.json F6-F10). Here duty is settable and no page names the setter, the bounds, the cadence or the process. The vocabulary cannot express either object, so it cannot express the difference between them either — a bounded delegate and an unnamed writer decompose identically, which is the whole content of this lane's control-plane finding."
+    },
+    {
+      "id": "F6",
+      "text": "the advertised savings rate is administered by a published reaction function whose inputs are a seven-day moving average of competitor stablecoin yields, the United States Federal Reserve policy rate, a competitive market premium, and the protocol's own underlying yield",
+      "elements": [],
+      "evidence": "https://docs.usdd.io/system-architecture/regarding-the-dynamic-apy-pricing-mechanism.md (accessed 2026-08-04)",
+      "note": "RESIDUE, and the second of the four rate instruments this lane was sent to separate. Three of four inputs come from OUTSIDE the protocol, including a central-bank policy rate. This is not Em (no token is emitted), not Ix (the index does not track realised returns), not As (quantity, not price) and not the Sky object (no on-chain agent, no bounds, no step). Nothing in 58 symbols names a rate whose level is a declared function of external market and central-bank rates — a policy rate with a published reaction function, which is the standard instrument of actual central banking. CORRECTION TO THE CORPUS: the corpus records a residue reading 'a foundation reserve subsidising an advertised savings rate out of band' and asserts 'the treasury tops up an interest rate in the stablecoin itself'. That is not supported at primary source. What the docs state is the four-input formula. Whether the gap between the administered rate and the earned yield is funded from a reserve is stated nowhere I could find: UNKNOWN. The residue should be restated as recorded here."
+    },
+    {
+      "id": "F7",
+      "text": "a holder may deposit the stablecoin into a share token whose exchange rate against it rises as returns accrue, redeemable at any time with no lockup",
+      "elements": [
+        "Sh",
+        "Ix"
+      ],
+      "evidence": "https://docs.usdd.io/system-architecture/susdd-mechanism.md (accessed 2026-08-04)",
+      "note": "DEPARTURE: the corpus carries Ix for USDD but not Sh, while carrying Sh for sUSDe, which is the same ERC-4626 shape — share accounting and a rising exchange rate. Inconsistent treatment of one shape across two rows of the same category, corrected here."
+    },
+    {
+      "id": "F8",
+      "text": "the yield paid on that share is produced by deploying idle capital into third-party lending venues, where the venues, the caps and the phasing are chosen jointly by two named teams after review of market conditions and liquidity, and only the execution is on-chain",
+      "elements": [],
+      "evidence": "https://docs.usdd.io/system-architecture/smart-allocator.md (accessed 2026-08-04)",
+      "note": "RESIDUE. A discretionary reserve manager standing behind a nominally permissionless CDP. CROSS-LANE: this is the yield lane's five-part delegated allocation mandate again — named agent, domain whitelist, magnitude cap, rate-of-change limit, revocation — except that only SLOT 1 IS VISIBLE HERE. The agent is named ('the USDD and JUST DAO teams'); no domain list, no cap, no step limit and no revocation path is published. That is a useful measurement in itself: the schema's slots are separable, and a protocol can ship the agent without the envelope. Compare Sky, which publishes all five (sky.json F6-F10), and Spark, which publishes all five in the allocation dress (spark-savings.json F17-F20)."
+    },
+    {
+      "id": "F9",
+      "text": "when a vault falls below its minimum ratio anyone may seize it, the seizure starts an auction, keepers are paid a fixed incentive for starting one, the proceeds repay the debt and any excess collateral returns to the owner",
+      "elements": [
+        "Li"
+      ],
+      "evidence": "https://docs.usdd.io/developers/core-contracts/clip.md (accessed 2026-08-04)",
+      "note": "Clip exposes kick(tab,lot,usr,kpr), take(id,amt,max,who,data), redo(id,kpr), yank(id) and file(what,data), with tip documented as a 'fixed incentive for starting an auction'. NOTE FOR THE NESTING CLAIM: USDD's Clip documents tip and cut but never a chip, so the proportional keeper fee that Sky and Lista both pay is not evidenced here. The corpus asserts Lista subset-of USDD subset-of Sky differing only by At, Xf and Fd; at parameter level the nesting is real for the skeleton and imperfect for the incentives."
+    },
+    {
+      "id": "F10",
+      "text": "the auction clears by a price that decays at a fixed rate per second and can be reset by anyone who is paid for resetting it",
+      "elements": [],
+      "evidence": "https://docs.usdd.io/developers/core-contracts/clip.md (accessed 2026-08-04)",
+      "note": "RESIDUE. cut is documented as the 'price decay factor per second'. Reachable only through the contested symbol Da, which this lane declines to use, recording the behaviour here as the corpus did. CROSS-PROTOCOL: identical to sky.json F12 and lista-cdp.json F8 down to the kick/take/redo interface, verified against three independent documentation sites and two source trees."
+    },
+    {
+      "id": "F11",
+      "text": "the architecture provides for auctions that sell governance tokens when the protocol runs a deficit",
+      "elements": [],
+      "evidence": "https://docs.usdd.io/system-architecture/system-architecture.md (accessed 2026-08-04)",
+      "note": "RESIDUE, the same recapitalisation-by-dilution gap as sky.json F14: Sl assigns a loss to a class and Bs pre-stakes capital to be slashed, and neither says new equity is issued against the loss after the fact. Weaker evidence than Sky's: the module is described in the architecture page, and no deployed debt-auction address is published, so whether it is live is UNKNOWN."
+    },
+    {
+      "id": "F12",
+      "text": "a shortfall the auction did not cover is carried by the system rather than by any named holder",
+      "elements": [
+        "Sl"
+      ],
+      "evidence": "https://docs.usdd.io/system-architecture/system-architecture.md (accessed 2026-08-04)",
+      "note": "FORCED, and thinly evidenced. The DSS skeleton implies a Vow, the architecture page describes the deficit path in outline, and no USDD page describes the surplus/deficit accounting in the detail Sky's Vow page gives. Carried because deleting it would leave the deficit path empty; flagged so stage 3 can weigh it as weaker than Sky's identically shaped obligation."
+    },
+    {
+      "id": "F13",
+      "text": "the stablecoin swaps one-for-one against named reserve stablecoins with no service fee, so the user pays only transaction cost, subject to a published availability cap",
+      "elements": [
+        "Ps"
+      ],
+      "evidence": "https://docs.usdd.io/user-guide/psm-peg-stability-module.md (accessed 2026-08-04)",
+      "note": "UsddPsm with AuthGemJoin adapters for USDT and USDC and a UsddJoin for minting and burning, discovered through a ChainLog registry under MCD_PSM_USDT_A and MCD_PSM_USDC_A, multi-decimal (6 against 18), Solidity ^0.6.12, deployed on TRON, Ethereum and BNB Smart Chain (https://github.com/decentralized-usd/psm, accessed 2026-08-05). The code carries separate tin and tout fees under governance control; the user-facing docs say the fee is currently zero. As at Sky, a live fee of zero and a governable fee of zero are the same number and different instruments, and Ps carries neither. This is the only par exit: Rd is correctly ABSENT, so L7 is discharged through Ps alone."
+    },
+    {
+      "id": "F14",
+      "text": "either direction of the peg swap can be paused independently by an authorised party",
+      "elements": [
+        "Gp"
+      ],
+      "evidence": "https://github.com/decentralized-usd/psm (accessed 2026-08-05)",
+      "note": "The one control-plane fact in this application evidenced at source rather than asserted in prose. Which party holds the pause is not published: UNKNOWN. Gp names the facility and, as everywhere in this lane, not the holder."
+    },
+    {
+      "id": "F15",
+      "text": "the issuer exists separately in three domains, with its own token contract and its own local collateral in each, and mints locally against local backing rather than bridging a single supply",
+      "elements": [],
+      "evidence": "https://docs.usdd.io/developers/deployment-addresses.md (accessed 2026-08-04)",
+      "note": "RESIDUE, and a DEPARTURE: the corpus carries Xf for USDD and this construction drops it. USDD on TRON TXDk8mbtRbXeYuMNS83CfKPaYYT8XWv9Hz, on Ethereum 0x4f8e5de400de08b164e7421b3ee387f461becd1a, on BNB 0x45e51bc23d592eb2dba86da3985299f7895d66ba, with TRX and sTRX ilks on TRON, USDT/USDC on Ethereum and USDT on BNB. Xf names moving an asset across domains and L9 requires debit(source) = credit(destination); nothing here is moved, so L9 does not apply and asserting Xf would assert a conservation relation that does not hold. One brand, one peg, three domains, three collateral sets, and no symbol for it. If a canonical bridge exists it was not found at primary source: UNKNOWN."
+    },
+    {
+      "id": "F16",
+      "text": "a core contract exists whose only job is to convert holders of the issuer's own predecessor liability into the current one",
+      "elements": [],
+      "evidence": "https://docs.usdd.io/developers/core-contracts.md (accessed 2026-08-04)",
+      "note": "RESIDUE. Migrate is listed among the ten core contracts. The predecessor, USDDOLD, was minted by whitelisted TRON DAO Reserve institutions burning TRX against a basket of BTC, USDT, USDC and TRX (https://docs.usdd.io/introduction/what-is-usddold.md, accessed 2026-08-04) — a completely different issuance mechanism under the same brand. Two liabilities of one issuer, one deprecated, one successor, with a conversion path and no symbol. The same object appears at Sky as the DAI/USDS converter (sky.json F18), where it is additionally a rate instrument. RELATED CORRECTION: the corpus carries At for USDD on the grounds that 'the TRON DAO Reserve publishes a transparency dashboard'. USDD 2.0's own documentation places the TDR in the past as the issuer of USDDOLD, and the current governance and architecture pages do not mention it. At is dropped; whether the TDR still stands behind USDD 2.0 is UNKNOWN."
+    },
+    {
+      "id": "F17",
+      "text": "the protocol states that its framework is community-driven and that critical changes are subject to community review and approval, and names no governable parameter, no timelock, no voting threshold and no administrative address",
+      "elements": [],
+      "evidence": "https://docs.usdd.io/governance/overview.md (accessed 2026-08-04)",
+      "note": "RESIDUE, and a THREE-SYMBOL DEPARTURE. The corpus carries Tg, Up and Gp for USDD. (a) Tg: no timelock is named at any primary source; secondary reporting describes a transition of governance to JST under JUST DAO, and JustLend's own docs describe a GovernorBravo + WJST + 48-hour Timelock stack for JustLend, but I could not confirm at a USDD primary source that USDD's own parameters sit under that timelock. UNKNOWN, so Tg is dropped. (b) Up: the 'Proxy contract' listed among the core contracts is the DSS user proxy, not an upgrade proxy; no upgradeability claim is evidenced. Up is dropped. (c) Gp survives only in the narrow, source-evidenced form of F14. (d) Em is also dropped: the corpus carried it for a savings subsidy that F6 shows is not evidenced. The measurement to report is that five of the corpus's thirteen elements for USDD are unsupported at primary source, four of them control-plane symbols, and that the security page repeats the governance page's principles without implementation detail (https://docs.usdd.io/security/secure-framework.md, accessed 2026-08-04). The vocabulary reads an undocumented control plane and a documented one identically."
+    }
+  ],
+  "paper": {
+    "title": "USDD",
+    "label": "cat:cdp:usdd",
+    "blurb": "A borrower deposits collateral --- the host chain's native token, its staked variant, or a fiat-backed stablecoin --- into a vault and mints the unit against it, staying above a minimum ratio that varies with the asset's volatility, and the debt accrues a stability fee through a rate accumulator. The peg is defended by over-collateralisation, by a peg-stability module that swaps a fiat-backed stablecoin for the unit at par with no service fee, and by liquidation. An unsafe vault is seized automatically and its collateral sold by a descending auction whose price decays at a fixed rate per second; the keeper takes a fixed incentive plus a proportional one, the proceeds repay the debt, and any excess collateral returns to the owner. The architecture also provides for auctions selling governance tokens when the protocol runs a deficit. There is no direct redemption right against collateral: the peg-swap is the par exit, and a savings share pays an administered rate to holders who deposit the unit.",
+    "witnessReason": "This is the smallest construction of the five, and it is small because most of what the corpus recorded for it could not be confirmed at a primary source. Five corpus elements are dropped: the timelock, because no primary source names one and secondary reporting about a successor governance stack could not be tied to this issuer's own parameters; the upgrade element, because the proxy listed among the core contracts is the borrower's own proxy rather than an upgrade proxy; the attestation, because the reserve it named issued the predecessor liability and the current architecture and governance pages do not mention it; the cross-domain element, because nothing is bridged --- the issuer exists separately in three domains, with its own token and its own local collateral in each, so the conservation law the symbol carries does not apply and asserting it would assert a relation that does not hold; and the emission element, because the savings subsidy it stood for is not evidenced anywhere. A share element is added, correcting a treatment the corpus already applies to an identically shaped share token elsewhere in this same category. The control plane is not merely thin: no public repository for the CDP core could be located, the governance pages name no governable parameter, no delay, no threshold and no address, and whether the deployed bytecode matches any published source is UNKNOWN.",
+    "residueNote": "What this protocol cannot say is mostly what its sources do not say. The savings rate is administered by a published reaction function whose inputs are in the main outside the protocol --- a moving average of competitor yields, a central bank's policy rate, a competitive premium --- and nothing in the vocabulary names a rate whose level is a function of external market and central-bank rates. Behind a nominally permissionless vault stands a discretionary allocator: two named teams choose the venues, the caps and the phasing, and only the execution is on-chain. The descending auction, the contract whose only purpose is to convert holders of the issuer's own predecessor liability, and the separate issuance in three domains are residue as well. The control-plane residue is of a different kind from the others in this category: elsewhere the vocabulary is too coarse to distinguish arrangements that are documented, and here the arrangement is not documented \\emph{at all}, which the record states as UNKNOWN rather than as absence."
+  }
+}

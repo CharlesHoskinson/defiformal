@@ -1,0 +1,189 @@
+{
+  "app": "Circle USYC (Hashnote)",
+  "category": "09-rwa",
+  "source": "C:\\defiformal-work\\09-rwa\\01-research.md",
+  "construction": [
+    "At",
+    "Aw",
+    "Ex",
+    "Fz",
+    "Gp",
+    "Ix",
+    "Rd",
+    "Sh",
+    "Sv",
+    "Up",
+    "Xf"
+  ],
+  "functionalObligations": [
+    {
+      "id": "F1",
+      "text": "an investor subscribes USDC and receives a token equal in number to the shares they hold in a Cayman Islands mutual fund",
+      "elements": [
+        "Sh"
+      ],
+      "evidence": "https://usyc.docs.hashnote.com/overview/product-structuring.md (accessed 2026-08-04)",
+      "note": "Hashnote mints an amount of USYC tokens equivalent to the number of shares the investor has in the fund, and price equals net asset value divided by supply. The reconciliation is measurable: cross-chain token supply about 2,651.3M against the oracle's share count 2,654,890,748.20, agreeing to 0.13 per cent, so essentially the whole fund is tokenised. The corpus marker stands: Sh elsewhere in this vocabulary means a claim on a pool the contract can enumerate, and this contract can enumerate nothing."
+    },
+    {
+      "id": "F2",
+      "text": "the claim accrues in the price rather than in the balance, so a holder who does nothing holds the same number of tokens worth more each day",
+      "elements": [
+        "Ix"
+      ],
+      "evidence": "https://usyc.docs.hashnote.com/overview/token-price.md (accessed 2026-08-04)",
+      "note": "DEPARTURE: the corpus omits Ix for USYC and it is a clean instance. Verified by reading the oracle and the balances separately: round 483 answer 1.133066960425761961 while holder balances are static. Ix is APPROXIMATE in one respect worth recording, that the index is not computed by the protocol from its own state but posted by the issuer (F3)."
+    },
+    {
+      "id": "F3",
+      "text": "the price is struck once per business day off-chain from a prime brokerage account and published on-chain at about nine in the morning eastern time through a Chainlink-interface aggregator",
+      "elements": [
+        "Ex",
+        "At",
+        "Sv"
+      ],
+      "evidence": "https://usyc.docs.hashnote.com/overview/token-price.md (accessed 2026-08-04)",
+      "note": "Ex is confirmed twice over for USYC, once for price and once for sanctions (F8), and the price oracle is provably the one the redemption path uses because Teller.oracle() returns exactly 0x74f2199AEb743f68f05943e5715A33EaF2b61f53 (18 decimals, round 483, updatedAt 1785846203). At is SCOPED: there is a daily NAV publication with a named administrator (NAV Consulting) and a named auditor (Cohen and Company), so a named attester exists, but there is NO reserve attestation of any kind, and the vocabulary conflates the two. Circle's docs claim the token price AND FUND HOLDINGS are published through an onchain oracle; latestRoundData returns only a price and the richest API payload carries only principal, interest, balance, price, supply and fee, with no composition at all. Sv is added as a DEPARTURE: the issuer determines the price, may delay it for operational or technical reasons, and decides discretionarily how much instant liquidity exists on a given day. Two live aggregators exist and the docs disagree on which is canonical (0x4c48bcb2160F8e0aDbf9D4F3B034f1e36d1f8b3e, 8 decimals, round 773, answer 1.13281096, a different value on a different schedule)."
+    },
+    {
+      "id": "F4",
+      "text": "a subscription arriving after two in the afternoon eastern time is priced at a forecast of the next price report rather than at any observed value",
+      "elements": [],
+      "evidence": "https://usyc.docs.hashnote.com/overview/token-price.md (accessed 2026-08-04)",
+      "note": "RESIDUE. Neither Ex (an observed external datum) nor Ix (mechanical accrual) names an issuer-computed PROJECTION of a value not yet determined, with the issuer bearing or capturing the difference. Distinct from Sv, which names discretion over a determination that has been made."
+    },
+    {
+      "id": "F5",
+      "text": "redemptions execute at a different price from subscriptions, with a time-varying spread between the two legs",
+      "elements": [],
+      "evidence": "https://usyc.docs.hashnote.com/overview/token-price.md (accessed 2026-08-04)",
+      "note": "RESIDUE. A two-price mechanism on the same instrument at the same instant. The vocabulary treats an instrument as having a price; this one has two, and which one applies depends on the direction the holder is travelling."
+    },
+    {
+      "id": "F6",
+      "text": "a holder may burn the token at the smart contract teller and be paid USDC at the latest reported price, at any hour of any day",
+      "elements": [
+        "Rd"
+      ],
+      "evidence": "https://usyc.docs.hashnote.com/overview/product-structuring.md (accessed 2026-08-04)",
+      "note": "APPROXIMATE, and the conditionality is not cosmetic. The teller ABI is minimal, deposit(uint256,address) and redeem(uint256,address,address), and mainnet teller 0xeE35F963BFC71b51eC95147f26c030D674ea30e6 has asset() = USDC. Rd asserts a right; F7 and F8 record why this one is discretionary in substance. Subscription funds arriving after 2 PM EST mint on the next business day."
+    },
+    {
+      "id": "F7",
+      "text": "no reserve stands behind that promise: the teller holds no USDC of its own, liquidity is pushed in by an operator at transaction time, and a holder needing more than the day's posted amount is told to contact the issuer",
+      "elements": [],
+      "evidence": "https://usyc.docs.hashnote.com/overview/product-structuring.md (accessed 2026-08-04)",
+      "note": "RESIDUE, and it is a measurement, not an inference: the mainnet teller's USDC balance is 0.0 and the BSC cross-chain teller's is 0.0, and an eth_getLogs scan for USDC Transfer into the mainnet teller over the most recent 4,000 blocks returned zero events (JSON-RPC ethereum-rpc.publicnode.com and bsc-rpc.publicnode.com, accessed 2026-08-04). Overflow is handled by an email address, not by a queue, so Wq is correctly absent and its absence must NOT be read as evidence of unconditional liquidity. UNKNOWN: the numeric cap; /api/liquidity and /api/teller both return 404 and no existing endpoint carries a capacity field. The fallback is NOT documented as T+1 and must not be asserted as such."
+    },
+    {
+      "id": "F8",
+      "text": "unconditional instant convertibility exists but must be bought: it is a separately priced per-client tier carrying additional fees",
+      "elements": [],
+      "evidence": "https://usyc.docs.hashnote.com/overview/subscription-and-redemption.md (accessed 2026-08-04)",
+      "note": "RESIDUE. The Private Liquidity Teller allows a client up to 100 per cent instant liquidity into USDC at all times, and additional fees apply. If 100 per cent instant liquidity must be purchased, the default teller manifestly does not provide it. The vocabulary treats redemption as a uniform property of an instrument; USYC's is STRATIFIED BY CONTRACT, and two holders of the same token have different rights. This is also the only publicly visible glimpse of bilateral variation in an otherwise private document set."
+    },
+    {
+      "id": "F9",
+      "text": "only wallets an off-chain administrator has approved may hold, subscribe or redeem, and the check runs in a contract the token itself points at",
+      "elements": [
+        "Aw"
+      ],
+      "evidence": "https://usyc.docs.hashnote.com/overview/investor-onboarding.md (accessed 2026-08-04)",
+      "note": "The gate is provably wired: authority() on the token 0x136471a34f6ef19fE571EFFC1CA711fdb8E49f2b returns 0x902D906b8d988092213bE799B18Bd2cbd64F808C, exactly the Entitlements contract named in the docs. Entitlements are the gatekeepers to most of the functionality of USYC. The determination is human and off-chain: the fund administrator performs KYC and AML, then a screening provider whitelists the wallet. Non-US persons only, minimum US$100,000, Regulation S."
+    },
+    {
+      "id": "F10",
+      "text": "eligibility is additionally revoked, continuously and by a third party, through a live sanctions oracle queried on every transfer",
+      "elements": [
+        "Ex",
+        "Aw"
+      ],
+      "evidence": "https://usyc.docs.hashnote.com/overview/product-structuring.md (accessed 2026-08-04)",
+      "note": "APPROXIMATE and the reason matters: Aw is INSUFFICIENT alone. The gate is a conjunction of two things with different temporal character, a static-ish allowlist bit set once at onboarding, and a dynamic negative check against a Chainalysis oracle that can invalidate a previously-valid wallet with no action by Circle, Hashnote or the holder. Ex is emitted here for the oracle, which is the second confirmed instance of Ex in this application. The residue is the SHAPE: an external oracle acting as a revocation channel, and a live protocol dependency on one firm's data availability and correctness."
+    },
+    {
+      "id": "F11",
+      "text": "the issuer can halt all transactions in the token and can destroy a named holder's balance, but no evidence exists that it can reassign one",
+      "elements": [
+        "Fz",
+        "Gp"
+      ],
+      "evidence": "https://usyc.docs.hashnote.com/overview/product-structuring.md (accessed 2026-08-04)",
+      "note": "CANDIDATE-REGISTER (Fz). The Entitlements contract can freeze all transactions involving USYC and Hashnote has the ability to prevent any transaction from being completed; live paused() is false. Selector extraction from the deployed implementations shows mint(address,uint256), burn(uint256) and burn(address,uint256), the last being an administrative burn of another party's balance. A targeted search for forceTransfer, seize, clawback, destroyBlackFunds, freeze(address) and blacklist(address) found none, so the Fz gloss overstates USYC by one power (forced transfer) and understates it by another (targeted destruction). Selector extraction is strong evidence of presence and weaker evidence of absence. Gp is emitted for pause()/unpause() on Entitlements."
+    },
+    {
+      "id": "F12",
+      "text": "the code of every core contract can be replaced by whoever owns its implementation, and three different parties own the four of them",
+      "elements": [
+        "Up"
+      ],
+      "evidence": "https://usyc.docs.hashnote.com/overview/smart-contracts.md (accessed 2026-08-04)",
+      "note": "All four core contracts are EIP-1967 proxies with UUPS-style upgradeTo and upgradeToAndCall; the admin slot is empty and the implementation slot populated on each, so upgrade authority sits with each implementation's owner(). Token impl owner 0x13ff8cAb..82dD6, Teller impl owner 0x8B1A2015..a3a55B, Entitlements impl owner 0x8fb098d6..5d2FC0, Oracle impl owner 0x1De107Dc..B19E98. Three distinct owners, so the control plane is segmented rather than a single key. UNKNOWN whether any owner is a multisig; owner bytecode was not fetched, so this must not be reported as safer than BUIDL, only as different. No timelock is evidenced anywhere, so L15 (Up implies Tg or a bounded emergency process) is NOT discharged."
+    },
+    {
+      "id": "F13",
+      "text": "the same claim is issued natively on three chains with dedicated cross-chain subscribe and redeem paths, and ninety-seven per cent of it lives on the chain of the one venue that accepts it as margin",
+      "elements": [
+        "Xf"
+      ],
+      "evidence": "https://usyc.docs.hashnote.com/overview/smart-contracts.md (accessed 2026-08-04)",
+      "note": "DEPARTURE, and it REVERSES a corpus attribution. The corpus records Xf and Xm for BUIDL and neither for USYC, and identicalClaimedByLane records the two applications as identical. Measured supplies on 2026-08-04: Ethereum 77,375,020.09, BNB Chain 2,573,937,729.19, Solana 113.69. Cross-chain tellers are deployed on Ethereum (0x5dbeCcECEbCdC2ce3258f6E638373d2923560c7d) and BSC (0xf38979E0..3D08). QUALIFICATION: issuance is NATIVE per chain, so Xf here means multi-domain native issuance with a cross-domain subscribe and redeem path, not lock-and-mint bridging. Xm is deliberately NOT emitted: every ABI probe of the cross-chain teller (owner, token, messenger, tokenMessenger, endpoint, lzEndpoint) reverted against 7,920 bytes of unverified bytecode and no document names a protocol, so the messaging layer is UNKNOWN and must not be asserted in either direction. On the evidence USYC has BETTER cross-domain support than BUIDL, which is the reverse of what the corpus records, and the two decompositions differ by at least four symbols before any of this is considered."
+    },
+    {
+      "id": "F14",
+      "text": "the token's primary use is not investment but margin: it sits immobilised with a tri-party custodian, pledged against derivatives positions at an exchange, while continuing to accrue",
+      "elements": [],
+      "evidence": "https://www.circle.com/pressroom/circles-usyc-now-supported-as-yield-bearing-off-exchange-collateral-for-binances-institutional-clients (accessed 2026-08-04)",
+      "note": "RESIDUE, and it is the dominant actual use rather than a side use: Circle's own 10-K says USYC is intended primarily for use as collateral in digital asset markets (https://www.sec.gov/Archives/edgar/data/1876042/000187604226000062/crcl-20251231.htm, accessed 2026-08-04). Held through Binance Banking Triparty or with Ceffu. There is no symbol for pledged-but-yielding collateral held by a third-party custodian, and this also EXPLAINS F13's concentration: the distribution of the supply across chains is a function of one exchange's collateral policy, which is itself a concentration risk with no name."
+    },
+    {
+      "id": "F15",
+      "text": "a ten per cent performance fee on yield plus four and three basis points on subscription and redemption are taken by the manager off the net asset value",
+      "elements": [],
+      "evidence": "https://usyc.docs.hashnote.com/overview/fees.md (accessed 2026-08-04)",
+      "note": "RESIDUE. Fd (surplus and fee distribution) was considered and REJECTED rather than approximated: Fd names a protocol distributing realised surplus to claim classes it can enumerate, and this is a fee charged off an off-chain net asset value by an off-chain manager, invisible to every contract. Measured effect, live: gross yield 3.5199632342282894 per cent against net 3.1679669108054607 per cent."
+    },
+    {
+      "id": "F16",
+      "text": "the holder must know who owes them the money, and here the fund owes it while a different company in a different jurisdiction is the party they deal with, and three primary sources disagree about which of the two is the issuer",
+      "elements": [],
+      "evidence": "https://www.sec.gov/Archives/edgar/data/1876042/000187604226000062/crcl-20251231.htm (accessed 2026-08-04)",
+      "note": "RESIDUE. The economic obligor is Hashnote International Short Duration Yield Fund Ltd., a CIMA-licensed Cayman exempted mutual fund; Circle International Bermuda Limited is the token administrator responsible for the management of USYC on behalf of the fund. The unresolved inconsistency must be flagged and not resolved: the USYC docs, Circle's developer docs and the 10-K regulatory section all say CIBL issues USYC, while 10-K Note 3 says the fund is the issuer of USYC and the press-release disclaimer calls CIBL merely token administrator. Recourse against Circle is nil and stated as such: the Company provides no guarantees and has no other financial obligations to each of the funds, and its maximum exposure to loss is limited to its insignificant investment and its obligations to perform services as the manager. Circle acquired the MANAGER (Hashnote Holdings LLC, about $100.1m, January 2025), not the fund. No element names an obligor, and none names the issuer-agency split in which the entity a holder deals with is not the entity that owes them."
+    },
+    {
+      "id": "F17",
+      "text": "the holder must know whether the chain is the register, and here the token is explicitly a digital twin of a transfer agent's share register that the administrator moves afterwards to match",
+      "elements": [],
+      "evidence": "https://usyc.docs.hashnote.com/overview/product-structuring.md (accessed 2026-08-04)",
+      "note": "RESIDUE, and the DIRECTION OF THE SENTENCE is the finding. Three quotes settle it: ownership in the fund is represented as shares at the Transfer Agent, and whose digital twins are represented onchain; the fund administrator moves shares in the share registry TO REFLECT movements in the USYC token; the client's redemption of the USYC token WILL BE REFLECTED IN the fund registry by our fund administrator. A twin is by construction a copy of something that exists elsewhere, so the register is legally primary; but the registry moves to reflect the token, so the token is operationally primary in ordering. USYC is on-chain-primary in sequence and off-chain-primary in legal effect. A formalisation that treats the token as the ledger of record misstates what a holder owns; one that treats it as a mere mirror misstates where transactions sequence. Both readings are wrong alone and the vocabulary can express neither, nor the fund administrator's role as the reconciling party between them. This is one of three distinct legal devices used to place the chain below a book in this category; compare BUIDL (a US transfer agent's books and records) and Centrifuge JTRSY (prima facie evidence under BVI law)."
+    },
+    {
+      "id": "F18",
+      "text": "the holder must know whether their claim survives the issuer's insolvency, and here they hold an unsecured equity interest with no security agreement, no collateral agent and no perfection step of any kind",
+      "elements": [],
+      "evidence": "https://www.sec.gov/Archives/edgar/data/1876042/000187604226000062/crcl-20251231.htm (accessed 2026-08-04)",
+      "note": "RESIDUE. There is no security interest to perfect: USYC is a fund share, not a secured note, and unlike Ondo no collateral agent, control agreement or first-priority claim is asserted anywhere. What IS established is segregation from Circle's balance sheet, unusually well evidenced: the fund is an unconsolidated variable interest entity in Circle's own 10-K, so a Circle insolvency does not reach the fund, and symmetrically holders have no recourse to Circle. Creditor ranking is structural and point-in-time: the fund reported total assets $1,537,818 thousand and total liabilities of nil at 2025-12-31, so at that date nothing ranked ahead of tokenholders; the fund is now about $3.0B and no updated liability figure exists. The instrument that actually creates the claim is the offering memorandum, which is NOT OBTAINABLE, so gating, suspension, side letters and wind-down are all UNKNOWN and must not be asserted. An offer is only made to eligible investors through the fund's offering documents, and those documents are private by construction."
+    },
+    {
+      "id": "F19",
+      "text": "the holder must know what the reserve holds and who holds it, and here the assets sit at a prime broker in repo positions whose counterparties are never named and whose composition is never published",
+      "elements": [],
+      "evidence": "https://usyc.docs.hashnote.com/overview/service-providers.md (accessed 2026-08-04)",
+      "note": "RESIDUE. Confirmed: Hashnote transfers the investor's funds to its prime brokerage to invest into T-bills and enter repo and reverse-repo agreements; Circle's docs weight it toward repo, primarily reverse repurchase agreements backed by U.S. government securities. Prime broker Marex, bank Customers Bank, auditor Cohen and Company, administrator NAV Consulting, KYC NAV Consulting and LMO Consulting, MPC wallets Fireblocks. There is NO separate custodian: assets are protected through segregated custodial accounts AT OUR PRIME BROKER, which is a broker, and the phrase qualified custodian appears in no USYC or Circle source fetched, so the paper must not describe USYC as employing qualified custody. Repo counterparty exposure is UNKNOWN, no concentration limit is published, and no holdings breakdown exists in any retrievable format. NEGATIVE RESULT worth recording: the strings prime broker and Marex do not appear anywhere in Circle's FY2025 10-K, so the single largest source of risk in the instrument is disclosed only in product documentation and never in the public-company filing."
+    },
+    {
+      "id": "F20",
+      "text": "the holder must know who may change what the money is invested in, and here the manager sets the mix between bills and repo with no published mandate, band or limit",
+      "elements": [],
+      "evidence": "https://developers.circle.com/tokenized/usyc/overview.md (accessed 2026-08-04)",
+      "note": "RESIDUE, applying the same boundary used across this lane: Sv (emitted at F3) names discretion over a DETERMINATION, and nothing names discretion over an ALLOCATION. The published policy is one adverb, primarily, attached to reverse repo. This is the fourth of five products in this category whose investment discretion is unconstrained and invisible, and it converges with the delegated allocation mandate that the 06-yield and 03-CDP lanes independently identified as a missing level above the element."
+    }
+  ],
+  "paper": {
+    "title": "Circle USYC",
+    "label": "cat:rwa:usyc",
+    "blurb": "An investor subscribes a stablecoin and receives a token equal in number to the shares they hold in a Cayman Islands mutual fund. The fund owes the money; the company the investor deals with is a Bermuda token administrator, and the sponsor disclaims every guarantee to the fund while listing it as a subsidiary in an exhibit to the same annual report whose notes treat it as an unconsolidated variable interest entity. The price is struck once per business day off chain from a prime brokerage account, divided by the supply and published on chain behind a standard aggregator interface, so value accrues in the price and never in the balance. A holder may burn the token at the issuer's teller and be paid at the latest reported price at any hour --- but the teller escrows nothing, an operator pushes liquidity in at the moment of the transaction, a holder who needs more is directed to an email address, and unconditional instant convertibility exists as a separately priced tier.",
+    "witnessReason": "The corpus records this fund and the other treasury fund as identical decompositions while writing down different element sets for them, and the witness makes the difference explicit rather than repairing the arrays. A peg-swap element does not belong here: the price is a rising net asset value and the teller is a net-asset-value mint and redeem with a deliberately asymmetric pair of legs, which is the structural opposite of a par swap. The witness adds an accrual element, because the claim grows in the price and not in the balance; a discretion element, because the issuer determines the price, may delay it, forecasts it after the afternoon cut-off and decides how much instant liquidity exists on a given day; and a cross-domain element, because the token is natively issued on several chains and almost all of it lives on the chain of the single venue that accepts it as margin. Sanctions screening is carried by the external-feed element rather than by the access gate, because the gate is a bit set once at onboarding and the screen is a third party that can invalidate a valid wallet with no act by the issuer, the sponsor or the holder.",
+    "residueNote": "This is the register-of-record gap in its clearest published form. Ownership sits as shares at a transfer agent and the tokens are the issuer's own \\emph{digital twins} of them, with the fund administrator moving shares in the registry \\emph{to reflect} movements in the token. Operationally the token leads and the register follows; legally the register is still the record, and a formalisation that treats the token as the ledger misstates what the holder owns, while one that treats it as a mirror misstates where transactions sequence. The residue also swallows the fund's dominant actual use --- pledged at a tri-party custodian as exchange margin, immobilised and still accruing --- along with the identity of every party that holds the assets, which no regulator's record reaches: no adviser files a private-fund schedule for this fund, and the Cayman register is served behind a challenge the fetch could not pass. The mandate over those assets exists in legal form and stops short, naming an agent and a domain and supplying no counterparty limit, no concentration limit and no holdings feed."
+  }
+}

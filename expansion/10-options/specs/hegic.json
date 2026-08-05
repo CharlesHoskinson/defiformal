@@ -1,0 +1,144 @@
+{
+  "app": "Hegic",
+  "category": "10-options",
+  "source": "C:\\defiformal-work\\10-options\\01-research.md",
+  "construction": [
+    "Bs",
+    "Ep",
+    "Ex",
+    "Fd",
+    "Gp",
+    "Op",
+    "Sh"
+  ],
+  "functionalObligations": [
+    {
+      "id": "F1",
+      "text": "A buyer picks one of a fixed catalogue of deployed strategy contracts — an ETH or BTC call struck at 100/110/120/130% of spot, a put at 70/80/90/100%, or a spread, straddle, strangle, strap, strip, inverse butterfly or inverse condor — and a holding period, pays a USDC premium and receives an ERC-721 position.",
+      "elements": [
+        "Op"
+      ],
+      "evidence": "packages/herge/contracts/Strategies/HegicStrategy.sol and packages/herge/deployments/arbitrum/.addresses.json (about 200 HegicStrategy_* addresses) at https://github.com/hegic/contracts/tree/54833086acc17d2a2bf90229040c456f2fda2624 (accessed 2026-08-04 via gh api contents)",
+      "note": "All mechanism claims here are read from source, not from docs: the public gitbook still documents the 2020-era V1 design (ETH/DAI liquidity pools) two generations behind the deployed Herge system. Dormancy is a first-class fact about this row, not a parenthesis: core commits stopped 2022-12-26, and https://api.llama.fi/overview/options reported $14,842 of 30-day notional and $0 over 24 hours against $8.98M of TVL on 2026-08-04 — capital parked, flow near zero."
+    },
+    {
+      "id": "F2",
+      "text": "The Hegic Operational Treasury is the writer of every position; there is no counterparty user anywhere in the system.",
+      "elements": [],
+      "evidence": "packages/herge/contracts/OperationalTreasury.sol at https://github.com/hegic/contracts/tree/54833086acc17d2a2bf90229040c456f2fda2624 (accessed 2026-08-04 via gh api contents); org repo description 'on-chain peer-to-pool options trading protocol' (gh api orgs/hegic/repos, accessed 2026-08-04)",
+      "note": "RESIDUE, axis (c), and the protocol's defining mechanism. `Pl` is lending. `Cv` is adjudicated claims on pooled premium and Hegic's payoff is automatic and unadjudicated, so `Cv` fails on its distinguishing clause. Confirmed exactly as the corpus states."
+    },
+    {
+      "id": "F3",
+      "text": "At purchase the treasury locks negativePNL — the maximum possible payoff of that position — out of its USDC and adds the premium to lockedPremium; the reservation is released by unlock at expiry.",
+      "elements": [],
+      "evidence": "packages/herge/contracts/OperationalTreasury.sol (buy, _lockLiquidity, unlock) at https://github.com/hegic/contracts/tree/54833086acc17d2a2bf90229040c456f2fda2624 (accessed 2026-08-04 via gh api contents)",
+      "note": "RESIDUE, and the premise of F4-F6. Pre-locked maximum loss is Hegic's solvency primitive and no element names it. Same shape as Rysk F7 from the opposite side: Rysk escrows the user's maximum loss, Hegic escrows the pool's."
+    },
+    {
+      "id": "F4",
+      "text": "Every write is admitted only if totalLocked + lockedPremium <= totalBalance() + coverPool.availableForPayment(), checked on the write itself, and refused otherwise.",
+      "elements": [],
+      "evidence": "packages/herge/contracts/OperationalTreasury.sol (the require in _lockLiquidity) at https://github.com/hegic/contracts/tree/54833086acc17d2a2bf90229040c456f2fda2624 (accessed 2026-08-04 via gh api contents)",
+      "note": "DISCHARGE BY CONSTRUCTION for the threshold term. `Ct` is a per-position ratio evaluated continuously over a position's life, and its purpose is to detect a breach after the fact. This is a balance-sheet inequality over the whole book enforced at admission: nothing can breach it later, because a position that would breach it is never written. The tables reject Hegic for want of `Ct`; the empty array is the honest answer and the rejection is a fact about the requirement language, which admits only 'name a satisfying element' and has no way to say 'the obligation cannot arise'."
+    },
+    {
+      "id": "F5",
+      "text": "DISCHARGED BY CONSTRUCTION: there is no margin engine, no health factor, no liquidator and no liquidation path for any position on either side.",
+      "elements": [],
+      "evidence": "packages/herge/contracts/{OperationalTreasury.sol,Strategies/HegicStrategy.sol,CoverPool.sol} at https://github.com/hegic/contracts/tree/54833086acc17d2a2bf90229040c456f2fda2624 (accessed 2026-08-04 via gh api contents) — no liquidation, health or auction surface exists in the Herge contract set",
+      "note": "DISCHARGE BY CONSTRUCTION. The buyer has no obligation at all once the premium is paid, and the writer's obligation is pre-locked by F3, so `Li` has nothing to do. `Li` is warranted by `Ct` in the tables, so the absence propagates from F4."
+    },
+    {
+      "id": "F6",
+      "text": "The buyer realises the payoff by calling payOff before expiry, which pays the strategy's net P&L in USDC; exercise is permitted only inside exerciseWindowDuration before expiry, and an in-the-money position not claimed in that window pays nothing, its reservation returning to the treasury.",
+      "elements": [],
+      "evidence": "packages/herge/contracts/OperationalTreasury.sol (payOff requires ll.expiration > block.timestamp) and packages/herge/contracts/Strategies/HegicStrategy.sol (isPayoffAvailable requires positionExpiration < block.timestamp + exerciseWindowDuration) at https://github.com/hegic/contracts/tree/54833086acc17d2a2bf90229040c456f2fda2624 (accessed 2026-08-04 via gh api contents)",
+      "note": "RESIDUE on two counts, axes (a) and (b). The exercise style is a window *before* expiry with forfeiture after — neither European nor American, and not one of the two values the corpus's axis offers; the earlier V8888 generation was documented as American and Herge narrowed it. And nothing names the transfer of value from inattentive holders to the pool, which is a real economic term of the instrument. Settlement is cash, a net P&L rather than a delivery, which `Op` also cannot record."
+    },
+    {
+      "id": "F7",
+      "text": "The premium is computed on-chain at purchase by that instrument's own PriceCalculator: either a single admin-set impliedVolRate scalar, or five admin-set int256 polynomial coefficients over the holding period; strikes are scaled to spot at purchase by a priceCorrectionRate.",
+      "elements": [],
+      "evidence": "packages/v8888/contracts/PriceCalculators/IVLPriceCalculator.sol and .../PolynomialPriceCalculator.sol (setImpliedVolRate and setCoefficients, both DEFAULT_ADMIN_ROLE) at https://github.com/hegic/contracts/tree/54833086acc17d2a2bf90229040c456f2fda2624 (accessed 2026-08-04 via gh api contents)",
+      "note": "RESIDUE, axis (f), and a corpus correction. There is no element for a pricing model and none for a volatility surface; an administered implied volatility is the degenerate limit of a surface and the vocabulary has neither the general object nor the limit. Where Derive expresses a surface as five SVI parameters per expiry, Hegic expresses it as a directory of 60+ deployed calculator addresses each holding a scalar or a quartic in time. The corpus residue 'premium pricing is a utilization-scaled IV formula' is a V1-era claim: in Herge the pricer takes no utilisation argument (calculateNegativepnlAndPositivepnl, calculateTotalPremium) and utilisation is handled separately by F9."
+    },
+    {
+      "id": "F8",
+      "text": "The reference price for strike setting and payoff is read from a Chainlink aggregator held by each strategy contract.",
+      "elements": [
+        "Ex"
+      ],
+      "evidence": "packages/herge/contracts/Strategies/HegicStrategy.sol (AggregatorV3Interface priceProvider) and packages/herge/deployments/arbitrum/.addresses.json (PriceProviderETH 0x639Fe6ab55C921f74e7fac1ee960C0B6293ba612, PriceProviderBTC 0x6ce185860a4963106506C203335A2910413708e9) at https://github.com/hegic/contracts/tree/54833086acc17d2a2bf90229040c456f2fda2624 (accessed 2026-08-04 via gh api contents)",
+      "note": "`Ex` fits: a pull medianizer feed. Nothing names the terminal fixing, which here is simply whatever the feed returns at the moment the holder calls payOff — a fixing determined by the claimant's own transaction timing, which is a third distinct fixing regime beside Derive's TWAP and Rysk's 08:00 print."
+    },
+    {
+      "id": "F9",
+      "text": "The only control on how much risk the pool may write is a pair of admin-set notional caps — lockedLimit per strategy contract and LimitController.limit() globally — and an admin can stop the pool writing new risk by setting them.",
+      "elements": [
+        "Gp"
+      ],
+      "evidence": "packages/herge/contracts/Strategies/HegicStrategy.sol (lockedLimit, setLimit) and packages/herge/contracts/Strategies/LimitController.sol at https://github.com/hegic/contracts/tree/54833086acc17d2a2bf90229040c456f2fda2624 (accessed 2026-08-04 via gh api contents)",
+      "note": "APPROXIMATE. `Gp` names an emergency guardian or pause and the halt is achievable, but here the emergency stop and the ordinary utilisation control are the same admin-set scalar, so the vocabulary cannot distinguish 'the protocol was paused' from 'the cap was reached'. RESIDUE inside the obligation: no element names a notional cap as a solvency control, and this is the only thing preventing the pool from selling itself insolvent."
+    },
+    {
+      "id": "F10",
+      "text": "When treasury USDC is short of a payout, _replenish draws from the Stake & Cover pool, selling staked HEGIC to the treasury at epoch[currentEpoch].changingPrice, a rate the admin sets for the next epoch.",
+      "elements": [
+        "Bs"
+      ],
+      "evidence": "packages/herge/contracts/OperationalTreasury.sol (replenish) and packages/herge/contracts/CoverPool.sol (payOut, setNextEpochChangingPrice, coverToken = HEGIC 0x431402e8b9de9aa016c743880e04e517074d8cec, profitToken = USDC) at https://github.com/hegic/contracts/tree/54833086acc17d2a2bf90229040c456f2fda2624 (accessed 2026-08-04 via gh api contents)",
+      "note": "`Bs` is used on its core clause and the use is deliberate: cover providers are stakers, their capital is first-loss, and it is consumed to pay claims. This is the one place in this category where `Bs` is defensible, and it is the contrast that convicts the corpus's use of `Bs` for Derive's owner-funded Security Module. What `Bs` does not carry, and should: the backstop is denominated in the protocol's own token, entry and exit are epoch-gated, and the price at which it is worth anything is set by the entity it backstops. That is most of X3 ('protocol token as collateral AND oracle market AND backstop') but not all of it — the token is not user collateral and its conversion price is an admin scalar rather than a manipulable market, which is arguably worse than what X3 names and is not what X3 says. The corpus's armedProhibitions: [] is unsupported here."
+    },
+    {
+      "id": "F11",
+      "text": "Cover providers hold a Hegic Herge Stake & Cover ERC-721 representing a pro-rata claim on the cover pool, may only provide or withdraw within a five-day window at the start of an epoch, epochs run at least seven days, and anyone may close a stale epoch after ninety days.",
+      "elements": [
+        "Sh",
+        "Ep"
+      ],
+      "evidence": "packages/herge/contracts/CoverPool.sol (windowSize = 5 days, MINIMAL_EPOCH_DURATION = 7 days, fallbackEpochClose) at https://github.com/hegic/contracts/tree/54833086acc17d2a2bf90229040c456f2fda2624 (accessed 2026-08-04 via gh api contents)",
+      "note": "`Ep` is added to the corpus element set, which omitted it: the epoch is a first-class, contract-enforced gate on entry, exit and instrument connection, not a strategy cycle. `Sh` carries the corpus's marker — the claim is pro-rata on a pool whose value depends on unrealised short-option liabilities that are not marked, so the share is a claim on an unenumerable pool."
+    },
+    {
+      "id": "F12",
+      "text": "fixProfit closes an epoch and distributes accumulated USDC to cover providers, with a settlementFeeShare of 20 taken on premium.",
+      "elements": [
+        "Fd",
+        "Ep"
+      ],
+      "evidence": "packages/herge/contracts/CoverPool.sol (fixProfit), packages/herge/contracts/ProfitDistributor.sol and packages/v8888/contracts/PriceCalculators/IVLPriceCalculator.sol (settlementFeeShare = 20) at https://github.com/hegic/contracts/tree/54833086acc17d2a2bf90229040c456f2fda2624 (accessed 2026-08-04 via gh api contents)",
+      "note": "`Fd` is candidate register, used for the surplus-allocation rule naming cover providers as residual claimant. The distribution is an admin transaction (fixProfit is role-gated), which `Fd` does not record."
+    },
+    {
+      "id": "F13",
+      "text": "A new instrument comes into existence by deploying a strategy contract and connecting it through addStrategy / connectStrategy, delayed by one or two cover-pool epochs; there is no expiry calendar and no strike grid, only a directory of about 200 strategy addresses and 60+ calculator addresses.",
+      "elements": [
+        "Ep"
+      ],
+      "evidence": "packages/herge/contracts/OperationalTreasury.sol (addStrategy, connectStrategy with epoch delay) and packages/herge/deployments/arbitrum/.addresses.json at https://github.com/hegic/contracts/tree/54833086acc17d2a2bf90229040c456f2fda2624 (accessed 2026-08-04 via gh api contents)",
+      "note": "`Ep` discharges only the delay. RESIDUE: nothing names a listing process, and 'listing is contract deployment' is the third of five mutually incompatible listing regimes in this category (rolling delta-dependent calendar at Derive, fixed calendar at Aevo, deployment here, continuous taker-specified at Rysk, permissionless factory at Panoptic)."
+    },
+    {
+      "id": "F14",
+      "text": "Composed payoffs — straddles, strangles, straps, strips, spreads, inverse butterflies and inverse condors — are each their own deployed contract with its own pricer and its own limit, rather than compositions a user assembles from legs.",
+      "elements": [],
+      "evidence": "packages/herge/contracts/Strategies/ (14 payoff contracts) and packages/herge/deployments/arbitrum/.addresses.json at https://github.com/hegic/contracts/tree/54833086acc17d2a2bf90229040c456f2fda2624 (accessed 2026-08-04 via gh api contents)",
+      "note": "RESIDUE. No element names a composed payoff as a first-class instrument. The formalism's only composition operator is the union of element sets between protocols, which cannot express composition *within* one symbol's instrument space."
+    },
+    {
+      "id": "F15",
+      "text": "DEFAULT_ADMIN_ROLE can withdraw an arbitrary amount from the Operational Treasury to an arbitrary address, set the implied-volatility scalar and the polynomial coefficients, set period limits and the benchmark, set the next epoch's conversion price, set the payoff pool and close epochs — with no timelock in the code read, and against plain non-proxy contracts.",
+      "elements": [],
+      "evidence": "packages/herge/contracts/OperationalTreasury.sol (withdraw(address,uint256), setBenchmark, setPeriodLimits, replenish) and packages/herge/contracts/CoverPool.sol (setNextEpochChangingPrice, setWindowSize, setPayoffPool, fixProfit), all OpenZeppelin AccessControl, at https://github.com/hegic/contracts/tree/54833086acc17d2a2bf90229040c456f2fda2624 (accessed 2026-08-04 via gh api contents)",
+      "note": "RESIDUE, and a corpus correction. `Up` is dropped from the corpus element set: the Herge contracts are plain and immutable with immutable constructor arguments — no proxy, no initializer, no implementation slot — and mutability is achieved by role-gated setter and by deploying and connecting new strategy contracts, which no element names. `Tg` requires a delay and none appears. X9 ('Up with immediate single-key control') is the right shape for an untimelocked admin withdraw, but X9's own text presumes `Up`, so the prohibition cannot fire on a protocol that achieves the same mutability without a proxy — a gap in the prohibition, not in the protocol. Who holds DEFAULT_ADMIN_ROLE on the live Arbitrum deployment is UNKNOWN."
+    }
+  ],
+  "paper": {
+    "title": "Hegic",
+    "label": "cat:opt:hegic",
+    "blurb": "A peer-to-pool venue: buyers take the other side of a single pool, and the pool underwrites every position. Like Rysk it closes its solvency obligation at write time, by an inequality on the pool's balance sheet rather than by a test on an individual position.",
+    "witnessReason": "The narrower of the two by-construction cases, and the difference is instructive. This venue does carry a first-loss layer --- staked capital that absorbs losses ahead of the pool --- so the loss-absorption term closes and only the collateral-test term stays open. One rejection where the corpus recorded two, and the remaining one is again an obligation that cannot arise.",
+    "residueNote": "A balance-sheet inequality checked when a contract is written and a threshold test evaluated while it is open are different mechanisms with the same purpose. The vocabulary has a name for the second and none for the first, so a venue that cannot become insolvent in the relevant sense is recorded as one that has not said how it avoids it."
+  }
+}

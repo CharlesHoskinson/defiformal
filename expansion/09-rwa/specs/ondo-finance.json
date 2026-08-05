@@ -1,0 +1,222 @@
+{
+  "app": "Ondo Finance (USDY + OUSG + Global Markets)",
+  "category": "09-rwa",
+  "source": "C:\\defiformal-work\\09-rwa\\01-research.md",
+  "construction": [
+    "At",
+    "Aw",
+    "Ex",
+    "Fz",
+    "Gp",
+    "Ix",
+    "Ps",
+    "Rb",
+    "Rd",
+    "Rf",
+    "Sh",
+    "Sv",
+    "Tg",
+    "Up",
+    "Xf",
+    "Xm"
+  ],
+  "functionalObligations": [
+    {
+      "id": "F1",
+      "text": "a subscriber's dollars buy a token that evidences the issuer's debt to the subscriber as a lender, not a proportional interest in any pool",
+      "elements": [],
+      "evidence": "https://docs.ondo.finance/trust-and-security.md (accessed 2026-08-04)",
+      "note": "RESIDUE, and a DEPARTURE from the corpus, which emits Sh for the whole application. The SPV's purpose clause limits it to borrowing funds from prospective lenders and issuing USDY tokens to evidence the LLC's debt obligations to those lenders; Ondo calls holders lenders. A creditor claim of principal plus accrued interest is not a pro-rata slice of an enumerable pool, and no element in the 58 names a debt claim as such. SCOPE: Sh is retained in the construction for OUSG (F5) and for the rUSDY wrapper's internal share accounting only. Applying Sh to USDY conflates a creditor with an equity holder, which is precisely the distinction the security agreement exists to preserve."
+    },
+    {
+      "id": "F2",
+      "text": "the USDY redemption price rises every day by a rate that compounds deterministically on-chain between administrative rate changes",
+      "elements": [
+        "Ix"
+      ],
+      "evidence": "https://docs.ondo.finance/developer-guides/usdy-instant-manager-integration.md (accessed 2026-08-04)",
+      "note": "The RWADynamicOracle is configured with a series of ranges, each with a start time, an end time and a daily interest rate that compounds across the range; the price therefore accrues mechanically between updates. Live getPrice() = 1.14179424 on 2026-08-04 read through USDYOracleWrapper 0x87b126e5518b6a1Bb8465779b4607C45C643DF90. This is a textbook accrual index and Ix is exact for the compounding. Ix does NOT name where the rate comes from; that is F3."
+    },
+    {
+      "id": "F3",
+      "text": "the rate and the fund price are determinations the issuer makes off-chain and then publishes on-chain, once per business day, by hand, from a conservative estimate that is corrected the next day",
+      "elements": [
+        "Ex",
+        "Sv"
+      ],
+      "evidence": "https://docs.ondo.finance/qualified-access-products/ousg/yield.md (accessed 2026-08-04)",
+      "note": "DEPARTURE: Sv is added to the corpus record and is the largest single omission in it. Ondo pushes OUSG NAV once every business day between 4-6pm ET, states that this is a manual process that may take longer, and uses a conservative estimate of the net income it expects trued up the next day. The legacy OUSG oracle was bounded to plus or minus 74 bps against SHV; the current oracle 0x9Cad45a8BF0Ed41Ff33074449B357C7a1fAb4094 carries no documented sanity band. Ex is APPROXIMATE in the marker sense the corpus already records: this is a single-publisher assertion by the obligor, not a medianizer or an adversarial feed."
+    },
+    {
+      "id": "F4",
+      "text": "a sibling token holds price at one dollar and changes nominal balances instead, rebasing on the same daily schedule",
+      "elements": [
+        "Rb"
+      ],
+      "evidence": "https://docs.ondo.finance/general-access-products/usdy/rebasing.md (accessed 2026-08-04)",
+      "note": "rUSDY, live supply 11,862,015.98. Rb is exact. The rebase is coincident with the price update, so the two accounting forms are the same determination in two dresses."
+    },
+    {
+      "id": "F5",
+      "text": "an OUSG subscriber becomes a limited partner in a Delaware fund and the token is a unitized limited partnership interest",
+      "elements": [
+        "Sh"
+      ],
+      "evidence": "https://docs.ondo.finance/qualified-access-products/ousg/overview.md (accessed 2026-08-04)",
+      "note": "Live OndoOracle.getAssetPrice(OUSG) = 116.118574; supply 1,429,129.29, so about $165.9M on Ethereum against a stated portfolio of $378,543,269. Sh is right here and only here. The corpus marker stands: the pool the token is pro-rata OF is off-chain and the contract cannot enumerate it."
+    },
+    {
+      "id": "F6",
+      "text": "the price of every tokenised-equity trade is fixed by an off-chain quote the issuer signs, valid for about thirty seconds, carrying a replay identifier, and consumed by the mint or redeem call",
+      "elements": [
+        "Rf"
+      ],
+      "evidence": "https://docs.ondo.finance/ondo-stocks/token-and-quote-pricing.md (accessed 2026-08-04)",
+      "note": "DEPARTURE and APPROXIMATE, both stated. The corpus and stage 1 both treated this as residue under Ex, on the ground that Ex assumes a readable external datum while this is a capability grant. Neither considered Rf, which names a signed maker quote consumed on-chain and is the closer symbol: the EIP-712 Quote struct with attestationId and expiration is documented at https://docs.ondo.finance/api-reference/smart-contracts.md and consumed by mintWithAttestation / redeemWithAttestation. The approximation is real and must be recorded: in Rf the maker is one of several competing market makers and the quote prices a secondary trade; here the maker is the issuer, is the only counterparty, prices the PRIMARY issuance of its own liability, and sets the spread by proprietary considerations it declines to publish."
+    },
+    {
+      "id": "F7",
+      "text": "the atomic path is not self-contained: every tokenised-equity mint or redeem requires a live artefact from the issuer's attestation service, and settlement into a stablecoin depends on a swapper holding inventory",
+      "elements": [],
+      "evidence": "https://docs.ondo.finance/ondo-stocks/investing-and-redeeming.md (accessed 2026-08-04)",
+      "note": "RESIDUE. The on-chain code is atomic and the system is not. USDC settlement is available only provided there is enough liquidity in the stablecoin swapper, so a holder can be stuck in the issuer's own dollar token indefinitely. Nothing in the vocabulary marks an on-chain operation whose liveness depends on an off-chain signer, and nothing marks a settlement leg contingent on a third party's inventory."
+    },
+    {
+      "id": "F8",
+      "text": "a holder may redeem, but the right is conditional: on registry membership on-chain, on the issuer's diligence off-chain, on a non-US bank account for the wire rail, and the issuer may refuse a redemption it suspects is non-compliant",
+      "elements": [
+        "Rd"
+      ],
+      "evidence": "https://docs.ondo.finance/ondo-stocks/secondary-market-restrictions.md (accessed 2026-08-04)",
+      "note": "APPROXIMATE. Rd asserts a redemption right; every Ondo redemption is conditional and one product has no cash rail at all. The on-chain gate is USDY_InstantManager reverting with UserNotRegistered for an address absent from OndoIDRegistry. The document is explicit that a secondary-market buyer may fail the diligence and therefore may not be able to redeem."
+    },
+    {
+      "id": "F9",
+      "text": "the instant channel is capacity-limited, fifty million dollars globally and twenty-five million per investor per rolling twenty-four hours, and is additionally limited by a third party's stablecoin availability",
+      "elements": [],
+      "evidence": "https://docs.ondo.finance/qualified-access-products/ousg/instant-limits.md (accessed 2026-08-04)",
+      "note": "RESIDUE. Above the threshold an atomic right becomes a next-business-day one against a 4pm ET cut-off. Wq is REFUTED here rather than approximate: there is no queue, no ordering, no position and no claim on the next release. This is a soft rationing boundary and the vocabulary has no symbol for a right that degrades by size rather than being denied."
+    },
+    {
+      "id": "F10",
+      "text": "the issuer operates a one-for-one swap module between its own dollar token and USDC, gated by a whitelist and bounded by the module's inventory",
+      "elements": [
+        "Ps"
+      ],
+      "evidence": "https://docs.ondo.finance/addresses.md (accessed 2026-08-04)",
+      "note": "DEPARTURE: the corpus omits Ps and Ondo names it in its own address register as the Ondo PSM (Peg Stability Module) for USDon, at USDonManager 0x05CCbB4b74854f8A067b83475E8c34f5a413D7e1. Live USDon supply 29,998,093.04. Two qualifications the symbol does not carry: by default users are not whitelisted to swap, and all tokenised-equity trades must settle through USDon, so the swap is not an optional convenience but a mandatory intermediation step, which nothing names."
+    },
+    {
+      "id": "F11",
+      "text": "transfers are gated by an identity determination made off-chain and enforced in the token's transfer hook, under three different regimes across the three products",
+      "elements": [
+        "Aw"
+      ],
+      "evidence": "https://docs.ondo.finance/qualified-access-products/ousg/overview.md (accessed 2026-08-04)",
+      "note": "APPROXIMATE, and the flattening is the finding. OUSG runs a true allowlist: CashKYCSenderReceiver requires msg.sender, from and to all to be KYC'd, with membership in OndoIDRegistry whose state is mapping(rwaToken => mapping(user => bytes32 userID)), binding an address to an off-chain identity PER TOKEN. The tokenised equities run a DENYLIST only, so anyone not blocked may hold one and only a KYC'd party may mint or redeem. USDY runs a pass-through stub (F12). A single Aw flattens a permissioned fund, a bearer instrument and a dormant-gate hybrid into one symbol, and it cannot express a per-token identity keyspace. Verified source of the OUSG implementation at https://eth.blockscout.com/api/v2/smart-contracts/0x1B19C19393e2d034D8Ff31ff34c81252FcBbee92 (accessed 2026-08-04)."
+    },
+    {
+      "id": "F12",
+      "text": "the USDY gate is installed, wired into the transfer hook and deliberately switched off, and one role-holder can re-arm it in a single transaction with no delay",
+      "elements": [],
+      "evidence": "https://eth.blockscout.com/api/v2/smart-contracts/0x5cd9e3a4c9933133b512da1b6ba4672160e0c665 (accessed 2026-08-04)",
+      "note": "RESIDUE, and it deserves its own symbol. Live USDY.allowlist() returns 0x5cd9e3a4c9933133b512da1b6ba4672160e0c665, whose verified source is contract AllowlistStub with isAllowed(address) returning true unconditionally; confirmed behaviourally against a never-transacted address. setAllowlist(address) is callable by LIST_CONFIGURER_ROLE, member count 1, with no timelock. This is the mechanism behind the permissionless-yieldcoin marketing. Neither permissioned nor permissionless describes it, and Aw has no notion of a gate's default or of its re-armability."
+    },
+    {
+      "id": "F13",
+      "text": "the issuer can immobilise a holder's balance in both directions, by blocklist and by a live sanctions oracle, and can destroy it, but cannot reassign it to anyone",
+      "elements": [
+        "Fz"
+      ],
+      "evidence": "https://github.com/ondoprotocol/usdy/blob/3912ca0698c2992e4db997d0855e62588c44e2c0/contracts/usdy/USDY.sol (accessed 2026-08-04)",
+      "note": "CANDIDATE-REGISTER (Fz), and HALF RIGHT as the corpus states it. Freeze is confirmed: Blocklist 0xd8c8174691d936E2C80114EC449037b13421B0a8 plus the Chainalysis sanctions oracle plus pausability, all evaluated in _beforeTokenTransfer on msg.sender, from and to. Forced transfer is ABSENT: no forceTransfer, seize or recover exists in any Ondo contract read. What exists instead is an admin burn whose BURNER_ROLE member count is 0 on USDY, 0 on OUSG and 0 on NVDAon on 2026-08-04, a latent unassigned destructive power. Freeze, confiscate-by-burn and forced transfer are three different powers and Fz names one, so L28 (named authority, enumerated triggers, appeal path, holder disclosure) cannot be evaluated against what is actually deployed."
+    },
+    {
+      "id": "F14",
+      "text": "any one of nine signers on a threshold-one multisig can halt USDY transfers",
+      "elements": [
+        "Gp"
+      ],
+      "evidence": "https://docs.ondo.finance/addresses.md (accessed 2026-08-04)",
+      "note": "Gp names the pause. It does not name the holder, which is the whole content here: PAUSER_ROLE on USDY has 2 members, the 4-of-7 admin Safe and 0x2e55b738f5969eea10fb67e326bee5e2fa15a2cc, which is a Gnosis Safe with threshold 1 of 9 owners. The same hot address holds PAUSER_ROLE on OUSG and EXECUTOR_ROLE plus CANCELLER_ROLE on the Ondo Stocks timelock. This is the cross-lane party-sort gap recorded for 07-bridges, exhibited again on $1.1B of live supply. Role censuses read by eth_call against ethereum-rpc.publicnode.com on 2026-08-04."
+    },
+    {
+      "id": "F15",
+      "text": "the code behind every core token can be replaced, and for the tokens carrying most of the value the replacement is immediate",
+      "elements": [
+        "Up",
+        "Tg"
+      ],
+      "evidence": "https://docs.ondo.finance/addresses.md (accessed 2026-08-04)",
+      "note": "SCOPE, and Tg is MISLEADING UNQUALIFIED. USDY, rUSDY, USDYc, OUSG and OndoIDRegistry are EIP-1967 proxies upgraded by bare Safes with ZERO delay (4-of-7, 4-of-7, 3-of-5). The only TimelockController 0x3715b2154d2ff4c5b027c7a1f734b53f27bc34f1 has getMinDelay() = 7200 seconds and governs only USDon's ProxyAdmin and the tokenised-equity beacon; its TIMELOCK_ADMIN_ROLE is renounced and its EXECUTOR_ROLE includes the 1-of-9 Safe and a bare EOA. USDY plus OUSG are about 87 per cent of Ondo's yield-asset value, so Tg describes the minority of the system and two hours is a fat-finger guard, not a governance window. Also unnameable: one beacon upgrade replaces the implementation of all 444 Ethereum tokenised-equity tokens at once, and Up carries no notion of fan-out. L15 (Up implies Tg or a bounded emergency process) is discharged for USDon and the beacon and is NOT discharged for USDY, OUSG or the registry."
+    },
+    {
+      "id": "F16",
+      "text": "the same claim exists on ten or more chains, moved by burning on one and minting on another under a three-attestor quorum in which the issuer is itself an attestor, subject to per-pathway daily caps",
+      "elements": [
+        "Xf",
+        "Xm"
+      ],
+      "evidence": "https://docs.ondo.finance/tools/ondo-bridge.md (accessed 2026-08-04)",
+      "note": "Xm OVERSTATED as recorded. The DVN set is Canary DVN, LayerZero Labs DVN and Ondo DVN, so verification is an attestation quorum containing the issuer, not cryptographic verification of source-chain state. The exposure is direct and measurable: the Ethereum OFT adapter 0xa6275720b3fB1Efe3E6EF2b5BF2293148852307D holds MINTER_ROLE on USDY, so bridging literally mints and a quorum failure mints unbacked USDY. Rate limits are 450,000 out and 500,000 in per pathway per day for USDY. STALENESS: any Xm or Xf reasoning that assumed an Ondo-operated settlement chain is void, because Ondo Chain was cancelled on 2026-07-27 and replaced by an off-chain-enclave design (https://ondo.finance/ondo-chain, accessed 2026-08-04)."
+    },
+    {
+      "id": "F17",
+      "text": "a named third party attests daily to the assets said to back the tokens, and a named administrator independently computes the fund's net asset value from read-only account access",
+      "elements": [
+        "At"
+      ],
+      "evidence": "https://docs.ondo.finance/ondo-stocks/trust-and-transparency.md (accessed 2026-08-04)",
+      "note": "At is discharged here better than anywhere else in this category, and still incompletely against L27. Named attester: Ankura Trust Company as Verification Agent performing daily attestations, and NAV Consulting as OUSG's fund administrator with read-only account access (https://docs.ondo.finance/qualified-access-products/ousg/trust-and-transparency.md, accessed 2026-08-04). Missing from L27: no stated assurance level, no staleness bound, and no recourse against the attester. Note that the daily attestation covers existence of assets, not composition, and the issuer expressly disclaims responsibility for errors in any determination."
+    },
+    {
+      "id": "F18",
+      "text": "the holder must know who owes them the money and what they can do about it, and here the issuer's own live documentation names two different obligors for the same token while capping recourse at whatever collateral is recovered",
+      "elements": [],
+      "evidence": "https://docs.ondo.finance/general-access-products/usdy/important-notes.md (accessed 2026-08-04)",
+      "note": "RESIDUE. No element of the 58 names an obligor or a recourse position. The facts: one live page says USDY tokens are issued by Ondo Global Markets (BVI) Limited; another describes Ondo USDY LLC (Delaware) in the present tense; the product page reports Issuer Domicile: United States (https://ondo.finance/usdy, accessed 2026-08-04). UNKNOWN whether outstanding USDY was novated or whether two vintages have two obligors; EDGAR has no registrant for either entity, so no novation disclosure exists. Recourse is contractually capped: all payments shall only be satisfied by recourse to the sums received or recovered, and purchasers shall have no further recourse to the Issuer, with recourse to directors, officers and employees also excluded. A limited-recourse note and a full-recourse note are different instruments and no symbol distinguishes them. For the tokenised equities, disputes go to arbitration in Zurich under the Swiss Rules and holders are entitled to damages only, expressly not to specific performance."
+    },
+    {
+      "id": "F19",
+      "text": "the holder must know whether the chain is the register of ownership or a mirror of somebody's book, and across Ondo's three products the answer is three different things",
+      "elements": [],
+      "evidence": "https://web.archive.org/web/20251013000000id_/https://docs.ondo.finance/general-access-products/usdy/faq/investing-and-redeeming (accessed 2026-08-04)",
+      "note": "RESIDUE, and the largest gap by capital in the project. In no Ondo document does any sentence say the blockchain is the register of record. USDY: the chain controls, proved by an asymmetry in Ondo's own loss language, that a lost token cannot be recovered because it is designed to be a bearer instrument like a stablecoin while a lost Temporary Global Certificate can always be re-downloaded from the account system, and USDYc is described as an onchain bookkeeping representation of that certificate. OUSG: UNKNOWN, and this is the sharpest single gap, because a Delaware LP must keep a partner register, no transfer agent is named for OUSG anywhere, no document says which of the register and the token ledger controls, and the 2026 Form D reports 84 investors against a token freely transferable among all KYC'd parties. Tokenised equities: the chain records who holds and Ondo's KYC book records who may be paid, and the holder will not see their name on the share register for the underlying assets, which are held in the name of the Issuer. That last split, a real transferable claim that is nonetheless unredeemable in the hands of someone who cannot pass diligence, is the single most interesting formal feature of the design and has no name at all."
+    },
+    {
+      "id": "F20",
+      "text": "the holder must know whether their claim is secured, perfected, and able to survive the issuer's insolvency, and here a first-priority security interest is asserted while the steps that would make it good are either private or absent",
+      "elements": [],
+      "evidence": "https://web.archive.org/web/20251013000000id_/https://docs.ondo.finance/general-access-products/usdy/faq/trust-and-transparency (accessed 2026-08-04)",
+      "note": "RESIDUE. CONFIRMED: Ankura Trust Company is collateral and security agent for USDY and for the tokenised equities; perfection is by control agreements entered with Ankura and each of the banks and custodians, which is the correct route for deposit accounts and securities entitlements; a secondary buyer appoints Ankura as Security Agent by the act of acquiring the token. UNKNOWN: no UCC-1 or financing statement is mentioned in any page fetched or archived; and because Ondo Global Markets (BVI) Limited is a BVI company, UCC Article 9 would not govern perfection against it in the ordinary way, so the governing law of the security agreement is undetermined. UNDER-MODELLED: enforcement is gated on a tokenholder vote, Ankura acting subject to USDY Tokenholder approval upon acceleration of the loans by the vote of USDY holders, and NOTHING ON-CHAIN IMPLEMENTS THAT VOTE. Bankruptcy remoteness is built by four devices, entity separation with an independent director, a restricted purpose clause, a non-petition covenant of one year plus one day, and limited recourse extended to persons; the last two are the textbook securitisation pair and are completely invisible in the 58 symbols. Bankruptcy remoteness is NOT claimed for OUSG at all."
+    },
+    {
+      "id": "F21",
+      "text": "the holder must know what the reserve holds and who holds it, and here the disclosure is a self-published portfolio page with no independent composition attestation, whose fund product is itself two tokenisation layers away from any Treasury",
+      "elements": [],
+      "evidence": "https://ondo.finance/usdy (accessed 2026-08-04)",
+      "note": "RESIDUE. At names the attestation, never the assets. Measured from Ondo's own reports on 2026-08-04: USDY outstanding $2.14B against assets $2.16B, a collateralisation ratio of 104.20 per cent, 99.21 per cent US Treasuries with weighted average maturity 173.76 days, 0.11 per cent SVB deposits, and a line item of $14,631,268 of USDY issued under the tokenised-equity programme sitting inside the USDY collateral pool. OUSG on the same date holds $378,543,269 as SWEEP 39.75 per cent, BUIDL 26.75 per cent, BENJI 16.86 per cent, FYOXX 16.23 per cent (https://ondo.finance/ousg, accessed 2026-08-04): every one of the four fund positions is itself a tokenised money-market fund, so an OUSG holder sits two tokenisation layers from the Treasuries. That composition, a claim on a token that is a claim on a token that is a claim on a fund, is the containment relation the intents and yield lanes independently found the carrier cannot state. Custody: the assets sit with unnamed banks and custodians party to the control agreements, and no custodian is named in any Ondo document fetched."
+    },
+    {
+      "id": "F22",
+      "text": "the holder must know who may change what the money is invested in, and here the manager states an unconstrained discretion to change it with no target allocation, no band and no concentration limit disclosed anywhere",
+      "elements": [],
+      "evidence": "https://docs.ondo.finance/qualified-access-products/ousg/overview.md (accessed 2026-08-04)",
+      "note": "RESIDUE, and it converges with the 06-yield and 03-CDP finding that the vocabulary has no delegated allocation mandate. The portfolio may, in the future, include other US Treasury funds and/or direct investments in US Treasuries; WisdomTree is named in the prose and holds zero. No element is sensitive to a party who can change the entire risk profile of the instrument without touching a contract. Sv, which this construction does emit at F3, names discretion over a DETERMINATION (what the price is); it does not reach discretion over an ALLOCATION (what the assets are). That boundary is applied identically across all five specs in this lane."
+    },
+    {
+      "id": "F23",
+      "text": "over-collateralisation is provided as sponsor equity under a contractual floor tested at quarter end, and there is no second class of token, no subordinated holder and no distribution waterfall",
+      "elements": [],
+      "evidence": "https://web.archive.org/web/20251013000000id_/https://docs.ondo.finance/general-access-products/usdy/faq/trust-and-transparency (accessed 2026-08-04)",
+      "note": "RESIDUE, and a CORRECTION the corpus requires. Tr is REFUTED for Ondo. The 3 per cent is real and citable, a 3 per cent first-loss position such that $100 of USDY is always secured by at least $103, and live collateralisation was 104.20 per cent on 2026-08-03. But it is a contractual minimum of SPONSOR EQUITY, not a junior note class: there is no second class of tokens, no subordinated holder, no distribution waterfall in normal operation, and no on-chain loss-allocation logic. A priority ordering appears only on enforcement, in the phrase less any sums which the Issuer is or may be obligated to pay to any person in priority to such Purchaser. The compliance test is at quarter end, so intra-quarter breach is contemplated. What is actually present is credit support supplied from OUTSIDE the structure by the sponsor, plus an Ondo Foundation guarantee for the tokenised equities, and nothing in the 58 names external credit support."
+    }
+  ],
+  "paper": {
+    "title": "Ondo Finance",
+    "label": "cat:rwa:ondo",
+    "blurb": "One sponsor issues claims that are not of the same legal kind, and the difference is larger than the wrapper they share. A subscriber to the yield token is a \\emph{lender}: the token evidences the issuer's debt, a named collateral agent holds a first-priority security interest for the holders, and recourse is contractually capped at what that collateral recovers. A subscriber to the fund token becomes a limited partner in a Delaware partnership; a subscriber to the tokenised equities holds a structured note of a British Virgin Islands vehicle governed by Swiss law, whose holders are entitled to damages and not to performance. Price is set a different way in each: a rate that compounds deterministically on chain between administrative changes, a net asset value pushed by hand once a business day from an estimate trued up the next, and a signed off-chain quote that expires in seconds and is consumed by the trade it prices. Redemption is atomic for a holder the registry knows, and otherwise a wire to a non-US bank account, a shared capacity cap, or a diligence check a secondary buyer can fail.",
+    "witnessReason": "The corpus record carries a tranche element for this sponsor and the witness drops it. The junior capital is real --- a contractual floor of sponsor equity above the tokens outstanding, tested at quarter end --- but it is equity standing behind the whole issue rather than a subordinated class of tokens: there is no second token, no junior holder and no distribution waterfall in normal operation, and a priority ordering appears only on enforcement. In its place the witness carries a peg-swap element the issuer names in its own address register, a signed-quote element for a price that arrives as an unforgeable expiring capability rather than as a readable feed, and a discretion element for a rate the issuer administers against a document the holder cannot read. The pro-rata claim element is scoped to the fund token alone; applying it to the debt token would make a creditor into an equity holder, which is the distinction the security agreement exists to preserve.",
+    "residueNote": "The residue is where the sponsor's own record stops agreeing with itself. Its live documentation names two obligors for the same token, and its terms of service keep the Delaware company alive as a distinct contracting party while naming issuers for the other two products and none for that one, so the first thing a holder must know --- who owes them the money --- is settled by no public source. The security interest is asserted and the control agreements are confirmed, and the financing statement that would make the interest good against third parties cannot be checked at all: Delaware publishes no free debtor-name index, and a certified search must be bought from an authorised searcher. That is a documented absence rather than a search failure, and it is this category's problem in its sharpest form --- the wrapper is readable by anyone with an RPC endpoint, and the step that makes the claim survive an insolvency is readable only by whoever pays for it. The one published quantitative bound on discretion anywhere in the category is here, and it bounds the sponsor's credit support rather than the manager's mandate."
+  }
+}

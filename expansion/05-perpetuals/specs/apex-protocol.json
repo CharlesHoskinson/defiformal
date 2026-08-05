@@ -1,0 +1,208 @@
+{
+  "app": "ApeX Protocol (ApeX Omni)",
+  "category": "05-perpetuals",
+  "source": "C:\\defiformal-work\\05-perpetuals\\01-research.md",
+  "construction": [
+    "Ob",
+    "Pf",
+    "Ct",
+    "Ex",
+    "Li",
+    "Ad",
+    "Sh",
+    "Fd",
+    "Au",
+    "Xf",
+    "Xm"
+  ],
+  "functionalObligations": [
+    {
+      "id": "F1",
+      "text": "orders rest in a price-time-priority central limit order book with maker and taker fees tiered from 2/5 bps down to 0/2.5 bps, offering up to 100x leverage on majors",
+      "elements": [
+        "Ob"
+      ],
+      "evidence": "https://apex-pro.gitbook.io/apex-pro/apex-omni/perpetual-contracts-open-interest-and-leverage.md (accessed 2026-08-04)",
+      "note": "APPROXIMATE — Ob asserts an ON-CHAIN order book. ApeX's microstructure is a price-time-priority CLOB, but the venue never states where the book is kept (F2), so the 'on-chain' half of the symbol is unverified and probably false. Fee table at https://apex-pro.gitbook.io/apex-pro/apex-omni/trading-and-funding-fees.md (2026-08-04)."
+    },
+    {
+      "id": "F2",
+      "text": "the venue does not state where its matching engine runs: the documented architecture is an Access / Application / Blockchain layering whose execution layer 'leverages the zkLink engine' and whose settlement layer 'provides proof verification', reached through an operator-hosted REST and WebSocket API",
+      "elements": [],
+      "evidence": "https://www.apex.exchange/blog/detail/ApeX-Omni-Litepaper (accessed 2026-08-04)",
+      "note": "RESIDUE — matching locus, and here the vocabulary is not merely blind to the answer: the protocol does not publish the answer. No symbol can express 'the locus is undisclosed'. Corroborating architecture claim at https://apex-pro.gitbook.io/apex-pro/what-is-apex-omni.md (2026-08-04)."
+    },
+    {
+      "id": "F3",
+      "text": "every order, transfer and withdrawal carries a user-supplied ZkKeys signature — a zkLink L2 signature over the order parameters — in addition to HMAC-SHA256 API-key authentication of the session",
+      "elements": [
+        "Au"
+      ],
+      "evidence": "https://apex-pro.gitbook.io/apex-pro/llms-full.txt (accessed 2026-08-04)",
+      "note": "APPROXIMATE — Au names a delegated execution scope. The API key is exactly that (a scoped session credential, with TradFi perps requiring a separately scoped key), but the scoping partitions ASSET CLASSES rather than permissions, and the second signature is self-custodial authorisation rather than delegation. The pair together — 'the operator may route but may not author an order' — has no expression."
+    },
+    {
+      "id": "F4",
+      "text": "no constraint on the operator's ordering or matching discretion is published: there is no stated fairness rule, no sequencing commitment and no named sequencer, and zkLink X's own sequencing is described as delegable to third parties without ApeX stating whether it delegates",
+      "elements": [],
+      "evidence": "https://docs.zk.link/ (accessed 2026-08-04)",
+      "note": "RESIDUE — operator discretion. Contrast Hyperliquid's in-block class ordering and Lighter's proven priority. The user-signed ZkKeys signature (F3) bounds what the operator may forge but not what it may reorder or withhold."
+    },
+    {
+      "id": "F5",
+      "text": "state transitions are finalised by validity proofs on a zkLink X app-rollup, batched at app-rollup and L2 levels before Ethereum settlement, with proofs first committed on a host chain that forwards sync hashes",
+      "elements": [],
+      "evidence": "https://www.apex.exchange/blog/detail/ApeX-Omni-zkLink-Elevating-Multi-chain-Liquidity-Trading-via-zkLink-X (accessed 2026-08-04)",
+      "note": "RESIDUE — proof system. The 58 contain no element for a validity proof; `Zk` is contested-register and outside the vocabulary, and in any case names state validity, which is exactly what does NOT distinguish this venue from Lighter (whose proof covers the matching rule). Note also that the proof is a third party's: the stack is zkLink X, and no auditor is named for ApeX Omni itself (https://apex-pro.gitbook.io/apex-pro/faqs/apex-protocol-faqs/is-apex-omni-safe-are-your-smart-contracts-audited.md, 2026-08-04)."
+    },
+    {
+      "id": "F6",
+      "text": "the data-availability layer under the venue is not stated: zkLink X offers Ethereum, Celestia, EigenDA, Polygon Avail or a zkLink-organised committee, and ApeX's selection is documented nowhere",
+      "elements": [],
+      "evidence": "https://docs.zk.link/ (accessed 2026-08-04)",
+      "note": "RESIDUE — data availability. The corpus residue asserts a data-availability committee for ApeX; stage 1 shows that is an inherited guess from the discontinued StarkEx product and is not established, so the DAC claim is DROPPED and replaced by this obligation."
+    },
+    {
+      "id": "F7",
+      "text": "a censored trader exits in two steps — submit a forced exit on zkLink L2, wait for on-chain confirmation, then claim on L1 by interacting directly with the ApeX zkLink contract on the chosen chain — with no deadline or exit-window duration stated anywhere",
+      "elements": [],
+      "evidence": "https://apex-pro.gitbook.io/apex-pro/apex-omni/force-withdrawal.md (accessed 2026-08-04)",
+      "note": "RESIDUE — exit. Two things are unnameable: the escape hatch itself, and the fact that its DEADLINE — the whole censorship-resistance argument — is absent. The absence of a parameter is not expressible. Per-chain contract addresses are published on the same page (BNB 0xb8d9f005654b7b127b34dae8f973ba729ca3a2d9, Ethereum 0x35D173cdfE4d484BC5985fDa55FABad5892c7B82, Arbitrum 0x3169844a120c0f517b4eb4a750c08d8518c8466a, Base 0xee7981c4642de8d19aed11da3bac59277dfd59d7, Mantle 0x3c7c0ebfcd5786ef48df5ed127cddeb806db976c)."
+    },
+    {
+      "id": "F8",
+      "text": "collateral is deposited on any of Ethereum, BNB Chain, Arbitrum, Base, Mantle or Solana into a per-chain contract, credited to an Omni funding account, and transferred internally into a Perps or Spot account",
+      "elements": [
+        "Xf",
+        "Xm"
+      ],
+      "evidence": "https://apex-pro.gitbook.io/apex-pro/what-is-apex-omni.md (accessed 2026-08-04)",
+      "note": "Xf names the asset movement. Xm is APPROXIMATE: the cross-chain state synchronisation is zkLink's (Nexus via zk-proof and Ethereum, Origin via zk-proof and a Light Oracle Network), the verification is not ApeX's own, and which scheme ApeX runs is undocumented (https://docs.zk.link/, 2026-08-04)."
+    },
+    {
+      "id": "F9",
+      "text": "one account balance spans six chains: the chain of deposit is a coordinate on a single account object rather than a separate account per domain",
+      "elements": [],
+      "evidence": "https://apex-pro.gitbook.io/apex-pro/what-is-apex-omni.md (accessed 2026-08-04)",
+      "note": "RESIDUE. Xf names the transfer and Xm the verification; neither says the ledger is unified. The contested `Ua` (unified-balance ledger) gestures at it and is outside the 58 — and unlike Hyperliquid, where the corpus declined `Ua` as merely scope, for ApeX this is the headline product claim."
+    },
+    {
+      "id": "F10",
+      "text": "all positions share one unified margin pool backed by total account equity in USDT, with no isolated mode available",
+      "elements": [
+        "Ct"
+      ],
+      "evidence": "https://apex-pro.gitbook.io/apex-pro/apex-omni/margin-risk-management-and-liquidations.md (accessed 2026-08-04)",
+      "note": "Ct computes the test; it cannot say that the test is portfolio-wide by construction and that per-position ring-fencing is unavailable. Margin scope remains residue as it does for Hyperliquid."
+    },
+    {
+      "id": "F11",
+      "text": "initial margin is position size times entry price times IMR, maintenance margin is position size times mark price times MMR, and liquidation fires when the margin ratio (total maintenance margin over total equity) reaches 100%",
+      "elements": [
+        "Ct"
+      ],
+      "evidence": "https://apex-pro.gitbook.io/apex-pro/apex-omni/margin-risk-management-and-liquidations.md (accessed 2026-08-04)",
+      "note": "A single trigger line, unlike Lighter's three-rung ladder — a distinction Ct cannot carry."
+    },
+    {
+      "id": "F12",
+      "text": "eight non-USDT collaterals are valued as Amount x Index Price x Collateral Ratio under tiered haircuts and per-asset supply caps (USDC 99% on the first 5,000,000 then 97.5%, capped at 20,000,000; USDT 100% and uncapped), while a second balance — Perpetual Balance — is computed without the haircut",
+      "elements": [],
+      "evidence": "https://apex-pro.gitbook.io/apex-pro/apex-omni/cross-collateral.md (accessed 2026-08-04)",
+      "note": "RESIDUE. Ct names the threshold test, not the map from token balance to margin value with per-asset ratios and supply caps — and certainly not the coexistence of TWO different valuations of the same collateral. This is absent from the corpus record entirely and it changes what Ct has to compute."
+    },
+    {
+      "id": "F13",
+      "text": "positions are marked to Median(Price1, Price2, Last Price), where Price1 is the index adjusted by the last funding rate over the fraction of the interval remaining and Price2 is the index plus a 5-minute moving average of the mid-index basis, and mark price — not last price — drives liquidations, unrealised PnL, bankruptcy price and margin requirements",
+      "elements": [
+        "Ex"
+      ],
+      "evidence": "https://apex-pro.gitbook.io/apex-pro/apex-omni/price-markers.md (accessed 2026-08-04)",
+      "note": "Ex names the index feed. Its publisher is not named in ApeX's documentation, so this is an external oracle whose source is undisclosed — a weaker position than Ex implies. Tp is NOT claimed: the 5-minute moving average is computed inside an operator-run engine, not on chain, so 'on-chain time-weighted price' would be false."
+    },
+    {
+      "id": "F14",
+      "text": "longs and shorts exchange funding every hour on the hour UTC at F = P + clamp(I - P, -0.05%, +0.05%), with the fee computed as position size times index price times F, the hourly rate capped at plus or minus 0.05%, and any excess beyond the cap absorbed by the platform rather than passed to the counterparty",
+      "elements": [
+        "Pf"
+      ],
+      "evidence": "https://apex-pro.gitbook.io/apex-pro/apex-omni/trading-and-funding-fees.md (accessed 2026-08-04)",
+      "note": "Pf fits exactly — this is a genuine long/short transfer, so the category's 'perp tether' flag is refuted here. What Pf cannot carry is the truncation: above the cap the venue itself becomes the counterparty to the tether, which is an unpriced liability of the operator."
+    },
+    {
+      "id": "F15",
+      "text": "on breach the liquidation engine closes positions in order of risk severity at available market prices, and charges a liquidation fee",
+      "elements": [
+        "Li"
+      ],
+      "evidence": "https://apex-pro.gitbook.io/apex-pro/apex-omni/margin-risk-management-and-liquidations.md (accessed 2026-08-04)",
+      "note": "APPROXIMATE — Li names third parties PAID to close positions. Here an operator-run engine closes them; the liquidation fee exists but is routed to the Insurance Vault's depositors (F18), not to a keeper. The 'incentivized third party' half of the symbol is absent."
+    },
+    {
+      "id": "F16",
+      "text": "if a liquidated position cannot be closed at or above its bankruptcy price, profitable opposite-side positions are closed at the bankruptcy price, ranked by leveraged return, with the ranking surfaced to users so they can manage their queue position",
+      "elements": [
+        "Ad"
+      ],
+      "evidence": "https://apex-pro.gitbook.io/apex-pro/apex-omni/auto-deleveraging-system-adl.md (accessed 2026-08-04)",
+      "note": "Ad fits. It is also, on this venue's own documentation, the FIRST and only loss-absorption layer — the ADL page names no fund that absorbs before it."
+    },
+    {
+      "id": "F17",
+      "text": "no insurance fund exists: the string does not occur anywhere in the venue's 383 KB documentation corpus, and no capital is documented as absorbing a bankrupt position before auto-deleveraging",
+      "elements": [],
+      "evidence": "https://apex-pro.gitbook.io/apex-pro/llms-full.txt (accessed 2026-08-04)",
+      "note": "RESIDUE, and the reason `Bs` is DROPPED from the corpus element set. The corpus justifies Bs with 'the insurance fund absorbs bankrupt-position losses but is protocol-owned and non-slashable'; BOTH halves fail — there is no fund, and what is called the Insurance Vault is user capital (F18). Removing Bs leaves Ad as the loss-absorption element, so the construction still discharges the requirement."
+    },
+    {
+      "id": "F18",
+      "text": "users deposit USDT into a Protocol Vault branded the Insurance Vault, receive shares at NAV with no lock-up and redemption at any time, and earn 100% of the previous day's liquidation fees from all Omni perp trades, credited at 08:05 UTC",
+      "elements": [
+        "Sh",
+        "Fd"
+      ],
+      "evidence": "https://apex-pro.gitbook.io/apex-pro/apex-omni/protocol-vaults.md (accessed 2026-08-04)",
+      "note": "Sh names the pro-rata claim; Fd (CANDIDATE-REGISTER) names the routing of a fee stream to that claim class. What neither names — and what makes this venue's backstop different in kind from Hyperliquid's HLP and Lighter's LLP — is that the docs simultaneously call it 'a backstop for the protocol' and promise a 'stable, positive, and protocol-guaranteed' return: first-loss capital RECRUITED BY RENTING IT with a fee stream, with no stated loss-absorption duty."
+    },
+    {
+      "id": "F19",
+      "text": "traders create and manage Omni Vaults (Community Vaults) that attract external capital and pay the manager a performance fee, for example 10% of profits",
+      "elements": [
+        "Sh"
+      ],
+      "evidence": "https://apex-pro.gitbook.io/apex-pro/apex-omni/protocol-vaults.md (accessed 2026-08-04)",
+      "note": "Sh names the depositor claim only; the delegated trading mandate and its fee have no symbol. Unlike Hyperliquid, no minimum manager stake is documented."
+    },
+    {
+      "id": "F20",
+      "text": "the venue renders a third party's order books — Polymarket's — inside its own interface, margined from the user's Omni account and settled in Polymarket USD",
+      "elements": [],
+      "evidence": "https://apex-pro.gitbook.io/apex-pro/llms-full.txt (accessed 2026-08-04)",
+      "note": "RESIDUE. Ag is route construction across venues for a swap; this is a HOSTED foreign book with a foreign settlement currency, margined from the host's account. Also absent from the corpus record: TradFi perpetuals, tokenised US stocks and Pre-IPO spot inside the same account."
+    },
+    {
+      "id": "F21",
+      "text": "a trader's fee tier advances on the greater of 14-day volume or staked APEX, and APEX / esAPEX staking carries revenue-sharing incentives",
+      "elements": [
+        "Fd"
+      ],
+      "evidence": "https://apex-pro.gitbook.io/apex-pro/apex-omni/trading-and-funding-fees.md (accessed 2026-08-04)",
+      "note": "Fd (CANDIDATE-REGISTER) names the revenue share. `Em` is DROPPED relative to the corpus: stage 1 found esAPEX vesting and revenue sharing but no emissions schedule, so 'protocol-funded emissions' is unsupported and what is documented is fee distribution. Residual: a fee tier advanced by the MAXIMUM of two unrelated commitments (volume traded, capital staked) is a substitution rule with no expression."
+    },
+    {
+      "id": "F22",
+      "text": "no upgrade authority, timelock, guardian or pause power over the contracts custodying user funds is documented, and the contracts in question are zkLink's rather than the venue's",
+      "elements": [],
+      "evidence": "https://apex-pro.gitbook.io/apex-pro/faqs/apex-protocol-faqs/is-apex-omni-safe-are-your-smart-contracts-audited.md (accessed 2026-08-04)",
+      "note": "RESIDUE, and the reason `Tg` and `Up` are DROPPED from the corpus element set. The corpus asserts both with no visible support; stage 1 searched the documentation corpus and found no timelock, no governance execution delay and no upgrade authority. Recording 'the control plane is undocumented' is not the same as recording 'there is none', and the vocabulary can do neither. The predecessor product ApeX Pro (StarkEx) is discontinued and archived (https://l2beat.com/scaling/archived, 2026-08-04), so any StarkEx-derived control-plane claim in the corpus is inherited from a dead product."
+    }
+  ],
+  "paper": {
+    "title": "ApeX",
+    "label": "cat:perp:apex",
+    "blurb": "A venue whose order book is run off-chain by an operator and settled on-chain against validity proofs. The trader posts margin to a bridge contract, trades against a book they cannot observe being constructed, and relies on the proof system for settlement integrity rather than on the sequencing being agreed. The venue never states where its matching engine runs; the stack it is built on does.",
+    "witnessReason": "The witness drops the staked backstop the corpus assigns, because no insurance fund is documented anywhere in the venue's own materials, and an element carried on an undocumented mechanism is a forced fit. The remaining terms are discharged by elements the venue plainly has.",
+    "residueNote": "The operator's discretion is the whole of this venue's risk and none of its decomposition. Two facts found on the second pass make the point sharper than any absence could. The published escape hatch does not work: on four of the five chains for which the venue publishes it, the exit call reverts, because the deployed verifier returns false unconditionally. And the exit deadline is counted in blocks rather than in time, so the same nominal window is a fortnight on one chain and the better part of a year on another. A venue with a documented escape hatch, a venue with a working one, and a venue with neither are three different objects; the vocabulary writes all three the same way.",
+    "source2": "expansion/05-perpetuals/01-research-round2.md"
+  }
+}

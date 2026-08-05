@@ -1,0 +1,182 @@
+{
+  "app": "Grove Finance (Onchain Capital Allocator)",
+  "category": "12-prediction",
+  "source": "C:\\defiformal-work\\12-prediction\\01-research.md",
+  "construction": [
+    "Aw",
+    "Ps",
+    "Sh",
+    "Ix",
+    "At",
+    "Xf",
+    "Tg",
+    "Gp",
+    "Fd"
+  ],
+  "functionalObligations": [
+    {
+      "id": "F1",
+      "text": "a strategy may be funded only after Sky governance approves it through the Atlas Edit weekly cycle following a public forum round in which Grove answers voter questions; only approved strategies move to on-chain deployment",
+      "elements": [],
+      "evidence": "https://www.grove.finance/blog/inside-grove-onchain-allocation-framework (accessed 2026-08-04)",
+      "note": "residue, confirming corpus claim (c), and the harder case than Steakhouse because the discretion and the capital sit in DIFFERENT governance domains: the capital is Sky's, the discretion is Grove's, and the depositor in the economically meaningful sense is a DAO rather than a user. Nothing names the authorisation, its size limit, its revocability, or the standing of the authorising body."
+    },
+    {
+      "id": "F2",
+      "text": "the capital enters by minting USDS against a Sky allocation vault rather than by any user transferring assets in — the deposit is a governance-authorised credit line",
+      "elements": [],
+      "evidence": "https://docs.grove.finance/grove-allocator (accessed 2026-08-04)",
+      "note": "residue. `Cd` (collateralized-debt minting) requires collateral posted against the liability and none is; `Uc` (undercollateralized credit) requires identity, underwriting and recourse against an obligor, and what stands in their place is a governance vote by the creditor's own token holders in favour of a counterparty they part-own. No element expresses a credit line whose underwriting is a ballot."
+    },
+    {
+      "id": "F3",
+      "text": "the allocator converts between USDS, DAI and USDC at par through the mainnet peg-swap module",
+      "elements": [
+        "Ps"
+      ],
+      "evidence": "https://docs.grove.finance/grove-allocator (accessed 2026-08-04)",
+      "note": "good fit and a departure from the corpus, which records no stability element for Grove. `Ps` is exactly a 1:1 reserve-backed swap module and the PSM is the named mechanism."
+    },
+    {
+      "id": "F4",
+      "text": "every asset the allocator controls sits in one minimal stateless proxy that holds no logic, and every movement of those assets is a call the proxy makes on a controller's instruction; funds never leave it",
+      "elements": [],
+      "evidence": "https://docs.grove.finance/grove-allocator (accessed 2026-08-04)",
+      "note": "residue. Custody separated from logic, with arbitrary call, call-with-value and delegatecall forwarding. `Up` names a mutable implementation behind a fixed address and this is the inverse arrangement — a fixed custodian in front of replaceable logic — and the two have opposite risk profiles. No element names custody at all."
+    },
+    {
+      "id": "F5",
+      "text": "only holders of a relayer role may invoke a fund-moving function, and the role is exercised by an off-chain planner that submits the transactions",
+      "elements": [],
+      "evidence": "https://docs.grove.finance/grove-allocator (accessed 2026-08-04)",
+      "note": "residue. `Au` (delegated execution scope) is the nearest and stage 1 declines it: `Au` is written for a principal's user-configured session policy, and this is an institution's operations bot acting on an authority no user granted. Declined here for the same reason as steakhouse-financial.json F12, and in deliberate contrast with azuro.json F6 and polymarket.json F4, where a user does sign the authority the relayer exercises."
+    },
+    {
+      "id": "F6",
+      "text": "a freezer role can revoke the relayer role and thereby halt every automated operation of the allocator",
+      "elements": [
+        "Gp"
+      ],
+      "evidence": "https://docs.grove.finance/grove-allocator (accessed 2026-08-04)",
+      "note": "approximate; corpus retained `Gp` and stage 1 marks the mismatch. `Gp` names a pause of a SYSTEM — a flag that suspends functions and is later cleared. This is the revocation of an ACTOR's authority: the system is not paused, it is left with nobody able to act, and restoring it requires re-granting a role rather than unsetting a flag. The emergency stop and the authority model are the same object here, which no single element expresses."
+    },
+    {
+      "id": "F7",
+      "text": "every controller operation is bounded by a rate limit that refills linearly at a configured slope up to a maximum, keyed per asset, per destination or per domain",
+      "elements": [],
+      "evidence": "https://docs.grove.finance/grove-allocator (accessed 2026-08-04)",
+      "note": "residue, and stage 1's most consequential addition to the corpus record (delta 7): this is the single most load-bearing on-chain risk control in the allocator and the corpus element set has nothing for it. The formula is explicit — current = min(slope * (now - lastUpdated) + lastAmount, maxAmount) — and it is not a delay (`Tg`), not a pause (`Gp`), not an epoch (`Ep`) and not a cap on a position: it is a FLOW constraint on a privileged actor, bounding how fast rather than how much. The vocabulary has no flow limiter at all, and stage 1 notes the gap is general — Spark, Grove and several bridges all use one."
+    },
+    {
+      "id": "F8",
+      "text": "the value of an off-chain allocation enters the on-chain accounting as the fund manager's own reported net asset value",
+      "elements": [
+        "At"
+      ],
+      "evidence": "https://docs.grove.finance/grove-allocator (accessed 2026-08-04)",
+      "note": "approximate; corpus marker confirmed and now with a mechanism to point at (stage-1 delta 6). `At` presupposes L27's shape — a named attester, independence, a stated assurance level, a staleness bound and recourse — and here the attester is the manager whose performance is being attested, with no independence and no recourse."
+    },
+    {
+      "id": "F9",
+      "text": "positions are taken in vaults whose deposits and redemptions do not settle synchronously: a request is made on-chain now and the claim is fulfilled later out of an off-chain process",
+      "elements": [],
+      "evidence": "https://docs.grove.finance/grove-allocator (accessed 2026-08-04)",
+      "note": "residue. The ERC-7540 async vault is the interface across which an unverifiable NAV enters the accounting (F8), and it is a request/claim protocol with an off-chain fulfilment step. The vocabulary assumes settlement is synchronous or queued; `Wq` names a queue of claimants inside one system, not a two-phase claim across a system boundary, and `Of` (optimistic fill and reimbursement) presupposes a filler who is made whole on a verified message."
+    },
+    {
+      "id": "F10",
+      "text": "capital moves between Ethereum, Avalanche and Plume through cross-chain transfer protocols",
+      "elements": [
+        "Xf"
+      ],
+      "evidence": "https://docs.grove.finance/grove-allocator (accessed 2026-08-04)",
+      "note": "good fit; corpus retained. CCTP and LayerZero are the named routes."
+    },
+    {
+      "id": "F11",
+      "text": "the economically decisive transfer is not between chains but from a chain into a fund administrator's register of record, where the subscription becomes an entry in a Cayman or Luxembourg vehicle's books",
+      "elements": [],
+      "evidence": "https://centrifuge.io/blog/grove-avalanche-centrifuge-jaaa (accessed 2026-08-04)",
+      "note": "residue, confirming the corpus marker. `Xf` (F10) describes movement between chains and its law demands debit(source) = credit(destination); the hop that matters crosses out of every ledger the formalism can see, and no symbol reaches it."
+    },
+    {
+      "id": "F12",
+      "text": "the credit the capital ultimately buys is a tranche of a collateralised loan obligation, which from the allocator's position is a single opaque net asset value with no visible waterfall",
+      "elements": [],
+      "evidence": "https://www.businesswire.com/news/home/20250624393365/en/Grove-Announces-Launch-of-Institutional-Grade-Credit-Infrastructure-DeFi-Protocol-with-$1-Billion-Allocation-to-Tokenized-Janus-Henderson-Anemoy-AAA-CLO-Strategy (accessed 2026-08-04)",
+      "note": "residue, confirming the corpus. `Tr` would name the waterfall if the waterfall were visible; what the allocator holds is a share of a fund that holds tranches, so the seniority the price depends on is one level below anything the construction can reach. The initially approved size was $1 billion into JAAA via Centrifuge, later extended to JTRSY and to a $250M Avalanche target."
+    },
+    {
+      "id": "F13",
+      "text": "a retail user supplies USDS or USDC to the savings product and receives sUSDS, an ERC-4626 share with no lock-up whose exchange rate updates at the Sky Savings Rate, a parameter set by Sky governance",
+      "elements": [
+        "Sh",
+        "Ix"
+      ],
+      "evidence": "https://docs.grove.finance/grove-app (accessed 2026-08-04)",
+      "note": "departure from the corpus, which recorded `Sh` without siting it (stage-1 delta 3), and the correction that matters most for anyone building on this spec: the retail user is NOT buying Grove's credit book — the share is a claim on the Sky Savings Rate, issued by Sky, and Grove's TVL is Sky-sourced allocated capital, not retail deposits. Any construction that treats Grove as a deposit-taking vault is wrong. `Sh` names the share and `Ix` the accrual of its exchange rate; neither names that the accrual RATE is a governance parameter of a different protocol, which is the whole content of the product."
+    },
+    {
+      "id": "F14",
+      "text": "users also accrue Grove Points in proportion to their activity, which are non-transferable, have no monetary value and confer no claim or entitlement",
+      "elements": [],
+      "evidence": "https://docs.grove.finance/faqs (accessed 2026-08-04)",
+      "note": "residue. `Em` (protocol-funded emissions) presupposes that the emitted thing has value and that emitting it is a cost to the protocol. A pure record of contribution with no claim attached is neither an emission nor a security nor a share, and it is one of the most widely deployed objects in DeFi with no symbol."
+    },
+    {
+      "id": "F15",
+      "text": "GROVE holders stake into stGROVE and vote directly or by delegate, but the token contract's only authorised admin is Sky's pause proxy, so administrative authority over the governance token belongs to another protocol's governance",
+      "elements": [],
+      "evidence": "https://docs.grove.finance/grove-token (accessed 2026-08-04)",
+      "note": "residue. A governance system whose root of authority is another governance system is a distinct object; `Tg` names a delay and nothing names SUBORDINATION. Stage 1 found no evidence that GROVE holders can veto an allocation, so the votes that decide are Sky's and the votes that are sold are Grove's. Ten billion tokens at genesis, split 70% Sky ecosystem / 25% team and contributors / 5% foundation over ten years, with 21% still unassigned by future Sky governance decisions."
+    },
+    {
+      "id": "F16",
+      "text": "the Basin facility commits up to $1 billion a day of immediate stablecoin liquidity to eligible holders of tokenised funds, without purchasing or taking ownership of the underlying assets and without changing the fund's own redemption procedures, settlement cycles or transfer restrictions",
+      "elements": [],
+      "evidence": "https://docs.grove.finance/grove-basin (accessed 2026-08-04)",
+      "note": "residue, entirely absent from the corpus, and stage 1 calls it the single most interesting unnameable object in the category (delta 1). The corpus's own residue list names the redemption LAG between an on-chain instant-liquidity promise and a slow off-chain fund as a structural maturity transformation; Basin is a purpose-built facility that SELLS that transformation, to counterparties who are not the protocol's depositors, for a fee, warehousing the timing risk itself while the fund's T+2/T+3 workflow continues unchanged behind it. `Wq` names a queue of claimants; `Fl` names atomic borrow-and-repay inside one settlement scope; neither is a standing committed facility against a slow claim."
+    },
+    {
+      "id": "F17",
+      "text": "an eligible counterparty may use Basin only if it already holds the tokenised fund, whose transfer eligibility is enforced by the issuer",
+      "elements": [
+        "Aw"
+      ],
+      "evidence": "https://docs.grove.finance/grove-basin (accessed 2026-08-04)",
+      "note": "approximate; corpus retained `Aw`. The gate is the underlying fund's own investor-eligibility régime, enforced by the issuer and its transfer agent rather than by Grove, so the permission the construction depends on is administered outside it. Launch partners are BlackRock and Janus Henderson as managers, Securitize and Centrifuge as tokenisers, and Anchorage, Galaxy and FalconX for institutional access."
+    },
+    {
+      "id": "F18",
+      "text": "administrative changes to Basin execute only after a mandatory timelock delay",
+      "elements": [
+        "Tg"
+      ],
+      "evidence": "https://docs.grove.finance/grove-basin (accessed 2026-08-04)",
+      "note": "good fit; an OpenZeppelin TimelockController is the named mechanism."
+    },
+    {
+      "id": "F19",
+      "text": "in that timelock the external issuer holds the proposal right, Grove governance executes after the delay, and a security multisig may cancel",
+      "elements": [],
+      "evidence": "https://docs.grove.finance/grove-basin (accessed 2026-08-04)",
+      "note": "residue. `Tg` (F18) names the delay and the execution but not a proposal right held by an EXTERNAL COMMERCIAL COUNTERPARTY, which is what makes this three-party arrangement unusual: the party whose commercial interests the change serves initiates it, and the protocol's own governance is reduced to executing or being overridden by a multisig veto."
+    },
+    {
+      "id": "F20",
+      "text": "Basin fees accrue on-chain and are immediately claimable by authorised issuers, the only function exempt from the timelock delay",
+      "elements": [
+        "Fd"
+      ],
+      "evidence": "https://docs.grove.finance/grove-basin (accessed 2026-08-04)",
+      "note": "approximate, and a departure from the corpus, which records no fee element for Grove. `Fd` (candidate register) names accrual and distribution to a named claimant; the carve-out from the delay — the one privileged action nobody has to wait for is the one that moves money to the counterparty — is a structure `Fd` does not carry. What Grove itself earns on the Sky mandate is not published at any primary source stage 1 could reach and is UNKNOWN; it is not guessed at here and no element is claimed for it."
+    }
+  ],
+  "paper": {
+    "title": "Grove Finance",
+    "label": "cat:prd:grove",
+    "blurb": "Grove is the other member the sampling frame could not file elsewhere, and it is an allocator and a savings product under one name --- a distinction that is load-bearing. The allocator mints USDS against a Sky allocation vault under a mandate Sky governance approves, and deploys it into credit, most visibly a tokenised collateralised-loan-obligation fund alongside on-chain lending, liquidity and yield venues across several chains; the capital is Sky's, the discretion is Grove's, and the depositor in the economically meaningful sense is a DAO. A retail user who supplies a stablecoin to the savings product receives sUSDS, whose exchange rate accrues at the Sky Savings Rate, plus non-transferable points carrying no claim --- that user is not buying Grove's credit book, and treating this as a deposit-taking vault is an error. Where the money goes is decided by Grove and approved through Sky's weekly governance cycle after a public forum round, and the standing on-chain controls are a rate limit on every controller operation and a freezer role able to revoke the relayer and halt the machine. Recourse therefore runs to Sky governance and to that freezer rather than to a depositor: the savings user's only remedy is redemption, and Grove's own governance token has Sky's pause proxy as its sole authorised admin.",
+    "witnessReason": "The corpus records $Sh$ without siting it. The witness sites it on the savings share and pairs it with $Ix$, because that share's exchange rate accrues by an index whose rate is a governance parameter of another protocol --- and the siting is what matters most here, since the share is a claim on Sky's savings rate rather than on Grove's book. $Ps$ and $Fd$ are added on evidence, for the peg-swap module through which the allocator converts between its stablecoins at par and for the standing liquidity facility's on-chain fee accrual to authorised issuers, while nothing is claimed for what Grove earns on the Sky mandate, which is published at no primary source and is not guessed at. $Gp$ is retained under protest and $Au$ is declined: the freezer does not pause a system but revokes an actor, leaving the machine running with nobody able to act and restoration requiring a role to be re-granted rather than a flag cleared, and $Au$ describes a principal delegating their own authority under a session policy, which no user here has done.",
+    "residueNote": "The residue is the mandate, the custody and the flow control. Nothing names an authorisation granted by one governance system over capital it owns and discretion it does not exercise, nor a governance system whose root of authority is another one, nor a credit line whose underwriting is a ballot. Nothing names custody at all: every asset sits in a stateless proxy that holds no logic and forwards calls, which is the inverse of a mutable implementation behind a fixed address and carries the opposite risk. The rate limit --- a linearly refilling per-key bound on how fast a privileged actor may move value --- is the most load-bearing on-chain control in the allocator, and the vocabulary has no flow limiter at all; the gap is general rather than local to this protocol. The largest object here post-dates the corpus entirely: a standing facility that sells immediate stablecoin liquidity to holders of slow-settling tokenised funds, warehousing the timing risk for a fee while the fund's own settlement cycle continues unchanged behind it, sold to counterparties who are not the protocol's depositors at all."
+  }
+}

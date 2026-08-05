@@ -1,0 +1,173 @@
+{
+  "app": "JustLend V1",
+  "category": "02-lending",
+  "source": "C:\\defiformal-work\\02-lending\\01-research.md",
+  "construction": [
+    "Pl",
+    "Sh",
+    "Ix",
+    "Ct",
+    "Ex",
+    "Li",
+    "Aw",
+    "Tg",
+    "Up",
+    "Gp"
+  ],
+  "functionalObligations": [
+    {
+      "id": "F1",
+      "text": "a supplier deposits into a per-asset market and receives a token representing a pro-rata claim on it, whose redemption value rises through a growing exchange rate rather than through a growing balance",
+      "elements": [
+        "Pl",
+        "Sh"
+      ],
+      "evidence": "https://api.github.com/repos/justlend/justlend-protocol/git/trees/main?recursive=1 (accessed 2026-08-04)",
+      "note": "CErc20, CEther and CTokenERC777 in the tree; a Compound V2 fork on TRON, confirmed file-by-file across 52 Solidity files at pragma ^0.5.12. The corpus marker for Sh (FORCED) is retained and inverted in emphasis: the MECHANISM is Ix and the USER-FACING OBJECT is Sh, so the vocabulary again charges two symbols for one design -- the mirror image of Aave, where the same duality appears as Ix plus Rb (aave-v3.json F2). Three protocols in this lane express one accrual in three symbol pairs and no element says they are the same idea. FLAG FOR STAGE 3: law L2's exit-liquidity term is not discharged by any element this lane can cite; a redemption simply fails when the market has no cash, which is the same unnameable conditional exit recorded at Morpho (morpho.json F8)."
+    },
+    {
+      "id": "F2",
+      "text": "interest accrues into a per-market borrow index that is advanced every block a transaction touches the market",
+      "elements": [
+        "Ix"
+      ],
+      "evidence": "https://raw.githubusercontent.com/justlend/justlend-protocol/main/contracts/BaseJumpRateModelV2.sol (accessed 2026-08-04)",
+      "note": "Ix is exact -- borrowIndex is an explicit named accumulator, more literally Ix than either Morpho's totals or Maple's per-loan accounting."
+    },
+    {
+      "id": "F3",
+      "text": "the rate is quoted and accrued per block rather than per second or per year, with a hard-coded 10,512,000 blocks per year matching a three-second chain, so the realised annual rate depends on how fast the chain produces blocks",
+      "elements": [],
+      "evidence": "https://raw.githubusercontent.com/justlend/justlend-protocol/main/contracts/BaseJumpRateModelV2.sol (accessed 2026-08-04)",
+      "note": "RESIDUE, and a kind of gap no other target in the lane exhibits. blocksPerYear = 10_512_000 is the TRON adaptation of Compound's Ethereum constant. A CONSENSUS PROPERTY LEAKS INTO A CREDIT PARAMETER: if block production drifts, every quoted rate in the protocol is wrong by the same factor, and the fix is a redeployment. No element in the vocabulary touches block time, and the four other targets in this lane all denominate in seconds or years, so the vocabulary records five rate mechanisms with one time base when they have two."
+    },
+    {
+      "id": "F4",
+      "text": "a borrower enters markets explicitly and a controller contract computes account liquidity from each entered collateral's collateral factor against the value of every borrow, refusing any action that would leave a shortfall",
+      "elements": [
+        "Ct"
+      ],
+      "evidence": "https://raw.githubusercontent.com/justlend/justlend-protocol/main/contracts/Comptroller.sol (accessed 2026-08-04)",
+      "note": "Ct is exact and first-class, not derived. One threshold per asset (collateralFactorMantissa), so as at Morpho and unlike Compound V3 there is no separate opening and closing line."
+    },
+    {
+      "id": "F5",
+      "text": "collateral and debt are valued by a push oracle whose price is written by a permitted party rather than pulled from a feed",
+      "elements": [
+        "Ex"
+      ],
+      "evidence": "https://api.github.com/repos/justlend/justlend-protocol/git/trees/main?recursive=1 (accessed 2026-08-04)",
+      "note": "Ex APPROXIMATE. The tree carries PriceOracle.sol, PriceOracleProxy.sol, PriceOracle/PriceOracleV1.sol, PriceOracle/DSValue.sol and SimplePriceOracle.sol; DSValue is a Maker-lineage SINGLE-WRITER PUSH oracle, which is a materially different trust object from a medianised feed, and WHICH OF THE FIVE IS LIVE IS UNKNOWN. Ex bundles push, pull and medianizer into one symbol, so a protocol whose price is one address's assertion and a protocol whose price is an aggregate of many reporters decompose identically -- the 07-bridges lane's party-sort gap, here on the truth axis rather than the control axis. Law L13 (Ex implies freshness validation) is NOT evidenced."
+    },
+    {
+      "id": "F6",
+      "text": "a liquidator repays part of an underwater borrow and seizes collateral worth the repayment times a multiplicative premium, priced from the same oracle",
+      "elements": [
+        "Li"
+      ],
+      "evidence": "https://raw.githubusercontent.com/justlend/justlend-protocol/main/contracts/Comptroller.sol (accessed 2026-08-04)",
+      "note": "Li is exact. Seize amount = repayAmount * liquidationIncentive * priceBorrowed / priceCollateral, the Compound-family form."
+    },
+    {
+      "id": "F7",
+      "text": "one liquidation may repay at most a fixed fraction of the outstanding borrow, the fraction being a governed constant that does not depend on how far underwater the position is",
+      "elements": [],
+      "evidence": "https://raw.githubusercontent.com/justlend/justlend-protocol/main/contracts/Comptroller.sol (accessed 2026-08-04)",
+      "note": "RESIDUE, confirming the corpus and re-siting it. maxClose = closeFactorMantissa * borrowBalance. The corpus files this residue under JustLend with the gloss 'every Compound descendant has it', which reads as though it were JustLend-specific and as though Aave lacked one. IT IS CATEGORY-WIDE WITH TWO DISTINCT SHAPES: JustLend's close factor is a CONSTANT, Aave's is a FUNCTION of health factor and position size (aave-v3.json F7), and Morpho's liquidation incentive is a FUNCTION of the market's loan-to-value (morpho.json F6). Three different policies over one unnameable quantity, and the vocabulary distinguishes none of them."
+    },
+    {
+      "id": "F8",
+      "text": "the risk parameters are bounded in code at write time: a collateral factor may not exceed ninety per cent, a close factor must lie between five and ninety per cent, and a liquidation incentive must lie between one and one-and-a-half",
+      "elements": [],
+      "evidence": "https://raw.githubusercontent.com/justlend/justlend-protocol/main/contracts/Comptroller.sol (accessed 2026-08-04)",
+      "note": "RESIDUE, and it is half of the finding that F11 completes. closeFactorMinMantissa 0.05e18, closeFactorMaxMantissa 0.9e18, collateralFactorMaxMantissa 0.9e18, liquidationIncentiveMinMantissa 1.0e18, liquidationIncentiveMaxMantissa 1.5e18. A multiplicative seize premium with an explicit permitted interval has no symbol, and neither does a permitted interval on any other governed parameter. Note especially the SPLIT this protocol makes and the corpus does not record: RISK parameters are bounded here while RATE parameters are not bounded at all (F11). A vocabulary that cannot see either bound cannot see that a protocol drew the line between them."
+    },
+    {
+      "id": "F9",
+      "text": "the borrow rate is a memoryless two-slope jump-rate function of current utilisation, and the supply rate is utilisation times the borrow rate net of the reserve factor",
+      "elements": [],
+      "evidence": "https://raw.githubusercontent.com/justlend/justlend-protocol/main/contracts/BaseJumpRateModelV2.sol (accessed 2026-08-04)",
+      "note": "RESIDUE. FINDING 1's fourth row. THE FUNCTIONAL FORM, self-described in the file header as 'JumpRateModel V2, modified by Dharma Labs, refactored by Arr00'. Functionally the same shape as Aave's and SparkLend's and governed unlike either -- three identical curves, three different instruments, one residue line in the corpus."
+    },
+    {
+      "id": "F10",
+      "text": "the whole rate curve -- base rate, both multipliers and the kink -- may be rewritten in one call by a single owner address, guarded by exactly one equality check",
+      "elements": [
+        "Aw"
+      ],
+      "evidence": "https://raw.githubusercontent.com/justlend/justlend-protocol/main/contracts/BaseJumpRateModelV2.sol (accessed 2026-08-04)",
+      "note": "FINDING 1: THE SETTER LOCUS -- a mutable parameter inside the protocol, as at Aave, and therefore INDISTINGUISHABLE FROM AAVE IN THE VOCABULARY despite F11. updateJumpRateModel(baseRatePerYear, multiplierPerYear, jumpMultiplierPerYear, kink_) guarded by require(msg.sender == owner, 'only the owner may call this function.'). Aw APPROXIMATE on this lane's uniform reading, and note what it fails to distinguish here: Aave's writer is an enumerated multi-role registry with grant and revoke (aave-v3.json F13) and JustLend's is a single mutable address variable, and both decompose to Aw. That is the 07-bridges lane's finding -- QUORUM VERSUS SINGLE KEY, not delay versus upgrade -- reproduced in lending. WHETHER THE OWNER IS ACTUALLY THE TIMELOCK ON THE LIVE TRON DEPLOYMENT IS UNKNOWN: the file's comments say so and no on-chain read was performed in this run."
+    },
+    {
+      "id": "F11",
+      "text": "nothing bounds what that curve may become: there is no maximum rate, no minimum or maximum kink, no requirement that the jump multiplier exceed the ordinary one, and no limit on how far a single update may move any of them",
+      "elements": [],
+      "evidence": "https://raw.githubusercontent.com/justlend/justlend-protocol/main/contracts/BaseJumpRateModelV2.sol (accessed 2026-08-04)",
+      "note": "RESIDUE. FINDING 1: THE BOUND -- NONE, the fifth and last distinct answer in this lane after Aave's parameter bounds, Morpho's output clamp, SparkLend's inherited bound and Maple's absence of any instrument. This is the entire risk statement about JustLend's rate and it is invisible: the vocabulary can record that Tg is present and cannot record that THE TIMELOCK IS THE ONLY PROTECTION. An absent bound and a present bound produce the same decomposition, which is the strongest single argument in the lane for a bound-valued field rather than a new element. Prohibition X16 (unbounded delegated authority) is arguably armed here in a way the corpus does not record."
+    },
+    {
+      "id": "F12",
+      "text": "the only protection on that rewrite is timing: the owner is a delay contract, so the change is visible before it can take effect",
+      "elements": [
+        "Tg"
+      ],
+      "evidence": "https://api.github.com/repos/justlend/justlend-protocol/git/trees/main?recursive=1 (accessed 2026-08-04)",
+      "note": "FINDING 1: THE LATENCY -- a timelock, and nothing else. Tg is emitted on the presence of Timelock.sol in the tree together with the rate model's own comment identifying the owner as 'the Timelock contract, which can update parameters directly'. THE DELAY'S VALUE WAS NOT READ AND THE LIVE OWNERSHIP WAS NOT VERIFIED. Contrast the same slot at Aave, where the steward bypasses the timelock inside an envelope: Aave bounds the VALUES and the STEP, JustLend bounds only the TIMING. Both carry Tg."
+    },
+    {
+      "id": "F13",
+      "text": "every risk and every rate parameter in the protocol is set directly by one administrative address, with no per-parameter envelope, no step limit, no cooldown and no delegate of any kind",
+      "elements": [],
+      "evidence": "https://raw.githubusercontent.com/justlend/justlend-protocol/main/contracts/Comptroller.sol (accessed 2026-08-04)",
+      "note": "RESIDUE, and this obligation is the LANE'S CONTROL. MANDATE ABSENT: zero of the five parts. No curator, no steward, no keeper, no bounded operator; _setCloseFactor and its siblings are guarded by msg.sender != admin and nothing more. Its importance is chronological. Aave's RiskSteward, MetaMorpho's curator, SparkLend's CapAutomator and SparkLend's ALM RateLimits are ALL in separate repositories from their protocol cores and are ALL later than the code they bound; JustLend is a 2020-era Compound V2 fork at pragma ^0.5.12 and has none. THE BOUNDED DELEGATE MANDATE IS NOT A LENDING PRIMITIVE -- IT IS A LAYER THAT GREW ON TOP OF LENDING PRIMITIVES, and its absence from a 58-element vocabulary is a vintage problem rather than an oversight. One protocol in five having none is also what makes the other five instances measurable rather than universal."
+    },
+    {
+      "id": "F14",
+      "text": "the controller and every individual market sit behind delegate-call proxies whose implementations the administrator may replace",
+      "elements": [
+        "Up"
+      ],
+      "evidence": "https://api.github.com/repos/justlend/justlend-protocol/git/trees/main?recursive=1 (accessed 2026-08-04)",
+      "note": "Up is exact and doubled: Unitroller is the storage-and-proxy pair for the Comptroller, and CErc20Delegator with CErc20Delegate gives every market its own independently upgradeable implementation. Up names one mutable implementation and cannot say there are fifty of them under two different upgrade authorities. Law L15 (Up implies Tg or a bounded emergency process) is discharged by F12, with the same UNKNOWN attached."
+    },
+    {
+      "id": "F15",
+      "text": "a designated guardian may pause protocol actions without holding the administrator's other powers",
+      "elements": [
+        "Gp"
+      ],
+      "evidence": "https://raw.githubusercontent.com/justlend/justlend-protocol/main/contracts/Comptroller.sol (accessed 2026-08-04)",
+      "note": "Gp is supported (pauseGuardian). As at MetaMorpho (morpho.json F22), the design point Gp cannot express is the SEPARATION of the right to halt from the right to act. Who holds it is UNKNOWN."
+    },
+    {
+      "id": "F16",
+      "text": "changes are proposed and voted through an on-chain governor over a transferable governance token before reaching the delay contract",
+      "elements": [
+        "Tg"
+      ],
+      "evidence": "https://api.github.com/repos/justlend/justlend-protocol/git/trees/main?recursive=1 (accessed 2026-08-04)",
+      "note": "Governance/Bravo/GovernorBravoDelegate.sol, Governance/GovernorAlpha.sol, Governance/Comp.sol and WJST.sol in the tree. Tg carries the whole governance stack here, which is most of what the vocabulary has to say about it. Prohibition X6 (borrowable voting power with immediate execution) deserves a look from stage 3 that this lane cannot perform: the governance token is a transferable ERC-20 in a protocol whose business is lending assets, and whether it is itself a listed market on the live deployment is UNKNOWN. DEPARTURE: the corpus carries Em for JustLend; stage 1 read the Comptroller and recorded no distribution mechanism, so Em is DROPPED rather than carried on memory. If the live Comptroller distributes JST to suppliers, stage 3 should restore it on evidence."
+    },
+    {
+      "id": "F17",
+      "text": "the parameter changes that were actually executed are themselves committed to the repository as deployable contracts",
+      "elements": [],
+      "evidence": "https://api.github.com/repos/justlend/justlend-protocol/git/trees/main?recursive=1 (accessed 2026-08-04)",
+      "note": "RESIDUE. Governance/ProposalAddEthMarket.sol, ProposalAddUsdcMarket.sol, ProposalOldSunCollaterFactor.sol, ProposalOldSunReserveFactor.sol and others make the executed policy history a repository artefact. Nothing in the vocabulary names THE RECORD OF EXERCISED AUTHORITY as distinct from the authority: Tg says a delay exists, and what these files are is the log of what passed through it. SparkLend's spark-spells repository is the same object at the same layer in a different organisation, which suggests it is a category-level pattern rather than a JustLend habit."
+    },
+    {
+      "id": "F18",
+      "text": "no contract in this repository rents chain execution resources, so the resource-rental business the corpus attributes to this protocol is not part of the artefact decomposed here",
+      "elements": [],
+      "evidence": "https://api.github.com/repos/justlend/justlend-protocol/git/trees/main?recursive=1 (accessed 2026-08-04)",
+      "note": "RESIDUE, recorded as UNCONFIRMED IN-REPO rather than refuted. The corpus files a TRX energy and bandwidth rental market as JustLend's headline residue; the 52 Solidity files here are Compound V2 and nothing else. It is either in a different repository or not open-sourced, and a lane that cannot see it cannot decompose it. IF IT IS REAL the corpus's own gloss is the right one and worth carrying: it would be Pl over a NON-FUNGIBLE PER-ACCOUNT EXECUTION ALLOWANCE, and Pl assumes the lent thing is fungible value. A REPRODUCTION CONSTRAINT belongs on this record too: the repository declares NO LICENCE AT ALL (https://api.github.com/repos/justlend/justlend-protocol, accessed 2026-08-04, license null), where Compound V2's own code is BSD-3-Clause, so under default copyright there is no grant of reproduction rights and no JustLend source may be quoted in the paper. That is the same class of constraint the 01-spot-exchange lane found at Curve."
+    }
+  ],
+  "paper": {
+    "title": "JustLend V1",
+    "label": "cat:lnd:justlend",
+    "blurb": "A supplier deposits into a per-asset market and receives a token representing a pro-rata claim on it, whose redemption value rises through a growing exchange rate rather than through a growing balance. A borrower enters markets explicitly and a controller contract computes account liquidity from each entered collateral's collateral factor, valued by a push oracle whose price a permitted party writes rather than a feed the protocol pulls. Interest accrues into a per-market borrow index advanced every block a transaction touches the market, and the rate is quoted per block, so what a loan costs over a year depends on how fast the chain produces blocks. A liquidator repays at most a fixed fraction of the outstanding borrow and seizes collateral worth the repayment times a multiplicative premium, that fraction being a governed constant which does not vary with how far underwater the position is. The risk parameters carry permitted intervals checked in code; the rate curve carries none, and may be rewritten whole in a single call by one owner address.",
+    "witnessReason": "The corpus records $Em$; the witness drops it, the controller having been read with no distribution mechanism in it, and adds $Aw$ for the single administrative address that writes every parameter and $Tg$ for the delay contract, the on-chain governor and the governance token standing behind it. Nothing else is added, and that is the point of this witness: it is the control in its category. No steward, no curator, no keeper and no bounded operator appears anywhere in the tree, and the decomposition would be identical whether the rate curve carried a permitted interval or none --- which is the strongest argument in the category that what is missing is a field on an element rather than an element. The corpus files the liquidation allowance here as though it were peculiar to this protocol and its ancestors; it is not, and the witness carries that residue under a category-wide reading with the three distinct policies the category actually runs.",
+    "residueNote": "The instructive residue here is an absence. Every other protocol in this category carries a bounded delegate over something, and this one carries none; its risk parameters are bounded in code while its rate parameters are bounded by nothing whatever, a line the protocol deliberately drew and the decomposition cannot record. An absent bound and a present bound yield the same element set, so the vocabulary reports that a delay exists and cannot report that the delay is the only protection there is. That the primitive is missing here also dates it: this is a fork of a design older than the bounded mandate, and the stewards, curators and automators elsewhere in the category all arrived later and in repositories separate from the cores they govern, so the gap in the vocabulary is one of vintage rather than of scope. The rest is the category's own --- a rate quoted per block, so that a property of consensus leaks into a credit parameter, and a liquidation allowance fixed as a constant where the largest protocol here computes one."
+  }
+}

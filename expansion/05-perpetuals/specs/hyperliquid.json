@@ -1,0 +1,239 @@
+{
+  "app": "Hyperliquid",
+  "category": "05-perpetuals",
+  "source": "C:\\defiformal-work\\05-perpetuals\\01-research.md",
+  "construction": [
+    "Ob",
+    "Pf",
+    "Ct",
+    "Ex",
+    "Tp",
+    "Li",
+    "Ad",
+    "Sl",
+    "Sh",
+    "Vl",
+    "Ep",
+    "Wq",
+    "Gp",
+    "Xf",
+    "Xm"
+  ],
+  "functionalObligations": [
+    {
+      "id": "F1",
+      "text": "a trader's limit and market orders are matched against a resting book in price-time priority, with tick and lot quantisation and a margin check run both when the order is placed and again for the resting side at each match",
+      "elements": [
+        "Ob"
+      ],
+      "evidence": "https://hyperliquid.gitbook.io/hyperliquid-docs/hypercore/order-book.md (accessed 2026-08-04)",
+      "note": "Ob names the book and its priority rule; it says nothing about where the book is kept or who executes it, which is F2."
+    },
+    {
+      "id": "F2",
+      "text": "the book, the margin state, the matching and the liquidations are the chain's own state machine — HyperCore is executed by the validator set under HyperBFT consensus, not by an off-chain operator",
+      "elements": [],
+      "evidence": "https://hyperliquid.gitbook.io/hyperliquid-docs/hypercore/overview.md (accessed 2026-08-04)",
+      "note": "RESIDUE — matching locus. Ob is equally true of a book deployed as a contract on someone else's chain, of an operator-run engine with validity proofs, and of this. The single most important architectural fact about the category's largest venue is unnameable."
+    },
+    {
+      "id": "F3",
+      "text": "within a block, actions are sorted into three classes — actions containing no GTC or IOC order, then cancels, then actions carrying at least one GTC or IOC — with proposed order preserved inside each class",
+      "elements": [],
+      "evidence": "https://hyperliquid.gitbook.io/hyperliquid-docs/hypercore/order-book.md (accessed 2026-08-04)",
+      "note": "RESIDUE — operator discretion. This is a fairness rule enforced at the ordering layer rather than the execution layer, i.e. a bound on the block proposer's discretion. No element in the 58 constrains who orders transactions or how; there is not even an execution-layer analogue of this rule to force it onto."
+    },
+    {
+      "id": "F4",
+      "text": "the correctness of every fill, funding payment and liquidation rests on two-thirds of staking power being honest; there is no validity proof, no fraud proof, and the node that computes the state is distributed as a signed pre-compiled binary with no published source",
+      "elements": [],
+      "evidence": "https://github.com/hyperliquid-dex/node (accessed 2026-08-04)",
+      "note": "RESIDUE — proof system. The vocabulary has no element for a validity proof (`Zk` is contested-register and outside the 58) and therefore also no way to record its absence. Cross-check: the only source-bearing artefact in the org is Bridge2.sol at https://github.com/hyperliquid-dex/contracts (2026-08-04)."
+    },
+    {
+      "id": "F5",
+      "text": "the full order-book and account state is replicated to every validator and served from public nodes and the public API; nothing is posted to, or reconstructible from, any other chain",
+      "elements": [],
+      "evidence": "https://hyperliquid.gitbook.io/hyperliquid-docs/hypercore/overview.md (accessed 2026-08-04)",
+      "note": "RESIDUE — data availability. The DA regime here (replicated L1 state, no settlement layer beneath it) is a different object from blobs on Ethereum, a validium committee, or a DA menu, and the vocabulary cannot distinguish any of them."
+    },
+    {
+      "id": "F6",
+      "text": "USDC enters and leaves HyperCore across a bridge contract on Arbitrum, with the L1 balance debited immediately on withdrawal and 1 USDC charged in place of Arbitrum gas",
+      "elements": [
+        "Xf"
+      ],
+      "evidence": "https://hyperliquid.gitbook.io/hyperliquid-docs/hypercore/bridge.md (accessed 2026-08-04)",
+      "note": ""
+    },
+    {
+      "id": "F7",
+      "text": "a deposit is credited, and a withdrawal is paid, only against signatures from validators holding more than two-thirds of staking power, with the validator set and its stake mirrored on the bridge contract",
+      "elements": [
+        "Xm"
+      ],
+      "evidence": "https://hyperliquid.gitbook.io/hyperliquid-docs/hypercore/bridge.md (accessed 2026-08-04)",
+      "note": ""
+    },
+    {
+      "id": "F8",
+      "text": "a trader has no unilateral exit: there is no forced-inclusion transaction, no censorship deadline and no escape hatch, so leaving the venue requires the validator set to sign",
+      "elements": [],
+      "evidence": "https://hyperliquid.gitbook.io/hyperliquid-docs/hypercore/bridge.md (accessed 2026-08-04)",
+      "note": "RESIDUE — exit. Compare Lighter's 14-day forced-transaction deadline and StarkEx's 7-day forced withdrawal: this venue's answer is 'none', and the vocabulary can record neither the mechanism nor its absence."
+    },
+    {
+      "id": "F9",
+      "text": "during the post-withdrawal dispute period the bridge can be locked if a withdrawal does not match L1 state, and unlocking requires cold-wallet signatures from two-thirds of the stake-weighted set",
+      "elements": [
+        "Gp"
+      ],
+      "evidence": "https://hyperliquid.gitbook.io/hyperliquid-docs/hypercore/bridge.md (accessed 2026-08-04)",
+      "note": "APPROXIMATE — Gp names an emergency guardian or pause; here the pause authority is the validator set itself acting through cold keys, not a named guardian, and its scope is the bridge rather than the venue."
+    },
+    {
+      "id": "F10",
+      "text": "every validator publishes a spot price roughly every 3 seconds as a weighted median of eight named venues, and the clearinghouse takes the stake-weighted median of those submissions as the oracle price",
+      "elements": [
+        "Ex"
+      ],
+      "evidence": "https://hyperliquid.gitbook.io/hyperliquid-docs/hypercore/oracle.md (accessed 2026-08-04)",
+      "note": "APPROXIMATE — Ex names an EXTERNAL data oracle. Here the chain's own validator set is the publisher, so the trust argument is the opposite of Chainlink's: there is no external party to trust and no external party to blame. The venue-weight rule (assets whose primary liquidity is on Hyperliquid exclude external sources, and vice versa) is a further parameter with no expression."
+    },
+    {
+      "id": "F11",
+      "text": "positions are marked to the median of three constructions — the oracle price plus a 150-second EMA of (Hyperliquid mid minus oracle), the median of best bid, best ask and last trade, and a weighted median of five external perp mids — with a 30-second EMA substituted when only two components exist",
+      "elements": [
+        "Ex",
+        "Tp"
+      ],
+      "evidence": "https://hyperliquid.gitbook.io/hyperliquid-docs/trading/robust-price-indices.md (accessed 2026-08-04)",
+      "note": "Tp genuinely discharges the EMA components (an on-chain time-weighted price built from the venue's own mid). Ex covers the external legs. Neither names the median-of-medians composition itself."
+    },
+    {
+      "id": "F12",
+      "text": "longs and shorts exchange funding hourly at one-eighth of an 8-hour rate F = P + clamp(interest_rate - P, -0.0005, +0.0005), capped at 4%/hour, with the payment notional computed at the spot oracle price rather than the mark price",
+      "elements": [
+        "Pf"
+      ],
+      "evidence": "https://hyperliquid.gitbook.io/hyperliquid-docs/trading/funding.md (accessed 2026-08-04)",
+      "note": "Pf fits exactly: this is a long/short transfer tethering the perp to an index. Pf names the transfer but not which of the venue's several prices sets its notional, which here is a deliberate and unusual choice."
+    },
+    {
+      "id": "F13",
+      "text": "a position must carry initial margin of position_size * mark_price / leverage, and maintenance margin equal to notional * rate minus a maintenance deduction that keeps the requirement continuous across notional tiers; moving margin out must leave max(initial_margin_required, 0.1 * total_position_value)",
+      "elements": [
+        "Ct"
+      ],
+      "evidence": "https://hyperliquid.gitbook.io/hyperliquid-docs/trading/margin-tiers.md (accessed 2026-08-04)",
+      "note": "Margining formulas cross-checked at https://hyperliquid.gitbook.io/hyperliquid-docs/trading/margining.md (2026-08-04)."
+    },
+    {
+      "id": "F14",
+      "text": "collateral is pooled across every perp and spot market by default, and a trader may instead ring-fence a single position in isolated margin, or partition capital into sub-accounts and vaults",
+      "elements": [],
+      "evidence": "https://hyperliquid.gitbook.io/hyperliquid-docs/hypercore/clearinghouse.md (accessed 2026-08-04)",
+      "note": "RESIDUE — margin scope. Ct computes the threshold test; nothing says which positions share a collateral pool. The contested `Ua` gestures at this and is outside the 58."
+    },
+    {
+      "id": "F15",
+      "text": "when account equity falls below maintenance margin the engine sends market orders to close enough of the position to restore the requirement, and any surplus collateral stays with the trader",
+      "elements": [
+        "Li"
+      ],
+      "evidence": "https://hyperliquid.gitbook.io/hyperliquid-docs/trading/liquidations.md (accessed 2026-08-04)",
+      "note": "APPROXIMATE — Li names INCENTIVIZED liquidation by third parties. Here the matching engine itself issues the closing orders; no keeper is paid a bounty and no liquidation auction exists. Only the 'position is force-closed against the book' half of the symbol applies."
+    },
+    {
+      "id": "F16",
+      "text": "if equity falls below two-thirds of maintenance margin without the book absorbing the position, the trader's entire cross position set and cross margin are transferred to the liquidator vault, and the resulting PnL stream accrues to HLP's depositors",
+      "elements": [
+        "Li",
+        "Sl"
+      ],
+      "evidence": "https://hyperliquid.gitbook.io/hyperliquid-docs/trading/liquidations.md (accessed 2026-08-04)",
+      "note": "Sl discharges the loss allocation: the liquidator vault is a component strategy of HLP, so gains and losses from backstop liquidation land on a named claim class. Li is again approximate for the same reason as F15. This is the obligation that replaces the corpus's Bs — see the construction note in F19."
+    },
+    {
+      "id": "F17",
+      "text": "if account value goes negative anyway, traders on the opposite side are ranked by (mark_price / entry_price) * (notional_position / account_value) and closed against the distressed account at the previous mark price, and a user with no open positions never socialises platform losses",
+      "elements": [
+        "Ad"
+      ],
+      "evidence": "https://hyperliquid.gitbook.io/hyperliquid-docs/trading/auto-deleveraging.md (accessed 2026-08-04)",
+      "note": "Ad fits exactly, including the rank ordering. The stated invariant (flat users are never touched) is a property of the mechanism that the symbol does not carry."
+    },
+    {
+      "id": "F18",
+      "text": "a depositor into HLP holds a pro-rata claim on the vault's value, subject to a 4-day post-deposit lock-up, with no management fee and no profit share",
+      "elements": [
+        "Sh"
+      ],
+      "evidence": "https://hyperliquid.gitbook.io/hyperliquid-docs/hypercore/vaults/protocol-vaults.md (accessed 2026-08-04)",
+      "note": "Sh names the pro-rata claim. The 4-day lock-up is not Wq — it is a fixed dwell time on a share, not a queue on redemptions — and has no symbol."
+    },
+    {
+      "id": "F19",
+      "text": "one pool, HLP, simultaneously makes markets through multiple strategies, performs backstop liquidations, supplies USDC in Earn and accrues a share of trading fees, and it is community-owned rather than protocol-owned",
+      "elements": [],
+      "evidence": "https://hyperliquid.gitbook.io/hyperliquid-docs/hypercore/vaults/protocol-vaults.md (accessed 2026-08-04)",
+      "note": "RESIDUE — role multiplicity, and the reason `Bs` is DROPPED from the corpus element set. Bs is slashable first-loss capital posted as a bond; HLP is profit-seeking depositor capital that happens to sit in front of the waterfall, is not bonded and is not slashable. Stage 1 also corrects the corpus's count: five roles, not three. Nothing composes 'the loss absorber is also the price maker'."
+    },
+    {
+      "id": "F20",
+      "text": "HYPE is delegated to validators under a 1-day delegation lockup with a 10k HYPE self-delegation floor locked for a year, commission may not be raised except to at most 1%, poor performers are jailed by peer vote and self-cure, and there is currently no automatic slashing for consensus faults",
+      "elements": [
+        "Vl"
+      ],
+      "evidence": "https://hyperliquid.gitbook.io/hyperliquid-docs/hypercore/staking.md (accessed 2026-08-04)",
+      "note": "CANDIDATE-REGISTER. Vl names the lifecycle but elides two different punishment regimes: consensus misbehaviour is socially punished (jailing, no automatic slashing) while HIP-3 deployer misbehaviour is mechanically slashed (F22). It also cannot say that this same set is the oracle publisher (F10) and the bridge's verifier set (F7)."
+    },
+    {
+      "id": "F21",
+      "text": "the validator set rotates on epochs of 100k consensus rounds (about 90 minutes), and unstaking from staking to spot passes through a 7-day queue that admits at most 5 pending withdrawals",
+      "elements": [
+        "Ep",
+        "Wq"
+      ],
+      "evidence": "https://hyperliquid.gitbook.io/hyperliquid-docs/hypercore/staking.md (accessed 2026-08-04)",
+      "note": "Both fit: Ep for the epoch-gated set rotation, Wq for a genuine rate-limited redemption queue. Ep is ADDED relative to the corpus decomposition, which lists Wq but not Ep."
+    },
+    {
+      "id": "F22",
+      "text": "the right to list a spot ticker is sold by a 31-hour Dutch auction decaying to 500 HYPE, and the right to deploy a perp DEX requires 500k HYPE staked and maintained for at least 183 days, slashable by stake-weighted validator vote up to 100% for invalid state transitions and up to 50% or 20% for downtime and degradation",
+      "elements": [],
+      "evidence": "https://hyperliquid.gitbook.io/hyperliquid-docs/hyperliquid-improvement-proposals-hips/hip-3-builder-deployed-perpetuals.md (accessed 2026-08-04)",
+      "note": "RESIDUE, twice over. (i) Permissionless listing priced by descending auction has no symbol, and the auction hyperparameters are SHARED across all deployed perp DEXs, coupling nominally independent venues. HIP-1 detail at https://hyperliquid.gitbook.io/hyperliquid-docs/hyperliquid-improvement-proposals-hips/hip-1-native-token-standard.md (2026-08-04). (ii) This is genuinely slashable bonded capital — the thing Bs names — but it secures listing quality, oracle honesty and uptime, NOT the loss waterfall, so Bs still cannot sit here. 'Slashable capital exists and does not back solvency' is a finding the vocabulary cannot state."
+    },
+    {
+      "id": "F23",
+      "text": "a third-party front end can attach its own fee to order flow it originates, up to 0.1% on perps and 1% on spot, charged inside the exchange's fee logic, requiring an ApproveBuilderFee action from the user's main wallet, at most 10 active approvals and at least 100 USDC in the builder's perps account",
+      "elements": [],
+      "evidence": "https://hyperliquid.gitbook.io/hyperliquid-docs/trading/builder-codes.md (accessed 2026-08-04)",
+      "note": "RESIDUE. Au (delegated execution scope) is the nearest symbol and does not fit: what the user approves is a fee ceiling for a named counterparty, not authority to act. Builder fills are published at https://stats-data.hyperliquid.xyz/Mainnet/builder_fills/{builder_address}/{YYYYMMDD}.csv.lz4 (2026-08-04)."
+    },
+    {
+      "id": "F24",
+      "text": "a vault leader trades depositors' capital for a 10% profit share, must hold at least 5% of the vault at all times and cannot withdraw below it, pays a 10k USDC creation fee and imposes a 1-day depositor lockup",
+      "elements": [
+        "Sh"
+      ],
+      "evidence": "https://hyperliquid.gitbook.io/hyperliquid-docs/hypercore/vaults/hypercore-vaults-legacy.md (accessed 2026-08-04)",
+      "note": "Sh names the depositor claim only. The mandatory non-withdrawable leader stake is a solvency-style constraint applied to a MANAGER rather than a borrower, and has no symbol; nor does the restriction that vaults may trade validator-operated perps only."
+    },
+    {
+      "id": "F25",
+      "text": "orders must be placed within 1% of the oracle price, with HLP exempt so it can keep quoting, and open-interest caps scaled to liquidity block new positions when hit",
+      "elements": [],
+      "evidence": "https://hyperliquid.gitbook.io/hyperliquid-docs/risks.md (accessed 2026-08-04)",
+      "note": "RESIDUE. These are risk controls that act on the ORDER, not on the account; Ct is an account test. A per-participant exemption from a risk control has no expression at all."
+    }
+  ],
+  "paper": {
+    "title": "Hyperliquid",
+    "label": "cat:perp:hyperliquid",
+    "blurb": "The largest venue in the category matches orders in a book whose state is part of its own chain's consensus, so the sequence of trades is agreed by the validator set rather than asserted by an operator. Margin is posted on the same chain, funding is a long/short transfer, and a position that fails its margin test is closed by a liquidator and, past that, by auto-deleveraging against profitable accounts. Its backstop is a depositor-funded vault rather than staked capital, which the construction records as loss allocation over a pro-rata claim rather than as a bond.",
+    "witnessReason": "The construction is exhibited rather than derived: the corpus decomposition carries a staked backstop this venue does not have --- the vault is unbonded and unslashable depositor capital --- so the witness drops it and lets socialised loss over a pro-rata claim carry the obligation instead. Among the alternatives left open by the loss-absorption term, that is the one the code supports.",
+    "residueNote": "The residue is not incidental to this venue; it is what distinguishes it from the other four. That the book is in consensus, that no operator may reorder it, and that a user can exit without the operator's cooperation are three separate facts, and the vocabulary states none of them."
+  }
+}

@@ -1,0 +1,239 @@
+{
+  "app": "Lido",
+  "category": "04-liquid-staking",
+  "source": "C:\\defiformal-work\\04-liquid-staking\\01-research.md",
+  "construction": [
+    "Sh",
+    "Rb",
+    "Ix",
+    "Cd",
+    "Ct",
+    "Ex",
+    "Ep",
+    "Wq",
+    "Rd",
+    "Sl",
+    "Bs",
+    "Fd",
+    "Aw",
+    "Tg",
+    "Up",
+    "Gp"
+  ],
+  "functionalObligations": [
+    {
+      "id": "F1",
+      "text": "A user who sends ETH to the core pool receives stETH minted 1:1 at deposit, recorded not as a balance but as a share of a ledger whose balance function is shares x totalPooledEther / totalShares.",
+      "elements": [
+        "Sh"
+      ],
+      "evidence": "https://docs.lido.fi/contracts/accounting-oracle (accessed 2026-08-04)",
+      "note": "The accounting-oracle page is the stage-1-itemised first-party source that describes the pooled-ether recomputation and fee-share minting that the share ledger is defined against. The dedicated stETH contract page (docs.lido.fi/contracts/lido) is a sibling in the same verified docs tree but was not itemised in stage 1's evidence table; stage 3 may re-verify there."
+    },
+    {
+      "id": "F2",
+      "text": "A holder's nominal stETH balance changes, up or down, when the oracle report changes total pooled ether, with no transfer and no action by the holder.",
+      "elements": [
+        "Rb"
+      ],
+      "evidence": "https://docs.lido.fi/contracts/accounting-oracle (accessed 2026-08-04)",
+      "note": ""
+    },
+    {
+      "id": "F3",
+      "text": "wstETH holds shares directly, so an integration that cannot tolerate a moving balance holds a fixed-quantity token whose value per unit rises instead.",
+      "elements": [
+        "Sh",
+        "Ix"
+      ],
+      "evidence": "https://docs.lido.fi/deployed-contracts/ (accessed 2026-08-04)",
+      "note": "This is the Rb/Ix duality made explicit: the same claim is expressible as a moving balance or as a moving index over a fixed balance. It also discharges prohibition X4 (Rb into a balance-invariant ledger with no adapter) by being the adapter. Ix is added to the construction on this obligation alone; the core token is Rb."
+    },
+    {
+      "id": "F4",
+      "text": "A quorum of a permissioned committee (documented 5 of 9) publishes once per 225-epoch consensus-layer frame a signed report of consensus-layer validator balances, pending balances, newly exited validators per module, withdrawal-vault and execution-layer reward balances, shares requested to burn, the withdrawal finalisation batches and a bunker-mode flag; the report is rejected unless it passes bounds in OracleReportSanityChecker.",
+      "elements": [
+        "Ex",
+        "Ep"
+      ],
+      "evidence": "https://docs.lido.fi/contracts/accounting-oracle (accessed 2026-08-04)",
+      "note": "Ex is FORCED and retained. Ex names a price feed (push/pull/medianizer); this is a quorum-signed report of protocol state and the failure mode is collusion on a balance, not manipulation of a market price. The sanity bounds satisfy law L13's freshness/validation warrant on Ex, so L13 is met. The category-level residue stands: nothing in the 58 distinguishes a state-reporting committee from a price feed."
+    },
+    {
+      "id": "F5",
+      "text": "10% of rewards is retained as a protocol fee, minted as new shares, and split between node operators and the DAO treasury at a rate that differs per staking module: Curated 5/5, the permissionless module 3.5/6.5, Simple DVT 8/2 for normal clusters and 6/4 for super clusters; 90% reaches stakers in every module.",
+      "elements": [
+        "Fd"
+      ],
+      "evidence": "https://lido.fi/how-lido-works/protocol-fee (accessed 2026-08-04); https://operatorportal.lido.fi/modules/simple-dvt-module (accessed 2026-08-04)",
+      "note": "Fd is a CANDIDATE symbol, used with the required mark. CORRECTION to the corpus. The corpus Fd marker states 'the 10% fee splits 5% to node operators and 5% to treasury'. First-party source states the split is per-module. A single global fee split is not a fact about Lido, and Fd carries a distribution rule without a way to scope it to a counterparty class."
+    },
+    {
+      "id": "F6",
+      "text": "Only DAO-approved addresses may register as node operators in the Curated module, and only clusters approved by a 5-of-7 SAFE multisig may operate in Simple DVT; Simple DVT onboarding is closed.",
+      "elements": [
+        "Aw"
+      ],
+      "evidence": "https://lido.fi/how-lido-works/lido-node-operators-set-overview (accessed 2026-08-04); https://operatorportal.lido.fi/modules/simple-dvt-module (accessed 2026-08-04)",
+      "note": "ADDED to the corpus construction. The corpus element list for Lido carries no permission symbol despite two of the three live modules being permissioned."
+    },
+    {
+      "id": "F7",
+      "text": "Anyone may become a node operator in the Community Staking Module by posting a slashable stETH bond on a declining curve (portal states 2.4 down to 1.3 ETH), with the module capped at a 9% stake share.",
+      "elements": [
+        "Bs"
+      ],
+      "evidence": "https://docs.lido.fi/staking-modules/csm/intro (accessed 2026-08-04); https://operatorportal.lido.fi/modules/community-staking-module (accessed 2026-08-04)",
+      "note": "Bs is exact for CSM and false for Curated, whose operators post nothing. The vocabulary has no way to scope a symbol to a subset of a protocol; see F8."
+    },
+    {
+      "id": "F8",
+      "text": "[Vl sub-mechanism 1 of 5: validator key registration and vetting] Three mutually incompatible operator-admission and key-vetting regimes run side by side over one share ledger and one loss pool: permissioned and unbonded (Curated, NodeOperatorsRegistry), permissioned and cluster-managed by a 5-of-7 multisig over Obol and SSV clusters (Simple DVT), and permissionless and bonded (CSM). Separately, a guardian may invalidate specific already-submitted validator public keys with a single signature, bounded by maxOperatorsPerUnvetting, without removing the operator.",
+      "elements": [],
+      "evidence": "https://lido.fi/how-lido-works/lido-node-operators-set-overview (accessed 2026-08-04); https://docs.lido.fi/contracts/deposit-security-module/ (accessed 2026-08-04)",
+      "note": "RESIDUE, and the first of the five mechanisms Vl compresses. Aw (F6) names one gate and Bs (F7) one bond; neither can be scoped to a subset of a protocol, and nothing names the coexistence of three trust models over one claim. Nothing at all names key-level vetting as distinct from operator-level admission: unvetSigningKeys invalidates a pubkey while leaving the operator registered, which is neither a permission change nor a removal. Vl is not used here: it names the aggregate category, not this mechanism, and using it would assert the sameness the code refutes."
+    },
+    {
+      "id": "F9",
+      "text": "[Vl sub-mechanism 2 of 5: stake allocation and scheduling across operator modules] Buffered ETH is allocated across the module registry by MinFirstAllocationStrategy, which fills the least-allocated modules first in whole validator units until the amount is exhausted or capacity is reached, subject to a per-module stake share limit, a per-module priority exit share threshold, per-module deposit rate limits (maxDepositsPerBlock, minDepositBlockDistance) and a per-module withdrawal-credential type.",
+      "elements": [],
+      "evidence": "https://docs.lido.fi/contracts/staking-router (accessed 2026-08-04)",
+      "note": "RESIDUE. This is a scheduler over heterogeneous counterparties with per-counterparty hard caps and rate limits, and nothing in the 58 names a scheduler. Any framing of it as 'who receives the next 32 ETH' is now stale: LIP-35 (shipped in lidofinance/core v4.0.0, 2026-07-24) makes module reward weight moduleActiveBalance / totalActiveBalance, i.e. balance-weighted rather than validator-count weighted."
+    },
+    {
+      "id": "F10",
+      "text": "[Vl sub-mechanism 3 of 5, implementation A: deposit front-running defence] Buffered ETH may be deposited only after a 4-of-6 guardian committee signs, in EIP-2098 short form, over (blockNumber, blockHash, depositRoot, stakingModuleId, nonce); this defeats an operator who front-runs depositBufferedEther with a >=1 ETH direct deposit using the same pubkey and different withdrawal credentials in order to capture the pool's 32 ETH. Any single guardian may unilaterally pause deposits, with validity bounded by pauseIntentValidityPeriodBlocks.",
+      "elements": [],
+      "evidence": "https://docs.lido.fi/contracts/deposit-security-module/ (accessed 2026-08-04); https://research.lido.fi/t/mitigations-for-deposit-front-running-vulnerability/1239 (accessed 2026-08-04)",
+      "note": "RESIDUE. Aw would call this a permission gate, which misreads it: the guardians do not decide who may deposit, they attest that a specific block's deposit root has not been poisoned. Gp names the unilateral pause but not the attestation, and the attestation is the mechanism. Quorum 4 of 6 is first-party; the corpus states no quorum."
+    },
+    {
+      "id": "F11",
+      "text": "[Vl sub-mechanism 3 of 5, implementation B] In a stVault the node operator locks a 1 ETH guarantee and submits a 1 ETH predeposit that pins the withdrawal credentials; PredepositGuarantee stages the remaining 31 ETH and releases it only once the validator's withdrawal credentials are proved against a beacon block root via EIP-4788 with BLS12-381 verification (EIP-2537). Wrong credentials cause the guarantee to be seized. Policies are STRICT, ALLOW_PROVE and ALLOW_DEPOSIT_AND_PROVE.",
+      "elements": [],
+      "evidence": "https://hackmd.io/@lido/stVaults-design (accessed 2026-08-04)",
+      "note": "RESIDUE, and a CORRECTION to the corpus, which records only the committee-signature form. This is a structurally different answer to the same adversary: a cryptographic credential proof plus a forfeitable bond, with no committee and no signature quorum. One protocol now runs two incompatible anti-front-running mechanisms simultaneously, and the vocabulary has no symbol for either."
+    },
+    {
+      "id": "F12",
+      "text": "[Vl sub-mechanism 4 of 5: exit signalling and the validator-side exit queue] A second oracle publishes packed exit requests naming (moduleId, nodeOperatorId, validatorIndex, pubkey), sorted ascending on that key, subject to a per-report cap and to an ETH-denominated per-frame budget that restores at 32 ETH per 0x01 validator and 2048 ETH per 0x02 validator; operator compliance with a published request is an off-chain social norm, and non-compliance is answered by submitting EIP-7002 triggerable-withdrawal requests through a gateway with msg.value covering the EIP-7002 fee.",
+      "elements": [],
+      "evidence": "https://docs.lido.fi/contracts/validators-exit-bus-oracle (accessed 2026-08-04)",
+      "note": "RESIDUE. The contract calls itself 'an on-chain message bus between the protocol's off-chain oracle and off-chain observers'. Wq covers the user's withdrawal request; nothing covers the validator-side exit that must complete before the user's queue can be paid, nor the fact that the primary enforcement is a social norm (SNOP 3.0) with a forced-exit fallback."
+    },
+    {
+      "id": "F13",
+      "text": "[Vl sub-mechanism 5 of 5, regime A: penalty attribution] A consensus-layer penalty or slashing appears as a lower reported validator balance and is absorbed as a negative rebase across the entire stETH supply, irrespective of which operator or module caused it.",
+      "elements": [
+        "Sl",
+        "Rb"
+      ],
+      "evidence": "https://docs.lido.fi/contracts/accounting-oracle (accessed 2026-08-04)",
+      "note": "Sl is retained and is FORCED in exactly the way the corpus states: it names the socialisation correctly and cannot express that the loss is not attributed to the party that caused it. This is the one of Vl's five sub-mechanisms the vocabulary can partly name, and the gap is recorded here rather than as an empty array because the symbol does discharge the allocation."
+    },
+    {
+      "id": "F14",
+      "text": "[Vl sub-mechanism 5 of 5, regime B] A CSM operator's own posted bond absorbs penalties attributable to its own validators, and accumulated strikes trigger EIP-7002 ejection with a badPerformancePenalty, so a second, module-local, attributed loss regime runs simultaneously with the socialised one.",
+      "elements": [
+        "Bs"
+      ],
+      "evidence": "https://docs.lido.fi/staking-modules/csm/intro (accessed 2026-08-04)",
+      "note": "RESIDUE recorded alongside a used symbol: Bs names the bond and Sl names the socialisation, but nothing names a protocol running two loss regimes at once, nor the boundary that decides which loss goes to which."
+    },
+    {
+      "id": "F15",
+      "text": "[Vl sub-mechanism 6, absent from the corpus: validator sizing, top-up and consolidation] Validators may be created with 0x01 credentials at 32 ETH or 0x02 credentials up to 2048 ETH; stake may be added to a live validator through TopUpGateway with a 2 ETH minimum and a 1.25 ETH margin; and stake may be migrated between operators through a three-contract consolidation pipeline (ConsolidationMigrator, ConsolidationBus, ConsolidationGateway).",
+      "elements": [],
+      "evidence": "https://github.com/lidofinance/lido-improvement-proposals/blob/develop/LIPS/lip-35.md (accessed 2026-08-04); https://research.lido.fi/t/staking-router-v3-design-implementation-proposal-lip-35/11621 (accessed 2026-08-04)",
+      "note": "RESIDUE, and NEW: absent from the corpus record, which predates lidofinance/core v4.0.0 (2026-07-24). Merging two existing validators and adding stake to a live one are neither registration nor exit; Vl has no place to put them. This is a sixth separable mechanism inside the one symbol, one more than the structural claim on trial asserts."
+    },
+    {
+      "id": "F16",
+      "text": "A holder burns stETH into a withdrawal queue and receives an ERC-721 (also ERC-4906) representing a queue position, between 100 wei and 1000 ETH; the accounting oracle path prefinalizes and finalizes batches at a maximum share rate of 1e27, locking ether and burning the shares, after which the NFT holder claims against a checkpoint hint.",
+      "elements": [
+        "Wq",
+        "Ep"
+      ],
+      "evidence": "https://docs.lido.fi/contracts/withdrawal-queue-erc721 (accessed 2026-08-04)",
+      "note": "The oracle report additionally carries an isBunkerMode flag that changes finalisation semantics under mass-slashing conditions. Nothing in the 58 names a protocol-wide mode switch that alters the settlement rule of a queue; that is residue carried in this note rather than as a separate obligation."
+    },
+    {
+      "id": "F17",
+      "text": "The protocol asserts as a design invariant that all existing stETH can be converted into ETH at a 1:1 ratio.",
+      "elements": [
+        "Rd"
+      ],
+      "evidence": "https://hackmd.io/@lido/stVaults-design (accessed 2026-08-04)",
+      "note": "ADDED. The right is asserted at 1:1 and mediated by F16's queue rather than being immediate, which satisfies law L14 (illiquid backing requires a queue or a bounded liquidity reserve) and keeps prohibition X5 (illiquid backing plus uncapped instant par redemption) disarmed."
+    },
+    {
+      "id": "F18",
+      "text": "A vault owner may mint stETH as a liability against an isolated staking position whose collateral is a validator set, over-collateralised at a DAO-set reserve ratio, with locked value = liability + max(reserve implied by the ratio, max(1 ETH connect deposit, slashing reserve)); a vault below its force-rebalance threshold is unhealthy.",
+      "elements": [
+        "Cd",
+        "Ct"
+      ],
+      "evidence": "https://hackmd.io/@lido/stVaults-design (accessed 2026-08-04); https://blog.lido.fi/lido-v3-is-live-modular-infrastructure-for-a-new-paradigm-of-ethereum-staking/ (accessed 2026-08-04)",
+      "note": "ADDED, both symbols. The corpus record predates Lido V3 entirely (mainnet 2026-01-30) and contains no trace of an over-collateralised minting path. Cd warrants Ct (law L1c) and Ct is present; law L1d's loss branch is satisfied by Sl and Bs, already in the construction."
+    },
+    {
+      "id": "F19",
+      "text": "An unhealthy vault may be force-rebalanced by anyone, and while unhealthy is blocked from minting, from withdrawal, from beacon deposits and from full partial withdrawal; vault obligations are serviced in a fixed order, health first, then redemptions to service core withdrawals, then Lido fees.",
+      "elements": [],
+      "evidence": "https://hackmd.io/@lido/stVaults-design (accessed 2026-08-04)",
+      "note": "RESIDUE. Li is the nearest symbol and is deliberately not used: Li requires that third parties be paid to close positions, and stage 1 found no first-party statement of a payment to the force-rebalance caller. A permissionless close with no cited incentive is not incentivized liquidation, and asserting Li would be exactly the forced fit this stage exists to catch. Nothing names a fixed ordering over a position's competing obligations either."
+    },
+    {
+      "id": "F20",
+      "text": "The same validator principal backs both the vault owner's own position and the stETH minted against it, and the DAO caps in basis points the fraction of total stETH supply that may be backed by external vault collateral rather than by the core pool (setMaxExternalRatioBP).",
+      "elements": [],
+      "evidence": "https://docs.lido.fi/guides/protocol-levers/ (accessed 2026-08-04); https://hackmd.io/@lido/stVaults-design (accessed 2026-08-04)",
+      "note": "RESIDUE. This is the category's 'can the same collateral be committed twice' question in its Lido form: yes, once as an isolated staking position and once as backing for a fungible pool claim, with a single global cap as the only bound. Nothing in the 58 names a cap on how much of one claim class may be backed by a different collateral topology, and that cap is the seam between the two products. The protocol-levers page names the lever and carries no current numeric value."
+    },
+    {
+      "id": "F21",
+      "text": "A vault's reported value is usable only if it matches the latest checkpoint and is under two days old, staleness blocking withdrawals, minting, rebalancing, beacon deposits and disconnection; and value increases above routine execution- and consensus-layer rewards are held in a timelocked quarantine buffer rather than credited immediately.",
+      "elements": [
+        "Ex"
+      ],
+      "evidence": "https://hackmd.io/@lido/stVaults-design (accessed 2026-08-04)",
+      "note": "Ex is used for the Merkle-rooted state posting and its freshness gate, which is Ex's own L13 warrant. The quarantine is RESIDUE and is recorded here: a timelock applied to an anomalous reported *value* rather than to a transaction or a governance action has no symbol. Tg names delayed execution of a decision, not delayed recognition of a number."
+    },
+    {
+      "id": "F22",
+      "text": "A DAO motion cannot execute for at least three days, and stETH, wstETH or withdrawal-NFT holders who escrow their position (minimum five-hour lock) extend that delay dynamically between 5 and 45 days; at a first seal of 1% of stETH supply the timelock begins growing, and at a second seal of 10% the protocol enters rage quit, blocking all execution until the escrowed stETH has been fully withdrawn to ETH, with a 7-day rage-quit extension and a 60-to-180-day ETH withdrawal delay.",
+      "elements": [
+        "Tg",
+        "Ep"
+      ],
+      "evidence": "https://github.com/lidofinance/lido-improvement-proposals/blob/develop/LIPS/lip-28.md (accessed 2026-08-04)",
+      "note": "Tg names the delay and Ep the state-machine transitions. RESIDUE carried here: nothing names a second governance chamber whose ballot is a redemption. The corpus residue entry is correct but under-specified; LIP-28 gives a five-state machine, exact thresholds and three named committees (Reseal, Emergency 4/7 and 5/7, Tiebreaker 2/3)."
+    },
+    {
+      "id": "F23",
+      "text": "Every principal contract in the protocol is a proxy whose implementation the DAO can replace, and named committees can pause or reseal individual contracts outside the ordinary governance path.",
+      "elements": [
+        "Up",
+        "Gp"
+      ],
+      "evidence": "https://docs.lido.fi/deployed-contracts/ (accessed 2026-08-04); https://github.com/lidofinance/lido-improvement-proposals/blob/develop/LIPS/lip-28.md (accessed 2026-08-04)",
+      "note": "Law L15 (Up requires Tg or a bounded emergency process) is satisfied by F22. Prohibition X9 (Up with immediate single-key control) is disarmed: upgrades pass through the dual-governance timelock. Stage 1 did not perform a byte-level source-vs-deployment diff, so the correspondence between the deployed implementations and any repo commit is UNKNOWN."
+    },
+    {
+      "id": "F24",
+      "text": "A stVault is grouped into an operator group and a tier carrying its own share limit, reserve ratio, force-rebalance threshold and fees; tier changes require dual confirmation from both the vault owner and the node operator, and the DAO may jail a specific vault, blocking minting while continuing to permit burns and administrative operations.",
+      "elements": [
+        "Aw"
+      ],
+      "evidence": "https://hackmd.io/@lido/stVaults-design (accessed 2026-08-04)",
+      "note": "Aw names the tiering and the dual-confirmation gate. The jail is RESIDUE and is recorded here: it is neither a pause (the contract keeps operating) nor a permission gate (the owner's identity is unchanged) but a suspension of one specific capability of one specific position. Stage 1 also records the asserted invariant that slashing consequences are contained within the operator group, which is a per-group loss fence with no symbol."
+    }
+  ],
+  "paper": {
+    "title": "Lido",
+    "label": "cat:lsd:lido",
+    "blurb": "A user sends ETH to the core pool and receives stETH, a share of a ledger whose balance is the pool's total ether apportioned across its shares; wstETH holds the share directly, for integrations that cannot tolerate a moving balance. Rewards and losses both arrive as a rebase, because a permissioned committee reports consensus-layer balances on a fixed frame and the ledger is recomputed from what it reports. The pooled ether is scheduled across a registry of staking modules, each a different operator set under a different trust model, and only the permissionless module requires its operators to post a bond. Exit has a user side and a validator side that do not meet: the holder burns stETH into a queue and holds an NFT until a batch is finalised at a rate fixed then, while the protocol must separately signal beacon-chain exits and, where an operator does not comply, force them. A penalty or a slashing is absorbed as a negative rebase across the entire supply, irrespective of which operator caused it, and the bonded module runs its own attributed loss regime alongside.",
+    "witnessReason": "$Vl$ is not used: it names the category rather than any mechanism, and this protocol keeps operator admission, stake scheduling, deposit defence, exit signalling and penalty attribution in separate contracts under separate failure modes, so one symbol laid over all of them would assert a sameness the code refutes. The corpus record's fee marker does not hold --- the protocol's own fee page and its operator portal state a split that differs per module, so a single global split is not a fact about Lido --- and the construction adds a permission element the record omits, because the curated and the distributed-validator modules both admit operators by approval, and adds the collateralised-debt pair, because the vault product reached mainnet after the record was written and mints the pool token as a liability against an isolated validator set. Incentivised liquidation is deliberately not claimed for the permissionless force-rebalance: the design document states the power and states no payment to whoever exercises it, and asserting the element would be exactly the forced fit this stage exists to catch. Among the alternatives the loss-absorption term leaves open, the witness carries both socialised rebase and a posted bond, because the protocol runs both regimes at once and either alone misdescribes part of the stake.",
+    "residueNote": "Everything between the ether arriving and the ether returning is residue. The protocol admits operators under mutually incompatible regimes over a single share ledger and a single loss pool, schedules principal across them, defends its own deposit path against its own operators by structurally unrelated devices --- a guardian signature quorum in the core pool, a credential proof against a beacon block root with a forfeitable bond in the vaults --- signals exits over a bus whose enforcement is a social norm, and now resizes, tops up and merges live validators. That last mechanism is \\emph{neither entry nor exit}, which is the demonstration in miniature: the candidate symbol for this category has nowhere to put it, and nowhere to put the rest either. What the construction does say is the accounting: a share ledger, an index, a queue, a fee, a governance delay. What it cannot say is the staking."
+  }
+}

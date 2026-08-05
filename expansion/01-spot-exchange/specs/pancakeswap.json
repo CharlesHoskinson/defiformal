@@ -1,0 +1,197 @@
+{
+  "app": "PancakeSwap",
+  "category": "01-spot-exchange",
+  "source": "C:\\defiformal-work\\01-spot-exchange\\01-research.md",
+  "construction": [
+    "Cp",
+    "Cl",
+    "St",
+    "Sh",
+    "Ix",
+    "Fl",
+    "Em",
+    "Gp"
+  ],
+  "functionalObligations": [
+    {
+      "id": "F1",
+      "text": "a v2 pool quotes a swap off the constant-product invariant on its own two reserves, charging a total swap fee of 0.25% of which 0.17% is added back to the liquidity pool",
+      "elements": [
+        "Cp"
+      ],
+      "evidence": "https://docs.pancakeswap.finance/earn/pancakeswap-pools.md (accessed 2026-08-04)",
+      "note": "THE POOL INVARIANT, first of four this protocol runs simultaneously. Cp fits exactly. The residual 0.08% is documented only as non-LP: the widely repeated 0.03% treasury / 0.05% burn split could NOT be confirmed at a PancakeSwap primary source by stage 1 and must not be carried further."
+    },
+    {
+      "id": "F2",
+      "text": "a v3 or Infinity CLAMM pool applies the constant-product curve inside a tick range — 'CLAMM operates on the constant product formula (X * Y = K)' — with tick spacing carried in the pool's parameters",
+      "elements": [
+        "Cl",
+        "Cp"
+      ],
+      "evidence": "https://docs.pancakeswap.finance/trade/pancakeswap-infinity/pool-types/infinity-clamm-and-lbamm.md (accessed 2026-08-04)",
+      "note": "THE POOL INVARIANT, second answer. Cl and Cp together fit well, as for Uniswap."
+    },
+    {
+      "id": "F3",
+      "text": "an Infinity LBAMM ('Liquidity Book') pool prices instead on DISCRETE BINS: liquidity sits in a bin at a fixed price, the invariant WITHIN a bin is constant sum — 'LBAMM follows the constant sum formula (X + Y = K)' — so a trade inside one bin has zero price impact, and the bin step rather than a tick spacing is carried in the pool key",
+      "elements": [],
+      "evidence": "https://docs.pancakeswap.finance/trade/pancakeswap-infinity/pool-types/infinity-clamm-and-lbamm.md (accessed 2026-08-04)",
+      "note": "RESIDUE — THE POOL INVARIANT, third answer, and unnameable. St was considered and REJECTED: St is constant-sum NEAR PARITY over a whole pool as a limiting behaviour, whereas a bin is EXACTLY constant-sum over a quantised price cell, and vocab.md itself declares constant sum (CSM) 'a limit of St, not an element'. Cl was also rejected: bins are not ranges and carry no per-position index. This is a live, named, deployed pool type whose curve the vocabulary cannot state, and the corpus does not record it."
+    },
+    {
+      "id": "F4",
+      "text": "a StableSwap pool type is deployed and routed to by the SmartRouter, which is documented as 'Able to route to v3, v2 and stable pool'",
+      "elements": [
+        "St"
+      ],
+      "evidence": "https://developer.pancakeswap.finance/contracts/v3/addresses (accessed 2026-08-04)",
+      "note": "THE POOL INVARIANT, fourth answer. St fits by kind but the pool's parameterisation was not established at a primary source by stage 1, and the type carries only $3.7M of a $2,059.6M protocol (DefiLlama, 2026-08-04), so the symbol is carried on thin evidence and is the weakest member of this construction. SmartRouter 0x13f4EA83D0bd40E75C8222255bc855a974568Dd4."
+    },
+    {
+      "id": "F5",
+      "text": "a v2 liquidity provider holds a fungible ERC-20 LP token: a pro-rata claim on the whole reserve",
+      "elements": [
+        "Sh"
+      ],
+      "evidence": "https://docs.pancakeswap.finance/earn/pancakeswap-pools.md (accessed 2026-08-04)",
+      "note": "FUNGIBILITY OF THE POSITION, first of three answers this one protocol gives."
+    },
+    {
+      "id": "F6",
+      "text": "a v3 or CLAMM liquidity provider holds a per-range NON-FUNGIBLE position, wrapped as an ERC-721 by the NonfungiblePositionManager",
+      "elements": [],
+      "evidence": "https://developer.pancakeswap.finance/contracts/v3/addresses (accessed 2026-08-04)",
+      "note": "RESIDUE — FUNGIBILITY OF THE POSITION, second answer, and the same gap as Uniswap F4. NonfungiblePositionManager 0x46A15B0b27311cedF172AB29E4f4766fbE7F4364."
+    },
+    {
+      "id": "F7",
+      "text": "an LBAMM liquidity provider holds a claim that is FUNGIBLE PER BIN — an ERC-20 for the bin — so within one protocol the claim shape is a property of the pool type, not of the protocol",
+      "elements": [
+        "Sh"
+      ],
+      "evidence": "https://docs.pancakeswap.finance/trade/pancakeswap-infinity/pool-types/infinity-clamm-and-lbamm.md (accessed 2026-08-04)",
+      "note": "FUNGIBILITY OF THE POSITION, third answer. Sh discharges the per-bin claim. RESIDUE for the indexing: a decomposition assigns Sh to 'PancakeSwap' as a whole and thereby asserts something false about its v3 pools and something true about its bins. No element in the 58 is indexed by pool type, which is the resolution failure this protocol exhibits most cleanly."
+    },
+    {
+      "id": "F8",
+      "text": "fees accrue to a v3/CLAMM position against a fee-growth index snapshotted when the position was opened, and are collected rather than paid",
+      "elements": [
+        "Ix"
+      ],
+      "evidence": "https://docs.pancakeswap.finance/trade/pancakeswap-infinity/key-features.md (accessed 2026-08-04)",
+      "note": "APPROXIMATE for the same reason as Uniswap F5: the index is range-local, not global. Ix is ADDED relative to the corpus."
+    },
+    {
+      "id": "F9",
+      "text": "settlement in Infinity is deferred and net against an immutable ledger: vault.lock() then lockAcquired(data), operations run against a pool manager which calls vault.accountAppBalanceDelta(...), and the caller reconciles with take / settle / mint / burn (plus clear() for dust and the three-step sync-transfer-settle), with unsettled deltas counted in transient storage by SettlementGuard through UNSETTLED_DELTAS_COUNT and CURRENCY_DELTA",
+      "elements": [],
+      "evidence": "https://developer.pancakeswap.finance/contracts/infinity/overview/accounting-layer-vault (accessed 2026-08-04)",
+      "note": "RESIDUE — THE SETTLEMENT DISCIPLINE. Same object as Uniswap v4 (uniswap.json F10) and the same failure: Fl names borrow-and-repay, not 'run arbitrary operations then settle the net', and no symbol states the zero-delta conservation law. Note the counter-based encoding here (a count of unsettled currencies) rather than Uniswap's vector-of-deltas encoding — a difference in mechanism that no construction can register because neither is nameable."
+    },
+    {
+      "id": "F10",
+      "text": "custody and pricing are SPLIT ACROSS CONTRACTS: an immutable Vault holds all balances and the accounting, while pricing lives in independent singleton pool managers (CLPoolManager and BinPoolManager) that register against it, so two AMM families share one ledger and tokens are transferred to the Vault rather than to the pool manager",
+      "elements": [],
+      "evidence": "https://developer.pancakeswap.finance/contracts/infinity/overview (accessed 2026-08-04)",
+      "note": "RESIDUE — a settlement ledger that several independent pricing engines register against. This is the single largest architectural difference from Uniswap v4, which fuses the two, and it is structurally the SAME OBJECT as Fluid's Liquidity Layer (fluid.json F8). One missing symbol, two appearances in this lane — which is the strongest evidence in the category that the gap is real rather than an artefact of one protocol. PoolKey is (currency0, currency1, hooks, poolManager, fee, parameters), so the pricing engine is named IN the pool's identity; PoolId = keccak256(abi.encode(poolKey)). Cross-check https://developer.pancakeswap.finance/contracts/infinity/overview/amm-layer-poolmanager (2026-08-04)."
+    },
+    {
+      "id": "F11",
+      "text": "a caller may take assets before paying inside one lock scope, with the balance check deferred to reconciliation",
+      "elements": [
+        "Fl"
+      ],
+      "evidence": "https://docs.pancakeswap.finance/trade/pancakeswap-infinity/key-features.md (accessed 2026-08-04)",
+      "note": "Fl fits the take-before-settle capability. Distinguish from F9 as in Uniswap: the flash capability and the net-settlement discipline are different obligations that happen to be implemented by the same machinery."
+    },
+    {
+      "id": "F12",
+      "text": "a pool may name a hook, and WHICH callbacks fire is carried in the POOL'S OWN KEY: the first 16 bits of the bytes32 parameters field are the hook registration bitmap and the next field is tick spacing (CL) or bin step (Bin) — the docs decode 0x...0a00c2 as permission bits 0000 0000 1100 0010 (afterInitialize, beforeSwap, afterSwap) with tick spacing 10 — so one hook contract may be registered with DIFFERENT permission sets by different pools and no address mining is required",
+      "elements": [],
+      "evidence": "https://developer.pancakeswap.finance/contracts/infinity/faq/pancakeswap-infinity-vs-uniswap-v4 (accessed 2026-08-04)",
+      "note": "RESIDUE — EXTENSION POINT, permission-binding convention #2 of three in this lane. The semantics match Uniswap's but the BINDING is opposite: here the permission set belongs to the POOL, there it belongs to the CODE. Any symbol that names 'hook' must choose one, and these two protocols answer differently, so a single symbol would make them look identical when their security and deployment models differ. Nothing in the 58 names third-party code in the settlement path at all. CertiK published 'PancakeSwap Infinity: Hooks Security Considerations' for this surface."
+    },
+    {
+      "id": "F13",
+      "text": "the current generation publishes no protocol-level price series: Infinity ships no oracle in the core and a custom oracle is an advertised hook use case",
+      "elements": [],
+      "evidence": "https://developer.pancakeswap.finance/contracts/infinity/overview (accessed 2026-08-04)",
+      "note": "RESIDUE — THE PRICE-SERIES QUESTION, answered by relocation rather than by a mechanism, as in Uniswap v4 (uniswap.json F8). Tp is NOT assigned: the v3 fork presumably inherits Uniswap v3's observation ring buffer but stage 1 did not verify this at a primary source, so under the run's cite-or-drop invariant no price element enters this construction. The corpus likewise carries no Tp for PancakeSwap."
+    },
+    {
+      "id": "F14",
+      "text": "the protocol's share of the fee is set by a swappable controller: ProtocolFeeController is Ownable2Step with protocolFeeSplitRatio = 33 * 1e4 (33% of the total fee in hundredths of a bip) and defaultProtocolFeeForDynamicFeePool = 300, rejects a dynamic-pool default greater than 0.4%, and exposes owner-only setProtocolFeeSplitRatio, setDefaultProtocolFeeForDynamicFeePool, per-pool setProtocolFee and collectProtocolFee",
+      "elements": [],
+      "evidence": "https://raw.githubusercontent.com/pancakeswap/infinity-core/main/src/ProtocolFeeController.sol (accessed 2026-08-04)",
+      "note": "RESIDUE — the whole controller is replaceable wholesale by setProtocolFeeController, which is the same privilege/policy split as Uniswap's V4FeePolicy (uniswap.json F20): not Up (no proxy, no delegatecall) and not Tg (the swap is not the delay). This is the mechanism the corpus mislabels as Up."
+    },
+    {
+      "id": "F15",
+      "text": "the swap fee is split THREE WAYS at the protocol level, per tier, with the burn as one of the three legs: EVM v3 tiers pay LP 67 / burn 15 / treasury 18 at 0.01%, 66 / 15 / 19 at 0.05%, and 68 / 23 / 9 at both 0.25% and 1%, while Solana pools pay a uniform 84 / 8 / 8",
+      "elements": [],
+      "evidence": "https://docs.pancakeswap.finance/earn/pancakeswap-pools.md (accessed 2026-08-04)",
+      "note": "RESIDUE — Fd is DROPPED from this construction. Fd names distribution of surplus to a claim class; here the split is a PRIMITIVE OF THE FEE ACCOUNTING computed per tier, and one of its three destinations is destruction and another is a treasury, neither of which is a claim class. After Tokenomics 3.0 there is no revenue share to any class at all."
+    },
+    {
+      "id": "F16",
+      "text": "THE VALUE-RETURN CHANNEL IS SUPPLY DESTRUCTION, funded from five named sources: spot trading 15-23% of trading fees, perpetual trading 20% of all profits, CAKE.PADs 100% of fees, Prediction 3% of each round and Lottery 20% of CAKE played, targeting 'an annual deflation rate of at least ~4% per year and a total CAKE supply reduction of ~20% by 2030'",
+      "elements": [],
+      "evidence": "https://docs.pancakeswap.finance/protocol/cake-tokenomics.md (accessed 2026-08-04)",
+      "note": "RESIDUE. Destruction, like Uniswap and UNLIKE Raydium, which buys and holds (raydium.json F11) — the corpus's three-way grouping of these protocols is invalid. Note the mechanism differs from Uniswap's even within the destruction family: PancakeSwap burns at source from an enumerated set of revenue lines, whereas Uniswap burns a searcher's premium paid to redeem an inventory. One symbol for 'burn' would erase that too."
+    },
+    {
+      "id": "F17",
+      "text": "the terminal bound on supply is itself governable: the CAKE hard cap was lowered from 450M to 400M by a proposal that passed 2026-01-16",
+      "elements": [],
+      "evidence": "https://docs.pancakeswap.finance/protocol/cake-tokenomics.md (accessed 2026-08-04)",
+      "note": "RESIDUE — Em covers issuance and says nothing about a ceiling; nothing covers a governance-mutable terminal bound on supply."
+    },
+    {
+      "id": "F18",
+      "text": "liquidity providers may stake their LP tokens or position NFTs into farms and receive CAKE emissions, directed to 'multichain farms, lottery, and ecosystem growth'",
+      "elements": [
+        "Em"
+      ],
+      "evidence": "https://docs.pancakeswap.finance/protocol/cake-tokenomics.md (accessed 2026-08-04)",
+      "note": "Em fits the issuance. MasterChefV3 0x556B9306565093C855AEA9AE92A594704c2Cd59e per https://developer.pancakeswap.finance/contracts/v3/addresses (2026-08-04)."
+    },
+    {
+      "id": "F19",
+      "text": "the emission is directed across pools by an admin-mutable allocation-point vector, and the docs do not name the authority that sets it, calling it only 'the Chefs'",
+      "elements": [],
+      "evidence": "https://docs.pancakeswap.finance/protocol/cake-tokenomics.md (accessed 2026-08-04)",
+      "note": "RESIDUE — Em says tokens are emitted and is silent on DIRECTION. Confirms the corpus's first residue item. Note this is the same shape as Curve's gauge-weight vote (curve.json F16) with the vote replaced by an admin: the object is a weight vector over pools parameterising the emission function, and the vocabulary can name neither the vector nor who sets it."
+    },
+    {
+      "id": "F20",
+      "text": "the AMM layer can be stopped, by an authority strictly weaker than ownership: CLPoolManagerOwner is PausableRole and exposes pausePoolManager() onlyPausableRoleOrOwner while unpausePoolManager() is onlyOwner",
+      "elements": [
+        "Gp"
+      ],
+      "evidence": "https://raw.githubusercontent.com/pancakeswap/infinity-core/main/src/pool-cl/CLPoolManagerOwner.sol (accessed 2026-08-04)",
+      "note": "APPROXIMATE, and Gp is ADDED relative to the corpus, which records no pause for PancakeSwap at all — stage 1 calls this the single most consequential delta in its section. RESIDUE for the shape: the authority is ONE-DIRECTIONAL, a delegate may stop but only the owner may restart. Gp names a pause as a symmetric switch. Compare Curve's Emergency DAO, which is monotone in the other register (may reduce a ceiling, may never raise it) — curve.json F22."
+    },
+    {
+      "id": "F21",
+      "text": "the core is not upgradeable — the Vault is stated immutable and the docs assert 'The non-upgradeable core ensures stability' — while ownership of the pool-manager owner and of the fee controller moves by 2-step transfer, and the identity of the owner and of the pausable role is not published",
+      "elements": [],
+      "evidence": "https://developer.pancakeswap.finance/contracts/infinity/overview (accessed 2026-08-04)",
+      "note": "RESIDUE, and TWO DEPARTURES from the corpus. Up is DROPPED: the corpus assigns it on the strength of 'a mutable admin', but at the Infinity generation there is no proxy and no delegatecall — what exists is a wholesale-swappable policy object (F14) and a pause (F20). Tg is DROPPED for want of evidence, not refuted: stage 1 could not establish at any primary source whether the owner is a multisig, a timelock, or an EOA, or what delay applies, so under the run's cite-or-drop invariant no delayed-governance symbol may be asserted. The vocabulary's control elements name the FACILITY without naming the holder — the same gap the bridges lane found on three bridges."
+    },
+    {
+      "id": "F22",
+      "text": "the protocol RETIRED a whole mechanism and settled the holders of a third party's derivative of it: veCAKE, gauge voting, farm boosting and the 5% revenue share ended on 2025-04-23 (final gauge vote Epoch 37), Epoch 38 ran 2025-04-25 to 05-06, accrual and revenue share stopped 2025-05-07, a 6-month redemption window for directly staked CAKE closed 2025-10-23, third-party locker protocols were handled by whitelisting delegator addresses for 1:1 redemption, and the freed revenue-share allocation was 'redirected to the CAKE burn mechanism, increasing the burn rate for these pools from 10% to 15%'",
+      "elements": [],
+      "evidence": "https://docs.pancakeswap.finance/welcome-to-pancakeswap/vecake-sunset (accessed 2026-08-04)",
+      "note": "RESIDUE, twice. (i) The vocabulary is a predicate on a protocol at an instant: it can record the absence of a vote-escrow mechanism but not a TRANSITION out of one, and every construction in this lane is therefore timeless in a way the protocols are not. (ii) It cannot record that a protocol assumed a liability to a derivative built on its own mechanism by a third party — the mirror image of Curve's finding that a third party effectively controls its governance path (curve.json F23)."
+    }
+  ],
+  "paper": {
+    "title": "PancakeSwap",
+    "label": "cat:dex:pancakeswap",
+    "blurb": "A provider deposits a pair into a constant-product pair carrying a fungible share, a tick-bounded position carrying a non-fungible one, a stable pool, or a Liquidity Book pool whose claim is fungible per price bin. Price formation follows the pool type: constant product on the reserves, the same curve restricted to a tick range, a stable-hybrid invariant near parity, and, inside a bin, constant sum --- so a trade that stays within one bin moves no price at all. The current generation separates custody from pricing, an immutable vault holding every balance and counting unsettled deltas in transient storage while independent pool managers for the concentrated and the bin families register against it, which makes the pricing engine pluggable at the contract level rather than only at the hook level. A position ends by burning the share or the position token and collecting; a provider may instead stake it into a farm and draw emissions on an administered allocation. There is no debt and so no liquidation, and the protocol's share of every fee is taken as a split declared at the protocol level with a token burn as one of its legs.",
+    "witnessReason": "The corpus assigns a mutable implementation proxy on the strength of a mutable admin; at the current generation there is no proxy, the vault is stated immutable and the documentation asserts a non-upgradeable core, so $Up$ is dropped and what is actually there --- a fee controller swappable wholesale by an owner call, behind two-step ownership --- is left as residue. $Gp$ is added, which the corpus does not record at all: CLPoolManagerOwner is a PausableRole and exposes a pause reachable by a role strictly weaker than the owner while unpause is owner-only, so the emergency authority is one-directional. $St$ is carried for the deployed stable pool type, but the witness refuses to stretch it over the bins, because constant sum is a degenerate limit of $St$ in this vocabulary and not an instance of it. The corpus's summary of this protocol --- Uniswap with an emission schedule and a mutable admin --- fails on architecture rather than on flavour, and the split singleton, the second AMM family and the pool-key hook binding are the demonstration.",
+    "residueNote": "The pricing group offers a symbol for the constant-product curve, one for its restriction to a range, one for the stable hybrid, one for a weighted-geometric invariant and one for an oracle-priced inventory curve, and this protocol still deploys a live, documented, audited pool type that none of them names. Neither the weighted-geometric symbol nor the oracle-priced one discharges anything anywhere in this category, so the group's apparent resolution is redundancy where the pools are alike and silence where they differ. The hook residue recurs here with the permissions carried in the pool's own key rather than mined into the hook's address, which means one hook contract may run under different permission sets in different pools --- the same mechanism as Uniswap's under a binding that changes both the deployment model and who chooses the capability. Other obligations here concern time rather than state: a whole mechanism was retired and the holders of a third party's derivative of it were settled at par, and the terminal bound on token supply was itself lowered by a vote. The vocabulary records which mechanisms a protocol has; it cannot record that one was retired, that a liability to somebody else's derivative was assumed, or that a supply cap is governable."
+  }
+}

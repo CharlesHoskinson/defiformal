@@ -1,0 +1,170 @@
+{
+  "app": "Hyperliquid Bridge",
+  "category": "07-bridges",
+  "source": "C:\\defiformal-work\\07-bridges\\01-research.md",
+  "construction": [
+    "Xf",
+    "Xm",
+    "Gp",
+    "Vl",
+    "Wq",
+    "Gs"
+  ],
+  "functionalObligations": [
+    {
+      "id": "F1",
+      "text": "A user transfers native Arbitrum USDC to the Bridge2 contract at 0x2Df1c51E09aECF9cacB7bc98cB1742757f163dF7 and receives a credit to their Hyperliquid L1 account about a minute later; the contract holds $421,856,739.90 of native USDC plus $5,026.03 of legacy USDC.e.",
+      "elements": [
+        "Xf"
+      ],
+      "evidence": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/bridge2 (accessed 2026-08-04) | https://arbitrum-one-rpc.publicnode.com eth_call usdcToken() and balanceOf(Bridge2) (accessed 2026-08-04)",
+      "note": "SUPPLY-TOPOLOGY AXIS: lock-and-mint escrow on the source side, and the only entry of the five whose reserve is a first-class on-chain object -- law L9's debit is directly observable. RANKING BASIS, MIS-ATTRIBUTED: DefiLlama hyperliquid-bridge = $5,906,458,452 against the corpus's $5,893.6m, but it splits Arbitrum $421,919,062 / 'Hyperliquid L1' $5,484,539,389, and that second bucket is native USDC minted on Hyperliquid via Circle's CCTP which never touched this escrow. Roughly 93% of the ranked figure is canonical issuance, not bridge escrow. The rank ordering is unaffected; any claim of a '$5.9b bridge honeypot' is wrong by an order of magnitude. Decompose the system, not the number."
+    },
+    {
+      "id": "F2",
+      "text": "A deposit is credited, and a withdrawal is authorised, only when validators holding more than two thirds of staking power have signed it; there is no external verifier, no oracle and no third-party fraud proof.",
+      "elements": [
+        "Xm"
+      ],
+      "evidence": "https://hyperliquid.gitbook.io/hyperliquid-docs/hypercore/bridge.md (accessed 2026-08-04) | https://raw.githubusercontent.com/hyperliquid-dex/contracts/master/Bridge2.sol (accessed 2026-08-04)",
+      "note": "Xm fires, and this is the strongest instance of it in the category -- an on-chain signature threshold against a set whose membership and weights are readable. VERIFICATION-MODEL AXIS: endogenous consensus, distinct from single-company attestation, from application-configured verifier sets, from a light client and from proof verification."
+    },
+    {
+      "id": "F3",
+      "text": "The set that signs withdrawals is the same stake-weighted validator set that secures the destination chain, so holding bridged funds adds no trust assumption beyond using Hyperliquid at all.",
+      "elements": [],
+      "evidence": "https://hyperliquid.gitbook.io/hyperliquid-docs/hypercore/bridge.md (accessed 2026-08-04)",
+      "note": "RESIDUE, and the single most important property of a native L1 bridge. Xm cannot express that the verifying set is endogenous. The consequence is that Xm assigned here and Xm assigned to a 1-of-1 external DVN configuration assert the same thing about opposite designs; prohibition X13 ('external-validator Xm securing value exceeding slashable stake') presumes an external set and cannot even classify this one."
+    },
+    {
+      "id": "F4",
+      "text": "A deposit below the 5 USDC minimum is not credited and is lost permanently.",
+      "elements": [],
+      "evidence": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/bridge2 (accessed 2026-08-04)",
+      "note": "RESIDUE. No element for a minimum transfer size, and none for an irreversible loss on a malformed transfer. Small, but it is a hard economic term of the transfer that the construction cannot state."
+    },
+    {
+      "id": "F5",
+      "text": "To withdraw, the user signs an EIP-712 WithdrawAction3 on Hyperliquid, the L1 balance is deducted immediately, validators sign, a request is posted to the Arbitrum contract, and a finalizer releases the USDC; funds arrive in three to four minutes.",
+      "elements": [
+        "Xf",
+        "Xm"
+      ],
+      "evidence": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/bridge2 (accessed 2026-08-04)",
+      "note": "The debit precedes the credit and is unconditional, which is the ordering that makes the dispute window (F6) a safety mechanism rather than a liquidity one."
+    },
+    {
+      "id": "F6",
+      "text": "A posted withdrawal is released only after a 200-second dispute period, during which lockers may vote to lock the bridge and stop it; disputePeriodSeconds() = 200 and blockDurationMillis() = 350 are on-chain readable.",
+      "elements": [],
+      "evidence": "https://arbitrum-one-rpc.publicnode.com eth_call disputePeriodSeconds() = 200, blockDurationMillis() = 350 (accessed 2026-08-04) | https://hyperliquid.gitbook.io/hyperliquid-docs/hypercore/bridge.md (accessed 2026-08-04)",
+      "note": "RESIDUE, and a CORPUS DEPARTURE: Wq is dropped from this obligation. The delay exists to give honest validators time to veto a fraudulent withdrawal, not to ration scarce liquidity among exiting claimants; Wq names the queue and misses the purpose entirely. Oa was also considered and rejected: there is no assertion, no bond and no adjudicator, only a veto window. A dispute window as a safety parameter has no symbol."
+    },
+    {
+      "id": "F7",
+      "text": "The user pays a flat 1 USDC fee on Hyperliquid and never needs Arbitrum ETH: the Arbitrum-side transaction that releases the funds is submitted and paid for by a finalizer.",
+      "elements": [
+        "Gs"
+      ],
+      "evidence": "https://hyperliquid.gitbook.io/hyperliquid-docs/hypercore/bridge.md (accessed 2026-08-04) | https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/bridge2 (accessed 2026-08-04)",
+      "note": "CANDIDATE-REGISTER (Gs). A third party pays destination-domain gas and is compensated in the source domain's unit -- structurally the same behaviour as LayerZero's Executor, and the two together are the case for reading Gs cross-domain rather than only as an account-abstraction paymaster. Law L21 (Gs -> Au + metering + fee settlement) again fails on the Au term: the user grants nothing."
+    },
+    {
+      "id": "F8",
+      "text": "Nothing is minted on the destination: what the user receives is a balance in HyperCore's ledger, not a transferable token, so there is no destination-side representation to hold, trade or bridge onward.",
+      "elements": [],
+      "evidence": "https://hyperliquid.gitbook.io/hyperliquid-docs/hypercore/bridge.md (accessed 2026-08-04)",
+      "note": "RESIDUE. SUPPLY-TOPOLOGY AXIS again, and none of the four topologies fits cleanly: it is escrow on one side and a ledger credit on the other. Xf presumes a transferable representation on the destination. There is also no mint or burn authority in the system at all, which is why no element from the issuance group appears in the construction."
+    },
+    {
+      "id": "F9",
+      "text": "Two supplies of the same asset coexist on the destination chain with different trust models and are fungible to the user: $421.9m that came through this escrow and $5.48b issued natively on Hyperliquid via CCTP.",
+      "elements": [],
+      "evidence": "https://api.llama.fi/protocol/hyperliquid-bridge (accessed 2026-08-04) | https://www.circle.com/blog/native-usdc-cctp-v2-are-coming-to-hyperliquid-what-you-need-to-know (accessed 2026-08-04)",
+      "note": "RESIDUE, and promoted from the corpus's residue-observation to a measurement: the ratio is 13:1 in favour of canonical issuance, so the escrow regime is now the minority one for its own asset on its own chain. No element for one asset carrying two trust models in one balance."
+    },
+    {
+      "id": "F10",
+      "text": "The escrow has no owner and no upgrade path: implementation(), admin() and owner() all revert, and every privileged action is authorised by validator signatures rather than by an admin key.",
+      "elements": [],
+      "evidence": "https://arbitrum-one-rpc.publicnode.com eth_call implementation(), admin(), owner() on Bridge2, all revert (accessed 2026-08-04) | https://raw.githubusercontent.com/hyperliquid-dex/contracts/master/Bridge2.sol (accessed 2026-08-04)",
+      "note": "RESIDUE of the guarantee-by-absence kind. This is the only one of the five with no owning party, and the vocabulary can only say so by omitting Up, Tg and every holder -- which is indistinguishable from not having checked. It is the strongest control-plane fact in the category and the least expressible."
+    },
+    {
+      "id": "F11",
+      "text": "Emergency powers are three, all held by the validator set: lockers vote to trigger an emergency lock which pauses the contract, invalidateWithdrawals cancels pending withdrawals under a cold-wallet quorum, and emergencyUnlock requires cold-wallet signatures of two thirds of stake and installs a new validator set; paused() is currently false.",
+      "elements": [
+        "Gp"
+      ],
+      "evidence": "https://raw.githubusercontent.com/hyperliquid-dex/contracts/master/Bridge2.sol (accessed 2026-08-04) | https://arbitrum-one-rpc.publicnode.com eth_call paused() = false, epoch() = 7 (accessed 2026-08-04)",
+      "note": "APPROXIMATE. Gp names the pause facility and nothing else: not that the power is exercised by a vote of the same principals who authorise ordinary flow, not that a cold-key quorum can cancel already-authorised withdrawals, and not that the emergency exit re-seats the authority itself. A cold-wallet lock is a different emergency posture from a contract pause and the corpus already flags that gap."
+    },
+    {
+      "id": "F12",
+      "text": "The same principals hold two key tiers with different powers: hot keys sign routine deposits and withdrawals, cold keys invalidate withdrawals and re-seat the validator set; hotValidatorSetHash() and coldValidatorSetHash() are distinct on-chain state.",
+      "elements": [],
+      "evidence": "https://arbitrum-one-rpc.publicnode.com eth_call hotValidatorSetHash(), coldValidatorSetHash() (accessed 2026-08-04) | https://raw.githubusercontent.com/hyperliquid-dex/contracts/master/Bridge2.sol (accessed 2026-08-04)",
+      "note": "RESIDUE. No vocabulary for 'the same principals, two escalation tiers'. This is the holder problem in its most refined form: not who holds the power, but which of a single party's key sets holds which power."
+    },
+    {
+      "id": "F13",
+      "text": "Two named roles exist that are neither owners nor governance: lockers, who can vote the bridge into a lock, and finalizers, who submit the transaction that releases a withdrawal after the dispute period.",
+      "elements": [],
+      "evidence": "https://raw.githubusercontent.com/hyperliquid-dex/contracts/master/Bridge2.sol (accessed 2026-08-04)",
+      "note": "RESIDUE. The control group knows owners, guardians, timelocks and proxies; it has no way to name an operational role with one specific privileged action and no ownership."
+    },
+    {
+      "id": "F14",
+      "text": "The verifier set is maintained by a staking lifecycle: HYPE is delegated to validators, each validator must self-delegate 10,000 HYPE locked for a year, delegations carry a one-day lockup, and unresponsive validators are jailed by peer vote; 34 validators exist, 27 are active, and 436,005,726 HYPE is staked.",
+      "elements": [
+        "Vl"
+      ],
+      "evidence": "https://hyperliquid.gitbook.io/hyperliquid-docs/hypercore/staking.md (accessed 2026-08-04) | https://api.hyperliquid.xyz/info POST {\"type\":\"validatorSummaries\"} (accessed 2026-08-04)",
+      "note": "CANDIDATE-REGISTER (Vl). A firm fit for the lifecycle itself -- delegation, bonding, jailing, rotation -- with the caveat that the lifecycle belongs to the L1 and the bridge merely reads its output. Note that Vl's usual companion Bs is absent here, which the vocabulary treats as unremarkable and F16 shows is the whole story."
+    },
+    {
+      "id": "F15",
+      "text": "Moving HYPE from a staking account to a spot account goes through a seven-day unstaking queue, with at most five withdrawals pending at once.",
+      "elements": [
+        "Wq"
+      ],
+      "evidence": "https://hyperliquid.gitbook.io/hyperliquid-docs/hypercore/staking.md (accessed 2026-08-04)",
+      "note": "RE-SITING of the corpus's Wq. The corpus assigned Wq to the bridge's 200-second dispute window, where it is wrong (F6); the genuine Wq-shaped object in this system is this queue -- a delay with a concurrency cap on exits from the capital that constitutes the verifier set. Scope caveat: it belongs to staking rather than to the escrow, and is included because the verifier set's exit dynamics are what the bridge depends on."
+    },
+    {
+      "id": "F16",
+      "text": "Validator stake is not slashable: the documentation states that there is currently no automatic slashing implemented, so the only consequences for a validator are jailing by peer vote and the seven-day queue, and no path exists from a bridge failure to a loss of stake.",
+      "elements": [],
+      "evidence": "https://hyperliquid.gitbook.io/hyperliquid-docs/hypercore/staking.md (accessed 2026-08-04)",
+      "note": "RESIDUE, and a CORPUS DEPARTURE: Bs is dropped outright. Bs means slashable first-loss capital and there is none to slash -- worse than the corpus's marker, which says only that the stake is not posted specifically as bridge collateral. What exists is stake as control value and reputation with no loss path, and that has no symbol. Consequence for the algebra: prohibition X13 compares secured value against slashable stake, and with slashable stake at zero the comparison is degenerate on the one protocol in this category it was written for."
+    },
+    {
+      "id": "F17",
+      "text": "The two-thirds threshold is evaluated over a concentrated distribution: five Hyper Foundation validators hold 212,971,320 of 436,005,726 HYPE, or 48.85%, so one operator family is far above the one third needed to veto any withdrawal or validator-set update and needs only a further sixth of stake to act alone.",
+      "elements": [],
+      "evidence": "https://api.hyperliquid.xyz/info POST {\"type\":\"validatorSummaries\"} (accessed 2026-08-04)",
+      "note": "RESIDUE, and the sharpest instance of the holder problem in the category: the element (Xm) records that a threshold exists, and the security is entirely a property of the distribution behind it, which no element carries. A 2/3 rule over a 48.85% bloc is a different mechanism from a 2/3 rule over an even distribution, and the two decompose identically."
+    },
+    {
+      "id": "F18",
+      "text": "Validator-set updates are themselves subject to the dispute period and are ordered by an on-chain epoch counter, epoch() = 7.",
+      "elements": [],
+      "evidence": "https://arbitrum-one-rpc.publicnode.com eth_call epoch() = 7 (accessed 2026-08-04) | https://raw.githubusercontent.com/hyperliquid-dex/contracts/master/Bridge2.sol (accessed 2026-08-04)",
+      "note": "RESIDUE. Ep was considered and rejected: the counter orders authority rotations and prevents replay of stale set updates rather than gating a transition on an epoch boundary. The mechanism -- the authority that can change the authority is subject to the same delay as ordinary flow -- is a real safety property with no name."
+    },
+    {
+      "id": "F19",
+      "text": "No reserve attestation exists or is needed: the escrow is a contract balance that anyone can read directly, and the issuer publishes nothing about it.",
+      "elements": [],
+      "evidence": "https://arbitrum-one-rpc.publicnode.com eth_call USDC.balanceOf(0x2Df1c51E09aECF9cacB7bc98cB1742757f163dF7) (accessed 2026-08-04)",
+      "note": "RESIDUE of the discharge-by-construction kind, which the options lane raised as a formalism-level gap: the obligation that At exists to discharge cannot arise here, and the requirement language admits only discharge by naming a satisfying element. Omitting At therefore reads as 'no attestation' -- the same string a decomposition of an unaudited custodian would produce -- when the correct reading is 'attestation is unnecessary because the reserve is a first-class on-chain object'. Two opposite epistemic states, one representation."
+    }
+  ],
+  "paper": {
+    "title": "Hyperliquid Bridge",
+    "label": "cat:bri:hyperliquid",
+    "blurb": "A user transfers native USDC into an escrow contract on Arbitrum and is credited on the destination chain's own ledger; nothing is minted, and what the user holds is a balance rather than a token. Both directions are authorised by signatures from validators holding a supermajority of staking power --- the set that already secures the destination chain --- so the bridge inherits the chain's trust model rather than adding one to it. A withdrawal is deducted first and released only after a dispute period, during which named lockers may vote the bridge shut. The escrow has no owner and no upgrade path: every privileged action, including re-seating the validator set, runs on validator signatures, and the cold keys that do the re-seating belong to the same principals as the hot keys that sign ordinary flow.",
+    "witnessReason": "The corpus carries a staked backstop and the witness drops it: the documentation states that no automatic slashing is implemented, so no path runs from a bridge failure to a loss of stake and there is nothing for the element to name. The queue element is not dropped but moved. The corpus attaches it to the dispute period, where it is wrong --- that delay exists so an honest validator can veto a fraudulent withdrawal, not to ration scarce liquidity among exiting claimants --- and the genuine queue in this system is the unstaking delay with its cap on concurrent exits, which governs the capital that constitutes the verifier set. The gas element is carried from the candidate register for the finalizer that pays the destination transaction, and it is precisely what makes this construction inadmissible: the law behind it demands a user-granted delegation, and the user grants nothing.",
+    "residueNote": "This is the only entry in the category whose safety is not a legal promise, and the construction cannot say so. That the verifying set is endogenous --- that it is the destination chain's own validator set --- is the most important property a native bridge has, and the verification element asserts the same thing here as it would of a lone external attester. The reserve needs no attestation because it is a contract balance anyone may read, and the vocabulary expresses that only by omitting the attestation element, which is the string an unaudited custodian also produces: two opposite epistemic states, one representation. The threshold is then evaluated over a distribution no element carries, one operator family holding enough stake to veto every withdrawal and every validator-set update on its own, so a supermajority rule over a concentrated set and a supermajority rule over an even one decompose identically."
+  }
+}

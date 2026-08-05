@@ -1,0 +1,158 @@
+{
+  "app": "LayerZero V2",
+  "category": "07-bridges",
+  "source": "C:\\defiformal-work\\07-bridges\\01-research.md",
+  "construction": [
+    "Xm",
+    "Xf",
+    "Au",
+    "Gs"
+  ],
+  "functionalObligations": [
+    {
+      "id": "F1",
+      "text": "A packet sent from a source contract through the immutable EndpointV2 is delivered exactly once to a named destination contract on a named remote endpoint, under a per-pathway nonce that binds the message to its channel and prevents replay; the Ethereum endpoint is 0x1a44076050125825900e736c501f859c50fe728c with eid 30101.",
+      "elements": [
+        "Xm"
+      ],
+      "evidence": "https://docs.layerzero.network/v2/concepts/protocol/layerzero-endpoint (accessed 2026-08-04) | https://ethereum-rpc.publicnode.com eth_call EndpointV2.eid() = 30101 (accessed 2026-08-04)",
+      "note": "This is the part of law L18 (Xm -> explicit finality + chain/domain binding + replay protection) that the protocol genuinely discharges: domain binding by eid and replay protection by nonce. LayerZero is not a bridge; it is the messaging layer bridges are built on, so its obligations are conditional on an application supplying the asset half."
+    },
+    {
+      "id": "F2",
+      "text": "A delivered packet is accepted only after every required Decentralized Verifier Network has attested to the same payloadHash and enough optional DVNs have attested to meet a threshold -- the X-of-Y-of-N security stack -- configured per application, per remote endpoint and per direction.",
+      "elements": [
+        "Xm"
+      ],
+      "evidence": "https://docs.layerzero.network/v2/concepts/modular-security/security-stack-dvns (accessed 2026-08-04) | https://docs.layerzero.network/v2/home/protocol/protocol-overview (accessed 2026-08-04)",
+      "note": "APPROXIMATE, and the most over-loaded use of Xm anywhere in this category. Xm asserts 'messages are verified' and carries none of: who verifies, how many, whether the set is chosen by the application or by the protocol, and what happens when the set is one party. VERIFICATION-MODEL AXIS: application-configured verifier sets -- distinct from single-company attestation (WBTC, Coinbase, BTCB, CCTP), from endogenous consensus (Hyperliquid), from a light client, and from proof verification, none of which the top five use."
+    },
+    {
+      "id": "F3",
+      "text": "Verification security is a per-application parameter rather than a protocol property: two applications on the same endpoint pair can run entirely different verifier sets and thresholds, and one of them may be a single company.",
+      "elements": [],
+      "evidence": "https://docs.layerzero.network/v2/concepts/modular-security/security-stack-dvns (accessed 2026-08-04) | https://docs.layerzero.network/v2/concepts/glossary (accessed 2026-08-04)",
+      "note": "RESIDUE, and the #2 entry's defining feature is invisible in the vocabulary. A decomposition that gives LayerZero Xm says the same thing about a 1-of-1 configuration and a 5-of-9 one. The element is a unary predicate on a protocol where the property being asserted belongs to a configuration held by a third party."
+    },
+    {
+      "id": "F4",
+      "text": "An application that does not set its configuration inherits protocol defaults, which the documentation warns are placeholders that 'may be Dead DVNs that prevent message delivery' -- a Dead DVN is deployed on each chain, 0x747c741496a507e4b404b50463e691a8d692f6ac on Ethereum -- while the historical default in the other direction was a 1-of-1 LayerZero Labs DVN.",
+      "elements": [],
+      "evidence": "https://docs.layerzero.network/v2/concepts/modular-security/security-stack-dvns (accessed 2026-08-04) | https://www.coindesk.com/tech/2026/04/20/kelp-dao-claims-layerzero-s-default-settings-are-what-actually-caused-the-usd290-million-disaster (accessed 2026-08-04)",
+      "note": "RESIDUE. Inherited security -- the security an application gets when it specifies nothing -- is a mechanism with two opposite failure modes (a bricked pathway or an unguarded one) and no symbol. Kelp's position that 1-of-1 was the documented default, with roughly 40% of protocols on it, is a party's claim, not a first-party page; LayerZero's own statement that it 'made a mistake' in allowing its verifier network to secure high-value assets in that configuration is reported by the same outlet. Its post-mortem page was not locatable on layerzero.network/blog."
+    },
+    {
+      "id": "F5",
+      "text": "Safety on a pathway is exactly the honesty of the configured verifier set: on 2026-04-18, with rsETH configured to a single verifier -- the LayerZero Labs DVN -- and two LayerZero-hosted RPC nodes compromised, approximately $292m / 116,500 rsETH was minted on a destination without a matching source burn.",
+      "elements": [],
+      "evidence": "https://www.chainalysis.com/blog/kelpdao-bridge-exploit-april-2026/ (accessed 2026-08-04)",
+      "note": "RESIDUE, and the strongest empirical support available for the corpus's own claim that Xm conflates verification models: it converts the argument into a measurement. The corpus carries no record of the exploit. Prohibition X7 ('cross-domain mint whose verifier is present but unproven correct', class H) is the nearest rule and it fires on every entry in this category equally, so it does not separate a 1-of-1 from a 5-of-9 either."
+    },
+    {
+      "id": "F6",
+      "text": "An Executor watches for sufficient verification, commits the nonce, calls lzReceive on the destination and fronts the destination-chain gas on the sender's behalf, recovering it from the fee quoted and paid on the source chain; on Ethereum the Executor is 0x173272739bd7aa6e4e214714048a9fe699453059.",
+      "elements": [
+        "Gs"
+      ],
+      "evidence": "https://docs.layerzero.network/v2/concepts/glossary (accessed 2026-08-04) | https://metadata.layerzero-api.com/v1/metadata/deployments (accessed 2026-08-04)",
+      "note": "CANDIDATE-REGISTER (Gs). Genuinely a sponsored-fee liability: a third party pays gas in one domain's unit and is repaid in another's. Gs is written for account-abstraction paymasters, so law L21 (Gs -> Au + metering + fee settlement) reads oddly here -- there is fee settlement and metering by quote, but no user-granted Au. The same candidate covers Hyperliquid's finalizer, which is evidence for promoting it out of the candidate register with a cross-domain reading added."
+    },
+    {
+      "id": "F7",
+      "text": "Safety and liveness are held by two different role types: DVNs decide whether a message is true, Executors decide whether it arrives, and the loss of each has a different consequence -- a corrupted DVN set mints falsely, an absent Executor merely stalls.",
+      "elements": [],
+      "evidence": "https://docs.layerzero.network/v2/home/protocol/protocol-overview (accessed 2026-08-04) | https://docs.layerzero.network/v2/concepts/glossary (accessed 2026-08-04)",
+      "note": "RESIDUE. The separation is the design; Xm collapses it and Gs names only the paying half. Nothing in the vocabulary distinguishes a role whose failure is a safety failure from one whose failure is a liveness failure."
+    },
+    {
+      "id": "F8",
+      "text": "Under the OFT standard, tokens are burned on the source chain and minted on the destination, so total supply across all chains is conserved, no escrow exists, and an exploit cannot exceed what was burned.",
+      "elements": [
+        "Xf"
+      ],
+      "evidence": "https://docs.layerzero.network/v2/home/token-standards/oft-standard (accessed 2026-08-04)",
+      "note": "SUPPLY-TOPOLOGY AXIS, first of two the same protocol supports: burn-and-mint canonical-style issuance under an application's own token."
+    },
+    {
+      "id": "F9",
+      "text": "Under the OFT Adapter, the original token is locked in a lockbox contract on its home chain and a representation circulates elsewhere, concentrating value in an escrow.",
+      "elements": [
+        "Xf"
+      ],
+      "evidence": "https://docs.layerzero.network/v2/home/token-standards/oft-standard (accessed 2026-08-04) | https://api.llama.fi/protocol/layerzero (accessed 2026-08-04)",
+      "note": "SUPPLY-TOPOLOGY AXIS, second: lock-and-mint escrow. RANKING BASIS: DefiLlama layerzero = $6,669,281,380 against the corpus's $6,666.7m, of which $6,374,017,781 is Ethereum alone -- the measured TVL is almost entirely this adapter leg, because the burn-and-mint leg contributes no TVL by construction. Rank #2 stands, but the number measures one of the protocol's two topologies and is blind to the other, which is the same blindness that keeps CCTP off the list entirely."
+    },
+    {
+      "id": "F10",
+      "text": "The two topologies have opposite attack surfaces and the same user-visible interface, so the question 'how much can be stolen' has a different answer per token on one protocol.",
+      "elements": [],
+      "evidence": "https://docs.layerzero.network/v2/home/token-standards/oft-standard (accessed 2026-08-04)",
+      "note": "RESIDUE. Both are Xf. The corpus names this gap and it is confirmed here at the sharpest possible site: not two protocols with one symbol, but one protocol whose two modes have one symbol."
+    },
+    {
+      "id": "F11",
+      "text": "Mint and burn authority, and custody of any lockbox, belong to the application's own contract and its owner, not to LayerZero, so the party that must be trusted for supply conservation is one the protocol does not name.",
+      "elements": [],
+      "evidence": "https://docs.layerzero.network/v2/home/token-standards/oft-standard (accessed 2026-08-04) | https://docs.layerzero.network/v2/concepts/glossary (accessed 2026-08-04)",
+      "note": "RESIDUE. Containment between protocols again: the trust question moves from the decomposed protocol to an application the decomposition cannot reference. The carrier composes peers by union of element sets and has no relation for 'A's safety is a property of B'."
+    },
+    {
+      "id": "F12",
+      "text": "The Endpoint's code cannot be replaced -- 24,005 bytes of direct non-proxy bytecode, documented as immutable and permissionless -- and it is nevertheless owned: owner() = 0xbe010a7e3686fdf65e93344ab664d065a0b02478, a custom multisig with threshold() = 3 and nonce() = 611, carrying no secondsTimeLocked and no getMinDelay.",
+      "elements": [],
+      "evidence": "https://ethereum-rpc.publicnode.com eth_call EndpointV2.owner(), eth_getCode (24,005 bytes, no implementation slot), owner threshold() = 3, secondsTimeLocked()/getMinDelay() absent (accessed 2026-08-04) | https://docs.layerzero.network/v2/home/protocol/protocol-overview (accessed 2026-08-04)",
+      "note": "RESIDUE, and two CORPUS DEPARTURES. Up is dropped: EndpointV2 is not a proxy and has no implementation slot, so the corpus symbol captures the right worry ('the protocol can change under you') with the wrong mechanism. Tg is dropped: the owner executes immediately on a 3-signature quorum, the same error the corpus makes on WBTC. An immutable contract that is nonetheless owned has no name -- and once again the missing information is the holder: a 3-of-n, not a delay and not a proxy."
+    },
+    {
+      "id": "F13",
+      "text": "There is no protocol-level pause: paused() and pause() both revert on EndpointV2, so no party can stop message flow by pausing the endpoint.",
+      "elements": [],
+      "evidence": "https://ethereum-rpc.publicnode.com eth_call EndpointV2.paused() and pause(), both revert (accessed 2026-08-04)",
+      "note": "CORPUS DEPARTURE: Gp is dropped. A guardian pause may exist per-OApp, but that is the application's power, not the protocol's, and the decomposition is of the protocol. Same guarantee-by-absence problem as WBTC F13: the vocabulary cannot assert that a power does not exist."
+    },
+    {
+      "id": "F14",
+      "text": "The Endpoint owner controls which message libraries are registered -- getRegisteredLibraries() returns 4 entries, including a blockedLibrary at 0x1ccbf0db9c192d969de57e25b3ff09a25bb1d862 -- and the protocol-level defaults, so delivery on a pathway can be stopped or redirected by configuration.",
+      "elements": [],
+      "evidence": "https://ethereum-rpc.publicnode.com eth_call EndpointV2.getRegisteredLibraries(), blockedLibrary() (accessed 2026-08-04) | https://metadata.layerzero-api.com/v1/metadata/deployments (accessed 2026-08-04)",
+      "note": "RESIDUE. Gp was considered and rejected: the effect resembles a pause but the mechanism is a registry swap with no pause semantics, no emergency trigger and no scope limit. This is the mutable surface of an immutable contract and the reason F12's 'immutable' is a claim about code and not about behaviour."
+    },
+    {
+      "id": "F15",
+      "text": "An application's send and receive configuration -- its verifier set, its threshold and its libraries -- can be changed at any time by the application's owner, with no delay and no notice, including while messages are in flight.",
+      "elements": [],
+      "evidence": "https://docs.layerzero.network/v2/concepts/modular-security/security-stack-dvns (accessed 2026-08-04) | https://docs.layerzero.network/v2/concepts/glossary (accessed 2026-08-04)",
+      "note": "RESIDUE. Tg names delay in changing code or parameters and there is none; Up names mutable code and this is mutable security parameters. Mutability of the security stack is the specific power that makes F3 dangerous, and it has no symbol."
+    },
+    {
+      "id": "F16",
+      "text": "An application owner may name a delegate authorised to set that configuration on the application's behalf, revocably.",
+      "elements": [
+        "Au"
+      ],
+      "evidence": "https://docs.layerzero.network/v2/concepts/glossary (accessed 2026-08-04)",
+      "note": "APPROXIMATE. Au ('delegated execution scope') names the relation -- a named party may act within a bounded scope and be revoked -- but is written for user-side session policy, and law L17 (Au -> bounded scope + revocation + expiry + nonce/domain separation) will not be satisfied: the delegate has scope and revocation, no expiry and no nonce discipline. Recorded as an approximate fit rather than residue because the delegation relation is exactly what the symbol names; the mis-fit is that the delegator is an admin rather than a user, which is the holder problem in yet another place."
+    },
+    {
+      "id": "F17",
+      "text": "Fees may optionally be denominated in a protocol token, and this is a per-chain parameter: lzToken() is address(0) on Ethereum, so ZRO fee payment is not enabled there while it is elsewhere.",
+      "elements": [],
+      "evidence": "https://ethereum-rpc.publicnode.com eth_call EndpointV2.lzToken() = 0x0 (accessed 2026-08-04) | https://docs.layerzero.network/v2/concepts/glossary (accessed 2026-08-04)",
+      "note": "RESIDUE. Minor, but it is one more parameter of the protocol that differs per deployment, and the vocabulary has no way to say that an element is instantiated differently on each of 180 mainnet deployments."
+    },
+    {
+      "id": "F18",
+      "text": "A received message can itself trigger further cross-domain calls through lzCompose, so a transfer composes horizontally into a sequence of domain-crossing actions.",
+      "elements": [],
+      "evidence": "https://docs.layerzero.network/v2/concepts/glossary (accessed 2026-08-04)",
+      "note": "RESIDUE. Xf and Xm each describe one hop. Nothing names a composed multi-hop action whose intermediate states are on different domains -- the same shape as the hub-and-spoke two-hop routing the corpus flags for USDT0."
+    }
+  ],
+  "paper": {
+    "title": "LayerZero V2",
+    "label": "cat:bri:layerzero",
+    "blurb": "Not a bridge but the messaging layer bridges are built on, so its guarantees are conditional on the application above it. A packet leaves an immutable endpoint under a per-pathway nonce, is verified on the destination by the verifier networks \\emph{the application itself chose} under a threshold it set, and is delivered by an executor that fronts the destination gas and is repaid on the source chain. The token half belongs to the application: under one standard the supply is burned and reminted and nothing is escrowed, under the other the original is locked in a lockbox and a representation circulates. What a holder trusts is therefore not this protocol but a configuration held by an application owner, changeable without delay or notice, which may name a single company as the sole verifier.",
+    "witnessReason": "The corpus decomposes this protocol with an upgrade proxy, a guardian pause and a timelock, and the witness drops all three on direct reads of the endpoint: the deployed code carries no implementation slot, the pause accessors revert, and the owning multisig executes on signature count with no delay accessor present. What is mutable is the registered library set and the protocol defaults, which is a different mechanism from mutable code and has no element at all. In their place the witness carries the delegation an application owner may grant over its own security stack, and the executor's cross-domain gas sponsorship from the candidate register --- the same shape the Hyperliquid finalizer takes, which is the case for reading that element across domains rather than only as an account-abstraction paymaster.",
+    "residueNote": "The residue is the product. Verification here is a per-application parameter, so the element carried for it asserts the same of a lone company and of a broad independent set; when a pathway's configured set was a single verifier network and the nodes behind it were compromised, a destination minted against no source burn, and the decomposition of that pathway is identical before and after. Inherited security --- what an application gets when it configures nothing --- has no symbol in either of its failure directions, the bricked pathway or the unguarded one. Nor does the separation the design rests on: the verifiers hold safety, the executor holds liveness, and the loss of each has a different consequence. The two supply topologies this one protocol offers have opposite attack surfaces, the same user-visible interface, and one element between them."
+  }
+}
