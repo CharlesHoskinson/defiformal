@@ -52,3 +52,9 @@
 - **Abstract inverts the emphasis.** ACTIONED - it now says the structural results are near-immediate from clause polarity and the substantive findings are diagnostic.
 - **Completeness asserted without its number.** ACTIONED - the corpus figures are inlined: not one of 72 protocols fully expressible, coverage 25 to 73 percent by category.
 - **Inconsistent citation.** ACTIONED in the previous cycle.
+
+## Review loop cycle 2
+
+- **Step 4: conj:perfect claimed falsifiability by a finite search at our scale.** Indefensible - |Adm| is of order 10^16. ACTIONED by strengthening rather than downgrading: the trace reduction is now a stated proposition, so the graph is a blow-up of a quotient on the trace space and perfection may be decided there, citing Lovasz replication for blow-ups. The accompanying measurement records that the quotient is currently complete, so perfection presently holds trivially - one enforceable prohibition row of five elements, and no union of sampled protocols covers it.
+- Naked attributions: three grep hits, all false positives with the cite on the adjacent line. Verified by inspection.
+- All majors from all three referees are actioned; none outstanding.
