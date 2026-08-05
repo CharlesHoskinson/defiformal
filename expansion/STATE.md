@@ -62,8 +62,17 @@ machine-checked against `formal/v2/tables.mjs` and audited.
 
 Windows tools cannot read `\\wsl.localhost\...` (EPERM). Agents write to
 `C:\defiformal-work\`; the orchestrator copies into the repo and commits.
-The Bash-tool wrapper eats `$VAR` and `$(...)`: stage scripts as files and
-`tr -d "\r"` them across `/mnt/c`.
+
+**Three traps that have already cost time on this run:**
+1. The Bash-tool wrapper eats `$VAR`, `$(...)` **and `${...}`**. A patch
+   containing template literals applied with the interpolations silently
+   removed, twice, once landing in a commit. Stage every script and patch as a
+   file, `tr -d "\r"` it across `/mnt/c`, and run the file.
+2. `codex exec` reads stdin for additional input **even when given a prompt
+   argument**, and blocks forever with no error. Always `< /dev/null`.
+3. Under `set -o pipefail`, piping a tool that exits non-zero *by design*
+   (a validator rejecting input) into `grep` reports the intended failure as a
+   test failure. Capture output, then match.
 
 ---
 
@@ -71,13 +80,23 @@ The Bash-tool wrapper eats `$VAR` and `$(...)`: stage scripts as files and
 
 | # | Stage | Output | Status |
 |---|---|---|---|
-| 0 | 12 category sections in `atlas.tex` | commit `ff196be`, 29 pages, 60 measurements | **DONE** |
-| 1 | Research: 12 agents × top-5 apps — design, repo, architecture, citations | `C:\defiformal-work\NN-slug\01-research.md` | in progress |
-| 2 | Deconstruction: each app → element set + residue, against `decomp-contract.md` | `NN-slug\02-decomp.json` | pending |
-| 3 | Composition: construct each app from the formalism; machine-check | `NN-slug\03-construction.md` + `formal/v3/` | pending |
-| 4 | Formalism improvements: what the constructions could not express | `algebra/EXTENSIONS.md` + paper edits | pending |
-| 5 | Council: GPT-5.6 Sol auditors attack constructions and extensions | `review/COUNCIL-*.md` | pending |
-| 6 | Paper expansion: 5 subsections per category section; build clean; commit | `paper/atlas.tex` | pending |
+| 0 | 12 category sections in `atlas.tex` | commit `ff196be`, then `05162ed` added §Constructions; 31 pages, 33 proved, 61 measurements | **DONE** |
+| 1 | Research: 12 agents × top-5 apps — design, repo, architecture, citations | `C:\defiformal-work\NN-slug\01-research.md` | **in progress**, 12 agents live |
+| 2 | Deconstruction: each app → functional obligations + construction | `NN-slug\02-decomp\<app>.json` | pending, prompt ready in `PROMPTS.md` |
+| 3 | Composition: machine-check every construction | `expansion/NN-slug/verdicts.json` | **machinery DONE** (`formal/v3`, commits `1fe4a46`…`00b89be`) |
+| 4 | Formalism improvements: what the constructions could not express | `algebra/EXTENSIONS.md` + paper edits | aggregator ready (`formal/v3/residue.mjs`) |
+| 5 | Council: GPT-5.6 Sol auditors attack constructions and extensions | `review/COUNCIL-*.md` | pass 1 running on stage 0 output |
+| 6 | Paper expansion: 5 subsections per category section; build clean; commit | `paper/atlas.tex` | emitter ready (`formal/v3/emit-tex.mjs`) |
+
+**Stage-3 toolchain, all committed and smoke-tested** (`bash formal/v3/smoke.sh`
+→ `SMOKE OK`): `validate.mjs` rejects malformed specs; `construct.mjs` returns
+the verdict; `emit-tex.mjs` generates the subsection *from the verdict*, so a
+paper figure cannot drift from its computation; `residue.mjs` aggregates what
+could not be named; `selftest.mjs` reproduces every published number from the
+checker's own predicates (22 assertions).
+
+**Auditor path verified 2026-08-04**: `codex exec -m gpt-5.6-sol` runs
+read-only against the repo and independently counted the 12 category sections.
 
 Stages are per-category, not global: a category may be at stage 3 while another
 is at stage 1. Do not hold a barrier unless a stage genuinely needs all inputs.
@@ -93,10 +112,42 @@ firing; (c) is the next action still the shortest path to the goal above;
 (d) what is blocked and why. Then take the next action. If everything is
 running, verify one completed artefact against the invariants instead of idling.
 
+**LOOP-3 — knowledge-graph completeness. Every 30 minutes at :09 and :39.**
+Every ingested lane must carry a graphify knowledge graph. Check
+`/root/defiformal/expansion/<slug>/graphify-out/graph.json` for all twelve
+slugs, run `bash /root/kg.sh <slug>` for any that are missing, and when all
+ingested lanes have graphs, merge them into one cross-lane graph. A lane whose
+research has not landed is PENDING, not FAILED.
+
 **LOOP-2 — integrity gate. Hourly at :07.**
 Rebuild the paper. Re-run the four harnesses. Confirm every new numeric claim in
 `atlas.tex` is reproducible from a committed script. Confirm no uncited protocol
 claim entered the paper. Commit if clean; if not, fix before advancing.
+
+---
+
+## KNOWLEDGE GRAPH
+
+Every ingested lane carries its own graphify graph at
+`expansion/<slug>/graphify-out/`, and the twelve merge into one cross-lane
+graph. Built by `bash /root/kg.sh <slug>`, which runs two passes:
+
+1. **AST pass** — `graphify update .`, deterministic, no LLM, always succeeds.
+   This is what LOOP-3 gates on.
+2. **Semantic pass** — `graphify extract . --backend ollama --model gemma4:26b`,
+   which runs locally on the 5090 and adds cross-document edges. It may fail
+   without losing the graph.
+
+Neither pass costs API credit. Three facts the tooling does not advertise:
+`graphify` runs from `/opt/conda/envs/graphify`, so the ollama backend needs
+`openai` installed **in that env** (`/opt/conda/envs/graphify/bin/pip install
+openai`) — installed 2026-08-04; `graph.json` calls its edges `links`, not
+`edges`; and the semantic pass is GPU-bound, so lanes must be built one at a
+time.
+
+`bash /root/ingest.sh [slug…]` is the whole ingest step: copy the completed
+research out of `C:\defiformal-work`, build the graph, and print a census of
+all twelve. It is idempotent.
 
 ---
 
@@ -106,4 +157,20 @@ Append one line per firing to `LEDGER.md`. Never rewrite history there.
 
 ## CURRENT NEXT ACTION
 
-Stage 1 for all 12 categories, running as background agents.
+Seven lanes have research on disk (01, 04, 05, 06, 08, 10, 12); five are still
+running (02, 03, 07, 09, 11). Stage 2 is launched for 05, 06, 08, 12 and should
+be launched for 04 and 10 next, then for each remaining lane as it lands. Run
+`bash /root/ingest.sh` after each completion — it is idempotent and builds the
+knowledge graph.
+
+`FINDINGS-STAGE1.md` holds the per-lane findings that bear on the formalism, as
+they arrive. It is stage 4's input and the reason the lane summaries are not
+lost when a context window turns over. Two entries in it are already
+formalism-level rather than vocabulary-level:
+
+- **the requirement language admits only one way to discharge a term** — name a
+  satisfying element — and needs a second, *discharge by construction*, where
+  the obligation cannot arise (options lane);
+- **containment between protocols is inexpressible** — a meta-aggregator that
+  routes to routers, and a curator who allocates over other protocols, are both
+  relations the carrier has no way to state (intents and yield lanes).
