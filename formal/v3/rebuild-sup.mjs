@@ -22,6 +22,7 @@ const L = [
   "\\documentclass[11pt]{amsart}",
   "\\usepackage[margin=1.15in]{geometry}",
   "\\usepackage{amsmath,amssymb,amsthm,mathtools}",
+  "\\usepackage{longtable,booktabs}",
   "\\usepackage[hidelinks]{hyperref}",
   "\\theoremstyle{remark}",
   "\\newtheorem{measurement}{Measurement}[section]",
@@ -57,6 +58,8 @@ for (const [slug, title] of Object.entries(NAME)) {
   count += (out.match(/\\subsection\{/g) || []).length;
 }
 
+L.push(fs.readFileSync("/root/defiformal/paper/formal-data.tex", "utf8").trim());
+L.push("");
 L.push(fs.readFileSync("/root/evidence.tex", "utf8").trim());
 L.push("");
 L.push("\\end{document}");
