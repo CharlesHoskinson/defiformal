@@ -4063,6 +4063,170 @@ maximum composable fragment computable in polynomial time by the
 Gr\"otschel--Lov\'asz--Schrijver algorithm \cite{gls1981}. We have not tested it.
 \end{remark}
 
+\section{What the residue asks for, and what each repair costs}\label{sec:extend}
+
+The sixty constructions leave $686$ obligations that no element discharges.
+Taken one at a time these are a list of complaints; grouped, they are a small
+number of requests, and each request has a price against the results above. This
+section states the three we would act on and the reason for declining the
+largest. The classification and the costings are recorded in full in the
+development; what follows is the part that bears on the algebra.
+
+\begin{definition}[Kinds of repair]\label{def:repairkind}
+A residue group admits a repair of exactly one of four kinds:
+\emph{(a)} a new \textbf{element}, where a mechanism exists and no symbol names
+it; \emph{(b)} a new \textbf{constraint form}, where the mechanism can be named
+but the clause language cannot state the relation; \emph{(c)} a new \textbf{sort}
+in the carrier, where the object is not a mechanism at all; and \emph{(d)} a new
+\textbf{level}, where the object is a relation over protocols rather than a part
+of one.
+\end{definition}
+
+\begin{measurement}[The residue by kind of repair]\label{meas:kinds}
+Of the residue obligations, $172$ ($44.7\%$) ask for a new element, $134$
+($34.8\%$) for a new sort, $51$ ($13.2\%$) for a new constraint form and $28$
+($7.3\%$) for a new level. Regrouped by the sort a repair presupposes rather
+than by the kind of edit it makes, $135$ obligations --- $35.1\%$ --- turn on a
+party sort, more than double any other single addition.
+\end{measurement}
+
+\subsection{The party sort}
+
+The largest request is for a carrier that can name a party. Ninety-five
+obligations across all seven categories checked at the time and twenty-six of
+thirty-five applications ask who holds an authority and how many of them there
+are: an externally-owned account, a quorum, a delegated agent, an obligor.
+
+\begin{proposition}[The party sort is free except on one measurement]\label{prop:party}
+Adjoin party facts as positive existential atoms occurring only as heads. Then
+Lemma~\ref{lem:polarity}, Corollary~\ref{cor:lattice},
+Theorem~\ref{thm:convex}, Corollary~\ref{cor:ex} and
+Theorem~\ref{thm:excomp} hold unchanged, and the prohibition $X9$ becomes
+enforceable, taking the enforceable clutter from one row to two.
+\end{proposition}
+
+\begin{proof}[Proof sketch]
+A requirement over the enlarged signature is still $\neg s \vee \bigvee_e e$,
+one negative literal, hence dual-Horn, so polarity and union-closure are
+inherited. The specialization digraph has fifteen arcs whose sources and targets
+are disjoint; atoms appearing only as heads add targets and no sources, so $D$
+stays acyclic and the convex geometry survives with its canonical forms.
+\end{proof}
+
+\begin{remark}[The encoding is the whole cost]
+The condition is not decorative. If the sort instead records \emph{exactly}
+which holder shape is present, the mutual-exclusion clauses $\neg\mathit{quorum}
+\vee \neg\mathit{singleKey}$ are purely negative, and the argument that purely
+negative classes are not union-closed applies verbatim:
+Corollary~\ref{cor:lattice} dies. The existential encoding is a choice, and the
+choice is where the structure is preserved or lost.
+\end{remark}
+
+\begin{remark}[What is damaged]
+$X9$ --- a mutable implementation under immediate single-key control --- is one
+of the nine recorded rows that name no element, and a party atom makes it a
+genuine prohibition. The trace space of Proposition~\ref{prop:trace} grows and
+the measurement that the quotient is complete, on which perfection held
+trivially, is destroyed. Conjecture~\ref{conj:perfect} becomes a real conjecture
+rather than a vacuous one. A published measurement stops being true, which must
+be counted as damage even though what it removes is a false comfort.
+\end{remark}
+
+\subsection{The bounded mandate}
+
+Twenty-seven obligations across six categories describe one primitive: a named
+agent may move a quantity within a declared envelope. Four categories found it
+independently --- over allocations, over interest rates, in code at five further
+instances, and in legal form --- and it is the best-evidenced request in the
+residue.
+
+\begin{measurement}[The envelope, part by part]\label{meas:mandate}
+Across the corpus the parts of the envelope are recorded as follows: fifteen
+magnitude caps, nine domain restrictions, seven rate-of-change limits or delays,
+six mandates with no bound at all, and \emph{zero} revocations. Revocation is in
+every instance held by a party other than the agent, which is why this repair
+and the party sort must be made together or not at all.
+\end{measurement}
+
+\begin{proposition}[The mandate costs nothing and improves the polarity split]\label{prop:mandate}
+Recording the mandate at presence granularity --- that an envelope of each kind
+exists, not what its value is --- preserves every result above, and reclassifies
+$X16$ from the Horn half to the dual-Horn half.
+\end{proposition}
+
+\begin{remark}
+The reclassification is the interesting half. $X16$ --- unbounded delegated
+authority --- is a prohibition precisely because the envelope is absent, so
+naming the envelope turns a negative row into a requirement with a positive
+consequent. This is the only proposal in the residue that \emph{shrinks} the
+part of the theory to which Measurement~\ref{meas:whereitfails} attributes every
+observed composition failure. Union-closure of the enlarged system was verified
+exhaustively over $2^{12}$ assignments.
+\end{remark}
+
+\subsection{Discharge by construction}
+
+\begin{definition}[Void terms]\label{def:void}
+For a requirement $(s,T)$ and a set $V \subseteq \El$ of \emph{voiding}
+elements, the \emph{voided requirement} is the clause with head $T \cup V$: the
+term is discharged either by satisfying it or by the presence of a mechanism
+that makes the obligation unable to arise.
+\end{definition}
+
+\begin{theorem}[The repair is free on the lattice results]\label{thm:void}
+Voided requirements are dual-Horn and their model class is union-closed, and the
+model class of a voided requirement contains that of the original.
+\end{theorem}
+
+\begin{proof}
+Formalised in Lean~4 against mathlib as \texttt{dualHorn\_voidReq},
+\texttt{voidReq\_union\_closed} and \texttt{sat\_voidReq\_of\_sat}, with no
+\texttt{sorry} and depending only on \texttt{propext},
+\texttt{Classical.choice} and \texttt{Quot.sound}. Widening the head does not
+touch the negative literal.
+\end{proof}
+
+\begin{remark}[The price, stated]
+The model class only grows, so no protocol admissible before becomes
+inadmissible and no published verdict is reversed in that direction. What is
+lost is definiteness: \texttt{voidReq\_not\_definite} shows a voided requirement
+with two distinct alternatives is not definite, so the term leaves the fragment
+of \S\ref{sec:convex}. On our instance the loss is one arc of fifteen,
+$Op \to Ct$, and the digraph remains acyclic, so the convex geometry survives
+with a smaller definite fragment.
+\end{remark}
+
+\begin{remark}[Why it is worth the arc]
+Eleven obligations in four categories are of this kind, and two of them are the
+options venues that escrow the maximum payoff at trade time. Their rejection is
+correct about the tables and wrong about the protocols, and no assignment of
+elements repairs it, because the defect is that the language admits one way to
+discharge a term. Definition~\ref{def:void} admits a second.
+\end{remark}
+
+\subsection{What we decline, and the open problems}
+
+\begin{remark}[The largest group is not worth repairing]
+Eighty-two obligations, spread over all seven categories checked and twenty-six
+applications, are of the form \emph{the mechanism itself has no symbol}. It is
+the widest evidence base in the residue and we recommend against acting on it.
+It is not one gap seen seven times; it is eighty-two gaps seen once each, and a
+repair is eighty-two fitted warrant rows that prove no theorem. The vocabulary
+would grow by half and the algebra would be unchanged. This is the clearest case
+in the study of evidence quantity failing to imply structural significance.
+\end{remark}
+
+\begin{remark}[Three requests left open, with reasons]
+A \emph{level} above the protocol --- a curator allocating across venues, an
+aggregator routing to aggregators --- would break four of the five results
+above, composition no longer being union. \emph{Magnitudes}, the request to
+record how much rather than whether, break all five and come with a witnessed
+counterexample. And the \emph{off-ledger register} splits: the half that names a
+holder folds into the party sort, and the half that asks the carrier to
+represent a fact whose truth-maker is a document breaks everything and is
+unbounded. These are recorded as open problems rather than proposals.
+\end{remark}
+
 \section{Open problems}
 
 \begin{enumerate}
