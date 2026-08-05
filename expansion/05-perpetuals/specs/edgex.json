@@ -2,12 +2,22 @@
   "app": "edgeX",
   "category": "05-perpetuals",
   "source": "C:\\defiformal-work\\05-perpetuals\\01-research.md",
-  "construction": ["Ob", "Pf", "Ct", "Ex", "Li", "Up", "Xf"],
+  "construction": [
+    "Ob",
+    "Pf",
+    "Ct",
+    "Ex",
+    "Li",
+    "Up",
+    "Xf"
+  ],
   "functionalObligations": [
     {
       "id": "F1",
       "text": "orders are matched in a central limit order book by a purpose-built Go microservice matching engine that operates independently of on-chain block times",
-      "elements": ["Ob"],
+      "elements": [
+        "Ob"
+      ],
       "evidence": "https://edgex-1.gitbook.io/edgeX-documentation/edgex-v2/v2-technical-architecture.md (accessed 2026-08-04)",
       "note": "APPROXIMATE — Ob asserts an ON-CHAIN order book, and the venue says in its own words that the engine runs off chain. The symbol is right about the microstructure and false about the qualifier, exactly as the corpus marker records."
     },
@@ -56,7 +66,9 @@
     {
       "id": "F8",
       "text": "USDT is deposited from Ethereum mainnet after roughly 15 confirmations (about 5 minutes) and credited to the trader's L2 account",
-      "elements": ["Xf"],
+      "elements": [
+        "Xf"
+      ],
       "evidence": "https://edgex-1.gitbook.io/edgeX-documentation/getting-started/deposits-and-withdrawals/deposits.md (accessed 2026-08-04)",
       "note": ""
     },
@@ -77,42 +89,55 @@
     {
       "id": "F11",
       "text": "the account is cross-margined so that collateral is shared among all positions within one trading account, isolation is obtained by opening separate sub-accounts, and sub-account volume aggregates into the main account's fee tier",
-      "elements": ["Ct"],
+      "elements": [
+        "Ct"
+      ],
       "evidence": "https://edgex-1.gitbook.io/edgeX-documentation/trading/trading-accounts-and-margin.md (accessed 2026-08-04)",
       "note": "Ct computes the test; margin scope is unnameable here as everywhere in the category. The fee-tier aggregation across nominally isolated sub-accounts — a coupling between risk fences — has no symbol either."
     },
     {
       "id": "F12",
       "text": "risk is parameterised per contract by a 22-step notional staircase published as API metadata rather than as protocol constants: for BTCUSDT tier 1 covers notional up to $50,000 at 100x with a maintenance-margin rate of 0.5%, rising to a top tier at 6x and 10.5%",
-      "elements": ["Ct"],
+      "elements": [
+        "Ct"
+      ],
       "evidence": "https://edgex-1.gitbook.io/edgeX-documentation/api-v2.md (accessed 2026-08-04)",
       "note": "APPROXIMATE — the explicit initial-margin and maintenance-margin FORMULAS are not published anywhere, so Ct is discharged by a table of parameters with no stated computation over them. A risk parameter that is API data rather than a protocol constant is also a control-plane fact — the operator can restate it without an upgrade — that no element carries."
     },
     {
       "id": "F13",
       "text": "the Index Price is a weighted average of prices collected from Binance, OKX, Bybit and Coinbase with weights readjusted every four hours, and it drives funding",
-      "elements": ["Ex"],
+      "elements": [
+        "Ex"
+      ],
       "evidence": "https://edgex-1.gitbook.io/edgeX-documentation/trading/last-price-index-price-and-oracle-price.md (accessed 2026-08-04)",
       "note": "Ex fits: genuinely external publishers, unlike Hyperliquid's and Aster's validator-produced prices. V2 additionally claims a native Multi-CEX oracle aggregation pipeline (https://edgex-1.gitbook.io/edgeX-documentation/edgex-v2.md, 2026-08-04). Tp is NOT claimed — the weighting is across venues, not across time."
     },
     {
       "id": "F14",
       "text": "a second and different price, the Oracle Price sourced from the independent provider Stork, drives margin requirements and liquidation prices",
-      "elements": ["Ex"],
+      "elements": [
+        "Ex"
+      ],
       "evidence": "https://edgex-1.gitbook.io/edgeX-documentation/trading/last-price-index-price-and-oracle-price.md (accessed 2026-08-04)",
       "note": "One symbol, two feeds, two jobs, two failure modes: nothing in the vocabulary says WHICH obligation a given price discharges, so a venue that funds off one publisher and liquidates off another decomposes identically to one that uses a single feed for both."
     },
     {
       "id": "F15",
       "text": "longs and shorts exchange funding hourly at F = P + clamp(I - P, -0.05%, +0.05%) with P = [max(0, ImpactBid - Index) - max(0, Index - ImpactAsk)] / Index, longs paying shorts when the rate is positive",
-      "elements": ["Pf"],
+      "elements": [
+        "Pf"
+      ],
       "evidence": "https://edgex-1.gitbook.io/edgeX-documentation/trading/funding-fees.md (accessed 2026-08-04)",
       "note": "Pf fits exactly — a genuine long/short transfer, so the category's 'perp tether' flag is refuted here as it is for the other four."
     },
     {
       "id": "F16",
       "text": "in cross mode a position is liquidated when the available balance reaches zero and the position margin drops to the maintenance-margin level",
-      "elements": ["Ct", "Li"],
+      "elements": [
+        "Ct",
+        "Li"
+      ],
       "evidence": "https://edgex-1.gitbook.io/edgeX-documentation/trading/liquidation-logic.md (accessed 2026-08-04)",
       "note": "APPROXIMATE — the page states the TRIGGER and nothing else. Whether a third party is paid to close the position, at what price, in what order, and with what fee is undocumented, so the 'incentivized' half of Li is unsupported rather than merely absent. Li is retained only because a forced close demonstrably occurs; it is the sole loss-handling element this venue's documentation supports, and stage 3 should treat that as fragile."
     },
@@ -126,9 +151,18 @@
     {
       "id": "F18",
       "text": "critical contracts can be upgraded by an externally owned account, with no delay and no window for users to exit an unwanted upgrade, while the bridge contract itself is immutable and its committee security 'cannot be improved'",
-      "elements": ["Up"],
+      "elements": [
+        "Up"
+      ],
       "evidence": "https://l2beat.com/scaling/projects/edgex (accessed 2026-08-04)",
       "note": "APPROXIMATE, and the strongest control-plane fact in the category. Up names a mutable implementation proxy and carries no delay parameter and no authority type, so it cannot say 'a single key, instantly, with no exit window' — which is L2BEAT's headline risk. `Tg` and `Gp` are deliberately NOT claimed (the corpus asserts Gp): the upgrading Safe 0x57814cC6e075f517781cB7c3B42897B3Bb2C54d8 'can upgrade with no delay', only the SHARP multisig 0x21F9eC47b19d95b5C2DDFB6Ae5D4F92fAdacAEc4 carries an 8-day delay, and no product-side guardian, pause or governance vote is documented. If the tables require a delayed or bounded emergency process alongside Up, this construction fails that requirement, and the failure is the finding. `Sh` and `Em` are DROPPED for the same evidentiary reason: no pro-rata pool, vault or LP claim is documented anywhere in the venue's corpus, and no emissions schedule is documented at a primary source — the EDGE token TGE and the Amber Group incubation appear only in third-party coverage and are recorded as UNKNOWN (https://edgex-1.gitbook.io/edgeX-documentation/llms-full.txt, 2026-08-04)."
     }
-  ]
+  ],
+  "paper": {
+    "title": "edgeX",
+    "label": "cat:perp:edgex",
+    "blurb": "A venue in the middle of a migration: a validity-proof stack still holds real value at almost no throughput while a rollup serves current activity. Which stack custodies a new deposit is not stated in its documentation, and the question is not one the vocabulary can put.",
+    "witnessReason": "The witness is deliberately thin. The corpus carries a staked backstop, a cross-domain verification element, a share claim and emissions; none is supported at a primary source for the current system, so all four are dropped. What remains is what can be evidenced, and the construction is rejected because of it.",
+    "residueNote": "The rejection is a result about the tables and not a criticism of the venue: the requirement demands a named loss-absorption mechanism, and this venue documents none. An undocumented mechanism and an absent one are different things, and the vocabulary cannot tell them apart --- which is the same defect the options category exhibits from the other side."
+  }
 }
