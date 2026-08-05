@@ -2,26 +2,43 @@
   "app": "Liquity (V1 + V2)",
   "category": "03-cdp-stablecoins",
   "source": "C:\\defiformal-work\\03-cdp-stablecoins\\01-research.md",
-  "construction": ["Cd", "Ct", "Ex", "Rd", "Li", "Bs", "Sl", "Em", "Fd", "Ep"],
+  "construction": [
+    "Cd",
+    "Ct",
+    "Ex",
+    "Rd",
+    "Li",
+    "Bs",
+    "Sl",
+    "Em",
+    "Fd",
+    "Ep"
+  ],
   "functionalObligations": [
     {
       "id": "F1",
       "text": "a user deposits a single collateral asset into a position and draws the stablecoin against it, in V1 against ether alone and in V2 against one of three assets on the branch that matches it, subject to a minimum draw and a refundable gas reserve",
-      "elements": ["Cd"],
+      "elements": [
+        "Cd"
+      ],
       "evidence": "https://docs.liquity.org/v2-faq/borrowing-and-liquidations.md (accessed 2026-08-04)",
       "note": "V1: ether into a Trove, LUSD out, plus a refundable 200 LUSD Liquidation Reserve. V2: WETH, wstETH or rETH into a branch Trove, at least 2,000 BOLD out, plus a refundable 0.0375 ETH gas reserve. Per branch the contracts are AddressesRegistry, BorrowerOperations, TroveManager, TroveNFT, StabilityPool, SortedTroves, ActivePool, DefaultPool, CollSurplusPool, GasPool and a PriceFeed, above which sit CollateralRegistry and BoldToken. Confirmed against contracts/src at liquity/bold main c8a5a4ee2e9dc024905856b6698a77d849c68c7e (2026-07-13)."
     },
     {
       "id": "F2",
       "text": "the position must stay above a minimum collateral ratio which differs by branch, and which is tighter for liquid-staking collateral than for ether",
-      "elements": ["Ct"],
+      "elements": [
+        "Ct"
+      ],
       "evidence": "https://docs.liquity.org/v2-faq/borrowing-and-liquidations.md (accessed 2026-08-04)",
       "note": "V1: a single 110% minimum. V2: maximum loan-to-value 90.91% on WETH and 83.33% on wstETH and rETH. Ct names the test and not that its parameter is per-market, which is the difference between V1's one number and V2's three."
     },
     {
       "id": "F3",
       "text": "each branch reads its own price feed, and the liquid-staking branches read a composed one: an ether price multiplied by an exchange rate for the staking receipt",
-      "elements": ["Ex"],
+      "elements": [
+        "Ex"
+      ],
       "evidence": "https://github.com/liquity/bold (accessed 2026-08-04)",
       "note": "WETHPriceFeed, WSTETHPriceFeed and RETHPriceFeed over CompositePriceFeed and MainnetPriceFeedBase — five feed contracts for three branches. A single Ex cannot distinguish a direct feed from a composed one, and composition is exactly where the LST branches' risk lives: the composite has two failure sources and one symbol. The V2 known-issues register devotes several of its twenty-six entries to oracle frontrunning and stale prices, with branch shutdown (F15) as the terminal mitigation — a documented, enumerated risk register that no element and no law records."
     },
@@ -49,7 +66,9 @@
     {
       "id": "F7",
       "text": "anyone may exchange the stablecoin for collateral at face value at any time, served from the riskiest positions first",
-      "elements": ["Rd"],
+      "elements": [
+        "Rd"
+      ],
       "evidence": "https://docs.liquity.org/liquity-v1/faq/general.md (accessed 2026-08-04)",
       "note": "EXACT for V1, and noted for contrast: this is the one protocol in the lane where Rd fits with no stretching, which suggests the symbol was written from it. But V1 and V2 are one corpus row under one Rd, and that hides the most interesting fact in the lane — see F5, F8 and F9. Same symbol, three different instruments."
     },
@@ -70,21 +89,27 @@
     {
       "id": "F10",
       "text": "an opt-in pool of stablecoin depositors absorbs liquidated debt first: the pool burns stablecoin equal to the debt and receives the collateral, so in normal conditions depositors profit from the event rather than losing by it",
-      "elements": ["Bs"],
+      "elements": [
+        "Bs"
+      ],
       "evidence": "https://docs.liquity.org/liquity-v1/faq/stability-pool-and-liquidations.md (accessed 2026-08-04)",
       "note": "FORCED, and the mis-fit is instructive. The docs' worked example gives a depositor $21,800 of collateral against $20,000 of debt cancelled. Bs says 'slashable first-loss capital' and the word SLASHABLE INVERTS THE INCENTIVE: this is first-loss capital that is compensated rather than penalised, so it must be recruited by a return rather than bonded by a threat. V2 sharpens the mis-fit further — the pool now also receives a share of interest revenue (F20), so it earns a running yield ON TOP of the liquidation discount. A paid, yielding, opt-in first-loss class."
     },
     {
       "id": "F11",
       "text": "if that pool cannot absorb the position, its debt and its collateral are redistributed pro rata to every remaining borrower in the branch, who never opted in",
-      "elements": ["Sl"],
+      "elements": [
+        "Sl"
+      ],
       "evidence": "https://docs.liquity.org/liquity-v1/faq/stability-pool-and-liquidations.md (accessed 2026-08-04)",
       "note": "FORCED. Sl names the socialisation and cannot distinguish OPT-IN loss absorption (F10) from CONSCRIPTED loss absorption (this), which are the two halves of Liquity's solvency design and carry opposite consent. V2 bounds the conscripted loss explicitly: up to 9.09% on the ether branch and 16.67% on the LST branches."
     },
     {
       "id": "F12",
       "text": "the party who triggers a liquidation is paid the position's refundable reserve plus a fixed fraction of its collateral",
-      "elements": ["Li"],
+      "elements": [
+        "Li"
+      ],
       "evidence": "https://docs.liquity.org/liquity-v1/faq/stability-pool-and-liquidations.md (accessed 2026-08-04)",
       "note": "V1: the 200 LUSD reserve plus 0.5% of the collateral. Li fits the incentive. Liquity uses NO AUCTION anywhere — the only protocol of the five without one — so the Dutch-auction residue that Sky, USDD and Lista all carry is absent here by construction, and that absence is a positive fact about the design rather than a missing observation."
     },
@@ -140,7 +165,10 @@
     {
       "id": "F20",
       "text": "V1 emitted its governance token to stability-pool depositors and liquidity providers; V2 emits nothing and instead splits interest revenue between the stability pool and a router that funds liquidity for the stablecoin",
-      "elements": ["Em", "Fd"],
+      "elements": [
+        "Em",
+        "Fd"
+      ],
       "evidence": "https://docs.liquity.org/v2-faq/lqty-staking.md (accessed 2026-08-04)",
       "note": "Fd is CANDIDATE. DEPARTURE FROM THE CORPUS, which carries Em for the combined V1+V2 entity: V2's Protocol Incentivized Liquidity is funded from PROTOCOL REVENUE, not from token issuance, which is Fd-shaped, and carrying Em across both versions blurs a real change of funding source. Both symbols are carried here because the entity spans both versions, and the note is the finding: the same incentive with two different funding sources is two different sustainability claims."
     },
@@ -154,9 +182,18 @@
     {
       "id": "F22",
       "text": "the one governable quantity — a quarter of protocol revenue — is directed by stakers voting in weekly epochs, where voting power is the product of stake and staking age, new stake starts at zero power, withdrawal destroys power immediately, only downvotes are admitted in the last day, registering a recipient costs a fee and a fraction of total voting power, and a recipient must clear a threshold of votes to receive anything",
-      "elements": ["Ep"],
+      "elements": [
+        "Ep"
+      ],
       "evidence": "https://docs.liquity.org/v2-faq/lqty-staking.md (accessed 2026-08-04)",
       "note": "Ep names the weekly Thursday-to-Wednesday epoch and the claim-in-the-same-week rule. Everything else is RESIDUE. (a) VOTING POWER = STAKE x STAKING AGE is a franchise that accrues with time held rather than with time locked, and it is a flash-loan defence rather than an alignment device; contested Ve is REJECTED because there is no escrow and no chosen lock duration. (b) A 2% eligibility threshold, a 100 BOLD registration fee and a 0.01%-of-total-voting-power registration cost are three distinct anti-spam prices on the franchise itself. (c) Voters may receive bribes from recipients, disclosed and expected. (d) 25% of revenue is the mandate's magnitude bound — mandate slot 3 again, this time bounding what a VOTE may direct rather than what an agent may write. Contracts: Governance.sol, BribeInitiative.sol, CurveV2GaugeRewards.sol, UniV4MerklRewards.sol, UserProxy.sol (github.com/liquity/V2-gov, MIT, accessed 2026-08-05). In 58 symbols this whole control plane is Ep, which is the lane's control-plane finding in its most extreme form."
     }
-  ]
+  ],
+  "paper": {
+    "title": "Liquity",
+    "label": "cat:cdp:liquity",
+    "blurb": "A borrower deposits ether or a liquid-staking receipt into a trove and draws the unit against it. In the first version there is no interest at all, only a one-time origination fee whose level rises with recent redemption activity and decays back; in the second the borrower chooses their own annual rate and may change it whenever they like. The peg floor is a direct redemption right at face value, exercisable by anyone at any time --- taken from the riskiest positions first in the first version, and in the second from the lowest-rate positions first, with volume allocated across markets in proportion to how little each has insured itself. Liquidation runs without an auction: a stability pool burns the unit against the debt and takes the collateral, and if that pool is empty the debt and the collateral are redistributed pro rata to every remaining borrower, who never opted in; the second version inserts a just-in-time tier between the two. Below a system-wide ratio the first version changes regime, and in the second a market shuts down of its own accord and switches redemption to no fee with a collateral bonus, paying whoever unwinds it.",
+    "witnessReason": "This witness is the mirror image of the largest member's: law $L7$ leaves the credit term open to a redemption right, a peg-swap or liquidation capacity, and here it is satisfied by the redemption right alone, there being no peg-swap anywhere in the protocol. The emergency-pause element is refused for branch shutdown and the refusal is the finding --- that element names a guardian and presumes a holder, and this has none, the shutdown being a pure function of a measured ratio, per market rather than global, and improving the redeemer's terms instead of freezing them; the delegated-scope element is refused for the rate delegate, which has no expiry, no nonce and no domain separation; and the vote-escrow element is refused because voting power accrues with time held rather than time locked, with no escrow and no chosen duration. Both an emission element and a fee-distribution element are carried, because the entity spans two versions in which the same incentive is funded first from token issuance and then from protocol revenue, and collapsing them would blur a real change of funding source. One control-plane fact has no field in the record at all: the second version's core contracts are source-available under a business licence naming a licensor and a future change date, and are not open source until that date, which is a counterexample to any claim that permissionless forkability characterises this category.",
+    "residueNote": "The price of credit is residue here for a reason no other member supplies: the borrower sets it, so it is not an instrument the protocol holds at all --- and because the same number fixes the borrower's place in the redemption queue, what is bought is priority rather than credit. Delegating that choice is the category's second instance of the five-part bounded mandate with the principal inverted: granted sideways by one user over their own position rather than downward by governance, and priced by a fee denominated in the very rate it governs. Around those sit a liability that is itself a transferable token, a position redeemed to dust that can no longer be redeemed but still exists and still accrues interest, a fee retained inside the redeemed borrower's collateral with no residual claimant at all, and three ordered liquidation tiers whose payer and penalty change at each step, against an element that presumes one path paid to one third party. Immutability is residue too, and it needs three values rather than two: no key and no governance in the first version, and in the second, contracts that cannot be changed alongside a governance system that can do exactly one thing. Recording that as the absence of an upgrade, a delay and a pause erases the distinction between them."
+  }
 }
