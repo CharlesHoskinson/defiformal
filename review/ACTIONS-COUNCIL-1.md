@@ -76,6 +76,23 @@ gaps, including that the atlas itself is not formalised, in labelled paragraphs.
 A formalisation claim is worth exactly as much as its statement, and the
 previous wording claimed five named results where it had parts of five.
 
+### MAJOR 7 — the resolution claim is now measured, and the capital half demoted
+
+The claim had two halves and only one is measurable from this corpus.
+
+Measured: over the twelve categories, the Spearman rank correlation between the
+number of distinct elements a category's five constructions use and the fraction
+of their obligations those constructions discharge is **rho = 0.874**. Coverage
+runs from 26.5% on intents, using ten distinct elements, to 59.1% on perpetuals,
+using twenty-six. Resolution and coverage are not independent axes.
+
+Not measured, and now said so: the relation to capital. Capital enters this
+corpus only as a selection criterion and never as a quantity, so a correlation
+computed against it would be a correlation against our own sampling rule. It is
+recorded as an observation about the sample rather than a measurement.
+
+Computed by `formal/v3/coverage.mjs`, committed with the claim.
+
 ## Not yet actioned — carried to the next firing
 
 | # | severity | finding | disposition |
@@ -85,7 +102,6 @@ previous wording claimed five named results where it had parts of five.
 | 4 | MAJOR | `prop:neither` contains a non sequitur about monotone search | needs adjudication: the proposition's *witnesses* verify, but the inference drawn from them may overreach |
 | 5 | MAJOR | the proof confuses a clutter with its downward-closed model class | needs care; this is a genuine distinction and the parenthetical may be sloppy |
 | 6 | MAJOR | `cor:notthe` generalises from one restricted finite instance | probably correct — the corollary should be scoped to the instance or restated as a conjecture |
-| 7 | MAJOR | the capital-versus-resolution relationship is asserted, never measured | correct; either measure it or demote it to a remark, and it appears in the conclusion too |
 | 8 | MAJOR | `validate.mjs` admits evidence-defective specs | actionable directly in the checker |
 | 12 | MINOR | no sensitivity analysis for candidate-status elements | cheap to run and worth doing |
 
