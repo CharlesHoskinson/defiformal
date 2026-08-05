@@ -2,19 +2,38 @@
   "app": "Spark Savings (sUSDS / Sky Savings Rate)",
   "category": "06-yield-vaults",
   "source": "C:\\defiformal-work\\06-yield-vaults\\01-research.md",
-  "construction": ["Sh", "Ix", "Sr", "Rd", "Ps", "Xf", "Xm", "Ex", "Aw", "Tg", "Gp", "Up"],
+  "construction": [
+    "Sh",
+    "Ix",
+    "Sr",
+    "Rd",
+    "Ps",
+    "Xf",
+    "Xm",
+    "Ex",
+    "Aw",
+    "Tg",
+    "Gp",
+    "Up"
+  ],
   "functionalObligations": [
     {
       "id": "F1",
       "text": "a depositor exchanges the stablecoin for a share token whose nominal balance never changes and whose redemption value rises",
-      "elements": ["Sh", "Ix"],
+      "elements": [
+        "Sh",
+        "Ix"
+      ],
       "evidence": "https://docs.spark.fi/products/spark-savings (accessed 2026-08-04)",
       "note": ""
     },
     {
       "id": "F2",
       "text": "interest compounds per second into a stored rate accumulator, advanced by a permissionless call and extrapolated exactly in view functions without writing state",
-      "elements": ["Ix", "Sr"],
+      "elements": [
+        "Ix",
+        "Sr"
+      ],
       "evidence": "https://github.com/sky-ecosystem/sdai/blob/susds/src/SUsds.sol (accessed 2026-08-04)",
       "note": "Sr is approximate: this is per-second compounding of an accumulator (chi = _rpow(ssr, now - rho) * chi / RAY), not the streaming of a claim to a named recipient. Live 2026-08-04: chi = 1.105245252046483725540827799, totalAssets = 4,750,051,555.68 USDS."
     },
@@ -35,7 +54,9 @@
     {
       "id": "F5",
       "text": "the rate may be written only by addresses enumerated in an on-chain set which governance may add to or remove from at any time",
-      "elements": ["Aw"],
+      "elements": [
+        "Aw"
+      ],
       "evidence": "https://github.com/sky-ecosystem/sp-beam/blob/master/src/SPBEAM.sol (accessed 2026-08-04)",
       "note": "MANDATE SLOT 1 (named agent) and SLOT 5 (revocation), partial fit. Aw names the caller enumeration (buds[msg.sender] == 1) and its mutability. It does not name that what is being granted is a discretionary economic authority rather than a right to participate. Independently verified: sUSDS.wards(0x36B072ed8AFE665E3Aa6DaBa79Decbec63752b22) = 1. DEPARTURE: the corpus does not carry Aw for Spark."
     },
@@ -70,42 +91,55 @@
     {
       "id": "F10",
       "text": "the rate-setting module can be halted outright by an emergency contract, after which no agent may write anything",
-      "elements": ["Gp"],
+      "elements": [
+        "Gp"
+      ],
       "evidence": "https://github.com/sky-ecosystem/sp-beam/blob/master/src/SPBEAM.sol (accessed 2026-08-04)",
       "note": "MANDATE SLOT 5 (halt). Gp names the kill switch (bad != 0) but not the mandate it kills. A sibling module in the same ecosystem (pau-administered-agent) deliberately separates grantors from revokers so that revokers act as live watchdogs; Tg, Gp and Au all treat authority as a single scalar and cannot express that split."
     },
     {
       "id": "F11",
       "text": "governance's own parameter changes execute only after a forty-eight-hour delay",
-      "elements": ["Tg"],
+      "elements": [
+        "Tg"
+      ],
       "evidence": "https://ethereum-rpc.publicnode.com (eth_call MCD_PAUSE.delay() = 172800, accessed 2026-08-04)",
       "note": ""
     },
     {
       "id": "F12",
       "text": "a holder may redeem the share for the underlying stablecoin at the current accumulator value at any time",
-      "elements": ["Rd"],
+      "elements": [
+        "Rd"
+      ],
       "evidence": "https://docs.spark.fi/products/spark-savings (accessed 2026-08-04)",
       "note": "Large mainnet withdrawals are routed through an off-chain 'Savings Liquidity Intents' request fulfilled within minutes; that routing is a service level, not a contract term, and is not decomposed."
     },
     {
       "id": "F13",
       "text": "the underlying stablecoin swaps one-for-one against a reserve asset through a peg module at zero fee, subject to a buffer, with the fee range bounded in code",
-      "elements": ["Ps"],
+      "elements": [
+        "Ps"
+      ],
       "evidence": "https://ethereum-rpc.publicnode.com (eth_call tin() = 0, tout() = 0, buf() = 800,000,000 on 0xf6e72Db5454dd049d0788e411b06CfAF16853042, accessed 2026-08-04)",
       "note": "INHERITED, corpus marker retained. The peg module belongs to the Sky/USDS system that the savings product sits on, not to the savings product. It is load-bearing for solvency while being invisible as a property of the thing decomposed; the vocabulary has no way to mark an element as inherited from a dependency."
     },
     {
       "id": "F14",
       "text": "the savings claim is represented on six other chains by a token minted and burned against the mainnet position",
-      "elements": ["Xf"],
+      "elements": [
+        "Xf"
+      ],
       "evidence": "https://github.com/sparkdotfi/xchain-ssr-oracle (accessed 2026-08-04)",
       "note": ""
     },
     {
       "id": "F15",
       "text": "the rate tuple (rate, accumulator, timestamp) is forwarded to each remote chain over that chain's canonical bridge and accepted only after application-level sanity checks including an upper bound on the rate and enforcement of event ordering",
-      "elements": ["Xm", "Ex"],
+      "elements": [
+        "Xm",
+        "Ex"
+      ],
       "evidence": "https://github.com/sparkdotfi/xchain-ssr-oracle (accessed 2026-08-04)",
       "note": "DEPARTURE: the corpus carries neither Xm nor Ex for Spark. Xm names the canonical-bridge verification; Ex names the remote oracle that publishes the tuple. The maxSSR bound exists explicitly to bound the damage of a compromised bridge, which is L13-shaped freshness/validity validation."
     },
@@ -119,7 +153,9 @@
     {
       "id": "F17",
       "text": "the system's own capital — not the depositor's claim — is deployed into external protocols by a named multisig role, with custody of all deployed funds sitting in a single proxy",
-      "elements": ["Aw"],
+      "elements": [
+        "Aw"
+      ],
       "evidence": "https://github.com/sparkdotfi/spark-alm-controller/blob/dev/src/MainnetController.sol (accessed 2026-08-04)",
       "note": "MANDATE SLOT 1 (named agent), partial fit, second instance at this application. SCOPE: obligations F17-F20 belong to the Spark Liquidity Layer, which DefiLlama files as a separate protocol in a separate category (Onchain Capital Allocator, $1.58bn). They are included because the newer Spark Savings vaults are documented as generating yield 'via the Spark Liquidity Layer', and because the same organisation shipping the claim and the mandate as different objects with different addresses is itself the evidence for a missing level. Verified: MainnetController.hasRole(RELAYER, 0x8a25A24EDE9482C4Fc0738F99611BE58F1c839AB) = 1."
     },
@@ -140,16 +176,27 @@
     {
       "id": "F20",
       "text": "a separate multisig can freeze the controller without being able to use it",
-      "elements": ["Gp"],
+      "elements": [
+        "Gp"
+      ],
       "evidence": "https://github.com/sparkdotfi/spark-address-registry/blob/master/src/Ethereum.sol (accessed 2026-08-04)",
       "note": "MANDATE SLOT 5 (halt). Gp names the freeze. It does not name that the right to halt is deliberately held by a different party from the right to act, which is the whole accountability design."
     },
     {
       "id": "F21",
       "text": "the savings token itself sits behind an upgradeable proxy whose administrator is the governance pause proxy",
-      "elements": ["Up"],
+      "elements": [
+        "Up"
+      ],
       "evidence": "https://eth.blockscout.com/api/v2/smart-contracts/0xa3931d71877C0E7a3148CB7Eb4463524FEc27fbD (accessed 2026-08-04)",
       "note": "L15 is satisfied here: the upgrade path runs through the 48-hour pause proxy (F11). Not an obligation but a measurement hazard for stage 6: live sUSDS.totalAssets() = $4.750bn against DefiLlama's Spark Savings line of $1,132,142,962.30, so a paper figure must state which of the two it means."
     }
-  ]
+  ],
+  "paper": {
+    "title": "Spark Savings",
+    "label": "cat:yld:spark",
+    "blurb": "A depositor brings the system's stablecoin and receives a share token whose nominal balance never moves and whose redemption value rises. The rate it earns is a written number held on the token itself, compounding per second into a stored accumulator; it is not derived from a utilisation curve, an auction or any market, and the only bound inside the token is that it be non-negative. The payment is funded by minting internal debt against the system's surplus account, unconditionally and with no read of revenue, reserves or any solvency condition, so the saver is paid first and the shortfall is left behind as protocol debt. Nobody allocates the depositor's capital, because the claim holds no assets --- it is a claim on a balance sheet --- and the deployment decision sits one level up, where a named multisig moves the system's own capital across an enumerated set of venues under caps that refill continuously with elapsed time, watched by a separate multisig that can freeze it without being able to use it. Exit is redemption at the accumulator at any time, or a swap against the reserve asset through a peg module at no fee.",
+    "witnessReason": "The witness adds a permission gate, an external feed and cross-domain message verification, and drops nothing. The gate is carried twice over, for two different agents: the rate may be written only by addresses enumerated in an on-chain set, and the savings token records the rate-setting module among its own authorised writers on mainnet, while the deployment of the system's capital is confined to one named role that holds custody of everything deployed. The verification and the feed enter together, because the remote representation is not the claim --- only the mainnet contract holds the accumulator and can mint against the balance sheet, while each remote chain receives a forwarded tuple over its canonical bridge, accepts it only after an application-level bound on the rate, and settles against local peg-module inventory. Among the control-plane alternatives the timelock is kept, and it is worth being exact about what it gates: governance's own parameter changes wait for it, and the agent's move inside the envelope does not.",
+    "residueNote": "What the construction cannot say here is most of what makes this a savings product rather than an accounting identity. The rate is a number a named agent chooses at its own discretion; the code holds a floor, a ceiling, a maximum step per update and a cooldown between updates, and it holds nothing that computes the number, triggers a change, or defines what a wrong rate would be. The same shape appears again one level up over venues instead of rates, with an enumerated action set standing where the floor and ceiling stood and a capacity regenerating with elapsed time standing where the step stood. Both are this category's mandate and neither has a symbol: the vocabulary's authority terms name a delay, a proxy and a pause, which is to say the facilities, never the \\emph{envelope}. The remainder is the funding path, and no incentive, loss or stability term can express it, because the payment does not respond to a deficit --- it creates one."
+  }
 }

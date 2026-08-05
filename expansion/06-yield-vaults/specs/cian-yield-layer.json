@@ -2,19 +2,33 @@
   "app": "CIAN Yield Layer",
   "category": "06-yield-vaults",
   "source": "C:\\defiformal-work\\06-yield-vaults\\01-research.md",
-  "construction": ["Sh", "Ix", "Fl", "Ct", "Ex", "Wq", "Aw", "Gp", "Up"],
+  "construction": [
+    "Sh",
+    "Ix",
+    "Fl",
+    "Ct",
+    "Ex",
+    "Wq",
+    "Aw",
+    "Gp",
+    "Up"
+  ],
   "functionalObligations": [
     {
       "id": "F1",
       "text": "a depositor brings the vault's accounting asset, or one of four related staking tokens through a converter path, and receives a transferable pro-rata share of the vault",
-      "elements": ["Sh"],
+      "elements": [
+        "Sh"
+      ],
       "evidence": "https://eth.blockscout.com/api?module=contract&action=getsourcecode&address=0xB13aa2d0345b0439b064f26B82D8dCf3f508775d (accessed 2026-08-04)",
       "note": "Live symbol() = ylstETH, name() = CIAN yield layer stETH, asset() = WETH. The audit records that the vault is NOT ERC-4626 compliant because withdraw and redeem revert (see F15)."
     },
     {
       "id": "F2",
       "text": "every share's redemption value moves by a single stored global index",
-      "elements": ["Ix"],
+      "elements": [
+        "Ix"
+      ],
       "evidence": "https://ethereum-rpc.publicnode.com (eth_call exchangePrice = 1.0735855763962243, totalAssets = exchangePrice * totalSupply / PRECISION on 0xB13aa2d0345b0439b064f26B82D8dCf3f508775d, accessed 2026-08-04)",
       "note": "Ix names the FORM only. See F3 for what writes it."
     },
@@ -49,14 +63,18 @@
     {
       "id": "F7",
       "text": "each leverage or deleverage step borrows and repays within a single settlement scope, from one of three flash-loan providers selected by the caller, with reentrancy blocked while a loan is open",
-      "elements": ["Fl"],
+      "elements": [
+        "Fl"
+      ],
       "evidence": "https://eth.blockscout.com/api?module=contract&action=getsourcecode&address=0x49d9409111a6363d82c4371ffa43faea660c917b (accessed 2026-08-04)",
       "note": "CORRECTION to the corpus: the enumerated sources are AAVEV3, BALANCER and MAKER. The corpus's mention of Morpho as a source is not supported."
     },
     {
       "id": "F8",
       "text": "any transaction that ends with the position's collateral ratio above a stored ceiling reverts",
-      "elements": ["Ct"],
+      "elements": [
+        "Ct"
+      ],
       "evidence": "https://ethereum-rpc.publicnode.com (eth_call safeProtocolRatio() = 0.923e18, MAX_PROTOCOL_RATIO() = 0.93e18, accessed 2026-08-04)",
       "note": "APPROXIMATE, corpus marker retained and sharpened. The liquidation test that matters belongs to the external lending market; CIAN's own check is a one-sided post-condition strictly inside it. It can revert a transaction that ends too levered; it cannot compel one, cannot reject an under-levered or simply bad allocation, and cannot fire at all if the operator stays silent. The vocabulary has one symbol for 'a solvency test exists' and cannot distinguish being subject to one from operating deliberately against one."
     },
@@ -70,7 +88,9 @@
     {
       "id": "F10",
       "text": "the leverage and deleverage entry points are callable only by one stored address, which resolves to a contract that forwards arbitrary batched calls from a set of cloud-hosted signing keys",
-      "elements": ["Aw"],
+      "elements": [
+        "Aw"
+      ],
       "evidence": "https://eth.blockscout.com/api?module=contract&action=getsourcecode&address=0x6d425B3D302DD82cC611866eC8176d435307b616 (accessed 2026-08-04)",
       "note": "MANDATE SLOT 1 (named agent), partial fit. DEPARTURE: the corpus carries no access element for CIAN. Aw names the caller enumeration (onlyRebalancer, then onlyOperator over a Manager whose docstring reads 'used to manage KMS addresses for batch operations'); it does not name that what is enumerated is an authority over other people's principal. The complete authority path is cloud key -> Manager.multiCall -> Strategy.leverage/deleverage and Vault.updateExchangePrice/stakeTo/transferToStrategy."
     },
@@ -98,14 +118,18 @@
     {
       "id": "F14",
       "text": "the owner may replace the agent at any time, and either the owner or the agent itself may pause the vault, while only the owner may unpause it",
-      "elements": ["Gp"],
+      "elements": [
+        "Gp"
+      ],
       "evidence": "https://ethereum-rpc.publicnode.com (eth_call paused() = false; owner() = 0x261090afe1e7305474f4e3eefcaca9964ebffff5, a 3-of-4 Safe, accessed 2026-08-04)",
       "note": "MANDATE SLOT 5 (revocation and halt). Gp names the pause but not the mandate it suspends, and it cannot express that the agent can halt itself — unusual, and worth carrying into stage 4 as the inverse of Sky's deliberate grantor/revoker split."
     },
     {
       "id": "F15",
       "text": "the standard withdrawal path is disabled outright: a depositor files a redemption request naming a payout token and waits for a designated operator to settle it in a batch, documented at about five days",
-      "elements": ["Wq"],
+      "elements": [
+        "Wq"
+      ],
       "evidence": "https://docs.cian.app/llms-full.txt (accessed 2026-08-04)",
       "note": "APPROXIMATE. withdraw() and redeem() both revert with NotSupportedYet. Wq names an ordering of exits; here there is a pending set, a batch and an operator, and CIAN describes it as 'batched execution with manual review'."
     },
@@ -126,16 +150,27 @@
     {
       "id": "F18",
       "text": "prices consumed by the position come from the external lending market's own oracle, and an independent price feed is used as a sanity check before a deposit is accepted",
-      "elements": ["Ex"],
+      "elements": [
+        "Ex"
+      ],
       "evidence": "https://docs.cian.app/llms-full.txt (accessed 2026-08-04)",
       "note": "CONSUMED, NOT OWNED. CIAN operates no oracle. Ex is retained because a live external feed genuinely gates deposits, but note that the vault's own NAV does not come from it (F3), so the corpus's Ex points at the wrong object."
     },
     {
       "id": "F19",
       "text": "the vault implementation can be replaced instantly by a three-of-four multisig, with no delay anywhere in the path",
-      "elements": ["Up"],
+      "elements": [
+        "Up"
+      ],
       "evidence": "https://ethereum-rpc.publicnode.com (eth_call ProxyAdmin 0xf24955e9d0a05222373d4555f8831f7a05e83f62 owner() = 0x261090afe1e7305474f4e3eefcaca9964ebffff5, getThreshold() = 3 of 4, accessed 2026-08-04)",
       "note": "CORRECTION to the corpus, which records armedProhibitions: []. L15 (Up implies Tg or a bounded emergency process) is VIOLATED: no timelock protects the Yield Layer. The only timelock found on chain (0xb39e6f93cff9Af7011810f41a4ed9b14582019b7, delay 86400) belongs to the 2022-era flagship product and is itself administered by an EOA. The address the documentation labels MultiSig, 0x8FA9aa69a6e94c1cd49FbF214C833B2911D02553, returns empty code — it is an EOA. Stage 3 should expect this construction to fail L15, and that failure is the finding. Epistemic label for the whole spec: no source repository of these contracts exists in public — verified bytecode only, one audit whose scope explicitly EXCLUDES the strategies, so the leverage and LTV logic that is the entire product was never audited."
     }
-  ]
+  ],
+  "paper": {
+    "title": "CIAN Yield Layer",
+    "label": "cat:yld:cian",
+    "blurb": "A depositor brings the accounting asset, or one of a set of related staking tokens through a converter path, and receives a transferable pro-rata share of the vault. The yield is a recursive leveraged loop in an external lending market: supply the staking token, enter its correlated-asset mode, borrow the accounting asset against it, re-stake, repeat. The leverage, the venue, the swap route, the flash-loan source and the moment are all chosen by an off-chain agent holding a cloud-hosted key, which reaches the strategy through a contract whose sole privileged entry point forwards arbitrary batched calls. Exit is not the standard redemption path, which reverts outright: a depositor files a request naming a payout token and waits for a designated operator to settle it, at an amount that operator decides. The vault also refuses to report its own assets, and therefore refuses deposits and redemptions, if that agent has not lately written the price by which every share is valued.",
+    "witnessReason": "The witness adds a permission gate and drops emissions. The gate is the crux of the decomposition: the entry points that lever and unlever the position are callable by one stored address and no other, and that address resolves to a contract whose only privileged function forwards batched calls from a cloud-hosted signing key, so the whole authority path from key to position is a single enumerated caller. Emissions go because there is nothing to emit --- the documentation still reads that a token is coming, the listing carries no symbol, and what is actually paid is an off-chain point balance. The threshold test and the external feed stay, and among the truth-source alternatives the feed is the one the code supports, but both are inherited rather than owned: the price comes from the lending market's own oracle, and the ceiling the vault checks is a self-imposed inner bound below that venue's immutable maximum, which the vocabulary cannot tell apart from merely being subject to a test.",
+    "residueNote": "This is the construction on which the category's central claim turns, and it turns on what is absent rather than on what is present. Written out, the contract holds an envelope --- a ceiling on the ratio, a fraction cap per strategy, a deposit cap, a slippage floor, a registered set of destinations, a pause --- and a human supplies the point inside it. Nothing computes the target, schedules a rebalance, defines when a target has been missed, or compels the agent to act at all, and the one function that computes the amount needed to reach the ceiling is a helper the agent is free to ignore. So the strategy is not an element the vocabulary failed to name; it is not on the chain to be named, which is a difference in \\emph{kind} rather than in coverage, and it predicts correctly that no further reading of this protocol's bytecode would ever produce it. The shape reaches past one vault: among this protocol's own destinations is a vault curated by another agent under another mandate, and the largest object in this category by capital is such a curator --- the one the requirement tables reject, whose distinguishing feature has no symbol at all."
+  }
 }
