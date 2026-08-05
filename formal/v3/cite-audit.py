@@ -28,14 +28,27 @@ for f in sorted(glob.glob("/root/defiformal/expansion/*/specs/*.json")):
 
 keys = list(urls)
 step = max(1, len(keys) // SAMPLE)
-first = set(keys[::step][:SAMPLE])
 sample = [k for i, k in enumerate(keys) if i % step == OFFSET % step][:SAMPLE]
-overlap = len(set(sample) & first)
 
-print("distinct evidence URLs: %d" % len(keys))
-print("first audit sampled    : %d" % len(first))
-print("this sample            : %d   overlap with the first: %d" % (len(sample), overlap))
-print("combined coverage      : %d of %d\n" % (len(first | set(sample)), len(keys)))
+# Which strata have been audited before? Offsets are residue classes mod step,
+# so distinct offsets are disjoint by construction and the union is exact.
+LEDGER = "/root/defiformal/formal/v3/.cite-audit-offsets"
+try:
+    done = {int(x) for x in io.open(LEDGER).read().split() if x.strip()}
+except OSError:
+    done = set()
+
+# Only the first SAMPLE of a class is fetched, and a class holds 63 or 64, so
+# crediting the whole class overcounts by the remainder. Count what was fetched.
+covered = set()
+for off in done | {OFFSET % step}:
+    covered |= set([k for i, k in enumerate(keys) if i % step == off][:SAMPLE])
+
+print("distinct evidence URLs : %d   stride %d" % (len(keys), step))
+print("this stratum (offset %d): %d URLs" % (OFFSET % step, len(sample)))
+print("strata run before      : %s" % (sorted(done) or "none"))
+print("cumulative coverage    : %d of %d  (%.0f%%)\n"
+      % (len(covered), len(keys), 100.0 * len(covered) / len(keys)))
 
 status = Counter()
 dead = []
@@ -62,3 +75,7 @@ for c, n in sorted(status.items(), key=lambda kv: -kv[1]):
 print("\nhard failures: %d of %d sampled" % (len(dead), len(sample)))
 for c, u, (app, oid) in dead:
     print("   %-4s %-24s %s" % (c, "%s/%s" % (app, oid), u[:100]))
+
+done.add(OFFSET % step)
+io.open(LEDGER, "w").write(" ".join(str(x) for x in sorted(done)) + "\n")
+print("\nstrata now audited: %s" % sorted(done))
