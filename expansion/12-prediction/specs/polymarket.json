@@ -1,0 +1,148 @@
+{
+  "app": "Polymarket",
+  "category": "12-prediction",
+  "source": "C:\\defiformal-work\\12-prediction\\01-research.md",
+  "construction": ["Aw", "Ps", "Ob", "Au", "Gs", "Oa", "Rd", "Ct", "Fd", "Gp", "Up"],
+  "functionalObligations": [
+    {
+      "id": "F1",
+      "text": "one unit of collateral is partitioned into one YES and one NO outcome token, and returning both recombines them into that unit, under an enforced invariant that the partition is pairwise disjoint, that no index set is empty and that none is the whole state space",
+      "elements": [],
+      "evidence": "https://raw.githubusercontent.com/gnosis/conditional-tokens-contracts/master/contracts/ConditionalTokens.sol (accessed 2026-08-04)",
+      "note": "residue, and the category's first structural claim stated precisely. `splitPosition`/`mergePositions` partition collateral along the STATE SPACE of a condition; `Py` is the only splitting element in the 58 and it partitions a claim along TIME, taking no partition argument at all. Two facts make the gap wider than the corpus recorded: the primitive is RECURSIVE — a position may be split again against a second condition through `parentCollectionId`, building a lattice of joint-state claims rather than a pair — and positions are not stored but DERIVED, a position id being a hash of (collateral token, condition, index set) used as an ERC-1155 id, so the claim space is defined intensionally. No element names any of it, and this is the operation that makes the venue fully collateralised without a counterparty."
+    },
+    {
+      "id": "F2",
+      "text": "two of the three settlement modes of the matching engine are that primitive: two crossing buy orders mint a complementary pair out of collateral, and two crossing sell orders merge a pair back into collateral, with only a crossing buy against a sell settling by transfer",
+      "elements": [],
+      "evidence": "https://github.com/Polymarket/ctf-exchange-v2 (accessed 2026-08-04)",
+      "note": "residue, and the sharpest form of the structural claim. The corpus's `Ob` marker ('off-chain signed-order matching with on-chain settlement') is true but incomplete (stage-1 delta 2): the matching engine and the state partition are the same machine, so a vocabulary with no state-partition symbol cannot name Polymarket's ORDER MATCHING either, not merely its collateral representation."
+    },
+    {
+      "id": "F3",
+      "text": "users sign orders off-chain and an exclusive operator matches them and calls the exchange with one taker order and an array of maker orders, which validates the signatures and cross-prices before settling on-chain",
+      "elements": ["Ob"],
+      "evidence": "https://github.com/Polymarket/ctf-exchange-v2 (accessed 2026-08-04)",
+      "note": "approximate; corpus marker retained. `Ob` is an on-chain order book and only the settlement is on-chain here. The exclusivity of the operator — a single party with the right to decide which orders match and in what order — is a censorship and reordering surface that `Ob` conceals and no element names."
+    },
+    {
+      "id": "F4",
+      "text": "a user's orders are executed through an operator-deployed proxy wallet acting on the user's signed authority rather than by the user's own account",
+      "elements": ["Au"],
+      "evidence": "https://github.com/Polymarket/ctf-exchange-v2 (accessed 2026-08-04)",
+      "note": "approximate; corpus marker retained (corpus records `Au` as derived). `Au` is delegated execution scope written for user-configured session policy; here the scope, the deployment and the revocation path are all operator-defined, and the user configures nothing."
+    },
+    {
+      "id": "F5",
+      "text": "the user pays no gas: transaction fees for trading and settlement are sponsored on the user's behalf",
+      "elements": ["Gs"],
+      "evidence": "https://github.com/Polymarket/ctf-exchange-v2 (accessed 2026-08-04)",
+      "note": "candidate register, and load-bearing for the product as the corpus records. Sponsorship is what makes a $1-scale contingent claim economically tradeable at all."
+    },
+    {
+      "id": "F6",
+      "text": "an outcome is proposed to an optimistic oracle under a $750 bond and stands if undisputed for roughly two hours; a first dispute resets the question and re-requests a price, and a second escalates to a token-holder vote that resolves in 48 to 72 hours",
+      "elements": ["Oa"],
+      "evidence": "https://help.polymarket.com/en/articles/13364518-how-are-prediction-markets-resolved (accessed 2026-08-04)",
+      "note": "approximate, per the corpus marker: `Oa` is structurally right (assert, bond, dispute, escalate) but the escalation terminates in a token-holder vote with no objective referent, and what is being asserted is an interpretation of prose rather than an observation of data. Stage 1 did not re-verify the WSJ voter-conflict statistics the corpus marker cites; they are UNKNOWN in this lane and are not restated here."
+    },
+    {
+      "id": "F7",
+      "text": "only addresses on a per-request proposer whitelist may propose an outcome, while any address may dispute one",
+      "elements": ["Aw"],
+      "evidence": "https://blog.uma.xyz/articles/managed-proposers (accessed 2026-08-04)",
+      "note": "partial. `Aw` names the gate on the proposing role, so the obligation is not pure residue; what it cannot express is the ASYMMETRY, which is the structurally interesting half (stage-1 delta 6). `Oa`'s whole shape is permissionless assertion, and after UMA's MOOV2 / UMIP-189 the assertion is permissioned while the challenge remains open. No element composes a gated assertion with an ungated dispute."
+    },
+    {
+      "id": "F8",
+      "text": "the question being resolved is prose: a natural-language resolution criterion posted under the order book, against which every dispute is a dispute about text",
+      "elements": [],
+      "evidence": "https://help.polymarket.com/en/articles/13364518-how-are-prediction-markets-resolved (accessed 2026-08-04)",
+      "note": "residue, confirming the corpus. `Oa` (F6) names the wrapper around the answer and says nothing about what question is being answered. The rulebook is the product being sold and it is invisible to the formalism. The market's ancillary data is bounded at 8139 bytes, so even the size of the unnameable object is a checkable constant."
+    },
+    {
+      "id": "F9",
+      "text": "an admin role may pause and unpause resolution of a market, and may reset a question to re-issue a price request when the oracle callback failed",
+      "elements": ["Gp"],
+      "evidence": "https://raw.githubusercontent.com/Polymarket/uma-ctf-adapter/main/src/UmaCtfAdapter.sol (accessed 2026-08-04)",
+      "note": "good fit for the pause; the reset branch (re-requesting truth after a failed callback) is a recovery path `Gp` does not name."
+    },
+    {
+      "id": "F10",
+      "text": "an admin may flag a market, which pauses it and starts a fixed one-hour safety period, after which the admin writes the payout vector directly, overriding the oracle entirely",
+      "elements": [],
+      "evidence": "https://raw.githubusercontent.com/Polymarket/uma-ctf-adapter/main/src/UmaCtfAdapter.sol (accessed 2026-08-04)",
+      "note": "residue, and now a checkable constant rather than the corpus's governance narrative (stage-1 delta 5): flag() sets manualResolutionTimestamp = block.timestamp + SAFETY_PERIOD, unflag() cancels inside the window, resolveManually() writes the payout. `Tg` names a delay on GOVERNANCE execution; this is a delay on an operator's determination of FACT, the delay is one hour rather than a governance cycle, and the act delayed is unilateral. The escalation ladder is therefore proposer to disputer to token vote, and orthogonally to this write at any point."
+    },
+    {
+      "id": "F11",
+      "text": "on resolution the oracle's payout numerators are reported to the conditional-token contract, winning shares redeem for one unit of collateral each and losing shares become worthless",
+      "elements": ["Rd"],
+      "evidence": "https://docs.polymarket.com/developers/CTF/overview (accessed 2026-08-04)",
+      "note": "good fit: an unconditional right to draw a fixed amount of the escrowed collateral against a reported payout vector. Unlike Kalshi's F7 the obligor is the contract holding the collateral, so `Rd` carries the whole obligation here."
+    },
+    {
+      "id": "F12",
+      "text": "for a family of binary markets of which exactly one resolves true, a holder may exchange a bundle of NO positions for collateral plus the residual YES, financed before resolution out of a wrapped-collateral buffer the adapter holds itself; if the family's mutual-exclusivity constraint is violated the family cannot fully resolve and funds are frozen",
+      "elements": [],
+      "evidence": "https://github.com/polymarket/neg-risk-ctf-adapter (accessed 2026-08-04)",
+      "note": "residue, and stronger than the corpus's 'constraint-imposing wrapper'. It is an arbitrage-free-completion operator over a family of conditions, and it does two unnameable things at once: it converts N-1 complementary claims into collateral plus a claim on the residual outcome, and it releases that collateral BEFORE resolution out of a privately held buffer, giving the adapter liquidity control independent of the underlying accounting. No element names the conversion, the constraint it enforces, or the buffer."
+    },
+    {
+      "id": "F13",
+      "text": "collateral is pUSD, an ERC-20 on Polygon backed one-for-one by USDC with the backing enforced on-chain and no algorithmic peg or fractional reserve, convertible in either direction at par with no fee",
+      "elements": ["Ps"],
+      "evidence": "https://help.polymarket.com/en/articles/14762452-polymarket-exchange-upgrade-april-28-2026 (accessed 2026-08-04)",
+      "note": "departure from the corpus, whose canonical form omits it (stage-1 delta 1). Since the 2026-04-28 cutover the collateral is pUSD, not bridged USDC.e, and `Ps` (peg-swap module, 1:1 reserve-backed) is a genuine fit rather than an approximation: fixed parity, full reserve, no fee, on-chain enforcement."
+    },
+    {
+      "id": "F14",
+      "text": "the exchange wraps that collateral a second time as PMCT through a collateral adapter with dedicated onramp and offramp contracts, so an adapter can hold liquidity outside the conditional-token accounting",
+      "elements": [],
+      "evidence": "https://github.com/Polymarket/ctf-exchange-v2 (accessed 2026-08-04)",
+      "note": "residue. A wrapper whose purpose is to place value outside the accounting system that would otherwise govern it. `Ps` (F13) names a par-convertible representation backed by a reserve; it does not name a re-wrap whose function is accounting escape, and the failure mode of the second wrap is different from the first."
+    },
+    {
+      "id": "F15",
+      "text": "a fee up to an admin-settable maximum of 500 basis points is charged per order in USDC, calculated at match time rather than at placement, validated before execution and collected during settlement",
+      "elements": ["Fd"],
+      "evidence": "https://github.com/Polymarket/ctf-exchange-v2 (accessed 2026-08-04)",
+      "note": "approximate, and a departure from the corpus element set, which recorded no fee element. `Fd` (candidate register) names the taking of a fee; the destination of the collected fees is not stated at a primary source in stage 1's evidence, so the residual claimant is UNKNOWN and the distribution half of `Fd` is unverified."
+    },
+    {
+      "id": "F16",
+      "text": "the exchange and the collateral token are deployed behind upgradeable proxies with admin-settable parameters",
+      "elements": ["Up"],
+      "evidence": "https://github.com/Polymarket/ctf-exchange-v2 (accessed 2026-08-04)",
+      "note": "good fit. Corpus retained. Note that L15 (Up implies Tg or a bounded emergency process) is not satisfied by any documented timelock in stage 1's evidence; the only delay found anywhere in the system is the one-hour safety period of F10, which is not a governance delay."
+    },
+    {
+      "id": "F17",
+      "text": "on the US venue a participant must be onboarded to a designated contract market before trading, and contracts are quoted in minimum increments of $0.001 and tradeable in fractional units",
+      "elements": ["Aw"],
+      "evidence": "https://www.polymarketexchange.com/files/legal/latest/rulebook (accessed 2026-08-04)",
+      "note": "approximate: a regulated participant-onboarding process, off-chain, not a transfer-time gate. Same shape as Kalshi F1."
+    },
+    {
+      "id": "F18",
+      "text": "on the US venue every matched trade is novated: the clearing house is immediately substituted as seller to the purchaser and purchaser to the seller",
+      "elements": [],
+      "evidence": "https://www.polymarketexchange.com/files/legal/latest/rulebook (accessed 2026-08-04)",
+      "note": "residue, and the category's second structural claim, now shared by two of the five (stage-1 delta 3; Polymarket US Rulebook Rule 6.1(d), QCX designated 2025-07-09). The twist WEAKENS the corpus's framing: QC Clearing states publicly that it clears only fully collateralised positions, employs no margin methodology and maintains NO financial resource package — no guaranty fund at all. So the `Bs`/`Sl`/`Ad` trio that reconstructs Kalshi's waterfall (kalshi.json F9, F12, F13) reconstructs nothing here. A fully-collateralised central counterparty is pure novation plus custody, and against that institution the vocabulary has even less to say: there is no default waterfall to name because the whole institution is the unnameable part."
+    },
+    {
+      "id": "F19",
+      "text": "on the US venue the clearing house checks that the account holds the full collateral before accepting the trade, and refuses it otherwise",
+      "elements": ["Ct"],
+      "evidence": "https://www.polymarketexchange.com/clearing/ (accessed 2026-08-04)",
+      "note": "approximate, and a departure from the corpus element set. `Ct` names a collateral-sufficiency computation; this one is an off-chain rulebook check performed by the clearing house before novation (Rule 6.1(c)), with no ongoing health factor because a fully-collateralised position cannot become undercollateralised."
+    },
+    {
+      "id": "F20",
+      "text": "on the US venue a company officer runs a Contract Outcome Review Process, determines the final outcome at sole discretion, and may reverse a determined outcome in the case of obvious error, with company liability to any one participant capped at $2,500 a day, $5,000 a month and $50,000 a year",
+      "elements": [],
+      "evidence": "https://www.polymarketexchange.com/files/legal/latest/rulebook (accessed 2026-08-04)",
+      "note": "residue (Rule 10.4, Chapter 11), and the finding that sharpens the corpus's category residue (stage-1 delta 4). The same tribunal identified for Kalshi (kalshi.json F15), inside the same brand as F6: the same market question resolves by bonded assertion on Polygon and by officer discretion in New York, with a reversal power the on-chain leg does not have and a monetary cap on the operator's liability for getting it wrong. Counting venues rather than brands, only Polymarket-on-Polygon has an expressible resolution mechanism at all."
+    }
+  ]
+}

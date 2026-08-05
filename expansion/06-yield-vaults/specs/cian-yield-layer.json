@@ -1,0 +1,141 @@
+{
+  "app": "CIAN Yield Layer",
+  "category": "06-yield-vaults",
+  "source": "C:\\defiformal-work\\06-yield-vaults\\01-research.md",
+  "construction": ["Sh", "Ix", "Fl", "Ct", "Ex", "Wq", "Aw", "Gp", "Up"],
+  "functionalObligations": [
+    {
+      "id": "F1",
+      "text": "a depositor brings the vault's accounting asset, or one of four related staking tokens through a converter path, and receives a transferable pro-rata share of the vault",
+      "elements": ["Sh"],
+      "evidence": "https://eth.blockscout.com/api?module=contract&action=getsourcecode&address=0xB13aa2d0345b0439b064f26B82D8dCf3f508775d (accessed 2026-08-04)",
+      "note": "Live symbol() = ylstETH, name() = CIAN yield layer stETH, asset() = WETH. The audit records that the vault is NOT ERC-4626 compliant because withdraw and redeem revert (see F15)."
+    },
+    {
+      "id": "F2",
+      "text": "every share's redemption value moves by a single stored global index",
+      "elements": ["Ix"],
+      "evidence": "https://ethereum-rpc.publicnode.com (eth_call exchangePrice = 1.0735855763962243, totalAssets = exchangePrice * totalSupply / PRECISION on 0xB13aa2d0345b0439b064f26B82D8dCf3f508775d, accessed 2026-08-04)",
+      "note": "Ix names the FORM only. See F3 for what writes it."
+    },
+    {
+      "id": "F3",
+      "text": "that index is written by an off-chain operator at its own discretion, with no oracle input, no attester, no staleness recourse beyond a revert, and no derivation from realised profit and loss",
+      "elements": [],
+      "evidence": "https://github.com/Ackee-Blockchain/public-audit-reports/blob/master/2025/ackee-blockchain-cian-yield-layer-report.pdf (accessed 2026-08-04)",
+      "note": "RESIDUE, and the single largest unmitigated risk in the protocol. The audit's warning W4 reads 'Protocol owner can set arbitrary exchange price to pools' and W6 'Protocol owner can artificially mint Vault shares'. Not Ex (no external data source), not At (L27 requires a named attester, independence, a stated assurance level, a staleness bound and recourse), not Ix (an index a party may set to any value is not an accrual). An ASSERTED NAV with no attester has no symbol. The corpus's Ex points at the wrong object for this reason."
+    },
+    {
+      "id": "F4",
+      "text": "the vault refuses to report its own assets — and therefore refuses deposits and redemptions — if the index has not been written within three days",
+      "elements": [],
+      "evidence": "https://ethereum-rpc.publicnode.com (eth_call maxPriceUpdatePeriod = 3 days, lastUpdatePriceTime = 1785722699 on 0xB13aa2d0345b0439b064f26B82D8dCf3f508775d, accessed 2026-08-04)",
+      "note": "RESIDUE. This is stronger than 'an off-chain agent should call rebalance': it is the contract DECLARING that it cannot function without one, and it is the FIRST failure — earlier than any liquidation. No symbol records that a mechanism requires an external caller to stay alive."
+    },
+    {
+      "id": "F5",
+      "text": "total deposits into the vault are capped at a fixed quantity of the accounting asset",
+      "elements": [],
+      "evidence": "https://ethereum-rpc.publicnode.com (eth_call VaultParams.marketCapacity = 50,000 WETH on 0xB13aa2d0345b0439b064f26B82D8dCf3f508775d, accessed 2026-08-04)",
+      "note": "RESIDUE. A supply cap as a risk-fencing primitive has no symbol; the corpus records the same gap at Steakhouse."
+    },
+    {
+      "id": "F6",
+      "text": "the vault's assets are deployed as a recursive leveraged loop in an external lending market: supply a staking token, enter its correlated-asset mode, borrow the accounting asset against it, re-stake, repeat",
+      "elements": [],
+      "evidence": "https://docs.cian.app/llms-full.txt (accessed 2026-08-04)",
+      "note": "RESIDUE. Pl, Im and Cd all belong to the external lending market, not to CIAN, and emitting them would claim CIAN implements pooled lending. The vocabulary has no way to mark an element as CONSUMED from a dependency rather than implemented, which is the same defect the corpus hit with Spark/Ps and Steakhouse/Im. Also unnamed: composition depth — one live strategy deposits into a vault curated by a third party, so the depositor sees one share price over three stacked mandates each charging its own fee."
+    },
+    {
+      "id": "F7",
+      "text": "each leverage or deleverage step borrows and repays within a single settlement scope, from one of three flash-loan providers selected by the caller, with reentrancy blocked while a loan is open",
+      "elements": ["Fl"],
+      "evidence": "https://eth.blockscout.com/api?module=contract&action=getsourcecode&address=0x49d9409111a6363d82c4371ffa43faea660c917b (accessed 2026-08-04)",
+      "note": "CORRECTION to the corpus: the enumerated sources are AAVEV3, BALANCER and MAKER. The corpus's mention of Morpho as a source is not supported."
+    },
+    {
+      "id": "F8",
+      "text": "any transaction that ends with the position's collateral ratio above a stored ceiling reverts",
+      "elements": ["Ct"],
+      "evidence": "https://ethereum-rpc.publicnode.com (eth_call safeProtocolRatio() = 0.923e18, MAX_PROTOCOL_RATIO() = 0.93e18, accessed 2026-08-04)",
+      "note": "APPROXIMATE, corpus marker retained and sharpened. The liquidation test that matters belongs to the external lending market; CIAN's own check is a one-sided post-condition strictly inside it. It can revert a transaction that ends too levered; it cannot compel one, cannot reject an under-levered or simply bad allocation, and cannot fire at all if the operator stays silent. The vocabulary has one symbol for 'a solvency test exists' and cannot distinguish being subject to one from operating deliberately against one."
+    },
+    {
+      "id": "F9",
+      "text": "the ceiling the vault enforces is a self-imposed inner bound below an immutable maximum, and the position is deliberately kept pressed against it",
+      "elements": [],
+      "evidence": "https://docs.cian.app/llms-full.txt (accessed 2026-08-04)",
+      "note": "RESIDUE. Ct names the constraint; nothing names recursive leverage as an OBJECTIVE. Modelling hazard the corpus does not record: the documented implementation publishes MAX_PROTOCOL_RATIO = 0.85e18 while the live implementation 0x9191dc9e81bef6feea0dc4d6994d5392b898edf8 carries 0.93e18 — the real ceiling is eight points looser than the published one."
+    },
+    {
+      "id": "F10",
+      "text": "the leverage and deleverage entry points are callable only by one stored address, which resolves to a contract that forwards arbitrary batched calls from a set of cloud-hosted signing keys",
+      "elements": ["Aw"],
+      "evidence": "https://eth.blockscout.com/api?module=contract&action=getsourcecode&address=0x6d425B3D302DD82cC611866eC8176d435307b616 (accessed 2026-08-04)",
+      "note": "MANDATE SLOT 1 (named agent), partial fit. DEPARTURE: the corpus carries no access element for CIAN. Aw names the caller enumeration (onlyRebalancer, then onlyOperator over a Manager whose docstring reads 'used to manage KMS addresses for batch operations'); it does not name that what is enumerated is an authority over other people's principal. The complete authority path is cloud key -> Manager.multiCall -> Strategy.leverage/deleverage and Vault.updateExchangePrice/stakeTo/transferToStrategy."
+    },
+    {
+      "id": "F11",
+      "text": "that agent supplies the leverage amount, the swap route, the slippage floor and the flash-loan source as call arguments; nothing in the contracts computes them, schedules a rebalance, defines when a target has been missed, or compels the agent to act at all",
+      "elements": [],
+      "evidence": "https://eth.blockscout.com/api?module=contract&action=getsourcecode&address=0xB13aa2d0345b0439b064f26B82D8dCf3f508775d (accessed 2026-08-04)",
+      "note": "RESIDUE — the central finding of this lane. A public helper getLeverageAmount() computes exactly the amount needed to reach the target, but it is a helper, not a constraint: nothing forces the agent to call it or to use its output. Au fails L17 (no expiry, no nonce, and it operates over pooled third-party principal rather than the principal's own assets); Tg fails because the agent acts immediately; Sv fails because the agent determines nothing about a claim, he chooses where principal sits; Gp names only the kill switch. The vocabulary has no symbol because the object is not on the chain: the contract encodes an ENVELOPE and a human supplies the POINT inside it. Of the five-slot mandate shape, CIAN fills slots 1, 2, 3 and 5 and leaves slot 4 EMPTY — there is no cooldown, no step limit and no delay on anything the agent or the owner does. CIAN's own audit reply states the thesis outright: 'The adjustment of the allocation scheme cannot and should not be automated by the smart contract.'"
+    },
+    {
+      "id": "F12",
+      "text": "capital may be forwarded only to strategy contracts the owner has registered with the vault",
+      "elements": [],
+      "evidence": "https://docs.cian.app/llms-full.txt (accessed 2026-08-04)",
+      "note": "MANDATE SLOT 2 (domain whitelist). RESIDUE. The named strategy set for this vault is enumerated in the documentation (converter, leveraged-LST, a curated third-party vault, and three lending-market variants)."
+    },
+    {
+      "id": "F13",
+      "text": "no single strategy may hold more than a set fraction of the vault's total assets, checked at the moment of transfer",
+      "elements": [],
+      "evidence": "https://eth.blockscout.com/api?module=contract&action=getsourcecode&address=0xB13aa2d0345b0439b064f26B82D8dCf3f508775d (accessed 2026-08-04)",
+      "note": "MANDATE SLOT 3 (magnitude cap). RESIDUE. The check is `if ((nowAssets_ + _amount) > (totalAssets() * positionLimit_ / 1e4)) revert InvalidLimit()` — the vault's ONLY structural constraint on a strategy."
+    },
+    {
+      "id": "F14",
+      "text": "the owner may replace the agent at any time, and either the owner or the agent itself may pause the vault, while only the owner may unpause it",
+      "elements": ["Gp"],
+      "evidence": "https://ethereum-rpc.publicnode.com (eth_call paused() = false; owner() = 0x261090afe1e7305474f4e3eefcaca9964ebffff5, a 3-of-4 Safe, accessed 2026-08-04)",
+      "note": "MANDATE SLOT 5 (revocation and halt). Gp names the pause but not the mandate it suspends, and it cannot express that the agent can halt itself — unusual, and worth carrying into stage 4 as the inverse of Sky's deliberate grantor/revoker split."
+    },
+    {
+      "id": "F15",
+      "text": "the standard withdrawal path is disabled outright: a depositor files a redemption request naming a payout token and waits for a designated operator to settle it in a batch, documented at about five days",
+      "elements": ["Wq"],
+      "evidence": "https://docs.cian.app/llms-full.txt (accessed 2026-08-04)",
+      "note": "APPROXIMATE. withdraw() and redeem() both revert with NotSupportedYet. Wq names an ordering of exits; here there is a pending set, a batch and an operator, and CIAN describes it as 'batched execution with manual review'."
+    },
+    {
+      "id": "F16",
+      "text": "the amount a request settles for is decided by the entity that confirms it",
+      "elements": [],
+      "evidence": "https://github.com/Ackee-Blockchain/public-audit-reports/blob/master/2025/ackee-blockchain-cian-yield-layer-report.pdf (accessed 2026-08-04)",
+      "note": "RESIDUE. Auditor testimony, verbatim: 'The users have to trust protocol owners to act honestly since, once they deposit funds into the Vault, they cannot withdraw without external confirmation. The withdrawn amount is also decided by the entity that confirms the withdrawal requests.' Wq names an ordering; it does not name a queue whose SETTLEMENT AMOUNT is discretionary."
+    },
+    {
+      "id": "F17",
+      "text": "eight per cent of gains is taken by the operator as a performance fee, under a hard ceiling of fifteen per cent, with the documented exit and management fees currently set to zero",
+      "elements": [],
+      "evidence": "https://ethereum-rpc.publicnode.com (eth_call revenueRate = 800, exitFeeRate = 0, managementFeeRate = 0, MAX_REVENUE_FEE_RATE = 1500, accessed 2026-08-04)",
+      "note": "RESIDUE. Fd (candidate) was considered and rejected: Fd names distribution of realised surplus to a claimant class, and this is remuneration of the discretionary agent — slot 6 of the mandate shape, which the corpus already recorded as unnamed at Yearn ('no element for a performance fee taken by a manager out of a claim class'). Modelling hazard: a construction built from the docs (8% plus a 0.02% exit fee) reproduces a protocol whose live exit fee is zero."
+    },
+    {
+      "id": "F18",
+      "text": "prices consumed by the position come from the external lending market's own oracle, and an independent price feed is used as a sanity check before a deposit is accepted",
+      "elements": ["Ex"],
+      "evidence": "https://docs.cian.app/llms-full.txt (accessed 2026-08-04)",
+      "note": "CONSUMED, NOT OWNED. CIAN operates no oracle. Ex is retained because a live external feed genuinely gates deposits, but note that the vault's own NAV does not come from it (F3), so the corpus's Ex points at the wrong object."
+    },
+    {
+      "id": "F19",
+      "text": "the vault implementation can be replaced instantly by a three-of-four multisig, with no delay anywhere in the path",
+      "elements": ["Up"],
+      "evidence": "https://ethereum-rpc.publicnode.com (eth_call ProxyAdmin 0xf24955e9d0a05222373d4555f8831f7a05e83f62 owner() = 0x261090afe1e7305474f4e3eefcaca9964ebffff5, getThreshold() = 3 of 4, accessed 2026-08-04)",
+      "note": "CORRECTION to the corpus, which records armedProhibitions: []. L15 (Up implies Tg or a bounded emergency process) is VIOLATED: no timelock protects the Yield Layer. The only timelock found on chain (0xb39e6f93cff9Af7011810f41a4ed9b14582019b7, delay 86400) belongs to the 2022-era flagship product and is itself administered by an EOA. The address the documentation labels MultiSig, 0x8FA9aa69a6e94c1cd49FbF214C833B2911D02553, returns empty code — it is an EOA. Stage 3 should expect this construction to fail L15, and that failure is the finding. Epistemic label for the whole spec: no source repository of these contracts exists in public — verified bytecode only, one audit whose scope explicitly EXCLUDES the strategies, so the leverage and LTV logic that is the entire product was never audited."
+    }
+  ]
+}

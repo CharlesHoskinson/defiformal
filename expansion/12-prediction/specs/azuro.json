@@ -1,0 +1,141 @@
+{
+  "app": "Azuro",
+  "category": "12-prediction",
+  "source": "C:\\defiformal-work\\12-prediction\\01-research.md",
+  "construction": ["Aw", "Au", "Gs", "Rl", "Rd", "Fd", "Gp", "Up"],
+  "functionalObligations": [
+    {
+      "id": "F1",
+      "text": "a bettor's position is a transferable NFT carrying a payout struck against the pool; no operation splits pool collateral into complementary outcome claims and none recombines them",
+      "elements": [],
+      "evidence": "https://gem.azuro.org/hub/blockchains/architecture (accessed 2026-08-04)",
+      "note": "residue, and the third answer this category gives to the first structural claim. Polymarket implements a state partition (polymarket.json F1), Kalshi implements a price identity (kalshi.json F3), and Azuro implements neither: the contingent claim is one-sided and unitary, the pool holds the other side implicitly, and there is no object to split or merge. `Py` splits along time and does not apply; nothing in the 58 names a one-sided tokenised contingent claim on a pool either."
+    },
+    {
+      "id": "F2",
+      "text": "a single protocol-wide liquidity pool is the counterparty to every bet, writing a non-linear event-contingent payoff, so no bettor ever faces another bettor",
+      "elements": [],
+      "evidence": "https://gem.azuro.org/knowledge-hub/how-azuro-works/components/pools (accessed 2026-08-04)",
+      "note": "residue, confirming the corpus. `Pl` is lending; `Cv` requires adjudicated claims against pooled premium; `Op` requires a strike and an expiry. Note the relation to the category's second structural claim: this is the third clearing form in five applications — a pool that is principal to every trade with no novation and no substitution — and the vocabulary names none of the three."
+    },
+    {
+      "id": "F3",
+      "text": "the price of an outcome is the normalised inverse of the pool's virtual fund for that outcome, loaded with a spread allocated inversely to the outcome's probability under a total-margin constraint, and every bet moves the virtual funds so the odds worsen against incoming flow",
+      "elements": [],
+      "evidence": "https://gem.azuro.org/knowledge-hub/how-azuro-works/components/vAMM (accessed 2026-08-04)",
+      "note": "residue, confirming the corpus. The closed form is published: o_i = sum(F)/F_i, p_i = 1/o_i, s_i = 1 - p_i*o_i with s_i/s_j = p_j/p_i, and the update F_i <- F_i - a with the other funds scaled by their share. None of `Cp`, `Wg`, `St`, `Cl` or `Pm` describes it, because all five price an ASSET against another asset or against an external reference and this prices a STATE against the pool's own exposure. The virtual funds are pricing parameters deliberately decoupled from the pool's real balance, so the curve is not even a function of the inventory it claims to represent."
+    },
+    {
+      "id": "F4",
+      "text": "the odds struck at the moment of the bet are locked for that bettor and fix the payout, while the curve continues to move for everyone after",
+      "elements": [],
+      "evidence": "https://gem.azuro.org/knowledge-hub/how-azuro-works/components/odds (accessed 2026-08-04)",
+      "note": "residue. payout = o_i * (1 - s_i) * a, fixed at bet time. There is no symbol for a quoted-and-locked payoff drawn from a continuously repriced pool; `Rf` (request for quote) names a signed maker quote in a bilateral trade, not a quote struck against a pool's own moving curve, and `Op` requires a strike and an expiry rather than a struck price."
+    },
+    {
+      "id": "F5",
+      "text": "each Condition reserves a fixed Reinforcement of pool liquidity at creation, immutable thereafter, which both seeds the outcome pricing and bounds the pool's worst-case loss on that Condition so simultaneous events cannot oversubscribe the same capital",
+      "elements": ["Rl"],
+      "evidence": "https://gem.azuro.org/knowledge-hub/how-azuro-works/components/reinforcement (accessed 2026-08-04)",
+      "note": "approximate; the corpus marker is right that this is the closest good fit in the whole vocabulary, and stage 1 sharpens why it is still not exact: `Rl` reserves a RESOURCE against a fulfilment, whereas Reinforcement reserves a WORST-CASE LOSS computed across an entire outcome vector, and it doubles as the price prior. It is a risk budget and a pricing seed in one object, and `Rl` carries neither role. Azuro's own marketing calls this 'concentrated liquidity', which would have made `Cl` an attractive and completely wrong choice: naming collision, not mechanism match."
+    },
+    {
+      "id": "F6",
+      "text": "bets enter through a relayer that is the execution entry point for the whole protocol, taking the bettor's signed order and drawing sponsored fees and freebet amounts from a paymaster",
+      "elements": ["Au", "Gs"],
+      "evidence": "https://gem.azuro.org/hub/blockchains/architecture (accessed 2026-08-04)",
+      "note": "departure from the corpus, which records neither element; both are V3 components absent from the V2 public repository. `Gs` (sponsored-fee liability, paymaster) is an exact fit, down to the contract's name. `Au` is approximate: the relayer executes authority the bettor delegated by signing, which is the shape `Au` describes, but the scope is protocol-defined rather than user-configured. This pairing also warrants `Rl` (F5) under the tables and satisfies L20 and L21, which the corpus's Azuro element set could not."
+    },
+    {
+      "id": "F7",
+      "text": "each liquidity deposit is a separate leaf of a segment tree over a 2K+1 array, a Condition's profit and loss is distributed across a leaf range, and the updates are lazy — annotated at parent nodes and pushed down only when a provider withdraws",
+      "elements": [],
+      "evidence": "https://gem.azuro.org/knowledge-hub/how-azuro-works/liquidity-tree (accessed 2026-08-04)",
+      "note": "residue, and a departure from the corpus, which recorded `Sh` (stage-1 delta 4). A provider's claim is not a pro-rata share of one pot: it is a leaf with an entry position, and its value depends on WHICH Conditions resolved during its residence. That is neither `Sh` (proportional claim on a pool), nor `Ix` (a single global index), nor `Rb` (nominal rescaling). The LiquidityTree is a third accounting form the vocabulary does not have. The token standard of the provider's position is UNKNOWN — the docs do not say whether it is fungible, an NFT, or a bare accounting entry."
+    },
+    {
+      "id": "F8",
+      "text": "a liquidity provider is locked for seven days from deposit and may withdraw at will thereafter",
+      "elements": [],
+      "evidence": "https://gem.azuro.org/knowledge-hub/how-azuro-works/protocol-actors/liquidity-providers (accessed 2026-08-04)",
+      "note": "residue. `Wq` is a queue of claimants waiting for liquidity that has not arrived; this is a per-deposit minimum holding period with no queue and no rationing. `Ep` gates transitions at shared epoch boundaries and this lock is dated from each deposit individually. Azuro's own documentation warns that positions held under a week will most likely be in the red, so the lock is economically load-bearing rather than administrative."
+    },
+    {
+      "id": "F9",
+      "text": "one permissioned party creates and cancels events, seeds and reprices the sell-side odds, sets the reinforcement and margin, and then declares which outcome won",
+      "elements": [],
+      "evidence": "https://gem.azuro.org/knowledge-hub/how-azuro-works/protocol-actors/data-providers (accessed 2026-08-04)",
+      "note": "residue, and a departure from the corpus, which recorded `Ex` AND `Sv` for this role; stage 1 finds both wrong. `Ex` misrepresents a single trusted party as an oracle — there is no feed, no aggregation and no medianizer; `Sv` is written for servicing a loan and does not reach 'sets the price and also decides who won'; `Oa` needs an assertion, a bond and a dispute window and there is none. Azuro's docs say Data Providers resolve 'in good faith' citing a bookmaker's published settlement rules, with AzuroDAO 'acting as the arbiter of last resort in case of disputes' — so the corpus's flat claim of 'no dispute path' is wrong as documented (stage-1 delta 1), but the arbitration MECHANISM is not specified on-chain anywhere stage 1 could find and is marked UNKNOWN. Dropping `Ex` and `Sv` leaves this application with no expressible resolution mechanism at all, which is the category's finding, not a gap in the spec."
+    },
+    {
+      "id": "F10",
+      "text": "a Data Provider must post collateral up to the total Reinforcement it expects to use across all its active markets",
+      "elements": [],
+      "evidence": "https://gem.azuro.org/knowledge-hub/how-azuro-works/protocol-actors/data-providers (accessed 2026-08-04)",
+      "note": "residue, and a stage-1 finding the corpus records no bond for at all (stage-1 delta 2). `Bs` is the nearest shape and does not fit: nothing in the documentation describes a slashing condition, so this is a bond against MISPRICING — capital sized to the exposure the party is allowed to create — rather than slashable first-loss capital against insolvency or against a false report."
+    },
+    {
+      "id": "F11",
+      "text": "a Condition may be paused, and cancelling it refunds every bettor's stake instead of paying out",
+      "elements": ["Gp", "Rd"],
+      "evidence": "https://gem.azuro.org/knowledge-hub/how-azuro-works/components/conditions (accessed 2026-08-04)",
+      "note": "`Gp` fits the pause. `Rd` is approximate for the refund: it names an unconditional right to draw a fixed amount back, but the act here unwinds an already-struck contingent claim at par, and no element names the annulment of a live claim as distinct from its settlement."
+    },
+    {
+      "id": "F12",
+      "text": "a winning bettor claims the payout struck at bet time after the Condition is resolved",
+      "elements": ["Rd"],
+      "evidence": "https://gem.azuro.org/knowledge-hub/how-azuro-works/components/odds (accessed 2026-08-04)",
+      "note": "good fit for the claim itself; the amount claimed is fixed by F4, which is residue."
+    },
+    {
+      "id": "F13",
+      "text": "the pool quotes a price to buy back an open bet before the event concludes, extinguishing a live contingent claim early",
+      "elements": [],
+      "evidence": "https://gem.azuro.org/hub/releases/29-cashouts (accessed 2026-08-04)",
+      "note": "residue, and absent from the corpus record entirely — Cashout is a V3 feature (stage-1 delta 5). It is not `Rd` (there is no resolved payout to redeem against), not `Ob` (there is no counterparty), and not `Op` (there is no strike). A pool that will repurchase its own written liability at a quoted price before the state is known is a distinct mechanism with no symbol."
+    },
+    {
+      "id": "F14",
+      "text": "a combination bet multiplies the odds of several legs into one payout while the pool's exposure to the combination is not the product of its exposures to the legs",
+      "elements": [],
+      "evidence": "https://gem.azuro.org/knowledge-hub/how-azuro-works/components/betting-engines (accessed 2026-08-04)",
+      "note": "residue, confirming the corpus. A whole risk-management object — correlated exposure across simultaneously-priced conditions underwritten by one pool — with no representation in the vocabulary."
+    },
+    {
+      "id": "F15",
+      "text": "pool revenue is divided among four named claimants: liquidity providers take 20% and the Data Provider 10% of the pool's profit or loss on each completed Condition, apps take a share, and AzuroDAO takes the residual computed by deducting all other rewards from monthly pool revenue",
+      "elements": ["Fd"],
+      "evidence": "https://gem.azuro.org/knowledge-hub/how-azuro-works/reward-distribution (accessed 2026-08-04)",
+      "note": "`Fd` (candidate register) fits the distribution with a named residual claimant. Departure from the corpus on a neighbouring point: the corpus records `Em` (protocol-funded emissions) and stage 1 could not confirm at a primary source that protocol-funded emissions are currently paid (stage-1 delta 3). What is verifiable is a share of pool profit and loss and of spread revenue, which is `Fd`, not `Em`; a `RewardPool` repository exists but its live use is UNKNOWN. `Em` is therefore dropped from the construction. The split itself is mutable at AzuroDAO's discretion."
+    },
+    {
+      "id": "F16",
+      "text": "an app's share is the LESSER of 70% of the revenue it generated and a monthly cap of 50% of the spread times the bet size summed over its bets",
+      "elements": [],
+      "evidence": "https://gem.azuro.org/knowledge-hub/how-azuro-works/reward-distribution (accessed 2026-08-04)",
+      "note": "residue. `Fd` (F15) names the fact of distribution but not a share capped by a DIFFERENT quantity from the one it is a share of, and there is no symbol for a frontend as a first-class revenue claimant of the protocol it fronts."
+    },
+    {
+      "id": "F17",
+      "text": "when the pool loses, the liquidity providers', Data Provider's and DAO's rewards go negative, while an app's share can only ever be positive or zero",
+      "elements": [],
+      "evidence": "https://gem.azuro.org/knowledge-hub/how-azuro-works/reward-distribution (accessed 2026-08-04)",
+      "note": "residue. This is a declared order of loss-bearing across claimant classes, published in a fee schedule rather than encoded as a structure. `Tr` names declared seniority over a loss event and is the nearest, but there are no tranches, no principal and no waterfall — only a sign rule on a reward rate; `Sl` assigns a realised deficit to a claim class and there is no deficit here, just a negative share of a period's result. Neither is honest, so neither is used."
+    },
+    {
+      "id": "F18",
+      "text": "protocol roles are tokenised by an Access contract and granted by the pool owner, so only permissioned parties may create Conditions, reprice odds or resolve them",
+      "elements": ["Aw"],
+      "evidence": "https://gem.azuro.org/hub/blockchains/architecture (accessed 2026-08-04)",
+      "note": "approximate, and a departure from the corpus, which records no access element for Azuro. `Aw` is a permission/identity gate and the function matches — a party without the role token cannot act — but `Aw` is written for gating holders of a claim, and here what is gated is an office, with the role itself being transferable as a token."
+    },
+    {
+      "id": "F19",
+      "text": "pools are deployed by a factory behind beacon proxies, and the pool owner may attach new betting engines to a live pool",
+      "elements": ["Up"],
+      "evidence": "https://gem.azuro.org/hub/blockchains/architecture (accessed 2026-08-04)",
+      "note": "good fit for the beacon-proxy upgradeability. Note two facts stage 1 established that bear on any check of this construction: no timelock is documented, so L15 (Up implies Tg or a bounded emergency process) is unsatisfied; and the deployed system is V3 while the only public contract repository covers V2 and has not been touched since 2025-01-29, so the source for the live system is UNKNOWN and every element above is grounded in documentation rather than in code (stage-1 delta 6)."
+    }
+  ]
+}
