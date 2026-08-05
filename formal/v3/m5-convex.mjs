@@ -13,7 +13,9 @@ function definiteArcs(laws, label) {
   const uniq = [...new Set(arcs.map(a => a[0] + "->" + a[1]))];
   console.log(`${label}: definite (singleton-term) arcs = ${arcs.length}, distinct = ${uniq.length}`);
   console.log(`   ${uniq.join("  ")}`);
-  return arcs.map(a => [a[0], a[1]]);
+  // distinct arcs: a pair may be required by more than one row (Pf->Ct is in
+  // both L1 and L4), and a digraph has one arc per pair, not one per row.
+  return uniq.map(k => k.split("->"));
 }
 
 const arcsL = definiteArcs(T.LSTAR, "LSTAR (paper's L*)");

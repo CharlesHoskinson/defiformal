@@ -1,5 +1,6 @@
 // meas:latticeconf -- "Over 175,230 pairs from R n W there are 0 union-closure violations.
-// Meet is not intersection: 51,917 pairs have X n Y not in R n W."
+// Meet is not intersection. The count is the paper's to state, not this
+// script's to duplicate - a copy here is how it went stale."
 // cor:lattice -- R n W union-closed, contains empty and TOP, hence a complete lattice.
 import * as L from "./lib.mjs";
 
@@ -20,7 +21,7 @@ for (const seed of [1, 2, 3]) {
   }
   console.log(`\nseed=${seed}  |pool|=${pool.length}  pairs=${n}`);
   console.log(`  union-closure violations        : ${uv}   [paper: 0]`);
-  console.log(`  intersection (meet != cap) viol : ${iv}   [paper: 51,917]`);
+  console.log(`  intersection (meet != cap) viol : ${iv}`);
 }
 
 // EXHAUSTIVE over R n W members of size <= 3
