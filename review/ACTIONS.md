@@ -33,3 +33,5 @@
 - **meas:frag outstanding major from Referee B.** ACTIONED by downgrade rather than repair. Its only stored output terminates in an uncaught TypeError, so the certification rate it reported is not reproducible. The measurement is now a conjecture asserting only the witnessed lower bound of 11026, with the rate explicitly not claimed. If the computation is repaired it can be promoted back.
 
 - Step 4, the honest question: meas:frag was the claim I could not have defended, which is why it was downgraded in the same turn rather than recorded as pending.
+
+- **Referee A: no related work section.** ACTIONED. Four paragraphs covering interface theories, constraint satisfaction, financial contract formalisms, and what is absent from the literature.
