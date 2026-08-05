@@ -32,13 +32,29 @@ for lab, body in emitted.items():
     if body not in sup:
         bad.append(f"{lab}: not byte-equal in the supplement")
 
-cases = [l for l in emitted if l in art]
+# The article carries four abbreviated cases under case:* labels; the emitter
+# names them sub:cat:*. Map explicitly and require all four -- an empty list
+# here once meant "nothing to check" and passed.
+CASES = {
+    "sub:cat:dex:uniswap": "case:dex:uniswap",
+    "sub:cat:lsd:lido":    "case:lsd:lido",
+    "sub:cat:bri:wbtc":    "case:bri:wbtc",
+    "sub:cat:opt:rysk":    "case:opt:rysk",
+}
+cases = [l for l in CASES if f"\\label{{{CASES[l]}}}" in art]
+if len(cases) != len(CASES):
+    missing = [CASES[l] for l in CASES if l not in cases]
+    bad.append(f"article is missing case labels: {missing}")
 for lab in cases:
     m = re.search(r"\\begin\{measurement\}\\label\{meas:" + re.escape(lab[4:]) + r"\}.*?\\end\{measurement\}",
                   emitted[lab], re.S)
     if not m:
         bad.append(f"{lab}: emitted block has no construction measurement"); continue
-    if m.group(0) not in art:
+    body = m.group(0)
+    # the article renamed the measurement label with the case; compare the
+    # body from the first line after \label to \end{measurement}
+    inner = body.split("}", 2)[-1] if "\\label{" in body else body
+    if inner.strip() not in art:
         bad.append(f"{lab}: the article's construction measurement differs from the emitter")
 
 print(f"emitted profiles: {len(emitted)}   byte-equal in the supplement: {len(emitted) - len([b for b in bad if 'supplement' in b])}")
