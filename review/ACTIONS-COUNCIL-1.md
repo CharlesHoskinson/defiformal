@@ -93,15 +93,45 @@ recorded as an observation about the sample rather than a measurement.
 
 Computed by `formal/v3/coverage.mjs`, committed with the claim.
 
+### MAJOR 4, 5 and 6 — the three findings against the new propositions, all upheld
+
+Verified against the predicates rather than the prose, by
+`formal/v3/verify-propositions.mjs` and `verify-downward.mjs`.
+
+**4 — upheld.** Both witnesses of `prop:neither` reproduce exactly. The
+inference did not: non-closure invalidates *monotone greedy search*, not search.
+Enumeration by increasing cardinality with a fresh admissibility test finds a
+minimum-size sound cover at size six. The proposition now states the closure
+facts alone, and a remark says precisely what they forbid and what they do not.
+
+**5 — upheld, and sharpened past the proposed fix.** A clutter is an antichain of
+minimal forbidden sets and is not downward closed; the model class is. But the
+auditor's replacement would still have been wrong for the *full* predicate.
+Separating the two: over the 16,384 subsets of a 14-element universe, 15,872
+model the listed clutter and **none** has a subset that does not, while under the
+listed rows together with the conditional ones 6,580 are prohibition-free and
+**1,708** have a subset that is not, the smallest witness being `{Oa,Li,Ex}`
+arming `X18` on removal of `Ex`. Downward closure is lost entirely to the
+conditional prohibitions — the same division as `meas:whereitfails`, where the
+recorded clutter is nearly inert and the conditional constraints do the work.
+That is now a measurement of its own.
+
+**6 — upheld.** Two defects, both real. The corollary generalised from one
+restricted instance and is now scoped to it. And "the alternatives are exactly
+the choices left open by the disjunctive terms" was false under the paper's own
+definitions: an element may be carried for admissibility while discharging no
+obligation. Admitting four such support elements yields **60 further** minimal
+constructions, among them one carrying a constant-product element that
+discharges no obligation of a lending market and is present because the price
+obligation is met by a time-weighted price, which requires it. The count of 60
+is exact over the declared universe and a lower bound over the vocabulary.
+
 ## Not yet actioned — carried to the next firing
 
 | # | severity | finding | disposition |
 |---|---|---|---|
 | 2 | MAJOR | category boundaries called a sampling frame are partly editorial | likely correct; the "& other" category is the clearest case and the lead-in should concede it |
 | 3 | MAJOR | protocol-behaviour claims in the atlas carry no claim-level citations | correct as stated; the citations exist in `expansion/*/01-research.md` and enter the paper with the subsections at stage 6 |
-| 4 | MAJOR | `prop:neither` contains a non sequitur about monotone search | needs adjudication: the proposition's *witnesses* verify, but the inference drawn from them may overreach |
-| 5 | MAJOR | the proof confuses a clutter with its downward-closed model class | needs care; this is a genuine distinction and the parenthetical may be sloppy |
-| 6 | MAJOR | `cor:notthe` generalises from one restricted finite instance | probably correct — the corollary should be scoped to the instance or restated as a conjecture |
 | 8 | MAJOR | `validate.mjs` admits evidence-defective specs | actionable directly in the checker |
 | 12 | MINOR | no sensitivity analysis for candidate-status elements | cheap to run and worth doing |
 
