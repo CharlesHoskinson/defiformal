@@ -23,7 +23,7 @@ function admissibilityClause(v) {
     ? `It is admissible.` : `It is admissible: no requirement term is open, every element is warranted, and it arms no prohibition.`;
   const bits = [];
   if (v.openRequirementTerms.length)
-    bits.push(`it leaves ${v.openRequirementTerms.length === 1 ? "the requirement term" : "the requirement terms"} ${v.openRequirementTerms.map(t => `$${esc(t.replace(/\|/g, "{\\mid}"))}$`).join(", ")} open`);
+    bits.push(`it leaves ${v.openRequirementTerms.length === 1 ? "the requirement term" : "the requirement terms"} ${v.openRequirementTerms.map(t => { const [law, alts] = t.split(":"); return `$${esc(law)}\\!:\\!${(alts ?? "").split("|").map(esc).join("{\\mid}")}$`; }).join(", ")} open`);
   if (v.unwarrantedElements.length)
     bits.push(`${set(v.unwarrantedElements)} ${v.unwarrantedElements.length === 1 ? "has" : "have"} no consumer present`);
   if (v.armedProhibitions.length)
@@ -41,7 +41,7 @@ function compositionClause(v) {
   }
   return ` No composite of at most three corpus protocols equals it; ${c.containedCount === 0
     ? "no corpus protocol is contained in it"
-    : `${num(c.containedCount)} corpus protocols are contained in it, and together they supply every element except ${set(c.notSuppliedByAnyContainedProtocol)}`}.`;
+    : `${num(c.containedCount)} corpus ${c.containedCount === 1 ? "protocol is" : "protocols are"} contained in it, and together they supply every element except ${set(c.notSuppliedByAnyContainedProtocol)}`}.`;
 }
 
 function subsection(spec, v) {
