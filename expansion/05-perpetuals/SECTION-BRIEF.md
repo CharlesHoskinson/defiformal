@@ -118,7 +118,7 @@ The vocabulary resolves ONE axis of venue design well and is blind to the other 
 - Round-one research: `expansion/05-perpetuals/01-research.md`
 - Obligation specs: `expansion/05-perpetuals/specs/`
 - Verdicts: `expansion/05-perpetuals/verdicts.json`
-- Knowledge graph: `expansion/05-perpetuals/graphify-out/graph.json` — 37 nodes, 36 links
+- Knowledge graph: `expansion/05-perpetuals/graphify-out/graph.json` — 49 nodes, 46 links
 
 ---
 

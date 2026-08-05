@@ -144,7 +144,7 @@ The brief asks whether 'In'/'Ba'/'Rf'/'Ag' over-resolves this category. It does 
 - Round-one research: `expansion/08-intents/01-research.md`
 - Obligation specs: `expansion/08-intents/specs/`
 - Verdicts: `expansion/08-intents/verdicts.json`
-- Knowledge graph: `expansion/08-intents/graphify-out/graph.json` — 38 nodes, 37 links
+- Knowledge graph: `expansion/08-intents/graphify-out/graph.json` — 50 nodes, 47 links
 
 ---
 

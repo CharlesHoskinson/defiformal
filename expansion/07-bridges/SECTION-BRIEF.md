@@ -132,7 +132,7 @@ The 'Xm'/'Xf'/'Of' split is far too coarse, and the evidence is that the top thr
 - Round-one research: `expansion/07-bridges/01-research.md`
 - Obligation specs: `expansion/07-bridges/specs/`
 - Verdicts: `expansion/07-bridges/verdicts.json`
-- Knowledge graph: `expansion/07-bridges/graphify-out/graph.json` — 38 nodes, 37 links
+- Knowledge graph: `expansion/07-bridges/graphify-out/graph.json` — 50 nodes, 47 links
 
 ---
 

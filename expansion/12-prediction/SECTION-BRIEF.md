@@ -124,7 +124,7 @@ Two structural gaps and one measurement finding. (1) There is no element for CON
 - Round-one research: `expansion/12-prediction/01-research.md`
 - Obligation specs: `expansion/12-prediction/specs/`
 - Verdicts: `expansion/12-prediction/verdicts.json`
-- Knowledge graph: `expansion/12-prediction/graphify-out/graph.json` — 25 nodes, 16 links
+- Knowledge graph: `expansion/12-prediction/graphify-out/graph.json` — 52 nodes, 46 links
 
 ---
 

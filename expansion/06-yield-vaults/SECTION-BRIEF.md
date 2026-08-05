@@ -123,7 +123,7 @@ This category exposes a missing LEVEL, not a missing element, and that is the mo
 - Round-one research: `expansion/06-yield-vaults/01-research.md`
 - Obligation specs: `expansion/06-yield-vaults/specs/`
 - Verdicts: `expansion/06-yield-vaults/verdicts.json`
-- Knowledge graph: `expansion/06-yield-vaults/graphify-out/graph.json` — 37 nodes, 36 links
+- Knowledge graph: `expansion/06-yield-vaults/graphify-out/graph.json` — 49 nodes, 46 links
 
 ---
 

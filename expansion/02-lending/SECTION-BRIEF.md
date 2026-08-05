@@ -36,6 +36,7 @@ The answer to the assigned question, plainly: Aave V3 and Compound V3 do not pro
 
 - Round-one research: `expansion/02-lending/01-research.md`
 - Obligation specs: `expansion/02-lending/specs/`
+- Knowledge graph: `expansion/02-lending/graphify-out/graph.json` — 57 nodes, 54 links
 
 ---
 

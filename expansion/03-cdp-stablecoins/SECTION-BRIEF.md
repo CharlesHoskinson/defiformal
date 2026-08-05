@@ -117,7 +117,7 @@ Two structural failures. (1) Monetary policy. Every protocol here sets a rate to
 - Round-one research: `expansion/03-cdp-stablecoins/01-research.md`
 - Obligation specs: `expansion/03-cdp-stablecoins/specs/`
 - Verdicts: `expansion/03-cdp-stablecoins/verdicts.json`
-- Knowledge graph: `expansion/03-cdp-stablecoins/graphify-out/graph.json` — 23 nodes, 16 links
+- Knowledge graph: `expansion/03-cdp-stablecoins/graphify-out/graph.json` — 32 nodes, 20 links
 
 ---
 

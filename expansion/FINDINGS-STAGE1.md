@@ -166,17 +166,92 @@ recorded residues for one protocol are refuted outright.
 
 ---
 
+## 02 · Lending — the rate gap is eight instruments, and the delegate mandate is confirmed
+
+**Both tiebreak questions resolve, from source, not from search** (this lane ran
+after the WebSearch budget was exhausted, so every citation is a direct fetch of
+raw repository source or the GitHub API — narrower than a search lane, and
+harder evidence).
+
+**The price of credit is not one gap.** Five protocols, five different loci for
+the setter: a bounded mutable parameter (Aave V3, `MAX_BORROW_RATE = 1000%`,
+kink ∈ [1%,99%], `slope1 ≤ slope2`); a **compile-time constant nobody can
+change** (Morpho's `AdaptiveCurveIrm`, a closed-loop controller whose
+`rateAtTarget` drifts at 50/yr toward 90% utilisation within [0.1%, 200%]); **a
+live read of another protocol's state variable** (SparkLend's kink is an
+`immutable` spread over Sky's `pot.dsr()`/`susds.ssr()`, so Sky moves the rate
+with no SparkLend transaction at all); an **entirely unbounded** timelocked
+parameter (JustLend's `updateJumpRateModel` has no maximum, no kink bounds, no
+shape constraint); and **no protocol-level rate whatever** (Maple, where
+`_interestRate` is a field of a bilaterally accepted loan indenture). Four axes
+separate them — memory (function vs controller), setter locus, bounding, and
+latency — and no two protocols agree on all four. **Combined with the CDP lane
+the run has now distinguished eight rate instruments against one corpus residue
+line.** A single new element would name three of five and name them identically.
+
+**The delegated mandate: third lane confirmed, five instances, first four parts
+in code at every one.** Aave `RiskSteward` (rates, caps, LTV, e-modes, oracle
+caps — one reusable `_validateParamUpdate` carrying `minDelay` + `maxPercentChange`
+per parameter per asset); MetaMorpho curator+allocator (asymmetric queue
+timelock, 1 day–2 weeks); SparkLend `CapAutomator` (asymmetric cooldown);
+SparkLend ALM `RateLimits` (token bucket); Maple pool delegate. JustLend has
+none — and that dates the primitive: it is a **later layer in separate
+repositories**, absent from the Compound-V2 vintage.
+
+**Five things the yield and CDP lanes could not see, all of which change the
+schema:**
+1. the agent may be an **automaton** (Aave's `AaveStewardInjector*` + `RiskOracle`
+   + Chainlink/Gelato);
+2. the delay is **asymmetric** — instant to tighten, slow to loosen — rediscovered
+   independently by Morpho and Spark;
+3. the fourth slot is **four different mechanisms**, not one: debounce
+   (frequency), queue-timelock (latency), cooldown (one-sided frequency), token
+   bucket (**throughput**). "Rate-of-change limit" as a single field conflates
+   *how often* with *how much per unit time*;
+4. the agent may be **bonded**, not merely reputable — Maple's delegate posts
+   first-loss cover and `requestFunds` blocks origination below `minCoverAmount`,
+   so **"accountable only reputationally" is refuted in code** and must become an
+   optional sixth slot (stake) whose default is empty;
+5. **the bound itself may be revocable** — `setUnlimitedRateLimitData` lifts
+   Spark's cap and flow limit in one admin transaction with no delay. The schema
+   has a slot for revoking the *agent* and none for revoking the *bound*.
+
+**Consequence for stage 4, and it is the run's structural result.** Findings 1
+and 2 converge on **one field list** — setter locus, bound, latency, stake, and
+who may lift the limit. Aave proves they are one gap rather than two:
+`RiskSteward.updateRates` *is* the rate instrument implemented as a bounded
+mandate, through the same validator that bounds its caps and its LTVs.
+
+**Corpus deltas.** Morpho Blue **is not admin-less** — `Morpho.sol` has an
+`owner` with `setOwner`/`enableIrm`/`enableLltv`/`setFee`(≤25%)/`setFeeRecipient`;
+the true claim is *non-upgradeable, unpausable, and monotonic* (enabling can
+never be undone, and no owner function reaches an existing market). The
+Aave≡SparkLend identity claim is refuted on the one axis the corpus itself says
+matters most. The close-factor residue is filed under JustLend but is
+category-wide with two shapes — Aave's is *dynamic*
+(`CLOSE_FACTOR_HF_THRESHOLD = 0.95`, a `2000e8` size floor, a dust rule),
+JustLend's a constant in [5%,90%]. Spark's org moved to `sparkdotfi` and its
+core default branch is `dev`. **Three licence traps:** JustLend declares **no
+licence at all**, Maple's loan core is **BUSL-1.1** despite `NOASSERTION` repo
+metadata, and only Morpho (GPL-2.0, post-relicensing from BUSL-1.1) is
+unambiguously reproducible.
+
+---
+
 ## Cross-lane convergence, so far
 
 | finding | lanes | what it implies |
 |---|---|---|
-| a **bounded delegate mandate** — named agent, domain, cap, rate-of-change limit, revocation | 06 yield, 03 CDP | a schema over elements, not an element; the constraint language cannot state "an agent may move X within these bounds" |
-| **containment between protocols** — routers routing to routers, curators allocating over protocols | 08 intents, 06 yield | composition is modelled as union between peers; there is no relation for one protocol consuming another |
-| **the holder, not the facility** — who holds a key, and how many of them | 07 bridges, 03 CDP | control elements are unary predicates where the risk is a property of a party; the carrier has no party sort |
+| a **bounded delegate mandate** — named agent, domain, cap, rate-of-change limit, revocation | 06 yield, 03 CDP, **02 lending (5 instances, 4 parts in code at each)** | **CONFIRMED — a schema over elements, not an element.** Needs a 6th slot (agent stake, default empty), a 4-way split of the rate-of-change slot (debounce / timelock / cooldown / token bucket), an automaton-valued agent, and a slot for revoking *the bound* |
+| **the price of credit** — no element names a rate | 03 CDP (4 instruments), **02 lending (5 more, incl. two the CDP lane lacked)** | **eight distinguishable instruments against one corpus residue line.** Same field list as the mandate schema — Aave's `RiskSteward.updateRates` is the rate instrument *implemented as* a bounded mandate, so these are one gap, not two |
+| **containment between protocols** — routers routing to routers, curators allocating over protocols | 08 intents, 06 yield, **02 lending** | composition is modelled as union between peers; there is no relation for one protocol consuming another. Lending exhibits it three more times: MetaMorpho vaults deposit into Blue markets; SparkLend's rate *is* Sky's rate; Spark ships oracles into Morpho and Maple runs reward programmes there |
+| **the holder, not the facility** — who holds a key, and how many of them | 07 bridges, 03 CDP, **02 lending (unresolved)** | control elements are unary predicates where the risk is a property of a party; the carrier has no party sort. Lending could not close this either — source proves *what* a role may do and is silent on *who is* the role |
 | **discharge by construction** | 10 options | a requirement term can be closed by making the obligation unable to arise; the language admits only satisfaction by a named element |
 
 ---
 
 ## Pending lanes
 
-02-lending · 09-rwa · 11-fiat-stablecoins
+09-rwa · 11-fiat-stablecoins
+
+*(02-lending landed 2026-08-04; research at `C:\defiformal-work\02-lending\01-research.md`, 1372 lines.)*

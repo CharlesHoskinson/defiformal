@@ -124,9 +124,10 @@ The vocabulary can express the WRAPPER and none of the WRAPPED. Across all five,
 ## Sources
 
 - Round-one research: `expansion/09-rwa/01-research.md`
+- Round-two research: `expansion/09-rwa/01-research-round2.md`
 - Obligation specs: `expansion/09-rwa/specs/`
 - Verdicts: `expansion/09-rwa/verdicts.json`
-- Knowledge graph: `expansion/09-rwa/graphify-out/graph.json` — 121 nodes, 118 links
+- Knowledge graph: `expansion/09-rwa/graphify-out/graph.json` — 133 nodes, 128 links
 
 ---
 

@@ -117,7 +117,7 @@ The direct answer on Vl: it is required by four of the five and adequate in none
 - Round-one research: `expansion/04-liquid-staking/01-research.md`
 - Obligation specs: `expansion/04-liquid-staking/specs/`
 - Verdicts: `expansion/04-liquid-staking/verdicts.json`
-- Knowledge graph: `expansion/04-liquid-staking/graphify-out/graph.json` — 36 nodes, 15 links
+- Knowledge graph: `expansion/04-liquid-staking/graphify-out/graph.json` — 53 nodes, 29 links
 
 ---
 
