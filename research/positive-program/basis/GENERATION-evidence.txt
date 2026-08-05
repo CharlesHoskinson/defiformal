@@ -1,0 +1,292 @@
+=== NON-SUBSTANTIVE basis operators (bare builtin aliases, excluded as templates) ===
+   L1/common.collValue  ==  (amount * price)
+   L1/common.cpProduct  ==  (r0 * r1)
+   L3/common.mintPyAmount  ==  syToAsset(syIn, index, scale)
+   L3/common.redeemSyFromPy  ==  assetToSy(py, index, scale)
+   L4/common.applyEscrowDeposit  ==  (escrow + amt)
+   L4/common.applyEscrowWithdraw  ==  (escrow - amt)
+   L4/common.applyBurnOnSrc  ==  (srcSupply - amount)
+   L4/common.applyMintOnDst  ==  (dstSupply + amount)
+   L5/common.applyMintSupply  ==  (totalSupply + amt)
+   L5/common.applyBurnSupply  ==  (totalSupply - amt)
+   L5/common.assetsFromNav  ==  mulDivDown(shares, price, scale)
+   L6/common.isRestricted  ==  get(restricted, addr)
+   L6/common.setRestricted  ==  put(restricted, addr, flag)
+
+protocol specs           : 51
+definitions tested       : 820
+definitions P-generated  : 743
+definitions NOT generated: 77
+
+SPECS FULLY GENERATED    : 27
+SPECS WITH RESIDUE       : 24
+
+-- clean --
+   L1/aave_v3
+   L1/pancakeswap
+   L1/raydium_cp
+   L1/sparklend
+   L1/uniswap_v4
+   L2/lido
+   L3/hyperliquid
+   L3/lighter
+   L3/pendle
+   L3/spark
+   L3/yearn
+   L4/across
+   L4/cctp
+   L4/coinbase
+   L4/cow
+   L4/layerzero
+   L4/oneinch
+   L4/wbtc
+   L5/centrifuge
+   L5/hegic
+   L5/ondo
+   L6/azuro
+   L6/grove
+   L6/pyusd
+   L6/usdc
+   L6/usdg
+   L6/usdt
+
+-- residue --
+   L1/compound_v3: 2 ungenerated def(s): absorb, step
+   L1/curve: 3 ungenerated def(s): addLiquidity, approxD, step
+   L1/fluid: 2 ungenerated def(s): accrue, step
+   L1/justlend: 11 ungenerated def(s): accrueBlock, borrow, borrowBalance, exchangeRate, healthy, liquidate, mint, redeem, repay, step, underlyingBal
+   L1/maple: 2 ungenerated def(s): accrueLoan, step
+   L1/morpho_blue: 2 ungenerated def(s): liquidate, step
+   L1/uniswap_v2: 3 ungenerated def(s): burn, mint, step
+   L1/uniswap_v3: 2 ungenerated def(s): step, swap0for1
+   L2/babylon: 2 ungenerated def(s): slash, step
+   L2/crvusd: 6 ungenerated def(s): canCreate, createLoan, health, isUnhealthy, liquidate, step
+   L2/eigenlayer: 6 ungenerated def(s): deposit, queueWithdraw, sharesToUnderlying, slash, step, underlyingToShares
+   L2/etherfi: 2 ungenerated def(s): rebase, step
+   L2/liquity: 2 ungenerated def(s): redeem, step
+   L2/sky: 2 ungenerated def(s): drip, step
+   L2/usdd_psm: 3 ungenerated def(s): buyGem, sellGem, step
+   L3/apex: 5 ungenerated def(s): addLiquidity, openLongPos, openShortPos, step, swapOut
+   L3/beefy: 2 ungenerated def(s): step, withdraw
+   L3/convex: 5 ungenerated def(s): claim, depositLP, pending, step, withdrawLP
+   L3/gmx: 4 ungenerated def(s): increaseLong, increaseShort, oiCovered, step
+   L3/huma: 3 ungenerated def(s): depositSenior, processEpoch, step
+   L4/kyber: 2 ungenerated def(s): delegate, step
+   L5/derive: 2 ungenerated def(s): openOption, step
+   L5/panoptic: 2 ungenerated def(s): liquidate, step
+   L6/polymarket: 2 ungenerated def(s): step, tradeYes
+
+constant-folding hard ops excluded (economically inert): 3
+   L1/maple fundLoan: (DELEGATE_COVER / 2)
+   L1/uniswap_v2 init: (100 * 100)
+   L5/panoptic mintLong: (BASE_BPS / 2)
+
+================ EVERY VIOLATING SUBTERM (maximal) ================
+classification counts: {'B-novel': 31, 'A2-inlined-basis-core': 4, 'A1-inlined-basis-body': 11}  total: 46
+[A1-inlined-basis-body   ] L2/babylon          action   slash
+      term : ((field(d, sats) * SLASH_FRACTION_BPS) / BPS)
+      matches basis op: assetsFromIndex
+[A1-inlined-basis-body   ] L2/crvusd           puredef  health
+      term : ((debt * (WAD - LIQ_DISCOUNT)) / WAD)
+      matches basis op: assetsFromIndex
+[A1-inlined-basis-body   ] L2/eigenlayer       puredef  sharesToUnderlying
+      term : ((sh * (bal + BALANCE_OFFSET)) / (ts + SHARES_OFFSET))
+      matches basis op: assetsFromIndex
+[A1-inlined-basis-body   ] L2/eigenlayer       action   slash
+      term : ((maxM * proportion) / WAD)
+      matches basis op: assetsFromIndex
+[A1-inlined-basis-body   ] L2/eigenlayer       action   slash
+      term : ((delegatedShares * slashMag) / maxM)
+      matches basis op: assetsFromIndex
+[A1-inlined-basis-body   ] L2/eigenlayer       action   slash
+      term : ((get(userShares, u) * slashMag) / maxM)
+      matches basis op: assetsFromIndex
+[A1-inlined-basis-body   ] L2/eigenlayer       puredef  underlyingToShares
+      term : ((amount * (priorShares + SHARES_OFFSET)) / (priorBal + BALANCE_OFFSET))
+      matches basis op: assetsFromIndex
+[A1-inlined-basis-body   ] L2/etherfi          action   rebase
+      term : ((tpe * MAX_REBASE_BPS) / BPS)
+      matches basis op: assetsFromIndex
+[A1-inlined-basis-body   ] L2/liquity          action   redeem
+      term : ((boldAmt * WAD) / price)
+      matches basis op: assetsFromIndex
+[A1-inlined-basis-body   ] L2/usdd_psm         action   buyGem
+      term : ((gemAmt * tout) / WAD)
+      matches basis op: assetsFromIndex
+[A1-inlined-basis-body   ] L2/usdd_psm         action   sellGem
+      term : ((gemAmt * tin) / WAD)
+      matches basis op: assetsFromIndex
+[A2-inlined-basis-core   ] L1/justlend         action   accrueBlock
+      term : ((totalBorrows * rateBpsPerBlock) * blocks)
+      matches basis op: seizeCollateral
+[A2-inlined-basis-core   ] L1/maple            action   accrueLoan
+      term : ((outstandingPrincipal * loanRateBps) * dt)
+      matches basis op: seizeCollateral
+[A2-inlined-basis-core   ] L1/morpho_blue      action   liquidate
+      term : ((seizedCol * collPrice) * 10000)
+      matches basis op: seizeCollateral
+[A2-inlined-basis-core   ] L1/uniswap_v2       action   burn
+      term : ((reserve0 - a0) * (reserve1 - a1))
+      matches basis op: twoSlopeRate
+[B-novel                 ] L1/compound_v3      action   absorb
+      term : (col * collPrice)
+[B-novel                 ] L1/curve            puredef  approxD
+      term : (2 * min(x, y))
+[B-novel                 ] L1/curve            puredef  approxD
+      term : (amp * 2)
+[B-novel                 ] L1/curve            puredef  approxD
+      term : (((ann * S) + prodTerm) / (ann + 1))
+[B-novel                 ] L1/fluid            action   accrue
+      term : (rate / 2)
+[B-novel                 ] L1/justlend         puredef  borrowBalance
+      term : (principal * globalIdx)
+[B-novel                 ] L1/justlend         puredef  exchangeRate
+      term : (((cash + borrows) - reserves) * INDEX_BASE)
+[B-novel                 ] L1/justlend         action   liquidate
+      term : (seizeUnderlying * INDEX_BASE)
+[B-novel                 ] L1/justlend         action   mint
+      term : (amount * INDEX_BASE)
+[B-novel                 ] L1/justlend         puredef  underlyingBal
+      term : (cTokens * rate)
+[B-novel                 ] L1/uniswap_v2       action   mint
+      term : ((reserve0 + a0) * (reserve1 + a1))
+[B-novel                 ] L1/uniswap_v3       action   swap0for1
+      term : (amountIn / 1000)
+[B-novel                 ] L2/sky              action   drip
+      term : (SCALE / 10)
+[B-novel                 ] L3/apex             action   addLiquidity
+      term : (baseIn * lpShares)
+[B-novel                 ] L3/apex             action   addLiquidity
+      term : (baseIn * reserveQuote)
+[B-novel                 ] L3/apex             puredef  swapOut
+      term : (y * dx)
+[B-novel                 ] L3/beefy            action   withdraw
+      term : (pool * shares)
+[B-novel                 ] L3/convex           puredef  pending
+      term : (stakedU * (ix - paid))
+[B-novel                 ] L3/gmx              action   increaseLong
+      term : (poolAmount * markPrice)
+[B-novel                 ] L3/gmx              action   increaseShort
+      term : (poolAmount * markPrice)
+[B-novel                 ] L3/gmx              val      oiCovered
+      term : (poolAmount * markPrice)
+[B-novel                 ] L3/gmx              val      oiCovered
+      term : (impactPool * markPrice)
+[B-novel                 ] L3/huma             action   depositSenior
+      term : (MAX_SENIOR_RATIO * max(1, field(tranches, junior)))
+[B-novel                 ] L3/huma             action   processEpoch
+      term : (seniorRedeemReq * fillS)
+[B-novel                 ] L3/huma             action   processEpoch
+      term : (juniorRedeemReq * fillJ)
+[B-novel                 ] L4/kyber            action   delegate
+      term : (amountIn * 2)
+[B-novel                 ] L5/derive           action   openOption
+      term : (qty * MAINT_PER_SHORT)
+[B-novel                 ] L5/panoptic         action   liquidate
+      term : (collat / 2)
+[B-novel                 ] L6/polymarket       action   tradeYes
+      term : (yesAmt * price)
+[B-novel                 ] L6/polymarket       action   tradeYes
+      term : (yesAmt * price)
+[B-novel                 ] L6/polymarket       action   tradeYes
+      term : (yesAmt * price)
+lane primitives total (distinct names): 183
+unassigned: []
+
+--- family census over the lane commons ---
+   CTOR                 17
+   F1                   19
+   F2                   19
+   F3                   15
+   F4                   13
+   F5                   9
+   F6                   2
+   F7                   17
+   F8                   7
+   KERNEL               8
+   N1-swap              3
+   N10-authz            5
+   N2-markToMarket      3
+   N3-rateCurve         2
+   N4-tranche           4
+   N5-custody           12
+   N6-onceOnly          2
+   N7-limitOrder        6
+   N8-delegation        6
+   N9-ledger            14
+
+   in F1..F8 : 101
+   KERNEL    : 8
+   OUTSIDE P : 57   (10 new families)
+
+--- INDEPENDENCE: is F definable from the OTHER families? ---
+    F is DEPENDENT iff every F-op body is a term over
+    (ops of families != F) U KERNEL U plumbing, with hard arithmetic banned.
+  F1:  26 ops | INDEPENDENT -- 21 op(s) irreducible outside F1. e.g.:
+        L1.mulDivDown: needs raw ['imul', 'idiv']
+        L1.mulDivUp: needs raw ['imul', 'idiv']
+        L1.sharesFromAssets: needs F1 op ['mulDivDown']
+  F2:  19 ops | DEPENDENT -- every op reduces to other families + kernel + plumbing.  NOT a primitive.
+  F3:  17 ops | INDEPENDENT -- 8 op(s) irreducible outside F3. e.g.:
+        L3.currentLimit: needs raw ['imul']
+        L3.canConsume: needs F3 op ['currentLimit']
+        L3.consume: needs F3 op ['currentLimit']
+  F4:  15 ops | INDEPENDENT -- 1 op(s) irreducible outside F4. e.g.:
+        L6.supplyConserved: needs F4 op ['sumMap']
+  F5:  11 ops | INDEPENDENT -- 9 op(s) irreducible outside F5. e.g.:
+        L1.seizeCollateral: needs raw ['imul']
+        L1.isHealthy: needs raw ['imul']
+        L2.collateralRatio: needs raw ['imul', 'idiv']
+  F6:   2 ops | DEPENDENT -- every op reduces to other families + kernel + plumbing.  NOT a primitive.
+  F7:  17 ops | INDEPENDENT -- 11 op(s) irreducible outside F7. e.g.:
+        L1.accrueIndex: needs raw ['imul']
+        L2.accrueByIndex: needs raw ['imul', 'idiv']
+        L2.sharesFromIndex: needs raw ['imul', 'idiv']
+  F8:   7 ops | INDEPENDENT -- 3 op(s) irreducible outside F8. e.g.:
+        L5.europeanPayoff: needs F8 op ['callPayoff', 'putPayoff']
+        L5.signedSettlement: needs F8 op ['europeanPayoff']
+        L6.redeemPayout: needs raw ['imul']
+maximal violating subterms : 46
+  INLINE  (basis covers it) : 27
+  MISSING (basis lacks it)  : 19
+
+--- MISSING, grouped by the family that must be added ---
+     9  N2 mark-to-market
+     4  N1 trading function
+     3  N1 trading function (StableSwap D)
+     1  N2 mark-to-market (inverse)
+     1  N4 tranche subordination
+     1  N2 mark-to-market (margin per unit)
+
+SPEC VERDICTS over 51 formalised protocols
+  generated outright                    : 27
+  generated after re-folding inlined ops: 14
+  NOT generated (needs a new family)    : 10
+      L1/compound_v3: N2 mark-to-market
+      L1/curve: N1 trading function (StableSwap D)
+      L1/morpho_blue: N2 mark-to-market
+      L1/uniswap_v2: N1 trading function
+      L2/liquity: N2 mark-to-market (inverse)
+      L3/apex: N1 trading function
+      L3/gmx: N2 mark-to-market
+      L3/huma: N4 tranche subordination
+      L5/derive: N2 mark-to-market (margin per unit)
+      L6/polymarket: N2 mark-to-market
+
+  TOTAL GENERATED (modulo inlining)     : 41 / 51
+
+--- specs generated only after re-folding ---
+      L1/fluid
+      L1/justlend
+      L1/maple
+      L1/uniswap_v3
+      L2/babylon
+      L2/crvusd
+      L2/eigenlayer
+      L2/etherfi
+      L2/sky
+      L2/usdd_psm
+      L3/beefy
+      L3/convex
+      L4/kyber
+      L5/panoptic

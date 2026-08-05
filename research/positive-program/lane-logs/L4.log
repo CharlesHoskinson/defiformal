@@ -1,0 +1,33 @@
+I'll start by loading the Quint modeling/lang skills and surveying the L4 repos and existing layout so we can model Bridges + Intents correctly.Next I'll load the from-code workflow and sample peer lanes, then dig into the bridge/intent supplements and core contracts.I'll pull the bridge and intent supplement profiles and map the core economic state machines in each available repo.I'll extract core state and transitions from the available protocol contracts next, then draft shared Quint shapes.Peer lanes already have specs — I'll match their style before writing L4.Writing shared primitives and the bridge/intent specs now.Typechecking every spec next, then running invariants.Quint binds `val` only to the next expression in `all {}` — I'll nest the action bodies so bindings stay in scope.Across collides with common's `DepositOrder` shape — fixing that type mismatch next.CoW was dropping token0 on settle — routing the fill to the counterparty now.All eight specs typecheck and invariants hold. Writing the insight ledger now.## L4 complete
+
+### Deliverables
+
+| Path | Content |
+|---|---|
+| `quint-models/L4/common.qnt` | Shared primitives (wrap, burn-mint, once-only msg, optimistic fill, signed order, batch clearing, delegated intent, rate limit, escrow) |
+| `quint-models/L4/{wbtc,coinbase,cctp,layerzero,across,cow,oneinch,kyber}.qnt` | 8 protocol specs |
+| `research/positive-program/insights/INSIGHT-L4.md` | Structured insight ledger |
+
+All 9 `.qnt` files **typecheck**. At least one invariant per protocol **holds** under `quint run --max-steps≥15 --max-samples≥100`.
+
+### Modelled from code (8)
+
+**Bridges:** WBTC (two-phase merchant/custodian), Coinbase (rate-limited mint + freeze), CCTP (burn-mint + attested once-only), LayerZero OFT (send→verify→lzReceive), Across (deposit/fill/refund).
+
+**Intents:** CoW (batch clearing + solver), 1inch (taker fill + remaining), Kyber Smart Intent (delegate→execute status machine).
+
+### Profile-only (7, no repo)
+
+Hyperliquid, BTCB, LiquidMesh, Binance Wallet, OKX DEX, Jupiter, DFlow.
+
+### Highest-signal findings (ledger §§6–8)
+
+1. **`Xf` collapses four non-isomorphic machines** — custodial mint, burn-mint, optimistic fill, escrow-ledger.
+2. **`Xm` is not a protocol constant on LayerZero** — verification is per-app DVN config.
+3. **Across is Of, not burn-mint** — closer to intent fill + reimbursement than to CCTP.
+4. **Missing symbols:** rate-limited mint, two-phase custodian request, safety/liveness role split, order-flow ownership, positive “no-freeze” guarantee.
+5. **CoW conservation bug as method finding:** first `token0Conserved` failed until settlement was modelled as pairwise transfer (not burn) — matches real GPv2 vault transfers.
+
+### Invariant snapshot
+
+All primary conservation/once-only/remaining invariants pass. One intentional modelling hole documented: LayerZero `oftSupplyConserved` assumes the **OFT burn-mint** path and does **not** hold for OFTAdapter lockbox without counting escrow.

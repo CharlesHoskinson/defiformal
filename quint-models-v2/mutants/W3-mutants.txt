@@ -1,0 +1,47 @@
+CONTRAST SET MEMBERS -- build and run instructions
+==================================================
+
+These files are member M1 of each protocol's contrast set M, declared in the
+CONTRAST SET block of the corresponding spec header.  M1 is the v1 shortcut body
+substituted at the single definition site; everything else in the file -- the T0
+vectors, every invariant, every witness -- is carried over unchanged.  That is
+the point: what survives and what dies is the measurement.
+
+Regenerate (idempotent, reads the current specs):
+
+    python3 mutants/w3_build_mutants.py      (run from quint-models-v2/)
+    # substitutions:
+    #   liquity.qnt     action redeemCollateral(boldAmt)  ->  action redeem(u, boldAmt)
+    #                   step:  redeemCollateral(boldAmt)  ->  redeem(u, boldAmt)
+    #                   lastTouched' = r.touched          ->  lastTouched' = 1
+    #   polymarket.qnt  action matchOrders(taker)         ->  action tradeYes(s,b,amt,prc)
+    #                   step:  matchOrders(TAKERS[ti])    ->  tradeYes(u, ..., ti + 1)
+    #   both            import path ./kernel -> ../kernel, ./sorted -> ../sorted
+
+Run (each line must produce the verdict stated in the spec header):
+
+    quint run --main=liquity    --invariant=<I> --max-steps=20 --max-samples=20000 \
+        mutants/liquity_M1.qnt
+    quint run --main=polymarket --invariant=<I> --max-steps=20 --max-samples=20000 \
+        mutants/polymarket_M1.qnt
+
+THE HEADLINE RESULT, in one line per protocol:
+
+  liquity     M1 passes inv_T0, inv_conservation, inv_bounds, inv_listCanonical,
+              inv_redeemPrefix and inv_all.  It dies to wit_multiTrove alone.
+              Before `lastTouched` existed it also VIOLATED wit_live_redeemPrefix
+              and wit_prefixStrict — i.e. it DISCHARGED those obligations and
+              looked healthy — by reaching the same states in three calls
+              instead of one.  A single-state predicate cannot say "in one
+              transition"; a selection-shaped mechanism needs an arity label.
+
+  polymarket  M1 passes inv_T0, inv_conservation, inv_ctfBalanced,
+              inv_matchConserves and inv_all.  It dies to every value-signature
+              witness -- wit_mintSettlement, wit_mergeSettlement,
+              wit_partialPrefix, wit_used_takingAmount -- and to wit_branch_mint
+              and wit_branch_merge, because a bilateral transfer at a driver's
+              price never moves lockedCollateral and never derives a match type.
+
+In both cases the headline conservation invariant survives the deleted
+mechanism.  That is the v1 failure mode reproduced deliberately, and it is why
+the acceptance test is the witness table and not the invariant table.

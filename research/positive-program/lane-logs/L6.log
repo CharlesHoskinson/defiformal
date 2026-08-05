@@ -1,0 +1,24 @@
+I'll load the Quint modeling skills first, then map the L6 protocol repos and supplement profiles before writing specs.Next I'll load the from-code modelling guide and scan the supplement profiles plus any existing L6 work.I'll catalog the protocol source trees and sample an existing lane's Quint style next.Reading core contracts for fiat stablecoins and prediction markets to extract state machines.I have enough structure to write the shared module and protocol specs. Creating them now.Writing `common.qnt` and the protocol specs.Renaming reserved identifiers (`to`, `keys`, `next`) across the specs.All specs typecheck. Running invariants next.Fixing Azuro resolve double-counting of reinforcement, and tightening the USDT reserve invariant so the attested-fail case is explicit.Resolve was removing winner liability from free while claims still debit free — correcting that accounting.Azuro invariants pass. Writing the insight ledger and doing a final verification pass.## L6 complete
+
+### Deliverables
+| Path | Status |
+|---|---|
+| `quint-models/L6/common.qnt` | shared primitives |
+| `quint-models/L6/{usdt,usdc,usdg,pyusd,polymarket,azuro,grove}.qnt` | 7 protocol specs |
+| `research/positive-program/insights/INSIGHT-L6.md` | insight ledger |
+
+All 8 `.qnt` files **typecheck**. Primary invariants **pass** under `quint run --max-steps=20 --max-samples=200`.
+
+### Profile-only (no repo)
+- **USD1**, **Kalshi**, **Steakhouse Risk Curators**
+
+### Empirical highlights
+1. **Fiat tokens share one on-chain shape** (`FIAT_TOKEN_LEDGER` + off-chain reserve shadow). PYUSD ≡ USDG up to constants (PaxosTokenV2).
+2. **`inv_reserve_covers` fails on USDT** when `attestReserve` is free — 1:1 backing is not an on-chain invariant (`At` is prose).
+3. **`Fz` splits**: USDC blacklist keeps supply; USDT/Paxos can wipe/burn.
+4. **Strongest new primitive**: `LINEAR_REFILL_RATE_LIMIT` — same math in Paxos `RateLimit.sol` and Grove `RateLimits.sol`.
+5. **Prediction markets are two machines**: Polymarket CTF complementary split vs Azuro LP bookmaker — not the same construction.
+6. **Grove is mis-bucketed**: ALM credit-line allocator under Sky, not a prediction market.
+
+### Documented invariant failure
+USDT `inv_reserve_covers` is intentionally violable via off-chain attest under-backing — recorded in ledger §4 as a first-class finding, not a modelling bug.

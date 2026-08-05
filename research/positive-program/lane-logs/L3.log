@@ -1,0 +1,28 @@
+I'll load the Quint modelling skills and inspect the L3 sources (perp + yield repos, supplements, and target directories) so we can model from code into typechecked specs and an insight ledger.Loading the from-code modelling guide and the perp/yield supplements, then surveying core contracts and any existing lane patterns.Extracting core state machines from the highest-signal contracts next.I have enough structure from the core contracts. Writing `common.qnt` and the protocol specs next.Writing shared primitives and protocol specs now.Typechecking every spec and fixing errors.Fixing import paths, reserved-name collisions, and the cyclic `advanceFunding` shadowing.All specs typecheck. Running invariants next.Investigating the three invariant violations and fixing the models.Fixing model bugs in Lighter and Beefy, and tightening Hyperliquid’s invariant to match the code’s real guarantees.Writing the insight ledger with all findings.## L3 deliverables complete
+
+### Specs (`quint-models/L3/`)
+| File | Protocol | Core machine |
+|---|---|---|
+| `common.qnt` | shared | ShareVault, MarginPosition, Funding, AccrualIndex, queues, RateLimit, Tranches, PT/YT |
+| `apex.qnt` | ApeX | AMM margin perp (open/liquidate/funding) |
+| `gmx.qnt` | GMX v2 | Pool-backed OI + impact pool |
+| `lighter.qnt` | Lighter | Deposit/priority/desert L1 surface |
+| `hyperliquid.qnt` | Hyperliquid | Bridge2 only (perp engine not in repo) |
+| `yearn.qnt` | Yearn v3 | Multi-strategy idle/debt shares |
+| `beefy.qnt` | Beefy | Single-strategy share vault |
+| `convex.qnt` | Convex | 1:1 gauge stake + permanent CRV lock |
+| `pendle.qnt` | Pendle | PT/YT + HWM pyIndex |
+| `huma.qnt` | Huma v2 | Tranches + epoch senior-first redeem |
+| `spark.qnt` | Spark ALM | Rate-limit capital envelope |
+
+All **11 files typecheck**. Primary invariants **pass** under `quint run` (200×20 samples).
+
+### Ledger
+`research/positive-program/insights/INSIGHT-L3.md` — full 10-section schema.
+
+### Highest-value findings
+1. **`bridgeCoversPending` fails on Hyperliquid Bridge** — validators can over-subscribe pending withdrawals; code only checks per-request/per-finalize.
+2. **Vocabulary collapses** — `Ob` covers AMM / proven CLOB / consensus CLOB / no-book pool; `Wq` covers censorship deadline vs dispute vs epoch waterfall; `Ix` covers HWM vs stream vs implicit ratio; `Sh` covers NAV / par / irredeemable wrap.
+3. **No symbol for** permanent escrow (cvxCRV), rate-limit envelope (Spark), desert mode (Lighter), position impact pool (GMX), strategy-debt map (Yearn).
+4. **Code vs profile** — ApeX repo is AMM-perp not zkLink omni; Hyperliquid open source is bridge-only; Spark clone is ALM controller not sUSDS.
+5. **Profile-only** (no clone): Aster, edgeX, Jupiter Perp, CIAN, Steakhouse.
