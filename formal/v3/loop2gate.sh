@@ -60,6 +60,8 @@ case "$df" in *"DOMAIN GRAPH FRESH"*) echo "  ok   domain graph regenerates iden
 echo
 lc=$(python3 formal/v3/lane-coverage.py 2>&1 | tail -1); echo "  $lc"
 case "$lc" in *"LANE COVERAGE COMPLETE"*) echo "  ok   every lane document is in its lane graph" ;; *) echo "  FAIL a lane document is missing from its graph"; fail=1 ;; esac
+fp=$(node formal/v3/verify-footprints.mjs 2>&1 | tail -1); echo "  $fp"
+case "$fp" in *"FOOTPRINTS TABLE VERIFIED"*) echo "  ok   footprints table matches the corpus" ;; *) echo "  FAIL footprints table"; fail=1 ;; esac
 ct=$(node formal/v3/verify-cattable.mjs 2>&1 | tail -1); echo "  $ct"
 case "$ct" in *"CATEGORY TABLE VERIFIED"*) echo "  ok   category table matches the corpus cell by cell" ;; *) echo "  FAIL category table"; fail=1 ;; esac
 sc=$(node formal/v3/verify-setclaims.mjs 2>&1 | tail -1); echo "  $sc"
