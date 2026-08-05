@@ -162,13 +162,38 @@ all twelve. It is idempotent.
 
 Append one line per firing to `LEDGER.md`. Never rewrite history there.
 
+## WHERE EACH CATEGORY IS (2026-08-04, after LOOP-1 #2)
+
+| lane | research | stage 2 | stage 3 |
+|---|---|---|---|
+| 01-spot-exchange | done, 1508 lines | running | |
+| 02-lending | **still running** | | |
+| 03-cdp-stablecoins | done | running | |
+| 04-liquid-staking | done | running (3 of 5 specs) | |
+| 05-perpetuals | done | done | **done** |
+| 06-yield-vaults | done | done | **done** |
+| 07-bridges | done | done | **done** |
+| 08-intents | done | done | **done** |
+| 09-rwa | done | running | |
+| 10-options | done | running (3 of 5 specs) | |
+| 11-fiat-stablecoins | done | running | |
+| 12-prediction | done | done | **done** |
+
+**Stage-3 running total: 25 constructions, 503 obligations, 217 covered, 286
+residue, 43.1% coverage; 18 PARTIAL, 7 INADMISSIBLE, 0 COMPLETE.**
+
 ## CURRENT NEXT ACTION
 
-Seven lanes have research on disk (01, 04, 05, 06, 08, 10, 12); five are still
-running (02, 03, 07, 09, 11). Stage 2 is launched for 05, 06, 08, 12 and should
-be launched for 04 and 10 next, then for each remaining lane as it lands. Run
-`bash /root/ingest.sh` after each completion — it is idempotent and builds the
-knowledge graph.
+Run `bash /root/stage3.sh <slug>…` for each lane whose five stage-2 specs have
+landed — it copies, validates, checks and writes `verdicts.json`. Then commit.
+Four lanes are one or two specs short (04, 07 now complete, 10 at 3 of 5) and
+02-lending has no research yet; nudge that agent rather than relaunching it,
+since it has the evidence and only needs to write.
+
+Once eight or more lanes have verdicts, start **stage 4** from
+`node formal/v3/residue.mjs /root/defiformal/expansion` — the residue is the
+input and it is already 286 items. Do not wait for all twelve: the four
+cross-lane convergences below are already better evidenced than any single lane.
 
 `FINDINGS-STAGE1.md` holds the per-lane findings that bear on the formalism, as
 they arrive. It is stage 4's input and the reason the lane summaries are not
