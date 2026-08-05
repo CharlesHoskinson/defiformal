@@ -52,9 +52,9 @@ function subsection(spec, v) {
   L.push(`\\subsection{${esc(p.title ?? spec.app)}}\\label{sub:${label}}`);
   L.push("");
   if (p.blurb) { L.push(p.blurb.trim()); L.push(""); }
-  L.push(`\\begin{measurement}[Construction]\\label{meas:${label}}`);
-  L.push(`The construction $X = ${set(v.construction)}$ has canonical form`);
-  L.push(`$\\mathrm{ex}(X) = ${set(v.canonicalForm)}$${v.derived.length ? `, deriving ${set(v.derived)} rather than choosing ${v.derived.length === 1 ? "it" : "them"}` : ", so every element is primitive in it"}.`);
+  L.push(`\\begin{measurement}\\label{meas:${label}}`);
+  L.push(`Take $X = ${set(v.construction)}$, with canonical form`);
+  L.push(`$\\mathrm{ex}(X) = ${set(v.canonicalForm)}$${v.derived.length ? `; the elements ${set(v.derived)} are derived rather than chosen` : ", every element being primitive in it"}.`);
   L.push(`${admissibilityClause(v)} It discharges ${num(v.obligationsCovered)} of the ${num(v.obligationsTotal)} recorded obligations; ${uncovered.length === 0 ? "none is residue" : `${num(uncovered.length)} ${uncovered.length === 1 ? "is" : "are"} residue`}.${compositionClause(v)}`);
   if (v.unjustifiedElements.length)
     L.push(`Elements carried that discharge no recorded obligation: ${set(v.unjustifiedElements)}.`);
@@ -63,17 +63,17 @@ function subsection(spec, v) {
   L.push(`\\end{measurement}`);
   L.push("");
   if (uncovered.length) {
-    L.push(`\\begin{remark}[What the construction cannot say]`);
-    L.push(`${num(uncovered.length)} obligation${uncovered.length === 1 ? "" : "s"} of ${esc(spec.app)} ${uncovered.length === 1 ? "has" : "have"} no element:`);
-    L.push(`\\begin{itemize}`);
+    L.push(`\\begin{remark}`);
+    if (p.residueNote) { L.push(p.residueNote.trim()); L.push(""); }
+    L.push(`The obligations no element discharges are these.`);
+    L.push(`\\begin{itemize}\\setlength{\\itemsep}{0pt}`);
     for (const o of uncovered) L.push(`  \\item ${esc(o.text)}`);
     L.push(`\\end{itemize}`);
-    if (p.residueNote) L.push(p.residueNote.trim());
     L.push(`\\end{remark}`);
     L.push("");
   }
   if (p.witnessReason) {
-    L.push(`\\begin{remark}[Why this witness]`);
+    L.push(`\\begin{remark}`);
     L.push(p.witnessReason.trim());
     L.push(`\\end{remark}`);
     L.push("");
