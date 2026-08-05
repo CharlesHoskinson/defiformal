@@ -25,6 +25,7 @@
  * Nothing here is heuristic. Every predicate is the one the paper defines.
  */
 import { PARSED_NEW, MECH, CONSUME, ELEMS, bansCond, ungrounded } from "../v2/tables.mjs";
+import { validate } from "./validate.mjs";
 import fs from "node:fs";
 
 export const E = MECH.slice();
@@ -69,7 +70,7 @@ export function loadCorpus(root = "/root/DefiElements") {
 /* ---------- coverage, justification, minimality */
 function coverage(spec) {
   const obligations = spec.functionalObligations ?? [];
-  const X = new Set(spec.construction);
+  const X = asSet(spec.construction);
   const uncovered = [], covered = [], misdeclared = [];
   for (const o of obligations) {
     const els = (o.elements ?? []).filter(e => E.includes(e));
@@ -86,7 +87,7 @@ function coverage(spec) {
 }
 
 function minimality(spec) {
-  const X = new Set(spec.construction);
+  const X = asSet(spec.construction);
   const base = coverage(spec);
   if (!admissibility(X).admissible) return { checked: false, why: "construction is not admissible; minimality is not asked of an inadmissible set" };
   const redundant = [];
@@ -103,7 +104,7 @@ function minimality(spec) {
 /* ---------- can the construction be reached by composing corpus protocols?
  * Exact for k <= 3 over the corpus, which is 72 + 2556 + 59640 unions. */
 function compositional(spec, corpus, maxK = 3) {
-  const target = cn(new Set(spec.construction));
+  const target = cn(asSet(spec.construction));
   const key = S => [...S].sort().join(",");
   const T = key(target);
   const hits = [];
@@ -134,7 +135,8 @@ function compositional(spec, corpus, maxK = 3) {
   return {
     exact: hits.slice(0, 8), exactFound: hits.length,
     containedProtocols: parts,
-    reachableByUnionOfContained: [...target].filter(e => !union.has(e)).sort(),
+    containedCount: corpus.filter(p => p.syms.every(s => target.has(s))).length,
+    notSuppliedByAnyContainedProtocol: [...target].filter(e => !union.has(e)).sort(),
   };
 }
 
@@ -180,11 +182,16 @@ function main() {
   const dir = process.argv[2];
   if (!dir) { console.error("usage: node construct.mjs <dir-of-specs.json> [--json out.json]"); process.exit(2); }
   const corpus = loadCorpus();
-  const specs = [];
+  const specs = []; let rejected = 0;
   for (const f of fs.readdirSync(dir).sort()) if (f.endsWith(".json")) {
     const d = JSON.parse(fs.readFileSync(`${dir}/${f}`, "utf8"));
-    for (const s of Array.isArray(d) ? d : [d]) specs.push(s);
+    for (const s of Array.isArray(d) ? d : [d]) {
+      const v = validate(s, f);
+      if (!v.ok) { console.error(); rejected++; continue; }
+      specs.push(s);
+    }
   }
+  if (rejected) console.error();
   const out = specs.map(s => verify(s, corpus));
   for (const r of out) {
     console.log(`\n=== ${r.app}  [${r.category}]  ${r.verdict}`);
