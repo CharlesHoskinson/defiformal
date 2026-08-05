@@ -2,7 +2,13 @@
   "app": "WBTC",
   "category": "07-bridges",
   "source": "C:\\defiformal-work\\07-bridges\\01-research.md",
-  "construction": ["Xf", "Aw", "At", "Rd", "Gp"],
+  "construction": [
+    "Xf",
+    "Aw",
+    "At",
+    "Rd",
+    "Gp"
+  ],
   "functionalObligations": [
     {
       "id": "F1",
@@ -14,7 +20,9 @@
     {
       "id": "F2",
       "text": "WBTC is minted on Ethereum in the amount of bitcoin received at the custodian deposit address, so a claim in the Bitcoin domain becomes a spendable ERC-20 claim in the Ethereum domain; on-chain supply is 116,132.18273272 WBTC.",
-      "elements": ["Xf"],
+      "elements": [
+        "Xf"
+      ],
       "evidence": "https://docs.wbtc.network/how-wbtc-works/mint-burn-mechanism (accessed 2026-08-04) | https://ethereum-rpc.publicnode.com eth_call WBTC.totalSupply() at 0x2260fac5e5542a773aa44fbcfedf7c193bc2c599 (accessed 2026-08-04)",
       "note": "Xf is the only element that fires anywhere in this system's cross-domain behaviour. Law L9 (debit(source) = credit(destination)) is stated over two ledgers the construction cannot relate: the Bitcoin-side debit is observable but the binding between it and the Ethereum-side credit is an off-chain assertion by one party."
     },
@@ -35,7 +43,9 @@
     {
       "id": "F5",
       "text": "Only an address in the on-chain merchant registry may request a mint or execute a burn, and only the registered custodian may confirm or reject it; Members.getMerchants() returns 47 addresses today.",
-      "elements": ["Aw"],
+      "elements": [
+        "Aw"
+      ],
       "evidence": "https://raw.githubusercontent.com/WrappedBTC/bitcoin-token-smart-contracts/master/ethereum/contracts/factory/Factory.sol (accessed 2026-08-04) | https://ethereum-rpc.publicnode.com eth_call Members.getMerchants() (accessed 2026-08-04)",
       "note": "Aw is a firm fit here and only here among the three custodial wrappers: an on-chain registry of principals with role-gated entry, not an owner check. It is issuer-side rather than user-side -- ordinary holders face no gate -- which is the same qualification the corpus attached to Aw for CCTP."
     },
@@ -49,7 +59,9 @@
     {
       "id": "F7",
       "text": "A merchant approves the Factory for its WBTC, calls burn(), and the custodian sends BTC to that merchant's registered Bitcoin address after 25 Ethereum confirmations.",
-      "elements": ["Rd"],
+      "elements": [
+        "Rd"
+      ],
       "evidence": "https://docs.wbtc.network/how-wbtc-works/mint-burn-mechanism (accessed 2026-08-04)",
       "note": "APPROXIMATE. Rd asserts that a direct redemption right exists and is silent on who holds it. Here it is held by 47 firms and by nobody else, so the symbol is true of the system and false of essentially every holder. Ps was considered and rejected: there is no on-chain module holding a reserve to swap 1:1 against."
     },
@@ -63,7 +75,9 @@
     {
       "id": "F9",
       "text": "The issuer publishes a live proof-of-reserve listing every custodian address and its balance -- 116,514.34 BTC against 116,499.20 WBTC across 20 addresses -- and third parties consume that listing as the protocol's reserve, DefiLlama's adapter reading the same audit page.",
-      "elements": ["At"],
+      "elements": [
+        "At"
+      ],
       "evidence": "https://www.wbtc.network/transparency (accessed 2026-08-04) | https://raw.githubusercontent.com/DefiLlama/DefiLlama-Adapters/main/projects/wbtc.js (accessed 2026-08-04)",
       "note": "APPROXIMATE. Law L27 requires of At a named attester, independence, a stated assurance level, a staleness bound and recourse. This has an issuer, a refresh, and none of the other four. At cannot distinguish 'here are 20 addresses, check them yourself' from 'an auditor signed a report last quarter', and that difference is the entire epistemic content. RANKING BASIS: DefiLlama wbtc = $7,314,780,495 on 2026-08-04 against the corpus's $7,300.5m, hours apart; rank #1 stands and the figure is the sum of the balances of the addresses the issuer itself publishes."
     },
@@ -84,7 +98,9 @@
     {
       "id": "F12",
       "text": "The Controller's owner can pause and unpause all WBTC transfers; paused() is currently false.",
-      "elements": ["Gp"],
+      "elements": [
+        "Gp"
+      ],
       "evidence": "https://raw.githubusercontent.com/WrappedBTC/bitcoin-token-smart-contracts/master/ethereum/contracts/controller/Controller.sol (accessed 2026-08-04) | https://ethereum-rpc.publicnode.com eth_call WBTC.paused() (accessed 2026-08-04)",
       "note": "Gp is correct here, unlike for BTCB. It does not distinguish a pause that reaches every holder's transfers (this one) from a pause that only stops new issuance; those are different powers over different parties."
     },
@@ -137,5 +153,12 @@
       "evidence": "https://raw.githubusercontent.com/WrappedBTC/DAO/master/MerchantGuide.md (accessed 2026-08-04)",
       "note": "RESIDUE. Fd (candidate) names surplus and fee distribution as a protocol mechanism; a bilaterally negotiated off-chain price is not that, and pricing the only path to redemption is exactly where the peg's frictions live."
     }
-  ]
+  ],
+  "paper": {
+    "title": "WBTC",
+    "label": "cat:bri:wbtc",
+    "blurb": "A holder sends bitcoin to a deposit address the custodian controls and receives an ERC-20 on Ethereum. The mint is not the holder's transaction: a permissioned merchant performs the identity check and submits the request, and the custodian's confirmation is the bridge --- nothing on Ethereum observes the Bitcoin chain. Redemption is the merchants' right and not the holder's, so an ordinary holder has no contract-enforced path back to bitcoin and exits by selling into a secondary market. What is trusted is that a custodian whose key material is split across several jurisdictions holds the bitcoin unencumbered, and that the multisig quorums owning the mint authority --- which execute the instant they are reached --- do not point it somewhere else.",
+    "witnessReason": "The corpus separates this issuer from the other custodial wrappers by a timelock, and the witness drops it: all three governing contracts are plain Consensys multisig wallets, none exposes a delay accessor, and execution follows immediately on quorum. The corpus freeze marker goes with it, because the blacklist accessors revert and the token's inheritance list carries no such power. What actually distinguishes this system is quorum rather than delay, and the vocabulary has an element for delayed execution and none for authority that is shared but immediate, so the witness carries the permission registry, the pause and the reserve listing it can evidence and nothing more.",
+    "residueNote": "Everything that makes the peg hold is in this list. That a company holds the bitcoin, that a permissioned intermediary stands between the holder and the mint, that the reserve is an address listing the issuer publishes and third parties consume as ground truth, and that the contract authorising issuance can be swapped for another without touching a line of the token --- none of it has a symbol. The item that ought to be a guarantee reads as an omission: this token cannot freeze or seize a holder's balance, and the requirement language can record that only by declining to name an element, which is the same string a decomposition produces when nobody looked. The elements describe the facility; the residue holds the whole question of who operates it."
+  }
 }

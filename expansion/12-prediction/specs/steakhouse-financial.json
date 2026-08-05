@@ -2,19 +2,31 @@
   "app": "Steakhouse Financial (Risk Curators)",
   "category": "12-prediction",
   "source": "C:\\defiformal-work\\12-prediction\\01-research.md",
-  "construction": ["Sh", "Im", "Ct", "Rd", "Tg", "Gp", "Fd"],
+  "construction": [
+    "Sh",
+    "Im",
+    "Ct",
+    "Rd",
+    "Tg",
+    "Gp",
+    "Fd"
+  ],
   "functionalObligations": [
     {
       "id": "F1",
       "text": "a depositor puts a stablecoin into an ERC-4626 vault and receives shares representing a proportional claim on the vault's assets",
-      "elements": ["Sh"],
+      "elements": [
+        "Sh"
+      ],
       "evidence": "https://github.com/morpho-org/metamorpho (accessed 2026-08-04)",
       "note": "good fit; one vault per loan asset, with ERC-2612 permit on the V1 vaults."
     },
     {
       "id": "F2",
       "text": "the vault does not lend: it deploys the deposit into isolated lending markets on a base protocol, so the depositor holds the credit and oracle risk of markets they did not choose",
-      "elements": ["Im"],
+      "elements": [
+        "Im"
+      ],
       "evidence": "https://docs.morpho.org/curate/concepts/roles/ (accessed 2026-08-04)",
       "note": "approximate; corpus marker retained. `Im` names the per-market risk fence, which is the SUBSTRATE the vault allocates across — the vault neither creates the fence nor operates the market. There is no symbol for the client relation itself: a vault that is a customer of a market rather than a market. Stage 1 corrects the corpus's substrate list (delta 2): the documented platforms are Morpho V1, Morpho Vaults V2 and Kamino on Solana, plus a Coinbase distribution channel; no Steakhouse documentation names Euler."
     },
@@ -42,7 +54,9 @@
     {
       "id": "F6",
       "text": "a depositor may redeem shares at any time, but only to the extent the underlying markets can be drained; there is no queue and no pro-rata gate, so a redemption that outruns available liquidity simply fails",
-      "elements": ["Rd"],
+      "elements": [
+        "Rd"
+      ],
       "evidence": "https://steakhouse.financial/docs/products/stablecoin-products/vaults.md (accessed 2026-08-04)",
       "note": "approximate, and a departure: the corpus recorded no redemption element. `Rd` names an unconditional right to draw against the vault's assets, and the right IS unconditional in the contract — what is conditional is its exercise. Nothing names a redemption right that can fail for want of liquidity without queueing, which is the shape L14 (illiquid backing implies a queue or a bounded liquidity reserve) is reaching for; see F7."
     },
@@ -56,14 +70,18 @@
     {
       "id": "F8",
       "text": "capital is lent only against collateral subject to a liquidation-loan-to-value test, computed by the underlying markets rather than by the vault",
-      "elements": ["Ct"],
+      "elements": [
+        "Ct"
+      ],
       "evidence": "https://docs.morpho.org/curate/concepts/roles/ (accessed 2026-08-04)",
       "note": "approximate; corpus records `Ct` as derived and stage 1 confirms and tightens the marker. The vault performs no solvency computation of its own; it inherits one. Carried in the construction because the obligation is genuinely discharged, but the discharging mechanism belongs to a protocol the vault does not control."
     },
     {
       "id": "F9",
       "text": "raising a cap, adding a market or an adapter, and (on Vaults V2) changing a fee take effect only after a timelock, while lowering a cap takes effect immediately; Steakhouse sets seven days for new-market onboarding on its Prime line and three on High Yield, above the protocol minimum of twenty-four hours",
-      "elements": ["Tg"],
+      "elements": [
+        "Tg"
+      ],
       "evidence": "https://steakhouse.financial/docs/risk-management/monitoring/vault-setup-and-controls.md (accessed 2026-08-04)",
       "note": "good fit, and the asymmetry (delay to increase risk, immediate to reduce it) is expressible as two `Tg` settings. The delay is explicitly sized 'to provide depositors time to withdraw or exercise veto rights before capital deployment', which makes it the enabling half of F10."
     },
@@ -77,7 +95,9 @@
     {
       "id": "F11",
       "text": "a guardian or sentinel may revoke a pending timelocked action, decrease caps instantly and deallocate, and the vault owner is a five-of-five multisig",
-      "elements": ["Gp"],
+      "elements": [
+        "Gp"
+      ],
       "evidence": "https://docs.morpho.org/curate/concepts/roles/ (accessed 2026-08-04)",
       "note": "good fit, with one carve-out `Gp` cannot express: on Morpho V1 the guardian explicitly CANNOT revoke a fee change, so exactly the action that transfers value to the curator is outside the emergency power. On Vaults V2 fee changes became timelocked instead."
     },
@@ -91,7 +111,9 @@
     {
       "id": "F13",
       "text": "the curator takes a performance fee of up to 50% of generated interest and, on Vaults V2, a management fee of up to 5% a year on assets, accruing on interaction",
-      "elements": ["Fd"],
+      "elements": [
+        "Fd"
+      ],
       "evidence": "https://docs.morpho.org/curate/concepts/fee/ (accessed 2026-08-04)",
       "note": "`Fd` (candidate register) names the fee take; corpus marker retained. Steakhouse's High Yield line charges typically 10% with temporary waivers. Accrual only on interaction means a fee recipient who never transacts cannot actually receive underlying assets, which `Fd` does not express. The corpus notes but does not name the incentive this creates to reach for yield."
     },
@@ -123,5 +145,12 @@
       "evidence": "https://steakhouse.financial/docs/llms.txt (accessed 2026-08-04)",
       "note": "residue, and the finding that joins the two halves of this category. The allocation is a function of a DOCUMENT — exactly the shape of the prediction-market rulebook (polymarket.json F8, kalshi.json F18) in a completely different sector. What is verifiable on-chain is the role assignments, the enabled markets and caps, the queue ordering, the timelock and the fee; what is not verifiable is why any of those values were chosen."
     }
-  ]
+  ],
+  "paper": {
+    "title": "Steakhouse Financial",
+    "label": "cat:prd:steakhouse",
+    "blurb": "This is not a prediction market. It sits in this category because it fits no conventional one, and the category is where the sampling frame put what it could not file elsewhere. A depositor puts a stablecoin into a vault and receives shares; the vault does not lend but allocates the deposit across isolated lending markets on a base protocol, so what the depositor buys is a manager and what they hold is the credit and oracle risk of markets they did not choose. A named firm decides which markets the capital may enter, at what ceiling for each, and in what order deposits fill and withdrawals drain, and takes a share of the interest for doing so. The depositor's recourse is \\emph{preventive} and not \\emph{compensatory}: they may exit while liquidity lasts, and they hold veto weight over a critical curator action in proportion to their deposit, exercisable inside a timelock explicitly sized to let them withdraw or veto before capital moves --- but after a loss there is no addressee, the terms disclaiming any fiduciary relationship, denying that the firm is a broker, intermediary, agent, custodian or adviser, and capping total liability at a nominal sum.",
+    "witnessReason": "The corpus records $Wq$; the witness drops it, because the queues here are queues of \\emph{venues} in priority order and no claimant ever waits in them, and adds $Rd$ instead, because the redemption right is unconditional in the contract even though its exercise is not. The rest is retained --- the share, the isolated markets the vault is a client of, the inherited threshold test, the asymmetric timelock that delays a raised cap and lets a lowered one take effect at once, the guardian and the fee. Among the alternatives the mandate leaves open, no element is chosen for the mandate itself: forcing servicing discretion onto exposure selection would name a mechanism this firm does not have, and declining is the honest move. The construction is rejected for want of a price source and of a loss-absorption mechanism, and that is right --- this vault computes no price and absorbs no loss, both being properties of the markets underneath it, and the carrier has no way to record an obligation discharged one level down.",
+    "residueNote": "The unnamed obligations are the mandate and everything that gives it shape. Nothing names the delegation of investment discretion over other people's capital, and nothing names the supply cap that is the vault's own risk instrument --- a portfolio limit on a manager rather than a solvency test on a borrower, defaulting to nothing so that a market is unusable until an affirmative act makes it usable. The depositor-weighted veto has no element, and neither has its absence: the vocabulary cannot distinguish a mandate with recourse from one without, so a mandate with recourse and one without decompose identically and the single most important fact about the instrument is invisible. The fee is residue in its mechanism if not in its fact, being paid by minting fresh shares to the recipient --- dilution, which cannot fail for want of assets and does not appear in the asset accounting at all. Above all, where the capital goes is a function of a published, versioned rating document, which is the prediction venues' rulebook problem in a different sector and is the reason both halves of this category belong in one place."
+  }
 }

@@ -1753,6 +1753,180 @@ verification. These are the distinctions that determine what a holder is
 exposed to, and the vocabulary does not make them.
 \end{remark}
 
+The five highest-ranked members of the category are treated below. Each
+subsection states what the system does, exhibits one construction with the
+reason for that witness among the alternatives the disjunctive terms leave open
+(Corollary~\ref{cor:notthe}), reports the verdict, and lists the obligations no
+element discharges. Every figure in the measurement environments is emitted from
+the checker output rather than transcribed.
+
+\subsection{BTCB}\label{sub:cat:bri:btcb}
+
+A holder deposits bitcoin to an exchange and then withdraws it over BNB Chain, and what arrives is a BEP-20 the exchange issues. There is no source-domain event at all: the debit is a row in an internal ledger and the credit is a transfer of tokens the owner key has already minted. Redemption is depositing the token back and withdrawing bitcoin, which is an exchange withdrawal subject to account standing, network status and unilateral suspension. What a holder trusts is an externally-owned account that can mint without limit, a self-published reserve address whose issuer discloses that the amounts may not match and states no bound on the discrepancy, and an exchange that can refuse redemption with no on-chain act.
+
+\begin{measurement}[Construction]\label{meas:cat:bri:btcb}
+The construction $X = \{At,Rd,Xf\}$ has canonical form
+$\mathrm{ex}(X) = \{At,Rd,Xf\}$, so every element is primitive in it.
+It is admissible: no requirement term is open, every element is warranted, and it arms no prohibition. It discharges 3 of the 15 recorded obligations; 12 are residue. No composite of at most three corpus protocols equals it; no corpus protocol is contained in it.
+\end{measurement}
+
+\begin{remark}[What the construction cannot say]
+12 obligations of Binance Bitcoin (BTCB) have no element:
+\begin{itemize}
+  \item What secures the peg is Binance's statement that it holds an equivalent amount of bitcoin in multi-signature cold storage; there is no message, no proof, no verifier and no threshold of any kind.
+  \item Nothing is locked in a contract on either side: the issuer describes the mechanism as a swap in which 'their Bitcoin remains locked and can be redeemed by depositing BTCB back', with the lock being an internal custody arrangement rather than an escrow.
+  \item Access to both mint and redemption runs through an exchange account, so only KYC'd customers in eligible jurisdictions can enter or exit, and the exchange can freeze an account and refuse redemption with no on-chain action whatsoever.
+  \item Issuance is unbounded and unilateral: mint(uint256) is onlyOwner, owner() = getOwner() = 0xf68a4b64162906eff0ff6ae34e2bb1cd42fef62d, and eth\_getCode on that address returns empty, so a single externally-owned account can mint arbitrarily against a multi-billion-dollar liability.
+  \item The on-chain artefact of a redemption is a self-burn -- burn(uint256) burns the caller's own balance -- with nothing in the transaction linking it to a bitcoin payout or to a redeeming party.
+  \item The entire on-chain governance surface is transferOwnership and renounceOwnership: the contract is Binance's standard BEP20Token template (solc 0.5.16, Apache-2.0, verified Exact Match, not a proxy) with no pause, no blacklist, no forced transfer, no upgrade path, no timelock, no multisig and no registry.
+  \item The authority over that surface is one key: not a quorum, not a contract, not a delay, with no published internal process binding its use.
+  \item The issuer discloses that the peg may not hold exactly: 'the amount of locked BTC may not be precisely the same as the wrapped BTC due to the delays caused by the extensive auditing process', with no bound stated on the discrepancy.
+  \item One reserve pool is drawn against by three pegged representations of the same asset on three different ledgers -- Ethereum, BEP2 and BEP20 -- so no single representation's backing is separable.
+  \item Two reserve claims exist over the same custodian and must not be added together: 68,200 BTC of pegged-token collateral on the Proof of Collateral page, and 640,780.255 BTC of exchange customer reserve on the Proof of Reserves page (monthly Merkle-tree and zk-SNARK snapshot, latest 01/07/26 00:00 UTC at BTC block 956,140, ratio 100.08\%), the first page carrying an explicit disclaimer that it is not the exchange's proof of reserve.
+  \item No independent auditor attests to the BTCB collateral specifically; no such report was found.
+  \item A holder's transfers cannot be blocked and a holder's balance cannot be seized on-chain: the token has no freeze, no blacklist and no forced-transfer function.
+\end{itemize}
+The construction is small because the system is weak, and that is the category's finding in a line. Issuance is unbounded and unilateral from one key with no quorum, no delay and no published process, and the control group has no symbol whose weakest reading is that weak --- so on the corpus arrays this entry is a subset of both other custodial wrappers and reads as the mildest of them, when on the evidence it has by a wide margin the weakest control plane in the category. The one dimension a holder can check runs the other way: with no code to freeze or seize a balance, the worst-governed wrapper gives the strongest on-chain guarantee, and the vocabulary states it only by omitting an element. Reserve claims stand twice over the same custodian, collateral for the pegged tokens and the exchange's own customer liabilities, published on separate pages with a disclaimer between them; the attestation element is the only symbol available for either, so using it for both would assert that a self-published address list and a proven liability snapshot are the same kind of object.
+\end{remark}
+
+\begin{remark}[Why this witness]
+The corpus gives this token an emergency guardian and the witness drops it: the verified source and its function list carry mint, burn, transfer, approve and the ownership calls, and no pause. The access gate is dropped too, since there is no on-chain permission or identity check of any kind and reading the owner check on minting as one would make the element true of every ownable contract ever deployed. The freeze marker is dropped on the same evidence, the blacklist and forced transfer the corpus records being absent from the code. Both dropped powers are real and both are exercised inside a company where no contract can observe them; what survives is the wrap, the reserve listing and the redemption claim --- the smallest construction in the category, and the one the checker admits without complaint.
+\end{remark}
+
+\subsection{Coinbase Bridge}\label{sub:cat:bri:coinbase}
+
+A customer withdrawing bitcoin from an exchange account to a supported network receives a wrapped ERC-20 instead of the asset, and the exchange keeps the asset. The crossing is a side effect of a transfer rather than a transaction the user submits, and sending the token back to an account unwraps it. There is no source-domain event to verify and, for all but one of the source assets, no source chain that could run a verification contract. What a holder trusts is that the issuer holds the underlying and keeps unwrapping, that a redemption right conditioned on account standing and on jurisdiction is not withdrawn, and that the single keys holding the pause, the blacklist, the minter administration and the proxy admin are not turned against them.
+
+\begin{measurement}[Construction]\label{meas:cat:bri:coinbase}
+The construction $X = \{At,Aw,Fz,Gp,Rd,Up,Xf\}$ has canonical form
+$\mathrm{ex}(X) = \{At,Aw,Fz,Gp,Rd,Up,Xf\}$, so every element is primitive in it.
+It is admissible: no requirement term is open, every element is warranted, and it arms no prohibition. It discharges 7 of the 18 recorded obligations; 11 are residue. No composite of at most three corpus protocols equals it; 2 corpus protocols are contained in it, and together they supply every element except \{Fz\}.
+It is not minimal: \{Fz\} can be removed with every obligation still covered and admissibility intact.
+\end{measurement}
+
+\begin{remark}[What the construction cannot say]
+11 obligations of Coinbase Bridge (cbBTC and other wrapped assets) have no element:
+\begin{itemize}
+  \item What secures the peg is that Coinbase holds the underlying asset and continues to unwrap on demand; there is no message, no proof, no verifier set and no threshold anywhere in the system.
+  \item No contract escrows the underlying on any source chain, and five of the six source assets live on chains that cannot run a verification contract at all -- Bitcoin, XRP, Dogecoin, Cardano and Litecoin -- while the sixth, MegaETH, can.
+  \item The conversion is a side effect of a transfer rather than a transaction the user submits: the user asked to withdraw BTC, and the system delivered cbBTC; sending the wrapped token back to a Coinbase account auto-unwraps it.
+  \item The redemption right is conditioned on jurisdiction and asset: cbBTC cannot be sent or received by accounts in Canada, Japan and Georgia, and the other five wrapped assets are blocked in over a hundred jurisdictions including most of the EEA, Japan, Singapore, Hong Kong and New York State.
+  \item Third parties treat the issuer's own reserve JSON as ground truth for the protocol's size: DefiLlama's adapter calls getConfig('coinbase-cbbtc-proof-of-reserves', 'https://www.coinbase.com/cbbtc/proof-of-reserves.json') and sums the declared addresses.
+  \item Minting is rate-limited with programmatic allowance replenishment: a MintForwarder contract lets a minter continuously mint up to N tokens over M time without a cold masterMinter key having to top the allowance back up.
+  \item The holders of these powers are single keys: eth\_getCode returns empty for both owner and masterMinter, so there is no multisig contract and no timelock anywhere in the admin surface.
+  \item Authority is partitioned across keys: the owner can change owner, pauser, blacklister, masterMinter and oracle, and cannot change the proxy owner, so upgrade authority sits behind a separate key from role administration.
+  \item The contract that holds every balance is not the issuer's own code: the repository states the token 'will be an exact duplicate of centre-tokens [FiatTokenV2\_1]' and the proxy an exact duplicate of the centre-tokens proxy, and the issuer's repository has not been touched since 2023-05-12 and never mentions cbBTC or any of the newer wrapped assets by name.
+  \item The custodian of the underlying is also the largest venue on which the underlying trades, so the party whose failure would break the peg is the same party whose order book would price the break.
+  \item One reserve pool backs four networks' supply of cbBTC simultaneously (48,338.78 Ethereum, 44,528.809, 3,108.551 and 78.272 on the others), reconciled only on the issuer's page.
+\end{itemize}
+The powers here are the strongest in the category and the custody of them the weakest, and only the first half is in the construction. The keys that can replace the implementation, blacklist a holder and appoint a minter are plain externally-owned accounts; the prohibition written for exactly this shape --- an upgrade path under immediate single-key control --- therefore cannot be evaluated, because its antecedent is unstateable. The only quantitative bound on any authority among the custodial wrappers, a rate limit on minting with programmatic replenishment, has no element either. Redemption is a jurisdiction vector rather than a right, the same token being redeemable in one country and not in another, enforced at an account layer no contract in the construction can see. And the measured size of the system is the issuer's own published file, which the attestation element names as an attestation and cannot name as a circularity.
+\end{remark}
+
+\begin{remark}[Why this witness]
+The upgrade element is right and load-bearing --- the token is a genuine proxy whose implementation slot resolves to a verified fiat-token implementation, and nothing in the other custodial wrappers is comparable --- so the witness keeps it. It also promotes the freeze from a marker to a firm assignment on a live named blacklister role whose accessors answer, which no other custodial wrapper in this category can offer. Both the freeze and the permission gate are recorded against that obligation, because both genuinely discharge it and the vocabulary gives no rule for choosing; the checker duly reports the freeze as removable, so the one power that distinguishes this issuer from the other two reads as redundant. Nothing in the witness records that the holders of these powers are individual keys, because the vocabulary has nothing to record it with.
+\end{remark}
+
+\subsection{Hyperliquid Bridge}\label{sub:cat:bri:hyperliquid}
+
+A user transfers native USDC into an escrow contract on Arbitrum and is credited on the destination chain's own ledger; nothing is minted, and what the user holds is a balance rather than a token. Both directions are authorised by signatures from validators holding a supermajority of staking power --- the set that already secures the destination chain --- so the bridge inherits the chain's trust model rather than adding one to it. A withdrawal is deducted first and released only after a dispute period, during which named lockers may vote the bridge shut. The escrow has no owner and no upgrade path: every privileged action, including re-seating the validator set, runs on validator signatures, and the cold keys that do the re-seating belong to the same principals as the hot keys that sign ordinary flow.
+
+\begin{measurement}[Construction]\label{meas:cat:bri:hyperliquid}
+The construction $X = \{Gp,Gs,Vl,Wq,Xf,Xm\}$ has canonical form
+$\mathrm{ex}(X) = \{Gp,Gs,Vl,Wq,Xf,Xm\}$, so every element is primitive in it.
+It is not admissible: it leaves the requirement term $L21:Au$ open; \{Gs\} has no consumer present. It discharges 7 of the 19 recorded obligations; 12 are residue. No composite of at most three corpus protocols equals it; no corpus protocol is contained in it.
+\end{measurement}
+
+\begin{remark}[What the construction cannot say]
+12 obligations of Hyperliquid Bridge have no element:
+\begin{itemize}
+  \item The set that signs withdrawals is the same stake-weighted validator set that secures the destination chain, so holding bridged funds adds no trust assumption beyond using Hyperliquid at all.
+  \item A deposit below the 5 USDC minimum is not credited and is lost permanently.
+  \item A posted withdrawal is released only after a 200-second dispute period, during which lockers may vote to lock the bridge and stop it; disputePeriodSeconds() = 200 and blockDurationMillis() = 350 are on-chain readable.
+  \item Nothing is minted on the destination: what the user receives is a balance in HyperCore's ledger, not a transferable token, so there is no destination-side representation to hold, trade or bridge onward.
+  \item Two supplies of the same asset coexist on the destination chain with different trust models and are fungible to the user: \$421.9m that came through this escrow and \$5.48b issued natively on Hyperliquid via CCTP.
+  \item The escrow has no owner and no upgrade path: implementation(), admin() and owner() all revert, and every privileged action is authorised by validator signatures rather than by an admin key.
+  \item The same principals hold two key tiers with different powers: hot keys sign routine deposits and withdrawals, cold keys invalidate withdrawals and re-seat the validator set; hotValidatorSetHash() and coldValidatorSetHash() are distinct on-chain state.
+  \item Two named roles exist that are neither owners nor governance: lockers, who can vote the bridge into a lock, and finalizers, who submit the transaction that releases a withdrawal after the dispute period.
+  \item Validator stake is not slashable: the documentation states that there is currently no automatic slashing implemented, so the only consequences for a validator are jailing by peer vote and the seven-day queue, and no path exists from a bridge failure to a loss of stake.
+  \item The two-thirds threshold is evaluated over a concentrated distribution: five Hyper Foundation validators hold 212,971,320 of 436,005,726 HYPE, or 48.85\%, so one operator family is far above the one third needed to veto any withdrawal or validator-set update and needs only a further sixth of stake to act alone.
+  \item Validator-set updates are themselves subject to the dispute period and are ordered by an on-chain epoch counter, epoch() = 7.
+  \item No reserve attestation exists or is needed: the escrow is a contract balance that anyone can read directly, and the issuer publishes nothing about it.
+\end{itemize}
+This is the only entry in the category whose safety is not a legal promise, and the construction cannot say so. That the verifying set is endogenous --- that it is the destination chain's own validator set --- is the most important property a native bridge has, and the verification element asserts the same thing here as it would of a lone external attester. The reserve needs no attestation because it is a contract balance anyone may read, and the vocabulary expresses that only by omitting the attestation element, which is the string an unaudited custodian also produces: two opposite epistemic states, one representation. The threshold is then evaluated over a distribution no element carries, one operator family holding enough stake to veto every withdrawal and every validator-set update on its own, so a supermajority rule over a concentrated set and a supermajority rule over an even one decompose identically.
+\end{remark}
+
+\begin{remark}[Why this witness]
+The corpus carries a staked backstop and the witness drops it: the documentation states that no automatic slashing is implemented, so no path runs from a bridge failure to a loss of stake and there is nothing for the element to name. The queue element is not dropped but moved. The corpus attaches it to the dispute period, where it is wrong --- that delay exists so an honest validator can veto a fraudulent withdrawal, not to ration scarce liquidity among exiting claimants --- and the genuine queue in this system is the unstaking delay with its cap on concurrent exits, which governs the capital that constitutes the verifier set. The gas element is carried from the candidate register for the finalizer that pays the destination transaction, and it is precisely what makes this construction inadmissible: the law behind it demands a user-granted delegation, and the user grants nothing.
+\end{remark}
+
+\subsection{LayerZero V2}\label{sub:cat:bri:layerzero}
+
+Not a bridge but the messaging layer bridges are built on, so its guarantees are conditional on the application above it. A packet leaves an immutable endpoint under a per-pathway nonce, is verified on the destination by the verifier networks \emph{the application itself chose} under a threshold it set, and is delivered by an executor that fronts the destination gas and is repaid on the source chain. The token half belongs to the application: under one standard the supply is burned and reminted and nothing is escrowed, under the other the original is locked in a lockbox and a representation circulates. What a holder trusts is therefore not this protocol but a configuration held by an application owner, changeable without delay or notice, which may name a single company as the sole verifier.
+
+\begin{measurement}[Construction]\label{meas:cat:bri:layerzero}
+The construction $X = \{Au,Gs,Xf,Xm\}$ has canonical form
+$\mathrm{ex}(X) = \{Gs,Xf,Xm\}$, deriving \{Au\} rather than choosing it.
+It is admissible: no requirement term is open, every element is warranted, and it arms no prohibition. It discharges 6 of the 18 recorded obligations; 12 are residue. No composite of at most three corpus protocols equals it; no corpus protocol is contained in it.
+\end{measurement}
+
+\begin{remark}[What the construction cannot say]
+12 obligations of LayerZero V2 have no element:
+\begin{itemize}
+  \item Verification security is a per-application parameter rather than a protocol property: two applications on the same endpoint pair can run entirely different verifier sets and thresholds, and one of them may be a single company.
+  \item An application that does not set its configuration inherits protocol defaults, which the documentation warns are placeholders that 'may be Dead DVNs that prevent message delivery' -- a Dead DVN is deployed on each chain, 0x747c741496a507e4b404b50463e691a8d692f6ac on Ethereum -- while the historical default in the other direction was a 1-of-1 LayerZero Labs DVN.
+  \item Safety on a pathway is exactly the honesty of the configured verifier set: on 2026-04-18, with rsETH configured to a single verifier -- the LayerZero Labs DVN -- and two LayerZero-hosted RPC nodes compromised, approximately \$292m / 116,500 rsETH was minted on a destination without a matching source burn.
+  \item Safety and liveness are held by two different role types: DVNs decide whether a message is true, Executors decide whether it arrives, and the loss of each has a different consequence -- a corrupted DVN set mints falsely, an absent Executor merely stalls.
+  \item The two topologies have opposite attack surfaces and the same user-visible interface, so the question 'how much can be stolen' has a different answer per token on one protocol.
+  \item Mint and burn authority, and custody of any lockbox, belong to the application's own contract and its owner, not to LayerZero, so the party that must be trusted for supply conservation is one the protocol does not name.
+  \item The Endpoint's code cannot be replaced -- 24,005 bytes of direct non-proxy bytecode, documented as immutable and permissionless -- and it is nevertheless owned: owner() = 0xbe010a7e3686fdf65e93344ab664d065a0b02478, a custom multisig with threshold() = 3 and nonce() = 611, carrying no secondsTimeLocked and no getMinDelay.
+  \item There is no protocol-level pause: paused() and pause() both revert on EndpointV2, so no party can stop message flow by pausing the endpoint.
+  \item The Endpoint owner controls which message libraries are registered -- getRegisteredLibraries() returns 4 entries, including a blockedLibrary at 0x1ccbf0db9c192d969de57e25b3ff09a25bb1d862 -- and the protocol-level defaults, so delivery on a pathway can be stopped or redirected by configuration.
+  \item An application's send and receive configuration -- its verifier set, its threshold and its libraries -- can be changed at any time by the application's owner, with no delay and no notice, including while messages are in flight.
+  \item Fees may optionally be denominated in a protocol token, and this is a per-chain parameter: lzToken() is address(0) on Ethereum, so ZRO fee payment is not enabled there while it is elsewhere.
+  \item A received message can itself trigger further cross-domain calls through lzCompose, so a transfer composes horizontally into a sequence of domain-crossing actions.
+\end{itemize}
+The residue is the product. Verification here is a per-application parameter, so the element carried for it asserts the same of a lone company and of a broad independent set; when a pathway's configured set was a single verifier network and the nodes behind it were compromised, a destination minted against no source burn, and the decomposition of that pathway is identical before and after. Inherited security --- what an application gets when it configures nothing --- has no symbol in either of its failure directions, the bricked pathway or the unguarded one. Nor does the separation the design rests on: the verifiers hold safety, the executor holds liveness, and the loss of each has a different consequence. The two supply topologies this one protocol offers have opposite attack surfaces, the same user-visible interface, and one element between them.
+\end{remark}
+
+\begin{remark}[Why this witness]
+The corpus decomposes this protocol with an upgrade proxy, a guardian pause and a timelock, and the witness drops all three on direct reads of the endpoint: the deployed code carries no implementation slot, the pause accessors revert, and the owning multisig executes on signature count with no delay accessor present. What is mutable is the registered library set and the protocol defaults, which is a different mechanism from mutable code and has no element at all. In their place the witness carries the delegation an application owner may grant over its own security stack, and the executor's cross-domain gas sponsorship from the candidate register --- the same shape the Hyperliquid finalizer takes, which is the case for reading that element across domains rather than only as an account-abstraction paymaster.
+\end{remark}
+
+\subsection{WBTC}\label{sub:cat:bri:wbtc}
+
+A holder sends bitcoin to a deposit address the custodian controls and receives an ERC-20 on Ethereum. The mint is not the holder's transaction: a permissioned merchant performs the identity check and submits the request, and the custodian's confirmation is the bridge --- nothing on Ethereum observes the Bitcoin chain. Redemption is the merchants' right and not the holder's, so an ordinary holder has no contract-enforced path back to bitcoin and exits by selling into a secondary market. What is trusted is that a custodian whose key material is split across several jurisdictions holds the bitcoin unencumbered, and that the multisig quorums owning the mint authority --- which execute the instant they are reached --- do not point it somewhere else.
+
+\begin{measurement}[Construction]\label{meas:cat:bri:wbtc}
+The construction $X = \{At,Aw,Gp,Rd,Xf\}$ has canonical form
+$\mathrm{ex}(X) = \{At,Aw,Gp,Rd,Xf\}$, so every element is primitive in it.
+It is admissible: no requirement term is open, every element is warranted, and it arms no prohibition. It discharges 5 of the 19 recorded obligations; 14 are residue. Over the corpus it is reached exactly by Binance Bitcoin (BTCB).
+\end{measurement}
+
+\begin{remark}[What the construction cannot say]
+14 obligations of WBTC have no element:
+\begin{itemize}
+  \item A holder's bitcoin is taken into the custody of a named off-chain legal entity, and the equality of one WBTC to one BTC rests entirely on that entity continuing to hold, and to honour claims against, the bitcoin; no Ethereum contract holds, references or can reach the bitcoin.
+  \item Nothing on Ethereum verifies that the Bitcoin deposit occurred: Factory.confirmMintRequest() is gated by onlyCustodian, resolving through Controller.isCustodian() to the single address 0xb0f42d187145911c2ad1755831aded125619bd27, and the custodian's confirmation transaction is itself the bridge.
+  \item No contract escrows the underlying: the backing is a set of 20 Bitcoin addresses published by the issuer, so there is no on-chain object whose balance constitutes the reserve.
+  \item Before submitting a mint request the merchant performs KYC/AML on the requester, so entry to the system is conditioned on an identity check performed by a firm that the contracts never observe.
+  \item An ordinary WBTC holder has no contract-enforced way to obtain BTC and exits only by selling into a secondary market.
+  \item Anyone can verify the balances of the 20 published addresses; nobody can verify that those addresses belong to the custodian, that the bitcoin in them is unencumbered, or that it is not rehypothecated.
+  \item The custodian mints only after six Bitcoin confirmations and pays out only after 25 Ethereum confirmations, which is the design's entire treatment of source-domain finality and reorg exposure.
+  \item No party can seize or freeze an individual holder's balance: the token has no blacklist and no forced transfer -- blacklister() and isBlacklisted(address) both revert and the source inherits only StandardToken, DetailedERC20, MintableToken, BurnableToken, PausableToken and OwnableContract.
+  \item Authority is held by two independent quorums that execute immediately: the Controller is owned by a 6-of-10 multisig at 0x972eed35781f09987a5c40f761f6a24623c570de and Members by a 5-of-9 at 0x4dbbbfb0e68be9d8f5a377a4654604a62e851e80, both Consensys MultiSigWallet instances with no delay of any kind.
+  \item The governance body the project documents is not the one that holds the keys: the repository names 0xB33f8879...8A37c5 (8-of-13) as 'the WBTC DAO' and instructs readers to verify that it owns the Controller and Members, and it owns neither.
+  \item The 6-of-10 can replace the contract that authorises minting and the registry of merchants and custodians, via Controller.setFactory() and Controller.setMembers(), without changing a line of the token's code.
+  \item The token contract itself cannot be replaced or abandoned: it is a non-upgradeable Solidity 0.4.24 contract whose renounceOwnership() is deliberately reverted.
+  \item WBTC circulates on seven chains, and the cross-chain leg is supplied by a third-party messaging protocol that the issuer selects and can replace -- announced on the access date as a move from LayerZero to Chainlink CCIP for the whole \textasciitilde{}\$7.3-7.7b float.
+  \item The merchant's fee to the user is set off-chain by bilateral agreement, with no minimum size stated and no on-chain record.
+\end{itemize}
+Everything that makes the peg hold is in this list. That a company holds the bitcoin, that a permissioned intermediary stands between the holder and the mint, that the reserve is an address listing the issuer publishes and third parties consume as ground truth, and that the contract authorising issuance can be swapped for another without touching a line of the token --- none of it has a symbol. The item that ought to be a guarantee reads as an omission: this token cannot freeze or seize a holder's balance, and the requirement language can record that only by declining to name an element, which is the same string a decomposition produces when nobody looked. The elements describe the facility; the residue holds the whole question of who operates it.
+\end{remark}
+
+\begin{remark}[Why this witness]
+The corpus separates this issuer from the other custodial wrappers by a timelock, and the witness drops it: all three governing contracts are plain Consensys multisig wallets, none exposes a delay accessor, and execution follows immediately on quorum. The corpus freeze marker goes with it, because the blacklist accessors revert and the token's inheritance list carries no such power. What actually distinguishes this system is quorum rather than delay, and the vocabulary has an element for delayed execution and none for authority that is shared but immediate, so the witness carries the permission registry, the pause and the reserve listing it can evidence and nothing more.
+\end{remark}
+
 \section{Intents and aggregation}\label{sec:cat:intent}
 
 Eight protocols: LiquidMesh, Binance Wallet, OKX~DEX, Jupiter, KyberSwap,
@@ -2016,6 +2190,178 @@ mirroring a transfer agent's book; no claim perfection or bankruptcy remoteness,
 so $Tr$ names a waterfall without naming what it attaches to; no reserve
 composition, $At$ naming the attestation and not the assets; and no investment
 discretion. The vocabulary can express the wrapper and none of the wrapped.
+\end{remark}
+
+The five highest-ranked members of the category are treated below. Each
+subsection states what the system does, exhibits one construction with the
+reason for that witness among the alternatives the disjunctive terms leave open
+(Corollary~\ref{cor:notthe}), reports the verdict, and lists the obligations no
+element discharges. Every figure in the measurement environments is emitted from
+the checker output rather than transcribed.
+
+\subsection{BlackRock BUIDL}\label{sub:cat:rwa:buidl}
+
+A qualified purchaser subscribes through a placement agent and receives a share in a British Virgin Islands company, recognised there as a professional fund and recorded on chain as a token. The company owes the money, and its sponsor states, in the same paragraph as the dollar target, that it has no legal obligation to support the fund. There is no price feed of any kind: the unit is assumed at par, and yield is declared off chain against a snapshot of who held the token at a wall-clock instant, then paid the following business day by minting new tokens. A holder redeems for cash on the same business day if the request reaches the transfer agent in good order inside the morning-to-afternoon window --- and the transfer agent, not the chain, decides whether it did.
+
+\begin{measurement}[Construction]\label{meas:cat:rwa:buidl}
+The construction $X = \{Aw,Fz,Gp,Rd,Sh,Up\}$ has canonical form
+$\mathrm{ex}(X) = \{Aw,Fz,Gp,Rd,Sh,Up\}$, so every element is primitive in it.
+It is admissible: no requirement term is open, every element is warranted, and it arms no prohibition. It discharges 6 of the 19 recorded obligations; 13 are residue. No composite of at most three corpus protocols equals it; no corpus protocol is contained in it.
+\end{measurement}
+
+\begin{remark}[What the construction cannot say]
+13 obligations of BlackRock BUIDL (via Securitize) have no element:
+\begin{itemize}
+  \item the fund targets a constant one-dollar share value with no price feed of any kind on chain, warns in the same sentence that it may fail, and disclaims any sponsor obligation to support it
+  \item yield is declared off chain against a snapshot of who held the token at three in the afternoon eastern time, and paid the following business day by minting new tokens to them
+  \item the on-chain ledger is keyed on a legal identity rather than on an address: wallets are attached to an investor identifier, and the investor carries attributes that expire and that point at an off-chain document
+  \item the gate tests two distinct legal predicates at once, accredited-investor status under the securities law and qualified-purchaser status under the investment-company law, and the tighter of the two is what caps the fund's investor base
+  \item the holder must know whether the chain is the register of ownership or a mirror of a transfer agent's book, and here a redemption completed on chain before the deadline is not a redemption: if the transfer agent has not yet determined the transfer to be final and recorded it in the fund's books, the shares are not redeemed that day and roll to the next redemption date
+  \item the registrar of that authoritative book is a distinct SEC-registered entity from the broker-dealer that sells the fund, and it outsources its own recordkeeping to a legacy stock transfer agent
+  \item the party who holds that replacement power is one private key: the proxy owner is an externally owned account, with no multisig at the proxy layer and no delay of any kind
+  \item the same fund issues a legally distinct share class on each chain, priced with a different management fee, against one off-chain register, and movement between chains is a third-party service the fund disclaims
+  \item the holder must know who owes them the money and what recourse they have, and here the obligor is a BVI company whose sponsor has expressly disclaimed any obligation to support it and whose gating powers are unknowable
+  \item the holder must know whether their claim survives the fund's insolvency, and here it is unsecured equity: no security interest, no collateral agent, no bankruptcy-remoteness claim and no perfection step anywhere
+  \item the holder must know what the reserve holds and who custodies it, and here the only public statement of the portfolio is a marketing phrase and the custodian could not be established at a primary source
+  \item no independent attestation of the fund's assets is published anywhere obtainable: there is no holdings feed, no reserve report, no oracle and no covenant
+  \item the holder must know who may change what the money is invested in, and here the manager can change duration, issuer mix and repo exposure at will with nothing on chain constraining it
+\end{itemize}
+The strongest sentence in the category is the fund's own: a redemption effected on chain before the deadline may not be recorded on the fund's books in time, and in that event the shares are not redeemed on that date. The books are a distinct artefact from the chain and are authoritative over it, and the register keeper supplies the rest itself --- one control book and one master securityholder file, singular across chains, and on a fork the transfer agent \emph{determines} which chain is the authoritative record --- so the register is not a ledger but a determination by a named company, exercised over ledgers, and held under a rolling annual contract the fund may terminate on short notice. Nothing in the vocabulary reaches the register, so nothing reaches its tenure either. Every element this construction carries names the wrapper --- who may hold the token, who may halt it, who may replace its code --- and not one names the thing wrapped, which here is a claim on a company whose custodian, prime broker and auditor are absent from the one filing obliged to name them, and whose offering document sits with a regulator that publishes its existence and not its contents. The single-key upgrade path is likewise a fact about the \emph{holder} of a power rather than about the power: the control element says the implementation is mutable, and cannot say who may mutate it, how fast, or with what independence.
+\end{remark}
+
+\begin{remark}[Why this witness]
+The witness is the smallest in the category, and most of its departures from the corpus record are removals. The attestation element goes because no independent statement of the fund's assets is published anywhere obtainable, and because the sworn adviser filing that must name a custodian, a prime broker and an auditor names none of them. The peg-swap element goes because the par-conversion facility was always a separate commercial arrangement of another company and the fund's own page now disclaims third-party liquidity generally; the cross-domain elements go because each chain carries a legally distinct share class, priced with its own management fee, against one off-chain register, and movement between chains is a disclaimed third-party service rather than a mechanism of the fund. Against that, the witness arms a prohibition the corpus recorded as unarmed --- the token's proxy exposes an owner and a target and nothing else, and that owner is an externally owned account which may replace the implementation in a single call, with no delay and no second signature.
+\end{remark}
+
+\subsection{Centrifuge}\label{sub:cat:rwa:centrifuge}
+
+An investor subscribes an asset into a vault attached to a share class of a pool and receives a share token that rises in price rather than in balance. The protocol owes nothing: the obligor is an off-chain fund --- for the flagship share class, a British Virgin Islands segregated portfolio company recognised there as a professional fund --- and that fund describes the token as \emph{prima facie} evidence of ownership, in the same way a share certificate would be. The net asset value is computed off chain and enters the protocol as a single number one party posts, with the freshness timestamp supplied by that same party and no dispute window, challenge bond or deviation bound anywhere in the call path; it reaches every other chain only when somebody pays gas to push it. Subscription and redemption are asynchronous --- a request is placed, the issuer approves a batch, shares are issued or revoked, the batch is fulfilled, and only then may the investor claim --- with the issuer setting each batch's execution price separately from the published one.
+
+\begin{measurement}[Construction]\label{meas:cat:rwa:centrifuge}
+The construction $X = \{Au,Aw,Ep,Ex,Fz,Gp,Rd,Sh,Sv,Tg,Up,Xf,Xm\}$ has canonical form
+$\mathrm{ex}(X) = \{Au,Aw,Ep,Ex,Fz,Gp,Rd,Sh,Sv,Tg,Up,Xf,Xm\}$, so every element is primitive in it.
+It is admissible: no requirement term is open, every element is warranted, and it arms no prohibition. It discharges 11 of the 22 recorded obligations; 11 are residue. No composite of at most three corpus protocols equals it; 2 corpus protocols are contained in it, and together they supply every element except \{Au,Ep,Ex,Fz,Rd,Sh,Sv\}.
+It is not minimal: \{Ex,Rd,Sv,Tg,Up\} can be removed with every obligation still covered and admissibility intact.
+\end{measurement}
+
+\begin{remark}[What the construction cannot say]
+11 obligations of Centrifuge (Centrifuge Protocol V3) have no element:
+\begin{itemize}
+  \item that price is authoritative on one chain and a message-derived copy everywhere else, propagated only when somebody pays gas for it, and a per-chain manager may override the local copy with a different number
+  \item eligibility carries an expiry: membership is stored as a valid-until timestamp packed into the same storage slot as the balance, so a holder ceases to be eligible with no actor doing anything
+  \item a restricted share can be wrapped into a freely transferable token that trades on top of it, while the right to mint or redeem remains behind the identity gate
+  \item the global pause is deliberately partial: it halts all cross-chain messaging in both directions and leaves local deposits, redemptions and withdrawals running
+  \item there is no seniority anywhere in the protocol: multiple share classes exist, they can be named and permissioned differently, and nothing allocates a loss between them
+  \item a defaulted underlying asset has no on-chain representation of any kind: no delinquency state, no roll rate, no write-off flag and no impairment call exist in the protocol
+  \item the holder must know who owes them the money, and here the protocol owes them nothing: the obligor is an off-chain fund and Centrifuge is infrastructure
+  \item the holder must know whether the chain is the register, and here the token is prima facie evidence of ownership under BVI law in the same way a share certificate would be
+  \item the holder must know whether their claim survives the issuer's insolvency, and here a bankruptcy-remote structure is asserted by the issuer and no security trustee is named anywhere
+  \item the holder must know what the reserve holds and who custodies it, and here the fund discloses the roles and names none of the parties
+  \item the holder must know who may change what the money is invested in, and here nothing on chain records who selected an asset or on what criteria
+\end{itemize}
+The register here is a different legal device again: the token is evidence of ownership under the fund's own law, which is to say rebuttable evidence of an entry in a book kept elsewhere --- and the book is kept by a fund administrator the fund discloses as a role and never names. That pattern runs through the whole disclosure: prime broker, custodian, administrator, each present as a function and absent as a party. On chain the residue is emptier than expected rather than richer, because a defaulted underlying asset has no representation of any kind --- no delinquency state, no roll rate, no write-off flag, no impairment call --- so the only way a loss reaches a holder is a lower number in the next price the manager posts. The construction the residue most needs to state is the wrapper on the wrapper: a restricted share wrapped into a freely transferable token whose economic exposure is bearer while the right to mint or redeem stays behind the identity gate, so a holder of the outer token has a real claim and no path to the obligor.
+\end{remark}
+
+\begin{remark}[Why this witness]
+The corpus record carries a tranche element and the witness drops it, on a search of the protocol's own source: seniority, subordination and waterfall appear nowhere in it, and the only occurrences of the word tranche are in an audit document, a test-properties file and legacy migration scripts. The documentation's junior-and-senior phrasing describes a configuration idiom --- name share classes differently, permission them differently, price them differently --- and there is no loss-allocation logic, no seniority ordering and no trigger that redirects anything, so subordination here lives in offering documents and reaches the chain only as the manager choosing to mark one class down before another. In its place the witness carries a freeze-and-recovery element the corpus omitted, although this protocol ships more of that machinery than the fund tokens the corpus does credit with it; a redemption element, because redemption is a first-class operation with its own transfer-hook regime; and a delegated-execution element, for the merkle-rooted policies that restrain a strategist by target contract, function selector and parameter value. Epoch-gated exit replaces the queue: this is a request, approve and fulfil batch cycle priced by the issuer, and the queue element belongs to the private-credit member of this category, where it is exactly right.
+\end{remark}
+
+\subsection{Circle USYC}\label{sub:cat:rwa:usyc}
+
+An investor subscribes a stablecoin and receives a token equal in number to the shares they hold in a Cayman Islands mutual fund. The fund owes the money; the company the investor deals with is a Bermuda token administrator, and the sponsor disclaims every guarantee to the fund while listing it as a subsidiary in an exhibit to the same annual report whose notes treat it as an unconsolidated variable interest entity. The price is struck once per business day off chain from a prime brokerage account, divided by the supply and published on chain behind a standard aggregator interface, so value accrues in the price and never in the balance. A holder may burn the token at the issuer's teller and be paid at the latest reported price at any hour --- but the teller escrows nothing, an operator pushes liquidity in at the moment of the transaction, a holder who needs more is directed to an email address, and unconditional instant convertibility exists as a separately priced tier.
+
+\begin{measurement}[Construction]\label{meas:cat:rwa:usyc}
+The construction $X = \{At,Aw,Ex,Fz,Gp,Ix,Rd,Sh,Sv,Up,Xf\}$ has canonical form
+$\mathrm{ex}(X) = \{At,Aw,Ex,Fz,Gp,Ix,Rd,Sh,Sv,Up,Xf\}$, so every element is primitive in it.
+It is admissible: no requirement term is open, every element is warranted, and it arms no prohibition. It discharges 9 of the 20 recorded obligations; 11 are residue. No composite of at most three corpus protocols equals it; 4 corpus protocols are contained in it, and together they supply every element except \{Sv\}.
+It is not minimal: \{At,Ex,Fz,Gp,Sv\} can be removed with every obligation still covered and admissibility intact.
+\end{measurement}
+
+\begin{remark}[What the construction cannot say]
+11 obligations of Circle USYC (Hashnote) have no element:
+\begin{itemize}
+  \item a subscription arriving after two in the afternoon eastern time is priced at a forecast of the next price report rather than at any observed value
+  \item redemptions execute at a different price from subscriptions, with a time-varying spread between the two legs
+  \item no reserve stands behind that promise: the teller holds no USDC of its own, liquidity is pushed in by an operator at transaction time, and a holder needing more than the day's posted amount is told to contact the issuer
+  \item unconditional instant convertibility exists but must be bought: it is a separately priced per-client tier carrying additional fees
+  \item the token's primary use is not investment but margin: it sits immobilised with a tri-party custodian, pledged against derivatives positions at an exchange, while continuing to accrue
+  \item a ten per cent performance fee on yield plus four and three basis points on subscription and redemption are taken by the manager off the net asset value
+  \item the holder must know who owes them the money, and here the fund owes it while a different company in a different jurisdiction is the party they deal with, and three primary sources disagree about which of the two is the issuer
+  \item the holder must know whether the chain is the register, and here the token is explicitly a digital twin of a transfer agent's share register that the administrator moves afterwards to match
+  \item the holder must know whether their claim survives the issuer's insolvency, and here they hold an unsecured equity interest with no security agreement, no collateral agent and no perfection step of any kind
+  \item the holder must know what the reserve holds and who holds it, and here the assets sit at a prime broker in repo positions whose counterparties are never named and whose composition is never published
+  \item the holder must know who may change what the money is invested in, and here the manager sets the mix between bills and repo with no published mandate, band or limit
+\end{itemize}
+This is the register-of-record gap in its clearest published form. Ownership sits as shares at a transfer agent and the tokens are the issuer's own \emph{digital twins} of them, with the fund administrator moving shares in the registry \emph{to reflect} movements in the token. Operationally the token leads and the register follows; legally the register is still the record, and a formalisation that treats the token as the ledger misstates what the holder owns, while one that treats it as a mirror misstates where transactions sequence. The residue also swallows the fund's dominant actual use --- pledged at a tri-party custodian as exchange margin, immobilised and still accruing --- along with the identity of every party that holds the assets, which no regulator's record reaches: no adviser files a private-fund schedule for this fund, and the Cayman register is served behind a challenge the fetch could not pass. The mandate over those assets exists in legal form and stops short, naming an agent and a domain and supplying no counterparty limit, no concentration limit and no holdings feed.
+\end{remark}
+
+\begin{remark}[Why this witness]
+The corpus records this fund and the other treasury fund as identical decompositions while writing down different element sets for them, and the witness makes the difference explicit rather than repairing the arrays. A peg-swap element does not belong here: the price is a rising net asset value and the teller is a net-asset-value mint and redeem with a deliberately asymmetric pair of legs, which is the structural opposite of a par swap. The witness adds an accrual element, because the claim grows in the price and not in the balance; a discretion element, because the issuer determines the price, may delay it, forecasts it after the afternoon cut-off and decides how much instant liquidity exists on a given day; and a cross-domain element, because the token is natively issued on several chains and almost all of it lives on the chain of the single venue that accepts it as margin. Sanctions screening is carried by the external-feed element rather than by the access gate, because the gate is a bit set once at onboarding and the screen is a third party that can invalidate a valid wallet with no act by the issuer, the sponsor or the holder.
+\end{remark}
+
+\subsection{Maple Finance}\label{sub:cat:rwa:maple}
+
+A lender deposits a stablecoin into a pool and receives a vault share whose redemption value rises as borrowers repay. The claim runs against one segregated portfolio of a segregated portfolio company, ring-fenced by statute from the company's other portfolios, and recourse is limited to the assets in that portfolio alone. The pool's capital is lent to named institutional borrowers as dated loan contracts on terms agreed off chain, and is also allocated to futures basis trades, other market-neutral strategies and liquidity provision on other protocols, with no published cap, venue whitelist or leverage limit. Value is the pool's assets less its unrealised losses: interest accrues mechanically from the loan schedules, and a loss is recognised when a human declares it and may be reversed by another. Exit is a first-in first-out queue served as liquidity appears, and the protocol publishes both a normal case and a far longer contractual bound.
+
+\begin{measurement}[Construction]\label{meas:cat:rwa:maple}
+The construction $X = \{Aw,Ct,Fd,Ft,Gp,Pl,Sh,Sl,Sv,Tg,Up,Wq,Xf,Xm\}$ has canonical form
+$\mathrm{ex}(X) = \{Aw,Fd,Ft,Gp,Pl,Sh,Sl,Sv,Tg,Up,Wq,Xf,Xm\}$, deriving \{Ct\} rather than choosing it.
+It is not admissible: it leaves the requirement term $L1:Ex\{\textbackslash\{\}mid\}Tp\{\textbackslash\{\}mid\}At$ open. It discharges 10 of the 22 recorded obligations; 12 are residue. No composite of at most three corpus protocols equals it; 2 corpus protocols are contained in it, and together they supply every element except \{Ct,Fd,Ft,Pl,Sh,Sl,Sv,Wq\}.
+\end{measurement}
+
+\begin{remark}[What the construction cannot say]
+12 obligations of Maple Finance (syrupUSDC / institutional pools) have no element:
+\begin{itemize}
+  \item the solvency test itself runs off chain: an operations team watches three price feeds around the clock, gives a borrower twenty-four hours to top up, and then sells the collateral through over-the-counter desks under the loan agreement
+  \item a manager may declare a paper loss that immediately reduces what an exiting lender receives, may reverse it, and the protocol states the purpose is to incentivise current lenders to remain
+  \item the first-loss module exists in the code and is deliberately empty, and the staked governance token was never slashable and no longer earns anything
+  \item the instant exit is not a protocol facility at all: a lender who will not wait sells the share token into third-party automated market makers the protocol does not control
+  \item the permission check returns true by default: if a pool's criteria bitmap was never set, everyone passes, and the protocol documents this as intentional
+  \item a pool may be made permissionless once and can never be made permissioned again
+  \item the delay protecting those upgrades is set by the same authority the delay is meant to restrain, can be changed at any time, and the change applies retroactively to calls already scheduled
+  \item the holder must know who owes them the money, and here the claim runs to a pool contract that holds loan contracts funded to named institutions under bilateral agreements whose governing law and recourse are not published
+  \item the holder must know whether the chain is the register, and here it is: the pool contract is the authoritative ledger of the lender's claim, and Maple is the only one of the five whose investor register is on chain
+  \item the holder must know whether their claim is perfected against the borrower's estate, and here no security trustee, control agreement or perfection step is evidenced anywhere, only possession of collateral by a contract
+  \item the holder must know what backs the claim and who holds it, and here the answer is unusually good: collateral is custodied by the loan contracts on chain and the ratio is published, while the disposal of it is off chain
+  \item the holder must know who may change what the money is lent against, and here one delegate selects the counterparties, sets the rate and the size, and no concentration limit is enforced on chain
+\end{itemize}
+Maple is the only member of this category whose register of record is the token ledger. There is no transfer agent, no share registry and no off-chain book: the pool contract \emph{is} the ledger of the lender's claim, and what that costs is a recourse limited by statute to one portfolio's assets. The residue holds everything around the claim instead --- that the solvency test runs off chain against price feeds nothing on chain can see and is enforced by an operations team selling through desks, that the delay protecting the upgrade path is set by the same authority it restrains and may be shortened retroactively, that the permission check passes everyone when its criteria were never configured, and that the real instant exit is a third-party automated market maker the protocol does not control. The bounded delegate mandate appears here in its on-chain form and is the most complete instance in the category, and the two parts a checker would have to evaluate are the defective ones: the cap bounds the pool rather than exposure to any borrower, venue or strategy, and the rate-of-change limit is revocable by the party it binds.
+\end{remark}
+
+\begin{remark}[Why this witness]
+The corpus record carries a staked backstop and protocol-funded emissions, and the witness drops both. The first-loss module exists in the code under the protocol's own heading calling it unused, the governance stake was never slashable and its rewards were sunset by a governance proposal, and both emission channels are closed --- the lender programme's final claim window has passed, and the surviving lender incentives are funded by third parties, which is precisely what protocol-funded emissions are not. With the backstop gone, socialised loss over the pro-rata claim is the only loss-absorption mechanism the protocol has, so the witness adds it, and it is what closes the loss-absorption term the corpus record left open. The witness also adds the cross-domain pair the corpus omitted, and keeps the collateral test as a first-class element rather than a derived one: collateral is posted to and repossessed by the loan contracts on chain, and only the price monitoring and the act of selling are off chain.
+\end{remark}
+
+\subsection{Ondo Finance}\label{sub:cat:rwa:ondo}
+
+One sponsor issues claims that are not of the same legal kind, and the difference is larger than the wrapper they share. A subscriber to the yield token is a \emph{lender}: the token evidences the issuer's debt, a named collateral agent holds a first-priority security interest for the holders, and recourse is contractually capped at what that collateral recovers. A subscriber to the fund token becomes a limited partner in a Delaware partnership; a subscriber to the tokenised equities holds a structured note of a British Virgin Islands vehicle governed by Swiss law, whose holders are entitled to damages and not to performance. Price is set a different way in each: a rate that compounds deterministically on chain between administrative changes, a net asset value pushed by hand once a business day from an estimate trued up the next, and a signed off-chain quote that expires in seconds and is consumed by the trade it prices. Redemption is atomic for a holder the registry knows, and otherwise a wire to a non-US bank account, a shared capacity cap, or a diligence check a secondary buyer can fail.
+
+\begin{measurement}[Construction]\label{meas:cat:rwa:ondo}
+The construction $X = \{At,Aw,Ex,Fz,Gp,Ix,Ps,Rb,Rd,Rf,Sh,Sv,Tg,Up,Xf,Xm\}$ has canonical form
+$\mathrm{ex}(X) = \{At,Aw,Ex,Fz,Gp,Ix,Ps,Rb,Rd,Rf,Sh,Sv,Tg,Up,Xf,Xm\}$, so every element is primitive in it.
+It is admissible: no requirement term is open, every element is warranted, and it arms no prohibition. It discharges 13 of the 23 recorded obligations; 10 are residue. No composite of at most three corpus protocols equals it; 13 corpus protocols are contained in it, and together they supply every element except \{Rb,Rf,Sv\}.
+It is not minimal: \{Ex,Sv,Tg,Up,Xf,Xm\} can be removed with every obligation still covered and admissibility intact.
+\end{measurement}
+
+\begin{remark}[What the construction cannot say]
+10 obligations of Ondo Finance (USDY + OUSG + Global Markets) have no element:
+\begin{itemize}
+  \item a subscriber's dollars buy a token that evidences the issuer's debt to the subscriber as a lender, not a proportional interest in any pool
+  \item the atomic path is not self-contained: every tokenised-equity mint or redeem requires a live artefact from the issuer's attestation service, and settlement into a stablecoin depends on a swapper holding inventory
+  \item the instant channel is capacity-limited, fifty million dollars globally and twenty-five million per investor per rolling twenty-four hours, and is additionally limited by a third party's stablecoin availability
+  \item the USDY gate is installed, wired into the transfer hook and deliberately switched off, and one role-holder can re-arm it in a single transaction with no delay
+  \item the holder must know who owes them the money and what they can do about it, and here the issuer's own live documentation names two different obligors for the same token while capping recourse at whatever collateral is recovered
+  \item the holder must know whether the chain is the register of ownership or a mirror of somebody's book, and across Ondo's three products the answer is three different things
+  \item the holder must know whether their claim is secured, perfected, and able to survive the issuer's insolvency, and here a first-priority security interest is asserted while the steps that would make it good are either private or absent
+  \item the holder must know what the reserve holds and who holds it, and here the disclosure is a self-published portfolio page with no independent composition attestation, whose fund product is itself two tokenisation layers away from any Treasury
+  \item the holder must know who may change what the money is invested in, and here the manager states an unconstrained discretion to change it with no target allocation, no band and no concentration limit disclosed anywhere
+  \item over-collateralisation is provided as sponsor equity under a contractual floor tested at quarter end, and there is no second class of token, no subordinated holder and no distribution waterfall
+\end{itemize}
+The residue is where the sponsor's own record stops agreeing with itself. Its live documentation names two obligors for the same token, and its terms of service keep the Delaware company alive as a distinct contracting party while naming issuers for the other two products and none for that one, so the first thing a holder must know --- who owes them the money --- is settled by no public source. The security interest is asserted and the control agreements are confirmed, and the financing statement that would make the interest good against third parties cannot be checked at all: Delaware publishes no free debtor-name index, and a certified search must be bought from an authorised searcher. That is a documented absence rather than a search failure, and it is this category's problem in its sharpest form --- the wrapper is readable by anyone with an RPC endpoint, and the step that makes the claim survive an insolvency is readable only by whoever pays for it. The one published quantitative bound on discretion anywhere in the category is here, and it bounds the sponsor's credit support rather than the manager's mandate.
+\end{remark}
+
+\begin{remark}[Why this witness]
+The corpus record carries a tranche element for this sponsor and the witness drops it. The junior capital is real --- a contractual floor of sponsor equity above the tokens outstanding, tested at quarter end --- but it is equity standing behind the whole issue rather than a subordinated class of tokens: there is no second token, no junior holder and no distribution waterfall in normal operation, and a priority ordering appears only on enforcement. In its place the witness carries a peg-swap element the issuer names in its own address register, a signed-quote element for a price that arrives as an unforgeable expiring capability rather than as a readable feed, and a discretion element for a rate the issuer administers against a document the holder cannot read. The pro-rata claim element is scoped to the fund token alone; applying it to the debt token would make a creditor into an equity holder, which is the distinction the security agreement exists to preserve.
 \end{remark}
 
 \section{Options and structured products}\label{sec:cat:opt}
@@ -2520,6 +2866,175 @@ vocabulary rejects most often --- options at four of five, prediction at two of
 five --- are the ones whose members hold risk that the requirement tables
 insist must be absorbed by a named mechanism, which those protocols carry
 off-chain or not at all.
+\end{remark}
+
+The five highest-ranked members of the category are treated below. Each
+subsection states what the system does, exhibits one construction with the
+reason for that witness among the alternatives the disjunctive terms leave open
+(Corollary~\ref{cor:notthe}), reports the verdict, and lists the obligations no
+element discharges. Every figure in the measurement environments is emitted from
+the checker output rather than transcribed.
+
+\subsection{Azuro}\label{sub:cat:prd:azuro}
+
+A bettor stakes collateral on an outcome at odds quoted and locked at the moment of the bet, and holds the position as a transferable token. There is no counterparty on the other side: a single protocol-wide pool underwrites every bet, and the odds move against incoming flow because each bet shifts the virtual funds from which they are computed. The payout is fixed at bet time and claimed once the event resolves; a cancelled event refunds the stake instead, and the pool will also quote a price to buy an open bet back before the event concludes. The party that priced the event also resolves it --- a permissioned data provider creates the event, seeds and reprices the odds, sets the risk budget, and then declares which outcome won, resolving in good faith against a bookmaker's published settlement rules. The protocol's documentation names its DAO as arbiter of last resort in a dispute and specifies no mechanism for that arbitration anywhere on-chain, so the dispute path exists on paper and nowhere else.
+
+\begin{measurement}[Construction]\label{meas:cat:prd:azuro}
+The construction $X = \{Au,Aw,Fd,Gp,Gs,Rd,Rl,Up\}$ has canonical form
+$\mathrm{ex}(X) = \{Aw,Fd,Gp,Gs,Rd,Rl,Up\}$, deriving \{Au\} rather than choosing it.
+It is admissible: no requirement term is open, every element is warranted, and it arms no prohibition. It discharges 7 of the 19 recorded obligations; 12 are residue. No composite of at most three corpus protocols equals it; no corpus protocol is contained in it.
+It is not minimal: \{Gs,Gp\} can be removed with every obligation still covered and admissibility intact.
+\end{measurement}
+
+\begin{remark}[What the construction cannot say]
+12 obligations of Azuro have no element:
+\begin{itemize}
+  \item a bettor's position is a transferable NFT carrying a payout struck against the pool; no operation splits pool collateral into complementary outcome claims and none recombines them
+  \item a single protocol-wide liquidity pool is the counterparty to every bet, writing a non-linear event-contingent payoff, so no bettor ever faces another bettor
+  \item the price of an outcome is the normalised inverse of the pool's virtual fund for that outcome, loaded with a spread allocated inversely to the outcome's probability under a total-margin constraint, and every bet moves the virtual funds so the odds worsen against incoming flow
+  \item the odds struck at the moment of the bet are locked for that bettor and fix the payout, while the curve continues to move for everyone after
+  \item each liquidity deposit is a separate leaf of a segment tree over a 2K+1 array, a Condition's profit and loss is distributed across a leaf range, and the updates are lazy — annotated at parent nodes and pushed down only when a provider withdraws
+  \item a liquidity provider is locked for seven days from deposit and may withdraw at will thereafter
+  \item one permissioned party creates and cancels events, seeds and reprices the sell-side odds, sets the reinforcement and margin, and then declares which outcome won
+  \item a Data Provider must post collateral up to the total Reinforcement it expects to use across all its active markets
+  \item the pool quotes a price to buy back an open bet before the event concludes, extinguishing a live contingent claim early
+  \item a combination bet multiplies the odds of several legs into one payout while the pool's exposure to the combination is not the product of its exposures to the legs
+  \item an app's share is the LESSER of 70\% of the revenue it generated and a monthly cap of 50\% of the spread times the bet size summed over its bets
+  \item when the pool loses, the liquidity providers', Data Provider's and DAO's rewards go negative, while an app's share can only ever be positive or zero
+\end{itemize}
+What the witness cannot say is almost everything that makes this a betting protocol rather than an exchange. A pool that is principal to every trade, writing a non-linear event-contingent payoff, has no element; nor has a curve that prices a \emph{state} against the pool's own exposure rather than an asset against an asset; nor has a payoff quoted and locked for one bettor while that curve keeps moving for the next. The resource lock the witness does carry is the closest good fit in the whole vocabulary and is still not exact, because what is reserved is a worst-case loss across an entire outcome vector and it doubles as the pricing seed. The accounting is residue too: a provider's claim is a leaf with an entry position rather than a proportional share of a pot, and the vocabulary has no accounting form for it. What remains is the commercial arrangement --- early buy-back of a live claim, correlated exposure across combined legs, a frontend as a first-class revenue claimant, and an order of loss-bearing declared in a fee schedule rather than encoded as a structure.
+\end{remark}
+
+\begin{remark}[Why this witness]
+The corpus record carries $Rl$ with no $Au$, which makes this the only protocol in the corpus rejected on a \emph{warrant} --- an element present that nothing consumes --- rather than on a requirement alone. The witness repairs that with $Au$ and $Gs$ on evidence: the live protocol routes every bet through a relayer that executes the bettor's signed order and draws sponsored fees from a paymaster, both documented in the architecture and both absent from the public contract repository, which covers a superseded version. $Ex$ and $Sv$ are dropped because there is no feed, no aggregation and no medianizer, and because servicing discretion is written for a loan rather than for a party that sets the price and then decides who won; $Sh$ is dropped because a provider's claim is a leaf of a segment tree whose value depends on which events resolved during its residence; $Em$ is dropped because what is documented is a share of the pool's profit and loss, which is $Fd$. Dropping the truth elements leaves this venue with no expressible resolution mechanism at all, and that is the finding rather than a defect in the witness.
+\end{remark}
+
+\subsection{Grove Finance}\label{sub:cat:prd:grove}
+
+Grove is the other member the sampling frame could not file elsewhere, and it is an allocator and a savings product under one name --- a distinction that is load-bearing. The allocator mints USDS against a Sky allocation vault under a mandate Sky governance approves, and deploys it into credit, most visibly a tokenised collateralised-loan-obligation fund alongside on-chain lending, liquidity and yield venues across several chains; the capital is Sky's, the discretion is Grove's, and the depositor in the economically meaningful sense is a DAO. A retail user who supplies a stablecoin to the savings product receives sUSDS, whose exchange rate accrues at the Sky Savings Rate, plus non-transferable points carrying no claim --- that user is not buying Grove's credit book, and treating this as a deposit-taking vault is an error. Where the money goes is decided by Grove and approved through Sky's weekly governance cycle after a public forum round, and the standing on-chain controls are a rate limit on every controller operation and a freezer role able to revoke the relayer and halt the machine. Recourse therefore runs to Sky governance and to that freezer rather than to a depositor: the savings user's only remedy is redemption, and Grove's own governance token has Sky's pause proxy as its sole authorised admin.
+
+\begin{measurement}[Construction]\label{meas:cat:prd:grove}
+The construction $X = \{At,Aw,Fd,Gp,Ix,Ps,Sh,Tg,Xf\}$ has canonical form
+$\mathrm{ex}(X) = \{At,Aw,Fd,Gp,Ix,Ps,Sh,Tg,Xf\}$, so every element is primitive in it.
+It is admissible: no requirement term is open, every element is warranted, and it arms no prohibition. It discharges 8 of the 20 recorded obligations; 12 are residue. No composite of at most three corpus protocols equals it; 1 corpus protocols are contained in it, and together they supply every element except \{Fd,Ix,Ps\}.
+It is not minimal: \{Sh,Ix\} can be removed with every obligation still covered and admissibility intact.
+\end{measurement}
+
+\begin{remark}[What the construction cannot say]
+12 obligations of Grove Finance (Onchain Capital Allocator) have no element:
+\begin{itemize}
+  \item a strategy may be funded only after Sky governance approves it through the Atlas Edit weekly cycle following a public forum round in which Grove answers voter questions; only approved strategies move to on-chain deployment
+  \item the capital enters by minting USDS against a Sky allocation vault rather than by any user transferring assets in — the deposit is a governance-authorised credit line
+  \item every asset the allocator controls sits in one minimal stateless proxy that holds no logic, and every movement of those assets is a call the proxy makes on a controller's instruction; funds never leave it
+  \item only holders of a relayer role may invoke a fund-moving function, and the role is exercised by an off-chain planner that submits the transactions
+  \item every controller operation is bounded by a rate limit that refills linearly at a configured slope up to a maximum, keyed per asset, per destination or per domain
+  \item positions are taken in vaults whose deposits and redemptions do not settle synchronously: a request is made on-chain now and the claim is fulfilled later out of an off-chain process
+  \item the economically decisive transfer is not between chains but from a chain into a fund administrator's register of record, where the subscription becomes an entry in a Cayman or Luxembourg vehicle's books
+  \item the credit the capital ultimately buys is a tranche of a collateralised loan obligation, which from the allocator's position is a single opaque net asset value with no visible waterfall
+  \item users also accrue Grove Points in proportion to their activity, which are non-transferable, have no monetary value and confer no claim or entitlement
+  \item GROVE holders stake into stGROVE and vote directly or by delegate, but the token contract's only authorised admin is Sky's pause proxy, so administrative authority over the governance token belongs to another protocol's governance
+  \item the Basin facility commits up to \$1 billion a day of immediate stablecoin liquidity to eligible holders of tokenised funds, without purchasing or taking ownership of the underlying assets and without changing the fund's own redemption procedures, settlement cycles or transfer restrictions
+  \item in that timelock the external issuer holds the proposal right, Grove governance executes after the delay, and a security multisig may cancel
+\end{itemize}
+The residue is the mandate, the custody and the flow control. Nothing names an authorisation granted by one governance system over capital it owns and discretion it does not exercise, nor a governance system whose root of authority is another one, nor a credit line whose underwriting is a ballot. Nothing names custody at all: every asset sits in a stateless proxy that holds no logic and forwards calls, which is the inverse of a mutable implementation behind a fixed address and carries the opposite risk. The rate limit --- a linearly refilling per-key bound on how fast a privileged actor may move value --- is the most load-bearing on-chain control in the allocator, and the vocabulary has no flow limiter at all; the gap is general rather than local to this protocol. The largest object here post-dates the corpus entirely: a standing facility that sells immediate stablecoin liquidity to holders of slow-settling tokenised funds, warehousing the timing risk for a fee while the fund's own settlement cycle continues unchanged behind it, sold to counterparties who are not the protocol's depositors at all.
+\end{remark}
+
+\begin{remark}[Why this witness]
+The corpus records $Sh$ without siting it. The witness sites it on the savings share and pairs it with $Ix$, because that share's exchange rate accrues by an index whose rate is a governance parameter of another protocol --- and the siting is what matters most here, since the share is a claim on Sky's savings rate rather than on Grove's book. $Ps$ and $Fd$ are added on evidence, for the peg-swap module through which the allocator converts between its stablecoins at par and for the standing liquidity facility's on-chain fee accrual to authorised issuers, while nothing is claimed for what Grove earns on the Sky mandate, which is published at no primary source and is not guessed at. $Gp$ is retained under protest and $Au$ is declined: the freezer does not pause a system but revokes an actor, leaving the machine running with nobody able to act and restoration requiring a role to be re-granted rather than a flag cleared, and $Au$ describes a principal delegating their own authority under a session policy, which no user here has done.
+\end{remark}
+
+\subsection{Kalshi}\label{sub:cat:prd:kalshi}
+
+A user opens an account at a regulated exchange and buys a contract on a stated future fact, at a price that reads directly as a probability. At expiration the contract pays a fixed settlement value to the side whose payout criterion is met; a scalar contract apportions that value between long and short rather than paying it whole, and either way the payment is a clearing-house bookkeeping entry against a segregated settlement account. The outcome is determined by the exchange itself. An internal committee interprets the contract's terms with full discretion and its determination is final and not subject to review, so a disagreement about an outcome is not adjudicated but \emph{decided}; where the fact is indeterminable the contract may settle at its own last traded price, and once trading has begun the venue may designate a different settlement source for a contract that is already open.
+
+\begin{measurement}[Construction]\label{meas:cat:prd:kalshi}
+The construction $X = \{Ad,Aw,Bs,Ct,Fd,Gp,Pf,Rd,Sl\}$ has canonical form
+$\mathrm{ex}(X) = \{Ad,Aw,Bs,Fd,Gp,Pf,Rd,Sl\}$, deriving \{Ct\} rather than choosing it.
+It is not admissible: it leaves the requirement terms $L1:Ex\{\textbackslash\{\}mid\}Tp\{\textbackslash\{\}mid\}At$, $L4:Ex$, $L4:Li$ open. It discharges 9 of the 22 recorded obligations; 13 are residue. No composite of at most three corpus protocols equals it; 1 corpus protocols are contained in it, and together they supply every element except \{Ad,Bs,Ex,Fd,Gp,Li,Pf,Sl\}.
+\end{measurement}
+
+\begin{remark}[What the construction cannot say]
+13 obligations of Kalshi have no element:
+\begin{itemize}
+  \item orders rest in a continuous two-sided limit order book operated by the exchange, quoted in sub-penny dollar prices and published as bids only
+  \item the long and short of one contract are complementary claims on one escrowed dollar, and that complementarity exists only as a price identity — a YES bid at X is a NO ask at \$1.00 minus X — with no object that can be split into or merged out of the pair
+  \item on acceptance of a matched trade the clearing house is substituted as seller to the buying participant and buyer to the selling participant, the original bilateral contract is extinguished, and the parties are released from their obligations to each other
+  \item open margined positions are marked and settled in cash at least once each business day, with unscheduled intra-day calls available
+  \item a scalar contract apportions the \$1.00 between long and short as a function of where the Expiration Value falls, rather than paying it wholly to one side
+  \item the operator commits two capped tranches of its own capital to the default waterfall, one ahead of the mutualised fund and one behind it, each capped at the greater of \$20 million or 10\% of the guaranty fund
+  \item when the fund is exhausted the clearing house may call assessments on every surviving member, pro rata to their deposit requirement over the preceding three months, capped at 200\% for one default and 550\% for multiple defaults in six months, and refundable pro rata out of later recoveries
+  \item the mutualised default fund is partitioned by Contract Segment between the fully-collateralised and margined product classes, and the collateral of non-defaulting customers in each account class may not be applied to a defaulting member's obligations
+  \item the outcome of a contract is determined by an internal committee of the exchange with full discretion, within 24 hours, and its determination is final and not subject to review
+  \item where the Expiration Value is indeterminable the contract may be settled at its own last traded price
+  \item after the first day of trading the venue may designate a new Source Agency and Underlying for a listed contract and change its specifications
+  \item a new market exists because the venue self-certified its terms with the regulator under CEA 5c(c) and the regulator did not object within the window
+  \item customer funds are held in United States dollars only, segregated by account class under CFTC Reg. 1.20 or Part 22 with the clearing house holding a continuing first-priority security interest and UCC control over them, investable only in US Treasuries, agency securities, reverse repo on those and government money-market funds up to two-year maturity — and the clearing house retains all profit from that investment not paid to members
+\end{itemize}
+What the construction cannot say is the institution. Novation extinguishes a bilateral obligation and replaces it with obligations against a clearing house, and nothing in the vocabulary is a counterparty-substitution operator: $Rd$ names a right to be paid and carries no obligor, and the obligor is the entire content of novation. Beyond it, the operator's own capped first-loss contributions and the callable assessments the clearing house may levy on surviving members --- unfunded until called, capped, and refundable out of later recoveries --- have no symbol either, so the vocabulary reconstructs the mutualised middle of this waterfall and neither end of it. The rest of the residue is the product: a payout criterion written in prose, a settlement source the venue may replace mid-contract, a listing that exists because a regulator did not object, and customer money whose investment income belongs to its custodian. This is the most precisely specified default waterfall in the corpus, and that precision is what makes its inexpressibility a result rather than an omission.
+\end{remark}
+
+\begin{remark}[Why this witness]
+The corpus records $Aw$, $Ct$ and $Rd$. The witness adds $Bs$, $Sl$ and $Ad$ because the clearing rulebook specifies a default waterfall in more detail than any other document in the corpus --- a mutualised guaranty fund, variation-margin gains haircutting, and tear-ups --- and adds $Pf$, $Fd$ and $Gp$ because the venue now lists perpetual futures with a funding rate, publishes a fee schedule computed from the contract's own price, and holds emergency powers under both the exchange and the clearing rulebook. Among the alternatives the loss-absorption term leaves open, the rulebook names its own layers in its own order, so the witness follows the rulebook rather than the nearest DeFi analogue. The construction is rejected, and the rejection is correct: every element that could close the truth term requires a feed, a price series or an independent attester, and the truth source here is a committee.
+\end{remark}
+
+\subsection{Polymarket}\label{sub:cat:prd:polymarket}
+
+A user deposits a reserve-backed dollar token and buys outcome shares in a market whose resolution criteria are written in prose beneath the order book. A share pays a unit of collateral if its outcome occurs and nothing otherwise, so its price reads as a probability; the user may also mint the complementary pair directly out of collateral and merge it back, which is what makes the venue fully collateralised with no counterparty. The outcome is proposed to an optimistic oracle by a whitelisted proposer under a bond, and stands if nobody disputes it within the challenge window. A dispute resets the question and re-requests a price, a further dispute escalates to a token-holder vote, and orthogonally to both an admin may flag the market and, after a fixed safety period, write the payout vector directly. The same brand also runs a regulated contract market on which a company officer determines the outcome at sole discretion and may reverse a determination for obvious error, so the same question resolves by bonded assertion on one venue and by officer discretion on the other.
+
+\begin{measurement}[Construction]\label{meas:cat:prd:polymarket}
+The construction $X = \{Au,Aw,Ct,Fd,Gp,Gs,Oa,Ob,Ps,Rd,Up\}$ has canonical form
+$\mathrm{ex}(X) = \{Aw,Ct,Fd,Gp,Gs,Oa,Ob,Ps,Rd,Up\}$, deriving \{Au\} rather than choosing it.
+It is admissible: no requirement term is open, every element is warranted, and it arms no prohibition. It discharges 12 of the 20 recorded obligations; 8 are residue. No composite of at most three corpus protocols equals it; 2 corpus protocols are contained in it, and together they supply every element except \{Fd,Ps\}.
+\end{measurement}
+
+\begin{remark}[What the construction cannot say]
+8 obligations of Polymarket have no element:
+\begin{itemize}
+  \item one unit of collateral is partitioned into one YES and one NO outcome token, and returning both recombines them into that unit, under an enforced invariant that the partition is pairwise disjoint, that no index set is empty and that none is the whole state space
+  \item two of the three settlement modes of the matching engine are that primitive: two crossing buy orders mint a complementary pair out of collateral, and two crossing sell orders merge a pair back into collateral, with only a crossing buy against a sell settling by transfer
+  \item the question being resolved is prose: a natural-language resolution criterion posted under the order book, against which every dispute is a dispute about text
+  \item an admin may flag a market, which pauses it and starts a fixed one-hour safety period, after which the admin writes the payout vector directly, overriding the oracle entirely
+  \item for a family of binary markets of which exactly one resolves true, a holder may exchange a bundle of NO positions for collateral plus the residual YES, financed before resolution out of a wrapped-collateral buffer the adapter holds itself; if the family's mutual-exclusivity constraint is violated the family cannot fully resolve and funds are frozen
+  \item the exchange wraps that collateral a second time as PMCT through a collateral adapter with dedicated onramp and offramp contracts, so an adapter can hold liquidity outside the conditional-token accounting
+  \item on the US venue every matched trade is novated: the clearing house is immediately substituted as seller to the purchaser and purchaser to the seller
+  \item on the US venue a company officer runs a Contract Outcome Review Process, determines the final outcome at sole discretion, and may reverse a determined outcome in the case of obvious error, with company liability to any one participant capped at \$2,500 a day, \$5,000 a month and \$50,000 a year
+\end{itemize}
+The residue begins with the primitive that defines the sector. Splitting collateral along the \emph{state} space of a condition, under an enforced disjoint and non-degenerate partition and recursively against further conditions, has no element; the only splitting element in the vocabulary partitions a claim along \emph{time} and takes no partition argument at all. That absence propagates into the matching engine, because a crossing pair of buys is settled by minting the complementary pair out of collateral and a crossing pair of sells by merging one back, so the order book and the state partition are the same machine and the vocabulary can name neither. The rest is the market itself: the prose question that every dispute is a dispute about, the completion operator over a family of mutually exclusive markets and the private buffer that finances it, and --- on the regulated leg --- a central counterparty that novates every trade and holds no guaranty fund and no financial resource package at all, against which the loss-absorption symbols reconstruct nothing. A fully collateralised clearing house is pure novation and custody, and that is the case the vocabulary has least to say about, not most.
+\end{remark}
+
+\begin{remark}[Why this witness]
+The corpus canonical form omits $Ps$, and the collateral has since changed: it is now a token backed at par by a reserve, convertible in either direction with no fee and enforced on-chain, which is what the peg-swap element names exactly rather than approximately. The witness adds $Ct$ and $Fd$ on the same evidential footing --- the pre-trade collateral check the affiliated clearing house performs before it will novate, documented in the rulebook, and the per-order fee the exchange charges at match time, documented in the exchange repository. $Oa$ is kept for resolution although its shape now fits badly, because the ladder it names --- assert, bond, dispute, escalate --- is genuinely present; what it cannot express is that proposals are permissioned per request while disputes remain open to anyone, and that asymmetry is the structurally interesting half. Among the alternatives the truth term leaves open, this is the only honest one: there is no feed and no price series, and an attestation would misname a bonded assertion about prose.
+\end{remark}
+
+\subsection{Steakhouse Financial}\label{sub:cat:prd:steakhouse}
+
+This is not a prediction market. It sits in this category because it fits no conventional one, and the category is where the sampling frame put what it could not file elsewhere. A depositor puts a stablecoin into a vault and receives shares; the vault does not lend but allocates the deposit across isolated lending markets on a base protocol, so what the depositor buys is a manager and what they hold is the credit and oracle risk of markets they did not choose. A named firm decides which markets the capital may enter, at what ceiling for each, and in what order deposits fill and withdrawals drain, and takes a share of the interest for doing so. The depositor's recourse is \emph{preventive} and not \emph{compensatory}: they may exit while liquidity lasts, and they hold veto weight over a critical curator action in proportion to their deposit, exercisable inside a timelock explicitly sized to let them withdraw or veto before capital moves --- but after a loss there is no addressee, the terms disclaiming any fiduciary relationship, denying that the firm is a broker, intermediary, agent, custodian or adviser, and capping total liability at a nominal sum.
+
+\begin{measurement}[Construction]\label{meas:cat:prd:steakhouse}
+The construction $X = \{Ct,Fd,Gp,Im,Rd,Sh,Tg\}$ has canonical form
+$\mathrm{ex}(X) = \{Fd,Gp,Im,Rd,Sh,Tg\}$, deriving \{Ct\} rather than choosing it.
+It is not admissible: it leaves the requirement terms $L1:Ex\{\textbackslash\{\}mid\}Tp\{\textbackslash\{\}mid\}At$, $L1:Li\{\textbackslash\{\}mid\}Ad\{\textbackslash\{\}mid\}Sl\{\textbackslash\{\}mid\}Bs$ open. It discharges 7 of the 17 recorded obligations; 10 are residue. No composite of at most three corpus protocols equals it; no corpus protocol is contained in it.
+\end{measurement}
+
+\begin{remark}[What the construction cannot say]
+10 obligations of Steakhouse Financial (Risk Curators) have no element:
+\begin{itemize}
+  \item a named firm decides which markets the capital may enter, in what order they fill and drain, and rebalances at will, for a share of the interest generated
+  \item each market carries a supply cap defaulting to zero, so no market may receive any capital until the curator explicitly caps it up, and a vault may enable at most thirty markets
+  \item deposits fill along an ordered supply queue up to each cap and withdrawals drain along an ordered withdraw queue, so the identity of the market receiving the next dollar is a curator-set ordering
+  \item capital not deployed into a market sits as idle supply in a market with null oracle and null collateral addresses, immediately withdrawable
+  \item vault users become vault guardians in proportion to the size of their deposit, and may veto a critical curator action inside the timelock window
+  \item authority is split four ways — an appointer, a strategy-setter who sets caps and fees, bounded executors who may only move funds within the strategy-setter's limits, and sentinels who may only reduce
+  \item the fee is paid by minting new vault shares to the fee recipients, so it is borne as dilution of every other holder rather than as a transfer of assets
+  \item the curator disclaims being a broker, intermediary, agent, custodian or advisor, disclaims any fiduciary relationship or obligation, caps total liability at \$1,000, and routes disputes to Cayman arbitration with a class-action waiver
+  \item before a market may be listed at all, at least two members of the risk team run a quality-control review across six named risk vectors, and every vault passes a due-diligence questionnaire with at least two internal and one external reviewer
+  \item where the capital goes is a function of a published, versioned three-layer rating — an asset rating over issuer, credit and operational pillars, a platform rating, and a market rating over oracle, liquidity, price fluctuation, LLTV and credit-enhancement criteria — which is entirely off-chain
+\end{itemize}
+The unnamed obligations are the mandate and everything that gives it shape. Nothing names the delegation of investment discretion over other people's capital, and nothing names the supply cap that is the vault's own risk instrument --- a portfolio limit on a manager rather than a solvency test on a borrower, defaulting to nothing so that a market is unusable until an affirmative act makes it usable. The depositor-weighted veto has no element, and neither has its absence: the vocabulary cannot distinguish a mandate with recourse from one without, so a mandate with recourse and one without decompose identically and the single most important fact about the instrument is invisible. The fee is residue in its mechanism if not in its fact, being paid by minting fresh shares to the recipient --- dilution, which cannot fail for want of assets and does not appear in the asset accounting at all. Above all, where the capital goes is a function of a published, versioned rating document, which is the prediction venues' rulebook problem in a different sector and is the reason both halves of this category belong in one place.
+\end{remark}
+
+\begin{remark}[Why this witness]
+The corpus records $Wq$; the witness drops it, because the queues here are queues of \emph{venues} in priority order and no claimant ever waits in them, and adds $Rd$ instead, because the redemption right is unconditional in the contract even though its exercise is not. The rest is retained --- the share, the isolated markets the vault is a client of, the inherited threshold test, the asymmetric timelock that delays a raised cap and lets a lowered one take effect at once, the guardian and the fee. Among the alternatives the mandate leaves open, no element is chosen for the mandate itself: forcing servicing discretion onto exposure selection would name a mechanism this firm does not have, and declining is the honest move. The construction is rejected for want of a price source and of a loss-absorption mechanism, and that is right --- this vault computes no price and absorbs no loss, both being properties of the markets underneath it, and the carrier has no way to record an obligation discharged one level down.
 \end{remark}
 
 \section{The composable fragment problem}\label{sec:cfp}

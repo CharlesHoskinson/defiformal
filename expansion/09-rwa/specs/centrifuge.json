@@ -2,33 +2,57 @@
   "app": "Centrifuge (Centrifuge Protocol V3)",
   "category": "09-rwa",
   "source": "C:\\defiformal-work\\09-rwa\\01-research.md",
-  "construction": ["Au", "Aw", "Ep", "Ex", "Fz", "Gp", "Rd", "Sh", "Sv", "Tg", "Up", "Xf", "Xm"],
+  "construction": [
+    "Au",
+    "Aw",
+    "Ep",
+    "Ex",
+    "Fz",
+    "Gp",
+    "Rd",
+    "Sh",
+    "Sv",
+    "Tg",
+    "Up",
+    "Xf",
+    "Xm"
+  ],
   "functionalObligations": [
     {
       "id": "F1",
       "text": "an investor subscribes an asset into a vault attached to a share class of a pool and receives a share token that represents a claim on the pool's assets and rises in price rather than in balance",
-      "elements": ["Sh"],
+      "elements": [
+        "Sh"
+      ],
       "evidence": "https://docs.centrifuge.io/user/concepts/share-tokens.md (accessed 2026-08-04)",
       "note": "Live flagship: JTRSY 0x8c213ee79581ff4984583c6a801e5263418c4b86, 792,751,306.27 shares at 1.111749542989796511, that is $881.3M, read from the protocol's own public GraphQL at https://api.centrifuge.io (accessed 2026-08-04); JAAA $684.79M, ACRDX $43.45M, SPXA $3.37M, total primary share tokens $1.613B. Ix was considered and NOT emitted: the price rises because a manager posts a higher number (F4), not because any accrual rule computes one, so there is no index object. That distinction is exactly what separates Centrifuge from Ondo's USDY, where Ix is exact."
     },
     {
       "id": "F2",
       "text": "subscription and redemption are asynchronous: a request is placed, the issuer approves a batch, shares are issued or revoked, the batch is fulfilled and only then may the investor claim",
-      "elements": ["Ep"],
+      "elements": [
+        "Ep"
+      ],
       "evidence": "https://docs.centrifuge.io/user/concepts/pools.md (accessed 2026-08-04)",
       "note": "The ERC-7540 lifecycle is pending, approved, issued or revoked, fulfilled, claimed, and the ISSUER controls approval. Ep carries the mechanism; Wq is DROPPED as a DEPARTURE from the corpus, because there is no queue, no ordering, no position and no liquidity trigger, only a batch the issuer approves. This is the exact mirror image of Maple, where Wq is right and Ep is wrong, and a decomposition that gives both symbols to both protocols loses the distinction. Sync-deposit vaults (ERC-4626 plus ERC-7540) skip the request phase for deposits only, so the asynchrony is one-sided in that configuration."
     },
     {
       "id": "F3",
       "text": "redemption is a first-class protocol operation with its own dedicated transfer-hook regime, and it is conditional on the issuer approving the batch and setting its execution price",
-      "elements": ["Rd", "Sv"],
+      "elements": [
+        "Rd",
+        "Sv"
+      ],
       "evidence": "https://docs.centrifuge.io/developer/protocol/guides/publish-nav-and-oracles.md (accessed 2026-08-04)",
       "note": "DEPARTURE: the corpus omits Rd and it should be present with a conditionality note, which is the qualification Rd needs everywhere in this category. The BatchRequestManager 0xc52Bd1Bd..3dFe77 sets the execution price for individual deposit and redemption batches SEPARATELY from the published reference price, so the price at which a holder actually exits is a second discretionary number distinct from the NAV, which is why Sv is emitted here as well as at F4. A dedicated RedemptionRestrictions hook 0xE5423eD8..17f06 exists to gate the redemption leg specifically."
     },
     {
       "id": "F4",
       "text": "the value of every share is a single number one party posts on chain, with the freshness timestamp supplied by that same party, and no dispute window, challenge bond, deviation bound or staleness rejection anywhere in the call path",
-      "elements": ["Ex", "Sv"],
+      "elements": [
+        "Ex",
+        "Sv"
+      ],
       "evidence": "https://raw.githubusercontent.com/centrifuge/protocol/v3.2.0/src/core/hub/Hub.sol (accessed 2026-08-04)",
       "note": "Hub.updateSharePrice(PoolId, ShareClassId, D18 pricePoolPerShare, uint64 computedAt) at lines 314 to 323, guarded by _isManager(poolId) and nothing else, with computedAt a CALLER-SUPPLIED ARGUMENT rather than taken from the block. A pool's NAV is typically computed offchain, for example from a portfolio held with a bank or custodian, and the issuer publishes the resulting share price to the hub. Third-party oracles do not repair this: the documented Chronicle integration reads the oracle and calls THE SAME SETTER. Ex is emitted as the closest symbol and is APPROXIMATE in the corpus's own marker sense, since Ex presumes an adversarial or aggregated feed. Oa does not apply, there being no assertion and dispute game. DEPARTURE: At is DROPPED. There is no named independent attester, no assurance level, no staleness bound and no recourse, so L27 cannot be discharged at all; contrast USYC, which does have a named administrator and auditor and where At is retained but scoped to NAV rather than reserves. NAV manipulation is the primary failure mode of this design and it has no representation."
     },
@@ -42,7 +66,9 @@
     {
       "id": "F6",
       "text": "who may hold a share token is decided by a transfer hook chosen per share class from a shipped set, replaceable without redeploying the token, and the hook knows which operation it is gating",
-      "elements": ["Aw"],
+      "elements": [
+        "Aw"
+      ],
       "evidence": "https://docs.centrifuge.io/developer/protocol/features/token-compliance.md (accessed 2026-08-04)",
       "note": "Share tokens are ERC-20 extended with ERC-1404 and a modular hook system. Four hooks are deployed plus the option of none: FullRestrictions 0x8E680873..24a4, FreelyTransferable 0x2a9B9C14..1A61, RedemptionRestrictions 0xE5423eD8..17f06, FreezeOnly. The hook is ACTION-AWARE, distinguishing deposit requests, deposit claims, redemption requests, redemption claims, cross-chain transfers and peer-to-peer transfers, so different rules apply to different operation types, which Aw cannot carry. DOCUMENTATION DEFECT worth recording for stage 3: the docs site says FreelyTransferable requires memberlist membership for deposits and redemptions while the repository's own src/hooks/README.md says it always returns true for transfer checks (https://raw.githubusercontent.com/centrifuge/protocol/v3.2.0/src/hooks/README.md, accessed 2026-08-04); the code is authoritative and the docs page is wrong."
     },
@@ -56,7 +82,9 @@
     {
       "id": "F8",
       "text": "a pool manager can freeze an address and can take shares from a wallet and move them elsewhere, and a dedicated recovery contract is deployed for it",
-      "elements": ["Fz"],
+      "elements": [
+        "Fz"
+      ],
       "evidence": "https://raw.githubusercontent.com/centrifuge/protocol/v3.2.0/src/core/spoke/BalanceSheet.sol (accessed 2026-08-04)",
       "note": "DEPARTURE: the corpus omits Fz for Centrifuge and it is a clear omission. Verified in source at tag v3.2.0: transferSharesFrom at line 136 is guarded isManager(poolId), refuses to pull from an endorsed contract, and calls token.authTransferFrom on the auth-gated ShareToken; issue and revoke at lines 156 and 232 are likewise isManager. The docs name it explicitly, recover tokens from a lost wallet by forced transfer via balance sheet transferSharesFrom, alongside a per-address freeze flag in token storage. A TokenRecoverer 0x1E70530e9555711f8DF4838Ab940b97c039B4037 is deployed. Centrifuge therefore has MORE explicit freeze and forced-transfer machinery than USYC, which the corpus does credit with Fz."
     },
@@ -70,28 +98,37 @@
     {
       "id": "F10",
       "text": "messages between chains are delivered by several independent adapters and each pool chooses which of them it trusts and how many must agree",
-      "elements": ["Xm"],
+      "elements": [
+        "Xm"
+      ],
       "evidence": "https://docs.centrifuge.io/developer/security/pool-access-levels.md (accessed 2026-08-04)",
       "note": "Xm is confirmed and materially richer than the symbol. Deployed on mainnet: Chainlink 0x39CF679E..7D955, Axelar 0x34e90423..a6484, Wormhole 0x4BE43040..706A7 and a second Wormhole adapter, aggregated behind MultiAdapter 0x35C837F0..073BE and Gateway 0x19a524D0..D3172. Each pool calls setAdapters to choose providers, a confirmation threshold setting the minimum number of adapters that must deliver a message before it is processed, and recovery adapters. RESIDUE INSIDE THE SYMBOL: Xm is a boolean, and here verification strength is A PARAMETER CHOSEN BY THE PARTY WHOSE ASSETS ARE AT RISK, so two pools on the same protocol can have materially different cross-domain security and carry the same symbol. L18 (explicit finality, domain binding, replay protection) is not separately evidenced and should be checked in stage 3."
     },
     {
       "id": "F11",
       "text": "share tokens move between chains with the eligibility hook invoked on both the outgoing and the incoming leg",
-      "elements": ["Xf"],
+      "elements": [
+        "Xf"
+      ],
       "evidence": "https://docs.centrifuge.io/developer/protocol/features/token-compliance.md (accessed 2026-08-04)",
       "note": "Confirmed: limit token bridging, hook is invoked on outgoing and incoming cross-chain transfers. This means L26 (Aw plus Xf implies destination-enforced eligibility) is satisfied BY CONSTRUCTION here, which is the only clean discharge of L26 in this category and is worth stating positively. Core contracts sit at identical addresses across 11 networks (Ethereum, Base, Arbitrum, Avalanche, Plume, BNB, Optimism, HyperEVM, Monad, Pharos, X Layer), a correction to the corpus's and the docs' own llms.txt figure of 9."
     },
     {
       "id": "F12",
       "text": "one immutable contract holds administrative access over every other contract in the protocol, and every escalation of privilege through it waits forty-eight hours",
-      "elements": ["Tg", "Up"],
+      "elements": [
+        "Tg",
+        "Up"
+      ],
       "evidence": "https://docs.centrifuge.io/developer/security/guardian.md (accessed 2026-08-04)",
       "note": "The protocol is controlled by the Root contract, an immutable smart contract that holds admin (ward) access on all other contracts, mainnet 0xdc9456e7e20f15029C8231Ec433a20F404b7235E, and all privilege escalation through Root goes through a 48-hour timelock. This is the STRONGEST control plane of the five and the decomposition must not treat it as equivalent to BUIDL's single EOA or to Maple's retroactively shortenable delay; L15 is discharged here in a way it is not for Ondo, USYC or BUIDL. RESIDUE INSIDE THE PAIR: rendering this as Up plus Tg loses the actual design, which is that the AUTHORITY contract cannot be upgraded but can rewrite the permissions on everything else after two days. Immutable-but-omnipotent is a distinct shape and neither symbol names it."
     },
     {
       "id": "F13",
       "text": "two separate guardians hold different powers on separate multisignature wallets, and only one of them can pause anything",
-      "elements": ["Gp"],
+      "elements": [
+        "Gp"
+      ],
       "evidence": "https://docs.centrifuge.io/developer/security/guardian.md (accessed 2026-08-04)",
       "note": "ProtocolGuardian 0xCEb7eD5d5B3bAD3088f6A1697738B60d829635c6 holds pause, upgrades and cross-chain powers, with every transaction verified by third-party signers from Cantina; OpsGuardian 0x055589229506Ee89645EF08ebE9B9a863486d0dE holds wiring and pool creation and has NO PAUSE AUTHORITY. Both at identical addresses on every network. Gp names the facility and cannot express that the power to halt and the power to configure are deliberately held by different parties, the same split the 06-yield lane recorded for Sky's grantors and revokers and for Huma's pauser and restarter."
     },
@@ -105,7 +142,9 @@
     {
       "id": "F15",
       "text": "each strategist is given a merkle root encoding the exact set of calls they may make, verified per call by target contract, function selector and parameter values, and revised by replacing the root",
-      "elements": ["Au"],
+      "elements": [
+        "Au"
+      ],
       "evidence": "https://docs.centrifuge.io/developer/security/pool-access-levels.md (accessed 2026-08-04)",
       "note": "DEPARTURE: the corpus does not record Au for Centrifuge at all, and the MerkleProofManager is delegated execution scope in the strongest sense the vocabulary contemplates, far more expressive than the symbol suggests. L17 (bounded scope, revocation, expiry, nonce or domain separation) is partly discharged: scope and revocation are explicit, expiry and replay separation are not evidenced. Related pool roles that Au does not reach: a hub manager can grant or revoke the hub manager role for OTHER addresses, so the top-level authority is self-propagating; a gateway manager can block outgoing messages for one pool on one destination, a pool-scoped circuit breaker; and OnOfframpManager runs a permissionless onramp against a relayer-gated offramp to pre-approved destinations."
     },
@@ -158,5 +197,12 @@
       "evidence": "https://docs.centrifuge.io/developer/security/pool-access-levels.md (accessed 2026-08-04)",
       "note": "RESIDUE, confirmed unnameable, and the boundary must be stated because Centrifuge is the case that most tempts a forced fit. The MerkleProofManager emitted at F15 constrains WHAT CALLS A STRATEGIST MAY MAKE, which is an execution-scope constraint, not a credit criterion; Au therefore bounds the mechanics of allocation while saying nothing about its merits. The vocabulary has no way to distinguish a pool whose assets were chosen by a rated manager from one whose assets were chosen arbitrarily. Fifth of five products in this category with unconstrained, invisible investment discretion, and the fifth independent confirmation in this lane of the delegated allocation mandate the 06-yield and 03-CDP lanes identified as a missing level above the element."
     }
-  ]
+  ],
+  "paper": {
+    "title": "Centrifuge",
+    "label": "cat:rwa:centrifuge",
+    "blurb": "An investor subscribes an asset into a vault attached to a share class of a pool and receives a share token that rises in price rather than in balance. The protocol owes nothing: the obligor is an off-chain fund --- for the flagship share class, a British Virgin Islands segregated portfolio company recognised there as a professional fund --- and that fund describes the token as \\emph{prima facie} evidence of ownership, in the same way a share certificate would be. The net asset value is computed off chain and enters the protocol as a single number one party posts, with the freshness timestamp supplied by that same party and no dispute window, challenge bond or deviation bound anywhere in the call path; it reaches every other chain only when somebody pays gas to push it. Subscription and redemption are asynchronous --- a request is placed, the issuer approves a batch, shares are issued or revoked, the batch is fulfilled, and only then may the investor claim --- with the issuer setting each batch's execution price separately from the published one.",
+    "witnessReason": "The corpus record carries a tranche element and the witness drops it, on a search of the protocol's own source: seniority, subordination and waterfall appear nowhere in it, and the only occurrences of the word tranche are in an audit document, a test-properties file and legacy migration scripts. The documentation's junior-and-senior phrasing describes a configuration idiom --- name share classes differently, permission them differently, price them differently --- and there is no loss-allocation logic, no seniority ordering and no trigger that redirects anything, so subordination here lives in offering documents and reaches the chain only as the manager choosing to mark one class down before another. In its place the witness carries a freeze-and-recovery element the corpus omitted, although this protocol ships more of that machinery than the fund tokens the corpus does credit with it; a redemption element, because redemption is a first-class operation with its own transfer-hook regime; and a delegated-execution element, for the merkle-rooted policies that restrain a strategist by target contract, function selector and parameter value. Epoch-gated exit replaces the queue: this is a request, approve and fulfil batch cycle priced by the issuer, and the queue element belongs to the private-credit member of this category, where it is exactly right.",
+    "residueNote": "The register here is a different legal device again: the token is evidence of ownership under the fund's own law, which is to say rebuttable evidence of an entry in a book kept elsewhere --- and the book is kept by a fund administrator the fund discloses as a role and never names. That pattern runs through the whole disclosure: prime broker, custodian, administrator, each present as a function and absent as a party. On chain the residue is emptier than expected rather than richer, because a defaulted underlying asset has no representation of any kind --- no delinquency state, no roll rate, no write-off flag, no impairment call --- so the only way a loss reaches a holder is a lower number in the next price the manager posts. The construction the residue most needs to state is the wrapper on the wrapper: a restricted share wrapped into a freely transferable token whose economic exposure is bearer while the right to mint or redeem stays behind the identity gate, so a holder of the outer token has a real claim and no path to the obligor."
+  }
 }

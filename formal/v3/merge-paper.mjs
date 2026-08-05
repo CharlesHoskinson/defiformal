@@ -36,7 +36,12 @@ for (const f of files) {
     blurb: norm(a.blurb), witnessReason: norm(a.witnessReason), residueNote: norm(a.residueNote) };
   /* a number in the prose is a defect: the emitter supplies every figure */
   for (const k of ["blurb", "witnessReason", "residueNote"]) {
-    const m = spec.paper[k].match(/\b\d[\d,.]*\b/g);
+    /* standards and version names carry digits and are not figures */
+    const stripped = spec.paper[k]
+      .replace(/\b(ERC|EIP|BIP|SLIP|CIP|RFC|ISAE|UCC|SEC|CEA)[- ]?\d+[A-Za-z-]*/gi, "")
+      .replace(/\bv\d+(\.\d+)*\b/gi, "")
+      .replace(/\b(secp|sha|keccak|blake)\d+\b/gi, "");
+    const m = stripped.match(/\b\d[\d,.]*\b/g);
     if (m) console.error(`  warn ${spec.app}.${k}: contains ${m.join(", ")} - the emitter supplies figures`);
   }
   fs.writeFileSync(p, JSON.stringify(spec, null, 2));

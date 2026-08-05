@@ -2,12 +2,22 @@
   "app": "Coinbase Bridge (cbBTC and other wrapped assets)",
   "category": "07-bridges",
   "source": "C:\\defiformal-work\\07-bridges\\01-research.md",
-  "construction": ["Xf", "Aw", "At", "Rd", "Fz", "Gp", "Up"],
+  "construction": [
+    "Xf",
+    "Aw",
+    "At",
+    "Rd",
+    "Fz",
+    "Gp",
+    "Up"
+  ],
   "functionalObligations": [
     {
       "id": "F1",
       "text": "A customer withdrawing BTC (or DOGE, XRP, ADA, LTC, MEGA) from a Coinbase account to a supported network receives a 1:1 wrapped ERC-20 instead of the native asset: cbBTC on Base, Ethereum, Solana and Arbitrum, and cbDOGE, cbXRP, cbADA, cbLTC, cbMEGA on Base.",
-      "elements": ["Xf"],
+      "elements": [
+        "Xf"
+      ],
       "evidence": "https://help.coinbase.com/en/coinbase/trading-and-funding/sending-or-receiving-cryptocurrency/coinbase-wrapped-btc (accessed 2026-08-04) | https://www.coinbase.com/blog/coinbase-wrapped-btc-cbbtc-is-now-live (accessed 2026-08-04)",
       "note": "APPROXIMATE at the level of law L9 (Xf -> debit(source) = credit(destination)). The credit is a mint and is observable; the debit is a ledger entry inside a company and is not, so the law's equality has one observable side and one asserted side. Xf presumes a source-domain transaction; here there is none."
     },
@@ -35,7 +45,9 @@
     {
       "id": "F5",
       "text": "Redemption is depositing the wrapped token into a Coinbase account, which auto-unwraps it and credits the underlying asset; there is no contract-level redemption and no order book or trading pair for the wrapped token on Coinbase.",
-      "elements": ["Rd"],
+      "elements": [
+        "Rd"
+      ],
       "evidence": "https://help.coinbase.com/en/coinbase/trading-and-funding/sending-or-receiving-cryptocurrency/coinbase-wrapped-btc (accessed 2026-08-04) | https://www.coinbase.com/blog/coinbase-wrapped-btc-cbbtc-is-now-live (accessed 2026-08-04)",
       "note": "APPROXIMATE, same overstatement as WBTC F7: redemption is an account action governed by the User Agreement and gated by account standing, not a contract right, and non-customers have no redemption path at all. Rd asserts a right and cannot say who holds it or under what terms it is withdrawn."
     },
@@ -49,7 +61,9 @@
     {
       "id": "F7",
       "text": "The issuer publishes a live per-address proof of reserves -- 96,065.18 BTC of reserve against 96,054.41 cbBTC of supply, 20 reserve addresses, refreshed 8/4/2026 8:45 PM, split 48,338.78 / 44,528.809 / 3,108.551 / 78.272 across four networks -- and the Ethereum-side supply reads 48,338.77958531 cbBTC on chain, matching the first bucket exactly.",
-      "elements": ["At"],
+      "elements": [
+        "At"
+      ],
       "evidence": "https://www.coinbase.com/cbbtc/proof-of-reserves (accessed 2026-08-04) | https://ethereum-rpc.publicnode.com eth_call cbBTC.totalSupply() (accessed 2026-08-04)",
       "note": "APPROXIMATE against law L27 (At -> named attester + independence + stated assurance + staleness bound + recourse): there is an attester (the issuer, not independent), a timestamp, no assurance level and no recourse. CORPUS DEPARTURE: the corpus marker calls the reporting 'periodic'; it is a live per-address feed with a machine-readable JSON endpoint, plus a reported Chainlink Proof of Reserve feed on Base and Ethereum (third-party source only, chainlink social post, not a first-party Coinbase page). Still issuer-published, but 'periodic' is no longer accurate. At launch on 2024-09-12 the issuer said proof of reserves 'will follow'; it now exists, including per-asset pages for the other wrapped assets."
     },
@@ -63,7 +77,9 @@
     {
       "id": "F9",
       "text": "Issuance authority is a chain of on-chain roles: an owner appoints a masterMinter, which grants and revokes per-minter allowances; on Ethereum owner = 0xce56d20689d836ec7a728ceb94a15746696c16e6 and masterMinter = 0x1302dfb1f806398f48650c75ab0fda9a0186f47b.",
-      "elements": ["Aw"],
+      "elements": [
+        "Aw"
+      ],
       "evidence": "https://raw.githubusercontent.com/coinbase/wrapped-tokens-os/master/README.md (accessed 2026-08-04) | https://ethereum-rpc.publicnode.com eth_call owner(), masterMinter() (accessed 2026-08-04)",
       "note": "APPROXIMATE. Aw is a user-facing permission gate as written; here it is a registry of permitted issuers with per-party allowances -- the same issuer-side reading the corpus marks for CCTP. It is a weaker instance than WBTC's Members registry, which enumerates 47 counterparties and a custodian."
     },
@@ -77,21 +93,28 @@
     {
       "id": "F11",
       "text": "A named blacklister role -- 0x5130bf38bf5342aa06cc79b8cc198cce832b01af -- can blacklist and un-blacklist any address, blocking that holder's transfers at transfer time.",
-      "elements": ["Fz", "Aw"],
+      "elements": [
+        "Fz",
+        "Aw"
+      ],
       "evidence": "https://ethereum-rpc.publicnode.com eth_call blacklister(), isBlacklisted(address) (accessed 2026-08-04) | https://basescan.org/address/0x7458bfDC30034EB860B265E6068121D18Fa5Aa72#code (accessed 2026-08-04)",
       "note": "CANDIDATE-REGISTER (Fz), and a firm assignment rather than a marker: Coinbase is the ONLY one of the three custodial wrappers with an on-chain freeze. Two elements are listed because both genuinely discharge it and the vocabulary gives no rule for choosing: Fz names the power, and Aw under law L16 names exactly this mechanic ('transfer-time enforcement where eligibility follows the holder'). Law L28 (Fz -> named authority + enumerated triggers + appeal path + holder disclosure) has one of four: the authority is named, the triggers, appeal and disclosure are not."
     },
     {
       "id": "F12",
       "text": "A named pauser role -- 0x1ac78dfcae082e9fe286d1ccb12c17a3e906b906 -- can halt all transfers of the token; paused() is currently false.",
-      "elements": ["Gp"],
+      "elements": [
+        "Gp"
+      ],
       "evidence": "https://ethereum-rpc.publicnode.com eth_call pauser(), paused() = false (accessed 2026-08-04) | https://basescan.org/address/0x7458bfDC30034EB860B265E6068121D18Fa5Aa72#code (accessed 2026-08-04)",
       "note": "Gp is correct. As with WBTC, it does not distinguish a pause over all holders' transfers from a pause over new issuance."
     },
     {
       "id": "F13",
       "text": "The token's implementation can be replaced outright: cbBTC is a FiatTokenProxy exposing upgradeTo, upgradeToAndCall and changeAdmin, currently pointing at FiatTokenV2_1 at 0x7458bfDC30034EB860B265E6068121D18Fa5Aa72 (solc 0.6.12), the same implementation address on Base and Ethereum, held in the legacy ZeppelinOS slot 0x7050c9e0... rather than the EIP-1967 slot, which reads zero.",
-      "elements": ["Up"],
+      "elements": [
+        "Up"
+      ],
       "evidence": "https://basescan.org/address/0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf (accessed 2026-08-04) | https://ethereum-rpc.publicnode.com eth_getStorageAt legacy implementation slot (accessed 2026-08-04)",
       "note": "Up is right and is the load-bearing difference between this entry and the other two custodial wrappers: nothing in WBTC or BTCB is comparable. Law L15 (Up -> Tg | bounded emergency process) is NOT satisfied -- see F14 -- and that failure is the finding, not a defect of the decomposition."
     },
@@ -130,5 +153,12 @@
       "evidence": "https://www.coinbase.com/cbbtc/proof-of-reserves (accessed 2026-08-04)",
       "note": "RESIDUE. No element for a single reserve drawn against by several representations on different domains -- the same shape as BTCB's three representations. A per-chain supply is checkable, the aggregate against reserve is not, and only the aggregate is the peg."
     }
-  ]
+  ],
+  "paper": {
+    "title": "Coinbase Bridge",
+    "label": "cat:bri:coinbase",
+    "blurb": "A customer withdrawing bitcoin from an exchange account to a supported network receives a wrapped ERC-20 instead of the asset, and the exchange keeps the asset. The crossing is a side effect of a transfer rather than a transaction the user submits, and sending the token back to an account unwraps it. There is no source-domain event to verify and, for all but one of the source assets, no source chain that could run a verification contract. What a holder trusts is that the issuer holds the underlying and keeps unwrapping, that a redemption right conditioned on account standing and on jurisdiction is not withdrawn, and that the single keys holding the pause, the blacklist, the minter administration and the proxy admin are not turned against them.",
+    "witnessReason": "The upgrade element is right and load-bearing --- the token is a genuine proxy whose implementation slot resolves to a verified fiat-token implementation, and nothing in the other custodial wrappers is comparable --- so the witness keeps it. It also promotes the freeze from a marker to a firm assignment on a live named blacklister role whose accessors answer, which no other custodial wrapper in this category can offer. Both the freeze and the permission gate are recorded against that obligation, because both genuinely discharge it and the vocabulary gives no rule for choosing; the checker duly reports the freeze as removable, so the one power that distinguishes this issuer from the other two reads as redundant. Nothing in the witness records that the holders of these powers are individual keys, because the vocabulary has nothing to record it with.",
+    "residueNote": "The powers here are the strongest in the category and the custody of them the weakest, and only the first half is in the construction. The keys that can replace the implementation, blacklist a holder and appoint a minter are plain externally-owned accounts; the prohibition written for exactly this shape --- an upgrade path under immediate single-key control --- therefore cannot be evaluated, because its antecedent is unstateable. The only quantitative bound on any authority among the custodial wrappers, a rate limit on minting with programmatic replenishment, has no element either. Redemption is a jurisdiction vector rather than a right, the same token being redeemable in one country and not in another, enforced at an account layer no contract in the construction can see. And the measured size of the system is the issuer's own published file, which the attestation element names as an attestation and cannot name as a circularity."
+  }
 }
