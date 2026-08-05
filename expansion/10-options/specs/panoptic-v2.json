@@ -1,0 +1,169 @@
+{
+  "app": "Panoptic V2",
+  "category": "10-options",
+  "source": "C:\\defiformal-work\\10-options\\01-research.md",
+  "construction": ["Cl", "Ct", "Fd", "Gp", "Ix", "Li", "Op", "Pl", "Sh", "Sl", "Sr", "Tp"],
+  "functionalObligations": [
+    {
+      "id": "F1",
+      "text": "Anyone deposits token0 and/or token1 into the pool's two ERC-4626 CollateralTracker vaults and becomes a Panoptic Liquidity Provider holding a pro-rata claim, whose capital is lent to option sellers.",
+      "elements": ["Sh", "Pl"],
+      "evidence": "https://github.com/panoptic-labs/panoptic-v2-core#readme (CollateralTracker, ERC-4626, five actor roles) at commit d65310d6cfbaadb6910fa9446cc59c6541060749 (accessed 2026-08-04 via gh api readme); https://panoptic.xyz/docs/contracts/smart-contracts-overview (accessed 2026-08-04)",
+      "note": "`Pl` carries the corpus's marker: the pool lends *positions* into Uniswap rather than fungible assets to a borrower who wants leverage. Also relevant to L2's exit-liquidity clause, discharged here by `Sl` (F17)."
+    },
+    {
+      "id": "F2",
+      "text": "Each CollateralTracker maintains its own market state including a global borrow index, so a lender's claim accrues compound interest without a transfer.",
+      "elements": ["Ix"],
+      "evidence": "contracts/types/MarketState.sol and https://github.com/panoptic-labs/panoptic-v2-core#readme (CollateralTracker: 'its own market state including a global borrow index for compound interest calculations') at commit d65310d6cfbaadb6910fa9446cc59c6541060749 (accessed 2026-08-04 via gh api)",
+      "note": "`Ix` is added to the corpus element set, which carried only `Sh`. Index-based accrual and pro-rata shares coexist here and the corpus recorded one of them."
+    },
+    {
+      "id": "F3",
+      "text": "An option seller borrows pooled liquidity and deploys it into a concentrated Uniswap V3 or V4 range; an option buyer borrows that same chunk back out of Uniswap and holds the underlying tokens, and it is the removal of the liquidity that creates the option.",
+      "elements": ["Cl", "Pl"],
+      "evidence": "https://panoptic.xyz/docs/faq/ and https://panoptic.xyz/docs/product/streamia (accessed 2026-08-04); contracts/SemiFungiblePositionManagerV3.sol and contracts/SemiFungiblePositionManagerV4.sol at commit d65310d6cfbaadb6910fa9446cc59c6541060749 (accessed 2026-08-04 via gh api contents)",
+      "note": "RESIDUE inside the obligation. `Cl` names range positions and `Pl` names the shared credit pool, but nothing names lending an LP position as the underwriting primitive, nor the SFPM's ability to mint *negative* liquidity — burning Uniswap liquidity as a position is what manufactures a long option, and no element anticipates a composition of `Cl` and `Pl` in which the composition is the instrument."
+    },
+    {
+      "id": "F4",
+      "text": "A position has no strike and no expiry: it is a tick range, up to four legs, encoded in one ERC-1155 tokenId, and it never expires and is never exercised at a price.",
+      "elements": [],
+      "evidence": "https://panoptic.xyz/docs/faq/ (accessed 2026-08-04) — 'Panoptions are perpetual and never expire'; contracts/tokens/ERC1155Minimal.sol and contracts/types/LiquidityChunk.sol at commit d65310d6cfbaadb6910fa9446cc59c6541060749 (accessed 2026-08-04 via gh api contents)",
+      "note": "RESIDUE, axis (a). `Op` names 'strike/expiry/collateralized settlement' and two of the three clauses are false. Stronger than the corpus recorded: it is not that the strike takes an unusual value, it is that the strike parameter has a different *type* — an interval of ticks rather than a price — so any formalism that quantifies over strikes cannot quantify over these."
+    },
+    {
+      "id": "F4a",
+      "text": "A buyer's position pays like a long option and a seller's like a short one — the removed liquidity's payoff is convex in the price of the underlying pair, which is why the protocol calls them options and why they are collateralised as such.",
+      "elements": ["Op"],
+      "evidence": "https://panoptic.xyz/docs/faq/ and https://panoptic.xyz/docs/product/streamia (accessed 2026-08-04); https://panoptic.xyz/docs/panoptic-protocol/liquidations (Buying Power Requirement = notionalSize x (100% - S/K), accessed 2026-08-04)",
+      "note": "FLAGGED FORCED FIT, carried for the same reason the corpus carried it: the instrument is unambiguously an option economically and the vocabulary offers no alternative, while F4 and F5 falsify two of the symbol's three definitional clauses. RESIDUE inside the obligation: no element records that the payoff is *synthesised* from an AMM invariant — the LP payoff is a short-straddle-shaped function of `Cp` — rather than declared as a contract term."
+    },
+    {
+      "id": "F5",
+      "text": "The payoff is realised continuously as the underlying range position's composition changes with price; closing a position burns it and returns tokens, and there is no terminal fixing to determine.",
+      "elements": [],
+      "evidence": "https://panoptic.xyz/docs/faq/ and https://panoptic.xyz/docs/product/streamia (accessed 2026-08-04)",
+      "note": "RESIDUE, axis (b). Neither cash nor physical settlement as the axis means them — a third value the corpus's binary does not have, and the one case in this category where terminal settlement-price determination is not merely unnameable but inapplicable."
+    },
+    {
+      "id": "F6",
+      "text": "The buyer pays no upfront premium and instead owes streamia, a per-block stream to the seller that accrues only while spot is inside the position's range.",
+      "elements": ["Sr"],
+      "evidence": "https://panoptic.xyz/docs/product/streamia (accessed 2026-08-04)",
+      "note": "`Sr` names the accrual, axis (d) second value. It does not name that the stream IS the premium — that this accrual discharges the consideration for an option — which is why the corpus flagged it. Negative accumulated streamia is itself a liquidation trigger."
+    },
+    {
+      "id": "F7",
+      "text": "The rate of streamia is the Uniswap swap fee the removed liquidity would have generated, multiplied by a spread multiplier that grows with how much of that specific chunk has been removed (VEGOID = 8, nu = 1/VEGOID).",
+      "elements": [],
+      "evidence": "https://panoptic.xyz/docs/product/streamia (accessed 2026-08-04); VEGOID = 8 in contracts/RiskEngine.sol at commit d65310d6cfbaadb6910fa9446cc59c6541060749 (accessed 2026-08-04 via gh api contents)",
+      "note": "RESIDUE, axis (f), and a fourth value the corpus's axis does not enumerate. The premium is not modelled, quoted or matched — it is *generated* by realised trading activity in another protocol and then scaled by local utilisation. Beside model-priced, book-priced and quote-priced there is realised-AMM-fee-priced, and no element names any of the four."
+    },
+    {
+      "id": "F8",
+      "text": "Sellers pay interest to PLPs on the liquidity they borrow, at a rate produced by a PID controller with a persistent rate-at-target bounded between 0.001 and 2.0 ether per 365 days and initialised at 0.04.",
+      "elements": ["Pl"],
+      "evidence": "MIN_RATE_AT_TARGET, MAX_RATE_AT_TARGET and INITIAL_RATE_AT_TARGET in contracts/RiskEngine.sol at commit d65310d6cfbaadb6910fa9446cc59c6541060749 (accessed 2026-08-04 via gh api contents); https://panoptic.xyz/blog/panoptic-v2-is-coming (V1 deposit-fee model replaced by an interest-rate lending model, accessed 2026-08-04)",
+      "note": "`Pl` implies a rate exists. RESIDUE inside the obligation: nothing names a controller with memory — a rate that is a state variable moving between firings rather than a function of current utilisation. The corpus record predates this change entirely and does not mention interest at all."
+    },
+    {
+      "id": "F9",
+      "text": "The counterparty to a buyer is whoever's liquidity chunk was removed, the funding for both sides comes from a shared pool, and the payoff shape is the AMM's own.",
+      "elements": [],
+      "evidence": "https://panoptic.xyz/docs/faq/ and https://github.com/panoptic-labs/panoptic-v2-core#readme at commit d65310d6cfbaadb6910fa9446cc59c6541060749 (accessed 2026-08-04)",
+      "note": "RESIDUE, axis (c), and the sharpest case of it: Panoptic is peer-to-peer in exposure, peer-to-pool in funding and AMM-derived in payoff — three of the corpus's axis-(c) values at once. An axis whose values are not mutually exclusive is not a partition, which is a fact about the proposed refinement of `Op` as much as about the current symbol."
+    },
+    {
+      "id": "F10",
+      "text": "The RiskEngine computes a collateral requirement for a whole position set — spreads, strangles, iron condors and synthetics — and isAccountSolvent compares it to the account's balance, accounting for cross-collateralisation between token0 and token1 through CROSS_BUFFER_0 and CROSS_BUFFER_1.",
+      "elements": ["Ct"],
+      "evidence": "contracts/RiskEngine.sol (2,401 lines; isAccountSolvent, CROSS_BUFFER_0/1) at commit d65310d6cfbaadb6910fa9446cc59c6541060749 and https://github.com/panoptic-labs/panoptic-v2-core#readme (accessed 2026-08-04 via gh api); https://panoptic.xyz/docs/panoptic-protocol/liquidations (accessed 2026-08-04); RiskEngine.sol in scope at https://code4rena.com/audits/2025-12-panoptic-next-core (19 Dec 2025 - 7 Jan 2026, $56,000 USDC; accessed 2026-08-04)",
+      "note": "THE CORPUS DEMOTED `Ct` TO 'derived' AND THIS IS HALF OF WHY THE TABLES REJECT PANOPTIC. The threshold test is a standalone, separately audited 2,401-line contract whose entire purpose is this computation; it is as first-class as a mechanism gets. Promoted to the construction. The documented example — selling an OTM put starts at 20% collateralisation and rises as it moves in the money, Buying Power Requirement = notionalSize x (100% - S/K) — is the requirement `Ct` names."
+    },
+    {
+      "id": "F11",
+      "text": "Collateral requirements scale with pool utilisation up to SATURATED_POOL_UTIL = 9,000,000, and leverage of up to 10x buying and 5x selling holds only under normal conditions and changes in response to pool utilisation.",
+      "elements": [],
+      "evidence": "SATURATED_POOL_UTIL and BP_DECREASE_BUFFER in contracts/RiskEngine.sol at commit d65310d6cfbaadb6910fa9446cc59c6541060749 (accessed 2026-08-04 via gh api contents); https://panoptic.xyz/docs/faq/ (accessed 2026-08-04)",
+      "note": "RESIDUE. `Ct` tests a position against a requirement; nothing names a requirement that is a function of *pool* state, so a seller's margin can deteriorate because other accounts traded. This is a solvency coupling between users that the vocabulary represents as no coupling at all."
+    },
+    {
+      "id": "F12",
+      "text": "The price source is the traded pool itself: an eight-slot sorted ring buffer giving a median tick, four exponential moving averages at 60, 120, 240 and 960 seconds combined as twapEMA = (6*fastEMA + 3*slowEMA + eonsEMA)/10, a clamp on how far a median observation may move, and MAX_TWAP_DELTA_DISPATCH = 513 ticks as the largest permitted gap between the current tick and the TWAP tick at dispatch.",
+      "elements": ["Tp"],
+      "evidence": "EMA_PERIODS = 60 + (120 << 24) + (240 << 48) + (960 << 72), MAX_CLAMP_DELTA, MAX_TWAP_DELTA_DISPATCH = 513 and the median ring buffer in contracts/RiskEngine.sol at commit d65310d6cfbaadb6910fa9446cc59c6541060749 (accessed 2026-08-04 via gh api contents); https://panoptic.xyz/docs/faq/ ('Panoptic operates oracle-free by design', accessed 2026-08-04)",
+      "note": "THE OTHER HALF OF WHY THE TABLES REJECT PANOPTIC. The corpus carries no price-source element at all — no `Ex`, no `Tp` — so L1's first term is open, and 'oracle-free by design' means no *external* feed, not no price source. `Tp` is exactly right for an on-chain time-weighted price and is warranted here by `Cl`. Promoted to the construction; with `Tp` and `Ct` restored the rejection disappears and is shown to be a decomposition artefact. What `Tp` does not name: that the output is an *ensemble* of four values rather than one."
+    },
+    {
+      "id": "F13",
+      "text": "Safe mode is the disjunction of an external-shock test (|currentTick - spotEMA| > MAX_TICKS_DELTA), an internal-disagreement test (|spotEMA - fastEMA| > MAX_TICKS_DELTA/2) and a divergence test (|medianTick - slowEMA| > MAX_TICKS_DELTA/2), OR-ed with a guardian-settable lockMode; when it is on, or when the Euclidean deviation of spot, latest and current from the median exceeds MAX_TICKS_DELTA, solvency is tested at all four ticks instead of one.",
+      "elements": ["Gp"],
+      "evidence": "isSafeMode, lockMode and getSolvencyTicks in contracts/RiskEngine.sol at commit d65310d6cfbaadb6910fa9446cc59c6541060749 (accessed 2026-08-04 via gh api contents); contracts/PanopticGuardian.sol at the same commit; https://panoptic.xyz/docs/contracts/smart-contracts-overview (accessed 2026-08-04)",
+      "note": "APPROXIMATE. `Gp` names the guardian's lock and nothing else. RESIDUE in two directions: nothing names an automatic, graduated tightening triggered by the price source distrusting its own internal state — this is a circuit breaker whose trigger is self-diagnosis, not an operator's judgement — and nothing names a solvency test that is a *conjunction over an ensemble whose cardinality is a function of the ensemble's own dispersion*. Neither `Ex` nor `Tp` can express a risk test at four prices at once. Numeric values of MAX_TICKS_DELTA, MAX_CLAMP_DELTA and TARGET_POOL_UTIL were not read and are UNKNOWN."
+    },
+    {
+      "id": "F14",
+      "text": "A liquidator closes an insolvent account's positions and takes Bonus = min{Collateral Balance / 2, Collateral Requirement at TWAP - Collateral Balance at TWAP}.",
+      "elements": ["Li"],
+      "evidence": "https://panoptic.xyz/docs/panoptic-protocol/liquidations (accessed 2026-08-04); getLiquidationBonus in contracts/RiskEngine.sol at commit d65310d6cfbaadb6910fa9446cc59c6541060749 (accessed 2026-08-04 via gh api contents)",
+      "note": "`Li` fits. Note that the bonus is computed at the TWAP tick rather than the current tick, so the liquidation incentive is denominated in the same ensemble F12 produces."
+    },
+    {
+      "id": "F15",
+      "text": "A shortfall remaining after liquidation costs and bonus is absorbed first by a haircut on the account's unsettled premia.",
+      "elements": [],
+      "evidence": "https://github.com/panoptic-labs/panoptic-v2-core/blob/d65310d6cfbaadb6910fa9446cc59c6541060749/contracts/RiskEngine.sol — liquidation-bonus return docstring, 'the LeftRight-packed collateral remaining after liquidation costs and bonus; negative slots represent protocol loss before premia haircut' (accessed 2026-08-04 via gh api contents)",
+      "note": "RESIDUE. `Sl` allocates loss to a claim class and `Tr` declares seniority over a loss event; between them they cannot express 'haircut the unpaid stream first'. The first absorber here is an accrued receivable — income already earned and not yet settled — subordinated ahead of the pool, which is a seniority claim over a flow rather than over a balance."
+    },
+    {
+      "id": "F16",
+      "text": "What remains after the premia haircut is protocol loss borne by the CollateralTracker, that is by the PLPs pro rata.",
+      "elements": ["Sl"],
+      "evidence": "contracts/RiskEngine.sol ('negative slots represent protocol loss before premia haircut') at commit d65310d6cfbaadb6910fa9446cc59c6541060749 (accessed 2026-08-04 via gh api contents), against https://panoptic.xyz/docs/panoptic-protocol/liquidations (accessed 2026-08-04)",
+      "note": "`Sl` fits and is added to the corpus element set, discharging L1's loss-absorption term alongside `Li` and L2's exit-liquidity clause. It also settles a documentation conflict: the docs say the pool will never incur a loss, the code returns protocol loss as a modelled outcome. The code is the evidence."
+    },
+    {
+      "id": "F17",
+      "text": "A seller may force-exercise a buyer's out-of-range long position to reclaim the liquidity, paying the exercised user a fee that decays exponentially with distance from strike (FORCE_EXERCISE_COST = 30,000 scaled units, floored at ONE_BPS = 1000).",
+      "elements": [],
+      "evidence": "exerciseCost, FORCE_EXERCISE_COST = 30_000 and ONE_BPS = 1000 in contracts/RiskEngine.sol at commit d65310d6cfbaadb6910fa9446cc59c6541060749 (accessed 2026-08-04 via gh api contents); https://panoptic.xyz/docs/faq/ (accessed 2026-08-04)",
+      "note": "RESIDUE. Not liquidation — the target is solvent — and not exercise, since the holder does not elect it. Nothing names compulsion without distress: one user closing another's healthy position and compensating them for it."
+    },
+    {
+      "id": "F18",
+      "text": "PanopticFactoryV3 and PanopticFactoryV4 will open an options market on any Uniswap V3 or V4 pool permissionlessly, on any ERC20 pair.",
+      "elements": [],
+      "evidence": "contracts/PanopticFactoryV3.sol and contracts/PanopticFactoryV4.sol at commit d65310d6cfbaadb6910fa9446cc59c6541060749 (accessed 2026-08-04 via gh api contents); https://panoptic.xyz/docs/faq/ (accessed 2026-08-04)",
+      "note": "RESIDUE. Listing is factory deployment, so the instrument universe is unbounded and ungoverned — the opposite pole from the governed expiry calendars at Derive and Aevo and equally unnameable. The vocabulary has no symbol for a listing process at any point on that range."
+    },
+    {
+      "id": "F19",
+      "text": "Every user action funnels through dispatch() / dispatchFrom(), which will revert when the current tick is further than MAX_TWAP_DELTA_DISPATCH from the TWAP tick.",
+      "elements": [],
+      "evidence": "dispatch/dispatchFrom in https://github.com/panoptic-labs/panoptic-v2-core#readme and MAX_TWAP_DELTA_DISPATCH = 513 in contracts/RiskEngine.sol at commit d65310d6cfbaadb6910fa9446cc59c6541060749 (accessed 2026-08-04 via gh api)",
+      "note": "RESIDUE. A single entry point that admits or refuses every interaction on a price-agreement condition is neither a pause (`Gp`) nor a threshold test on a position (`Ct`) — it is an admission gate on the whole protocol, conditioned on the price source's internal consistency."
+    },
+    {
+      "id": "F20",
+      "text": "Commissions on positions are split between the protocol, the PLPs and, where a builder code is present, the integrator whose interface constructed the call; long positions above a rehypothecation threshold receive credited shares.",
+      "elements": ["Fd"],
+      "evidence": "contracts/Builder.sol at commit d65310d6cfbaadb6910fa9446cc59c6541060749 and https://github.com/panoptic-labs/panoptic-v2-core#readme (commissions, builder codes, rehypothecation threshold) (accessed 2026-08-04 via gh api)",
+      "note": "`Fd` is candidate register and names the surplus split. It does not name attribution to whoever constructed the calldata, which is the novel part — a fee share that follows the interface rather than the capital or the flow."
+    },
+    {
+      "id": "F21",
+      "text": "Administration is performed by Gnosis-Safe transactions against contracts that the factory deploys as fresh non-proxy instances, with a guardian able to override safe mode and lock or unlock pools.",
+      "elements": ["Gp"],
+      "evidence": "safe-txns-RiskEngine/ and gen_safetx.py at commit d65310d6cfbaadb6910fa9446cc59c6541060749, contracts/PanopticGuardian.sol (accessed 2026-08-04 via gh api contents); https://panoptic.xyz/docs/contracts/smart-contracts-overview (accessed 2026-08-04)",
+      "note": "`Up` is dropped from the corpus element set: stage 1 read no proxy, no initializer and no implementation slot in the V2 contracts, and the corpus asserts `Up` without an evidenced mechanism. Whether any component sits behind a proxy is UNKNOWN. `Tg` requires a delay and none is evidenced, so L15 does not arise because `Up` does not. RESIDUE: multisig administration of immutable, factory-deployed instances is a distinct control regime that neither `Up`, `Tg` nor `Gp` names."
+    },
+    {
+      "id": "F22",
+      "text": "The protocol lends against, and prices with, the same Uniswap pool its instruments are written on, and mitigates the resulting manipulation channel with a median ring buffer, a four-EMA ensemble, a clamp on median movement, the dispatch TWAP-delta bound and safe mode.",
+      "elements": [],
+      "evidence": "https://github.com/panoptic-labs/panoptic-v2-core/blob/d65310d6cfbaadb6910fa9446cc59c6541060749/contracts/RiskEngine.sol (median buffer, EMA_PERIODS, MAX_CLAMP_DELTA, MAX_TWAP_DELTA_DISPATCH, isSafeMode) and https://github.com/panoptic-labs/panoptic-v2-core/tree/d65310d6cfbaadb6910fa9446cc59c6541060749/audits (2025-10-panoptic-v2.pdf, NM0701-FINAL_PANOPTIC_V2.pdf, code4rena-panoptic-next-core.md) (accessed 2026-08-04 via gh api contents)",
+      "note": "RESIDUE about the prohibition tables rather than the vocabulary. X2 ('Fl + manipulable Cp/Cl price + Pl/Cd') is NOT armed — there is no flash liquidity — yet the failure mode X2 guards against is this protocol's central design problem, and five named mechanisms exist for no other purpose than to mitigate it. A prohibition is armed or it is not; there is no way to record 'the failure mode is present and explicitly defended', so the table scores an unmitigated design and a purpose-built defence identically."
+    }
+  ]
+}

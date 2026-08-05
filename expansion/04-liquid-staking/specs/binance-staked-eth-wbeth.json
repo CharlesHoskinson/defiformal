@@ -1,0 +1,120 @@
+{
+  "app": "Binance staked ETH (WBETH)",
+  "category": "04-liquid-staking",
+  "source": "C:\\defiformal-work\\04-liquid-staking\\01-research.md",
+  "construction": ["Ix", "Rd", "Wq", "Fz", "Gp", "Up"],
+  "functionalObligations": [
+    {
+      "id": "F1",
+      "text": "Anyone may send ETH to the token contract through a payable deposit(address referral) and be minted msg.value * 1e18 / exchangeRate() WBETH, with no account, no KYC and no allowlist.",
+      "elements": ["Ix"],
+      "evidence": "https://eth.blockscout.com/api/v2/smart-contracts/0x9E021c9607bD3ADB7424D3b25a2D35763ff180BB (accessed 2026-08-04)",
+      "note": "CORRECTION to the corpus, and the corpus is materially wrong here. The corpus marks Aw with the justification 'minting and redeeming require a Binance account... this gate is a login'. The verified implementation source of WrapTokenV3ETH shows deposit() carrying only require(msg.value > 0). Aw is DROPPED from the construction for this reason. The record was overturned from verified on-chain bytecode alone, there being no repo and no specification."
+    },
+    {
+      "id": "F2",
+      "text": "A holder's WBETH balance is a fixed quantity that never changes without a transfer; the ETH entitlement rises because a single stored scalar, exchangeRate(), rises.",
+      "elements": ["Ix"],
+      "evidence": "https://www.binance.com/en/support/faq/what-is-wbeth-e252366155174ba6887f6b32e3798273 (accessed 2026-08-04); https://eth.blockscout.com/api/v2/smart-contracts/0x9E021c9607bD3ADB7424D3b25a2D35763ff180BB (accessed 2026-08-04)",
+      "note": "Ix is FORCED and retained. The corpus marker is right in substance: Ix presumes an index derived from observable state, and here the state is not observable and the index is a claim. The gap is not index-versus-share; it is *asserted* versus *derived*, and the vocabulary has no way to mark which."
+    },
+    {
+      "id": "F3",
+      "text": "The on-chain ledger is a plain fixed-quantity ERC-20 with no share ledger and no on-chain pool: a holder's entitlement is balance x storedRate, not a proportion of any quantity the contract holds.",
+      "elements": ["Ix"],
+      "evidence": "https://eth.blockscout.com/api/v2/smart-contracts/0x9E021c9607bD3ADB7424D3b25a2D35763ff180BB (accessed 2026-08-04)",
+      "note": "CORRECTION: Sh is DROPPED from the corpus construction. Sh requires that the claim be proportional to a pool, i.e. value = shares/totalShares x poolValue. Here the rate is set exogenously and independently of totalSupply, so if the off-chain backing halved no on-chain quantity would change unless a whitelisted caller wrote a new number. Carrying both Sh and Ix would also double-count the same claim under its two dual descriptions."
+    },
+    {
+      "id": "F4",
+      "text": "Only whitelisted callers may write the exchange rate, and each write is bounded by a per-caller allowance that refills on a per-caller interval; a write that is zero, unchanged, or exceeds the remaining allowance reverts.",
+      "elements": [],
+      "evidence": "https://eth.blockscout.com/api/v2/smart-contracts/0x81720695e43A39C52557Ce6386feB3FAAC215f06 (accessed 2026-08-04)",
+      "note": "RESIDUE, and a CORRECTION that overturns the corpus record's central claim. The corpus says 'an ERC-20 whose exchange rate an admin key increments on a schedule'. The oracle role is held by a verified contract, ExchangeRateUpdater (MIT), whose guards read 'RateLimit: caller is not whitelisted' and 'ExchangeRateUpdater: exchange rate update exceeds allowance'. Nothing in the 58 names a governor on an oracle's discretion: it is not Tg (no delay, no queue, no proposal), not Gp (it cannot stop anything), not At (no attester, no assurance level). It is the only thing standing between a compromised oracle key and arbitrary repricing of the second-largest liquid-staking position in DeFi."
+    },
+    {
+      "id": "F5",
+      "text": "Any holder may call requestWithdrawEth, which unconditionally burns the caller's WBETH at the prevailing rate and registers a withdrawal request in a separate unwrap contract recording recipient, wbethAmount, ethAmount, triggerTime, claimTime and an allocated flag.",
+      "elements": ["Rd", "Wq"],
+      "evidence": "https://eth.blockscout.com/api/v2/smart-contracts/0x9E021c9607bD3ADB7424D3b25a2D35763ff180BB (accessed 2026-08-04); https://eth.blockscout.com/api/v2/smart-contracts/0x542059d658624DF6452b22B10302A15a6AB59f10 (accessed 2026-08-04)",
+      "note": "Wq is ADDED to the corpus construction: the corpus records no queue at all. Rd is retained but its corpus justification is CORRECTED. The corpus says redemption 'is an exchange feature governed by exchange terms and KYC, not a right the contract enforces'. The contract enforces the burn and the queue entry unconditionally for any holder with no KYC; what it does not enforce is payment (F6). The overstatement the corpus warns about is real but located in a different place."
+    },
+    {
+      "id": "F6",
+      "text": "A registered request becomes claimable only after an operator marks it allocated and after a minimum lock of two days (MIN_LOCK_TIME, with a settable lockTime); the contract is under no obligation to be funded, and is topped up from an off-chain balance through rechargeFromRechargeAddress.",
+      "elements": [],
+      "evidence": "https://eth.blockscout.com/api/v2/smart-contracts/0x542059d658624DF6452b22B10302A15a6AB59f10 (accessed 2026-08-04)",
+      "note": "RESIDUE, and the sharpest single finding about this protocol. Wq names a queue the protocol is obliged to clear. This is an enforced request against a discretionary fulfilment, and the distinction is the whole risk: solvency of the queue is an off-chain fact. The corpus's 'no on-chain redemption guarantee' is half right; the precise statement is that the path exists and the obligation to fund it does not."
+    },
+    {
+      "id": "F7",
+      "text": "A blacklister may permanently strand a named holder's redemption by blacklisting the address on claimWithdraw, while leaving the token transferable to everyone else and leaving that holder's ability to mint untouched.",
+      "elements": ["Fz"],
+      "evidence": "https://eth.blockscout.com/api/v2/smart-contracts/0x542059d658624DF6452b22B10302A15a6AB59f10 (accessed 2026-08-04)",
+      "note": "Fz is a CANDIDATE symbol, used here with the required mark, and is ADDED: the corpus records no freeze symbol at all. Law L28 requires a named authority, enumerated triggers, an appeal path and holder disclosure; none is published for WBETH, so the warrant is unmet and that is itself the finding. Fz is also approximate in scope: this is a selective freeze on *redemption only*, not on transfer, which Fz cannot distinguish."
+    },
+    {
+      "id": "F8",
+      "text": "An operator may pause the token contract and the unwrap contract, halting mint and claim.",
+      "elements": ["Gp"],
+      "evidence": "https://eth.blockscout.com/api/v2/smart-contracts/0x9E021c9607bD3ADB7424D3b25a2D35763ff180BB (accessed 2026-08-04); https://eth.blockscout.com/api/v2/smart-contracts/0x542059d658624DF6452b22B10302A15a6AB59f10 (accessed 2026-08-04)",
+      "note": "ADDED. The corpus canonical form omits any control-plane symbol beyond Up."
+    },
+    {
+      "id": "F9",
+      "text": "Both the token and the unwrap contract are EIP-1967 proxies whose admin may replace the implementation immediately, with no timelock and no governance process.",
+      "elements": ["Up"],
+      "evidence": "https://eth.blockscout.com/api/v2/smart-contracts/0xa2E3356610840701BDf5611a53974510Ae27E2e1 (accessed 2026-08-04); https://eth.blockscout.com/api/v2/smart-contracts/0x79973d557CD9dd87eb61e250cc2572c990e20196 (accessed 2026-08-04)",
+      "note": "Law L15 (Up requires Tg or a bounded emergency process) is UNMET: no timelock exists. Prohibition X9 (Up with immediate single-key control) is ARMED on the last published role map, which puts the proxy admin at a Binance EOA. UNKNOWN whether that assignment still holds: the map is from 2023-10-09 and describes WrappedTokenV1ETH, while the live implementation is WrapTokenV3ETH; stage 1 could not re-read live role values (Etherscan 403, Blockscout proxy-read 404, no eth_call available). Stage 3 should treat X9 as armed-pending-verification, not as proven."
+    },
+    {
+      "id": "F10",
+      "text": "The backing of the token is an off-chain balance sheet: no attestation object naming an attester, an assurance level, a frequency or a staleness bound is published for WBETH or BETH.",
+      "elements": [],
+      "evidence": "https://www.binance.com/en/proof-of-reserves (accessed 2026-08-04); https://llamarisk.com/research/risk-collateral-risk-assessment-binance-wrapped-beacon-eth-wbeth (accessed 2026-08-04)",
+      "note": "RESIDUE. At is deliberately not used. Law L27 requires a named attester, independence, a stated assurance level, a staleness bound and recourse. The proof-of-reserves page supplies a Merkle-tree and zk-SNARK methodology, names no auditor, states no frequency, and does not enumerate WBETH or BETH among covered assets. There is no symbol for 'backed by an off-chain balance sheet you cannot inspect'."
+    },
+    {
+      "id": "F11",
+      "text": "[Vl, all five sub-mechanisms] The protocol performs no validator action on chain of any kind: there is no validator registry, no key registration or vetting, no withdrawal-credential proof, no allocation of stake across operators, no deposit front-running defence, no exit request or exit signalling, no slashing record and no operator set. The three writes that touch the staking side (moveToStakingAddress, supplyEth, setNewEthStaked) move value to a Binance-controlled address or assert a number, and the trail ends on chain.",
+      "elements": [],
+      "evidence": "https://eth.blockscout.com/api/v2/smart-contracts/0x9E021c9607bD3ADB7424D3b25a2D35763ff180BB (accessed 2026-08-04)",
+      "note": "This is NOT residue in the ordinary sense, and saying so precisely is the deliverable. Vl is INAPPLICABLE here, not approximate: the obligation cannot arise, because the protocol performs no validator action within the ledger the model describes. Zero of Vl's five sub-mechanisms are present, in a position that stage 1's ranking puts at $6.9B, second largest in the category. The vocabulary reads this absence identically to an unnamed mechanism, which is the same defect the options lane recorded in FINDINGS-STAGE1: the requirement language admits only discharge-by-naming and has no way to say that an obligation is closed by construction. Any claim that Vl covers liquid staking has to survive this entry."
+    },
+    {
+      "id": "F12",
+      "text": "[What the collateral secures, who may write a slashing condition over it, whether it may be committed twice] Nothing on chain, no one, and unanswerable: there is no restaked collateral, no slashing condition, no party empowered to author one, and no on-chain record of the backing position against which a second commitment could be detected.",
+      "elements": [],
+      "evidence": "https://www.binance.com/en/research/projects/wrapped-beacon-eth-wbeth (accessed 2026-08-04); https://eth.blockscout.com/api/v2/smart-contracts/0x9E021c9607bD3ADB7424D3b25a2D35763ff180BB (accessed 2026-08-04)",
+      "note": "Stated because the category asks it of every member. All three answers are negative, and a negative answer is exactly what the carrier cannot record: an empty element array here means the same thing as an unnamed mechanism, which it is not."
+    },
+    {
+      "id": "F13",
+      "text": "The same ERC-20 is simultaneously a permissionless on-chain claim mintable by anyone at a posted rate and an exchange product gated by an account and by terms of service, with different rights behind each door; through the exchange, wrapping and unwrapping BETH are at zero fee.",
+      "elements": [],
+      "evidence": "https://www.binance.com/en/support/faq/what-is-wbeth-e252366155174ba6887f6b32e3798273 (accessed 2026-08-04)",
+      "note": "RESIDUE. The vocabulary has one gate symbol and no way to say that one door is code and the other is a login, with materially different rights behind each. This also explains why the corpus's Aw marker felt true while being false about the contract: it described the exchange door and attributed it to the ledger."
+    },
+    {
+      "id": "F14",
+      "text": "The conversion rate is updated once daily at 00:00 UTC, and staking and redemption through the exchange are suspended each day from 23:45 to 00:15 UTC while it is applied.",
+      "elements": [],
+      "evidence": "https://www.binance.com/en/support/faq/what-is-wbeth-e252366155174ba6887f6b32e3798273 (accessed 2026-08-04)",
+      "note": "RESIDUE. Ep is deliberately not used: Ep names an epoch-gated transition enforced by the ledger, and this cadence and its suspension window are enforced by an exchange's operational schedule, not by code. The contract itself imposes no schedule on updateExchangeRate beyond the rate limiter's per-caller interval (F4)."
+    },
+    {
+      "id": "F15",
+      "text": "The rate was initialised at 1:1 with BETH at launch on 2023-04-27 08:00 UTC, and the same token address serves Ethereum and BNB Smart Chain.",
+      "elements": [],
+      "evidence": "https://www.binance.com/en/support/announcement/binance-introduces-wrapped-beacon-eth-wbeth-on-eth-staking-a1197f34d832445db41654ad01f56b4d (accessed 2026-08-04)",
+      "note": "RESIDUE. Xf is deliberately not used: stage 1 found no evidence of an on-chain bridge, lock-mint or burn-mint path between the two deployments. Two independent deployments that happen to share a vanity address are not cross-domain asset transfer, and asserting Xf would be a forced fit on an address coincidence."
+    },
+    {
+      "id": "F16",
+      "text": "Slashing exposure, reward computation and the reserve sit entirely inside the custodian; a loss reaches the token only if a whitelisted caller writes a smaller number, and may not be written at all.",
+      "elements": [],
+      "evidence": "https://llamarisk.com/research/risk-collateral-risk-assessment-binance-wrapped-beacon-eth-wbeth (accessed 2026-08-04); https://eth.blockscout.com/api/v2/smart-contracts/0x81720695e43A39C52557Ce6386feB3FAAC215f06 (accessed 2026-08-04)",
+      "note": "RESIDUE. Sl is deliberately not used: Sl assigns a loss to a claim class through a rule the ledger executes. Here a loss is expressible only as a smaller asserted scalar, whose size per interval is capped by F4's allowance, so a large loss could not even be written promptly. Nothing in the 58 names a loss path that is discretionary in both its occurrence and its rate."
+    }
+  ]
+}

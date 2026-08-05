@@ -1,0 +1,155 @@
+{
+  "app": "Aevo (Ribbon Finance lineage)",
+  "category": "10-options",
+  "source": "C:\\defiformal-work\\10-options\\01-research.md",
+  "construction": ["Ad", "Ct", "Ex", "Fd", "Li", "Ob", "Op", "Pf", "Rf", "Xf", "Xm"],
+  "functionalObligations": [
+    {
+      "id": "F1",
+      "text": "A user buys or writes a European option on the Aevo index from a cross-margin account, with daily, weekly, monthly and quarterly expiries at 08:00 UTC out to about three months, a $0.01 tick and a per-instrument maximum notional of $10,000,000.",
+      "elements": ["Op"],
+      "evidence": "https://docs.aevo.xyz/aevo-products/aevo-exchange/trading-on-aevo/options-specifications/eth-options.md (accessed 2026-08-04); 686 live ETH option instruments with per-instrument greeks, price_band 0.7 and max_notional_value 10000000 from GET https://api.aevo.xyz/markets?asset=ETH&instrument_type=OPTION (accessed 2026-08-04)",
+      "note": "`Op` for the instrument only; F2-F4, F5, F8-F10 and F20 carry the six axes it collapses. Note for stage 3 that this construction departs from the corpus on `Ad` (added, F14), `Rf` (added, F7), `Up`, `Em` and `Sh` (dropped, F18/F19/F6)."
+    },
+    {
+      "id": "F2",
+      "text": "Exercise is never elected: the option is European and pays automatically at the 08:00 UTC expiry.",
+      "elements": [],
+      "evidence": "https://docs.aevo.xyz/aevo-products/aevo-exchange/trading-on-aevo/options-specifications/eth-options.md (accessed 2026-08-04)",
+      "note": "RESIDUE, axis (a). Same gap as Derive F2."
+    },
+    {
+      "id": "F3",
+      "text": "The payoff is paid in USDC as a cash difference against the Aevo index; no underlying is delivered.",
+      "elements": [],
+      "evidence": "https://docs.aevo.xyz/aevo-products/aevo-exchange/trading-on-aevo/options-specifications/eth-options.md (accessed 2026-08-04)",
+      "note": "RESIDUE, axis (b). Same gap as Derive F3."
+    },
+    {
+      "id": "F4",
+      "text": "The premium is paid in full at execution.",
+      "elements": [],
+      "evidence": "https://docs.aevo.xyz/aevo-products/aevo-exchange/trading-on-aevo/options-specifications/eth-options.md and https://docs.aevo.xyz/aevo-products/aevo-exchange/technical-architecture/margin-framework.md (accessed 2026-08-04)",
+      "note": "RESIDUE, axis (d). The one-poled axis again: `Sr` names the streamed alternative, nothing names the upfront case."
+    },
+    {
+      "id": "F5",
+      "text": "Both sides of every option are user accounts; the peer-to-pool layer that gave the protocol its name — the Ribbon DeFi Options Vaults, which sold weekly options into an auction — was exploited on 2025-12-12 for roughly $2.7M (about 32% of the affected vault) following an oracle upgrade, and has been halted and is being decommissioned with a compensation mechanism, leaving the exchange unaffected.",
+      "elements": [],
+      "evidence": "https://docs.aevo.xyz/llms.txt (accessed 2026-08-04 — no options-vault section; under Aevo Strategies the only entry is Aevo Basis Trade) and https://www.theblock.co/post/382461/aevos-legacy-ribbon-dov-vaults-exploited-for-2-7-million-following-oracle-upgrade (press, accessed 2026-08-04)",
+      "note": "RESIDUE on two counts, axis (c) and beyond it. No element names the underwriting topology. And nothing names an orderly wind-down of a product line with compensation — an act of governance that reassigns already-realised losses between claim classes, which is neither `Sl` (a rule applied to a loss event) nor `Gp` (a pause). The corpus's Ribbon-auction residue about a periodic sealed-bid auction of a bespoke instrument remains a valid vocabulary finding but is no longer a fact about the ranked protocol."
+    },
+    {
+      "id": "F6",
+      "text": "Collateral may be posted in several accepted assets under a cross-margin collateral framework, including aeUSD with its own deposit, redemption and composition regime, plus a spot-convert feature.",
+      "elements": [],
+      "evidence": "https://docs.aevo.xyz/llms.txt (collateral framework, aeUSD and spot-convert pages, accessed 2026-08-04)",
+      "note": "RESIDUE. No element names a collateral eligibility schedule — which assets are accepted, at what haircut, under what cap. `Sh` is dropped from the corpus element set: a cross-margin account balance is not a pro-rata claim on a pool, and stage 1 evidenced no pool-share accounting anywhere in the exchange."
+    },
+    {
+      "id": "F7",
+      "text": "Beside the book, a maker may quote into an RFQ or block-trade rail, and a separate OTC desk creates bespoke bilateral instruments with a protocol-level unwind endpoint, all settled by the same margin system.",
+      "elements": ["Rf"],
+      "evidence": "https://docs.aevo.xyz/llms.txt (/rfqs, /quotes, /otc/create-request, /otc/unwind endpoints, accessed 2026-08-04)",
+      "note": "`Rf` added to the corpus element set. RESIDUE inside the obligation: nothing names a bespoke bilateral instrument that a shared margin system nonetheless settles, nor an unwind primitive that reverses one."
+    },
+    {
+      "id": "F8",
+      "text": "Orders are matched by an off-chain order book and checked by an off-chain risk engine before entry, and only once a maker and taker order are matched are they posted to Aevo's smart contracts.",
+      "elements": ["Ob"],
+      "evidence": "https://docs.aevo.xyz/aevo-products/aevo-exchange/technical-architecture/exchange-structure/off-chain-orderbook-and-risk-engine.md (accessed 2026-08-04)",
+      "note": "FLAGGED FORCED FIT, and it is worse here than at Derive. `Ob` says ON-CHAIN order book; Aevo's is off-chain, and unlike Derive, Aevo documents no forced withdrawal and no escape hatch, so the trust assumption the symbol erases is strictly stronger. Retained for the same reason as Derive F8 — a double auction is the price-formation mechanism and nothing else in the 58 names it — with the falsified clause carried here."
+    },
+    {
+      "id": "F9",
+      "text": "Under Standard Margin the risk engine evaluates the margin for every position in a portfolio individually rather than holistically, and rejects an order that would breach it.",
+      "elements": ["Ct"],
+      "evidence": "https://docs.aevo.xyz/aevo-products/aevo-exchange/technical-architecture/margin-framework.md (accessed 2026-08-04)",
+      "note": "`Ct` fits, axis (e) first value. THE CORPUS DEMOTED `Ct` TO 'derived'. It is a first-class, order-gating computation performed by a named engine before a trade may enter the book; the demotion is a decomposition artefact and it is one of the two reasons the tables reject Aevo."
+    },
+    {
+      "id": "F10",
+      "text": "Under Portfolio Margin the requirement is Scenario Margin plus Floor Margin: fifteen scenarios formed from three spot-movement levels crossed with five IV-shift positions, at maximum spot movement +/-20% and IV shift +50% / -25% in the initial ETH phase, with initial margin 1.25 times maintenance.",
+      "elements": [],
+      "evidence": "https://docs.aevo.xyz/aevo-products/aevo-exchange/technical-architecture/margin-framework/portfolio-margin.md (accessed 2026-08-04)",
+      "note": "RESIDUE, axis (e) second value. `Ct` is a scalar comparison and this is a maximum over a shock grid. It also refutes the corpus's identicalClaimedByLane [[Derive, Aevo]] on its first clause: Aevo runs 15 scenarios of one geometry, Derive 23 of another plus three separate loss families."
+    },
+    {
+      "id": "F11",
+      "text": "Floor Margin = Net Short Exposure(Option) x Unit Floor Margin, at 0.01 ETH per unit in the initial ETH phase, added to the scenario result.",
+      "elements": [],
+      "evidence": "https://docs.aevo.xyz/aevo-products/aevo-exchange/technical-architecture/margin-framework/portfolio-margin.md (accessed 2026-08-04)",
+      "note": "RESIDUE, and the second clause refuting Derive-equals-Aevo: Aevo floors a max-over-scenarios with a per-unit charge on net short exposure, Derive instead adds contingency terms and an oracle contingency. The vocabulary has no operator for composing a scalar floor with a grid maximum, so it cannot represent either, let alone their difference."
+    },
+    {
+      "id": "F12",
+      "text": "Options and perpetual futures held in the same account share one margin computation and one collateral pool, and perpetuals pay a funding transfer tethering them to the index.",
+      "elements": ["Pf", "Ct"],
+      "evidence": "https://docs.aevo.xyz/aevo-products/aevo-exchange/technical-architecture/margin-framework.md and https://docs.aevo.xyz/aevo-products/aevo-exchange/technical-architecture/margin-framework/portfolio-margin.md (accessed 2026-08-04)",
+      "note": "`Pf` and `Ct` name the pieces. RESIDUE inside the obligation: nothing names the *sharing* — that a loss on one instrument type consumes the margin of another. X8 names the failure mode of the opposite arrangement (shared collateral across nominally isolated markets); there is no way to record cross-margining as a deliberate and disclosed design."
+    },
+    {
+      "id": "F13",
+      "text": "When an account fails AB - OO - MM > 0 the Liquidation Engine seizes it, cancels its open orders to free collateral, and works the position out with limit orders posted every 2 seconds for a maximum of 30 seconds, charging a liquidation fee on the fills.",
+      "elements": ["Ct", "Li"],
+      "evidence": "https://docs.aevo.xyz/aevo-products/aevo-exchange/technical-architecture/liquidations.md (accessed 2026-08-04)",
+      "note": "`Li` names paid third-party closure; here the closer is the exchange's own engine working the book, which is closer to an operator-run workout than to an open liquidation market, and the symbol cannot tell the two apart."
+    },
+    {
+      "id": "F14",
+      "text": "If the book cannot absorb the seized position, the insurance fund takes it at a markup, and a liquidation fee is charged on insurance-fund fills as well.",
+      "elements": [],
+      "evidence": "https://docs.aevo.xyz/aevo-products/aevo-exchange/technical-architecture/liquidations.md (accessed 2026-08-04)",
+      "note": "RESIDUE, and deliberately so. `Bs` is the nearest and fails on its distinguishing clause: no stake, no staker class and no slashing condition is documented for the fund, and its size is UNKNOWN. This is the same correction stage 1 applied to Derive's Security Module — an unfunded-by-stakers protocol reserve is not slashable first-loss capital — and applying it consistently is what leaves this obligation as residue rather than as a cheap admissibility fix."
+    },
+    {
+      "id": "F15",
+      "text": "If the insurance fund is insufficient, auto-deleveraging closes the positions of the most profitable opposing traders at mark price, distributing the loss among them rather than concentrating it on one counterparty.",
+      "elements": ["Ad"],
+      "evidence": "https://docs.aevo.xyz/aevo-products/aevo-exchange/technical-architecture/auto-deleveraging-adl.md and https://docs.aevo.xyz/aevo-products/aevo-exchange/technical-architecture/liquidations.md (accessed 2026-08-04)",
+      "note": "`Ad` IS ADDED TO THE CORPUS ELEMENT SET AND THIS IS THE SECOND REASON THE TABLES REJECT AEVO. The corpus carries [Ct, Em, Ex, Gp, Li, Ob, Op, Pf, Sh, Up, Xf, Xm] with no `Ad`, despite auto-deleveraging having its own documentation page; L4 (Pf -> Ex + Ct + Li + (Ad|Sl|Bs)) then has an open third term. With `Ad` restored the loss-absorption term closes and the rejection disappears — it was an artefact. What `Ad` does not name: the rank key. Ranking by counterparty profitability makes ADL a levy on being right, a materially different risk from a rank by leverage or by recency."
+    },
+    {
+      "id": "F16",
+      "text": "The three loss-absorption venues escalate in a fixed order — book workout, then insurance fund, then auto-deleveraging — and each transfers the position on a different price basis: limit orders, then a markup, then mark price.",
+      "elements": [],
+      "evidence": "https://docs.aevo.xyz/aevo-products/aevo-exchange/technical-architecture/liquidations.md (accessed 2026-08-04)",
+      "note": "RESIDUE. `Li`, `Bs` and `Ad` name pieces; nothing names the ordering, the escalation triggers, or that the price basis changes at each step. This is the loss-absorption topology gap: four protocols in this category close the writer-default channel in four incompatible ways and the vocabulary represents all four as an unordered set of symbols."
+    },
+    {
+      "id": "F17",
+      "text": "The index is built by excluding exchanges that are disconnected, administratively turned off or emitting detected-invalid data, taking the median of the survivors, discarding any source deviating more than 0.5% from that median, and averaging the remainder unweighted across ten named venues.",
+      "elements": ["Ex"],
+      "evidence": "https://docs.aevo.xyz/aevo-products/aevo-exchange/technical-architecture/index-price.md (accessed 2026-08-04)",
+      "note": "APPROXIMATE. `Ex` says push/pull/medianizer and collapses three distinct decisions: the median is used only as an outlier filter and the output is a mean; venues can be administratively turned off; and the venue list is itself governed. This is the third clause refuting Derive-equals-Aevo — Derive consumes signed SVI/forward/rate feeds from Block Scholes with confidence scores, Aevo builds its own trimmed-mean index from ten CEXs."
+    },
+    {
+      "id": "F18",
+      "text": "The settlement-price observation window at expiry is not documented anywhere in the exchange's documentation.",
+      "elements": [],
+      "evidence": "https://docs.aevo.xyz/llms.txt (full page index, accessed 2026-08-04) and https://docs.aevo.xyz/aevo-products/aevo-exchange/technical-architecture/index-price.md (accessed 2026-08-04) — index construction is specified, terminal fixing is not",
+      "note": "RESIDUE, and the strongest form of the terminal-fixing gap in this category: at Derive and Rysk the fixing is specified and unnameable; here it is unspecified, and nothing in the vocabulary or its laws would have forced it to be stated. UNKNOWN is recorded rather than guessed."
+    },
+    {
+      "id": "F19",
+      "text": "The exchange runs on its own EVM optimistic rollup whose sequencer is operated with Conduit, posting batches to Ethereum mainnet every hour with a two-hour dispute period and a two-to-three-hour confirmation window; deposits arrive over the Optimism Standard Bridge in about ten minutes.",
+      "elements": ["Xf", "Xm"],
+      "evidence": "https://docs.aevo.xyz/aevo-products/aevo-exchange/technical-architecture/exchange-structure/layer-2-architecture.md (accessed 2026-08-04)",
+      "note": "`Xf` and `Xm` name the bridge and the message verification. RESIDUE inside the obligation: nothing names who orders the transactions, at what cadence, and what an hourly batch with a two-hour dispute period implies for the timeliness of a liquidation on a derivatives ledger — a third-party sequencer is the finality of this exchange. `Up` is dropped from the corpus element set: there is no public repository for the deployed system, so upgradeability is UNKNOWN and the corpus asserts a mechanism it cannot cite. The corpus residue about migrating balances between a rollup and L1 as a primitive distinct from bridging is marked unsupported — current docs describe a standard Optimism-bridge deposit and a 2-3 hour withdrawal."
+    },
+    {
+      "id": "F20",
+      "text": "Mark prices and per-instrument greeks including implied volatility are computed by the exchange and published through /markets; no pricing model, surface parameterisation or margin-model source is published.",
+      "elements": [],
+      "evidence": "GET https://api.aevo.xyz/markets?asset=ETH&instrument_type=OPTION (per-instrument iv and greeks, accessed 2026-08-04); gh api orgs/aevoxyz/repos returns only `audit` and `aevo-sdk` (accessed 2026-08-04)",
+      "note": "RESIDUE, axis (f). Aevo is book-priced for execution and model-priced for margin and mark, and the model is closed. There is no element for a pricing model, and no way to record that the model exists but is unauditable — which for a venue whose risk engine gates order entry off-chain is the central trust fact."
+    },
+    {
+      "id": "F21",
+      "text": "AEVO governs the protocol through AGP proposals and a governance portal, with a DAO treasury administered by a Treasury and Revenues Management Committee and a Growth & Marketing Committee, and a buyback-and-burn system for protocol revenue.",
+      "elements": ["Fd"],
+      "evidence": "https://docs.aevo.xyz/llms.txt (governance, AGP, treasury committee and buyback-and-burn pages, accessed 2026-08-04)",
+      "note": "`Fd` is candidate register, used for the surplus-allocation rule; the residual claimant is the token holder by burn rather than by distribution, which `Fd` does not distinguish. `Em` is dropped from the corpus element set: no emissions programme is evidenced in current documentation, and buyback-and-burn is its opposite."
+    }
+  ]
+}

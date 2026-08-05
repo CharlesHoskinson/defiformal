@@ -1,0 +1,148 @@
+{
+  "app": "Rysk V12",
+  "category": "10-options",
+  "source": "C:\\defiformal-work\\10-options\\01-research.md",
+  "construction": ["At", "Ep", "Ex", "Gp", "Op", "Rf", "Sh", "Sv", "Up", "Wq"],
+  "functionalObligations": [
+    {
+      "id": "F1",
+      "text": "A user sells an option by choosing asset, target price (strike), expiry and size; the protocol opens a request for quote to integrated market makers over WebSocket, and the maker returns a signed quote that is executed on-chain on acceptance.",
+      "elements": ["Rf"],
+      "evidence": "https://docs.rysk.finance/getting-started/solution-rysk-v12 and https://docs.rysk.finance/getting-started/protocol-and-product/makers-how-to-integrate-in-the-rfq.md (accessed 2026-08-04)",
+      "note": "`Rf` is the protocol's defining symbol and the corpus omitted it — its residue entry 'no element for the counterparty side' is a decomposition omission, not a residue. Note also the inversion this obligation records: the *user* is the seller and the market maker is the buyer, which no element expresses. `Dp` is dropped from the corpus element set (see F18) and `Em` is dropped for want of a citation."
+    },
+    {
+      "id": "F1a",
+      "text": "The instrument sold is an option with a named strike and a named expiry whose settlement is secured by collateral posted at inception, held as an oToken by the buyer.",
+      "elements": ["Op"],
+      "evidence": "https://docs.rysk.finance/getting-started/protocol-and-product/how-it-works.md and https://docs.rysk.finance/getting-started/protocol-and-product/makers-how-to-integrate-in-the-rfq.md (accessed 2026-08-04)",
+      "note": "Rysk is the one member of this category for which all three of `Op`'s clauses — strike, expiry, collateralized settlement — are literally true; at Panoptic two of the three are false and at Hegic the exercise semantics are neither of the styles the symbol implies. It is therefore the cleanest possible instance of the symbol, and the tables still reject it (F8, F10), which localises the failure in the requirement language rather than in `Op`."
+    },
+    {
+      "id": "F2",
+      "text": "Quotes are aggregated over a fixed two-second window with live competitiveness feedback to makers, and exactly one winning quote is surfaced and filled.",
+      "elements": [],
+      "evidence": "https://docs.rysk.finance/getting-started/protocol-and-product/makers-how-to-integrate-in-the-rfq.md (accessed 2026-08-04)",
+      "note": "RESIDUE. `Rf` names a signed maker quote — one quote, no clock, no competition. This is a timed sealed multi-quote round with nonces and validity timestamps resolved to a single winner, i.e. a repeated sealed-bid auction; `Ba` is uniform-price clearing over a batch of fungible flow and is the wrong shape too. Not forced onto either."
+    },
+    {
+      "id": "F3",
+      "text": "Options are European, expire at 08:00 UTC, cannot be exercised early, and cannot be closed, bought back or offset before expiry.",
+      "elements": [],
+      "evidence": "https://docs.rysk.finance/getting-started/protocol-and-product/how-it-works.md and https://docs.rysk.finance/getting-started/protocol-and-product/faq.md (accessed 2026-08-04)",
+      "note": "RESIDUE, axis (a). Beyond the exercise-style gap shared with Derive: nothing names a prohibition on closing a position. Locking the seller in until expiry is a material term of the instrument — a secondary market is documented as 'in development' — and it is invisible."
+    },
+    {
+      "id": "F4",
+      "text": "Settlement exchanges the collateral itself at the strike: a cash-secured put delivers stablecoins for the underlying at the lower strike; the covered-call side is documented both as cash-settled and as physically settled.",
+      "elements": [],
+      "evidence": "https://docs.rysk.finance/getting-started/protocol-and-product/how-it-works.md, https://docs.rysk.finance/getting-started/protocol-and-product/products.md and https://docs.rysk.finance/getting-started/solution-rysk-v12 (accessed 2026-08-04)",
+      "note": "RESIDUE, axis (b). `Op` does not distinguish physical delivery from a cash difference, so the vocabulary cannot even record that Rysk and Derive differ here — nor that the sources conflict. Call settlement is partially UNKNOWN and stage 1 recorded it as such rather than resolving it."
+    },
+    {
+      "id": "F5",
+      "text": "The counterparty is a market maker taking the other side bilaterally; Rysk Premium adds a curated pool that takes the maker side over the same rail.",
+      "elements": [],
+      "evidence": "https://docs.rysk.finance/getting-started/solution-rysk-v12 and https://docs.rysk.finance/rysk-premium/rysk-premium-explainer.md (accessed 2026-08-04)",
+      "note": "RESIDUE, axis (c). No element names the underwriting topology. `Pl` is lending; `Cv` requires adjudicated claims. And Rysk is simultaneously peer-to-peer at the base layer and peer-to-pool one layer up, which the vocabulary must state as a union of element sets rather than as a layering."
+    },
+    {
+      "id": "F6",
+      "text": "The premium is paid in full at execution, in USD, deducted from the maker's pre-deposited balance in the accounting contract and credited to the seller against oTokens.",
+      "elements": [],
+      "evidence": "https://docs.rysk.finance/getting-started/solution-rysk-v12 and https://docs.rysk.finance/getting-started/protocol-and-product/makers-how-to-integrate-in-the-rfq.md (accessed 2026-08-04)",
+      "note": "RESIDUE, axis (d), the same one-poled axis as Derive F11: `Sr` names the streamed alternative and nothing names an upfront premium."
+    },
+    {
+      "id": "F7",
+      "text": "The seller posts the entire maximum payoff at trade time — the underlying for a covered call, stablecoins equal to strike x size for a cash-secured put — into a MarginPool where it is locked for the life of the trade, never rehypothecated and never shared with any other position.",
+      "elements": [],
+      "evidence": "https://docs.rysk.finance/getting-started/solution-rysk-v12 and https://docs.rysk.finance/getting-started/protocol-and-product/how-it-works.md (accessed 2026-08-04); MarginPool 0x684404F2AEBAD87a6803F13741B1d638Bfe2C671 verified as an exact match on https://sourcify.dev/server/v2/contract/1/0x684404F2AEBAD87a6803F13741B1d638Bfe2C671?fields=compilation (accessed 2026-08-04)",
+      "note": "RESIDUE, and the premise of F8-F10. `Ct` names a threshold on a ratio evaluated over a position's life. This is a single admission condition — full escrow of the maximum payoff — after which the ratio is constant by construction and no test has anything to measure. The vocabulary has no symbol for 'the obligation is pre-funded in full', so a protocol that closes the loss channel looks identical to one that ignored it."
+    },
+    {
+      "id": "F8",
+      "text": "DISCHARGED BY CONSTRUCTION: no maintenance-margin or health test exists or can exist, because no position can ever become under-secured.",
+      "elements": [],
+      "evidence": "https://docs.rysk.finance/getting-started/protocol-and-product/how-it-works.md (accessed 2026-08-04) — 'locked in Rysk's settlement layer for the life of the trade and never leaves the contract, with no rehypothecation, no shared portfolio risk, and no unsecured bilateral counterparty credit risk'",
+      "note": "DISCHARGE BY CONSTRUCTION, not omission. The requirement tables demand that `Op` be accompanied by `Ct`; here the obligation `Ct` discharges cannot arise, because F7 makes the collateral ratio a constant fixed at 100% of maximum loss. The empty array is the correct answer and the checker will read it as an open term. That reading is a fact about the requirement language — which admits exactly one way to discharge a term, namely naming a satisfying element — and not a fact about Rysk. The corpus's `satisfiesRequirementsAndWarrants: false` for this protocol is a mis-diagnosis of exactly this kind."
+    },
+    {
+      "id": "F9",
+      "text": "DISCHARGED BY CONSTRUCTION: there is no liquidation path, no liquidator, no auction and no health-driven forced close anywhere in the protocol.",
+      "elements": [],
+      "evidence": "https://docs.rysk.finance/getting-started/protocol-and-product/how-it-works.md (accessed 2026-08-04); no liquidation surface appears anywhere in https://docs.rysk.finance/ (page index accessed 2026-08-04)",
+      "note": "DISCHARGE BY CONSTRUCTION. `Li` pays third parties to close positions that have become under-secured; by F7 none can. Note the ordering: `Li` is warranted by `Ct` in the tables, so the absence propagates — a vocabulary that cannot say 'closed' also cannot say why the dependent symbol is absent."
+    },
+    {
+      "id": "F10",
+      "text": "DISCHARGED BY CONSTRUCTION: there is no insurance fund, no backstop, no socialised loss and no auto-deleveraging, because the protocol has no loss channel for them to absorb.",
+      "elements": [],
+      "evidence": "https://docs.rysk.finance/getting-started/solution-rysk-v12 and https://docs.rysk.finance/resources/security.md (accessed 2026-08-04)",
+      "note": "DISCHARGE BY CONSTRUCTION, and this is the term on which the tables actually reject Rysk. L1 requires (Li|Ad|Sl|Bs) beside `Op`. Every one of those four is a mechanism for handling a shortfall that cannot occur. Carrying any of them to make the construction admissible would be the forced fit the project's standing rule forbids; the rejection is the evidence, and the residue is the explanation."
+    },
+    {
+      "id": "F11",
+      "text": "A maker's quote is only executable if the maker's USDT0 balance already deposited in the accounting contract covers the premium.",
+      "elements": [],
+      "evidence": "https://docs.rysk.finance/getting-started/protocol-and-product/makers-how-to-integrate-in-the-rfq.md (accessed 2026-08-04)",
+      "note": "RESIDUE. A capital gate on *participation* rather than on a position. `Aw` gates on identity or permission, not on funding; `Ct` gates a position, not an actor's right to quote. This is how Rysk replaces counterparty credit assessment on the buy side."
+    },
+    {
+      "id": "F12",
+      "text": "Prices are taken from Stork and cross-checked against Pyth, and when the two disagree beyond a threshold the system halts every process that requires an accurate price, with Stork as the fallback on divergence; Pendle assets are priced from the Pendle API.",
+      "elements": ["Ex", "Gp"],
+      "evidence": "https://docs.rysk.finance/resources/oracle.md (accessed 2026-08-04)",
+      "note": "`Ex` fits the feed. `Gp` is APPROXIMATE: it names an emergency guardian or pause, and here the trigger is automatic — a two-feed disagreement — rather than a guardian's decision. The vocabulary has no symbol for a self-triggering circuit breaker, the same gap Panoptic's safe mode exposes at a much larger scale."
+    },
+    {
+      "id": "F13",
+      "text": "At the 08:00 UTC fixing the Stork price settles the option, and for collateral assets a named team manually checks the price during a five-minute, smart-contract-enforced dispute period before settlement proceeds; funds are distributed within roughly two hours.",
+      "elements": ["Sv"],
+      "evidence": "https://docs.rysk.finance/resources/oracle.md and https://docs.rysk.finance/getting-started/protocol-and-product/how-it-works.md (accessed 2026-08-04)",
+      "note": "`Sv` is candidate register and is a good fit for determination discretion — this is exactly the terminal-fixing discretion the corpus flagged as unnamed. What `Sv` does not carry: the discretion is bounded by a contract-enforced five-minute window, so the protocol has made the *scope* of the operator's judgement a consensus-enforced quantity, which is the interesting part."
+    },
+    {
+      "id": "F14",
+      "text": "Rysk Premium LPs deposit USDC and hold a pro-rata claim on the pool, with a deposit price and a withdrawal price struck from NAV once per epoch.",
+      "elements": ["Sh", "Ep"],
+      "evidence": "https://docs.rysk.finance/rysk-premium/rysk-premium-explainer.md (accessed 2026-08-04)",
+      "note": "SCOPE FLAG: DefiLlama lists Rysk Premium as a separate protocol ($1.15M TVL, Yield category) from Rysk V12 ($30.15M TVL, Options Vault), and stage 1 recorded that the corpus fuses the two. Premium's obligations are carried here because Premium has no execution rail of its own — it is a taker on the V12 RFQ — but F14-F17 belong to the layer, not to the base protocol. `Sh` also inherits the marker the corpus put on Hegic's: the claim is on a pool whose value depends on unmarked short-option liabilities."
+    },
+    {
+      "id": "F15",
+      "text": "The pool's NAV per share is computed off-chain using aggregated pricing from a committee of option desks.",
+      "elements": ["At"],
+      "evidence": "https://docs.rysk.finance/rysk-premium/rysk-premium-explainer.md (accessed 2026-08-04)",
+      "note": "APPROXIMATE, and the approximation is the finding. `At` names a NAV attestation, and L27 requires a named attester, independence, a stated assurance level, a staleness bound and recourse. None of the five is published, and the attesters are drawn from the same population of desks that quote into the pool — so the entity marking the LPs' claim is an interested party. The symbol is carried so that the law can fail against it rather than being silently unstated."
+    },
+    {
+      "id": "F16",
+      "text": "Withdrawals are two-step and queue: if the pool's free balance is insufficient because collateral is locked in open positions the epoch advances without processing them, and the price the LP receives is the price of the first epoch in which withdrawals do clear.",
+      "elements": ["Wq", "Ep"],
+      "evidence": "https://docs.rysk.finance/rysk-premium/rysk-premium-explainer.md (accessed 2026-08-04)",
+      "note": "`Wq` names the queue and `Ep` the epoch gate. Neither names that the *price* is struck at an unknown future epoch: the LP has written a short option on their own exit with no premium and no notice, which is a risk transfer created by a queueing rule."
+    },
+    {
+      "id": "F17",
+      "text": "A named curator selects which instruments the pool writes and receives a share of the option-sale fee, and governance sets the epoch prices and may withdraw fees independently.",
+      "elements": [],
+      "evidence": "https://docs.rysk.finance/rysk-premium/rysk-premium-explainer.md (accessed 2026-08-04)",
+      "note": "RESIDUE. `Sv` is servicing and determination discretion, not instrument selection, and this is the same five-part shape the yield lane found — named agent, domain, magnitude, rate limit, revocation — one level down. The strike-and-tenor selection policy the corpus called Rysk's 'entire economic content' lives here, in Premium, not in V12, where the taker chooses."
+    },
+    {
+      "id": "F18",
+      "text": "DISCHARGED BY CONSTRUCTION: the protocol runs no hedging loop, no rebalancing and no directional book of its own — every position is fully collateralised at inception and left untouched until expiry.",
+      "elements": [],
+      "evidence": "https://docs.rysk.finance/getting-started/solution-rysk-v12 (accessed 2026-08-04); the Dynamic Hedging Vault core repository rysk-finance/dynamic-hedging returns HTTP 404 (gh api repos/rysk-finance/dynamic-hedging, accessed 2026-08-04); Rysk V1 TVL $193k vs Rysk V12 $30.15M on https://api.llama.fi/protocols (accessed 2026-08-04)",
+      "note": "DISCHARGE BY CONSTRUCTION, and the largest corpus correction in this category. The corpus decomposes the Dynamic Hedging Vault of Rysk V1 / Rysk Beyond on Arbitrum — sunset, no options tradeable after 2024-05-10, core repo removed — and carries `Dp` for delta-hedge maintenance. V12 has no hedge, no vault in the core protocol, and runs on HyperEVM and Ethereum, not Arbitrum. `Dp` is dropped."
+    },
+    {
+      "id": "F19",
+      "text": "The Ethereum settlement layer is an OwnedUpgradeabilityProxy compiled from Opyn GammaProtocol sources (solc 0.6.10), audited under the name Lean Gamma, with a separate upgrade-procedure audit.",
+      "elements": ["Up"],
+      "evidence": "https://sourcify.dev/server/v2/contract/1/0x684404F2AEBAD87a6803F13741B1d638Bfe2C671?fields=compilation (exact creation and runtime match, verified 2026-06-10; accessed 2026-08-04); https://docs.rysk.finance/resources/security.md and https://docs.rysk.finance/resources/important-contracts.md (accessed 2026-08-04)",
+      "note": "`Up` fits. RESIDUE inside the obligation: nothing in the vocabulary can express 'this mechanism is a vendored third-party protocol carrying its own upgrade authority', which is the actual trust statement. Whether the proxy owner is a timelock or a multisig is UNKNOWN, so X9 ('Up with immediate single-key control') is not asserted armed — but the corpus's blanket armedProhibitions: [] is unsupported, since the shape is present and the mitigation is unevidenced."
+    }
+  ]
+}
