@@ -100,7 +100,7 @@ for n in (str(x["id"]) for x in m["nodes"]):
 check("connected components", len(comps), stated(r"its (\d+) connected components"))
 check("largest component", max(comps), stated(r"the largest has (\d+) nodes"))
 check("isolated nodes", sum(1 for c in comps if c == 1),
-      stated(r"(\d+) isolated nodes across 709"))
+      stated(r"(\d+) isolated nodes across \d+"))
 
 # ---- domain: the real cross-category graph ---------------------------------
 print("\ndomain-graph.json")
@@ -171,8 +171,8 @@ check("obligation texts recurring across categories",
 # ---- the thin spots the document admits to ---------------------------------
 print("\nthin spots")
 g3 = load("%s/03-cdp-stablecoins/graphify-out/graph.json" % ROOT)
-check("03-cdp-stablecoins nodes", len(g3["nodes"]), stated(r"at \*\*(\d+) nodes / \d+ links"))
-check("03-cdp-stablecoins links", len(g3["links"]), stated(r"at \*\*\d+ nodes / (\d+) links"))
+check("03-cdp-stablecoins nodes", len(g3["nodes"]), stated(r"So 03 has the fewest nodes of any lane, (\d+),"))
+check("07-bridges nodes", len(load("%s/07-bridges/graphify-out/graph.json" % ROOT)["nodes"]), stated(r"same levels\) and yields (\d+) nodes"))
 check("lanes with isolated nodes", len(thin), 4)
 check("lanes with none", 12 - len(thin), 8)
 
