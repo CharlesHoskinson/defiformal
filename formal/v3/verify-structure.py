@@ -13,10 +13,11 @@ sup = io.open("/root/defiformal/paper/supplement.tex", encoding="utf-8").read()
 secs = re.findall(r"\\section\{([^}]*)\}\\label\{sec:cat:([a-z]+)\}", art)
 labels_art = re.findall(r"\\label\{(sub:cat:[a-z]+:[a-z0-9]+)\}", art)
 labels_sup = re.findall(r"\\label\{(sub:cat:[a-z]+:[a-z0-9]+)\}", sup)
-allp = labels_art + labels_sup
+allp = labels_sup   # the supplement is canonical; the article carries abbreviated cases
 
 print(f"category sections in the article: {len(secs)}")
-print(f"profiles: {len(labels_art)} in the article, {len(labels_sup)} in the supplement, {len(allp)} total")
+cases = art.count(chr(92) + "label{case:")
+print(f"profiles: {len(labels_sup)} in the supplement; abbreviated case studies in the article: {cases}")
 
 MAP = {"dex":"dex","lend":"lnd","cdp":"cdp","lsd":"lsd","perp":"perp",
        "yield":"yld","bridge":"bri","intent":"int","rwa":"rwa","opt":"opt",

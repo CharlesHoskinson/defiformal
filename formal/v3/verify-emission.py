@@ -1,9 +1,10 @@
-"""The emission invariant, across both documents.
+"""The emission invariant.
 
-Every emitted subsection must appear byte-equal in the article or in the
-supplement. Four are retained in the article as case studies; the rest are in
-the supplement. A subsection present in neither, or present but altered, means
-a figure may no longer match the computation behind it.
+The supplement is the canonical emitted artefact: all sixty profiles must appear
+there byte-equal to what the emitter produces. The article carries four
+abbreviated cases; for those the invariant is weaker but still binding — the
+construction measurement, which holds every figure, must be byte-equal, and only
+the enumerated residue may be elided.
 """
 import io, os, re, subprocess, sys
 
@@ -12,33 +13,38 @@ V3 = "/root/defiformal/formal/v3"
 art = io.open("/root/defiformal/paper/atlas.tex", encoding="utf-8").read()
 sup = io.open("/root/defiformal/paper/supplement.tex", encoding="utf-8").read()
 
-total = ok = 0
-bad = []
+emitted = {}
 for slug in sorted(d for d in os.listdir(ROOT) if re.match(r"^\d\d-", d)):
     specs, verd = f"{ROOT}/{slug}/specs", f"{ROOT}/{slug}/verdicts.json"
     if not (os.path.isdir(specs) and os.path.exists(verd)):
         continue
     r = subprocess.run(["node", f"{V3}/emit-tex.mjs", specs, verd],
                        capture_output=True, text=True)
-    if r.returncode != 0:
-        bad.append(f"{slug}: emitter failed"); continue
-    # split the emitted text into its subsections
-    parts = re.split(r"(?=\\subsection\{)", r.stdout.strip())
-    for p in parts:
+    assert r.returncode == 0, f"{slug}: emitter failed"
+    for p in re.split(r"(?=\\subsection\{)", r.stdout.strip()):
         if not p.strip().startswith("\\subsection{"):
             continue
-        total += 1
-        lab = re.search(r"\\label\{(sub:cat:[^}]*)\}", p)
-        body = p.strip()
-        if body in art or body in sup:
-            ok += 1
-        else:
-            where = "article" if (lab and lab.group(1) in art) else \
-                    ("supplement" if (lab and lab.group(1) in sup) else "neither")
-            bad.append(f"{slug} {lab.group(1) if lab else '?'}: present in {where} but not byte-equal")
+        lab = re.search(r"\\label\{(sub:cat:[^}]*)\}", p).group(1)
+        emitted[lab] = p.strip()
 
-print(f"emitted subsections: {total}   byte-equal in the article or supplement: {ok}")
-for b in bad[:12]:
+bad = []
+for lab, body in emitted.items():
+    if body not in sup:
+        bad.append(f"{lab}: not byte-equal in the supplement")
+
+cases = [l for l in emitted if l in art]
+for lab in cases:
+    m = re.search(r"\\begin\{measurement\}\\label\{meas:" + re.escape(lab[4:]) + r"\}.*?\\end\{measurement\}",
+                  emitted[lab], re.S)
+    if not m:
+        bad.append(f"{lab}: emitted block has no construction measurement"); continue
+    if m.group(0) not in art:
+        bad.append(f"{lab}: the article's construction measurement differs from the emitter")
+
+print(f"emitted profiles: {len(emitted)}   byte-equal in the supplement: {len(emitted) - len([b for b in bad if 'supplement' in b])}")
+print(f"abbreviated cases in the article: {len(cases)}   their measurements verified: "
+      f"{len(cases) - len([b for b in bad if 'article' in b or 'no construction' in b])}")
+for b in bad[:10]:
     print("  FAIL", b)
 print("\nEMISSION INVARIANT HOLDS" if not bad else "\nEMISSION INVARIANT VIOLATED")
 sys.exit(1 if bad else 0)

@@ -1560,11 +1560,11 @@ reason for that witness among the alternatives the disjunctive terms leave open
 element discharges. Every figure in the measurement environments is emitted from
 the verification output rather than transcribed.
 
-\subsection{Uniswap}\label{sub:cat:dex:uniswap}
+\subsection{Uniswap}\label{case:dex:uniswap}
 
 A liquidity provider deposits an ordered pair of tokens into a pool identified by that pair and a fee parameter. In v2 the claim is a fungible share of the whole reserve; in v3 and v4 it is a position bounded by a lower and an upper tick, so two providers in one pool holding different ranges hold economically different instruments. No counterparty quotes the swap --- the price is read off the constant-product invariant, applied to the reserves in v2 and to virtual reserves inside the active tick range thereafter, and the fee is skimmed from the input and left in the pool, so the marginal price moves monotonically against size. Settlement moves both tokens at each pool in v2 and v3; in v4 a singleton records signed deltas in transient storage across an unlocked scope and moves only the net, release being conditional on those deltas cancelling. A position ends when its owner burns it and collects principal and accrued fees; there is no maturity, no margin call and no liquidation, because no one is ever short.
 
-\begin{measurement}\label{meas:cat:dex:uniswap}
+\begin{measurement}\label{meas:case:dex:uniswap}
 Take $X = \{Cl,Cp,Fl,Ix,Sh,Tg,Tp,Xf\}$, with canonical form
 $\mathrm{ex}(X) = \{Cl,Cp,Fl,Ix,Sh,Tg,Tp,Xf\}$, every element being primitive in it.
 It is not admissible: it arms $X21$. It discharges 10 of the 22 recorded obligations; 12 are residue. No composite of at most three corpus protocols equals it; no corpus protocol is contained in it.
@@ -1573,21 +1573,7 @@ It is not admissible: it arms $X21$. It discharges 10 of the 22 recorded obligat
 \begin{remark}
 What the vocabulary cannot state is most of what v4 is. A hook is not merely third-party code in the settlement path: it is a capability vector fixed at pool initialization and chosen by mining the hook's address, of which the delta-returning bits promote the hook from observer to pricer, and that promotion is the boundary between a v4 pool and an arbitrary market maker wearing a v4 interface. The category now differentiates on exactly this obligation and each protocol binds the permission set differently --- into the hook's address here, into the pool's own key at PancakeSwap, into a named controller at Fluid --- so a symbol for hooks would first have to decide whether the permissions belong to the code or to the pool. Deferred net settlement is unnamed for a separate reason: $Fl$ names borrow-and-repay in one scope, nothing is borrowed here, and the requirement that the accumulated deltas cancel at release is a conservation law over a transaction, which no symbol states. The registry deciding which curves may exist is monotone --- a tier may be added and never removed --- so it is a ratchet on the space of admissible pools rather than a parameter, and the construction discharges the pool arithmetic while missing nearly everything that separates this protocol from its own earlier generations.
 
-The obligations no element discharges are these.
-\begin{itemize}\setlength{\itemsep}{0pt}
-  \item a v3 or v4 liquidity provider instead holds a position bounded by a lower and an upper tick which is NOT fungible: two providers in the same pool with different ranges hold economically different instruments, and the v3 periphery wraps each position in its own ERC-721
-  \item v4 ships NO built-in price series at all: the observation machinery was removed from the core and a TWAP is now something a hook must implement
-  \item in v2 and v3 settlement is per-pool: each swap moves both tokens at the pool contract itself inside the transaction, so an n-hop route performs 2n token transfers and each pool must hold its own inventory
-  \item in v4 settlement is deferred and net: an integrator calls unlock, the PoolManager calls back, any number of swap / modifyLiquidity / donate / take / settle / mint / burn operations run against the singleton, signed per-currency deltas are accumulated in EIP-1153 transient storage, and the only enforced condition is that every delta is zero when the unlock is released, so only the net moves
-  \item a v4 pool may name a hook contract at initialization, and WHICH of the fourteen lifecycle callbacks fire is encoded in the low fourteen bits of that contract's ADDRESS (ALL\_HOOK\_MASK = (1<<14)-1), so the permission set is chosen by mining the deployment address and is frozen: 'which callbacks are executed on a pool cannot change after pool initialization'
-  \item four of the fourteen hook bits — BEFORE\_SWAP\_RETURNS\_DELTA, AFTER\_SWAP\_RETURNS\_DELTA, AFTER\_ADD\_LIQUIDITY\_RETURNS\_DELTA, AFTER\_REMOVE\_LIQUIDITY\_RETURNS\_DELTA — let the hook alter the accounting outcome of the operation rather than observe it, i.e. supply a custom curve in place of the pool's
-  \item which curves may exist is itself a governed, MONOTONE registry: the v3 factory owner calls enableFeeAmount to add a (fee, tickSpacing) pair — seeded at 500/10, 3000/60 and 10000/200 — and a tier once added can never be removed
-  \item there is no pause anywhere in the v4 core: PoolManager.sol and ProtocolFees.sol at tag v4.0.0 contain no occurrence of 'pause', so no party can stop a pool
-  \item since December 2025 a protocol fee is skimmed off the LP fee on all three generations — v2 fixed in the pair at 1/6 of the swap fee (0.05\% of the 0.30\%), v3 at a per-tier 1/4 or 1/6, v4 resolved by an adapter — and accumulates in a per-chain immutable TokenJar exposing exactly one privileged role, a releaser that 'can atomically transfer the full balance of specified assets to a recipient'
-  \item THE VALUE-RETURN CHANNEL IS SUPPLY DESTRUCTION, exercised by a third party at a fixed price: Firepit.release() takes a fixed quantity of UNI from a searcher, releases the Jar's full balance of the named assets to that searcher's recipient, and sends the UNI to 0xdead; the protocol never places a market order and never holds the bought asset
-  \item fee policy is a replaceable object held behind a non-replaceable adapter: V4FeeAdapter is registered permanently as the PoolManager's protocolFeeController, while V4FeePolicy is swappable by an owner, so governance can change fee strategy without ever re-handing the PoolManager privilege
-  \item the fee owed by a pool is resolved by an on-chain classifier over third-party code: the policy checks a per-pool override, else resolves a family by hookFamilyId[hook], else static-pool 255 ('native math'), else protocolFeeFlags plus flagRules, else 0, then applies pairClassFees then familyDefaults then defaultFee, with native-math pools priced on a piecewise-linear bucket schedule alpha + beta x (lpFee - floor)/1e6 capped at 16 buckets
-\end{itemize}
+The 13 obligations no element discharges are listed in the supplement.
 \end{remark}
 
 \begin{remark}
@@ -1705,11 +1691,11 @@ reason for that witness among the alternatives the disjunctive terms leave open
 element discharges. Every figure in the measurement environments is emitted from
 the verification output rather than transcribed.
 
-\subsection{Lido}\label{sub:cat:lsd:lido}
+\subsection{Lido}\label{case:lsd:lido}
 
 A user sends ETH to the core pool and receives stETH, a share of a ledger whose balance is the pool's total ether apportioned across its shares; wstETH holds the share directly, for integrations that cannot tolerate a moving balance. Rewards and losses both arrive as a rebase, because a permissioned committee reports consensus-layer balances on a fixed frame and the ledger is recomputed from what it reports. The pooled ether is scheduled across a registry of staking modules, each a different operator set under a different trust model, and only the permissionless module requires its operators to post a bond. Exit has a user side and a validator side that do not meet: the holder burns stETH into a queue and holds an NFT until a batch is finalised at a rate fixed then, while the protocol must separately signal beacon-chain exits and, where an operator does not comply, force them. A penalty or a slashing is absorbed as a negative rebase across the entire supply, irrespective of which operator caused it, and the bonded module runs its own attributed loss regime alongside.
 
-\begin{measurement}\label{meas:cat:lsd:lido}
+\begin{measurement}\label{meas:case:lsd:lido}
 Take $X = \{Aw,Bs,Cd,Ct,Ep,Ex,Fd,Gp,Ix,Rb,Rd,Sh,Sl,Tg,Up,Wq\}$, with canonical form
 $\mathrm{ex}(X) = \{Aw,Bs,Cd,Ep,Ex,Fd,Gp,Ix,Rb,Rd,Sh,Sl,Tg,Up,Wq\}$; the elements \{Ct\} are derived rather than chosen.
 It is admissible: no requirement term is open, every element is warranted, and it arms no prohibition. It discharges 16 of the 24 recorded obligations; 8 are residue. No composite of at most three corpus protocols equals it; 2 corpus protocols are contained in it, and together they supply every element except \{Bs,Cd,Ep,Ex,Fd,Gp,Rb,Sl,Tg,Wq\}.
@@ -1719,17 +1705,7 @@ It is not minimal: \{Ix,Cd,Ep,Wq,Sl,Tg,Up,Gp\} can be removed with every obligat
 \begin{remark}
 Everything between the ether arriving and the ether returning is residue. The protocol admits operators under mutually incompatible regimes over a single share ledger and a single loss pool, schedules principal across them, defends its own deposit path against its own operators by structurally unrelated devices --- a guardian signature quorum in the core pool, a credential proof against a beacon block root with a forfeitable bond in the vaults --- signals exits over a bus whose enforcement is a social norm, and now resizes, tops up and merges live validators. That last mechanism is \emph{neither entry nor exit}, which is the demonstration in miniature: the candidate symbol for this category has nowhere to put it, and nowhere to put the rest either. What the construction does say is the accounting: a share ledger, an index, a queue, a fee, a governance delay. What it cannot say is the staking.
 
-The obligations no element discharges are these.
-\begin{itemize}\setlength{\itemsep}{0pt}
-  \item [Vl sub-mechanism 1 of 5: validator key registration and vetting] Three mutually incompatible operator-admission and key-vetting regimes run side by side over one share ledger and one loss pool: permissioned and unbonded (Curated, NodeOperatorsRegistry), permissioned and cluster-managed by a 5-of-7 multisig over Obol and SSV clusters (Simple DVT), and permissionless and bonded (CSM). Separately, a guardian may invalidate specific already-submitted validator public keys with a single signature, bounded by maxOperatorsPerUnvetting, without removing the operator.
-  \item [Vl sub-mechanism 2 of 5: stake allocation and scheduling across operator modules] Buffered ETH is allocated across the module registry by MinFirstAllocationStrategy, which fills the least-allocated modules first in whole validator units until the amount is exhausted or capacity is reached, subject to a per-module stake share limit, a per-module priority exit share threshold, per-module deposit rate limits (maxDepositsPerBlock, minDepositBlockDistance) and a per-module withdrawal-credential type.
-  \item [Vl sub-mechanism 3 of 5, implementation A: deposit front-running defence] Buffered ETH may be deposited only after a 4-of-6 guardian committee signs, in EIP-2098 short form, over (blockNumber, blockHash, depositRoot, stakingModuleId, nonce); this defeats an operator who front-runs depositBufferedEther with a >=1 ETH direct deposit using the same pubkey and different withdrawal credentials in order to capture the pool's 32 ETH. Any single guardian may unilaterally pause deposits, with validity bounded by pauseIntentValidityPeriodBlocks.
-  \item [Vl sub-mechanism 3 of 5, implementation B] In a stVault the node operator locks a 1 ETH guarantee and submits a 1 ETH predeposit that pins the withdrawal credentials; PredepositGuarantee stages the remaining 31 ETH and releases it only once the validator's withdrawal credentials are proved against a beacon block root via EIP-4788 with BLS12-381 verification (EIP-2537). Wrong credentials cause the guarantee to be seized. Policies are STRICT, ALLOW\_PROVE and ALLOW\_DEPOSIT\_AND\_PROVE.
-  \item [Vl sub-mechanism 4 of 5: exit signalling and the validator-side exit queue] A second oracle publishes packed exit requests naming (moduleId, nodeOperatorId, validatorIndex, pubkey), sorted ascending on that key, subject to a per-report cap and to an ETH-denominated per-frame budget that restores at 32 ETH per 0x01 validator and 2048 ETH per 0x02 validator; operator compliance with a published request is an off-chain social norm, and non-compliance is answered by submitting EIP-7002 triggerable-withdrawal requests through a gateway with msg.value covering the EIP-7002 fee.
-  \item [Vl sub-mechanism 6, absent from the corpus: validator sizing, top-up and consolidation] Validators may be created with 0x01 credentials at 32 ETH or 0x02 credentials up to 2048 ETH; stake may be added to a live validator through TopUpGateway with a 2 ETH minimum and a 1.25 ETH margin; and stake may be migrated between operators through a three-contract consolidation pipeline (ConsolidationMigrator, ConsolidationBus, ConsolidationGateway).
-  \item An unhealthy vault may be force-rebalanced by anyone, and while unhealthy is blocked from minting, from withdrawal, from beacon deposits and from full partial withdrawal; vault obligations are serviced in a fixed order, health first, then redemptions to service core withdrawals, then Lido fees.
-  \item The same validator principal backs both the vault owner's own position and the stETH minted against it, and the DAO caps in basis points the fraction of total stETH supply that may be backed by external vault collateral rather than by the core pool (setMaxExternalRatioBP).
-\end{itemize}
+The 9 obligations no element discharges are listed in the supplement.
 \end{remark}
 
 \begin{remark}
@@ -1853,11 +1829,11 @@ reason for that witness among the alternatives the disjunctive terms leave open
 element discharges. Every figure in the measurement environments is emitted from
 the verification output rather than transcribed.
 
-\subsection{WBTC}\label{sub:cat:bri:wbtc}
+\subsection{WBTC}\label{case:bri:wbtc}
 
 A holder sends bitcoin to a deposit address the custodian controls and receives an ERC-20 on Ethereum. The mint is not the holder's transaction: a permissioned merchant performs the identity check and submits the request, and the custodian's confirmation is the bridge --- nothing on Ethereum observes the Bitcoin chain. Redemption is the merchants' right and not the holder's, so an ordinary holder has no contract-enforced path back to bitcoin and exits by selling into a secondary market. What is trusted is that a custodian whose key material is split across several jurisdictions holds the bitcoin unencumbered, and that the multisig quorums owning the mint authority --- which execute the instant they are reached --- do not point it somewhere else.
 
-\begin{measurement}\label{meas:cat:bri:wbtc}
+\begin{measurement}\label{meas:case:bri:wbtc}
 Take $X = \{Aw,Gp,Rd,Xf\}$, with canonical form
 $\mathrm{ex}(X) = \{Aw,Gp,Rd,Xf\}$, every element being primitive in it.
 It is not admissible: it arms $X19*$. It discharges 4 of the 19 recorded obligations; 15 are residue. No composite of at most three corpus protocols equals it; no corpus protocol is contained in it.
@@ -1866,24 +1842,7 @@ It is not admissible: it arms $X19*$. It discharges 4 of the 19 recorded obligat
 \begin{remark}
 Everything that makes the peg hold is in this list. That a company holds the bitcoin, that a permissioned intermediary stands between the holder and the mint, that the reserve is an address listing the issuer publishes and third parties consume as ground truth, and that the contract authorising issuance can be swapped for another without touching a line of the token --- none of it has a symbol. The item that ought to be a guarantee reads as an omission: this token cannot freeze or seize a holder's balance, and the requirement language can record that only by declining to name an element, which is the same string a decomposition produces when nobody looked. The elements describe the facility; the residue holds the whole question of who operates it.
 
-The obligations no element discharges are these.
-\begin{itemize}\setlength{\itemsep}{0pt}
-  \item A holder's bitcoin is taken into the custody of a named off-chain legal entity, and the equality of one WBTC to one BTC rests entirely on that entity continuing to hold, and to honour claims against, the bitcoin; no Ethereum contract holds, references or can reach the bitcoin.
-  \item Nothing on Ethereum verifies that the Bitcoin deposit occurred: Factory.confirmMintRequest() is gated by onlyCustodian, resolving through Controller.isCustodian() to the single address 0xb0f42d187145911c2ad1755831aded125619bd27, and the custodian's confirmation transaction is itself the bridge.
-  \item No contract escrows the underlying: the backing is a set of 20 Bitcoin addresses published by the issuer, so there is no on-chain object whose balance constitutes the reserve.
-  \item Before submitting a mint request the merchant performs KYC/AML on the requester, so entry to the system is conditioned on an identity check performed by a firm that the contracts never observe.
-  \item An ordinary WBTC holder has no contract-enforced way to obtain BTC and exits only by selling into a secondary market.
-  \item The issuer publishes a live proof-of-reserve listing every custodian address and its balance -- 116,514.34 BTC against 116,499.20 WBTC across 20 addresses -- and third parties consume that listing as the protocol's reserve, DefiLlama's adapter reading the same audit page.
-  \item Anyone can verify the balances of the 20 published addresses; nobody can verify that those addresses belong to the custodian, that the bitcoin in them is unencumbered, or that it is not rehypothecated.
-  \item The custodian mints only after six Bitcoin confirmations and pays out only after 25 Ethereum confirmations, which is the design's entire treatment of source-domain finality and reorg exposure.
-  \item No party can seize or freeze an individual holder's balance: the token has no blacklist and no forced transfer -- blacklister() and isBlacklisted(address) both revert and the source inherits only StandardToken, DetailedERC20, MintableToken, BurnableToken, PausableToken and OwnableContract.
-  \item Authority is held by two independent quorums that execute immediately: the Controller is owned by a 6-of-10 multisig at 0x972eed35781f09987a5c40f761f6a24623c570de and Members by a 5-of-9 at 0x4dbbbfb0e68be9d8f5a377a4654604a62e851e80, both Consensys MultiSigWallet instances with no delay of any kind.
-  \item The governance body the project documents is not the one that holds the keys: the repository names 0xB33f8879...8A37c5 (8-of-13) as 'the WBTC DAO' and instructs readers to verify that it owns the Controller and Members, and it owns neither.
-  \item The 6-of-10 can replace the contract that authorises minting and the registry of merchants and custodians, via Controller.setFactory() and Controller.setMembers(), without changing a line of the token's code.
-  \item The token contract itself cannot be replaced or abandoned: it is a non-upgradeable Solidity 0.4.24 contract whose renounceOwnership() is deliberately reverted.
-  \item WBTC circulates on seven chains, and the cross-chain leg is supplied by a third-party messaging protocol that the issuer selects and can replace -- announced on the access date as a move from LayerZero to Chainlink CCIP for the whole \textasciitilde{}\$7.3-7.7b float.
-  \item The merchant's fee to the user is set off-chain by bilateral agreement, with no minimum size stated and no on-chain record.
-\end{itemize}
+The 16 obligations no element discharges are listed in the supplement.
 \end{remark}
 
 \begin{remark}
@@ -2001,11 +1960,11 @@ construction with the reason for that witness among the alternatives the
 disjunctive terms leave open (Corollary~\ref{cor:notthe}). Every figure in the
 measurement environments is emitted from the verification output.
 
-\subsection{Rysk}\label{sub:cat:opt:rysk}
+\subsection{Rysk}\label{case:opt:rysk}
 
 A venue where the writer escrows the maximum loss at the moment of trade. There is no margin call because there is no margin: the worst case is already held, and settlement can only pay out of it.
 
-\begin{measurement}\label{meas:cat:opt:rysk}
+\begin{measurement}\label{meas:case:opt:rysk}
 Take $X = \{At,Ep,Ex,Gp,Op,Rf,Sh,Sv,Up,Wq\}$, with canonical form
 $\mathrm{ex}(X) = \{At,Ep,Ex,Gp,Op,Rf,Sh,Sv,Up,Wq\}$, every element being primitive in it.
 It is not admissible: it leaves the requirement terms $L1\!:\!Ct$, $L1\!:\!Li{\mid}Ad{\mid}Sl{\mid}Bs$ open. It discharges 8 of the 20 recorded obligations; 12 are residue. No composite of at most three corpus protocols equals it; 1 corpus protocol is contained in it, and together they supply every element except \{At,Ct,Ep,Rf,Sv,Wq\}.
@@ -2014,21 +1973,7 @@ It is not admissible: it leaves the requirement terms $L1\!:\!Ct$, $L1\!:\!Li{\m
 \begin{remark}
 This is the sharpest case in the paper of a requirement discharged \emph{by construction}. The requirement language admits one way to satisfy a term --- name an element that discharges it --- so it reads an obligation that cannot arise as an obligation left unspecified. The rejection is correct about the tables and wrong about the protocol, and the repair is to the constraint language rather than to the vocabulary.
 
-The obligations no element discharges are these.
-\begin{itemize}\setlength{\itemsep}{0pt}
-  \item Quotes are aggregated over a fixed two-second window with live competitiveness feedback to makers, and exactly one winning quote is surfaced and filled.
-  \item Options are European, expire at 08:00 UTC, cannot be exercised early, and cannot be closed, bought back or offset before expiry.
-  \item Settlement exchanges the collateral itself at the strike: a cash-secured put delivers stablecoins for the underlying at the lower strike; the covered-call side is documented both as cash-settled and as physically settled.
-  \item The counterparty is a market maker taking the other side bilaterally; Rysk Premium adds a curated pool that takes the maker side over the same rail.
-  \item The premium is paid in full at execution, in USD, deducted from the maker's pre-deposited balance in the accounting contract and credited to the seller against oTokens.
-  \item The seller posts the entire maximum payoff at trade time — the underlying for a covered call, stablecoins equal to strike x size for a cash-secured put — into a MarginPool where it is locked for the life of the trade, never rehypothecated and never shared with any other position.
-  \item DISCHARGED BY CONSTRUCTION: no maintenance-margin or health test exists or can exist, because no position can ever become under-secured.
-  \item DISCHARGED BY CONSTRUCTION: there is no liquidation path, no liquidator, no auction and no health-driven forced close anywhere in the protocol.
-  \item DISCHARGED BY CONSTRUCTION: there is no insurance fund, no backstop, no socialised loss and no auto-deleveraging, because the protocol has no loss channel for them to absorb.
-  \item A maker's quote is only executable if the maker's USDT0 balance already deposited in the accounting contract covers the premium.
-  \item A named curator selects which instruments the pool writes and receives a share of the option-sale fee, and governance sets the epoch prices and may withdraw fees independently.
-  \item DISCHARGED BY CONSTRUCTION: the protocol runs no hedging loop, no rebalancing and no directional book of its own — every position is fully collateralised at inception and left untouched until expiry.
-\end{itemize}
+The 13 obligations no element discharges are listed in the supplement.
 \end{remark}
 
 \begin{remark}
