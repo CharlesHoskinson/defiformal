@@ -195,7 +195,20 @@ its first third of effort and improve it in place.
 
 Append one line per firing to `LEDGER.md`. Never rewrite history there.
 
-## WHERE EACH CATEGORY IS (2026-08-04, after LOOP-1 #2)
+## WHERE EACH CATEGORY IS (2026-08-04, after LOOP-1 #4)
+
+**All twelve lanes have research.** Eleven are through stage 2 and stage 3;
+`02-lending` landed last at 203 lines — the thinnest of the twelve, 16 citations,
+49-node graph — and is still being improved in place by its agent, so re-ingest
+rather than relaunch. Stage-3 running total: **55 constructions, 1,147
+obligations, 522 discharged, 625 residue, 45.5%; 43 PARTIAL, 12 INADMISSIBLE,
+0 COMPLETE.** Stage 4 is running on the 625 residue items. Council pass 1
+returned 1 BLOCKING, 8 MAJOR, 3 MINOR; four are actioned (the unnamed predicate,
+the false ranking, the overclaimed lead-in, the Lean fragment) and eight remain
+in `review/ACTIONS-COUNCIL-1.md`. Three round-two research lanes are running on
+perpetuals, RWA and fiat stablecoins.
+
+### Earlier snapshot (after LOOP-1 #2)
 
 | lane | research | stage 2 | stage 3 |
 |---|---|---|---|
@@ -217,16 +230,29 @@ residue, 43.1% coverage; 18 PARTIAL, 7 INADMISSIBLE, 0 COMPLETE.**
 
 ## CURRENT NEXT ACTION
 
-Run `bash /root/stage3.sh <slug>…` for each lane whose five stage-2 specs have
-landed — it copies, validates, checks and writes `verdicts.json`. Then commit.
-Four lanes are one or two specs short (04, 07 now complete, 10 at 3 of 5) and
-02-lending has no research yet; nudge that agent rather than relaunching it,
-since it has the evidence and only needs to write.
+**Stage 6, category by category.** Perpetuals is done and is the template
+(commit `7c85354`). For each remaining category:
 
-Once eight or more lanes have verdicts, start **stage 4** from
-`node formal/v3/residue.mjs /root/defiformal/expansion` — the residue is the
-input and it is already 286 items. Do not wait for all twelve: the four
-cross-lane convergences below are already better evidenced than any single lane.
+1. Author a `paper` object on each of its five specs — `title`, `label`,
+   `blurb`, `witnessReason`, `residueNote`. **Put no numbers in the prose**; the
+   emitter supplies them. `witnessReason` must say why *this* construction among
+   the alternatives the disjunctive terms leave open, per `cor:notthe`.
+2. Re-run `construct.mjs` (specs changed) then
+   `node emit-tex.mjs <specs-dir> <verdicts.json> > /root/<slug>-subs.tex`.
+3. `python3 /root/splice-subs.py /root/<slug>-subs.tex "\section{<next section>}" "$(cat lead.txt)"`.
+4. `./paper/build.sh`, then `node formal/v3/claims.mjs`, then commit.
+
+Order by strength of finding: options next (two rejections that are artefacts
+and two that are a defect in the language), then intents (26.5% coverage, the
+disjoint residue behind an identity claim), then RWA and bridges (the party-sort
+evidence), then the rest.
+
+**Then fold stage 4 in.** `algebra/EXTENSIONS.md` is finished and priced. The
+three recommended repairs — the party sort, the bounded delegate mandate at
+presence granularity, discharge by construction — each need a paper statement
+with its cost named, and `Discharge.lean` is already in the Lean development and
+builds. The mandate now has four independent sightings and is the run's
+best-evidenced finding.
 
 `FINDINGS-STAGE1.md` holds the per-lane findings that bear on the formalism, as
 they arrive. It is stage 4's input and the reason the lane summaries are not
