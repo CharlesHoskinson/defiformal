@@ -35,3 +35,10 @@
 - Step 4, the honest question: meas:frag was the claim I could not have defended, which is why it was downgraded in the same turn rather than recorded as pending.
 
 - **Referee A: no related work section.** ACTIONED. Four paragraphs covering interface theories, constraint satisfaction, financial contract formalisms, and what is absent from the literature.
+
+## Clone-theory lane
+
+- **thm:closure attributed the union/intersection characterisation to Geiger and BKKR.** ACTIONED. Neither states it - the words Horn, dual-Horn, union and max never appear in Geiger. The citable source is Jeavons-Cohen-Gyssens 1997 Example 5.3.5 p.541, now cited. BKW 2017 Thm 32 added as the modern Pol-Inv statement and as the open-access substitute for BKKR, which could not be obtained.
+- **Positioning confirmed, not refuted.** Pol-Inv quantifies over languages and carries no cardinality-extremal content about subfamilies of a single family, so it does not settle the composable-fragment question. Stated explicitly in related work.
+- **The combinatorial question is unnamed.** Zero hits across constraint satisfaction, lattice theory and the union-closed-families literature for maximum union-closed subfamily; the Frankl work concerns families already union-closed. Recorded as a contribution claim rather than a retrieval.
+- Schaefer remark verified exact against p.222; no change needed.
