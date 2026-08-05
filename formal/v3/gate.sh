@@ -40,6 +40,10 @@ say "3b. v3 toolchain smoke"
 sm=$(bash formal/v3/smoke.sh 2>&1 | tail -1); echo "$sm"
 printf '%s' "$sm" | grep -q 'SMOKE OK' && echo "  ok   smoke" || { echo "  FAIL smoke"; fail=1; }
 
+say "3c. knowledge-graph claims"
+gr=$(python3 formal/v3/verify-graphs.py 2>&1 | tail -1); echo "$gr"
+printf '%s' "$gr" | grep -q 'GRAPH CLAIMS VERIFIED' && echo "  ok   graph claims (12 lanes, merged, domain)" || { echo "  FAIL graph claims"; fail=1; }
+
 say "4. hand-asserted numbers and uncited protocol claims in the paper"
 # every \begin{measurement} block should be traceable; report the count and the
 # sections added since stage 0 so a human can spot an untraced figure
