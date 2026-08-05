@@ -55,6 +55,27 @@ Several report nothing there because there is nothing to report. The lead-in now
 claims only what is uniform and says canonical form is reported where it does
 something.
 
+### MAJOR 9 — the Lean claim was an overclaim in two specific places
+
+Checked against the development: 1,255 lines over six files, no `sorry`, no
+`admit`, no custom `axiom` declaration, and the auditor independently ran
+`lake build` (734 jobs) and the axiom audit, confirming every declaration
+depends only on `propext`, `Classical.choice` and `Quot.sound`. Those parts of
+the claim stand.
+
+Two parts did not. `thm:excomp` asserts the composite is computable in time
+linear in the size of the two generators; the Lean declaration is an equality of
+finite sets, with no algorithm, no cost model and no complexity bound, so the
+linear-time half was never formalised. And the negative halves of `thm:closure`
+are witnessed *generically* in Lean — there exist dual-Horn and purely negative
+classes lacking the opposite closure — not for this paper's own model classes,
+whose failures rest on the explicit counterexamples in the text.
+
+Actioned: the section now enumerates the formalised statements and all three
+gaps, including that the atlas itself is not formalised, in labelled paragraphs.
+A formalisation claim is worth exactly as much as its statement, and the
+previous wording claimed five named results where it had parts of five.
+
 ## Not yet actioned — carried to the next firing
 
 | # | severity | finding | disposition |
@@ -66,7 +87,6 @@ something.
 | 6 | MAJOR | `cor:notthe` generalises from one restricted finite instance | probably correct — the corollary should be scoped to the instance or restated as a conjecture |
 | 7 | MAJOR | the capital-versus-resolution relationship is asserted, never measured | correct; either measure it or demote it to a remark, and it appears in the conclusion too |
 | 8 | MAJOR | `validate.mjs` admits evidence-defective specs | actionable directly in the checker |
-| 9 | MAJOR | the Lean development is weaker than the prose describing it | highest-value remaining item; check declaration by declaration against `sec:lean` |
 | 12 | MINOR | no sensitivity analysis for candidate-status elements | cheap to run and worth doing |
 
 **Next mechanical step:** pin both predicate counts as assertions in
