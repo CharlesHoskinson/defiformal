@@ -2,12 +2,27 @@
   "app": "EigenCloud (EigenLayer)",
   "category": "04-liquid-staking",
   "source": "C:\\defiformal-work\\04-liquid-staking\\01-research.md",
-  "construction": ["Sh", "Rs", "Bs", "Sl", "Aw", "Ep", "Wq", "Fd", "Xm", "Gp", "Up"],
+  "construction": [
+    "Sh",
+    "Rs",
+    "Bs",
+    "Sl",
+    "Aw",
+    "Ep",
+    "Wq",
+    "Fd",
+    "Xm",
+    "Gp",
+    "Up"
+  ],
   "functionalObligations": [
     {
       "id": "F1",
       "text": "A depositor sends an ERC-20 (including a liquid staking token) into a whitelisted strategy and receives deposit shares: an internal, non-transferable pro-rata accounting claim, not a token. A Strategy Whitelister, currently the StrategyFactory, controls which strategies are eligible.",
-      "elements": ["Sh", "Aw"],
+      "elements": [
+        "Sh",
+        "Aw"
+      ],
       "evidence": "https://github.com/Layr-Labs/eigenlayer-contracts/blob/main/docs/core/StrategyManager.md (accessed 2026-08-04)",
       "note": ""
     },
@@ -21,7 +36,9 @@
     {
       "id": "F3",
       "text": "A pod's beacon-chain balance increase raises the owner's deposit shares, while a balance decrease does not lower them and instead reduces a proportional beaconChainSlashingFactor that starts at 1 WAD, so the protocol never carries a share deficit.",
-      "elements": ["Sh"],
+      "elements": [
+        "Sh"
+      ],
       "evidence": "https://github.com/Layr-Labs/eigenlayer-contracts/blob/main/docs/core/EigenPodManager.md (accessed 2026-08-04)",
       "note": "Ix is deliberately not used. The scaling factors here (beaconChainSlashingFactor per pod, _depositScalingFactor per staker) are per-position and monotone decreasing by construction; Ix names a *global* index that changes claim value in both directions. Claiming Ix would flatten the asymmetry, which is the whole content of the design."
     },
@@ -35,7 +52,9 @@
     {
       "id": "F5",
       "text": "An operator registers by naming a delegation approver, whose signature it may then require before any staker may delegate to it, and an allocation delay of its own choosing.",
-      "elements": ["Aw"],
+      "elements": [
+        "Aw"
+      ],
       "evidence": "https://github.com/Layr-Labs/eigenlayer-contracts/blob/main/docs/core/DelegationManager.md (accessed 2026-08-04)",
       "note": "Aw names the approver gate. It does not name the fact that operator identity lives in one contract (DelegationManager) and per-set membership in another (AllocationManager), so that 'being an operator' is two separate registrations with different admission rules."
     },
@@ -56,7 +75,9 @@
     {
       "id": "F8",
       "text": "[What the restaked collateral secures] The allocated stake secures an arbitrary external service, an AVS, whose duties, faults and correctness conditions the core protocol does not model and cannot read.",
-      "elements": ["Rs"],
+      "elements": [
+        "Rs"
+      ],
       "evidence": "https://github.com/eigenfoundation/ELIPs/blob/main/ELIPs/ELIP-002.md (accessed 2026-08-04)",
       "note": "Rs is a CANDIDATE and is used with the mark. It is exact in name and thin in content: it asserts that restaking is present and stops. Law L22 asks Rs for an attributed slash condition, non-reflexive capital and a loss waterfall; the first is present (F9), the second holds for LST and native ETH strategies, and the third is F11 and F12."
     },
@@ -70,14 +91,19 @@
     {
       "id": "F10",
       "text": "AVSDirectory is deprecated and AllocationManager is the sole registration path from an AVS to an operator set.",
-      "elements": ["Aw"],
+      "elements": [
+        "Aw"
+      ],
       "evidence": "https://github.com/eigenfoundation/ELIPs/blob/main/ELIPs/ELIP-002.md (accessed 2026-08-04); https://github.com/Layr-Labs/eigenlayer-contracts/blob/main/docs/README.md (accessed 2026-08-04)",
       "note": "Recorded because any decomposition anchored on AVSDirectory is stale. The published docs index still stamps itself EigenLayer v1.3.0 while the latest release is v1.13.0; the per-contract docs under docs/core/ are current and the index is not."
     },
     {
       "id": "F11",
       "text": "[Vl sub-mechanism 5 of 5: penalty attribution] A slash reduces the operator's currentMagnitude, maxMagnitude and encumberedMagnitude proportionally and processes pending deallocations pro rata, so the loss falls on every staker delegated to that operator in that strategy and on no one else.",
-      "elements": ["Sl", "Bs"],
+      "elements": [
+        "Sl",
+        "Bs"
+      ],
       "evidence": "https://github.com/Layr-Labs/eigenlayer-contracts/blob/main/docs/core/AllocationManager.md (accessed 2026-08-04)",
       "note": "Sl is used and is a better fit here than in Lido: the loss is socialised across a *named* claim class, the delegators of one operator in one strategy, rather than across the whole supply. Bs is used because the allocated stake is genuinely slashable first-loss capital rented out, which is the closest fit any symbol achieves anywhere in this category. What Sl cannot express is that the size of the class is itself a variable the operator controls through F6."
     },
@@ -98,28 +124,38 @@
     {
       "id": "F14",
       "text": "[Vl sub-mechanism 4 of 5: exit] A staker undelegates or queues a withdrawal, waits MIN_WITHDRAWAL_DELAY_BLOCKS (100,800 blocks on mainnet, about 14 days), and then completes the queued withdrawal either as shares or as tokens; for native ETH the beacon-chain exit queue sits underneath and is not modelled by these contracts.",
-      "elements": ["Wq", "Ep"],
+      "elements": [
+        "Wq",
+        "Ep"
+      ],
       "evidence": "https://github.com/Layr-Labs/eigenlayer-contracts/blob/main/docs/core/DelegationManager.md (accessed 2026-08-04)",
       "note": "Wq names the staker's queue and Ep the block-height gate. The validator-side exit that must complete underneath it for native restakers is outside the contract set entirely, which is the same gap Lido has, arrived at by a different route: Lido models the validator exit and does not name it, EigenLayer does not model it at all."
     },
     {
       "id": "F15",
       "text": "Five further delays bind, each for a different party's benefit: ALLOCATION_CONFIGURATION_DELAY of 126,000 blocks (17.5 days) before a new allocation binds, so stakers can leave before new risk attaches; an operator-chosen allocation delay; DEALLOCATION_DELAY of 100,800 blocks after which deregistration ends exposure, so an AVS keeps recourse; the withdrawal delay of F14; and the slash resolution delay of F12.",
-      "elements": ["Ep"],
+      "elements": [
+        "Ep"
+      ],
       "evidence": "https://github.com/Layr-Labs/eigenlayer-contracts/blob/main/docs/core/AllocationManager.md (accessed 2026-08-04); https://api.github.com/repos/Layr-Labs/eigenlayer-contracts/releases/latest (accessed 2026-08-04)",
       "note": "Ep names a gated transition and is retained. RESIDUE recorded here: Ep names an epoch and Wq a queue, and neither names a delay whose purpose is to give a *third party* time to react. Deregistering from an operator set does not end exposure, which is the clearest case: the delay exists solely so that the counterparty retains recourse against someone who has already left. The corpus lists this as one security parameter; it is now five."
     },
     {
       "id": "F16",
       "text": "An AVS funds a rewards submission weighted across strategies, or an operator-directed submission scoped to an operator set for operators registered during the period; a singleton rewardsUpdater posts distribution roots that become claimable after an activation delay, and earners claim against Merkle proofs or nominate a claimer. The operator's default split is 1000 basis points, a flat 10%.",
-      "elements": ["Fd", "Ep"],
+      "elements": [
+        "Fd",
+        "Ep"
+      ],
       "evidence": "https://github.com/Layr-Labs/eigenlayer-contracts/blob/main/docs/core/RewardsCoordinator.md (accessed 2026-08-04)",
       "note": "Fd is a CANDIDATE symbol, used with the required mark. CORRECTION: Em is DROPPED and Fd is ADDED. Em names protocol-funded emissions; these rewards are funded by the AVS that submits them, and reach earners as a distribution of received value. The corpus carries Em with no supporting marker. UNKNOWN and flagged: EmissionsController.sol exists in src/contracts/core/ with no coverage in docs/ at the commit stage 1 read, together with ProtocolRegistry.sol and ReleaseManager.sol; if EmissionsController is what its name suggests, Em may become load-bearing and should be re-tested rather than inherited. CALCULATION_INTERVAL_SECONDS and MAX_REWARDS_DURATION are named without values."
     },
     {
       "id": "F17",
       "text": "An AVS registers an operator-table calculator and a global configuration per operator set on the source chain; on a destination chain, an updater accepts a signed GlobalTableRoot and verifies individual operator tables against it by Merkle proof, with an EigenLabs-operated Generator calculating and signing the root and a permissionless Transporter distributing it.",
-      "elements": ["Xm"],
+      "elements": [
+        "Xm"
+      ],
       "evidence": "https://github.com/Layr-Labs/eigenlayer-contracts/blob/main/docs/multichain/README.md (accessed 2026-08-04)",
       "note": "ADDED. Xm names the verification and law L18 asks it for explicit finality, chain binding and replay protection. RESIDUE recorded here: what is being transported is not a message about an asset but *the security state itself*, exported to a domain where it will be relied upon, with a single named off-chain signer at the root of it. Nothing distinguishes exporting a stake table from delivering a message."
     },
@@ -133,14 +169,19 @@
     {
       "id": "F19",
       "text": "A dedicated pause flag can halt the burn-and-redistribution flow independently of the rest of the protocol.",
-      "elements": ["Gp"],
+      "elements": [
+        "Gp"
+      ],
       "evidence": "https://api.github.com/repos/Layr-Labs/eigenlayer-contracts/releases/latest (accessed 2026-08-04)",
       "note": "Shipped with v1.13.0. A pause scoped to one flow rather than to a contract is finer than Gp expresses, but the symbol discharges the obligation."
     },
     {
       "id": "F20",
       "text": "The core contracts are upgradeable and a permissions controller mediates who may act for whom.",
-      "elements": ["Up", "Aw"],
+      "elements": [
+        "Up",
+        "Aw"
+      ],
       "evidence": "https://api.github.com/repos/Layr-Labs/eigenlayer-contracts/contents/src/contracts (accessed 2026-08-04); https://api.github.com/repos/Layr-Labs/eigenlayer-contracts (accessed 2026-08-04)",
       "note": "CORRECTION: Tg is DROPPED. Stage 1 found no first-party citation of a governance timelock for EigenLayer, and invariant 5 of the run is cite-or-drop. Law L15 (Up requires Tg or a bounded emergency process) is therefore UNMET on the available evidence; F19's pause is the only bounded emergency process cited. UNKNOWN whether a timelock exists: this is an absence of evidence, not evidence of absence, and stage 3 should record it as such rather than as a defect. Stage 1 also did not verify deployed implementation addresses against the v1.13.0 tag, so deployed-to-repo correspondence is UNKNOWN. Licence note for the paper rather than the checker: the reference implementation is BUSL-1.1 (Layr Labs, Inc.) with change dates 2025-05-01 and 2027-02-06 to MIT and a production-use restriction."
     },
@@ -151,5 +192,12 @@
       "evidence": "https://github.com/Layr-Labs/eigenlayer-contracts/blob/main/docs/core/EigenPodManager.md (accessed 2026-08-04)",
       "note": "Not residue: the obligation is closed by construction because depositor and credential owner are the same party. The empty array records this identically to an unnamed mechanism, which it is not, and that conflation is the formalism finding this stage keeps reproducing across lanes. Three of Vl's five sub-mechanisms are present here (F2, F6, F14) plus penalty attribution (F11); this one does not arise, and stake allocation (F6) is present in a form that allocates exposure rather than principal."
     }
-  ]
+  ],
+  "paper": {
+    "title": "EigenLayer",
+    "label": "cat:lsd:eigenlayer",
+    "blurb": "A depositor sends a fungible token into a whitelisted strategy, or points a validator's withdrawal credentials at a pod it deploys itself and proves them on chain, and receives deposit shares --- an internal, non-transferable accounting claim rather than a token --- which it then delegates to an operator, transferring no custody and no transaction authority but only slashing liability. Nothing accrues to the share: services fund reward submissions, and earners claim against posted distribution roots. What the collateral secures is an arbitrary external service whose duties and faults the core protocol does not model; that service authors its own slashing predicate and calls for a proportion, and the protocol validates the arithmetic of a slash and never its ground. The same deposit backs many services at once and no unit of slashability backs more than one, because an operator's allocations cannot exceed a conserved total that only slashing reduces. Exit is a queue behind a long delay, with the beacon-chain exit queue sitting underneath it for native stake and modelled nowhere in these contracts.",
+    "witnessReason": "The corpus record's central residue claim for this protocol --- that the same collateral is simultaneously bonded to mutually unaware slashing laws --- is refuted rather than refined, and by the protocol's own arithmetic: the governing improvement proposal and the allocation contract's documentation both state that the sum of an operator's magnitudes can never exceed its total, which is precisely the property that stops distinct operator sets slashing the same stake. Protocol-funded emission is dropped and a fee-and-distribution element added in its place, because these rewards are funded by the service that submits them and reach earners as a distribution of received value, and the record carries the emission symbol with no supporting marker. The governance-timelock element is dropped under cite-or-drop: no first-party source names one, which leaves the upgrade warrant met only by a scoped pause, and that is an absence of evidence rather than evidence of absence. Delegated execution authority is deliberately not claimed for delegation, because what moves is liability and not the right to act; and the index element is deliberately not claimed for the pod's scaling factors, because they are per-position and fall in one direction only, and flattening that asymmetry would erase the design.",
+    "residueNote": "The construction covers the accounting and misses the protocol. What is allocated here is not principal but \\emph{exposure} over principal that does not move, and the conserved budget that makes the allocation exclusive is the central object of the design; the vocabulary has a symbol for slashable capital and none for a budget over that capital's slashability. Nor can it record who is permitted to define the fault --- the axis on which this protocol and Babylon sit at opposite ends, an open predicate at one end and no third-party predicate at all at the other, and both ends read as an empty array. The delays are the same story: the vocabulary names an epoch and a queue, and cannot say that a delay exists so that a counterparty who has already been left behind keeps its recourse. What is left is a loss recorded before it is effected and then cleared by any passer-by, and a remedy paid to a named recipient at an address fixed for the life of the set --- neither an allocation nor a pause, and neither of them nameable."
+  }
 }

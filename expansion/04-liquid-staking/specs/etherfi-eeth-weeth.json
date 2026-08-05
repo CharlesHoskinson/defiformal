@@ -2,19 +2,39 @@
   "app": "ether.fi (eETH / weETH)",
   "category": "04-liquid-staking",
   "source": "C:\\defiformal-work\\04-liquid-staking\\01-research.md",
-  "construction": ["Sh", "Rb", "Ix", "Ex", "Ep", "Wq", "Rd", "Sl", "Rs", "Fd", "Aw", "Fz", "Tg", "Up", "Gp"],
+  "construction": [
+    "Sh",
+    "Rb",
+    "Ix",
+    "Ex",
+    "Ep",
+    "Wq",
+    "Rd",
+    "Sl",
+    "Rs",
+    "Fd",
+    "Aw",
+    "Fz",
+    "Tg",
+    "Up",
+    "Gp"
+  ],
   "functionalObligations": [
     {
       "id": "F1",
       "text": "A user deposits ETH into the LiquidityPool and receives eETH, recorded as a share of a ledger holding totalShares and shares[address] at a SHARE_UNIT of 1e18; the pool tracks value in two halves, totalValueInLp and totalValueOutOfLp.",
-      "elements": ["Sh"],
+      "elements": [
+        "Sh"
+      ],
       "evidence": "https://github.com/etherfi-protocol/smart-contracts/blob/b4a0968087b178bc346cdf6bee6c0597bf4c42c7/src/core/EETH.sol (accessed 2026-08-04); https://github.com/etherfi-protocol/smart-contracts/blob/b4a0968087b178bc346cdf6bee6c0597bf4c42c7/src/core/LiquidityPool.sol (accessed 2026-08-04)",
       "note": "The repository is untagged, so the commit hash is the only pin available; b4a0968 is dated 2026-07-15. Bytecode-level correspondence between the deployed upgradeable implementations and this commit is UNKNOWN."
     },
     {
       "id": "F2",
       "text": "An eETH holder's nominal balance changes when the pool's total value changes, without a transfer.",
-      "elements": ["Rb"],
+      "elements": [
+        "Rb"
+      ],
       "evidence": "https://github.com/etherfi-protocol/smart-contracts/blob/b4a0968087b178bc346cdf6bee6c0597bf4c42c7/src/core/LiquidityPool.sol (accessed 2026-08-04)",
       "note": ""
     },
@@ -28,21 +48,29 @@
     {
       "id": "F4",
       "text": "weETH is the non-rebasing wrapper over eETH shares and is the form every integration and every cross-chain deployment uses.",
-      "elements": ["Sh", "Ix"],
+      "elements": [
+        "Sh",
+        "Ix"
+      ],
       "evidence": "https://github.com/etherfi-protocol/smart-contracts/blob/b4a0968087b178bc346cdf6bee6c0597bf4c42c7/src/core/WeETH.sol (accessed 2026-08-04)",
       "note": "Ix is ADDED on this obligation. Same structure as Lido's wstETH: the wrapper is the adapter that discharges prohibition X4 (Rb into a balance-invariant ledger with no adapter)."
     },
     {
       "id": "F5",
       "text": "A committee of members submits reports keyed by a report hash; once the committee's quorum size is reached the report is published, and an admin contract consumes it, with report periods and reference slots gating when a report is needed and when the previous one must have been handled.",
-      "elements": ["Ex", "Ep"],
+      "elements": [
+        "Ex",
+        "Ep"
+      ],
       "evidence": "https://github.com/etherfi-protocol/smart-contracts/blob/b4a0968087b178bc346cdf6bee6c0597bf4c42c7/src/oracle/EtherFiOracle.sol (accessed 2026-08-04)",
       "note": "Ex is FORCED and retained, for the same reason as Lido: this is a quorum-signed report of protocol state, not a price feed, and the failure mode is collusion on a balance. Three protocols in this category run this shape and none of them reports a price; that is the category-level finding on Ex."
     },
     {
       "id": "F6",
       "text": "[Vl sub-mechanism 1 of 5: registration and vetting] A node operator must be registered and whitelisted in NodeOperatorManager, which holds its key data, and carries approval tags mapping it to the categories of pool funds (SourceOfFunds) it is permitted to serve.",
-      "elements": ["Aw"],
+      "elements": [
+        "Aw"
+      ],
       "evidence": "https://github.com/etherfi-protocol/smart-contracts/blob/b4a0968087b178bc346cdf6bee6c0597bf4c42c7/src/staking/NodeOperatorManager.sol (accessed 2026-08-04)",
       "note": "Aw is ADDED to the corpus construction, which carries no permission symbol for ether.fi at all. Aw names the admission gate; it does not name the per-source-of-funds scoping, which partitions one operator set into sub-populations serving different pools of capital."
     },
@@ -56,7 +84,9 @@
     {
       "id": "F8",
       "text": "[Vl sub-mechanism 2 of 5: allocation and scheduling] Only addresses in the validatorSpawner mapping may create validators; creation binds an accepted bid to a newly deployed EtherFiNode beacon proxy and is tracked by a validator-creation status keyed on a hash.",
-      "elements": ["Aw"],
+      "elements": [
+        "Aw"
+      ],
       "evidence": "https://github.com/etherfi-protocol/smart-contracts/blob/b4a0968087b178bc346cdf6bee6c0597bf4c42c7/src/core/LiquidityPool.sol (accessed 2026-08-04); https://github.com/etherfi-protocol/smart-contracts/blob/b4a0968087b178bc346cdf6bee6c0597bf4c42c7/src/staking/StakingManager.sol (accessed 2026-08-04)",
       "note": "RESIDUE recorded alongside a used symbol. Aw names the spawner allowlist. What has no symbol is that allocation of principal to operators here is determined by an auction outcome plus an allowlist rather than by a scheduling rule: there is no least-allocated-first policy and no per-operator cap analogous to Lido's stake share limit. Two protocols in this category solve the same allocation problem with structurally incompatible mechanisms and the vocabulary names neither."
     },
@@ -77,35 +107,49 @@
     {
       "id": "F11",
       "text": "[Vl sub-mechanism 5 of 5: penalty attribution] A consensus-layer or restaking loss reaches eETH holders as a smaller rebase, with no operator-posted first-loss capital between the operator and the holder: permissioned operators are required to bid but are not required to post a bond as collateral, and solo stakers run without posting any collateral.",
-      "elements": ["Sl", "Rb"],
+      "elements": [
+        "Sl",
+        "Rb"
+      ],
       "evidence": "https://etherfi.gitbook.io/etherfi/resources/ether.fi-whitepaper/ether.fi-staking (accessed 2026-08-04); https://api.github.com/repos/etherfi-protocol/smart-contracts/contents/src/archive (accessed 2026-08-04)",
       "note": "TWO CORRECTIONS. (1) Tr is DROPPED. The T-NFT/B-NFT two-tier structure the corpus describes as 'a bond, described in tranche language' is not part of the live system: TNFT.sol and BNFT.sol are in src/archive/, retained only for storage-layout continuity. Any decomposition carrying Tr for ether.fi decomposes a dead mechanism. (2) Bs is DROPPED. With B-NFT archived and the whitepaper stating operators post no bond, stage 1 could identify no operator-posted first-loss capital in the current design; UNKNOWN whether any exists. Sl therefore does the whole of the loss work here, and the absence of any junior layer beneath eETH holders is the finding."
     },
     {
       "id": "F12",
       "text": "Staking rewards are split 90% to stakers, 5% to node operators and 5% to the protocol, and restaking rewards route separately through a rewards router and a cumulative-Merkle distributor.",
-      "elements": ["Fd"],
+      "elements": [
+        "Fd"
+      ],
       "evidence": "https://etherfi.gitbook.io/etherfi/resources/ether.fi-whitepaper/ether.fi-staking (accessed 2026-08-04); https://github.com/etherfi-protocol/smart-contracts/blob/b4a0968087b178bc346cdf6bee6c0597bf4c42c7/README.md (accessed 2026-08-04)",
       "note": "Fd is a CANDIDATE symbol, used with the required mark, and is ADDED; Em is DROPPED. Em names protocol-funded emissions of an existing asset; what is distributed here is received reward value, not newly funded incentive. See F19 for what Em was standing in for."
     },
     {
       "id": "F13",
       "text": "Standard exit: a holder burns eETH for an ERC-721 withdrawal request; an admin finalises a batch, and the claim rate is snapshotted at finalisation with ceiling rounding so that for any finalised token the claimable amount is invariant under subsequent rebases.",
-      "elements": ["Wq"],
+      "elements": [
+        "Wq"
+      ],
       "evidence": "https://github.com/etherfi-protocol/smart-contracts/blob/b4a0968087b178bc346cdf6bee6c0597bf4c42c7/src/withdrawals/WithdrawRequestNFT.sol (accessed 2026-08-04)",
       "note": "RESIDUE recorded alongside a used symbol, and the contract states this as its own invariant I3, property-tested, headed as 'the H-02 fix' from an audit. Rate freezing at finalisation is a deliberate severing of a claim from the accounting index at a named block: Rb and Wq together cannot say it, because it is the difference between a queue position and a fixed-price forward. Ft (fixed-term debt) is deliberately not used: there is no maturity date, only a frozen price."
     },
     {
       "id": "F14",
       "text": "Instant exit: a holder redeems eETH or weETH for ETH or stETH immediately in exchange for an exit fee, capped by a refilling token bucket over a time period and floored by a low-watermark expressed in basis points of pool TVL, with a stale-price window and a maximum price threshold on the stETH price feed.",
-      "elements": ["Rd", "Ex"],
+      "elements": [
+        "Rd",
+        "Ex"
+      ],
       "evidence": "https://github.com/etherfi-protocol/smart-contracts/blob/b4a0968087b178bc346cdf6bee6c0597bf4c42c7/src/withdrawals/EtherFiRedemptionManager.sol (accessed 2026-08-04)",
       "note": "Rd is ADDED: this door is a genuine direct redemption right, priced and capped. Ex is claimed here in its ordinary sense for once, because the stETH price feed is a real price oracle with a freshness bound, which satisfies law L13 and is a different object from the state-reporting committee of F5. The token bucket is RESIDUE; see F16."
     },
     {
       "id": "F15",
       "text": "Priority exit: whitelisted addresses redeem through a separate queue with an immutable minimum delay, for amounts between 0.01 and 1000 ETH, against a separately locked ETH balance.",
-      "elements": ["Wq", "Aw", "Ep"],
+      "elements": [
+        "Wq",
+        "Aw",
+        "Ep"
+      ],
       "evidence": "https://github.com/etherfi-protocol/smart-contracts/blob/b4a0968087b178bc346cdf6bee6c0597bf4c42c7/src/withdrawals/PriorityWithdrawalQueue.sol (accessed 2026-08-04)",
       "note": "Audited only in 2026-03, after the corpus record was written."
     },
@@ -126,7 +170,9 @@
     {
       "id": "F18",
       "text": "[What the restaked collateral secures] The same principal that backs eETH is natively restaked: the EtherFiNode holding the validators' withdrawal credentials is also an EigenPod, so one deposit serves Ethereum consensus and EigenLayer without a second user action and without a second lockup.",
-      "elements": ["Rs"],
+      "elements": [
+        "Rs"
+      ],
       "evidence": "https://etherfi.gitbook.io/etherfi/resources/ether.fi-whitepaper/ether.fi-re-staking (accessed 2026-08-04); https://github.com/etherfi-protocol/smart-contracts/blob/b4a0968087b178bc346cdf6bee6c0597bf4c42c7/src/restaking/EtherFiRestaker.sol (accessed 2026-08-04)",
       "note": "Rs is a CANDIDATE, used with the mark, and is exact in name and thin in content. It asserts restaking is a fact and stops."
     },
@@ -154,14 +200,21 @@
     {
       "id": "F22",
       "text": "A protocol-wide blacklister is wired into eETH, the LiquidityPool, the AuctionManager, both withdrawal queues and the redemption manager.",
-      "elements": ["Fz"],
+      "elements": [
+        "Fz"
+      ],
       "evidence": "https://github.com/etherfi-protocol/smart-contracts/blob/b4a0968087b178bc346cdf6bee6c0597bf4c42c7/src/core/EETH.sol (accessed 2026-08-04); https://github.com/etherfi-protocol/smart-contracts/blob/b4a0968087b178bc346cdf6bee6c0597bf4c42c7/src/core/LiquidityPool.sol (accessed 2026-08-04)",
       "note": "Fz is a CANDIDATE, used with the required mark, and is ADDED: the corpus element list for ether.fi contains no freeze or permission symbol at all. Law L28 asks Fz for a named authority, enumerated triggers, an appeal path and holder disclosure; stage 1 found the authority (RoleRegistry) but not the triggers, the appeal path or the disclosure, so the warrant is partly unmet."
     },
     {
       "id": "F23",
       "text": "Authority for the whole protocol is centralised in one RoleRegistry contract read by nearly every other contract through a shared mixin; two timelocks are deployed, an upgrade timelock and an operating timelock; every contract is UUPS- or beacon-upgradeable; and a mixin provides time-bounded rather than indefinite pauses.",
-      "elements": ["Tg", "Up", "Gp", "Aw"],
+      "elements": [
+        "Tg",
+        "Up",
+        "Gp",
+        "Aw"
+      ],
       "evidence": "https://etherfi.gitbook.io/etherfi/developers/contracts-and-integrations/deployed-contracts (accessed 2026-08-04); https://github.com/etherfi-protocol/smart-contracts/blob/b4a0968087b178bc346cdf6bee6c0597bf4c42c7/README.md (accessed 2026-08-04)",
       "note": "Law L15 (Up requires Tg or a bounded emergency process) is satisfied twice over, by the upgrade timelock and by the time-bounded pause. RESIDUE recorded here: Tg, Up and Gp describe three separate control mechanisms and cannot express that one registry contract is the authority for all of them, which makes the registry a single point of governance failure that the triple conceals rather than reveals."
     },
@@ -179,5 +232,12 @@
       "evidence": "https://etherfi.gitbook.io/etherfi/solo-stakers/operation-solo-staker/obol-dvt-explained (accessed 2026-08-04)",
       "note": "RESIDUE. The vocabulary has zero coverage of a threshold-signed distributed validator key. The scope claim is NARROWED from the corpus: stage 1 could place Obol/Charon only in the Operation Solo Staker programme, not demonstrably in the main permissioned operator set, and the primary page returned 404 on direct fetch so the 3/4 cluster threshold is UNCONFIRMED at first-party source. UNKNOWN what fraction of ether.fi's validator set is distributed. The category-level point that DVT is the largest unnamed mechanism by TVL stands on Lido's Simple DVT module plus SSV and Obol independently of this entry."
     }
-  ]
+  ],
+  "paper": {
+    "title": "ether.fi",
+    "label": "cat:lsd:etherfi",
+    "blurb": "A user deposits ETH into the liquidity pool and receives eETH, a share of a ledger whose nominal balance moves with the pool's reported value; weETH is the non-rebasing wrapper, and it is the form every integration and every cross-chain deployment holds. The same principal is staked and restaked at once, because the node contract holding the validators' withdrawal credentials is itself a pod; which services that stake secures, and therefore who is empowered to author the conditions under which it is destroyed, is settled by the protocol in contracts outside this repository. Operators do not select themselves: they bid on chain for the right to be assigned a validator, and the winning bid is forwarded to the treasury. Exit is a choice among doors --- instant for a fee, metered by a refilling bucket and floored on pool value; a standard queue whose claim rate is frozen at an administrator's finalisation and thereafter invariant under rebases; and a priority queue for whitelisted addresses under a minimum delay. Nothing sits beneath the holder: operators post no bond, so a consensus-layer or restaking loss reaches eETH as a smaller rebase and stops there.",
+    "witnessReason": "The tranche element is dropped: the tiered note structure the corpus record describes as a bond in tranche language now sits in the repository's archive directory, retained for storage-layout continuity, so a decomposition carrying it decomposes a dead mechanism. The bond element goes with it, because the whitepaper states that permissioned operators are required to bid and not to post collateral and that solo stakers post none either, and no other first-loss layer could be identified --- which leaves loss allocation doing the whole of the work, and the absence of any junior layer beneath the holder as the result. A permission element, a freeze element, a direct-redemption element and an index element are all added, because the record carries no access or freeze symbol for this protocol at all, the instant door is a genuine priced redemption right, and the wrapper is the adapter that keeps a rebasing claim admissible in balance-invariant ledgers. The record's multi-venue restaking framing is not inherited: within a single venue it is refuted by that venue's conserved allocation budget, and across venues the restaking contract imports the interfaces of one venue only, so the framing is unknown rather than established.",
+    "residueNote": "The protocol's own file layout is the argument: registration, the market for the slot, the key and predeposit path, exit and consolidation, and the restaking leg are separate contracts, and the candidate symbol for this category would collapse every one of them into itself. The market is the sharpest --- a priced, cleared, on-chain primary auction for the right to operate is not an emission, not a fee and not a permission gate, and nothing names it. Beneath it sit a refilling budget metering a state transition, which recurs across this category and has no symbol; a claim severed from the accounting index at a named block, which is the difference between a queue position and a fixed-price forward; and a menu of exits over one claim, where the routing is itself the price of leaving. The same principal is committed to consensus and to an external security market at once: within that market a conserved budget bounds the second commitment, and across markets nothing here bounds it or discloses the aggregate. The party that bears the loss neither chooses nor can observe on chain who may write the conditions under which its principal is destroyed, and that is the thinnest point in the carrier for this application."
+  }
 }
