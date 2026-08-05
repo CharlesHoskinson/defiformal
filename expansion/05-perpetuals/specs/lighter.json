@@ -1,0 +1,176 @@
+{
+  "app": "Lighter",
+  "category": "05-perpetuals",
+  "source": "C:\\defiformal-work\\05-perpetuals\\01-research.md",
+  "construction": ["Ob", "Rf", "Pf", "Ct", "Ex", "Tp", "Li", "Ad", "Sl", "Sh", "Aw", "Em", "Fd", "Tg", "Up", "Gp", "Xf", "Xm"],
+  "functionalObligations": [
+    {
+      "id": "F1",
+      "text": "orders submitted through API servers are ordered by a sequencer and matched under price-time priority, with a health check applied to both sides of every trade",
+      "elements": ["Ob"],
+      "evidence": "https://docs.lighter.xyz/trading/order-types-and-matching.md (accessed 2026-08-04)",
+      "note": "Ob names the book and its priority rule. Unlike ApeX and edgeX, the book here is genuine committed state — the Order Book Tree is Merkleised into the root the L1 verifier accepts — so 'on-chain' is defensible in a way it is not for the operator-run venues; the symbol cannot make that distinction."
+    },
+    {
+      "id": "F2",
+      "text": "price-time priority is enforced by the address space rather than by a rule: an ask at price p with nonce o occupies leaf index p*2^O + o and a bid occupies p*2^O + (2^O - 1 - o), so index order IS priority order, and every insertion proves non-crossing and every trade proves the supplied maker was the highest-priority crossing order by requiring crossingSize = 0 along the root-to-leaf path",
+      "elements": [],
+      "evidence": "https://assets.lighter.xyz/whitepaper.pdf (accessed 2026-08-04; whitepaper sections 3.7, 4.3-4.4)",
+      "note": "RESIDUE, and the single most valuable one in this lane: the vocabulary cannot express 'the matching RULE was proven'. `Zk` is contested-register, outside the 58, and names a verifiable STATE proof — which is what ApeX and edgeX also claim. Stage 1 supplies the exact statement the corpus could only gesture at, so a later stage can attempt to formalise it: crossing size zero on the highest-priority leaf, computed from internal-node subtree aggregates (AskSizeSum / BidSizeSum) under a Poseidon2 hash of (left, right, InternalData)."
+    },
+    {
+      "id": "F3",
+      "text": "the book is maintained by an off-chain sequencer whose only power is ordering — since execution and matching are verified by the prover, every valid state transition is deterministically inferable from the transaction order and the oracle data",
+      "elements": [],
+      "evidence": "https://assets.lighter.xyz/whitepaper.pdf (accessed 2026-08-04; whitepaper section 2.3)",
+      "note": "RESIDUE — matching locus AND operator discretion, which for this venue are one statement. The whitepaper names the alternative it rejects: designs 'where matching occurs directly at the Sequencer layer and proofs merely confirm that two orders intersect', in which 'the Sequencer could arbitrarily reorder or favor trades'. That is exactly ApeX's and edgeX's model, and all three emit the same Ob."
+    },
+    {
+      "id": "F4",
+      "text": "batches are proven by Plonky2 circuits — TurboPlonk arithmetisation over Goldilocks with FRI — aggregated block to segment to batch, wrapped into a gnark PLONK proof over BN254 for on-chain verification against the Aztec Ignition setup, and the deployed ZkLighterVerifier can be regenerated from the published circuits",
+      "elements": [],
+      "evidence": "https://l2beat.com/zk-catalog/lighterprover (accessed 2026-08-04)",
+      "note": "RESIDUE — proof system. No element names a validity proof, so nothing records that this is the one venue in the lane with source-to-deployment correspondence: L2BEAT's own upgrade note reads 'new lighter verifier and desert verifier deployed, succesfully regenerated from the sources', and running build_circuits.sh reproduces the verifier (https://github.com/elliottech/lighter-prover, 2026-08-04). Deployed: ZkLighterVerifier 0xac3Ce44B6ff4E402858C99D5699ff63131572BaA, DesertVerifier 0x866418061d4C1168e1c8E8f6facE79675395E008, ZKLighter 0x3B4D794a66304F130a4Db8F2551B0070dfCf5ca7."
+    },
+    {
+      "id": "F5",
+      "text": "data availability is defined by a sufficiency predicate rather than by a venue: an Account Delta Tree initialised empty each batch receives every update also applied to the Public Account Tree, is serialised, compressed and posted to Ethereum in a blob-carrying transaction with the market data, so replaying the blobs in order reconstructs the account state exactly — and two circuits bind the claim, a Blob Polynomial Equivalence Circuit evaluated at the point Ethereum's precompile uses and Account Delta Traversal Circuits at the same Fiat-Shamir point",
+      "elements": [],
+      "evidence": "https://assets.lighter.xyz/whitepaper.pdf (accessed 2026-08-04; whitepaper sections 3.2, 5)",
+      "note": "RESIDUE — data availability. The design object is not a DA venue (Ethereum versus a committee) but a PREDICATE: post the minimum sufficient for the escape hatch, and prove that it is sufficient. L2BEAT classifies the result as a ZK Rollup with Ethereum blobs at Stage 0 (https://l2beat.com/scaling/projects/lighter, 2026-08-04)."
+    },
+    {
+      "id": "F6",
+      "text": "a censored trader can force inclusion by queueing a priority transaction directly through the Ethereum contracts — deposits, withdrawals, order creation, order cancellation and burning of pool shares are all forceable — and if the sequencer misses the 14-day deadline, anyone may trigger desert mode, after which commitments stop, the state freezes, and users withdraw against the frozen root using blob data alone, with open positions settled at the latest mark price",
+      "elements": [],
+      "evidence": "https://l2beat.com/scaling/projects/lighter (accessed 2026-08-04)",
+      "note": "RESIDUE — exit, and the reason `Wq` is DROPPED from the corpus element set. Wq names a redemption-rate limiter; this is a censorship-resistance device with an enforced deadline whose expiry FREEZES the chain, which is a different object. Sharper than the corpus's generic 'escape hatch' gap: because order creation and cancellation are forceable, a censored trader can not merely exit but TRADE. Whitepaper sections 2.2.2 and 6 at https://assets.lighter.xyz/whitepaper.pdf (2026-08-04)."
+    },
+    {
+      "id": "F7",
+      "text": "USDC is deposited into the Lighter rollup contract on Ethereum and credited to a Main Account, from which Sub-Accounts and Public Pools derive",
+      "elements": ["Xf"],
+      "evidence": "https://docs.lighter.xyz/about-lighter/technical-architecture-lighter-core.md (accessed 2026-08-04)",
+      "note": ""
+    },
+    {
+      "id": "F8",
+      "text": "the L1 contracts accept a state root only against a verified proof, and bind L1-submitted priority transactions into L2 state through a queue the sequencer must consume",
+      "elements": ["Xm"],
+      "evidence": "https://assets.lighter.xyz/whitepaper.pdf (accessed 2026-08-04; whitepaper sections 2.2, 2.5)",
+      "note": "Xm names the domain-crossing verification. It cannot say that the verification is a validity proof rather than a signature quorum — the same message-passing symbol serves Hyperliquid's 2/3 validator signatures and this."
+    },
+    {
+      "id": "F9",
+      "text": "an account walks a three-rung ladder C_i < M_i < I_i: below initial margin it is in pre-liquidation, below maintenance margin it is partially liquidated against the book, and below close-out it is fully liquidated",
+      "elements": ["Ct"],
+      "evidence": "https://docs.lighter.xyz/trading/liquidations-and-llp-insurance-fund.md (accessed 2026-08-04)",
+      "note": "APPROXIMATE — Ct names ONE line. The third rung is what distinguishes partial from full liquidation, so collapsing the ladder loses the mechanism rather than a detail."
+    },
+    {
+      "id": "F10",
+      "text": "beyond the base asset, ETH (and SPY and USO on the Robinhood deployment) may be posted as margin under a three-parameter haircut — LTV 50% for margin contribution, LT 75% for the liquidation threshold, LF 95% as the minimum value received per unit at liquidation — with total account value computed as PortfolioBalance + sum over assets of LTV_j * MarginBalance_j * IndexPrice_j, and base collateral always valued at 100%",
+      "elements": ["Ct"],
+      "evidence": "https://docs.lighter.xyz/trading/multi-asset-margin.md (accessed 2026-08-04)",
+      "note": "APPROXIMATE — Ct collapses three independent parameters into one threshold. LF in particular is a floor on VALUE REALISED at liquidation, which is not a threshold test at all. Missing from the corpus record entirely."
+    },
+    {
+      "id": "F11",
+      "text": "positions are marked to the median of an impact price (the average execution price of a $500 market buy and a $500 market sell), an index-plus-liquidity-premium smoothed by an 8-minute EMA and capped at plus or minus 0.5% of index, and the median mark across major CEXs",
+      "elements": ["Ex", "Tp"],
+      "evidence": "https://docs.lighter.xyz/trading/fair-price-marking.md (accessed 2026-08-04)",
+      "note": "Tp discharges the 8-minute EMA, computed in-protocol and proven; Ex the index and CEX legs. The impact-price component — a price defined by executing a notional trade against one's own book — is neither, and has no symbol."
+    },
+    {
+      "id": "F12",
+      "text": "the index price is taken from a combination of Chainlink, Stork and Pyth, but the external signatures are not verified, so the sequencer must be trusted to report the price truthfully",
+      "elements": ["Ex"],
+      "evidence": "https://l2beat.com/scaling/projects/lighter (accessed 2026-08-04)",
+      "note": "APPROXIMATE, and the most important safety property of the design. Ex imports PUBLISHER trust; here it imports SEQUENCER trust, because the publisher's signature is never checked. The engine is proven and the input is not — a seam with no expression at all, and invisible in the corpus decomposition, which lists Ex as merely derived."
+    },
+    {
+      "id": "F13",
+      "text": "longs and shorts exchange funding hourly: a per-minute premium [max(0, ImpactBid - index) - max(0, index - ImpactAsk)] / index is sampled 60 times and time-weighted, then clamped at 0.05% around the 0.01% interest rate and again at 4% before dividing by 8, and the payment -1 * position * index * fundingRate is applied immediately to realised PnL through a Funding Prefix Sum accumulated in each block's pre-execution phase",
+      "elements": ["Pf", "Tp"],
+      "evidence": "https://docs.lighter.xyz/trading/funding.md (accessed 2026-08-04)",
+      "note": "Pf fits exactly. Tp is claimed for the 60-sample time-weighted premium, which is computed and proven in-protocol. What Pf cannot carry is that funding is applied as a prefix sum in a pre-execution phase, so it is charged before any transaction in the block executes."
+    },
+    {
+      "id": "F14",
+      "text": "below maintenance margin the account is partially liquidated against the order book, with a liquidation fee of up to 1% routed to the LLP when the fill beats the zero price, and below close-out it is fully liquidated — all of it executed by the protocol under circuit constraints rather than sold to keepers",
+      "elements": ["Li"],
+      "evidence": "https://docs.lighter.xyz/trading/liquidations-and-llp-insurance-fund.md (accessed 2026-08-04)",
+      "note": "APPROXIMATE — Li presumes an incentivized external liquidator, which is not the mechanism: liquidations are executed and PROVEN, so the fee is a charge to the liquidated account paid to a claim class rather than a bounty to a racer. 'Verifiable liquidation' is residue."
+    },
+    {
+      "id": "F15",
+      "text": "the LLP — an insurance fund implemented as a specialised Public Pool that also makes markets — absorbs positions the book cannot take, and when absorbing one would push the LLP below its own initial-margin requirement the position is auto-deleveraged instead of assumed",
+      "elements": ["Sl", "Ad"],
+      "evidence": "https://docs.lighter.xyz/trading/liquidations-and-llp-insurance-fund.md (accessed 2026-08-04)",
+      "note": "Sl discharges the loss allocation: the absorbed loss lands on a named claim class (LLP depositors), not on protocol reserve. `Bs` is deliberately NOT used — the LLP is neither bonded nor slashable — and Sl plus Sh names it better than Bs would, which is why Bs is absent from this construction while Aster's fee-funded reserve still needs it. The solvency-conditioned handover from absorption to ADL is itself unnameable."
+    },
+    {
+      "id": "F16",
+      "text": "auto-deleveraging matches bankrupt positions against opposite-side accounts whose zero prices align, ranked by leverage and unrealised PnL",
+      "elements": ["Ad"],
+      "evidence": "https://docs.lighter.xyz/trading/liquidations-and-llp-insurance-fund.md (accessed 2026-08-04)",
+      "note": ""
+    },
+    {
+      "id": "F17",
+      "text": "a Public Pool is a sub-account others buy into pro rata; it can trade but cannot transfer or withdraw its holdings, its operator is protocol-whitelisted, sets an operator fee and must satisfy a Minimum Operator Share (for example 10%, so 10,000 USDC of operator capital admits at most 90,000 of depositors), and there are no lockups",
+      "elements": ["Sh", "Aw"],
+      "evidence": "https://docs.lighter.xyz/trading/public-pools.md (accessed 2026-08-04)",
+      "note": "Sh names the claim, Aw the operator whitelist. Neither names the Minimum Operator Share — a mandatory skin-in-the-game ratio that bounds depositor capital by manager capital — nor the restriction that a pool may trade but never move its assets."
+    },
+    {
+      "id": "F18",
+      "text": "access to the LLP is gated by staked LIT at a ratio of 10 USDC of deposit per 1 LIT staked",
+      "elements": ["Aw"],
+      "evidence": "https://docs.lighter.xyz/about-lighter/lit-utility.md (accessed 2026-08-04)",
+      "note": "Aw names the gate. It does not name that the gate is PRICED, and priced in a second token — the right to hold the backstop claim is bought with a different asset than the claim itself."
+    },
+    {
+      "id": "F19",
+      "text": "standard accounts pay zero maker and taker fees at 300 ms taker and 200 ms maker latency, Premium accounts pay 0.4 to 2.8 bps scaling down with staked LIT in exchange for lower latency, and Plus accounts pay a flat 0.5 bps",
+      "elements": [],
+      "evidence": "https://docs.lighter.xyz/trading/trading-fees.md (accessed 2026-08-04)",
+      "note": "RESIDUE. The fee schedule is a latency auction: the priced good is speed, not execution. Em, Fd and every fee-adjacent symbol miss it, and so does the corpus's 'zero-fee model' residue, which records the zero and not what is being sold."
+    },
+    {
+      "id": "F20",
+      "text": "LIT carries a fixed 6% staking APR with a 3-day unstaking lockup, and the protocol buys LIT back daily on a 24-hour TWAP funded from trading-fee revenue",
+      "elements": ["Em", "Fd"],
+      "evidence": "https://docs.lighter.xyz/about-lighter/lit-utility.md (accessed 2026-08-04)",
+      "note": "Em for the fixed APR (protocol-funded), Fd (CANDIDATE-REGISTER) for the fee-funded buyback. The 3-day lockup is not Wq — a dwell time is not a queue — which is the second reason Wq is dropped from this construction."
+    },
+    {
+      "id": "F21",
+      "text": "a size-seeking trader can signal an RFQ through the order book, to which market makers respond within 10 seconds, with a 2-minute execution window",
+      "elements": ["Rf"],
+      "evidence": "https://docs.lighter.xyz/trading/perprfq.md (accessed 2026-08-04)",
+      "note": "Rf fits, and is ADDED relative to the corpus. What it does not carry is that the RFQ is signalled THROUGH the book rather than beside it, so the same venue runs two execution symbols over one liquidity pool."
+    },
+    {
+      "id": "F22",
+      "text": "regular upgrades are initiated by a network governor and execute after a 21-day delay, and the governor also retains the ability to add or remove validators",
+      "elements": ["Tg", "Up"],
+      "evidence": "https://l2beat.com/scaling/projects/lighter (accessed 2026-08-04)",
+      "note": "Tg is ADDED relative to the corpus, which lists Up without it. This is the only venue in the lane where the control plane is documented precisely enough for the vocabulary to work as intended. Multisigs 0x92b12c9d85BF7bd2EF5d2F53F4cd4Ce0BE432045 and 0x97A90Ec950B6BCd9B190b566525B2Bb92A2C03a2; UpgradeGatekeeper 0x94da8A995D0D82Ef0fE7E509C6D76c22603B6f67."
+    },
+    {
+      "id": "F23",
+      "text": "a security council may reduce the upgrade delay to zero in an emergency, and it does not currently satisfy the Stage 1 requirements",
+      "elements": ["Gp"],
+      "evidence": "https://l2beat.com/scaling/projects/lighter (accessed 2026-08-04)",
+      "note": "APPROXIMATE — Gp names an emergency guardian or PAUSE. The emergency power here is the opposite of a pause: it ACCELERATES a state change by deleting the delay users rely on. A symbol for 'the guardian can cancel the timelock' does not exist, and the composition Tg + Gp reads as strictly safer than it is."
+    },
+    {
+      "id": "F24",
+      "text": "a second sovereign deployment of the same stack, Lighter on Robinhood, runs with USDG as base collateral and SPY and USO as margin assets, under its own verifier contract",
+      "elements": [],
+      "evidence": "https://l2beat.com/zk-catalog/lighterprover (accessed 2026-08-04)",
+      "note": "RESIDUE. Nothing in the vocabulary distinguishes an INSTANCE of a venue from the venue, so two deployments with different collateral, different users and different verifiers decompose identically. Missing from the corpus record."
+    }
+  ]
+}

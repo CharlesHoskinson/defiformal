@@ -1,0 +1,148 @@
+{
+  "app": "KyberSwap",
+  "category": "08-intents",
+  "source": "C:\\defiformal-work\\08-intents\\01-research.md",
+  "construction": ["Ag", "Rf", "In", "Fd", "Ep", "Au", "Xf"],
+  "functionalObligations": [
+    {
+      "id": "F1",
+      "text": "a route is constructed for a user who named no venue, across four classes of liquidity at once: automated market makers, order-book venues, the operator's own limit orders, and off-chain market-maker quotes",
+      "elements": ["Ag"],
+      "evidence": "https://docs.kyberswap.com/kyberswap-solutions/kyberswap-aggregator (accessed 2026-08-05)",
+      "note": "Over 400 venues on 25 networks. Unlike every other application in this lane, the simulation half of the route computation is public and inspectable (see F19). One further property that Ag cannot carry: the router is deployed at the IDENTICAL address on every supported chain (MetaAggregationRouterV2 at 0x6131B5fae19EA4f9D964eAc0408E4408b66337b5, https://docs.kyberswap.com/developer-guide/aggregator-api/contracts.md, accessed 2026-08-05), which is the exact inverse of OKX F14, where the settlement address is deliberately not a constant. The vocabulary expresses neither policy and so cannot distinguish a settlement layer you can pin from one you must ask an API about."
+    },
+    {
+      "id": "F2",
+      "text": "quotes are obtained off-chain from private market makers and settled on-chain only in the cases where they beat the on-chain alternative; callers may exclude those sources by name",
+      "elements": ["Rf"],
+      "evidence": "https://docs.kyberswap.com/kyberswap-solutions/kyberswap-aggregator (accessed 2026-08-05)",
+      "note": "DEPARTURE FROM THE CORPUS, which decomposes KyberSwap as {Ag} alone. The API exposes excludeRFQSources and the documentation states the settle-only-if-better rule, so this is a documented quote class rather than an inference. The quote's firmness is not documented, but no last look is documented either, so unlike Jupiter F7 there is no positive evidence against Rf."
+    },
+    {
+      "id": "F3",
+      "text": "one of the four routed liquidity classes is the operator's own limit-order product, so the router is also a venue operator on its own routes",
+      "elements": [],
+      "evidence": "https://docs.kyberswap.com/kyberswap-solutions/kyberswap-aggregator (accessed 2026-08-05)",
+      "note": "RESIDUE. Ob is considered and NOT asserted: whether the book is on-chain is not established by any source in stage 1, so its mechanism is UNKNOWN. What is unnameable in any case is the routing preference for related liquidity. The corpus's version of this residue names KyberSwap Classic and Elastic, which is factually stale: neither appears anywhere in current documentation."
+    },
+    {
+      "id": "F4",
+      "text": "the user sets a slippage tolerance between 0 and 2000 basis points and a deadline, and settlement reverts unless the amount received clears the resulting minimum",
+      "elements": [],
+      "evidence": "https://docs.kyberswap.com/developer-guide/aggregator-api/aggregator-api-specification/evm-swaps.md (accessed 2026-08-05)",
+      "note": "RESIDUE, the recurring gap of this category (LiquidMesh F4, Binance Wallet F4). No element names a settlement-enforced output floor on a self-executed swap."
+    },
+    {
+      "id": "F5",
+      "text": "the user grants spending authority either as a standing token allowance to the router or as a signed permit carried in the build request",
+      "elements": ["Au"],
+      "evidence": "https://docs.kyberswap.com/developer-guide/aggregator-api/aggregator-api-specification/evm-swaps.md (accessed 2026-08-05)",
+      "note": "APPROXIMATE, but the best instance of Au in this lane: a permit carries expiry and nonce and so satisfies more of L17 than the bare approval contracts at LiquidMesh F17 and OKX F13. The allowance alternative still arms X16."
+    },
+    {
+      "id": "F6",
+      "text": "the venue is re-decided on-chain at execution time, per hop, by comparing candidate pools against their state in that block and switching away from the one named in the calldata",
+      "elements": [],
+      "evidence": "https://docs.kyberswap.com/developer-guide/start-here/foundational-solutions/smart-settlement-better-swap-output-with-lower-slippage.md (accessed 2026-08-05)",
+      "note": "RESIDUE, and a direct contradiction of what Ag presumes. Ag presumes the route is the thing being executed; here the route in the signed calldata is a proposal and the settlement contract may overrule it. No element names a settlement-time re-selection of the venue."
+    },
+    {
+      "id": "F7",
+      "text": "that re-selection is aimed at specific adversaries: pools that have been sandwiched or front-run in the same block, market makers that have widened their spread, and liquidity withdrawn just in time",
+      "elements": [],
+      "evidence": "https://docs.kyberswap.com/developer-guide/start-here/foundational-solutions/smart-settlement-better-swap-output-with-lower-slippage.md (accessed 2026-08-05)",
+      "note": "RESIDUE. MEV defence implemented as a settlement-time decision rather than as private broadcasting, which is a fifth distinct answer to the same problem in a lane of five (LiquidMesh private relays, Binance Wallet chain-level private RPC, OKX whitelisted broadcast, Jupiter's own validator). No element names any of them."
+    },
+    {
+      "id": "F8",
+      "text": "the user pays no fee for the swap, and the operator's revenue is instead the surplus of tokens above the ESTIMATED output, together with unconsumed dust from partial fills, while the user is protected only to the confirmed MINIMUM",
+      "elements": [],
+      "evidence": "https://docs.kyberswap.com/developer-guide/aggregator-api/aggregator-api-specification/evm-swaps.md (accessed 2026-08-05)",
+      "note": "RESIDUE, and where the money is. Nothing in the vocabulary names the gap between estimated output and minimum output as an economic object, so a decomposition of a protocol that advertises a zero fee cannot say how it earns. Fd is rejected: this surplus is captured, not distributed, and it belongs to no claim class. Fee schedule confirming the zero user fee: https://docs.kyberswap.com/getting-started/fee-schedule.md (accessed 2026-08-05)."
+    },
+    {
+      "id": "F9",
+      "text": "the operator holds pools, deployed as hooks on third parties' automated market makers, whose swaps are restricted in the pool's own code so that only the operator's aggregator may take from them",
+      "elements": [],
+      "evidence": "https://github.com/KyberNetwork/kyber-exclusive-amm-sc (accessed 2026-08-05)",
+      "note": "RESIDUE, and the sharpest instance in this whole category of the axis the corpus says is missing. Exclusivity over a venue is not the same obligation as routing to one. Aw is rejected under this lane's standing principle: Aw gates the party seeking the service, whereas this gates the TAKER, and does so to create an economic monopsony rather than to satisfy a compliance rule. Note the aggravating fact: unlike every other gate in this lane, this one IS on-chain and code-enforced, in a Uniswap v4 or PancakeSwap Infinity hook with salt-mined before-swap, after-swap and after-swap-returns-delta flags, and the vocabulary still cannot name it."
+    },
+    {
+      "id": "F10",
+      "text": "for each such trade the aggregator computes the best route with those pools and the best route without them, and treats the difference as the additional value the exclusivity created",
+      "elements": [],
+      "evidence": "https://docs.kyberswap.com/user-guide/kyberswap-fairflow/fairflow-details.md (accessed 2026-08-05)",
+      "note": "RESIDUE. A counterfactual route, computed but never executed, used as the accounting basis for splitting a gain. No element names a counterfactual as an input to a settlement."
+    },
+    {
+      "id": "F11",
+      "text": "an off-chain signer produces a signed fair market price for that single trade, which is carried in the transaction and validated by the hook against the pool's actual output",
+      "elements": [],
+      "evidence": "https://docs.kyberswap.com/user-guide/kyberswap-fairflow/solution-fairflow.md (accessed 2026-08-05)",
+      "note": "RESIDUE. Three symbols were considered and all fail. Ex is a data feed with push, pull or medianizer semantics; this is a per-trade, per-route signature solicited by the aggregator for one transaction. At is a reserve or NAV attestation about a balance sheet. Rf is a maker quote offering to fill; this signature offers nothing and only prices the benchmark. Price-improvement benchmarking stated as its own obligation per the stage-2 brief, and note the consequence for X14: KyberSwap is the ONLY application in this lane whose exclusive market structure comes with a benchmark that is actually named and signed, so X14's second limb is not armed here even though its first limb is armed most strongly of all five."
+    },
+    {
+      "id": "F12",
+      "text": "when the pool can do better than the signed price the taker is given the signed price and the pool keeps the excess; when it does worse the taker gets the actual output and nothing is kept",
+      "elements": [],
+      "evidence": "https://docs.kyberswap.com/user-guide/kyberswap-fairflow/fairflow-details.md (accessed 2026-08-05)",
+      "note": "RESIDUE. Surplus absorbed by the VENUE rather than won by a searcher, one-sided by construction. Fd names distribution of surplus and is wrong for the capture step; what is captured is foregone arbitrage, not fee revenue."
+    },
+    {
+      "id": "F13",
+      "text": "the captured surplus accrues over seven-day cycles, passes a 48-hour validation window, and is then distributed weekly in the pair's own tokens, 70 percent to the pool's liquidity providers and 30 percent to the hook's owner, to enrolled pools only and with no staking required",
+      "elements": ["Fd", "Ep"],
+      "evidence": "https://docs.kyberswap.com/user-guide/kyberswap-fairflow/fairflow-details.md (accessed 2026-08-05)",
+      "note": "Fd is CANDIDATE-REGISTER and approximate: the object distributed is captured arbitrage, not protocol fee revenue, and one of the two recipients is the operator in its capacity as owner of the exclusivity rather than as a claim holder. Ep is a clean fit for the seven-day cycle plus 48-hour validation window before a distribution becomes claimable; the on-chain accounting is public at https://github.com/KyberNetwork/kyber-exclusive-amm-sc (accessed 2026-08-05). This is the price at which liquidity providers sell a monopsony, and only the payment half of that transaction is expressible."
+    },
+    {
+      "id": "F14",
+      "text": "takers of the operator's limit orders pay a fee keyed to a six-band volatility classification of the token, from 0.01 percent for super-stable pairs to 1 percent for super-high-volatility pairs",
+      "elements": [],
+      "evidence": "https://docs.kyberswap.com/getting-started/fee-schedule.md (accessed 2026-08-05)",
+      "note": "RESIDUE. The mechanism prices its own service by the riskiness of the asset. Jupiter F11 prices by the age of the asset. Neither conditioning is expressible, and Fd names distribution rather than levy in both cases."
+    },
+    {
+      "id": "F15",
+      "text": "several fee recipients may be paid on a single trade, each with its own amount, its own side of the trade and its own receiving address, supplied as parallel lists",
+      "elements": [],
+      "evidence": "https://docs.kyberswap.com/developer-guide/aggregator-api/aggregator-api-specification/evm-swaps.md (accessed 2026-08-05)",
+      "note": "RESIDUE. The rent on one user's order is divisible along a chain of intermediaries. Of the four forms this primitive takes in this category, this is the only one that admits more than one beneficiary per trade (compare LiquidMesh F10, OKX F11, Jupiter F13)."
+    },
+    {
+      "id": "F16",
+      "text": "the terms a caller is offered depend on the wallet address in the request, which the documentation states is used to reach exclusive pools and rates",
+      "elements": [],
+      "evidence": "https://docs.kyberswap.com/developer-guide/aggregator-api/aggregator-api-specification/evm-swaps.md (accessed 2026-08-05)",
+      "note": "RESIDUE. Different wallets get different prices from the same endpoint. Aw is rejected on the corpus's own reasoning: its DFlow marker says Aw is a binary permission gate while segmentation is a graded pricing input, and is 'clearly the wrong shape'. The corpus expected this gap only at rank 6; it is present at rank 5 as well."
+    },
+    {
+      "id": "F17",
+      "text": "a signed-intent router is deployed for intent-based liquidity withdrawal, with separate hashing, nonce, accounting and storage contracts and its own hooks",
+      "elements": ["In"],
+      "evidence": "https://github.com/KyberNetwork/smart-intent-sc and https://docs.kyberswap.com/llms.txt (accessed 2026-08-05)",
+      "note": "DEPARTURE FROM THE CORPUS {Ag}, and the weakest element assignment in this spec. In is asserted on a GPL-3.0 public repository whose contract set (router, hasher, nonces, accounting, storage) is the shape of a signed-order system, plus a product-list entry for Smart Exit described as intent-based liquidity withdrawal. THE SOLVER HALF IS UNKNOWN: no source establishes a solver set, an auction, a settlement guarantee or a timeout, so three of L12's four parts are unevidenced. If stage 3 requires L12 to be evidenced part by part, this should degrade to residue; it is carried because the corpus itself carries In at Jupiter on a weaker basis."
+    },
+    {
+      "id": "F18",
+      "text": "a cross-chain swap behind the same brand moves assets between 23 chains, including to and from non-EVM domains, at fees that vary by corridor",
+      "elements": ["Ag", "Xf"],
+      "evidence": "https://docs.kyberswap.com/getting-started/fee-schedule.md (accessed 2026-08-05)",
+      "note": "Xf IS DISCHARGED BY DELEGATION to the bridges routed across, exactly as at OKX F17, and KyberSwap supplies neither Xm nor a named custodian. Stage 3 will therefore see Xf without Xm; that verdict records the vocabulary's missing composition operator, not a defect in KyberSwap. Corridor pricing (0.05 to 0.25 percent EVM to EVM, 0.25 percent for Bitcoin) is itself unnameable."
+    },
+    {
+      "id": "F19",
+      "text": "the pool simulators that the route search runs on are published for all 129 liquidity sources, and third-party venue teams add their own venues to the router by pull request",
+      "elements": [],
+      "evidence": "https://github.com/KyberNetwork/kyberswap-dex-lib (accessed 2026-08-05)",
+      "note": "RESIDUE. The venue set is maintained as an open commons by the venues themselves, which is a governance and supply arrangement with no symbol, and which makes this the only application in the lane whose route-construction substance is inspectable. Two cautions for a later stage: this repository and the aggregation router carry NO licence file at all, and public visibility is not a grant; and the deployed router is V2 while the public router repository contains a V3, so the published source does NOT correspond to what is deployed."
+    },
+    {
+      "id": "F20",
+      "text": "the operator's commercial asset is the venue rather than the user: it charges its users nothing, buys exclusivity over pools it did not build, pays the liquidity providers 70 percent of the arbitrage that exclusivity captures, and takes its own revenue from surplus at settlement",
+      "elements": [],
+      "evidence": "https://docs.kyberswap.com/user-guide/kyberswap-fairflow/solution-fairflow.md (accessed 2026-08-05)",
+      "note": "RESIDUE, and the central one. Order-flow ownership stated as its own obligation per the stage-2 brief. DEPARTURE FROM THE CORPUS: the corpus claims KyberSwap decomposes identically to LiquidMesh. It does not. LiquidMesh owns no venue and no user, publishes nothing, hands the fee lever to whoever owns the user, and earns by selling latency and backrunning its own flow; KyberSwap owns exclusive venues in which it is the sole permitted taker, publishes its simulators, and earns from positive slippage. Their economic positions are opposites and they collide on Ag only because Ag names route construction and stops. Note also that the corpus was right about the missing axis but aimed one short: the sharpest counterexample is about who owns the VENUE, not who owns the order."
+    }
+  ]
+}

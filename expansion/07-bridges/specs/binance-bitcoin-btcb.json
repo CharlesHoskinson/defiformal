@@ -1,0 +1,113 @@
+{
+  "app": "Binance Bitcoin (BTCB)",
+  "category": "07-bridges",
+  "source": "C:\\defiformal-work\\07-bridges\\01-research.md",
+  "construction": ["Xf", "At", "Rd"],
+  "functionalObligations": [
+    {
+      "id": "F1",
+      "text": "A holder deposits bitcoin to Binance.com, where it becomes an exchange account balance, and then withdraws 'BTC' over the BSC network; what arrives is BTCB, an 18-decimal BEP-20 at 0x7130d2a12b9bcbfae4f2634d864a1ee1ce3ead9c, of which 65,300.96996478 is outstanding.",
+      "elements": ["Xf"],
+      "evidence": "https://www.bnbchain.org/en/blog/btcb-on-binance-smart-chain-101 (accessed 2026-08-04) | https://bsc-rpc.publicnode.com eth_call totalSupply() (accessed 2026-08-04)",
+      "note": "APPROXIMATE, and the weakest instance of Xf in the project. There is no source-domain event at all: the debit is a row in an exchange's internal ledger and the credit is a transfer of tokens the owner key already minted. Law L9 (debit(source) = credit(destination)) is not merely unverified here, it is UNEVALUABLE -- one side of the equality is not an object in any domain the formalism describes. Compare WBTC, where at least the Bitcoin-side deposit is a public transaction."
+    },
+    {
+      "id": "F2",
+      "text": "What secures the peg is Binance's statement that it holds an equivalent amount of bitcoin in multi-signature cold storage; there is no message, no proof, no verifier and no threshold of any kind.",
+      "elements": [],
+      "evidence": "https://www.bnbchain.org/en/blog/btcb-on-binance-smart-chain-101 (accessed 2026-08-04)",
+      "note": "RESIDUE, category headline confirmed for the third of three custodial wrappers and without qualification: none of the three contains any verification mechanism, and for this one no verification mechanism is even constructible, because the source domain cannot execute code. VERIFICATION-MODEL AXIS: single-company attestation. Xm must not be assigned. Law L8's 'named custodian' branch again discharges Xf with something that is not an element."
+    },
+    {
+      "id": "F3",
+      "text": "Nothing is locked in a contract on either side: the issuer describes the mechanism as a swap in which 'their Bitcoin remains locked and can be redeemed by depositing BTCB back', with the lock being an internal custody arrangement rather than an escrow.",
+      "elements": [],
+      "evidence": "https://www.bnbchain.org/en/blog/btcb-on-binance-smart-chain-101 (accessed 2026-08-04)",
+      "note": "RESIDUE. SUPPLY-TOPOLOGY AXIS: custodial wrap settled by an exchange-internal ledger entry -- a fifth topology the corpus's four do not include, since even 'custodial wrap' presumes a deposit address the user sends to. Nothing names an exchange ledger as the settlement layer of a bridge."
+    },
+    {
+      "id": "F4",
+      "text": "Redemption is depositing BTCB back to Binance and withdrawing BTC over the Bitcoin network.",
+      "elements": ["Rd"],
+      "evidence": "https://www.bnbchain.org/en/blog/btcb-on-binance-smart-chain-101 (accessed 2026-08-04)",
+      "note": "APPROXIMATE, the same overstatement as WBTC F7 and Coinbase F5: redemption is an exchange withdrawal subject to account standing, KYC tier, network status and unilateral suspension, not a contract-enforced right. Rd asserts the right and cannot state its conditions or who may exercise it."
+    },
+    {
+      "id": "F5",
+      "text": "Access to both mint and redemption runs through an exchange account, so only KYC'd customers in eligible jurisdictions can enter or exit, and the exchange can freeze an account and refuse redemption with no on-chain action whatsoever.",
+      "elements": [],
+      "evidence": "https://www.bnbchain.org/en/blog/btcb-on-binance-smart-chain-101 (accessed 2026-08-04) | https://www.binance.com/en/proof-of-reserves (accessed 2026-08-04)",
+      "note": "RESIDUE, and two CORPUS DEPARTURES. Aw is dropped: there is no on-chain permission or identity gate of any kind, and the gate that exists is enforced inside a company and is unobservable and unfalsifiable on chain. Fz is dropped: 'issuer can freeze' is false on-chain -- no blacklist, no forced transfer -- and true at the account layer, which is invisible to the token. Both powers are real and neither is nameable, which is a sharper failure than either being absent."
+    },
+    {
+      "id": "F6",
+      "text": "Issuance is unbounded and unilateral: mint(uint256) is onlyOwner, owner() = getOwner() = 0xf68a4b64162906eff0ff6ae34e2bb1cd42fef62d, and eth_getCode on that address returns empty, so a single externally-owned account can mint arbitrarily against a multi-billion-dollar liability.",
+      "elements": [],
+      "evidence": "https://bsc-rpc.publicnode.com eth_call owner(), getOwner() and eth_getCode(owner), empty (accessed 2026-08-04) | https://bscscan.com/address/0x7130d2a12b9bcbfae4f2634d864a1ee1ce3ead9c#code (accessed 2026-08-04)",
+      "note": "RESIDUE. Aw was considered and rejected: reading onlyOwner as a permission gate would make Aw true of every ownable contract ever deployed and drain the symbol, which is precisely the objection the corpus itself raises against Xm. The control-and-authority group has no symbol whose weakest reading is this weak, and it has no way at all to record that an issuance power is unbounded in size."
+    },
+    {
+      "id": "F7",
+      "text": "The on-chain artefact of a redemption is a self-burn -- burn(uint256) burns the caller's own balance -- with nothing in the transaction linking it to a bitcoin payout or to a redeeming party.",
+      "elements": [],
+      "evidence": "https://bscscan.com/address/0x7130d2a12b9bcbfae4f2634d864a1ee1ce3ead9c#code (accessed 2026-08-04)",
+      "note": "RESIDUE. Contrast WBTC, where burn() runs through a Factory that records the merchant, the request and the destination address. Here the burn and the redemption are two unlinked events, so even the redemption leg cannot be audited on chain."
+    },
+    {
+      "id": "F8",
+      "text": "The entire on-chain governance surface is transferOwnership and renounceOwnership: the contract is Binance's standard BEP20Token template (solc 0.5.16, Apache-2.0, verified Exact Match, not a proxy) with no pause, no blacklist, no forced transfer, no upgrade path, no timelock, no multisig and no registry.",
+      "elements": [],
+      "evidence": "https://bscscan.com/token/0x7130d2a12b9bcbfae4f2634d864a1ee1ce3ead9c (accessed 2026-08-04) | https://bscscan.com/address/0x7130d2a12b9bcbfae4f2634d864a1ee1ce3ead9c#code (accessed 2026-08-04)",
+      "note": "CORPUS DEPARTURE: Gp is dropped. The corpus gives BTCB an emergency guardian or pause and the contract HAS NO PAUSE FUNCTION -- the verified source and function list show mint, burn, transfer, approve, owner, transferOwnership and renounceOwnership and nothing else. Whatever emergency power the issuer has is exercised at the exchange, not on the token. Dropping Gp here is what breaks the corpus's claim that the three custodial wrappers decompose identically in the control plane."
+    },
+    {
+      "id": "F9",
+      "text": "The authority over that surface is one key: not a quorum, not a contract, not a delay, with no published internal process binding its use.",
+      "elements": [],
+      "evidence": "https://bsc-rpc.publicnode.com eth_getCode(0xf68a4b64162906eff0ff6ae34e2bb1cd42fef62d), empty (accessed 2026-08-04)",
+      "note": "RESIDUE, and the reason the category's control-plane ordering inverts. The vocabulary names facilities (Tg, Up, Gp) and not holders, so it cannot rank one EOA with unlimited mint (here) against two independent multisig quorums with pause only (WBTC) against single EOAs holding upgrade and freeze (Coinbase). On the corpus's arrays BTCB is a proper subset of the other two and therefore reads as the mildest of the three; on the evidence it has by a wide margin the weakest control plane in the category."
+    },
+    {
+      "id": "F10",
+      "text": "The issuer publishes a Proof of Collateral page for its pegged tokens reporting BTC at 100%, with Proof of Assets of 68,200 BTC at a single published bitcoin address, against wrapped supplies of 2,900 on Ethereum, 128 on BEP2 and 65,222 on BEP20, plus Pioneer Burn 24 BTC and Token Recovered 49 BTC, covering 97 tokens.",
+      "elements": ["At"],
+      "evidence": "https://www.binance.com/en/proof-of-collateral (accessed 2026-08-04) | https://www.binance.com/en/collateral-btokens (accessed 2026-08-04)",
+      "note": "APPROXIMATE against law L27 (At -> named attester + independence + stated assurance + staleness bound + recourse): none of the five holds. It is a self-published address listing with no auditor and no recourse. RANKING BASIS, MIS-ATTRIBUTED: DefiLlama binance-bitcoin = $4,371,846,939 against the corpus's $4,363.3m, but it tracks the 68,200 BTC in this Proof-of-Assets address -- the reserve for ALL Binance-Peg BTC across BEP20, BEP2 and Ethereum -- and not the 65,301 BTCB on BNB Chain that is the token being decomposed (about $4.20b at the same price). Rank #5 stands; the figure measures a wider liability set than the named token."
+    },
+    {
+      "id": "F11",
+      "text": "The issuer discloses that the peg may not hold exactly: 'the amount of locked BTC may not be precisely the same as the wrapped BTC due to the delays caused by the extensive auditing process', with no bound stated on the discrepancy.",
+      "elements": [],
+      "evidence": "https://www.bnbchain.org/en/blog/btcb-on-binance-smart-chain-101 (accessed 2026-08-04)",
+      "note": "RESIDUE. At cannot express 'we publish an address, and by the way the numbers may not match, and we do not say by how much'. A disclosed but unbounded tolerance is a term of the instrument, and the vocabulary treats a reserve claim as binary."
+    },
+    {
+      "id": "F12",
+      "text": "One reserve pool is drawn against by three pegged representations of the same asset on three different ledgers -- Ethereum, BEP2 and BEP20 -- so no single representation's backing is separable.",
+      "elements": [],
+      "evidence": "https://www.binance.com/en/proof-of-collateral (accessed 2026-08-04)",
+      "note": "RESIDUE, the same shape as Coinbase F18 and unnamed for the same reason. Prohibition X8 ('shared collateral across nominally isolated markets') is the nearest rule in the algebra and is written for lending markets; the pattern here is identical and the rule cannot reach it."
+    },
+    {
+      "id": "F13",
+      "text": "Two reserve claims exist over the same custodian and must not be added together: 68,200 BTC of pegged-token collateral on the Proof of Collateral page, and 640,780.255 BTC of exchange customer reserve on the Proof of Reserves page (monthly Merkle-tree and zk-SNARK snapshot, latest 01/07/26 00:00 UTC at BTC block 956,140, ratio 100.08%), the first page carrying an explicit disclaimer that it is not the exchange's proof of reserve.",
+      "elements": [],
+      "evidence": "https://www.binance.com/en/proof-of-reserves (accessed 2026-08-04) | https://www.binance.com/en/proof-of-collateral (accessed 2026-08-04)",
+      "note": "RESIDUE, and the sharpest At finding in the category. Nothing names the risk that the two claims are the same coins. Worse: the two regimes are epistemically miles apart -- one is a self-published address list, the other a monthly zk-proven liability attestation -- and At is the only symbol available for either, so a decomposition that used At for both would assert they are the same kind of object. The zk attestation covers customer liabilities and says nothing about BTCB, so it is not part of this construction."
+    },
+    {
+      "id": "F14",
+      "text": "No independent auditor attests to the BTCB collateral specifically; no such report was found.",
+      "elements": [],
+      "evidence": "https://www.binance.com/en/proof-of-collateral (accessed 2026-08-04)",
+      "note": "RESIDUE, and flagged UNKNOWN by stage 1 rather than asserted as absence: the finding is that no attestation could be located, not that none exists. Recorded because At was assigned on the strength of F10 and a reader will otherwise assume an attester stands behind it. There is also no specification, no whitepaper describing the mechanism, no audit and no public source repository -- the canonical artefact is the verified contract itself."
+    },
+    {
+      "id": "F15",
+      "text": "A holder's transfers cannot be blocked and a holder's balance cannot be seized on-chain: the token has no freeze, no blacklist and no forced-transfer function.",
+      "elements": [],
+      "evidence": "https://bscscan.com/address/0x7130d2a12b9bcbfae4f2634d864a1ee1ce3ead9c#code (accessed 2026-08-04)",
+      "note": "RESIDUE of the guarantee-by-absence kind, and it cuts against the intuition the corpus encodes: on the one dimension a holder can actually check, the weakest-governed of the three custodial wrappers gives the strongest guarantee, because there is no code to do anything with. The vocabulary can only express this by omitting Fz, which is indistinguishable from not having looked."
+    }
+  ]
+}
