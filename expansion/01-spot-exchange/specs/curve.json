@@ -2,12 +2,23 @@
   "app": "Curve",
   "category": "01-spot-exchange",
   "source": "C:\\defiformal-work\\01-spot-exchange\\01-research.md",
-  "construction": ["St", "Sh", "Tp", "Ag", "Em", "Fd", "Tg", "Gp"],
+  "construction": [
+    "St",
+    "Sh",
+    "Tp",
+    "Ag",
+    "Em",
+    "Fd",
+    "Tg",
+    "Gp"
+  ],
   "functionalObligations": [
     {
       "id": "F1",
       "text": "a Stableswap pool quotes a swap off A*n^n*Sum(xi) + D = A*D*n^n + D^(n+1)/(n^n*Prod(xi)), obtained by scaling the constant-sum leg of chi*D^(n-1)*Sum(xi) + Prod(xi) = chi*D^n + (D/n)^n by chi = A*Prod(xi)/(D/n)^n so the curve degrades toward constant product as the pool goes out of balance, with D and xj recovered by iterative convergence in integer arithmetic inside the contract",
-      "elements": ["St"],
+      "elements": [
+        "St"
+      ],
       "evidence": "https://docs.curve.finance/pdf/whitepapers/whitepaper_stableswap.pdf (accessed 2026-08-04)",
       "note": "THE POOL INVARIANT, first of two. St fits: constant-sum near a FIXED parity, degrading to constant product with imbalance. The whitepaper's own simulation over DAI/USDC/USDT, May-Oct 2019 at $30,000 liquidity, reports optimal A = 85 and fee 0.06%. A is stored scaled by A_PRECISION = 100."
     },
@@ -42,7 +53,9 @@
     {
       "id": "F6",
       "text": "a liquidity provider holds a FUNGIBLE LP token — a pro-rata claim on the whole reserve — may deposit any subset of the coins unbalanced, and may exit either balanced or into a single coin, paying an imbalance fee calibrated so that 'a swap between USDC and USDT would pay roughly the same amount of fees as depositing USDC into the pool and then withdrawing USDT'",
-      "elements": ["Sh"],
+      "elements": [
+        "Sh"
+      ],
       "evidence": "https://docs.curve.finance/developer/amm/legacy/stableswap-overview (accessed 2026-08-04)",
       "note": "FUNGIBILITY OF THE POSITION. Sh fits exactly, and Curve is the ONLY one of the five with no non-fungible position anywhere in its DEX — the polar answer to Uniswap and PancakeSwap, which is what makes the fungible/non-fungible split a real axis rather than a detail. RESIDUE for the arbitrage-equivalence pricing of the imbalance fee: a fee calibrated so that two different action sequences cost the same has no expression."
     },
@@ -70,7 +83,9 @@
     {
       "id": "F10",
       "text": "the protocol publishes a PRICE, not an accumulator: Cryptoswap's price_oracle is an internal exponential moving average parameterised by ma_exp_time, and Stableswap-NG exposes an EMA oracle with _ma_exp_time set as time_in_seconds / ln(2); a consumer reads a number and uses it, performing no integration",
-      "elements": ["Tp"],
+      "elements": [
+        "Tp"
+      ],
       "evidence": "https://docs.curve.finance/developer/amm/factory/tricrypto-ng/deployer-api (accessed 2026-08-04)",
       "note": "APPROXIMATE, and THE PRICE-SERIES QUESTION answered the OPPOSITE way to Uniswap and Raydium, which publish accumulators the consumer must difference (uniswap.json F7, raydium.json F12). Tp collapses that distinction, and it also misses the load-bearing fact: this price is not merely exported, it is an INPUT TO THE POOL'S OWN STATE TRANSITION (F3), so manipulating it manipulates the pool's geometry rather than a downstream consumer. It is also an exponential rather than an arithmetic time weighting, which no symbol registers. Factory bounds 86 < ma_exp_time < 872542."
     },
@@ -91,14 +106,18 @@
     {
       "id": "F13",
       "text": "pools deployed by different factory generations are discovered through one interface, a MetaRegistry sitting behind an AddressProvider, and the protocol's own router constructs multi-pool routes across those generations within Curve",
-      "elements": ["Ag"],
+      "elements": [
+        "Ag"
+      ],
       "evidence": "https://docs.curve.finance/developer/amm/legacy/stableswap-overview (accessed 2026-08-04)",
       "note": "APPROXIMATE — Ag says MULTI-VENUE and this router is single-venue. Stage 1 sharpens the corpus's marker: the object solved here is REGISTRY UNIFICATION ACROSS GENERATIONS of a protocol's own code, not route construction across venues, and the two problems have nothing in common but the word routing."
     },
     {
       "id": "F14",
       "text": "CRV is minted weekly by the Minter against integrals reported by liquidity gauges, and the DAO may kill a gauge, ending its emissions without touching anyone's deposits",
-      "elements": ["Em"],
+      "elements": [
+        "Em"
+      ],
       "evidence": "https://docs.curve.finance/developer/gauges/gauges/liquidity-gauge-v6 (accessed 2026-08-04)",
       "note": "Em fits the issuance."
     },
@@ -126,7 +145,9 @@
     {
       "id": "F18",
       "text": "THE VALUE-RETURN CHANNEL IS DISTRIBUTION TO A CLAIM CLASS: 50% of every trading fee is an admin fee, routed FeeCollector -> CowSwapBurner -> Hooker -> FeeAllocator (which may divert at most 5,000 bps, 'the remaining portion (at least 50%) always flows to the FeeDistributor') -> FeeDistributor -> veCRV claimants, paid in crvUSD",
-      "elements": ["Fd"],
+      "elements": [
+        "Fd"
+      ],
       "evidence": "https://docs.curve.finance/developer/fees/overview (accessed 2026-08-04)",
       "note": "Fd fits, and this is THE ONLY GENUINE DISTRIBUTION TO A CLAIM CLASS among the five applications in this category — Uniswap and PancakeSwap destroy, Raydium accumulates, Fluid's channel is unestablished. Fd is a candidate-register symbol and is used as such. DEPARTURE from the corpus in detail: the reward token is crvUSD, not 3CRV — 'There are actually two FeeDistributors deployed, as rewards were distributed in 3CRV tokens, before a DAO vote changed the reward token to crvUSD' — so a construction assuming the 3CRV route describes a retired system. Allocator cap at https://docs.curve.finance/developer/fees/fee-allocator (2026-08-04)."
     },
@@ -140,14 +161,18 @@
     {
       "id": "F20",
       "text": "authority is split across TWO governance bodies with different thresholds over disjoint action sets: the OWNERSHIP DAO (agent 0x40907540d8a6C65c637785e8f8B742ae6b0b9968, quorum 30%, support 51%) and the PARAMETER DAO (agent 0x4eeb3ba4f221ca16ed4a0cc7254e2e32df948c5f, quorum 15%, support 60%), both voting with veCRV and executing Aragon EVM scripts",
-      "elements": ["Tg"],
+      "elements": [
+        "Tg"
+      ],
       "evidence": "https://docs.curve.finance/developer/curve-dao/governance/overview (accessed 2026-08-04)",
       "note": "APPROXIMATE — Tg treats governance as ONE delayed authority. There are two, over disjoint action sets, with different thresholds, and Tg names neither the partition nor the thresholds. The bridges lane's finding applies here too: the control elements name the facility and not the holder."
     },
     {
       "id": "F21",
       "text": "a third body may act quickly but only in one DIRECTION: a 5-of-9 Emergency DAO (0x467947EE34aF926cF1DCac093870f613C96B1E0c on Ethereum, 0x6d447e544D01a59cb0774763bf15526574CffFeD elsewhere) that 'cannot move or withdraw any user funds', may pause the Peg Stability Reserve, may REDUCE but never increase debt ceilings, may adjust Llamalend AMM fees and monetary policy 'without triggering liquidation for any users', and may set lending-vault deposit limits; pools themselves additionally expose kill_me / is_killed",
-      "elements": ["Gp"],
+      "elements": [
+        "Gp"
+      ],
       "evidence": "https://docs.curve.finance/governance (accessed 2026-08-04)",
       "note": "APPROXIMATE, and Gp is ADDED relative to the corpus, which records no emergency element for Curve at all. RESIDUE for the shape: a MONOTONE-RESTRICTED authority — may lower a bound, may never raise it — is neither a pause (Gp) nor a delay (Tg), and the constraint 'may act only where the act cannot cause a liquidation' is a restriction stated over the mechanism's own effects, which nothing in the 58 can express. Its nine members are named publicly, which is itself unrecordable."
     },
@@ -158,5 +183,12 @@
       "evidence": "https://docs.curve.finance/developer/curve-dao/governance/overview (accessed 2026-08-04)",
       "note": "RESIDUE — the vocabulary has no way to say that the effective controller of a mechanism is a third-party protocol. Stage 1 upgrades this from an observation about the ecosystem (Convex/Votium vote markets) to a fact about the protocol's own tooling, which is a stronger claim than the corpus's residue entry. Note also the reproduction constraint on any construction claiming to reimplement this AMM: the current-generation pool repositories are all-rights-reserved by Swiss Stake AG, 'published for informational purposes only', so the construction must be built from the whitepapers (F1, F2), not the code."
     }
-  ]
+  ],
+  "paper": {
+    "title": "Curve",
+    "label": "cat:dex:curve",
+    "blurb": "A depositor supplies any subset of a pool's coins, balanced or not, and receives a fungible claim on the whole reserve, exiting either balanced or into a single coin and paying an imbalance fee calibrated so that depositing one coin and withdrawing another costs about what the corresponding swap would cost. Stableswap pools quote off a hybrid of the constant-sum and constant-product invariants whose leverage term degrades toward constant product as the pool goes out of balance, concentrating liquidity at a fixed parity. Cryptoswap pools apply the same equation under a different leverage term around a moving internal price which the pool re-centres itself, consulting no external oracle and requiring no action from the provider. Settlement is atomic and per-pool, and a metapool composes by taking another pool's claim token as one of its own coins. A position ends on withdrawal --- the exchange carries no debt and so has no liquidation --- while a fixed share of every trading fee leaves the pool as an admin fee, is converted through another protocol's batch auction, and is distributed to lockers of the governance token.",
+    "witnessReason": "$Gp$ is added: the corpus records no emergency authority here and there is one, a standing multisig whose powers are directional --- it may reduce a debt ceiling and never raise one, and may move fees without causing a liquidation --- so the witness names the body and leaves the directionality as residue. $Ve$ is dropped rather than carried, and the obligations show why: the lock is at once the vote, the weight vector that directs emissions, and a rivalrous multiplier on the holder's own emission rate through a shared denominator, and one contested symbol standing for all of that would assert an identity the gauge code refutes. $Fd$ is carried and means what it says here, distribution to a claim class, which makes this the only member of the category whose value return pays a claim class. The pool arithmetic is reconstructed from the published whitepapers rather than from the repositories, which are all-rights-reserved, released for information only, and grant no right of reproduction --- a constraint on the paper, not a gap in the record.",
+    "residueNote": "Stableswap and Cryptoswap are one equation under different leverage terms, and the vocabulary names the one and not the other, so the residue here is not a missing mechanism but a cut through the middle of a parameterised family. What the cut hides is the gate: the pool moves its own centre of concentration only when an exponential moving average of its own price has passed a step and the drawdown in a named profit functional of the pool state stays inside a bounded fraction of the profit that functional has accumulated --- a self-referential price, a monotone profit ledger and a ratio-bounded transition, none of them named, and a construction modelling the gate as repeg-if-profitable admits behaviour the protocol forbids. That safety property has a deadlock documented by the protocol itself, with a remedy list: a pool which has drifted too far earns too little to afford the move and strands its liquidity, and one published escape is a deliberately loss-making trade by a third party. The gate also cannot be pinned to an artefact, because both live implementations of one pool type publish the same version string and gate the repeg on mathematically different predicates --- the deployed one linear in accumulated profit, the repository's quadratic, the former the first-order expansion of the latter, agreeing while the profit ledger is young and diverging as profit compounds. A citation of that version without a bytecode hash names an ambiguous artefact, and that is a finding about decomposing deployed systems rather than a fact about this protocol."
+  }
 }

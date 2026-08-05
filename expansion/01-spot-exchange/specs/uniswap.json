@@ -2,26 +2,42 @@
   "app": "Uniswap",
   "category": "01-spot-exchange",
   "source": "C:\\defiformal-work\\01-spot-exchange\\01-research.md",
-  "construction": ["Cp", "Cl", "Sh", "Ix", "Tp", "Fl", "Tg", "Xf"],
+  "construction": [
+    "Cp",
+    "Cl",
+    "Sh",
+    "Ix",
+    "Tp",
+    "Fl",
+    "Tg",
+    "Xf"
+  ],
   "functionalObligations": [
     {
       "id": "F1",
       "text": "a v2 pool quotes a swap off the constant-product invariant on its own two reserves: the swapper's marginal price moves monotonically against size, the LP fee is skimmed from the input, and the pair asserts that k is non-decreasing across the swap after fees",
-      "elements": ["Cp"],
+      "elements": [
+        "Cp"
+      ],
       "evidence": "https://raw.githubusercontent.com/Uniswap/v2-core/master/contracts/UniswapV2Factory.sol (accessed 2026-08-04)",
       "note": "Cp fits exactly. THE POOL INVARIANT, first of two answers this protocol gives — the fungible-reserve answer."
     },
     {
       "id": "F2",
       "text": "a v3 or v4 pool applies the same constant-product curve to VIRTUAL reserves inside the active tick range, carrying sqrtPriceX96, a current tick, a tick bitmap, per-tick liquidityNet/liquidityGross and a pool-level active liquidity, so that liquidity is a step function of price rather than a constant",
-      "elements": ["Cl", "Cp"],
+      "elements": [
+        "Cl",
+        "Cp"
+      ],
       "evidence": "https://raw.githubusercontent.com/Uniswap/v3-core/main/contracts/UniswapV3Factory.sol (accessed 2026-08-04)",
       "note": "THE POOL INVARIANT, second answer. Cl and Cp together are a genuinely good fit and this is the strongest case in the lane for the vocabulary's pool-pricing resolution being real: the pair states both the curve and its restriction to a range. Cross-checked against the v4 PoolKey (currency0, currency1, fee, tickSpacing, hooks) at https://github.com/Uniswap/v4-core/blob/v4.0.0/README.md (2026-08-04)."
     },
     {
       "id": "F3",
       "text": "a v2 liquidity provider holds a FUNGIBLE ERC-20 LP token representing a pro-rata claim on the entire reserve, redeemable at any time for its share of both assets",
-      "elements": ["Sh"],
+      "elements": [
+        "Sh"
+      ],
       "evidence": "https://raw.githubusercontent.com/Uniswap/v2-core/master/contracts/UniswapV2Factory.sol (accessed 2026-08-04)",
       "note": "FUNGIBILITY OF THE POSITION, first answer. Sh fits exactly."
     },
@@ -35,21 +51,28 @@
     {
       "id": "F5",
       "text": "fees accrue to a v3/v4 position as the difference between a range-local fee-growth index and the snapshot of that index taken when the position was opened, so the position is settled against an index rather than paid",
-      "elements": ["Ix"],
+      "elements": [
+        "Ix"
+      ],
       "evidence": "https://raw.githubusercontent.com/Uniswap/v3-core/main/contracts/UniswapV3Factory.sol (accessed 2026-08-04)",
       "note": "APPROXIMATE — Ix names a GLOBAL index that changes claim value. Here feeGrowthInside is range-local, reconstructed as feeGrowthGlobal minus the outside-values recorded at both boundary ticks, so the index a position accrues against depends on the position's own bounds. Ix is ADDED relative to the corpus decomposition, which carries no accrual element for Uniswap at all."
     },
     {
       "id": "F6",
       "text": "the LP fee is taken out of the swap INPUT and left inside the pool rather than paid out, so a v2 provider realises it as appreciation of a fungible share and a v3/v4 provider realises it by collecting against the index",
-      "elements": ["Sh", "Ix"],
+      "elements": [
+        "Sh",
+        "Ix"
+      ],
       "evidence": "https://developers.uniswap.org/llms.mdx/docs/protocols/protocol-fee/overview (accessed 2026-08-04)",
       "note": "Both symbols discharge the accounting; neither says which leg of the trade the fee is skimmed from, which is a free parameter other protocols in this lane set differently (Curve takes stableswap fees in the output token, Raydium fixes the leg per pool at creation)."
     },
     {
       "id": "F7",
       "text": "v2 and v3 publish an ACCUMULATOR, not a price: v2 stores price0CumulativeLast/price1CumulativeLast, described as 'a sum of the Uniswap price for every second in the entire history of the contract', and v3 stores a ring buffer of observations, so a consumer must read two points, difference them and divide by elapsed time to obtain a time-weighted price",
-      "elements": ["Tp"],
+      "elements": [
+        "Tp"
+      ],
       "evidence": "https://developers.uniswap.org/llms.mdx/docs/protocols/v2/concepts/oracles (accessed 2026-08-04)",
       "note": "APPROXIMATE, and this is THE PRICE-SERIES QUESTION. The protocol supplies the integral; the consumer performs the differentiation and chooses the window. Tp names 'on-chain time-weighted price' and therefore names the consumer's output, not the protocol's obligation. Curve answers the same question the other way (it publishes a price directly), so the accumulator/price distinction is a real axis the single symbol Tp collapses."
     },
@@ -77,7 +100,9 @@
     {
       "id": "F11",
       "text": "a caller may take assets out of a pool before paying for them within one settlement scope — v2/v3 flash swaps transfer out optimistically and call back before checking k, and v4 permits take() before settle() inside the unlock",
-      "elements": ["Fl"],
+      "elements": [
+        "Fl"
+      ],
       "evidence": "https://github.com/Uniswap/v4-core/blob/v4.0.0/README.md (accessed 2026-08-04)",
       "note": "Fl fits: borrow-and-repay inside one settlement scope, with the invariant check deferred to the end. This is the obligation Fl was cut for, and it is DIFFERENT from F10 — conflating them is the error the corpus's residue note warns against."
     },
@@ -105,7 +130,9 @@
     {
       "id": "F15",
       "text": "a live parameter surface is held behind a delay: UNI holders propose at a 1M threshold, vote after a 2-day delay for 7 days against a 40M quorum, and execution passes a 2-day Timelock which is v2's feeToSetter, is (through the fee adapter) v3's factory owner, and is the PoolManager's Owned.owner in v4",
-      "elements": ["Tg"],
+      "elements": [
+        "Tg"
+      ],
       "evidence": "https://developers.uniswap.org/llms.mdx/docs/ecosystem/governance/technical-reference (accessed 2026-08-04)",
       "note": "DEPARTURE from the corpus marker, which reads 'the core pool contracts are immutable ... the mechanism is beyond authority'. That is too strong and stage 1 refutes it: the fee switch, the tier registry and the per-pool protocol-fee fraction are all owner-gated and all three were exercised on 2025-12-28. The accurate statement is no upgrade path, no pause, and a live owner-gated parameter surface — and Tg names only the delay, not the code/parameter split that is the actual design. Timelock 0x1a9C8182C09F50C8318d769245beA52c32BE35BC."
     },
@@ -133,7 +160,9 @@
     {
       "id": "F19",
       "text": "on OP-Stack L2s the same channel completes on another domain: a searcher pays bridged UNI on the L2 above a 2000 UNI threshold, the Jar releases locally, and a bridge withdrawal is queued whose effect — L1 UNI sent to 0xdead — lands only after the 7-day challenge period",
-      "elements": ["Xf"],
+      "elements": [
+        "Xf"
+      ],
       "evidence": "https://github.com/Uniswap/protocol-fees (accessed 2026-08-04)",
       "note": "APPROXIMATE. Xf discharges only the transfer leg. RESIDUE for the shape: an economic act that begins on one domain and completes on another after a challenge window, with the two halves not atomic. Xf is ADDED relative to the corpus. A Wormhole NTT path (SyntheticNttUni) covers non-OP chains, and the chain surface includes a Robinhood-operated chain, id 4663."
     },
@@ -154,9 +183,18 @@
     {
       "id": "F22",
       "text": "the whole arrangement was installed in one governance act: proposal 93 executed 2025-12-28 17:55 with 125,342,017 FOR and 742 AGAINST, in eight on-chain actions including burning 100M UNI, handing v3 factory ownership to the fee controller, setting v2's feeToSetter to the Timelock and turning feeTo on, approving 40M UNI into UNIVester, and anchoring three legal agreements via AgreementAnchor",
-      "elements": ["Tg"],
+      "elements": [
+        "Tg"
+      ],
       "evidence": "https://vote.uniswapfoundation.org/proposals/93 (accessed 2026-08-04)",
       "note": "Tg discharges only the delayed execution of the batch. RESIDUE for two of the eight actions: a retroactive one-off supply destruction of 100M UNI, and the on-chain anchoring of an off-chain legal agreement, neither of which any symbol names."
     }
-  ]
+  ],
+  "paper": {
+    "title": "Uniswap",
+    "label": "cat:dex:uniswap",
+    "blurb": "A liquidity provider deposits an ordered pair of tokens into a pool identified by that pair and a fee parameter. In v2 the claim is a fungible share of the whole reserve; in v3 and v4 it is a position bounded by a lower and an upper tick, so two providers in one pool holding different ranges hold economically different instruments. No counterparty quotes the swap --- the price is read off the constant-product invariant, applied to the reserves in v2 and to virtual reserves inside the active tick range thereafter, and the fee is skimmed from the input and left in the pool, so the marginal price moves monotonically against size. Settlement moves both tokens at each pool in v2 and v3; in v4 a singleton records signed deltas in transient storage across an unlocked scope and moves only the net, release being conditional on those deltas cancelling. A position ends when its owner burns it and collects principal and accrued fees; there is no maturity, no margin call and no liquidation, because no one is ever short.",
+    "witnessReason": "The corpus records the value-return channel as a buy-and-burn, and on the evidence it is neither a purchase nor a distribution, so $Fd$ is dropped and supply destruction is left as residue: Firepit.release takes a fixed quantity of UNI from a searcher, releases the jar's balance to that searcher's recipient, and sends the UNI to the burn address, and the protocol never places a market order of its own. $Tg$ is carried against the corpus's reading that the mechanism is beyond authority --- the v3 factory owner may add a fee tier and the v2 fee setter may switch the protocol fee on, both exercised in the single governance act that installed the fee machine --- so immutability holds of the code and not of the parameters. $Xf$ is carried because that same channel completes on another domain, the L2 jar releasing locally and queueing a withdrawal whose effect lands on the settlement chain after the challenge window. Carried with $Fl$ it arms $X21$, although the flash path lives inside a pool's settlement scope and the burn path on a bridge days later, and an element set has no way to say that the two never meet.",
+    "residueNote": "What the vocabulary cannot state is most of what v4 is. A hook is not merely third-party code in the settlement path: it is a capability vector fixed at pool initialization and chosen by mining the hook's address, of which the delta-returning bits promote the hook from observer to pricer, and that promotion is the boundary between a v4 pool and an arbitrary market maker wearing a v4 interface. The category now differentiates on exactly this obligation and each protocol binds the permission set differently --- into the hook's address here, into the pool's own key at PancakeSwap, into a named controller at Fluid --- so a symbol for hooks would first have to decide whether the permissions belong to the code or to the pool. Deferred net settlement is unnamed for a separate reason: $Fl$ names borrow-and-repay in one scope, nothing is borrowed here, and the requirement that the accumulated deltas cancel at release is a conservation law over a transaction, which no symbol states. The registry deciding which curves may exist is monotone --- a tier may be added and never removed --- so it is a ratchet on the space of admissible pools rather than a parameter, and the construction discharges the pool arithmetic while missing nearly everything that separates this protocol from its own earlier generations."
+  }
 }

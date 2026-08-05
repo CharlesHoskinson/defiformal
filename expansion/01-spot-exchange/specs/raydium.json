@@ -2,19 +2,33 @@
   "app": "Raydium",
   "category": "01-spot-exchange",
   "source": "C:\\defiformal-work\\01-spot-exchange\\01-research.md",
-  "construction": ["Cp", "Cl", "Sh", "Ix", "Tp", "Em", "Up", "Gp"],
+  "construction": [
+    "Cp",
+    "Cl",
+    "Sh",
+    "Ix",
+    "Tp",
+    "Em",
+    "Up",
+    "Gp"
+  ],
   "functionalObligations": [
     {
       "id": "F1",
       "text": "an AMM v4 or CPMM pool quotes a swap off x*y=k on its two vault reserves, consulting no external oracle during a swap, deposit or withdrawal — 'Raydium's core products don't depend on external oracles for pricing: the pool state IS the oracle'",
-      "elements": ["Cp"],
+      "elements": [
+        "Cp"
+      ],
       "evidence": "https://docs.raydium.io/security/oracle-and-token-risks (accessed 2026-08-04)",
       "note": "THE POOL INVARIANT, first of three live answers. Cp fits exactly. Program IDs: AMM v4 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8, CPMM CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C, per https://docs.raydium.io/reference/program-addresses (2026-08-04)."
     },
     {
       "id": "F2",
       "text": "a CLMM pool quotes off sqrt-price and tick arithmetic with price(i) = 1.0001^i and MIN/MAX_TICK = -/+443636, carrying sqrt_price_x64, a current tick, fee-growth globals, an inline bitmap covering +/-1,024 tick arrays, and Uniswap v3's liquidity_gross / liquidity_net accounting",
-      "elements": ["Cl", "Cp"],
+      "elements": [
+        "Cl",
+        "Cp"
+      ],
       "evidence": "https://docs.raydium.io/products/clmm/ticks-and-positions (accessed 2026-08-04)",
       "note": "THE POOL INVARIANT, second answer. Cl and Cp fit together as for Uniswap. CLMM program CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK."
     },
@@ -28,7 +42,9 @@
     {
       "id": "F4",
       "text": "an AMM v4 or CPMM liquidity provider holds a FUNGIBLE SPL LP token and exits by burning it for a pro-rata slice of both vaults; there is no collect-fees instruction on either program, so fees remain in the vaults, inflate k, and are realised only implicitly at exit",
-      "elements": ["Sh"],
+      "elements": [
+        "Sh"
+      ],
       "evidence": "https://docs.raydium.io/products/cpmm/fees (accessed 2026-08-04)",
       "note": "FUNGIBILITY OF THE POSITION, first answer. Sh names the pro-rata claim. RESIDUE for the ABSENCE OF A CLAIM STEP: an LP earning that can only be realised by exiting is a different instrument from one with a callable accrual, and no symbol registers the difference."
     },
@@ -42,7 +58,9 @@
     {
       "id": "F6",
       "text": "fees accrue to a CLMM position against the pool's fee-growth globals, differenced against the position's own PersonalPositionState checkpoint",
-      "elements": ["Ix"],
+      "elements": [
+        "Ix"
+      ],
       "evidence": "https://docs.raydium.io/products/clmm/fees (accessed 2026-08-04)",
       "note": "APPROXIMATE for the same reason as Uniswap F5 — the effective index is range-local. Ix is ADDED relative to the corpus."
     },
@@ -84,7 +102,9 @@
     {
       "id": "F12",
       "text": "CPMM and CLMM each maintain an on-chain price series as a 100-entry ring in an ObservationState PDA — CPMM storing (block_timestamp, cumulative price), CLMM storing cumulative TICK — which downstream protocols consume; AMM v4, which holds the largest share of the TVL, has no observation account at all and publishes nothing",
-      "elements": ["Tp"],
+      "elements": [
+        "Tp"
+      ],
       "evidence": "https://docs.raydium.io/products/clmm/accounts (accessed 2026-08-04)",
       "note": "APPROXIMATE, and Tp is ADDED relative to the corpus, which records no price element for Raydium. THE PRICE-SERIES QUESTION: this is an ACCUMULATOR the consumer must difference and divide, as on Uniswap and unlike Curve — and CLMM accumulates TICK rather than price, so the consumer must also exponentiate, which no symbol registers. RESIDUE for the scoping: a decomposition assigns Tp to 'Raydium' and thereby asserts it of a program that does not have it."
     },
@@ -133,21 +153,27 @@
     {
       "id": "F19",
       "text": "ecosystem farms emit rewards against escrowed LP tokens in a separate MasterChef-style program (Farm v6, FarmqiPv5eAj3j1GMdMCMUGXqPUvmquZtMy86QH6rzhG) that escrows the LP token against PRE-FUNDED emissions and never calls the pool",
-      "elements": ["Em"],
+      "elements": [
+        "Em"
+      ],
       "evidence": "https://docs.raydium.io/reference/program-addresses (accessed 2026-08-04)",
       "note": "APPROXIMATE — Em names PROTOCOL-FUNDED emissions, and here the reward vault is funded at farm creation, so the funder may be a third-party project rather than the protocol; the three farm programs are closed source with no IDL (F3), so the funding party could not be established at a primary source. Em is retained because RAY emissions to farms are documented, but it is the weakest member of this construction."
     },
     {
       "id": "F20",
       "text": "every program's code can be replaced wholesale by ONE authority: all eight queried programs use BPF Loader Upgradeable and share the single upgrade authority FytDrVzDybM1TwFQPGb8qaxZR7dBCzNeqT3vtQsceZQK, none is immutable, and the docs concede 'Raydium has not set any program's upgrade authority to null'",
-      "elements": ["Up"],
+      "elements": [
+        "Up"
+      ],
       "evidence": "https://docs.raydium.io/security/admin-and-multisig (accessed 2026-08-04)",
       "note": "APPROXIMATE, and the corpus is right to mark it forced. Up names a proxy delegating to a swappable implementation; here the bytecode at the SAME ADDRESS is replaced entirely, with no delegatecall, no implementation slot, and no way for an integrator to diff what changed. RESIDUE also for the holder: the docs claim a 3/4 Squads multisig with a 24-hour timelock for upgrades and a separate 3/5 with NO timelock for treasury (which also holds program-admin powers and is described as 'an interim arrangement'), but stage 1 found the authority address to be a System-Program-owned zero-data account, consistent with a Squads vault PDA and NOT with a settings account, so the threshold and the delay are docs-only and Tg cannot be asserted. There is no on-chain token voting anywhere in Raydium."
     },
     {
       "id": "F21",
       "text": "pools can be stopped and creation disabled by that same admin: AMM v4 exposes SetParams(param=Status), CPMM exposes UpdatePoolStatus, and an AmmConfig carries disable_create_pool",
-      "elements": ["Gp"],
+      "elements": [
+        "Gp"
+      ],
       "evidence": "https://docs.raydium.io/security/admin-and-multisig (accessed 2026-08-04)",
       "note": "APPROXIMATE, and Gp is ADDED relative to the corpus. Gp names an EMERGENCY guardian; this is a routine per-pool status word held by the same authority that sweeps protocol fees, so the emergency framing is wrong and the concentration is the risk. The 2022-12-16 exploit was executed THROUGH this surface with a compromised pool-owner key — SetParams combined with AmmParams::SyncNeedTake to inflate need_take_pc/need_take_coin, then withdrawPNL (the same instruction that collects the 12%) drained the vaults — for a loss of $4,417,202.04 across nine pairs by the protocol's own published Total Loss Per Vault.csv, against a postmortem that says eight pools. SyncNeedTake was subsequently removed. https://github.com/raydium-io/dec_16_exploit (2026-08-04)."
     },
@@ -158,5 +184,12 @@
       "evidence": "https://verify.osec.io/status/CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C (accessed 2026-08-04)",
       "note": "RESIDUE — VERIFIABILITY IS A PROPERTY OF THE DEPLOYMENT, NOT OF THE CODE, and the vocabulary has no way to record its absence. This is not proof of divergence, only that nothing attests to a match. It compounds F3: a construction of 'Raydium' is a construction of three published programs plus six prose descriptions, none of which is attested to be what is running."
     }
-  ]
+  ],
+  "paper": {
+    "title": "Raydium",
+    "label": "cat:dex:raydium",
+    "blurb": "A provider deposits both sides of a pair into a constant-product pool and receives a fungible token claim on the two vaults, or chooses a price range in the concentrated pool and receives a position token whose mint authority is the program itself. The constant-product programs carry no collect-fees instruction at all, so fees stay in the vaults, inflate the invariant and are realised only on exit, whereas a concentrated position accrues against fee-growth globals differenced from its own checkpoint and is claimed explicitly. Price comes from pool state alone --- no external feed is consulted on a swap, a deposit or a withdrawal --- and settlement is atomic within a single instruction, a separate routing program composing a bounded number of pools inside one transaction. A position ends by burning the claim token, or by decreasing liquidity to nothing, collecting, and burning the position token. Nothing here can be liquidated: a concentrated position whose price leaves its range stops earning and converts wholly into one side, which is idleness rather than seizure.",
+    "witnessReason": "The corpus files this protocol's fee channel under the same buy-and-burn heading as the protocols that burn, and the grouping is invalid: they destroy their token, this one buys it on the open market and holds it in an account it controls, its supply standing essentially unchanged against its stated maximum. $Fd$ names distribution to a claim class and no claim class is paid, so it is dropped and accumulation is left as residue --- which obliges the category to treat distribution, destruction and accumulation separately where the record carried a single heading. $Tp$ is added, which the corpus omits: the constant-product and concentrated programs each maintain an on-chain price series in a ring account that downstream protocols consume, with the qualification that the oldest program, holding the largest share of the inventory, keeps none, so the symbol holds of the newer programs rather than of the protocol. $Up$ and $Gp$ rest on chain evidence rather than documentation --- every queried program shares one upgrade authority, none is immutable, and the pause surface belongs to that same admin.",
+    "residueNote": "The stable program and the launchpad each price against a curve the vocabulary cannot name, and one of them publishes no invariant at all: it is closed source, ships no interface description, and its curve is stated nowhere at a primary source. Reproducing this protocol therefore means reproducing a description rather than a codebase over a substantial part of it, and no registry attests that any deployed program matches any published source --- verifiability is a property of a deployment rather than of code, and the vocabulary has no way to record its absence. Other residues concern state rather than mechanism: tick-array accounts can never be closed and their rent is locked permanently, so the footprint can only grow, and the oldest program keeps the account layout of a mechanism deleted from its own bytecode, leaving an on-chain type provably wider than the on-chain semantics. The fee obligations fail differently again, since which leg of a trade the fee is taken from is fixed at pool creation and a pool's tier is a reference to an immutable configuration it can never change --- so a fee here is a constant of the pool rather than a rate the protocol sets."
+  }
 }
