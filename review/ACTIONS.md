@@ -42,3 +42,13 @@
 - **Positioning confirmed, not refuted.** Pol-Inv quantifies over languages and carries no cardinality-extremal content about subfamilies of a single family, so it does not settle the composable-fragment question. Stated explicitly in related work.
 - **The combinatorial question is unnamed.** Zero hits across constraint satisfaction, lattice theory and the union-closed-families literature for maximum union-closed subfamily; the Frankl work concerns families already union-closed. Recorded as a contribution claim rather than a retrieval.
 - Schaefer remark verified exact against p.222; no change needed.
+
+## Referee C (significance) - major revision
+
+- **Applied results largely restate what practitioners know.** ACCEPTED. The perpetuals result is close to definitional - nobody designs a perp DEX without a liquidation engine - and the paper no longer presents it as a discovery. Its value is that the canonical form separates order-book from oracle-pool microstructure without being told either exists, which is a statement about the method rather than about DeFi.
+- **Uniswap+Aave circularity undisclosed.** ACTIONED, and this was the sharpest finding. X2 was recorded by authors who already knew the flash-loan pattern, so the example recovers a known hazard rather than discovering one. Now stated in a provenance remark, together with what the example does show: the decompositions were made protocol by protocol without reference to X2 or to each other, and the covering was computed rather than sought, so a hazard written as a condition on one system is recovered as a property of a pair.
+- **Abstract and conclusion still claimed eight perpetual venues.** ACTIONED - framing text now matches the corrected body.
+- **No related work section.** ACTIONED in the previous cycle.
+- **Abstract inverts the emphasis.** ACTIONED - it now says the structural results are near-immediate from clause polarity and the substantive findings are diagnostic.
+- **Completeness asserted without its number.** ACTIONED - the corpus figures are inlined: not one of 72 protocols fully expressible, coverage 25 to 73 percent by category.
+- **Inconsistent citation.** ACTIONED in the previous cycle.
