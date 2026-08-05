@@ -1,90 +1,68 @@
-# DefiElements
+# defiformal
 
-A unified, typed vocabulary for describing what DeFi protocols mechanically do —
-elements, groups, strata, typed bonds, composition laws, hazard rules and an
-honest statement of what the model cannot explain.
+An algebra of mechanism composition for decentralised finance.
 
-## The deliverable
+A vocabulary of 58 recurring on-chain financial mechanisms, extracted from 72
+deployed protocols across 12 categories, together with the constraints saying
+which mechanisms require which others and which combinations are forbidden — and
+an investigation of what, if anything, composition preserves.
 
-**[`docs/UNIFIED-DEFI-ELEMENT-TABLE.md`](docs/UNIFIED-DEFI-ELEMENT-TABLE.md)** —
-The DeFi State-Transition Atlas, v1.0. Start at §1 (Quickstart); the complete
-worked example is Appendix A.
+**The paper is `paper/atlas.tex`.** Build it with `./paper/build.sh`.
 
-48 core elements · 10 candidates · 10 provisional · 16 groups · 5 strata ·
-4 bond types · 29 required-bond laws · 19 hazard rules.
+## What is established
 
-## The visualisation
+- **Polarity.** Requirements and warrants are dual-Horn, prohibitions Horn. So the
+  protocols satisfying requirements and warrants form a complete lattice under
+  union, which admissibility does not inherit. This is an instance of the
+  Pol–Inv characterisation, not a new result.
+- **The deterministic fragment is a convex geometry.** A union-stable closure is
+  anti-exchange iff its specialization digraph is acyclic; ours is. Verified
+  exhaustively over all 1.44 × 10¹⁶ closed sets, and formalised in Lean 4.
+- **Composition on canonical forms is linear.** Every protocol has a unique
+  minimal generator, and the generator of a composite is computable from the
+  generators of its parts without consulting the rest of the vocabulary.
+- **The positive theory does not bind.** Its 79 clauses exclude no element across
+  any of the 72 protocols. The vocabulary rejects; it does not predict.
 
-`viz/` — a browser view of the atlas. Build it with:
+## What is not
 
-```bash
-cd viz && npm install && npm run build
-```
-
-The result is a single self-contained `dist/index.html` — **16.3 KB gzipped**
-against a 150 KB budget, with no external requests.
-
-`npm run check` runs the conformance harness that gates the build: colour-vision
-simulation across both themes, text contrast, payload budget, banned
-dependencies, accessible-name template, and a data/document sync check. It
-caught four real defects during development.
-
-Its design brief was **decided by a six-lane blinded design council**, not by the
-implementer. See `openspec/changes/design-atlas-visualization/` for the proposal,
-ten design decisions with rationale, five capability specs and the task list; and
-[`council/design/COUNCIL-DESIGN-LOG.md`](council/design/COUNCIL-DESIGN-LOG.md)
-for the 41 findings, the six tension rulings and four preserved dissents.
-
-The council cut an earlier three.js direction: with the non-semantic layouts
-gone, both surviving arrangements are planar, so a scene graph was weight with no
-return. It also removed hue from the stratum ramp after two lanes independently
-computed that the hazard red and the deepest stratum collapsed to one swatch
-under deuteranopia.
-
-## How it was built
-
-1. **Four source reports** (`corpus/`) — two independent "periodic table of
-   DeFi" derivations and two independent CAKE unifications of them.
-2. **Knowledge graph** (`graphify-out/`) — 421 nodes, 1029 edges, 19
-   communities. `graph.html` is interactive; `GRAPH_REPORT.md` is the audit
-   trail. Its most useful structure is 16 explicit *dispute* hyperedges linking
-   the positions each source took on a contested question.
-3. **Reconciliation** → `docs/unified-v0.1.md`.
-4. **Blinded council review** (`council/`) — six expert lenses across three
-   provider families, author identity sealed. All eight completed lanes returned
-   `changes_requested`; 84 findings.
-5. **Iteration** → v1.0. Every finding dispositioned in
-   [`council/COUNCIL-LOG.md`](council/COUNCIL-LOG.md); the change itself is
-   `docs/v0.1-to-v1.0.patch`.
-6. **Design council** → the visualisation brief, then the build.
+The order structure of the admissible sets is unknown. Composition failure comes
+from constraints that are neither Horn nor dual-Horn, and so lie outside the
+classification that explains the structure. And the vocabulary is not complete:
+not one of the 72 protocols is fully expressible, with coverage degrading as more
+of a protocol lives off-chain — which is inversely correlated with capital held.
 
 ## Layout
 
-```
-corpus/                     the four source reports
-graphify-out/               knowledge graph (html, json, report)
-council/
-  BUNDLE-blinded.md         exactly what reviewers saw
-  BUNDLE.sha256             bundle identity
-  REVIEW-BRIEF.md           the review contract
-  reports/                  raw per-lane verdicts (JSON)
-  COUNCIL-LOG.md            findings register, dispositions, preserved dissent
-  design/                   the design council: bundle, verdicts, decision log
-viz/
-  src/data.ts               typed export, kept in sync with the document
-  src/main.ts               the application
-  scripts/conformance.mjs   the build gate
-openspec/changes/design-atlas-visualization/
-                            the decided design brief
-docs/
-  UNIFIED-DEFI-ELEMENT-TABLE.md   <- v1.0, the deliverable
-  unified-v0.1.md                  pre-council draft
-  v0.1-to-v1.0.patch               the iteration, as a diff
-```
+| | |
+|---|---|
+| `paper/` | the paper, its bibliography, and a build script that fails loudly |
+| `lean/` | Lean 4 + mathlib formalisation (`lake exe cache get` then `lake build`) |
+| `formal/` | Quint models and the verification harnesses |
+| `corpus50/` | the 72 protocol decompositions, from three independent blind lanes |
+| `algebra/` | requirements, the theorem ledger, results as graph nodes, research |
+| `review/` | referee reports and the record of what was actioned |
+| `viz/` | the element data, the law engine, and the visualisation backlog |
+| `papers/` | inventories of the literature (PDFs are gitignored) |
 
-## Reading the council logs first
+## Method
 
-If you only want to know whether to trust any of this: read
-`council/COUNCIL-LOG.md` §7 (preserved dissent), the atlas's §20.3 (what is
-unmeasured and owed), and `council/design/COUNCIL-DESIGN-LOG.md` §5. All three
-are deliberately unflattering.
+Claims carry their epistemic status in their environment: **theorem** means
+proved, **measurement** means established computationally with the instance and
+bound stated, **conjecture** means believed with the evidence named. Measurements
+are marked *exhaustive* or *sampled*. The paper states results; the working
+record of what was refuted along the way lives in `algebra/THEOREM-LEDGER.md`
+and `review/ACTIONS.md`.
+
+Every substantive claim was attacked before it was kept. Three referee reports
+returned major revision; the findings and their resolutions are in `review/`.
+
+## Reproducing
+
+```bash
+./paper/build.sh                              # the paper
+cd lean && lake exe cache get && lake build   # the formalisation
+node formal/v2/pairs.mjs                      # which protocols compose
+node formal/v2/canonical.mjs                  # canonical forms of the corpus
+node formal/v2/antiexchange.mjs               # the convex-geometry check
+```
