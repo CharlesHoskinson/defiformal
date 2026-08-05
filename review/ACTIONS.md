@@ -25,3 +25,11 @@
 - **Lean work claimed nowhere in the paper.** ACTIONED - a section now states what is formalised and, honestly, that the polarity lemma is immediate from its Lean definition.
 - OUTSTANDING: meas:frag stored output terminates in an uncaught TypeError; the figure needs recomputation before it can stand.
 - CONFIRMED by the referee and retained: the 179,864,061-pair enumeration is genuinely exhaustive and correctly labelled; the whole of the pairwise composition section reproduces exactly, including the Uniswap and Aave witness.
+
+## Review loop cycle 1
+
+- **Naked attributions (8).** ACTIONED. Cites added for Avron, Tarski (twice), Caspard-Monjardet, Edelman-Jamison, Edelman 1980, Isbell/Edmonds-Fulkerson, and Grotschel-Lovasz-Schrijver. The remaining grep hit is a false positive: Schaefer is named on one line and cited on the next. Bibliography is now 20 entries with zero bibtex warnings.
+
+- **meas:frag outstanding major from Referee B.** ACTIONED by downgrade rather than repair. Its only stored output terminates in an uncaught TypeError, so the certification rate it reported is not reproducible. The measurement is now a conjecture asserting only the witnessed lower bound of 11026, with the rate explicitly not claimed. If the computation is repaired it can be promoted back.
+
+- Step 4, the honest question: meas:frag was the claim I could not have defended, which is why it was downgraded in the same turn rather than recorded as pending.
