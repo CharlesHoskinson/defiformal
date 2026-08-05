@@ -2,19 +2,31 @@
   "app": "KyberSwap",
   "category": "08-intents",
   "source": "C:\\defiformal-work\\08-intents\\01-research.md",
-  "construction": ["Ag", "Rf", "In", "Fd", "Ep", "Au", "Xf"],
+  "construction": [
+    "Ag",
+    "Rf",
+    "In",
+    "Fd",
+    "Ep",
+    "Au",
+    "Xf"
+  ],
   "functionalObligations": [
     {
       "id": "F1",
       "text": "a route is constructed for a user who named no venue, across four classes of liquidity at once: automated market makers, order-book venues, the operator's own limit orders, and off-chain market-maker quotes",
-      "elements": ["Ag"],
+      "elements": [
+        "Ag"
+      ],
       "evidence": "https://docs.kyberswap.com/kyberswap-solutions/kyberswap-aggregator (accessed 2026-08-05)",
       "note": "Over 400 venues on 25 networks. Unlike every other application in this lane, the simulation half of the route computation is public and inspectable (see F19). One further property that Ag cannot carry: the router is deployed at the IDENTICAL address on every supported chain (MetaAggregationRouterV2 at 0x6131B5fae19EA4f9D964eAc0408E4408b66337b5, https://docs.kyberswap.com/developer-guide/aggregator-api/contracts.md, accessed 2026-08-05), which is the exact inverse of OKX F14, where the settlement address is deliberately not a constant. The vocabulary expresses neither policy and so cannot distinguish a settlement layer you can pin from one you must ask an API about."
     },
     {
       "id": "F2",
       "text": "quotes are obtained off-chain from private market makers and settled on-chain only in the cases where they beat the on-chain alternative; callers may exclude those sources by name",
-      "elements": ["Rf"],
+      "elements": [
+        "Rf"
+      ],
       "evidence": "https://docs.kyberswap.com/kyberswap-solutions/kyberswap-aggregator (accessed 2026-08-05)",
       "note": "DEPARTURE FROM THE CORPUS, which decomposes KyberSwap as {Ag} alone. The API exposes excludeRFQSources and the documentation states the settle-only-if-better rule, so this is a documented quote class rather than an inference. The quote's firmness is not documented, but no last look is documented either, so unlike Jupiter F7 there is no positive evidence against Rf."
     },
@@ -35,7 +47,9 @@
     {
       "id": "F5",
       "text": "the user grants spending authority either as a standing token allowance to the router or as a signed permit carried in the build request",
-      "elements": ["Au"],
+      "elements": [
+        "Au"
+      ],
       "evidence": "https://docs.kyberswap.com/developer-guide/aggregator-api/aggregator-api-specification/evm-swaps.md (accessed 2026-08-05)",
       "note": "APPROXIMATE, but the best instance of Au in this lane: a permit carries expiry and nonce and so satisfies more of L17 than the bare approval contracts at LiquidMesh F17 and OKX F13. The allowance alternative still arms X16."
     },
@@ -91,7 +105,10 @@
     {
       "id": "F13",
       "text": "the captured surplus accrues over seven-day cycles, passes a 48-hour validation window, and is then distributed weekly in the pair's own tokens, 70 percent to the pool's liquidity providers and 30 percent to the hook's owner, to enrolled pools only and with no staking required",
-      "elements": ["Fd", "Ep"],
+      "elements": [
+        "Fd",
+        "Ep"
+      ],
       "evidence": "https://docs.kyberswap.com/user-guide/kyberswap-fairflow/fairflow-details.md (accessed 2026-08-05)",
       "note": "Fd is CANDIDATE-REGISTER and approximate: the object distributed is captured arbitrage, not protocol fee revenue, and one of the two recipients is the operator in its capacity as owner of the exclusivity rather than as a claim holder. Ep is a clean fit for the seven-day cycle plus 48-hour validation window before a distribution becomes claimable; the on-chain accounting is public at https://github.com/KyberNetwork/kyber-exclusive-amm-sc (accessed 2026-08-05). This is the price at which liquidity providers sell a monopsony, and only the payment half of that transaction is expressible."
     },
@@ -119,14 +136,19 @@
     {
       "id": "F17",
       "text": "a signed-intent router is deployed for intent-based liquidity withdrawal, with separate hashing, nonce, accounting and storage contracts and its own hooks",
-      "elements": ["In"],
+      "elements": [
+        "In"
+      ],
       "evidence": "https://github.com/KyberNetwork/smart-intent-sc and https://docs.kyberswap.com/llms.txt (accessed 2026-08-05)",
       "note": "DEPARTURE FROM THE CORPUS {Ag}, and the weakest element assignment in this spec. In is asserted on a GPL-3.0 public repository whose contract set (router, hasher, nonces, accounting, storage) is the shape of a signed-order system, plus a product-list entry for Smart Exit described as intent-based liquidity withdrawal. THE SOLVER HALF IS UNKNOWN: no source establishes a solver set, an auction, a settlement guarantee or a timeout, so three of L12's four parts are unevidenced. If stage 3 requires L12 to be evidenced part by part, this should degrade to residue; it is carried because the corpus itself carries In at Jupiter on a weaker basis."
     },
     {
       "id": "F18",
       "text": "a cross-chain swap behind the same brand moves assets between 23 chains, including to and from non-EVM domains, at fees that vary by corridor",
-      "elements": ["Ag", "Xf"],
+      "elements": [
+        "Ag",
+        "Xf"
+      ],
       "evidence": "https://docs.kyberswap.com/getting-started/fee-schedule.md (accessed 2026-08-05)",
       "note": "Xf IS DISCHARGED BY DELEGATION to the bridges routed across, exactly as at OKX F17, and KyberSwap supplies neither Xm nor a named custodian. Stage 3 will therefore see Xf without Xm; that verdict records the vocabulary's missing composition operator, not a defect in KyberSwap. Corridor pricing (0.05 to 0.25 percent EVM to EVM, 0.25 percent for Bitcoin) is itself unnameable."
     },
@@ -144,5 +166,12 @@
       "evidence": "https://docs.kyberswap.com/user-guide/kyberswap-fairflow/solution-fairflow.md (accessed 2026-08-05)",
       "note": "RESIDUE, and the central one. Order-flow ownership stated as its own obligation per the stage-2 brief. DEPARTURE FROM THE CORPUS: the corpus claims KyberSwap decomposes identically to LiquidMesh. It does not. LiquidMesh owns no venue and no user, publishes nothing, hands the fee lever to whoever owns the user, and earns by selling latency and backrunning its own flow; KyberSwap owns exclusive venues in which it is the sole permitted taker, publishes its simulators, and earns from positive slippage. Their economic positions are opposites and they collide on Ag only because Ag names route construction and stops. Note also that the corpus was right about the missing axis but aimed one short: the sharpest counterexample is about who owns the VENUE, not who owns the order."
     }
-  ]
+  ],
+  "paper": {
+    "title": "KyberSwap",
+    "label": "cat:int:kyberswap",
+    "blurb": "A router that has become a venue owner: it now holds pools on two major exchanges where it is the only permitted taker, on a revenue split. The corpus records it as a bare router, which its current arrangement contradicts.",
+    "witnessReason": "The witness adds four elements the corpus omits --- a quote mechanism, an intent path, a fee distribution and an epoch gate --- each supported at the venue's own documentation. The corpus record predates all of them.",
+    "residueNote": "Exclusivity over a venue is not the same obligation as routing to one, and the vocabulary has a symbol only for the second. A router that owns the pool it routes to, and is the only party allowed to trade against it, is a different object from a router; the model writes them the same way."
+  }
 }

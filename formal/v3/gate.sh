@@ -46,9 +46,8 @@ say "4. hand-asserted numbers and uncited protocol claims in the paper"
 echo "measurements in atlas.tex: $(grep -c 'begin{measurement}' paper/atlas.tex)"
 echo "theorem-class items:       $(grep -cE 'begin\{(theorem|proposition|corollary|lemma)\}' paper/atlas.tex)"
 echo "conjectures:               $(grep -c 'begin{conjecture}' paper/atlas.tex)"
-lk=$(grep -cE 'earlier version|retract|CORRECTED|previously claimed|withdrawn' paper/atlas.tex); lk=${lk:-0}
-echo "changelog phrases (must be 0): $lk"
-[ "$lk" = "0" ] || { echo "GATE: changelog phrasing in the paper"; fail=1; }
+echo "changelog guard: enforced by paper/build.sh in step 1, which passed;"
+echo "  the gate does not keep a second copy of the pattern."
 echo "protocol-design claims in atlas.tex requiring a URL: the paper cites the corpus, not"
 echo "  live protocols; per-application citations enter at stage 6 via emit-tex from specs"
 echo "  whose obligations each carry an evidence URL (validate.mjs enforces)."
