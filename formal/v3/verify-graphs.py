@@ -176,7 +176,10 @@ check("07-bridges nodes", len(load("%s/07-bridges/graphify-out/graph.json" % ROO
 check("lanes with isolated nodes", len(thin), 4)
 check("lanes with none", 12 - len(thin), 8)
 
-print("\n%s" % ("GRAPH CLAIMS VERIFIED" if not fail else "GRAPH CLAIMS VIOLATED"))
 for f in fail:
     print("  ", f)
+# The verdict is printed LAST. The gate matches on tail -1, so anything after
+# it hides it; this printed the verdict first and the failures after, which
+# left the gate correct only by accident.
+print("\n%s" % ("GRAPH CLAIMS VERIFIED" if not fail else "GRAPH CLAIMS VIOLATED"))
 sys.exit(1 if fail else 0)

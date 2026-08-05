@@ -53,10 +53,11 @@ for f in orphan[:5]:
     fail.append("%s has no protocol node in the domain graph" % f)
 
 print()
+for f in fail:
+    print("   ", f)
+# verdict last: the gate matches on tail -1
 if fail:
     print("COVERAGE INCOMPLETE")
-    for f in fail:
-        print("   ", f)
 else:
     print("LANE COVERAGE COMPLETE: every markdown file is in its lane graph "
           "and every spec is in the domain graph")
