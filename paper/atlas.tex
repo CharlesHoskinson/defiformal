@@ -23,9 +23,9 @@
 \newcommand{\lfp}{\operatorname{lfp}}
 \newcommand{\gfp}{\operatorname{gfp}}
 \newcommand{\El}{\mathcal{E}}
-\newcommand{\Law}{\mathcal{R}}
-\newcommand{\Haz}{\mathcal{H}}
-\newcommand{\War}{\mathcal{W}}
+\newcommand{\Law}{\mathsf{Req}}
+\newcommand{\Haz}{\mathsf{Proh}}
+\newcommand{\War}{\mathsf{War}}
 
 \title{An Algebra of Mechanism Composition\\
 \large Structure and obstruction in a vocabulary of on-chain financial mechanisms}
@@ -41,8 +41,7 @@ together with two families of constraints: \emph{requirements}, stating what a
 mechanism needs, and \emph{prohibitions}, stating which combinations are
 forbidden. We show that requirements and warrants are dual-Horn while prohibitions are
 Horn; that consequently the protocols satisfying requirements and warrants form
-a complete lattice under union, and that prohibitions are the sole obstruction to
-admissibility inheriting it; that the resulting opposition of polarities
+a complete lattice under union, which admissibility does not inherit; that the resulting opposition of polarities
 obstructs approximation fixpoint theory and interlaced bilattices for one common
 reason; that reasoning over the full powerset collapses for reasons intrinsic to
 the constraint set rather than to any operator; and that the positive theory does
@@ -128,9 +127,9 @@ more useful than either refutation on its own.
 
 What survives is proved rather than measured, and follows from clause polarity
 alone. Requirements and warrants are both dual-Horn, so the protocols satisfying
-them are closed under union and form a complete lattice; prohibitions are Horn,
-destroy that closure, and are the sole obstruction to admissibility inheriting
-it. A lattice says little about any individual protocol, so the stronger result
+them are closed under union and form a complete lattice; prohibitions are Horn and destroy that closure. Every observed
+composition failure arises from conditional constraints that are neither Horn nor
+dual-Horn and so fall outside this classification. A lattice says little about any individual protocol, so the stronger result
 concerns the deterministic core. Restricted to requirements with a single consequent, the
 closure appears to satisfy the anti-exchange property, making it a \emph{convex
 geometry} --- and in a convex geometry every closed set has a unique minimal
@@ -303,8 +302,8 @@ and $\El$, hence a complete lattice under inclusion with $\bigvee = \bigcup$.
 
 \begin{proof}
 Intersections of dual-Horn model classes are dual-Horn, so union-closure is
-inherited from Lemma~\ref{lem:polarity} and Theorem~\ref{thm:closure}. Both
-$\emptyset$ and $\El$ satisfy every clause with a nonempty antecedent. A
+inherited from Lemma~\ref{lem:polarity} and Theorem~\ref{thm:closure}. Both $\emptyset$ and $\El$ satisfy every clause with a nonempty antecedent,
+$\El$ because every consumer set and every requirement term is nonempty. A
 union-closed family with a top element is a complete lattice, joins being unions
 and meets the union of all common lower bounds.
 \end{proof}
@@ -339,7 +338,7 @@ pairs with no failure.
 
 \begin{measurement}\label{meas:latticeconf}
 Over $175{,}230$ pairs from $\mathcal{R} \cap \mathcal{W}$ there are $0$
-union-closure violations. Meet is not intersection: $51{,}917$ pairs have
+union-closure violations. Meet is not intersection: circa $50{,}400$ pairs (three reruns: $50{,}223$, $50{,}611$, $50{,}276$) have
 $X \cap Y \notin \mathcal{R} \cap \mathcal{W}$.
 \end{measurement}
 
@@ -382,16 +381,16 @@ deflationary and monotone; its fixed points are exactly $\mathcal{W}$.
 \section{Obstructions}\label{sec:obstructions}
 
 \begin{theorem}[Bilattices]\label{thm:bilattice}
-No interlaced bilattice on $\Fix(\Gamma) \times \Fix(\Delta)$ has $\Adm$ as a
+No interlaced bilattice on $\mathcal{R} \times \mathcal{W}$ has $\Adm$ as a
 definable object.
 \end{theorem}
 
 \begin{proof}[Proof sketch]
 By Avron's representation theorem every interlaced bilattice is isomorphic to a
-componentwise product $L \odot R$, uniquely. Taking $L = \Fix(\Gamma)$ and
-$R = \Fix(\Delta)$ yields pairs with no constraint tying the coordinates, whereas
-$\Adm$ is precisely the diagonal $\{(x,x)\}$. A componentwise structure cannot
-distinguish it. Moreover a bilattice would make $\Adm$ a lattice under both
+componentwise product $L \odot R$, uniquely. Taking $L = \mathcal{R}$ and
+$R = \mathcal{W}$ yields pairs with no constraint tying the coordinates, whereas the object of
+interest is the diagonal $\{(x,x)\}$, of which $\Adm$ is a subset. A componentwise
+structure cannot distinguish the diagonal from its ambient product. Moreover a bilattice would make $\Adm$ a lattice under both
 orders, contradicting Theorem~\ref{lem:polarity}.
 \end{proof}
 
@@ -563,8 +562,12 @@ requires a party sort carrying obligor, attester and jurisdiction.
 
 \section{Composition}
 
-\begin{definition}
-$X \oplus Y \coloneqq \Gamma(X \cup Y)$.
+\begin{definition}[Composition]\label{def:oplus}
+$X \oplus Y \coloneqq Cn(X \cup Y)$, where $Cn$ is the definite closure of
+Definition~\ref{def:cn}. No closure operator exists for the disjunctive
+requirements (\S\ref{sec:models}), so composition is defined on the deterministic
+fragment and every statement about $\oplus$ below is a statement about that
+fragment.
 \end{definition}
 
 \begin{theorem}\label{thm:noncong}
@@ -581,18 +584,17 @@ is a different predicate and fails.
 \begin{measurement}\label{meas:frag}
 A union-closed fragment $F \subseteq \Adm$ with $|F|/|\Adm| = 0.478$ certifies
 $59\%$ of live protocol pairs with no errors. $F$ is a join-semilattice, not a
-sublattice; maximality is open in $[11026,\,23055)$.
+sublattice; the lower bound $11026$ is witnessed; no non-trivial upper bound is known, the stated $23055$ being $|\Adm|$ itself.
 \end{measurement}
 
-\begin{measurement}[Width dependence]\label{meas:width}
-Composition success depends on maximum disjunctive width $w$: rates
-$0.925, 0.710, 0.655, 0.684$ for $w = 1,\dots,4$, with union-closure falling from
-$0.75$ to $0.13$ between $w=1$ and $w=2$. These are Monte-Carlo runs on synthetic
-$2^8$ atlases rather than on the corpus, and are reported as indicative only.
-\end{measurement}
+\begin{remark}[Width, indicatively]
+Monte-Carlo runs on synthetic $2^8$ atlases suggest composition success falls as
+maximum disjunctive width rises. We report this as an indication only: it is not
+computed from the corpus and no inference in this paper depends on it.
+\end{remark}
 
 \begin{remark}[Corrected]
-It is tempting to read Measurement~\ref{meas:width} as showing that the recurring
+It is tempting to read the width runs as showing that the recurring
 ``good fragment'' phenomenon is a \emph{single} effect parameterised by
 disjunctive width. That is half right, and the half that is wrong matters.
 Proposition~\ref{prop:twoeffects} separates the two causes: prohibitions destroy
@@ -650,8 +652,8 @@ $224{,}025$ closed sets gives $0$ invariance failures.
 \end{measurement}
 
 \begin{corollary}\label{cor:residual}
-If $C$ is the residual of $R$ then $\Delta$ is $\Gamma$-invariant, and
-$\Fix(\Gamma) \cap \Fix(\Delta)$ is a complete lattice by Tarski's theorem.
+If $C$ is the residual of $R$ then $\Delta$ is $\mathcal{R}$-invariant, and
+$\mathcal{R} \cap \mathcal{W}$ is a complete lattice by Tarski's theorem.
 \end{corollary}
 
 \begin{measurement}[The repair destroys the operator]\label{meas:tradeoff}
@@ -695,7 +697,7 @@ would recover the structure theorem honestly. Whether one exists is open.
 On the definite fragment a closure operator does exist, and its structure is
 determined completely by two conditions, both of which our instance satisfies.
 
-\begin{definition}[Definite closure and its digraph]
+\begin{definition}[Definite closure and its digraph]\label{def:cn}
 Let $Cn$ be the closure generated by the requirements whose terms are singletons.
 Write $D$ for the digraph on $\El$ with an arc $s \to e$ for each such rule
 $s \to \{e\}$, and $\preceq$ for the specialization preorder
@@ -703,8 +705,8 @@ $a \succeq b \iff b \in Cn(\{a\})$.
 \end{definition}
 
 \begin{lemma}[Singleton premises; Caspard--Monjardet 2004, \S3]\label{lem:cm}
-For a single implication $A \to B$ the induced closure system is union-stable if
-and only if $|A| = 1$, or $A = \emptyset$ and $|B| = 1$. The condition is on the
+For a single implication $A \to B$ with $B \neq \emptyset$ the induced closure
+system is union-stable if and only if $|A| = 1$, or $A = \emptyset$ and $|B| = 1$. The condition is on the
 \emph{premise}, not the consequent: a two-element premise already destroys
 union-stability.
 \end{lemma}
@@ -746,7 +748,7 @@ $\mathrm{ex}(A) = \max_{\preceq}(A)$, its set of $\preceq$-maximal elements.
 \end{corollary}
 
 \begin{theorem}[Composition on canonical forms]\label{thm:excomp}
-For closed $A, B$,
+Assume $D$ acyclic (Corollary~\ref{cor:ourconvex}). For $Cn$-closed $A, B$,
 \[
   \mathrm{ex}(A \oplus B) \;=\; \max\nolimits_{\preceq}\bigl(\mathrm{ex}(A) \cup \mathrm{ex}(B)\bigr),
 \]
@@ -755,7 +757,7 @@ computable in time linear in $|\mathrm{ex}(A)| + |\mathrm{ex}(B)|$.
 
 \begin{proof}
 Union-stability gives $A \oplus B = Cn(A \cup B) = A \cup B$, and acyclicity
-(Theorem~\ref{thm:convex}) makes $\preceq$ a partial order, so the down-set
+(Corollary~\ref{cor:ourconvex}) makes $\preceq$ a partial order, so the down-set
 generated by the union is generated by the $\preceq$-extremal elements of the
 union of the generators.
 \end{proof}
@@ -878,6 +880,17 @@ Accessibility on the admissible side cannot be used to corroborate anti-exchange
 on the closure side.
 \end{remark}
 
+\section{Machine-checked fragment}\label{sec:lean}
+
+Lemma~\ref{lem:polarity}, Theorem~\ref{thm:closure}, Corollary~\ref{cor:lattice},
+Theorem~\ref{thm:convex} and Theorem~\ref{thm:excomp} are formalised in Lean~4
+against mathlib: the development builds with no \texttt{sorry} and no custom
+axioms, every declaration depending only on \texttt{propext},
+\texttt{Classical.choice} and \texttt{Quot.sound}. The formalisation is of the
+abstract statements; the atlas itself is not formalised, and
+Lemma~\ref{lem:polarity} is immediate from the Lean definition of a dual-Horn
+clause, so its formal proof carries less weight than its statement suggests.
+
 \section{Applying the canonical form to the corpus}\label{sec:apply}
 
 Corollary~\ref{cor:ex} assigns each protocol a canonical form. Computing it for
@@ -885,32 +898,41 @@ the $72$ decomposed protocols yields statements about named systems that the raw
 element sets do not support.
 
 \begin{measurement}\label{meas:compress}
-The specialization poset has $13$ arcs and exactly $10$ non-maximal elements. Of
+The specialization poset has $12$ distinct arcs and $10$ non-maximal elements. Of
 the $72$ protocols, $29$ have a strictly smaller canonical form.
 \end{measurement}
 
-\begin{proposition}[Derived solvency machinery in perpetual venues]\label{prop:perps}
-For every perpetual futures venue in the corpus --- Hyperliquid, ApeX, Aster,
-Lighter, edgeX, GMX~v2, Derive and Aevo --- the canonical form omits exactly
-$\{Ct, Ex, Li\}$: the collateral test, the price oracle and the liquidation
-incentive. Hyperliquid reduces from $14$ mechanisms to $11$, GMX~v2 from $13$ to
-$10$, Derive from $14$ to $11$.
-\end{proposition}
+\begin{measurement}[Derived solvency machinery in order-book venues]\label{prop:perps}
+The perpetuals category contains seven protocols. For six of them --- Hyperliquid,
+ApeX, Aster, Lighter, edgeX and GMX~v2 --- the canonical form omits exactly
+$\{Ct, Ex, Li\}$: the collateral test, the price oracle and the incentivised
+liquidator. Hyperliquid reduces from $14$ mechanisms to $11$ and GMX~v2 from $13$
+to $10$. The two order-book options venues, Derive and Aevo, exhibit the same
+signature.
+\end{measurement}
+
+\begin{measurement}[The exception, and why]\label{meas:jupiter}
+The seventh, Jupiter Perpetual Exchange, drops nothing: its canonical form has
+the same eight mechanisms as its element set. It is the only oracle-priced pool
+venue in the category, carrying $Pm$ and no $Pf$, so no requirement arc reaches
+$Ct$, $Ex$ or $Li$ and each is primitive in it.
+\end{measurement}
 
 \begin{remark}
-Proposition~\ref{prop:perps} is a statement one cannot make about element sets.
-It says that no perpetual venue in the corpus \emph{chooses} to have a collateral
-test, an oracle, or an incentivised liquidator: each follows by necessity from
-what the venue does choose, and the eight venues agree on this to the symbol.
-The design freedom in a perpetual exchange lies entirely elsewhere.
+The pair is more informative than a uniform claim would have been. Among venues
+that match orders, the collateral test, the oracle and the liquidator are not
+design choices but consequences, and six independent implementations agree to the
+symbol. Among venues that price against a pool they are choices. The canonical
+form separates the two microstructures without being told about either, which is
+a distinction the raw element sets do not make.
 \end{remark}
 
-\begin{proposition}[The collateral test is never primitive]\label{prop:ct}
+\begin{measurement}[The collateral test is never primitive]\label{prop:ct}
 $Ct$ is absent from the canonical form of every lending and collateralised-debt
 protocol in the corpus: Aave~v3 ($17 \to 16$), Morpho, SparkLend, JustLend,
 Compound~v3, Sky, USDD, Lista, Liquity, crvUSD, Fluid, Steakhouse, Maple,
 Rysk and Panoptic.
-\end{proposition}
+\end{measurement}
 
 \begin{remark}
 Together with Proposition~\ref{prop:perps} this identifies $Ct$ as the most
@@ -919,11 +941,11 @@ has it, and a primitive in none. A taxonomy that lists it beside genuinely
 independent mechanisms overstates its status.
 \end{remark}
 
-\begin{proposition}[Canonical form does not resolve the fibres]\label{prop:fibres}
+\begin{measurement}[Canonical form does not resolve the fibres]\label{prop:fibres}
 Passing to canonical forms neither merges nor separates any pair: the collision
 classes on canonical forms are exactly those on full element sets --- USDT/USD1,
 LiquidMesh/KyberSwap, Binance~Wallet/OKX~DEX, Jupiter/1inch.
-\end{proposition}
+\end{measurement}
 
 \begin{remark}
 The indistinguishability of USDT and USD1 is therefore not an artefact of
@@ -952,17 +974,17 @@ three additionally arm a recorded hazard row. Requirements, warrants and
 grounding contribute no failures.
 \end{measurement}
 
-\begin{proposition}[Failure is a cross-category phenomenon]\label{prop:crosscat}
+\begin{measurement}[Failure is a cross-category phenomenon]\label{prop:crosscat}
 Of the $185$ failing pairs, $182$ join protocols from different categories and
 $3$ from the same. Composition within a category is essentially always safe;
 composition across categories is where the risk lives.
-\end{proposition}
+\end{measurement}
 
-\begin{proposition}[The most composition-hostile protocols]\label{prop:hostile}
+\begin{measurement}[The most composition-hostile protocols]\label{prop:hostile}
 Ranked by number of incompatible partners out of $60$: Uniswap and PancakeSwap
 ($31$ each), Aave~v3, Morpho and SparkLend ($26$ each), CIAN and CoW~Swap ($23$
 each), Spark Savings ($12$).
-\end{proposition}
+\end{measurement}
 
 \begin{example}[Uniswap composed with Aave]\label{ex:uniaave}
 The pair $(\text{Uniswap}, \text{Aave~v3})$ fails, and additionally arms a
@@ -1063,10 +1085,10 @@ productive question is not ``what is $\omega(G_\oplus)$'' but:
 That question is decidable for our instance and, unlike the extremal one, has an
 answer that would transfer to other constraint systems.
 
-\emph{(iii) The certification figure is an edge density.} The reported $59\%$ of
-live protocol pairs is the density of $G_\oplus$ restricted to the $72$ corpus
-protocols, not a property of any fragment. The two numbers measure different
-things and should not be conflated.
+\emph{(iii) Two distinct figures.} $59\%$ is the certification rate of the
+fragment $F$; $90.3\%$ is the edge density of $G_\oplus$ restricted to the corpus.
+The first is a property of a fragment, the second of the graph, and they answer
+different questions.
 \end{remark}
 
 \begin{conjecture}\label{conj:perfect}

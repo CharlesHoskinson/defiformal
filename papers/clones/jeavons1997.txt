@@ -1,0 +1,1097 @@
+Closure Properties of Constraints
+
+PETER JEAVONS AND DAVID COHEN
+Royal Holloway, University of London, London, United Kingdom
+
+AND
+
+MARC GYSSENS
+University of Limburg, Diepenbeek, Belgium
+
+
+Abstract. Many combinatorial search problems can be expressed as “constraint satisfaction problems”
+and this class of problems is known to be NP-complete in general. In this paper, we investigate the
+subclasses that arise from restricting the possible constraint types. We first show that any set of
+constraints that does not give rise to an NP-complete class of problems must satisfy a certain type of
+algebraic closure condition. We then investigate all the different possible forms of this algebraic
+closure property, and establish which of these are sufficient to ensure tractability. As examples, we
+show that all known classes of tractable constraints over finite domains can be characterized by such
+an algebraic closure property. Finally, we describe a simple computational procedure that can be used
+to determine the closure properties of a given set of constraints. This procedure involves solving a
+particular constraint satisfaction problem, which we call an “indicator problem.”
+Categories and Subject Descriptors: F.1.3 [Computation by Abstract Devices]: Complexity Classes—
+reducibility and completeness; F.2.2 [Analysis of Algorithms and Problem Complexity]: Nonnumerical
+Algorithms and Problems—complexity of proof procedures; F.4.1 [Mathematical Logic and Formal
+Languages]: Mathematical Logic; G.2.1 [Discrete Mathematics]: Combinatorics
+General Terms: Algorithms, Languages, Theory, Verification
+Additional Key Words and Phrases: Complexity, constraint satisfaction problem, indicator problem,
+NP-completeness
+
+
+
+Earlier versions of parts of this paper were published as JEAVONS, P., COHEN, D., AND GYSSENS, M.
+1995. A unifying framework for tractable constraints. In Proceedings of the 1st International Confer-
+ence on Principles and Practice of Constraint Programming—CP ’95 (Cassis, France, Sept.). Lecture
+Notes in Computer Science, vol. 976. Springer-Verlag, New York, pp. 276 –291, and JEAVONS, P.,
+COHEN, D., AND GYSSENS, M. 1996. A test for tractability. In Proceedings of the 2nd International
+Conference on Constraint Programming—CP ’96 (Boston, Mass., Aug.). Lecture Notes in Computer
+Science, vol. 1118. Springer-Verlag, New York, pp. 267–281.
+This research was partially supported by EPSRC research grant GR/L09936 and by the British–
+Flemish Academic Research Collaboration Programme of the Belgian National Fund for Scientific
+Research and the British Council.
+Authors’ addresses: P. Jeavons and D. Cohen, Department of Computer Science, Royal Holloway,
+University of London, Egham, Surrey TW20 0EX, England; M. Gyssens, Department WNI, Univer-
+sity of Limburg, B-3590 Diepenbeek, Belgium.
+Permission to make digital / hard copy of part or all of this work for personal or classroom use is
+granted without fee provided that the copies are not made or distributed for profit or commercial
+advantage, the copyright notice, the title of the publication, and its date appear, and notice is given
+that copying is by permission of the Association for Computing Machinery (ACM), Inc. To copy
+otherwise, to republish, to post on servers, or to redistribute to lists, requires prior specific permission
+and / or a fee.
+q 1997 ACM 0004-5411/97/0700-0527 $03.50
+
+
+                                                           Journal of the ACM, Vol. 44, No. 4, July 1997, pp. 527–548.
+528                                                                           P. JEAVONS ET AL.
+
+
+1. Introduction
+Solving a constraint satisfaction problem is known to be NP-complete [Mack-
+worth 1977]. However, many of the problems that arise in practice have special
+properties that allow them to be solved efficiently. The question of identifying
+restrictions to the general problem that are sufficient to ensure tractability is
+important from both a practical and a theoretical viewpoint, and has been
+extensively studied.
+  Such restrictions may either involve the structure of the constraints (in other
+words, which variables may be constrained by which other variables)1 or they may
+involve the nature of the constraints (in other words, which combinations of
+values are allowed for variables that are mutually constrained).2
+  In this paper, we take the second approach, and investigate those classes of
+constraints that only give rise to tractable problems whatever way they are
+combined. A number of distinct classes of constraints with this property have
+previously been identified and shown to be maximal [Cooper et al. 1994; Jeavons
+et al. 1995; Jeavons and Cooper 1996].
+  In this paper, we establish that any class of constraints that does not give rise
+to NP-complete problems must satisfy a certain algebraic closure condition, and
+hence this algebraic property is a necessary condition for a class of constraints to
+be tractable (assuming that P is not equal to NP). We also show that many forms
+of this algebraic closure property are sufficient to ensure tractability.
+  As an example of the wide applicability of these results, we show that all
+known examples of tractable constraint classes over finite domains can be
+characterized by an algebraic condition of this kind, even though some of them
+were originally defined in very different ways.
+  Finally, we describe a simple computational procedure to determine the
+algebraic closure properties of a given set of constraints. The test involves
+calculating the solutions to a fixed constraint satisfaction problem involving
+constraints from the given set.
+  The work described in this paper represents a generalization of earlier results
+concerning tractable subproblems of the GENERALIZED SATISFIABILITY problem.
+Schaefer [1978] identified all possible tractable classes of constraints for this
+problem, which corresponds to the special case of the constraint satisfaction
+problem in which the variables are Boolean. The tractable classes described in
+Schaefer [1978] are special cases of the tractable classes of general constraints
+described below, and they are given as examples.
+  A number of tractable constraint classes have also been identified by Feder
+and Vardi [1993]. They define a notion of width for constraint satisfaction
+problems in terms of the logic programming language Datalog, and show that
+problems with bounded width are solvable in polynomial time. It is stated in
+Feder and Vardi [1993] that the problem of determining whether a fixed
+collection of constraints gives rise to problems of bounded width is not known to
+be decidable. However, it is shown that a more restricted property, called
+bounded strict width, is decidable, and in fact corresponds to an algebraic closure
+
+1
+  See, for example, Dechter and Pearl [1988], Freuder [1985], Gyssens et al. [1994], Montanari [1974],
+and Montanari and Rossi [1991].
+2
+  See, for example, Cooper et al. [1994], Jeavons et al. [1995], Jeavons and Cooper [1996], Feder and
+Vardi [1993], Kirousis [1993], Montanari [1974], van Beek [1992], and Van Hentenryck et al. [1992].
+Closure Properties of Constraints                                                        529
+
+property of the form described here. Other tractable constraint classes are also
+shown to be characterized by a closure property of this type. This paper builds on
+the work of Feder and Vardi [1993] by examining the general question of the link
+between algebraic closure properties and tractability of constraints, and estab-
+lishing necessary and sufficient conditions for these closure properties.
+   A different approach to identifying tractable constraints is taken in van Beek
+[1992], where it is shown that a property of constraints, referred to as ‘row-
+convexity’, together with path-consistency, is sufficient to ensure tractability in
+binary constraint satisfaction problems. It should be noted, however, that
+because of the additional requirement for path-consistency, row-convex con-
+straints do not constitute a tractable class in the sense defined in this paper. In
+fact, the class of problems that contain only row-convex constraints is NP-
+complete [Cooper et al. 1994].
+   The paper is organized as follows: In Section 2, we give the basic definitions,
+and in Section 3 we define what we mean by an algebraic closure property for a
+set of relations and examine the possible forms of such a closure property. In
+Section 4, we identify which of these forms are necessary conditions for tractabil-
+ity, and in Section 5, we identify which of them are sufficient for tractability. In
+Section 6, we describe a computational method to determine the closure
+properties satisfied by a set of relations. Finally, we summarize the results
+presented and draw some conclusions.
+
+2. Definitions
+  2.1. THE CONSTRAINT SATISFACTION PROBLEM
+   NOTATION 2.1.1. For any set D, and any natural number n, we denote the set of
+all n-tuples of elements of D by Dn. For any tuple t [ Dn, and any i in the range 1 to
+n, we denote the value in the ith coordinate position of t by t[i]. The tuple t may then
+be written in the form ^t[1], t[2], . . . , t[n]&.
+A subset of D n is called an n-ary relation over D.
+  We now define the (finite) constraint satisfaction problem that has been widely
+studied in the Artificial Intelligence community [Ladkin and Maddux 1994;
+Mackworth 1977; Montanari 1974].
+  Definition 2.1.2.     An instance of a constraint satisfaction problem consists of
+—a finite set of variables, V;
+—a finite domain of values, D;
+—a set of constraints {C 1 , C 2 , . . . , C q }.
+  Each constraint C i is a pair (S i , R i ), where S i is a list of variables of length m i ,
+  called the constraint scope, and R i is an m i -ary relation over D, called the
+  constraint relation. (The tuples of R i indicate the allowed combinations of
+  simultaneous values for the variables in S i .)
+The length of the tuples in the constraint relation of a given constraint will be
+called the arity of that constraint. In particular, unary constraints specify the
+allowed values for a single variable, and binary constraints specify the allowed
+combinations of values for a pair of variables. A solution to a constraint
+satisfaction problem is a function from the variables to the domain such that the
+530                                                                            P. JEAVONS ET AL.
+
+
+image of each constraint scope is an element of the corresponding constraint
+relation.
+  Deciding whether or not a given problem instance has a solution is NP-
+complete in general [Mackworth 1977] even when the constraints are restricted
+to binary constraints. In this paper we consider how restricting the allowed
+constraint relations to some fixed subset of all the possible relations affects the
+complexity of this decision problem. We therefore make the following definition:
+
+  Definition 2.1.3 For any set of relations, G, CSP(G) is defined to be the
+decision problem with
+INSTANCE: An instance, P, of a constraint satisfaction problem, in which all
+constraint relations are elements of G.
+QUESTION: Does P have a solution?
+
+If there exists an algorithm that solves every problem instance in CSP(G) in
+polynomial time, then we shall say that CSP(G) is a tractable problem, and G is a
+tractable set of relations.
+
+  Example 2.1.4.      The binary disequality relation over a set D, denoted Þ D , is
+defined as
+
+                              ÞD 5 $^ d 1 , d 2 & [ D 2 u d 1 Þ d 2 % .
+
+Note that CSP({Þ D }) corresponds precisely to the GRAPH uDu-COLORABILITY
+problem [Garey and Johnson 1979]. This problem is tractable when uDu # 2 and
+NP-complete when uDu $ 3.
+
+  Example 2.1.5. Consider the ternary relation d over the set D 5 {0, 1}
+which is defined by
+
+      d 5 $^ 0, 0, 1 & , ^ 0, 1, 0 & , ^ 1, 0, 0 & , ^ 0, 1, 1 & , ^ 1, 0, 1 & , ^ 1, 1, 0 &% .
+
+The problem CSP({d}) corresponds precisely to the NOT-ALL-EQUAL SATISFI-
+ABILITY problem [Garey and Johnson 1979], which is NP-complete [Schaefer
+1978].
+
+  Example 2.1.6. We now describe three relations that will be used as examples
+of constraint relations throughout the paper.
+  Each of these relations is a set of tuples of elements from the domain D 5 {0,
+1, 2}, as defined below:
+
+                    R1 5 $      ^ 0, 0 & ,       R2 5 $       ^ 0, 1, 2 & ,
+                                ^ 1, 2 & ,                    ^ 1, 2, 0 & ,
+                                ^ 0, 1 & ,                    ^ 2, 0, 1 &     }
+                                ^ 2, 1 &
+Closure Properties of Constraints                                                                       531
+
+
+                                             R3 5 $         ^ 2, 2 & ,
+                                                            ^ 2, 1 & ,
+                                                            ^ 2, 0 & ,
+                                                            ^ 1, 2 & ,
+                                                            ^ 1, 1 & ,
+                                                            ^ 1, 0 & ,
+                                                            ^ 0, 2 & ,
+                                                            ^ 0, 1 &        }
+
+The problem CSP({R 1 , R 2 , R 3 }) consists of all constraint satisfaction problem
+instances in which the constraint relations are all chosen from the set {R 1 , R 2 ,
+R 3 }.
+   The complexity of CSP(G) for arbitrary subsets G of {R 1 , R 2 , R 3 } will be
+determined using the techniques developed later in this paper (see Example 6.6).
+
+  2.2. OPERATIONS ON RELATIONS. In Section 4, we shall examine conditions on
+a set of relations G that allow known NP-complete problems to be reduced to
+CSP(G). The reductions will be described using standard operations from
+relational algebra [Codd 1970], which are described in this section.
+
+  Definition 2.2.1.        We define the following operations on relations.
+—Let R be an n-ary relation over a domain D and let S be an m-ary relation over
+ D. The Cartesian product R 3 S is defined to be the (n 1 m)-ary relation
+
+  R 3 S 5 $^ t @ 1 # , t @ 2 # , . . . , t @ n 1 m #&u~^ t @ 1 # , t @ 2 # , . . . , t @ n #& [ R ! `
+                                     ~^ t @ n 1 1 # , t @ n 1 2 # , . . . , t @ n 1 m #& [ S !% .
+—Let R be an n-ary relation over a domain D. Let 1 # i, j # n. The equality
+ selection s i5j (R) is defined to be the n-ary relation
+
+                                      s i5j ~ R ! 5 $ t [ R u t @ i # 5 t @ j #% .
+
+—Let R be an n-ary relation over a domain D. Let i 1 , . . . , i m be a subsequence
+ of 1, . . . , n. The projection p i 1 , . . . , i m (R) is defined to be the m-ary relation
+
+                         p i 1 , . . . , i m ~ R ! 5 $^ t @ i 1 # , . . . , t @ i m #&u t [ R % .
+
+It is well known that the combined effect of two constraints in a constraint
+satisfaction problem can be obtained by performing a relational join operation
+[Codd 1970] on the two constraints [Gyssens et al. 1994]. The next result is a
+simple consequence of the definition of the relational join operation.
+
+  LEMMA 2.2.2. Any relational join of relations R and S can be calculated by
+performing a sequence of Cartesian product, equality selection, and projection
+operations on R and S.
+In view of this result, it will be convenient to use the following notation.
+532                                                                                                P. JEAVONS ET AL.
+
+
+   NOTATION 2.2.3. The set of all relations that can be obtained from a given set of
+relations, G, using some sequence of Cartesian product, equality selection, and
+projection operations will be denoted G1.
+Note that G1 contains exactly those relations that can be obtained as ‘derived’
+relations in a constraint satisfaction problem instance with constraint relations
+chosen from G [Cohen et al. 1996].
+
+3. Closure Operations
+We shall establish below that significant information about CSP(G) can be
+determined from algebraic properties of the set of relations G. In order to
+describe these algebraic properties we need to consider arbitrary operations on
+D, in other words, arbitrary functions from D k to D, for arbitrary values of k.
+  For the results below, we shall be particularly interested in certain special
+kinds of operations. We therefore make the following definition:
+
+  Definition 3.1.          Let R be a k-ary operation from D k to D.
+—If R is such that, for all d [ D, R(d, d, . . . , d) 5 d, then R is said to be
+ idempotent.
+—If there exists an index i [ {1, 2, . . . , k} such that for all ^d 1 , d 2 , . . . , d n & [
+ D k we have R(d 1 , d 2 , . . . , d n ) 5 f(d i ), where f is a nonconstant unary
+ operation on D, then R is called essentially unary. (Note that f is required to be
+ nonconstant, so constant operations are not essentially unary.)
+ If f is the identity operation, then R is called a projection.
+—If k $ 3 and there exists an index i [ {1, 2, . . . , k} such that for all d 1 ,
+ d 2 , . . . , d k [ D with u{d 1 , d 2 , . . . , d k }u , k we have R(d 1 , d 2 , . . . , d k ) 5
+ d i , but R is not a projection, then R is called a semiprojection [Rosenberg 1986;
+ Szendrei 1986].
+—If k 5 3 and for all d, d9 [ D we have R(d, d, d9) 5 R(d, d9, d) 5 R(d9,
+ d, d) 5 d, then R is called a majority operation.
+—If k 5 3 and for all d 1 , d 2 , d 3 [ D we have R(d 1 , d 2 , d 3 ) 5 d 1 2 d 2 1 d 3 ,
+ where 1 and 2 are binary operations on D such that ^D, 1, 2& is an Abelian
+ group [Szendrei 1986], then R is called an affine operation.
+Any operation on D can be extended to an operation on tuples over D by
+applying the operation in each coordinate position separately (i.e., pointwise).
+Hence, any operation defined on the domain of a relation can be used to define
+an operation on the tuples in that relation, as follows:
+
+  Definition 3.2. Let R: D k 3 D be a k-ary operation on D and let R be an
+n-ary relation over D.
+  For any collection of k tuples, t 1 , t 2 , . . . , t k [ R, (not necessarily all distinct)
+the n-tuple R(t 1 , t 2 , . . . , t k ) is defined as follows:
+
+^ ~ t 1, t 2, . . . , t k! 5
+          ^ ^ ~ t 1 @ 1 # , t 2 @ 1 # , . . . , t k @ 1 #! , ^ ~ t 1 @ 2 # , t 2 @ 2 # , . . . , t k @ 2 #! , . . . ,
+                                                                                 ^ ~ t 1 @ n # , t 2 @ n # , . . . , t k @ n #!& .
+Closure Properties of Constraints                                                  533
+
+Finally, we define R(R) to be the n-ary relation
+
+                          $ ^ ~ t 1 , . . . , t k !u t 1 , . . . , t k [ R % .
+
+Using this definition, we now define the following closure property of relations.
+
+  Definition 3.3. Let R be a k-ary operation on D, and let R be an n-ary
+relation over D. The relation R is closed under R if R(R) # R.
+
+  Example 3.4.    Let D be the ternary majority operation defined as follows:
+
+
+                           D ~ x, y, z ! 5      H   y
+                                                    x
+                                                            if    y 5 z;
+                                                            otherwise.
+
+  The relation R 2 defined in Example 2.1.6 is closed under D, since applying the
+D operation to any three elements of R 2 yields an element of R 2 . For example,
+
+               D ~^ 0, 1, 2 & , ^ 1, 2, 0 & , ^ 1, 2, 0 &! 5 ^ 1, 2, 0 & [ R 2 .
+
+The relation R 3 defined in Example 2.1.6 is not closed under D, since applying
+the D operation to the last three elements of R 3 yields a tuple which is not an
+element of R 3 :
+
+                      D ~^ 1, 0 & , ^ 0, 2 & , ^ 0, 1 &! 5 ^ 0, 0 & [
+                                                                    y R 3.          e
+
+For any set of relations G, and any operation R, if every R [ G is closed under R,
+then we shall say that G is closed under R. The next lemma indicates that the
+property of being closed under some operation is preserved by all possible
+projection, equality selection, and product operations on relations, as defined in
+Section 2.2.
+
+  LEMMA 3.5. For any set of relations G, and any operation R, if G is closed under
+R, then G1 is closed under R.
+
+  PROOF.    Follows immediately from the definitions.                       e
+
+  NOTATION 3.6. For any set of relations G with domain D, the set of all
+operations on D under which G is closed will be denoted G”.
+  The set of closure operations, G”, can be used to obtain a great deal of
+information about the problem CSP(G), as we shall demonstrate in the next two
+sections.
+  As a first example of this, we shall show that the operations in G” can be used
+obtain a reduction from one problem to another.
+
+  PROPOSITION 3.7. For any set of finite relations G, and any R [ G”, there is a
+polynomial-time reduction from CSP(G) to CSP(R(G)), where R(G) 5 {R(R)uR [
+G}.
+
+   PROOF. Let 3 be any problem instance in CSP(G) and consider the instance
+39 obtained by replacing each constraint relation R i of 3 by the relation R(R i ).
+It is clear that 39 can be obtained from 3 in polynomial-time. It follows from
+Definition 3.3 that 39 has a solution if and only if 3 has a solution. e
+534                                                                 P. JEAVONS ET AL.
+
+
+  It follows from this result that if G” contains a non-injective unary operation,
+then CSP(G) can be reduced to a problem over a smaller domain. One way to
+view this is that the presence of a noninjective unary operation in G” indicates
+that constraints with relations chosen from G allow a form of global “substitut-
+ability,” similar to the notion defined by Freuder [1991].
+  If G” does not contain any noninjective unary operations, then we shall say that
+G is reduced. The next theorem uses a general result from universal algebra
+[Rosenberg 1986; Szendrei 1986] to show that the possible choices for G” are
+quite limited.
+
+     THEOREM 3.8.    For any reduced set of relations G, over a finite set, either
+
+(1) G” contains essentially unary operations only, or
+(2) G” contains an operation which is
+
+      (a) a constant operation; or
+      (b) a majority operation; or
+      (c) an idempotent binary operation (which is not a projection); or
+      (d) an affine operation; or
+      (e) a semiprojection.
+
+  PROOF. The set of operations G” contains all projections and is closed under
+composition; hence, it constitutes a “clone” [Cohn 1965; Szendrei 1986]. It was
+shown in Rosenberg [1986] that any nontrivial clone on a finite set must contain
+a minimal clone, and that any minimal clone contains either
+
+(1) a nonidentity unary operation; or
+(2) a constant operation; or
+(3) a majority operation; or
+(4) an idempotent binary operation (which is not a projection); or
+(5) an affine operation; or
+(6) a semiprojection.
+
+Furthermore, if G is reduced, and G” contains any operations that are not
+essentially unary, then it is straightforward to show, by considering such an
+operation of the smallest possible arity, that G” contains an operation in one of
+the last five of these classes [Szendrei 1986; Machida and Rosenberg 1984]. e
+  In the next two sections, we examine each of these possibilities in turn, in
+order to establish what can be said about the complexity of CSP(G) in the various
+cases.
+
+4.    A Necessary Condition for Tractability
+In this section, we will show that any set of relations that is only closed under
+essentially unary operations will give rise to a class of constraint satisfaction
+problems that is NP-complete.
+
+  THEOREM 4.1. For any finite set of relations, G, over a finite set D, if G”
+contains essentially unary operations only then CSP(G) is NP-complete.
+Closure Properties of Constraints                                                    535
+
+  PROOF. When uDu # 2, then we may assume without loss of generality that D
+# {0, 1}, where 0 corresponds to the Boolean value false and 1 corresponds to
+the Boolean value true. It follows that the problem CSP(G) corresponds to the
+GENERALIZED SATISFIABILITY problem over the set of Boolean relations G, as
+defined in Schaefer [1978] (see also Garey and Johnson [1979]).
+  It was established in Schaefer [1978] that this problem is NP-complete unless
+one of the following conditions holds:
+
+(1) Every relation in G contains the tuple (0, 0, . . . , 0);
+(2) Every relation in G contains the tuple (1, 1, . . . , 1);
+(3) Every relation in G is definable by a formula in conjunctive normal form in
+    which each conjunct has at most one negated variable;
+(4) Every relation in G is definable by a formula in conjunctive normal form in
+    which each conjunct has at most one unnegated variable;
+(5) Every relation in G is definable by a formula in conjunctive normal form in
+    which each conjunct contains at most 2 literals;
+(6) Every relation in G is the set of solutions of a system of linear equations over
+    the finite field GF(2).
+
+It is straightforward to show that in each of these cases G is closed under some
+operation which is not essentially unary (see Jeavons [1995] for details). Hence,
+the result holds when uDu 5 2.
+   For larger values of uDu, we proceed by induction. Assume that uDu $ 3 and
+the result holds for all smaller values of uDu. Let m 5 uDu(uDu 2 1) and let n 5
+uDu m . Let M be an m by n matrix over D in which the columns consist of all
+possible m-tuples over D (in some order). Let R 0 be the relation consisting of all
+the tuples occurring as rows of M. The only condition we place on the choice of
+order for the columns of M is that p 1,2 (R 0 ) 5 Þ D , where Þ D is the binary
+disequality relation over D, as defined in Example 2.1.4.
+   We now construct a relation R̂ 0 which is the “closest approximation” to R 0 that
+we can obtain from the relations in G and the domain D using the Cartesian
+product, equality selection and projection operations:
+
+                         R̂ 0 5 ù $ R [ ~ G ø D 1 ! 1 u R 0 # R % .
+
+Since this is a finite intersection, and intersection is a special case of join, we
+have from Lemma 2.1.8 that R̂ 0 [ (G ø D 1 ) 1 . In other words, the relation R̂ 0
+can be obtained as a derived constraint relation in some problem belonging to
+CSP(G).
+  There are now two cases to consider:
+
+(1) If there exists some tuple t 0 [ R̂ 0 with t 0 [1] 5 t 0 [2], then we will construct,
+    using t 0 , an appropriate operation under which G is closed.
+        Define the function R: D m 3 D by setting R(d 1 , d 2 , . . . , d m ) 5 t 0 [ j]
+    where j is the unique column of M corresponding to the m-tuple ^d 1 ,
+    d 2 , . . . , d m &. We will show that G is closed under R.
+        Choose any R [ G, and let p be the arity of R. We are required to show
+    that R is closed under R. Consider any sequence t 1 , t 2 , . . . , t m of tuples of
+    R (not necessarily distinct), and, for i 5 1, 2, . . . , p, let c i be the m-tuple
+536                                                                                          P. JEAVONS ET AL.
+
+
+      ^t 1 [i], t 2 [i], . . . , t m [i]&. For each pair of indices, i, j, such that c i 5 c j ,
+      apply the equality selection s i5j to R, to obtain a new relation R9.
+          Now choose a maximal set of indices, I 5 {i 1 , i 2 , . . . , i s }, such that the
+      corresponding c i are all distinct, and construct the relation R0 5 p I (R9) 3
+      D n2uIu . Finally, permute the coordinate positions of R0 (by a sequence of
+      Cartesian product, equality selection, and projection operations), such that
+      R0 $ R 0 (this is always possible, by the construction of R 0 and R0). Since R0
+      [ (G ø D 1 ) 1 , we know that t 0 is a tuple of R0, by the definition of R 0 .
+      Hence the appropriate projection of t 0 is an element of R, and R is closed
+      under R.
+      If R is not essentially unary, then we have the result. Otherwise, let f: D 3
+      D be the corresponding unary operation, and set
+
+      f ~ D ! 5 $ f ~ d !u d [ D % ;
+       f ~ G ! 5 $$^ f ~ d 1 ! , f ~ d 2 ! , . . . , f ~ d r !&u^ d 1 , d 2 , . . . , d r & [ C %u C [ G % .
+
+    By the choice of t 0 , f cannot be injective, so uf(D)u , uDu. By the inductive
+    hypothesis, we know that either CSP( f(G)) is NP-complete (in which case
+    CSP(G) must also be NP-complete) or else f(G) is closed under some
+    operation Q that is not essentially unary (in which case G is closed under the
+    operation Qf, which is also not essentially unary). Hence, the result follows
+    by induction in this case.
+(2) Alternatively, if R̂ 0 contains no tuple t such that t[1] 5 t[2], then p 1,2 (R̂ 0 )
+    5 Þ D , so Þ D [ (G ø D 1 ) 1 . But this implies that CSP({Þ D }) is reducible
+    to CSP(G), since every occurence of the constraint relation Þ D can be
+    replaced with an equivalent collection of constraints with relations chosen
+    from G. However, it was pointed out in Example 2.1.4 that CSP({Þ D })
+    corresponds to the GRAPH uDu-COLORABILITY problem [Garey and Johnson
+    1979], which is NP-complete when uDu $ 3. Hence, this implies that CSP(G)
+    is NP-complete, and the result holds in this case also. e
+
+  Combining Theorem 4.1 with Theorem 3.8 gives the following necessary
+condition for tractability.
+
+  COROLLARY 4.2. Assuming that P is not equal to NP, any tractable set of
+reduced relations must be closed under either a constant operation, or a majority
+operation, or an idempotent binary operation, or an affine operation, or a semi-
+projection.
+  Note that the arity of a semiprojection is at most uDu, so for any finite set D
+there are only finitely many operations matching the given criteria, which means
+that there is a finite procedure to check whether this necessary condition is
+satisfied (see Corollary 6.5).
+
+5. Sufficient Conditions for Tractability
+We have shown in the previous section that when G is a tractable set of relations,
+then G” must contain an operation from a limited range of types. For some of
+these types of operations, it can be shown that the relations in G have a particular
+Closure Properties of Constraints                                                   537
+
+structural form, which can be exploited to obtain an efficient algorithm for
+CSP(G).
+   We now consider each of the possibilities identified in Corollary 4.2 in turn, to
+determine whether or not they are sufficient to ensure tractability.
+
+  5.1. CONSTANT OPERATIONS. Closure under a constant operation is easily
+shown to be a sufficient condition for tractability.
+
+  PROPOSITION 5.1.1. For any set of relations G, if G is closed under a constant
+operation, then CSP(G) is solvable in polynomial time.
+
+   PROOF. If every relation in G is closed under some constant operation R, with
+constant value d, then every nonempty relation in G must contain the tuple ^d,
+d, . . . , d&. Hence, in this case, the decision problem for any constraint
+satisfaction problem instance in 3 in CSP(G) is clearly trivial to solve, since 3
+either contains an empty constraint, in which case it does not have a solution, or
+else 3 allows the solution in which every variable is assigned the value d. e
+The class of sets of relations closed under some constant operation is a rather
+trivial tractable class. It is referred to in Jeavons et al. [1995] as Class 0.
+
+   Example 5.1.2. Let Á denote the unary operation on the domain D 5 {0, 1,
+2} that returns the constant value 1. The constraint R 3 defined in Example 2.1.6
+is closed under Á, since applying the Á operation to any element of R 3 yields the
+tuple ^1, 1&, which is an element of R 3 . The constraint R 2 defined in Example
+2.1.6 is not closed under Á, since applying the Á operation to any element of R 2
+yields the tuple ^1, 1, 1&, which is not an element of R 2 . In fact, R 2 is clearly not
+closed under any constant operation.
+
+  Example 5.1.3. When D 5 {true,false}, there are only two possible constant
+operations on D.
+  The first two tractable subproblems of the GENERALIZED SATISFIABILITY
+problem identified by Schaefer [1978] correspond to the tractable classes of
+relations characterized by closure under these two constant operations.
+
+  5.2. MAJORITY OPERATIONS. We will now show that closure under a majority
+operation is also a sufficient condition for tractability.
+  We first establish that when a relation R is closed under a majority operation,
+any constraint involving R can be decomposed into binary constraints.
+
+  PROPOSITION 5.2.1. Let R be a relation of arity n that is closed under a majority
+operation, and let C be any constraint C 5 (S, R) with scope S and relation R.
+  For any problem 3 containing the constraint C, the problem 39 obtained by
+replacing C with the set of binary constraints
+
+                       $~~ S @ i # , S @ j #! , p i, j ~ R !!u 1 # i # j # n %
+
+has exactly the same solutions as 3.
+
+  PROOF. It is clear that any solution to 3 is a solution to 39, since 39 is
+obtained by taking binary projections of a constraint from 3.
+538                                                                                P. JEAVONS ET AL.
+
+
+   Now let s be any solution to 39, and set t 5 ^ s (S[1]), s (S[2]), . . . ,
+s (S[n])&. We shall prove, by induction on n, that t [ R, thereby establishing
+that s is a solution to 3.
+   For n , 3 the result holds trivially, so assume that n $ 3, and that the result
+holds for all smaller values. Let I 5 {1, 2, . . . , n} be the set of indices of
+positions in S and choose i 1 , i 2 , i 3 [ I. By Proposition 3.5 and the inductive
+hypothesis, applied to p I\{i j } (R), there is some t j [ R which agrees with t at all
+positions except i j , for j 5 1, 2, 3. Since R is closed under a majority operation,
+applying this operation to t 1 , t 2 , t 3 gives t [ R. e
+
+  Example 5.2.2. Recall the relation R 2 defined in Example 2.1.6.
+  It was shown in Example 3.4 that R 2 is closed under the operation D. Since this
+operation is a majority operation, we know by Proposition 5.2.1 that any
+constraint with relation R 2 can be decomposed into an equivalent collection of
+binary constraints with the following relations:
+
+                         p 1,2 ~ R 2 ! 5 $^ 0, 1 & , ^ 1, 2 & , ^ 2, 0 &%
+                         p 1,3 ~ R 2 ! 5 $^ 1, 0 & , ^ 2, 1 & , ^ 0, 2 &%
+                         p 2,3 ~ R 2 ! 5 $^ 0, 1 & , ^ 1, 2 & , ^ 2, 0 &%
+
+It is, of course, not always the case that a constraint can be replaced by a
+collection of binary constraints on the same variables. In many cases, the binary
+projections of the constraint relation allow extra solutions, as the following
+example demonstrates.
+
+  Example 5.2.3. Recall the relation d on domain D 5 {0, 1} defined in
+Example 2.1.5. The binary projections of d are as follows:
+
+                     p 1,2 ~ d ! 5 $^ 0, 0 & , ^ 0, 1 & , ^ 1, 0 & , ^ 1, 1 &%
+                     p 1,3 ~ d ! 5 $^ 0, 0 & , ^ 0, 1 & , ^ 1, 0 & , ^ 1, 1 &%
+                     p 2,3 ~ d ! 5 $^ 0, 0 & , ^ 0, 1 & , ^ 1, 0 & , ^ 1, 1 &% .
+
+The join of these binary projections contains the tuples ^0, 0, 0& and ^1, 1, 1&,
+which are not elements of d. It clearly follows that a constraint with relation d
+cannot be replaced by any set of binary constraints on the same variables without
+either losing solutions or introducing extra solutions.
+
+  THEOREM 5.2.4.      Let G be any set of relations over a finite domain, D.
+   If G is closed under a majority operation, then CSP(G) is solvable in polynomial
+time.
+
+  PROOF. For any problem instance 3 in CSP(G) we can impose strong (uDu 1
+1)-consistency [Dechter 1992] in polynomial time to obtain a new instance 39
+with the same solutions. All of the constraints in 39 are elements of G1, and so
+they are closed under a majority operation, by Proposition 3.5. Hence, all of the
+constraints of 39 are decomposable into binary constraints by Proposition 5.2.1.
+Hence, by Corollary 3.2 of Dechter [1992], 39 is solvable in polynomial time. e
+Closure Properties of Constraints                                                 539
+
+   Example 5.2.5. When D 5 {true,false}, there is only one possible majority
+operation on D, (which is equal to the D operation defined in Example 3.4). It is
+easily shown that all possible binary Boolean relations are closed under D.
+Hence, it follows from Proposition 5.2.1 that the Boolean relations of arbitrary
+arity, which are closed under this majority operation, are precisely the relations
+that are definable by a formula in conjunctive normal form in which each
+conjunct contains at most two literals. Hence, if a set of Boolean relations G is
+closed under a majority operation, then CSP(G) is equivalent to the 2-SATISFI-
+ABILITY problem (2-SAT) [Papadimitriou 1994], which is well known to be a
+tractable subproblem of the SATISFIABILITY problem [Schaefer 1978].
+  Recall the class of tractable constraints identified independently in Cooper et al.
+[1994] and Kirousis [1993], and referred to as 0/1/all constraints or implicational
+constraints. (This class of tractable constraints is referred to as Class I in Jeavons
+et al. [1995].) It was shown in Jeavons et al. [1995] that these constraints are in
+fact precisely the relations closed under the majority operation D defined in
+Example 3.4. This result is rather unexpected, in view of the fact that 0/1/all
+constraints were originally defined purely in terms of their syntactic structure
+[Cooper et al. 1994].
+  However, we remark here that the class of tractable sets of relations defined by
+closure under some majority operation is a true generalization of the class
+containing all sets of 0/1/all constraints. In other words, there exist tractable sets
+of relations that are closed under some majority operation but are not closed
+under the D operation, as the following example demonstrates.
+  Example 5.2.6. Let m be the ternary majority operation on D 5 {0, 1, 2} that
+returns the median value of its three arguments (in the standard ordering of D).
+  Recall the relation R 3 defined in Example 2.1.6. It is easy to show that R 3 is
+closed under m, since applying the m operation to any three elements of R 3 yields
+an element of R 3 . For example,
+
+                     m ~^ 1, 0 & , ^ 0, 2 & , ^ 0, 1 &! 5 ^ 0, 1 & [ R 3 .
+Hence, by Theorem 5.2.4, CSP({R 3 }) is tractable.
+  However, it was shown in Example 3.4 that R 3 is not closed under D, and
+hence R 3 is not a 0/1/all constraint.
+  5.3. BINARY OPERATIONS. We first show that closure under an arbitrary
+idempotent binary operation is not in general sufficient to ensure tractability.
+  LEMMA 5.3.1. There exists a set of relations G closed under an idempotent
+binary operation (which is not a projection) such that CSP(G) is NP-complete.
+   PROOF. Consider the binary operation h on the set D 5 {0, 1, 2, 3}, which
+is defined by the following table:
+540                                                                               P. JEAVONS ET AL.
+
+
+This operation is idempotent but it is not a projection. (In fact, it is an example
+of a form of binary operation known as a “rectangular band” [McKenzie et al.
+1987].)
+  Now consider the functions b 1 : D 3 {0, 1} and b 2 : D 3 {0, 1} which return
+the first and second bit in the binary expression for the numerical value of each
+element of D.
+  Using these functions, we define ternary relations R 1 and R 2 over D, as
+follows:
+
+R 1 5 $^ d, d9, d0 & [ D 3 u~ b 1 ~ d ! Þ b 1 ~ d9 !! ~ ~ b 1 ~ d9 !
+                                                                Þ b 1 ~ d0 !! ~ ~ b 1 ~ d0 ! Þ b 1 ~ d !!%
+R 2 5 $^ d, d9, d0 & [ D 3 u~ b 2 ~ d ! Þ b 2 ~ d9 !! ~ ~ b 2 ~ d9 !
+                                                               Þ b 2 ~ d0 !! ~ ~ b 2 ~ d0 ! Þ b 2 ~ d !!% .
+
+Finally, we define R 5 R 1 ù R 2 .
+  It is easily shown that R is closed under h, since applying the operation h to
+any 2 elements of R yields an element of R.
+  However, it can also be shown that the NOT-ALL-EQUAL SATISFIABILITY
+problem [Schaefer 1978], which is known to be NP-complete, is reducible in
+polynomial time to CSP({R}). Hence, CSP({R}) is NP-complete, and the result
+follows. e
+  We now describe some additional conditions that may be imposed on binary
+operations. It will be shown below that closure under any binary operation
+satisfying these additional conditions is a sufficient condition for tractability.
+
+  Definition 5.3.2. Let u: D 2 3 D be an idempotent binary operation on the
+set D such that, for all d 1 , d 2 , d 3 [ D,
+—u(u(d 1 , d 2 ), d 3 ) 5 u(d 1 , u(d 2 , d 3 )); and                                  (Associativity)
+—u(d 1 , d 2 ) 5 u(d 2 , d 1 ).                                                      (Commutativity)
+Then u is said to be an ACI operation.
+We will make use of the following result about ACI operations, which is well
+known from elementary algebra [Cohn 1965; McKenzie et al. 1987].
+
+  LEMMA 5.3.3.         Let u be an ACI operation on the set D. The binary relation R on
+D defined by
+
+                                  R ~ d 1 , d 2 ! Nu ~ d 1 , d 2 ! 5 d 2
+
+is a partial order on D in which any two elements d1, d2 have a least upper bound
+given by u(d1, d2).
+  It follows from Lemma 5.3.3 that any (finite) nonempty set D9 # D which is
+u-closed contains a least upper bound with respect to the partial order R. This
+upper bound will be denoted u(D9).
+  Using Lemma 5.3.3, we now show that relations that are closed under some
+arbitrary ACI operation form a tractable class.
+Closure Properties of Constraints                                                      541
+
+  THEOREM 5.3.4. For any set of relations G over a finite domain D, if G is closed
+under some ACI operation, then CSP(G) is solvable in polynomial time.
+
+   PROOF. Let G be a set of relations closed under the ACI operation u, and let
+3 be any problem instance in CSP(G). First enforce pairwise consistency to
+obtain a new instance 39 with the same set of solutions which is pairwise
+consistent. Such a 39 can be obtained by forming the join of every pair of
+constraints in 3, replacing these constraints with the (possibly smaller) con-
+straints obtained by projecting down to the original scopes, and then repeating
+this process until there are no further changes in the constraints. The time
+complexity of this procedure is polynomial in the size of 3, and the resulting 39
+is a member of CSP(G1). Hence, all the constraint relations in 39 are closed
+under u, by Proposition 3.5.
+   Now let D(v) denote the set of values allowed for variable v by the constraints
+of 39. Since D(v) equals the projection of some u-closed constraint onto v, it
+must be u-closed, by Proposition 3.5. There are two cases to consider:
+(1) If any of the sets D(v) is empty, then 39 has no solutions, so the decision
+    problem is trivial.
+(2) On the other hand, if all of these sets are nonempty, then we claim that
+    assigning the value u(D(v)) to each variable v gives a solution to 39, so the
+    decision problem is again trivial. To establish this claim, consider any
+    constraint C 5 (S, R) in 39, with relation R of arity n, and scope S. For
+    each i [ {1, 2, . . . , n}, there must be some tuple t i [ R such that t i [i] 5
+    u(D(S[i])), by the definition of D(S[i]). Now consider the tuple t 5 u(t 1 ,
+    u(t 2 , . . . , u(t r21 , t r )) . . .). We know that t [ R, since R is closed under u.
+    Furthermore, for each i, u(D(S[i])) is an upper bound of D(S[i]), so
+
+                             u ~ d, u ~ D ~ S @ i #!!! 5 u ~ D ~ S @ i #!!
+
+    for all d [ D(S[i]). Hence, t[i] 5 u(D(S[i])), so the constraint C allows
+    the assignment of u(D(v)) to each variable v in S. Since C was arbitrary, we
+    have shown that this assignment is a solution to 39, and hence a solution to
+    3. e
+
+  Example 5.3.5. When D 5 {true,false}, there are only two idempotent
+binary operations on D (which are not projections), corresponding to the logical
+AND operation and the logical OR operation. These two operations are both
+ACI operations, and they correspond to the two possible orderings of D.
+  It is well known [Dechter and Pearl 1992; Jeavons and Cooper 1996; Papad-
+imitriou 1994] that a Boolean relation is closed under AND if and only if it can
+be defined by a Horn sentence (i.e., a conjunction of clauses each of which
+contains at most one unnegated literal). Hence, if a set of Boolean relations G is
+closed under AND, then CSP(G) is equivalent to the Horn clause satisfiability
+problem, HORNSAT [Papadimitriou 1994], which is a tractable subproblem of the
+SATISFIABILITY problem [Schaefer 1978].
+  Similarly, a Boolean relation is closed under OR if and only if it can be defined
+by a conjunction of clauses each of which contains at most one negated literal,
+and this class or relations also gives rise to a tractable subproblem of the
+SATISFIABILITY problem [Schaefer 1978].
+542                                                             P. JEAVONS ET AL.
+
+
+   Example 5.3.6. Let D be a finite subset of the natural numbers. The opera-
+tion MAX: D 2 3 D which returns the larger of any pair of numbers is an ACI
+operation. The following types of arithmetic constraints (amongst many others)
+are closed under this operation:
+
+—aX Þ b
+—aX 5 bY 1 c
+—aX # bY 1 c
+—aX $ bY 1 c
+—a 1 X 1 a 2 Y 1 . . .1 a r Z $ c
+—aXY $ c
+—(a 1 X $ b 1 ) ~ (a 2 Y $ b 2 ) ~ (a 3 Z # b 3 )
+
+where upper-case letters represent variables and lower-case letters represent
+positive constants. Hence, by Theorem 5.3.4, it is possible to determine effi-
+ciently whether any collection of constraints of these types has a solution. These
+constraints include (and extend) the ‘basic’ arithmetic constraints allowed by the
+well-known constraint programming language, CHIP [Van Hentenryck et al.
+1992].
+   The class of tractable constraints first identified in Jeavons and Cooper [1996],
+and referred to as max-closed constraints, are in fact relations closed under an u
+operation with the additional property that the partial order R, defined in
+Lemma 5.3.3, is a total ordering of D. Hence, a set of constraints is max-closed if
+and only if the constraint relations are closed under some specialized ACI
+operation of this kind (see, e.g., Example 5.3.6). This class of tractable con-
+straints is referred to as Class II in Jeavons et al. [1995].
+   However, we remark here that the class of tractable sets of relations defined by
+closure under some ACI operation is a true generalization of the class containing
+all sets of max-closed constraints. In other words, there exist tractable relations
+which are closed under some ACI operation but are not closed under the
+maximum operation associated with any (total) ordering of the domain. (An
+example of such a relation is the relation R 1 defined in Example 2.1.6, see
+Example 6.4 below.)
+
+   5.4. AFFINE OPERATIONS. We will now show that closure under an affine
+operation is a sufficient condition for tractability.
+   This result was established in Jeavons et al. [1995] using elementary methods,
+for the special case when the domain D contains a prime number, p, of elements.
+It was shown in Jeavons et al. [1995] that, in this special case, constraints which
+are closed under an affine operation correspond precisely to constraints which
+may be expressed as conjunctions of linear equations modulo p. (This class of
+tractable constraints is referred to as Class III in Jeavons et al. [1995].)
+   We now generalize this result to arbitrary finite domain sizes by making use of
+a result stated by Feder and Vardi [1993].
+
+   THEOREM 5.4.1 [FEDER AND VARDI 1993]. For any finite group G, and any set
+G of cosets of subgroups of direct products of G, CSP(G) is solvable in polynomial
+time.
+Closure Properties of Constraints                                                              543
+
+  COROLLARY 5.4.2. For any set of relations G, if G is closed under an affine
+operation, then CSP(G) is solvable in polynomial time.
+  PROOF. By Definitions 3.1 and 3.2, any relation R that is closed under an
+affine operation is a subset of a direct product of some Abelian group, with the
+property that for all t 1 , t 2 , t 3 [ R, t 1 2 t 2 1 t 3 [ R. However, this is equivalent
+to saying that R is a coset of a subgroup of this direct product group [McKenzie
+et al. 1987], so we may apply Theorem 5.4.1 to G to obtain the result. e
+  Example 5.4.3. Let ¹ be the affine operation on D 5 {0, 1, 2} which is
+defined by ¹(d 1 , d 2 , d 3 ) 5 d 1 2 d 2 1 d 3 , where addition and subtraction are
+both modulo 3.
+  The relation R 2 defined in Example 2.1.6 is closed under ¹, since applying the
+¹ operation to any three elements of R 2 yields an element of R 2 . For example,
+
+                 ¹ ~^ 0, 1, 2 & , ^ 1, 2, 0 & , ^ 2, 0, 1 &! 5 ^ 1, 2, 0 & [ R 2 .
+Since uDu is prime, the results of Jeavons et al. [1995] indicate that R 2 must be
+the set of solutions to some system of linear equations over the integers modulo
+3. In fact, we have
+
+       R 2 5 $^ x 1 , x 2 , x 3 &u~ x 1 2 x 2 ; 2 ~ mod 3 !! ` ~ x 2 2 x 3 ; 2 ~ mod 3 !!% .
+
+  Example 5.4.4. Let G be the Abelian group ^D, 1, 2&, where D 5 {0, 1, 2,
+3} and the 1 operation is defined by the following table:
+
+
+
+
+Now let ¹ be the affine operation on D 5 {0, 1, 2, 3} which is defined by ¹(d 1 ,
+d 2 , d 3 ) 5 d 1 2 d 2 1 d 3 , where addition and subtraction are as defined in G.
+   Any relation R over D which is a coset of a subgroup of a direct product of G
+will be closed under ¹, and hence CSP({R}) will be tractable by Corollary 5.4.2.
+One example of such a relation is the following:
+
+                    R 5 $^ 0, 1, 2 & , ^ 1, 1, 2 & , ^ 2, 2, 0 & , ^ 3, 2, 0 &% .
+It is easily seen that in this case R is not the set of solutions to any system of
+linear equations over a field.
+  Example 5.4.5. When D 5 {true,false}, there is only one possible Abelian
+group structure over D and hence only one possible affine operation on D.
+  If a set of Boolean relations G is closed under this affine operation, then
+CSP(G) is equivalent to the problem of solving a set of simultaneous linear
+equations over the integers modulo 2. This corresponds to the final tractable
+subproblem of the GENERALIZED SATISFIABILITY problem identified by Schaefer
+[1978].
+544                                                                              P. JEAVONS ET AL.
+
+
+  5.5. SEMIPROJECTIONS. We now show that closure under a semiprojection
+operation is not in general a sufficient condition for tractability. In fact, we shall
+establish a much stronger result, which shows that even being closed under all
+semiprojections is not sufficient to ensure tractability.
+
+  LEMMA 5.5.1. For any finite set D, with uDu $ 3, there exists a set of relations G
+over D, such that G is closed under all semiprojections on D, and CSP(G) is
+NP-complete.
+
+   PROOF. Let D be a finite set with uDu $ 3 and let d 1 , d 2 be elements of D.
+Consider the relation R 5 {^d 1 , d 1 , d 2 &, ^d 1 , d 2 , d 1 &, ^d 2 , d 1 , d 1 &, ^d 2 , d 2 , d 1 &,
+^d 2 , d 1 , d 2 &, ^d 1 , d 2 , d 2 &}. This relation is closed under all semiprojections on
+D, since any 3 elements of R contain at most two distinct values in each
+coordinate position, so the semiprojection reduces to a projection.
+   However, if we identify d 1 with the Boolean value true and d 2 with the
+Boolean value false, then it is easy to see that CSP({R}) is isomorphic to the
+NOT-ALL-EQUAL SATISFIABILITY problem [Garey and Johnson 1979], which is
+NP-complete [Schaefer 1978] (see Example 2.1.5). e
+   It is currently unknown whether there are tractable sets of relations closed
+under some combination of semiprojections, unary operations and binary opera-
+tions that are not included in any of the tractable classes listed above.
+   However, when uDu 5 2 the situation is very simple, as the next example
+shows.
+
+   Example 5.5.2. When D 5 {true,false}, there are no semiprojections on D,
+so there are no subproblems of the SATISFIABILITY problem that are character-
+ized by a closure operation of this form.
+
+
+6. Calculating Closure Operations
+For any set of relations G, over a set D, the operations under which G is closed
+are simply mappings from D k to D, for some k, which satisfy certain constraints,
+as described in Definition 3.3. In this section, we show that it is possible to
+identify these operations by solving a single constraint satisfaction problem in
+CSP(G). In fact, we shall show that these closure operations are precisely the
+solutions to a constraint satisfaction problem of the following form:
+
+  Definition 6.1. Let G be a set of relations over a finite domain D.
+  For any natural number m . 0, the indicator problem for G of order m is
+defined to be the constraint satisfaction problem (3(G, m) with
+—Set of variables D m ;
+—Domain of values D;
+—Set of constraints {C 1 , C 2 , . . . , C q }, such that for each R [ G, and for each
+ sequence t 1 , t 2 , . . . , t m of tuples from R, there is a constraint C i 5 (S i , R)
+ with S i 5 (v 1 , v 2 , . . . , v n ) where n is the arity of R and v j 5 ^t 1 [ j],
+ t 2 [ j], . . . , t m [ j]&.
+
+  Example 6.2.        Consider the relation R 1 over D 5 {0, 1, 2}, defined in
+Example 2.1.6.
+Closure Properties of Constraints                                                                            545
+
+  The indicator problem for {R 1 } of order 1, (3({R 1 }, 1), has three variables
+and four constraints. The set of variables is
+
+                                             $^ 0 & , ^ 1 & , ^ 2 &% ,
+
+and the set of constraints is
+
+                                      $     ~~^ 0 & , ^ 0 &! , R 1 ! ,
+                                            ~~^ 0 & , ^ 1 &! , R 1 ! ,
+                                            ~~^ 1 & , ^ 2 &! , R 1 ! ,
+                                            ~~^ 2 & , ^ 1 &! , R 1 !     }.
+
+  The indicator problem for {R 1 } of order 2, (3({R 1 }, 2), has nine variables
+and 16 constraints. The set of variables is
+
+      $^ 0, 0 & , ^ 0, 1 & , ^ 0, 2 & , ^ 1, 0 & , ^ 1, 1 & , ^ 1, 2 & , ^ 2, 0 & , ^ 2, 1 & , ^ 2, 2 &% ,
+
+and the set of constraints is
+
+                $     ~~^ 0, 0 & , ^ 0, 0 &! , R 1 ! ,     ~~^ 0, 0 & , ^ 0, 1 &! , R 1 ! ,
+                      ~~^ 0, 0 & , ^ 1, 0 &! , R 1 ! ,     ~~^ 0, 0 & , ^ 1, 1 &! , R 1 ! ,
+                      ~~^ 0, 1 & , ^ 0, 2 &! , R 1 ! ,     ~~^ 0, 1 & , ^ 1, 2 &! , R 1 ! ,
+                      ~~^ 0, 2 & , ^ 0, 1 &! , R 1 ! ,     ~~^ 0, 2 & , ^ 1, 1 &! , R 1 ! ,
+                      ~~^ 1, 0 & , ^ 2, 0 &! , R 1 ! ,     ~~^ 1, 0 & , ^ 2, 1 &! , R 1 ! ,
+                      ~~^ 1, 1 & , ^ 2, 2 &! , R 1 ! ,     ~~^ 1, 2 & , ^ 2, 1 &! , R 1 ! ,
+                      ~~^ 2, 0 & , ^ 1, 0 &! , R 1 ! ,     ~~^ 2, 0 & , ^ 1, 1 &! , R 1 ! ,
+                      ~~^ 2, 1 & , ^ 1, 2 &! , R 1 ! ,     ~~^ 2, 2 & , ^ 1, 1 &! , R 1 !     }.
+
+  Further illustrative examples of indicator problems are given in Jeavons et al.
+[1996].
+  Solutions to the indicator problem for G of order m are functions from D m to
+D, or in other words, m-ary operations on D. We now show that they are
+precisely the m-ary operations under which G is closed.
+
+ THEOREM 6.3. For any set of relations G over domain D, the set of solutions to
+(3(G, m) is equal to the set of m-ary operations under which G is closed.
+
+  PROOF. By Definition 3.3, we know that G is closed under the m-ary
+operation R if and only if R satisfies the condition R(t 1 , t 2 , . . . , t m ) [ R for
+each possible choice of R [ G and t 1 , t 2 , . . . , t m [ R (not necessarily all
+distinct). But, by Definition 6.1, this is equivalent to saying that R satisfies all the
+constraints in (3(G, m), so the result follows. e
+
+  Example 6.4. Consider the relation R 1 over D 5 {0, 1, 2}, defined in
+Example 2.1.6.
+  The indicator problem for {R 1 } of order 1, defined in Example 6.2, has two
+546                                                             P. JEAVONS ET AL.
+
+
+solutions, which may be expressed in tabular form as follows:
+
+
+
+
+One of these solutions is a constant operation, so CSP({R 1 }) is tractable, by
+Proposition 5.1.1. In fact, any problem in CSP({R 1 }) has the solution that
+assigns the value 0 to each variable, so the complexity of CSP({R 1 }) is trivial.
+  The indicator problem for {R 1 } of order 2, defined in Example 6.2, has 4
+solutions, which may be expressed in tabular form as follows:
+
+
+
+
+The first of these solutions is a constant operation, and the second and third are
+essentially unary operations. However, the fourth solution shown in the table is
+more interesting. It is easily checked that this operation is an associative,
+commutative, idempotent (ACI) binary operation, so we have a second proof
+that CSP({R 1 }) is tractable, by Theorem 5.3.4. Furthermore, this result shows
+that R 1 can be combined with any other relations (of any arity) that are also
+closed under this ACI operation to obtain larger tractable problem classes.
+  COROLLARY 6.5. For any set of relations G over a domain D, with uDu $ 3, if all
+solutions to (3(G, uDu) are essentially unary, then CSP(G) is NP-complete.
+  PROOF.    Follows from Theorem 3.8, Theorem 4.1, and Theorem 6.3.          e
+  Example 6.6. Recall the relations R 1 , R 2 , and R 3 defined in Example 2.1.6. It
+has been shown in Examples 6.4, 5.4.3, and 5.1.2 that a set containing any one of
+these relations on its own is tractable.
+  For any set G containing more than one of these relations, it can be shown,
+using Corollary 6.5, that CSP(G) is NP-complete.
+  In the special case when uDu 5 2, we obtain an even stronger result.
+   COROLLARY 6.7. For any set of relations G over a domain D, with uDu 5 2, if all
+solutions to (3(G, 3) are essentially unary, then CSP(G) is NP-complete; otherwise,
+it is polynomial.
+  PROOF. It has been shown in Examples 5.1.3, 5.2.5, 5.3.5, 5.4.5, and 5.5.2 that,
+when uDu 5 2, all possible closure operations of the restricted types specified in
+Corollary 4.2 are sufficient to ensure tractability. e
+Closure Properties of Constraints                                                           547
+
+  This result demonstrates that solving the indicator problem of order 3 provides
+a simple and complete test for tractability of any set of relations over a domain
+with 2 elements. This answers a question posed by Schaefer [1978] concerning
+the existence of an efficient test for tractability in the GENERALIZED SATISFIABIL-
+ITY problem. Note that carrying out the test requires finding the solutions to a
+constraint satisfaction problem with just eight Boolean variables.
+
+7. Conclusion
+In this paper, we have shown how the algebraic properties of relations can be
+used to distinguish between sets of relations that give rise to tractable constraint
+satisfaction problems and those which give rise to NP-complete problems.
+Furthermore, we have proposed a method for determining the operations under
+which a set of relations is closed by solving a particular form of constraint
+satisfaction problem, which we have called an indicator problem.
+   For problems where the domain contains just two elements, these results
+provide a necessary and sufficient condition for tractability (assuming that P is
+not equal to NP), and an efficient test to distinguish the tractable sets of
+relations.
+   For problems with larger domains, we have described algebraic closure
+properties that are a necessary condition for tractability. We have also shown
+that, in many cases, these closure properties are sufficient to ensure tractability.
+   In particular, we have shown that closure under any constant operation, any
+majority operation, any ACI operation, or any affine operation, is a sufficient
+condition for tractability. It can be shown using the results of Jeavons [1995] that
+for any operation of one of these types, the set, G, containing all relations which
+are closed under that operation is a maximal set of tractable relations. In other
+words, the addition of any other relation which is not closed under the same
+operation changes CSP(G) from a tractable problem into an NP-complete
+problem. Hence, the tractable classes defined in this way are as large as possible.
+   We are now investigating the application of these results to particular problem
+types, such as temporal problems involving subsets of the interval algebra. We
+are also attempting to determine how the presence of particular algebraic closure
+properties in the constraints can be used to derive appropriate efficient algo-
+rithms for tractable problems.
+
+ACKNOWLEDGMENTS.       We are grateful to Martin Cooper for many helpful
+discussions, and for suggesting the proof of Theorem 5.2.4.
+
+REFERENCES
+
+CODD, E. F. 1970. A relational model of data for large shared data banks. Commun. ACM 13, 6
+ (June), 377–387.
+COHEN, D., GYSSENS, M., AND JEAVONS, P. 1996. Derivation of constraints and database relations.
+ In Proceedings of the 2nd International Conference on Constraint Programming—CP ’96 (Boston,
+ Mass., Aug.). Lecture Notes in Computer Science, 1118. Springer-Verlag, New York, pp. 134 –148.
+COHN, P. M. 1965. Universal Algebra. Harper & Row, New York.
+COOPER, M. C., COHEN, D. A. AND JEAVONS, P. G. 1994. Characterizing tractable constraints. Artif.
+ Int. 65, 347–361.
+DECHTER, R. 1992. From local to global consistency. Artif. Int. 55, 87–107.
+DECHTER, R., AND PEARL, J. 1988. Network-based heuristics for constraint-satisfaction problems.
+ Artif. Int. 34, 1–38.
+548                                                                           P. JEAVONS ET AL.
+
+
+DECHTER, R., AND PEARL, J. 1992. Structure identification in relational data. Artif. Int. 58,
+  237–270.
+FEDER, T., AND VARDI, M. 1993. Monotone monadic SNP and constraint satisfaction. In Proceed-
+  ings of the 25th ACM Symposium on the Theory of Computing (STOC) (San Diego, Calif., May
+  16 –18). ACM, New York, pp. 612– 622.
+FREUDER, E. C. 1985. A sufficient condition for backtrack-bounded search. J. ACM 32, 4 (Oct.),
+  755–761.
+FREUDER, E. C. 1991. Eliminating interchangeable values in constraint satisfaction problems. In
+  Proceedings of AAAI-91. pp. 227–233.
+GAREY, M. R., AND JOHNSON, D. S. 1979. Computers and Intractability: A Guide to the Theory of
+  NP-Completeness. Freeman, San Francisco, Calif.
+GYSSENS, M., JEAVONS, P., AND COHEN, D. 1994. Decomposing constraint satisfaction problems
+  using database techniques. Artif. Int. 66, 57– 89.
+JEAVONS, P. G. 1995. An algebraic characterization of tractable constraints. Tech. Rep. CSD-TR-
+  95-05. Royal Holloway, Univ. London, London, United Kingdom.
+JEAVONS, P., COHEN, D., AND GYSSENS, M. 1995. A unifying framework for tractable constraints.
+  In Proceedings of the 1st International Conference on Principles and Practice of Constraint Program-
+  ming—CP ’95 (Cassis, France, Sept.). Lecture Notes in Computer Science, vol. 976. Springer-
+  Verlag, New York, pp. 276 –291.
+JEAVONS, P., COHEN, D., AND GYSSENS, M. 1996. A test for tractability. In Proceedings of the 2nd
+  International Conference on Constraint Programming—CP ’96 (Boston, Mass., Aug.). Lecture Notes
+  in Computer Science, vol. 1118. Springer-Verlag, New York, pp. 267–281.
+JEAVONS, P. G., AND COOPER, M. C. 1996. Tractable constraints on ordered domains. Artif. Int. 79,
+  327–339.
+KIROUSIS, L. 1993. Fast parallel constraint satisfaction. Artif. Int. 64, 147–160.
+LADKIN, P. B., AND MADDUX, R. D. 1994. On binary constraint problems. J. ACM 41, 3 (May),
+  435– 469.
+MACHIDA, H., AND ROSENBERG, I. G. 1984. Classifying essentially minimal clones. In Proceedings
+  of the 14th International Symposium on Multiple-Valued Logic. (Winnipeg, 1984), pp. 4 –7.
+MACKWORTH, A. K. 1977. Consistency in networks of relations. Artif. Int. 8, 99 –118.
+MCKENZIE, R. N., MCNULTY, G. F., AND TAYLOR, W. F. 1987. Algebras, Lattices and Varieties.
+  Volume I. Wadsworth and Brooks, Calif.
+MONTANARI, U. 1974. Networks of constraints: Fundamental properties and applications to
+  picture processing. Inf. Sci. 7, 95–132.
+MONTANARI, U., AND ROSSI, F. 1991. Constraint relaxation may be perfect. Artif. Int. 48, 143–170.
+PAPADIMITRIOU, C. H. 1994. Computational Complexity, Addison-Wesley, Reading, Pa.
+ROSENBERG, I. G. 1986. Minimal clones I: The five types. In Lectures in Universal Algebra (Proc.
+  Conf. Szeged 1983), Colloq. Math. Soc. Janos Bolyai, vol. 43. North-Holland, Amsterdam, The
+  Netherlands, pp. 405– 427.
+SCHAEFER, T. J. 1978. The complexity of satisfiability problems. In Proceedings of the 10th ACM
+  Symposium on Theory of Computing (San Diego, Calif., May 1–3). ACM, New York, pp. 216 –226.
+SZENDREI, A. 1986. Clones in Universal Algebra. Seminaires de Mathematiques Superieures 99,
+  University of Montreal, Montreal, Que., Canada.
+VAN BEEK, P. 1992. On the minimality and decomposability of row-convex constraint networks. In
+  Proceedings of the 10th National Conference on Artificial Intelligence, AAAI-92. MIT Press, Cam-
+  bridge, Mass., pp. 447– 452.
+VAN HENTENRYCK, P., DEVILLE, Y., AND TENG, C-M. 1992. A generic arc-consistency algorithm
+  and its specializations. Artif. Int. 57, 291–321.
+
+RECEIVED OCTOBER 1996; REVISED MAY 1997; ACCEPTED APRIL 1997
+
+
+
+
+Journal of the ACM, Vol. 44, No. 4, July 1997.
+
