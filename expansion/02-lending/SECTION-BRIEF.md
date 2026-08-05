@@ -28,14 +28,109 @@ Element-set sizes 9, 12, 12, 14, 16, 17.
 
 The answer to the assigned question, plainly: Aave V3 and Compound V3 do not produce identical strings, but the differences the vocabulary records are peripheral facilities, and every difference that matters is invisible to it. Aave carries {Fl, Bs, Cd, Xm, Fd} that Compound lacks; Compound carries {Im, Sl} that Aave (mostly) lacks. Everything describing how a loan is opened, priced, monitored and closed — Pl, Ix, Rb, Ct, Ex, Li, Em, Up, Tg, Gp — is shared verbatim. Meanwhile the four things that actually distinguish these protocols in production (kinked-vs-per-market rate model; multi-asset shared pool vs single base asset; repay-liquidation vs absorb-then-sell; interest-bearing vs inert collateral) generate exactly zero symbol differences. So the vocabulary's resolution in lending is roughly 'is it a pool, and does it have a health check' — which every entry answers yes to. SparkLend is worse: its element set is a strict subset of Aave V3's, containing no symbol Aave lacks, because it is an Aave V3 fork. Across the category the dominant gaps are (1) the interest-rate model, absent and load-bearing in all six; (2) delegated risk curation, an $8.76B business with zero coverage; (3) the risk-parameter layer (caps, ceilings, e-mode, close factor); (4) credit delegation, reachable only via contested Cg; (5) protocol-to-protocol credit lines; (6) off-chain enforcement and custody for the Uc/institutional wing.
 
-## Stage 3
+## Stage 3: the constructions, machine-checked
 
-*Not yet run for this category — no `verdicts.json`.*
+5 applications, 112 obligations, 51 discharged, 61 residue, coverage 45.5%.
+
+| application | construction | canonical form | verdict | obligations | residue |
+|---|---|---|---|---|---|
+| Aave V3 | `Aw,Ct,Ex,Fd,Fl,Gp,Ix,Li,Pl,Rb,Tg,Up,Xm` | `Aw,Ex,Fd,Fl,Gp,Ix,Li,Pl,Rb,Tg,Up,Xm` | **PARTIAL** | 12/23 | 11 |
+| JustLend V1 | `Aw,Ct,Ex,Gp,Ix,Li,Pl,Sh,Tg,Up` | `Aw,Ex,Gp,Ix,Li,Pl,Sh,Tg,Up` | **PARTIAL** | 10/18 | 8 |
+| Maple | `Aw,Bs,Ct,Fd,Ft,Gp,Pl,Sh,Sl,Sv,Tg,Up,Wq` | `Aw,Bs,Fd,Ft,Gp,Pl,Sh,Sl,Sv,Tg,Up,Wq` | **INADMISSIBLE** (L1:Ex|Tp|At) | 10/23 | 13 |
+| Morpho | `Aw,Ct,Ex,Fd,Gp,Im,Ix,Li,Pl,Sh,Sl,Tg` | `Aw,Ex,Fd,Gp,Im,Ix,Li,Pl,Sh,Sl,Tg` | **PARTIAL** | 11/24 | 13 |
+| SparkLend | `Aw,Ct,Ex,Fl,Gp,Ix,Li,Pl,Rb,Tg,Up` | `Aw,Ex,Fl,Gp,Ix,Li,Pl,Rb,Tg,Up` | **PARTIAL** | 8/24 | 16 |
+
+### Where the corpus and the construction disagree
+
+- **Aave V3** — added `Aw`, dropped `Bs,Cd,Em,Im,Sl`.
+- **JustLend V1** — added `Aw,Tg`, dropped `Em`.
+- **Maple** — added `Bs,Fd,Sl`, dropped `At,Em,Ex,Ix,Li,Uc`.
+- **Morpho** — added `Fd`, dropped `Em,Fl,Sv`.
+- **SparkLend** — added `Aw`, dropped `Em,Im`.
+
+### Residue, verbatim
+
+**Aave V3** (11):
+
+- a liquid-staking-token feed is wrapped in an adapter that rejects any published value implying growth faster than a governance-set maximum yearly ratio, live example 10.64 per cent for wstETH
+- how much of a position one liquidation may take is itself a computed quantity: at most half the debt when the health factor is above 0.95 and both the collateral and the debt exceed 2000 units of base currency, otherwise all of it, and in no case may the call leave less than 1000 base units of either side standing
+- borrowing power is raised above the ordinary per-asset limits when the collateral and the debt belong to one governance-declared category of assets expected to track each other
+- each reserve carries a supply cap and a borrow cap that bound aggregate exposure to the asset independently of whether any individual position is solvent
+- the borrow rate is a memoryless two-slope function of the reserve's current utilisation alone -- base rate, a first slope up to a kink, a steeper second slope beyond it -- and the supply rate is that borrow rate scaled by supply utilisation and by one minus the reserve factor
+- whatever curve is written must satisfy hard bounds checked at write time: the sum of base rate and both slopes may not exceed 1000 per cent, the kink must lie between 1 and 99 per cent, and the first slope may never exceed the second
+- inside the strategy contract a permitted caller moves the entire curve in one transaction: there is no delay before the change takes effect and no limit on how far it may move
+- that address may act only within an enumerated set of parameter families -- caps, rates, the collateral side, e-mode categories, and three kinds of oracle price cap -- and any individual asset or e-mode may be fenced out of its reach entirely
+- each parameter carries its own maximum change per update, expressed either as a percentage of the current value or as an absolute step, and an update outside that range reverts
+- no parameter may be moved again until a minimum interval has passed since that same parameter was last moved on that same asset, each pair carrying its own timestamp
+- the principal may zero the envelope or fence any asset at any time, but cannot remove the agent: the agent's address is fixed at deployment and this contract holds no way to change it
+
+**JustLend V1** (8):
+
+- the rate is quoted and accrued per block rather than per second or per year, with a hard-coded 10,512,000 blocks per year matching a three-second chain, so the realised annual rate depends on how fast the chain produces blocks
+- one liquidation may repay at most a fixed fraction of the outstanding borrow, the fraction being a governed constant that does not depend on how far underwater the position is
+- the risk parameters are bounded in code at write time: a collateral factor may not exceed ninety per cent, a close factor must lie between five and ninety per cent, and a liquidation incentive must lie between one and one-and-a-half
+- the borrow rate is a memoryless two-slope jump-rate function of current utilisation, and the supply rate is utilisation times the borrow rate net of the reserve factor
+- nothing bounds what that curve may become: there is no maximum rate, no minimum or maximum kink, no requirement that the jump multiplier exceed the ordinary one, and no limit on how far a single update may move any of them
+- every risk and every rate parameter in the protocol is set directly by one administrative address, with no per-parameter envelope, no step limit, no cooldown and no delegate of any kind
+- the parameter changes that were actually executed are themselves committed to the repository as deployable contracts
+- no contract in this repository rents chain execution resources, so the resource-rental business the corpus attributes to this protocol is not part of the artefact decomposed here
+
+**Maple** (13):
+
+- the price of credit is a term of a bilateral contract, not an output of the protocol: a fixed annualised rate written into the loan at origination, alongside a closing rate, a late-fee rate and a premium that raises the interest rate once a payment is overdue past the grace period
+- the rate is agreed by the delegate and the borrower, and a loan cannot be funded until the borrower has accepted the terms
+- nothing in the loan contract bounds that rate: there is no maximum, no minimum and no permitted interval on any of the four rate fields
+- the rate does not move until both parties agree a new one: a change of terms is proposed as a hash commitment and takes effect only when the counterparty accepts it
+- closing a bad loan is an authorised act by a named party rather than a race: the delegate or a protocol admin triggers a default, no third party is paid to do it, and the process may span several transactions and be finished later by a second authorised call
+- the delegate may act only through instances the protocol registry recognises by kind -- a strategy, a liquidator factory, a withdrawal manager, a permission manager -- rather than through an enumerated list of addresses
+- the delegate cannot originate a loan while its own posted capital is below the protocol's floor, and cannot withdraw that capital below the same floor
+- the pool has a maximum size it may accept, and after configuration it is the protocol's admins and not the delegate who set it
+- nothing limits how fast the delegate may lend: within the cap it may originate at will, with no cooldown, no step limit and no throughput budget
+- the protocol's admins may replace the delegate, the registry alone may deactivate the pool, and every function in the pool manager stops while the protocol is paused
+- several powers exist only until the pool is configured and then move to a different party or vanish
+- there is no permissionless action anywhere on the credit side of this protocol: depositing is gated, originating is delegated, defaulting is authorised, and the only act anyone may take unbidden is to leave, which is queued
+- no price source exists in the pool layer at all: the pool manager holds no oracle, and where the secured book's collateral is valued is not established on chain
+
+**Morpho** (13):
+
+- anyone may create a market from any combination whose interest-rate model and loan-to-value are on governance's enabled lists, and nobody may edit it afterwards
+- the protocol checks nothing whatever about that oracle -- not its source, not its decimals, not its liveness -- and the address can never be changed for the life of the market
+- a borrow or a withdrawal is refused whenever it would leave the market's borrowed assets above its supplied assets, and that is the whole of a lender's exit guarantee -- there is no queue, no ordering, no buffer and no reserve
+- the borrow rate is produced by a closed-loop controller: a static curve of steepness four around a target rate, and that target rate itself drifts continuously toward whatever level drives utilisation to ninety per cent
+- no party may change any parameter of that controller: the steepness, the target, the adjustment speed and the bounds are compile-time constants in a contract with no setter and no admin
+- the controller's output is clamped in code: the target rate may never leave the band from one tenth of one per cent to two hundred per cent a year, so the realised borrow rate lies between 0.025 and 800 per cent a year
+- the only rate decision anyone ever makes is which interest-rate-model address a market is created with, and that address is then part of the market's identity and frozen for its life
+- no owner function can alter an existing market's oracle, model or loan-to-value, there is no proxy and no pause anywhere in the singleton, and the permitted lists may only be widened -- an enabled model or loan-to-value can never be disabled
+- the vault is itself a depositor in markets it does not control, so what a vault shareholder holds is a claim on a lender rather than a claim on a loan
+- the money may enter only markets the curator has admitted, and a market may not be admitted at all unless its loan asset is the vault's own asset and it already exists on the singleton, with at most thirty markets in the queue
+- no market may hold more of the vault's money than its own supply cap, checked on every allocation
+- the owner may remove the curator or any allocator at any moment, immediately and without a delay
+- an allocation must end where it began: the total withdrawn across markets in one call must equal the total supplied, so the allocator may permute the deposit and can never move value out of the vault
+
+**SparkLend** (16):
+
+- the borrow rate has the same two-slope kinked form as Aave's, but its base rate and its rate at the kink are not stored numbers -- they are read live, on every call, as a fixed spread over another protocol's savings rate
+- the quantity the rate tracks is fetched by a direct call into another protocol's own accumulator, not from any feed, medianizer or reporter
+- no party sets the rate in place: the spreads are fixed in the strategy contract's constructor and can only be changed by deploying a new strategy contract and repointing the reserve at it
+- nothing bounds the rate on SparkLend's own side: there is no maximum on the spread and no maximum on the level, which is whatever the tracked protocol sets
+- when the tracked protocol changes its savings rate, SparkLend's kink rate moves on the next interaction with no transaction on SparkLend at all
+- the lender of last resort is not a depositor: liquidity issued by another protocol is moved into SparkLend and into other venues by an operator acting on that other protocol's behalf
+- the keeper may act only on assets that have been given a configuration, and an asset with none is inert -- the computation returns its cap unchanged
+- each configured cap has a ceiling it may never exceed and a headroom it maintains above current usage, so the new cap is the lesser of current usage plus headroom and that ceiling
+- a cap may be lowered whenever the keeper likes but may not be raised again until a cooldown has passed since it was last raised, and no cap may be touched twice in one block
+- the admin may delete any asset's configuration and may remove the keeper's role outright
+- every permitted action is identified by a key naming an action and a venue together, and a key with no budget cannot be used at all
+- each key carries a ceiling that is the most the agent can move in any one action
+- spent budget refills continuously with elapsed time at a per-key rate, so what bounds the agent is not how often it acts but how much it may move per unit of time
+- the admin may also switch the bound off entirely for any single key in one transaction with no delay, after which the agent's budget is unlimited and the checks short-circuit
+- an oracle written and maintained in this protocol's own repository is supplied as the price source for markets in a different lending protocol
+- the protocol's code is a fork of one protocol and the price of its credit is a function of a second protocol's state, so it depends on two upstreams for two different things
 
 ## Sources
 
 - Round-one research: `expansion/02-lending/01-research.md`
 - Obligation specs: `expansion/02-lending/specs/`
+- Verdicts: `expansion/02-lending/verdicts.json`
 - Knowledge graph: `expansion/02-lending/graphify-out/graph.json` — 57 nodes, 54 links
 
 ---

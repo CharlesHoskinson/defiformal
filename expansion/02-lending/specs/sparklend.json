@@ -1,0 +1,176 @@
+{
+  "app": "SparkLend",
+  "category": "02-lending",
+  "source": "C:\\defiformal-work\\02-lending\\01-research.md",
+  "construction": ["Pl", "Ix", "Rb", "Ct", "Ex", "Li", "Fl", "Aw", "Gp", "Up", "Tg"],
+  "functionalObligations": [
+    {
+      "id": "F1",
+      "text": "a supplier deposits an asset into a single shared reserve and receives an interest-bearing claim token whose nominal balance grows as a per-reserve index accrues",
+      "elements": ["Pl", "Ix", "Rb"],
+      "evidence": "https://api.github.com/repos/sparkdotfi/sparklend-v1-core/git/trees/dev?recursive=1 (accessed 2026-08-04)",
+      "note": "Inherited verbatim from Aave V3 and the fork is confirmed structurally rather than asserted: the tree carries contracts/protocol/pool/DefaultReserveInterestRateStrategy.sol, the Aave-V3 PoolConfigurator and ACLManager layout, AToken, StableDebtToken and VariableDebtToken, flashloan/, and the Aave certora/ harness set. REPOSITORY DELTA: the org is sparkdotfi, not the corpus-era marsfoundation, and the core's default branch is dev, not main or master (https://api.github.com/repos/sparkdotfi/sparklend-v1-core, accessed 2026-08-04)."
+    },
+    {
+      "id": "F2",
+      "text": "a borrower marks supplied reserves as collateral, draws an open-ended loan with no maturity, and is monitored by a single on-chain health factor computed from oracle-priced collateral against oracle-priced debt",
+      "elements": ["Pl", "Ct", "Ex"],
+      "evidence": "https://api.github.com/repos/sparkdotfi/sparklend-v1-core/git/trees/dev?recursive=1 (accessed 2026-08-04)",
+      "note": "Ex is warranted by a purpose-built oracle estate rather than by the fork alone: WSTETHExchangeRateOracle, RETHExchangeRateOracle, WEETHExchangeRateOracle, EZETHExchangeRateOracle, RSETHExchangeRateOracle, SPETHExchangeRateOracle, CBBTCRatioOracle, FixedPriceOracle, CappedOracle and MorphoUpgradableOracle all sit in https://github.com/sparkdotfi/sparklend-advanced (accessed 2026-08-04). Two of those names are themselves residue: an EXCHANGE-RATE oracle reports a redemption ratio rather than a market price, and a CappedOracle bounds what a feed may report -- the same predicate-on-a-feed gap recorded at Aave (aave-v3.json F5). Ex names one undifferentiated feed for all of them."
+    },
+    {
+      "id": "F3",
+      "text": "a third party may repay part of an unhealthy borrower's debt and seize collateral at a bonus, permissionlessly",
+      "elements": ["Li"],
+      "evidence": "https://api.github.com/repos/sparkdotfi/sparklend-v1-core/git/trees/dev?recursive=1 (accessed 2026-08-04)",
+      "note": "Li is exact, inherited. The close-factor machinery is inherited too and carries the same residue as Aave's (aave-v3.json F7); this lane did not read SparkLend's LiquidationLogic to establish whether the fork tracks Aave's current dynamic close factor or an earlier constant one, so WHICH OF THE TWO SHAPES SparkLend runs is UNKNOWN. That question is unaskable in the vocabulary, which is the point."
+    },
+    {
+      "id": "F4",
+      "text": "anyone may borrow and repay within a single transaction with no collateral",
+      "elements": ["Fl"],
+      "evidence": "https://api.github.com/repos/sparkdotfi/sparklend-v1-core/git/trees/dev?recursive=1 (accessed 2026-08-04)",
+      "note": "Inherited; the tree carries a flashloan/ directory. Conditional prohibition X2 is armed by construction and not met inside this application, as at Aave."
+    },
+    {
+      "id": "F5",
+      "text": "the borrow rate has the same two-slope kinked form as Aave's, but its base rate and its rate at the kink are not stored numbers -- they are read live, on every call, as a fixed spread over another protocol's savings rate",
+      "elements": [],
+      "evidence": "https://raw.githubusercontent.com/sparkdotfi/sparklend-advanced/master/src/RateTargetKinkInterestRateStrategy.sol (accessed 2026-08-04)",
+      "note": "RESIDUE, and FINDING 1's third row. RateTargetBaseInterestRateStrategy sets _getBaseVariableBorrowRate() = RATE_SOURCE.getAPR() * 10^(27-dec) + _baseVariableBorrowRateSpread; RateTargetKinkInterestRateStrategy sets _getVariableRateSlope1() = max(0, RATE_SOURCE.getAPR() * 10^(27-dec) + _variableRateSlope1Spread - _baseVariableBorrowRate). THE FUNCTIONAL FORM IS THE SAME AS AAVE'S AND THE INSTRUMENT IS NOT, which refutes the corpus's own identity claim -- see F24. The slope-1 spread is a SIGNED int256, so SparkLend can deliberately price its kink BELOW the rate it tracks, a sign convention that carries the whole commercial policy and that no element could hold."
+    },
+    {
+      "id": "F6",
+      "text": "the quantity the rate tracks is fetched by a direct call into another protocol's own accumulator, not from any feed, medianizer or reporter",
+      "elements": [],
+      "evidence": "https://raw.githubusercontent.com/sparkdotfi/sparklend-advanced/master/src/SSRRateSource.sol (accessed 2026-08-04)",
+      "note": "RESIDUE, and the sharpest one for this target. PotRateSource.getAPR() = (pot.dsr() - 1e27) * 365 days and SSRRateSource.getAPR() = (susds.ssr() - 1e27) * 365 days (https://raw.githubusercontent.com/sparkdotfi/sparklend-advanced/master/src/PotRateSource.sol, accessed 2026-08-04). This is NOT Ex: there is no oracle, no feed, no publisher, no staleness, nothing to be wrong -- it is a staticcall into a live state variable of a contract in another system. It is not Ix either. The vocabulary has no way to say THIS PROTOCOL'S PRICE IS A FUNCTION OF THAT PROTOCOL'S PRICE, which is the containment gap (morpho.json F16) appearing on the rate axis rather than the allocation axis. A CappedFallbackRateSource also exists, so even the fallback is a rate source rather than a feed."
+    },
+    {
+      "id": "F7",
+      "text": "no party sets the rate in place: the spreads are fixed in the strategy contract's constructor and can only be changed by deploying a new strategy contract and repointing the reserve at it",
+      "elements": [],
+      "evidence": "https://raw.githubusercontent.com/sparkdotfi/sparklend-advanced/master/src/RateTargetBaseInterestRateStrategy.sol (accessed 2026-08-04)",
+      "note": "RESIDUE. FINDING 1: THE SETTER LOCUS -- another protocol's state variable for the level, and a redeployment for the spread. _baseVariableBorrowRateSpread and _variableRateSlope1Spread are immutable; the change path is a governance spell (https://api.github.com/orgs/sparkdotfi/repos?per_page=100, accessed 2026-08-04, spark-spells, AGPL-3.0, last push 2026-08-04T08:18:54Z). Up is the WRONG symbol and instructively so: Up names a mutable implementation behind a fixed address, and this is the exact opposite -- an IMMUTABLE IMPLEMENTATION BEHIND A MUTABLE POINTER. The two have different risk objects (an upgrade rewrites history for existing users; a repoint applies only forward) and the vocabulary has one symbol and it is the wrong one."
+    },
+    {
+      "id": "F8",
+      "text": "nothing bounds the rate on SparkLend's own side: there is no maximum on the spread and no maximum on the level, which is whatever the tracked protocol sets",
+      "elements": [],
+      "evidence": "https://raw.githubusercontent.com/sparkdotfi/sparklend-advanced/master/src/RateTargetKinkInterestRateStrategy.sol (accessed 2026-08-04)",
+      "note": "RESIDUE. FINDING 1: THE BOUND -- INHERITED, which is a fourth distinct answer after Aave's in-code parameter bounds, Morpho's in-code output clamp and JustLend's nothing at all. SparkLend's safety on the level is entirely a property of a governance process in a different organisation. No element expresses a bound held by a third party, and none expresses that a protocol has DELEGATED ITS RISK LIMIT TO ANOTHER PROTOCOL'S GOVERNANCE."
+    },
+    {
+      "id": "F9",
+      "text": "when the tracked protocol changes its savings rate, SparkLend's kink rate moves on the next interaction with no transaction on SparkLend at all",
+      "elements": [],
+      "evidence": "https://raw.githubusercontent.com/sparkdotfi/sparklend-advanced/master/src/SSRRateSource.sol (accessed 2026-08-04)",
+      "note": "RESIDUE. FINDING 1: THE LATENCY -- instantaneous and automatic in one direction, a deployment cycle in the other. This is NOT the CDP lane's 'administered rate keyed to external benchmarks': an administered rate is written by a party who reads a benchmark, and this is a LIVE FUNCTIONAL DEPENDENCY with no writer in the loop. Tg names a delay and there is none; Ep names a period and there is none; the change happens because someone touched the reserve for an unrelated reason."
+    },
+    {
+      "id": "F10",
+      "text": "the lender of last resort is not a depositor: liquidity issued by another protocol is moved into SparkLend and into other venues by an operator acting on that other protocol's behalf",
+      "elements": [],
+      "evidence": "https://api.github.com/repos/sparkdotfi/spark-alm-controller/git/trees/master?recursive=1 (accessed 2026-08-04)",
+      "note": "RESIDUE, confirming the corpus verbatim and extending it. The subsystem is real and separately engineered: ALMProxy.sol, ALMProxyFreezable.sol, MainnetController.sol, ForeignController.sol, OTCBuffer.sol, RateLimits.sol, RateLimitHelpers.sol, plus venue libraries for Aave, Curve, Uniswap V4, CCTP, LayerZero, ERC-4626 and the peg-swap module. Not Pl (there is no depositor and no claim), not Em (nothing is emitted), not Ps (no one-for-one reserve swap), not Cd (no per-position collateral). What the corpus did not record and this lane adds is that THE LINE IS ITSELF A BOUNDED DELEGATE MANDATE (F16 to F21), which converts the finding from 'an unnameable facility' into 'an unnameable facility governed by the same five-part shape found in three other categories'. The D3M's rate-targeting objective and which venues are live remain UNKNOWN -- MainnetController.sol was not read."
+    },
+    {
+      "id": "F11",
+      "text": "a named keeper role may move the protocol's supply and borrow caps without a governance vote, and a separate admin role sets the envelope it moves inside",
+      "elements": ["Aw"],
+      "evidence": "https://raw.githubusercontent.com/sparkdotfi/sparklend-cap-automator/master/src/CapAutomator.sol (accessed 2026-08-04)",
+      "note": "MANDATE SLOT 1 (named agent), instance (a) of two at this target. Aw APPROXIMATE, uniform reading (see aave-v3.json F13). OpenZeppelin AccessControlEnumerable with UPDATE_ROLE for the keeper and DEFAULT_ADMIN_ROLE for governance, both required non-zero at construction. THIS IS THE LIMIT CASE OF THE SHAPE AND WORTH RECORDING AS SUCH: the target cap is a pure function of observed usage, so the UPDATE_ROLE holder exercises no discretion at all and chooses only WHEN to call. The mandate has been narrowed until the agent is a crank. A schema that treats 'named agent' as a party with judgement will misdescribe this instance, and Aave's automaton variant (aave-v3.json F16) reaches the same place from the other direction. MANDATE SLOT 6 (agent stake): EMPTY. Performance fee: absent -- the keeper is not paid by this contract."
+    },
+    {
+      "id": "F12",
+      "text": "the keeper may act only on assets that have been given a configuration, and an asset with none is inert -- the computation returns its cap unchanged",
+      "elements": [],
+      "evidence": "https://raw.githubusercontent.com/sparkdotfi/sparklend-cap-automator/master/src/CapAutomator.sol (accessed 2026-08-04)",
+      "note": "MANDATE SLOT 2 (domain whitelist). RESIDUE. Per-asset supplyCapConfigs and borrowCapConfigs; _calculateNewCap returns the current value when max == 0. Note the default: THE DOMAIN FAILS CLOSED, an unconfigured asset being untouchable rather than unlimited. The 09-rwa lane found a gate at the same organisation's competitor that fails OPEN. A gate that fails open and a gate that fails closed are different security objects and no element distinguishes them."
+    },
+    {
+      "id": "F13",
+      "text": "each configured cap has a ceiling it may never exceed and a headroom it maintains above current usage, so the new cap is the lesser of current usage plus headroom and that ceiling",
+      "elements": [],
+      "evidence": "https://raw.githubusercontent.com/sparkdotfi/sparklend-cap-automator/master/src/CapAutomator.sol (accessed 2026-08-04)",
+      "note": "MANDATE SLOT 3 (magnitude cap). RESIDUE. max, further bounded by ReserveConfiguration.MAX_VALID_SUPPLY_CAP and MAX_VALID_BORROW_CAP, with gap <= max enforced. Two bounds of different kinds live in one slot here: an ABSOLUTE ceiling (max) and a RELATIVE headroom (gap) which makes the cap track usage. A single 'magnitude cap' field cannot hold both, and the relative one is the interesting half -- it is a cap that follows the thing it caps."
+    },
+    {
+      "id": "F14",
+      "text": "a cap may be lowered whenever the keeper likes but may not be raised again until a cooldown has passed since it was last raised, and no cap may be touched twice in one block",
+      "elements": [],
+      "evidence": "https://raw.githubusercontent.com/sparkdotfi/sparklend-cap-automator/master/src/CapAutomator.sol (accessed 2026-08-04)",
+      "note": "MANDATE SLOT 4 (rate-of-change limit or delay). RESIDUE. increaseCooldown seconds tracked in lastIncreaseTime and applied to increases only -- the source comment reads 'Cap cannot be increased before cooldown passes, but can be decreased' -- plus a lastUpdateBlock == block.number guard. Tg does NOT reach this: a cooldown SINCE the last change is not a delay BEFORE execution, and the keeper's call executes immediately. THE ASYMMETRY IS THE SECOND INDEPENDENT REDISCOVERY: MetaMorpho reached instant-to-tighten and slow-to-loosen in a different organisation over a different quantity by a different mechanism (morpho.json F20). Two independent arrivals at the same asymmetry is evidence it is structural, and it is the property the current one-field schema most obviously cannot hold."
+    },
+    {
+      "id": "F15",
+      "text": "the admin may delete any asset's configuration and may remove the keeper's role outright",
+      "elements": [],
+      "evidence": "https://raw.githubusercontent.com/sparkdotfi/sparklend-cap-automator/master/src/CapAutomator.sol (accessed 2026-08-04)",
+      "note": "MANDATE SLOT 5 (revocation). RESIDUE. removeSupplyCapConfig and removeBorrowCapConfig under DEFAULT_ADMIN_ROLE, plus revokeRole(UPDATE_ROLE, ...) from AccessControlEnumerable. Aw is not emitted, for the reason given at morpho.json F21. Note that here the two revocations are of DIFFERENT KINDS -- removing the domain leaves the agent in place with nothing to do, removing the role leaves the domain in place with no one to act -- and a single revocation field cannot express which of the two a principal used, though the recovery paths differ."
+    },
+    {
+      "id": "F16",
+      "text": "a named controller contract, driven by an off-chain relayer, may move another protocol's liquidity across a set of external venues, and a separate admin role sets the budget it moves inside",
+      "elements": ["Aw"],
+      "evidence": "https://raw.githubusercontent.com/sparkdotfi/spark-alm-controller/master/src/RateLimits.sol (accessed 2026-08-04)",
+      "note": "MANDATE SLOT 1 (named agent), instance (b) of two at this target and the FIFTH instance in this lane. Aw APPROXIMATE, uniform reading. CONTROLLER role held by MainnetController / ForeignController; DEFAULT_ADMIN_ROLE sets the envelope. MANDATE SLOT 6 (agent stake): EMPTY. Performance fee: absent. The agent here is a CONTRACT DRIVEN BY AN OFF-CHAIN PROCESS, which is a third kind of holder after a human council and an on-chain automaton, and 'named agent' as a single field cannot distinguish an address that decides from an address that relays a decision made elsewhere -- which is precisely where the accountability sits."
+    },
+    {
+      "id": "F17",
+      "text": "every permitted action is identified by a key naming an action and a venue together, and a key with no budget cannot be used at all",
+      "elements": [],
+      "evidence": "https://raw.githubusercontent.com/sparkdotfi/spark-alm-controller/master/src/RateLimits.sol (accessed 2026-08-04)",
+      "note": "MANDATE SLOT 2 (domain whitelist). RESIDUE. Budgets are keyed by bytes32, constructed by RateLimitHelpers.sol, with venue libraries (AaveLib, CurveLib, UniswapV4Lib, PSMLib, CCTPLib, LayerZeroLib, ERC4626Lib) enumerating what may be done at all; a key with maxAmount == 0 reverts RateLimits/zero-maxAmount. The domain here is a PRODUCT OF TWO AXES -- what may be done and where -- and it is expressed as a hash, so the whitelist is not enumerable from the contract's own state. A formalism with a set-valued domain field would model this as a set of opaque atoms and lose the structure that makes it auditable."
+    },
+    {
+      "id": "F18",
+      "text": "each key carries a ceiling that is the most the agent can move in any one action",
+      "elements": [],
+      "evidence": "https://raw.githubusercontent.com/sparkdotfi/spark-alm-controller/master/src/RateLimits.sol (accessed 2026-08-04)",
+      "note": "MANDATE SLOT 3 (magnitude cap). RESIDUE. maxAmount in struct RateLimitData { uint256 maxAmount; uint256 slope; uint256 lastAmount; uint256 lastUpdated; }."
+    },
+    {
+      "id": "F19",
+      "text": "spent budget refills continuously with elapsed time at a per-key rate, so what bounds the agent is not how often it acts but how much it may move per unit of time",
+      "elements": [],
+      "evidence": "https://raw.githubusercontent.com/sparkdotfi/spark-alm-controller/master/src/RateLimits.sol (accessed 2026-08-04)",
+      "note": "MANDATE SLOT 4 (rate-of-change limit or delay). RESIDUE, and the FOURTH DISTINCT MECHANISM occupying this one slot in this one lane. getCurrentRateLimit returns _min(d.slope * (block.timestamp - d.lastUpdated) + d.lastAmount, d.maxAmount); triggerRateLimitDecrease consumes it under onlyRole(CONTROLLER) and requires amountToDecrease <= currentRateLimit. THIS IS A TRUE FLOW LIMIT, NOT A DELAY: it bounds THROUGHPUT where Aave's debounce and Spark's own cooldown bound FREQUENCY and MetaMorpho's timelock bounds LATENCY. A formalism that writes 'rate-of-change limit' as a single field conflates three different guarantees, and only the throughput form composes with itself -- two calls under a token bucket are bounded, two calls under a debounce are not."
+    },
+    {
+      "id": "F20",
+      "text": "the admin may zero any budget, remove the controller's role, or freeze the proxy that holds every deployed fund through purpose-built freezer and kill-switch contracts",
+      "elements": ["Gp"],
+      "evidence": "https://raw.githubusercontent.com/sparkdotfi/spark-alm-controller/master/src/RateLimits.sol (accessed 2026-08-04)",
+      "note": "MANDATE SLOT 5 (revocation). Gp is APPROXIMATE and emitted only for the freeze half: ALMProxyFreezable.sol in the same tree, plus sparklend-freezer and sparklend-kill-switch as separate audited AGPL-3.0 repositories (https://api.github.com/orgs/sparkdotfi/repos?per_page=100, accessed 2026-08-04). The revocation half -- setRateLimitData(key, 0, 0) and revokeRole(CONTROLLER, ...) -- is RESIDUE on the same reading as elsewhere in this lane. Gp names a halt and cannot say that halting and de-authorising are different acts with different blast radii, nor that this protocol has THREE separate stop mechanisms in three separate repositories, which is a control-plane estate Aave has no analogue for."
+    },
+    {
+      "id": "F21",
+      "text": "the admin may also switch the bound off entirely for any single key in one transaction with no delay, after which the agent's budget is unlimited and the checks short-circuit",
+      "elements": [],
+      "evidence": "https://raw.githubusercontent.com/sparkdotfi/spark-alm-controller/master/src/RateLimits.sol (accessed 2026-08-04)",
+      "note": "RESIDUE, and it is the sharpest control-plane detail in the lane. setUnlimitedRateLimitData(bytes32 key) sets maxAmount = type(uint256).max, and both trigger functions then return type(uint256).max immediately. THE BOUND IS REVOCABLE UPWARD AS WELL AS DOWNWARD. The five-part schema has a slot for revoking the AGENT and none for revoking the BOUND, and the second is the more dangerous: revoking an agent removes an authority, revoking a bound converts a bounded agent into an unbounded one while every element and every role assignment in the decomposition stays exactly as it was. No other of the five instances in this lane has this property. Prohibition X16 (unbounded delegated authority) is reachable from a bounded configuration in one admin transaction, which means the prohibition is a predicate on STATE and the risk is a predicate on REACHABLE state."
+    },
+    {
+      "id": "F22",
+      "text": "an oracle written and maintained in this protocol's own repository is supplied as the price source for markets in a different lending protocol",
+      "elements": [],
+      "evidence": "https://github.com/sparkdotfi/sparklend-advanced (accessed 2026-08-04)",
+      "note": "RESIDUE. MorphoUpgradableOracle sits in sparklend-advanced/src/ alongside Spark's own oracles, so one target in this lane is a price input to another target in the same lane (see morpho.json F5, where Morpho Blue validates no oracle whatsoever). This is the CONTAINMENT gap again and in its most awkward direction -- not a protocol consuming another, but a protocol SUPPLYING A SAFETY-CRITICAL COMPONENT TO A COMPETITOR. Union of element sets between peers cannot state it, and a decomposition of Morpho that emits Ex is silently emitting a dependency on SparkLend's engineering."
+    },
+    {
+      "id": "F23",
+      "text": "reserves and the whole market can be frozen or killed, the pool sits behind a replaceable implementation, and governance acts by deploying executable payload contracts",
+      "elements": ["Gp", "Up", "Tg"],
+      "evidence": "https://api.github.com/orgs/sparkdotfi/repos?per_page=100 (accessed 2026-08-04)",
+      "note": "All three inherited or purpose-built, and all three thin. The org carries sparklend-freezer, sparklend-kill-switch, sparklend-health-checker, spark-gov-relay (cross-chain governance), spark-spells (executable governance payloads), upgradeable-proxy and mainnet-invariants, all AGPL-3.0. Tg is emitted on the spell process; THE DELAY'S VALUE WAS NOT READ IN THIS RUN and is Sky's rather than SparkLend's, so law L15 (Up implies Tg or a bounded emergency process) is discharged only nominally and stage 3 should treat it as UNKNOWN rather than as satisfied. Xm is NOT emitted despite spark-gov-relay: the evidence is a repository name in an org listing, and this lane does not assert a verification mechanism it has not read. Who holds any of these keys is UNKNOWN, as for all five targets."
+    },
+    {
+      "id": "F24",
+      "text": "the protocol's code is a fork of one protocol and the price of its credit is a function of a second protocol's state, so it depends on two upstreams for two different things",
+      "elements": [],
+      "evidence": "https://api.github.com/repos/sparkdotfi/sparklend-v1-core/git/trees/dev?recursive=1 (accessed 2026-08-04)",
+      "note": "RESIDUE, confirming the corpus and adding its second half. THE CORPUS'S IDENTITY CLAIM IS REFUTED HERE: identicalClaimedByLane records [Aave V3, SparkLend], and the two are not the same instrument on the one axis the corpus itself says matters most. Aave runs a mutable-parameter, bounded, governed kinked curve (aave-v3.json F12 to F15); SparkLend runs an immutable-spread curve pegged live to an external protocol's savings rate (F5 to F9). Same functional form, different setter, different bound, different latency, different party in control. The identity survives only because the vocabulary cannot see rates, which is the corpus's own thesis -- now demonstrated rather than asserted. A second corpus statement is also qualified: SparkLend's element set IS close to a subset of Aave's, and SparkLend nonetheless carries a control-plane estate Aave has no analogue for (three separate stop mechanisms, a cap automator, a health checker, a liquidity controller, each an independently audited repository). Subset in symbols, superset in control machinery. DEPARTURES: Im is dropped (inherited from Aave, whose debt ceiling is absent from the current reserve configuration -- aave-v3.json F11) and Em is dropped (uncited in stage 1)."
+    }
+  ]
+}

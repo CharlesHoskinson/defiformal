@@ -1,0 +1,176 @@
+{
+  "app": "Morpho",
+  "category": "02-lending",
+  "source": "C:\\defiformal-work\\02-lending\\01-research.md",
+  "construction": ["Im", "Pl", "Sh", "Ix", "Ct", "Ex", "Li", "Sl", "Aw", "Tg", "Gp", "Fd"],
+  "functionalObligations": [
+    {
+      "id": "F1",
+      "text": "credit is organised as many independent markets inside one contract, each fixed at creation by five parameters -- loan asset, collateral asset, oracle, interest-rate model and liquidation loan-to-value -- with no netting between them, so a bad debt in one market cannot reach another",
+      "elements": ["Im"],
+      "evidence": "https://raw.githubusercontent.com/morpho-org/morpho-blue/main/src/Morpho.sol (accessed 2026-08-04)",
+      "note": "Im is exact and it is the design claim rather than a fence bolted onto a shared pool, which is what distinguishes it from the corpus's FORCED Im at Aave and SparkLend. SCOPE NOTE for the whole file: Morpho is two layers and they must not be conflated. F1 to F16 are Morpho Blue, the singleton primitive; F17 to F24 are Morpho Vaults (MetaMorpho), where most depositor capital actually sits. Elements true of one layer are routinely false of the other -- see F15 and F24 -- and the corpus record does not separate them."
+    },
+    {
+      "id": "F2",
+      "text": "anyone may create a market from any combination whose interest-rate model and loan-to-value are on governance's enabled lists, and nobody may edit it afterwards",
+      "elements": [],
+      "evidence": "https://raw.githubusercontent.com/morpho-org/morpho-blue/main/src/Morpho.sol (accessed 2026-08-04)",
+      "note": "RESIDUE, confirming the corpus. Im names the fence and says nothing about who may build one. A PERMISSIONLESS FACTORY OVER A FROZEN TEMPLATE is a different object from either a governed market list or an open pool: the template's degrees of freedom are governance's, the instantiation is anyone's, and the result is immutable. Aw is deliberately not emitted -- createMarket has no caller gate at all, so what would be gated is the SHAPE of the argument, not the identity of the caller."
+    },
+    {
+      "id": "F3",
+      "text": "a lender supplies to a chosen market and receives shares of that market alone, whose value rises as accrued interest is added to that market's totals against a share supply that does not change",
+      "elements": ["Pl", "Sh", "Ix"],
+      "evidence": "https://raw.githubusercontent.com/morpho-org/morpho-blue/main/src/Morpho.sol (accessed 2026-08-04)",
+      "note": "The corpus marker for Pl (FORCED) is retained: each market IS a shared pool of many lenders in one asset, so Pl is literally true, while the protocol's entire design claim is that it is not pooled. Emitting Im and Pl together states the fact and loses the claim, and the vocabulary offers no way to say 'pooled within a fence'. Ix is APPROXIMATE: the accrual is implemented as growth of totalSupplyAssets against fixed totalSupplyShares rather than as a published global index object, so what Ix names here is the effect, not the artefact. DEPARTURE: the corpus carries Fl for Morpho; stage 1 read Morpho.sol and recorded no flash-loan facility, so this lane declines to assert it and DROPS Fl. If Morpho.flashLoan exists on a pinned SHA, stage 3 should restore it -- an element restored on evidence is a better outcome than one carried on memory."
+    },
+    {
+      "id": "F4",
+      "text": "a borrower posts the market's collateral asset and every borrow and withdrawal is checked against that market's single fixed loan-to-value using the price reported by the oracle address named at the market's creation",
+      "elements": ["Ct", "Ex"],
+      "evidence": "https://raw.githubusercontent.com/morpho-org/morpho-blue/main/src/Morpho.sol (accessed 2026-08-04)",
+      "note": "Ct is exact (_isHealthy) and, as at Aave, first-class rather than derived. One threshold, not two: Morpho has no separate borrow-side and liquidation-side factor, so a position is opened and closed at the same line, which Ct cannot distinguish from Aave's two-threshold arrangement or from Compound V3's. enableLltv requires lltv < WAD, the only validation governance performs on the number."
+    },
+    {
+      "id": "F5",
+      "text": "the protocol checks nothing whatever about that oracle -- not its source, not its decimals, not its liveness -- and the address can never be changed for the life of the market",
+      "elements": [],
+      "evidence": "https://raw.githubusercontent.com/morpho-org/morpho-blue/main/README.md (accessed 2026-08-04)",
+      "note": "RESIDUE, confirming the corpus. Ex names a feed. It cannot say 'the feed is whatever the market creator wrote and the protocol never looks at it', and it cannot say the choice is irrevocable. Law L13 (Ex implies freshness validation, Gp preferred for high-value obligations) is NOT discharged at the protocol layer and CANNOT BE, by design: there is no pause (F15) and no validation. The risk is relocated rather than removed -- it lands on the curator's whitelist (F20), which is the only filter in the system and is unverifiable on chain."
+    },
+    {
+      "id": "F6",
+      "text": "a liquidator repays an unhealthy position's debt and seizes collateral at an incentive the protocol computes from that market's own loan-to-value rather than accepting as a parameter, hard-capped at 1.15 times",
+      "elements": ["Li"],
+      "evidence": "https://raw.githubusercontent.com/morpho-org/morpho-blue/main/src/libraries/ConstantsLib.sol (accessed 2026-08-04)",
+      "note": "Li is exact on the incentive. RESIDUE INSIDE A NAMED OBLIGATION: LIQUIDATION_CURSOR = 0.3e18 and MAX_LIQUIDATION_INCENTIVE_FACTOR = 1.15e18 make the bonus A FUNCTION OF THE LLTV, so a market creator who picks a loan-to-value has thereby picked a liquidation bonus and cannot pick them independently. Li treats the incentive as given. This is the third distinct shape of the liquidation-allowance gap in this lane -- Aave computes the close factor from health and size, JustLend fixes it as a constant in an interval, Morpho derives the bonus from the LLTV -- and one residue line covers all three in the corpus."
+    },
+    {
+      "id": "F7",
+      "text": "a debt that survives liquidation with no collateral behind it is written down against that market's own suppliers and cannot touch any other market",
+      "elements": ["Sl", "Im"],
+      "evidence": "https://raw.githubusercontent.com/morpho-org/morpho-blue/main/src/Morpho.sol (accessed 2026-08-04)",
+      "note": "Sl names the allocation of a loss to a claim class; Im names the boundary of that class. What neither names is that the boundary is the LOSS-CONTAINMENT DESIGN rather than a risk-management preference -- isolation here exists so that socialisation has a small and knowable domain, and the two symbols are emitted independently as though they were unrelated facts about the protocol."
+    },
+    {
+      "id": "F8",
+      "text": "a borrow or a withdrawal is refused whenever it would leave the market's borrowed assets above its supplied assets, and that is the whole of a lender's exit guarantee -- there is no queue, no ordering, no buffer and no reserve",
+      "elements": [],
+      "evidence": "https://raw.githubusercontent.com/morpho-org/morpho-blue/main/src/Morpho.sol (accessed 2026-08-04)",
+      "note": "RESIDUE, and it names the open term in law L2 (Pl implies a claim form plus exit liquidity). Wq is wrong -- there is no queue and no order. Rd is wrong -- redemption is not guaranteed at par or at all. What the protocol actually offers is a SOLVENCY-PRESERVING REFUSAL: the invariant totalBorrowAssets <= totalSupplyAssets, enforced on both borrow and withdraw, which protects the accounting and gives the lender no timing guarantee at all. No element expresses 'the exit right is conditional on someone else's behaviour, with no mechanism to make it happen'."
+    },
+    {
+      "id": "F9",
+      "text": "the borrow rate is produced by a closed-loop controller: a static curve of steepness four around a target rate, and that target rate itself drifts continuously toward whatever level drives utilisation to ninety per cent",
+      "elements": [],
+      "evidence": "https://raw.githubusercontent.com/morpho-org/morpho-blue-irm/main/src/adaptive-curve-irm/AdaptiveCurveIrm.sol (accessed 2026-08-04)",
+      "note": "RESIDUE, and FINDING 1's second row and its most consequential distinction. CURVE_STEEPNESS 4 ether, TARGET_UTILIZATION 0.9 ether, ADJUSTMENT_SPEED 50 ether / 365 days, INITIAL_RATE_AT_TARGET 0.04 ether / 365 days (https://raw.githubusercontent.com/morpho-org/morpho-blue-irm/main/src/adaptive-curve-irm/libraries/ConstantsLib.sol, accessed 2026-08-04). THE FUNCTIONAL FORM IS A CONTROLLER, NOT A FUNCTION: Aave, SparkLend and JustLend price from CURRENT utilisation and are memoryless; Morpho prices from the HISTORY of utilisation through a stateful rateAtTarget that compounds at ADJUSTMENT_SPEED times the normalised utilisation error per second. Ix cannot distinguish a memoryless price from a stateful one and the difference is the whole design. The CDP lane found a closed-loop controller on PEG error; this is the same shape on UTILISATION error, which shows the controller is not specific to stablecoins."
+    },
+    {
+      "id": "F10",
+      "text": "no party may change any parameter of that controller: the steepness, the target, the adjustment speed and the bounds are compile-time constants in a contract with no setter and no admin",
+      "elements": [],
+      "evidence": "https://raw.githubusercontent.com/morpho-org/morpho-blue-irm/main/src/adaptive-curve-irm/libraries/ConstantsLib.sol (accessed 2026-08-04)",
+      "note": "RESIDUE. FINDING 1: THE SETTER LOCUS -- a compile-time constant, and this is the only one of the five loci in the lane where the answer is NOBODY. Not the owner, not the market creator, not the curator. This is a different risk object from Aave's mutable-parameter-with-bounds and from JustLend's mutable-parameter-with-no-bounds, and all three decompose to the same Ix. The vocabulary cannot record the absence of an authority as a positive property, which is the same defect as F15."
+    },
+    {
+      "id": "F11",
+      "text": "the controller's output is clamped in code: the target rate may never leave the band from one tenth of one per cent to two hundred per cent a year, so the realised borrow rate lies between 0.025 and 800 per cent a year",
+      "elements": [],
+      "evidence": "https://raw.githubusercontent.com/morpho-org/morpho-blue-irm/main/src/adaptive-curve-irm/libraries/ConstantsLib.sol (accessed 2026-08-04)",
+      "note": "RESIDUE. FINDING 1: THE BOUND. MIN_RATE_AT_TARGET = 0.001 ether / 365 days, MAX_RATE_AT_TARGET = 2.0 ether / 365 days, and the source's own comments record the implied realised band. Note the type of bound: Aave bounds the PARAMETERS a setter may write, Morpho bounds the OUTPUT a controller may reach with no setter in the picture. Both are 'a bound', both are residue, and a single repair that names only one of them would misdescribe the other."
+    },
+    {
+      "id": "F12",
+      "text": "the only rate decision anyone ever makes is which interest-rate-model address a market is created with, and that address is then part of the market's identity and frozen for its life",
+      "elements": [],
+      "evidence": "https://raw.githubusercontent.com/morpho-org/morpho-blue/main/src/Morpho.sol (accessed 2026-08-04)",
+      "note": "RESIDUE. FINDING 1: THE LATENCY -- never. Rate policy at Morpho is not a governance action at all; it is a deployment choice made once per market by whoever created it, out of a set governance pre-approved through enableIrm. Tg is meaningless here: there is nothing to delay because there is nothing to change. Whether any live market uses an interest-rate model other than AdaptiveCurveIrm is UNKNOWN."
+    },
+    {
+      "id": "F13",
+      "text": "one owner address may transfer its own ownership, add interest-rate models and loan-to-value values to the permitted lists, set a per-market protocol fee of at most twenty-five per cent, and name the recipient of that fee",
+      "elements": ["Aw"],
+      "evidence": "https://raw.githubusercontent.com/morpho-org/morpho-blue/main/src/Morpho.sol (accessed 2026-08-04)",
+      "note": "CORPUS DELTA, and the one the lane brief asks to carry: MORPHO BLUE IS NOT ADMIN-LESS. The corpus records 'Morpho Blue has no admin and cannot be upgraded' as a single residue; the second clause is confirmed at F15 and the first is FALSE. Morpho.sol declares owner, an onlyOwner modifier and exactly five owner functions: setOwner, enableIrm, enableLltv (requiring lltv < WAD), setFee bounded by MAX_FEE = 0.25e18, and setFeeRecipient. Aw is APPROXIMATE, emitted on this lane's uniform reading for address-keyed administrative gates (see aave-v3.json F13) and following the corpus's own FORCED use of Aw for Morpho's role structure. The accurate claim is GOVERNANCE-MINIMISED AND NON-UPGRADEABLE WITH A LIVE OWNER WHOSE AUTHORITY IS MONOTONIC AND CANNOT REACH AN EXISTING MARKET -- which is a more interesting statement than 'no admin' and which no element or combination of elements can make."
+    },
+    {
+      "id": "F14",
+      "text": "no owner function can alter an existing market's oracle, model or loan-to-value, there is no proxy and no pause anywhere in the singleton, and the permitted lists may only be widened -- an enabled model or loan-to-value can never be disabled",
+      "elements": [],
+      "evidence": "https://raw.githubusercontent.com/morpho-org/morpho-blue/main/src/Morpho.sol (accessed 2026-08-04)",
+      "note": "RESIDUE, three distinct ones fused because they are one commitment. (a) IMMUTABILITY AS A POSITIVE COMMITMENT: the vocabulary can only record this as the absence of Up and Gp, and absence of a symbol means 'I did not observe it', not 'it cannot exist'. (b) MONOTONIC AUTHORITY: enableIrm and enableLltv set a flag true and there is no disable, so governance can widen the permitted set forever and never narrow it, and can never retract a market already created. No element expresses a one-way authority. (c) IRREVOCABILITY OF AN INSTANTIATION. DEPARTURE: the corpus lists Gp for Morpho; Morpho Blue has no pause function, so Gp is REFUTED at this layer and is emitted only at the vault layer (F24), where its meaning is also wrong in a different way. The corpus record does not separate the layers and therefore attributes a vault power to the primitive."
+    },
+    {
+      "id": "F15",
+      "text": "a passive depositor deposits a single asset into a vault and receives vault shares, and the vault -- not the depositor -- is the lender of record in the markets the money reaches",
+      "elements": ["Sh"],
+      "evidence": "https://raw.githubusercontent.com/morpho-org/metamorpho/main/src/MetaMorpho.sol (accessed 2026-08-04)",
+      "note": "Sh is exact for the ERC-4626 claim. Most depositor capital reaches Blue through a vault rather than directly, which is why the curator (F17 to F22) is the economic centre of the protocol even though it is no part of the base primitive."
+    },
+    {
+      "id": "F16",
+      "text": "the vault is itself a depositor in markets it does not control, so what a vault shareholder holds is a claim on a lender rather than a claim on a loan",
+      "elements": [],
+      "evidence": "https://raw.githubusercontent.com/morpho-org/metamorpho/main/src/MetaMorpho.sol (accessed 2026-08-04)",
+      "note": "RESIDUE, and the third independent sighting of the run's CONTAINMENT gap after 08-intents (a meta-aggregator routing to routers) and 06-yield (a curator allocating over protocols). Composition in this corpus is modelled as UNION OF ELEMENT SETS BETWEEN PEERS; there is no relation for one protocol consuming another, and the union of MetaMorpho's elements with Blue's asserts a single flat system that does not exist. Lending exhibits the same relation three further times: SparkLend's rate IS Sky's rate (sparklend.json F10), Spark ships MorphoUpgradableOracle into Morpho markets (sparklend.json F22), and Maple runs reward programmes on Morpho Blue (https://api.github.com/orgs/maple-labs/repos?per_page=100&sort=pushed, accessed 2026-08-04)."
+    },
+    {
+      "id": "F17",
+      "text": "two named agents with different powers act over the vault's money: a curator who sets the envelope of markets and sizes, and one or more allocators who move the money inside it",
+      "elements": ["Aw"],
+      "evidence": "https://raw.githubusercontent.com/morpho-org/metamorpho/main/src/MetaMorpho.sol (accessed 2026-08-04)",
+      "note": "MANDATE SLOT 1 (named agent). Aw APPROXIMATE, uniform reading. setCurator and setIsAllocator are both onlyOwner. THE SLOT IS NOT SCALAR: this instance splits the mandate between an agent who may widen the envelope and an agent who may only act within it, and a schema with one 'named agent' field cannot express a two-tier delegation. MANDATE SLOT 6 (agent stake): EMPTY -- the curator posts no bond, and what is genuinely reputational at Morpho is precisely and only the JUDGEMENT INSIDE THE ENVELOPE. Blue validates neither oracle (F5) nor collateral, so the curator's whitelist is the only risk filter in the system. The five parts bound the magnitude of a mistake; nothing bounds its direction."
+    },
+    {
+      "id": "F18",
+      "text": "the money may enter only markets the curator has admitted, and a market may not be admitted at all unless its loan asset is the vault's own asset and it already exists on the singleton, with at most thirty markets in the queue",
+      "elements": [],
+      "evidence": "https://raw.githubusercontent.com/morpho-org/metamorpho/main/src/MetaMorpho.sol (accessed 2026-08-04)",
+      "note": "MANDATE SLOT 2 (domain whitelist). RESIDUE. reallocate reverts UnauthorizedMarket(id) whenever config[id].cap == 0; submitCap rejects any market whose loanToken != asset() or which is not yet created on Blue; MAX_QUEUE_LENGTH = 30 (https://raw.githubusercontent.com/morpho-org/metamorpho/main/src/libraries/ConstantsLib.sol, accessed 2026-08-04). Note the identity the code makes between slots 2 and 3: THE DOMAIN IS THE SET OF MARKETS WITH A NON-ZERO CAP, so admitting a market and sizing it are the same act, and a schema that separates the two fields will not fit this instance without collapsing them."
+    },
+    {
+      "id": "F19",
+      "text": "no market may hold more of the vault's money than its own supply cap, checked on every allocation",
+      "elements": [],
+      "evidence": "https://raw.githubusercontent.com/morpho-org/metamorpho/main/src/MetaMorpho.sol (accessed 2026-08-04)",
+      "note": "MANDATE SLOT 3 (magnitude cap). RESIDUE. if (supplyAssets + suppliedAssets > supplyCap) revert SupplyCapExceeded(id). Ct is a solvency test and not a parameter envelope; nothing in the vocabulary states a per-destination allowance on a delegated allocation."
+    },
+    {
+      "id": "F20",
+      "text": "lowering a cap takes effect at once while raising one must be queued and accepted only after a delay of between one day and two weeks, and removing a market from the vault is queued the same way",
+      "elements": ["Tg"],
+      "evidence": "https://raw.githubusercontent.com/morpho-org/metamorpho/main/src/MetaMorpho.sol (accessed 2026-08-04)",
+      "note": "MANDATE SLOT 4 (rate-of-change limit or delay), and THE ONLY ONE OF THE FIVE INSTANCES IN THIS LANE THAT ANY ELEMENT REACHES. Tg is emitted as APPROXIMATE: a queue-and-accept timelock is literally a delayed execution, so Tg names the delay on increases. Two things it cannot say, and both are the point. (a) THE ASYMMETRY: a decrease calls _setCap inline while an increase writes pendingCap[id].update(newSupplyCap, timelock) and waits for acceptCap; MIN_TIMELOCK = 1 days, MAX_TIMELOCK = 2 weeks. Tg is a single scalar delay and cannot express 'instant to tighten, slow to loosen'. SparkLend's CapAutomator reached the same asymmetry independently in a different organisation over a different quantity, which is evidence that it is structural rather than idiomatic. (b) THE PARTY: Tg reads 'delayed-GOVERNANCE execution' and the delayed party here is a delegate, not governance. Compare the other three mechanisms in this slot across the lane -- debounce (Aave), one-sided cooldown (Spark caps), token bucket (Spark ALM) -- none of which Tg reaches at all, so the slot is one-fifth named and four-fifths residue."
+    },
+    {
+      "id": "F21",
+      "text": "the owner may remove the curator or any allocator at any moment, immediately and without a delay",
+      "elements": [],
+      "evidence": "https://raw.githubusercontent.com/morpho-org/metamorpho/main/src/MetaMorpho.sol (accessed 2026-08-04)",
+      "note": "MANDATE SLOT 5 (revocation). RESIDUE. setCurator(address(0)) and setIsAllocator(x, false), both onlyOwner. Aw is NOT emitted for this slot anywhere in this lane: a mutable membership set is a state predicate over who may call, and the obligation here is that A PRINCIPAL MAY WITHDRAW A DELEGATED ECONOMIC AUTHORITY UNILATERALLY AND WITHOUT NOTICE, which is a relation between two parties and not a property of a gate. Note the asymmetry the code creates with F20: revoking the agent is instant while the agent's own loosening is delayed -- the principal is faster than the agent in one direction and slower in the other, and nothing states it. Stage 4 has counted ZERO revocation obligations across the corpus; this is one of five added by this lane."
+    },
+    {
+      "id": "F22",
+      "text": "a separate guardian may cancel any queued change -- a pending cap, a pending market removal, a pending timelock, a pending guardian -- without being able to initiate one",
+      "elements": ["Gp"],
+      "evidence": "https://raw.githubusercontent.com/morpho-org/metamorpho/main/src/MetaMorpho.sol (accessed 2026-08-04)",
+      "note": "Gp is APPROXIMATE and defensible ONLY at this layer. revokePendingCap and revokePendingMarketRemoval (curator or guardian), revokePendingTimelock and revokePendingGuardian (guardian). Gp names an emergency stop over user funds; this guardian cannot stop anything users do and cannot touch the money -- its whole power is a VETO OVER QUEUED CHANGES. That is the 12-prediction lane's PREVENTIVE versus COMPENSATORY distinction, arrived at independently: a party who can only cancel a pending change holds a preventive power, and the vocabulary has one symbol for both kinds. The design point Gp also misses is the SEPARATION -- the right to veto is deliberately held by a different party from the right to act, which is the whole accountability structure and reads as a single boolean."
+    },
+    {
+      "id": "F23",
+      "text": "an allocation must end where it began: the total withdrawn across markets in one call must equal the total supplied, so the allocator may permute the deposit and can never move value out of the vault",
+      "elements": [],
+      "evidence": "https://raw.githubusercontent.com/morpho-org/metamorpho/main/src/MetaMorpho.sol (accessed 2026-08-04)",
+      "note": "RESIDUE, and it is the constraint the other four mandate sightings in this lane lack. reallocate ends with if (totalWithdrawn != totalSupplied) revert InconsistentReallocation(). This is a CONSERVATION LAW ON A DELEGATED ACTION, which is a categorically stronger protection than any bound on magnitude: caps limit how much damage an allocation can do, conservation makes theft-by-allocation impossible. The five-part schema has no slot for it, and a formalism that models the mandate purely as an envelope will price Morpho's allocator and Spark's ALM controller as the same risk when one cannot remove value and the other exists precisely to move it out."
+    },
+    {
+      "id": "F24",
+      "text": "the vault charges a performance fee, capped at half the yield, and the party who sets it is the owner and not the curator who earns the return",
+      "elements": ["Fd"],
+      "evidence": "https://raw.githubusercontent.com/morpho-org/metamorpho/main/src/MetaMorpho.sol (accessed 2026-08-04)",
+      "note": "CANDIDATE-REGISTER (Fd). setFee is onlyOwner with MAX_FEE = 0.5e18 (https://raw.githubusercontent.com/morpho-org/metamorpho/main/src/libraries/ConstantsLib.sol, accessed 2026-08-04). DEPARTURE: the corpus files 'a curator ... takes a performance fee' as part of its largest residue and does not record that the agent DOES NOT SET ITS OWN FEE. The same correction lands at Maple (maple.json F16), so it is a category-level fact and not a Morpho detail: in both protocols the delegate's compensation is set by the principal. Fd reaches 'a fee accrues and is distributed'; it does not reach that the fee is the PRICE OF A MANDATE, which is the seventh field the schema would need. DEPARTURE: the corpus carries Sv for Morpho with its own marker conceding Sv 'is still wrong' -- Sv names servicing and determination discretion over a loan, and a curator never touches a loan. This lane DROPS Sv rather than carry a symbol the corpus itself refutes; the curator's discretion is over allocation and caps exercised before anything goes wrong, and it is residue at F17 to F21. The corpus also carries Em for Morpho, uncited in stage 1 and therefore also dropped."
+    }
+  ]
+}
