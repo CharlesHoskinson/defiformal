@@ -1401,6 +1401,183 @@ under caps, a timelock and a performance fee. $Sv$ names discretion over a
 \emph{loan}; a curator never touches a loan.
 \end{remark}
 
+The five highest-ranked members of the category are treated below. Each
+subsection states what the system does, exhibits one construction with the
+reason for that witness among the alternatives the disjunctive terms leave open
+(Corollary~\ref{cor:notthe}), reports the verdict, and lists the obligations no
+element discharges. Every figure in the measurement environments is emitted from
+the checker output rather than transcribed.
+
+\subsection{Aave V3}\label{sub:cat:lnd:aave}
+
+A supplier deposits a fungible token into one shared reserve and receives a transferable claim token whose nominal balance grows as the reserve's index accrues. A borrower marks supplied reserves as collateral and draws an open-ended loan from the same reserve, with no maturity and no schedule, recorded as a debt token accruing by that same index. The price of the loan is a memoryless two-slope function of the reserve's current utilisation, held in a mutable per-reserve struct that only the pool configurator may write, and bounded at write time on its level, on where its kink may sit and on its shape. Solvency is a single scalar computed on chain from the oracle value of each collateral against the oracle value of the debt. A borrower closes by repaying; anyone else closes by repaying part of the debt and seizing collateral at a bonus, and how much of a position one liquidation may take is itself a computed quantity, falling out of how far underwater the position is and how large it is.
+
+\begin{measurement}[Construction]\label{meas:cat:lnd:aave}
+The construction $X = \{Aw,Ct,Ex,Fd,Fl,Gp,Ix,Li,Pl,Rb,Tg,Up,Xm\}$ has canonical form
+$\mathrm{ex}(X) = \{Aw,Ex,Fd,Fl,Gp,Ix,Li,Pl,Rb,Tg,Up,Xm\}$, deriving \{Ct\} rather than choosing it.
+It is admissible: no requirement term is open, every element is warranted, and it arms no prohibition. It discharges 12 of the 23 recorded obligations; 11 are residue. No composite of at most three corpus protocols equals it; no corpus protocol is contained in it.
+It is not minimal: \{Rb,Tg,Xm\} can be removed with every obligation still covered and admissibility intact.
+\end{measurement}
+
+\begin{remark}[What the construction cannot say]
+11 obligations of Aave V3 have no element:
+\begin{itemize}
+  \item a liquid-staking-token feed is wrapped in an adapter that rejects any published value implying growth faster than a governance-set maximum yearly ratio, live example 10.64 per cent for wstETH
+  \item how much of a position one liquidation may take is itself a computed quantity: at most half the debt when the health factor is above 0.95 and both the collateral and the debt exceed 2000 units of base currency, otherwise all of it, and in no case may the call leave less than 1000 base units of either side standing
+  \item borrowing power is raised above the ordinary per-asset limits when the collateral and the debt belong to one governance-declared category of assets expected to track each other
+  \item each reserve carries a supply cap and a borrow cap that bound aggregate exposure to the asset independently of whether any individual position is solvent
+  \item the borrow rate is a memoryless two-slope function of the reserve's current utilisation alone -- base rate, a first slope up to a kink, a steeper second slope beyond it -- and the supply rate is that borrow rate scaled by supply utilisation and by one minus the reserve factor
+  \item whatever curve is written must satisfy hard bounds checked at write time: the sum of base rate and both slopes may not exceed 1000 per cent, the kink must lie between 1 and 99 per cent, and the first slope may never exceed the second
+  \item inside the strategy contract a permitted caller moves the entire curve in one transaction: there is no delay before the change takes effect and no limit on how far it may move
+  \item that address may act only within an enumerated set of parameter families -- caps, rates, the collateral side, e-mode categories, and three kinds of oracle price cap -- and any individual asset or e-mode may be fenced out of its reach entirely
+  \item each parameter carries its own maximum change per update, expressed either as a percentage of the current value or as an absolute step, and an update outside that range reverts
+  \item no parameter may be moved again until a minimum interval has passed since that same parameter was last moved on that same asset, each pair carrying its own timestamp
+  \item the principal may zero the envelope or fence any asset at any time, but cannot remove the agent: the agent's address is fixed at deployment and this contract holds no way to change it
+\end{itemize}
+The residue here is the entire surface a risk team manages. What the vocabulary keeps is that money is pooled, that an index accrues, that a test is run, and that someone is paid to close a failing position; what it loses is every quantity those mechanisms are actually set to --- the shape of the rate curve and the interval its parameters must lie in, the allowance one liquidation may take and the remainder it may not leave, the caps that bound an asset's whole population rather than any individual position, and the permitted drift of a price feed. The sharpest instance is the steward: a named address, fixed at deployment, may move rates, caps, collateral parameters, correlated-asset categories and oracle growth limits with no vote, and of that mandate the decomposition names only the agent, and names it only by stretching an address-keyed permission gate. The enumerated domains it may touch, the maximum step per update, the minimum interval before the same parameter of the same asset may move again, and the principal's power to empty the envelope while being unable to remove the agent are all residue --- and across every instance of this shape in the category the domain, the magnitude cap and the revocation are residue without exception. Here the parts are not merely present but factored into one reusable validator, and that validator bounds the rate through the same code that bounds the caps, which is why the price of credit and the delegated mandate are one gap stated twice rather than two gaps.
+\end{remark}
+
+\begin{remark}[Why this witness]
+The corpus records $Bs$, $Cd$, $Em$, $Im$ and $Sl$; the witness carries none of them and adds $Aw$. $Im$ goes because the reserve configuration in the current tree holds no debt-ceiling field at all --- the bitmap's own comment records the unoccupied bits left where one used to sit --- so the fenced market the corpus called forced is not merely forced but unsupported, and the same drop follows downstream at the protocol that forked this one. $Bs$ and $Sl$ go because the Safety Module contracts were not read and this lane carries no element on memory; $Cd$ and $Em$ go for the same reason; $Aw$ arrives for the address-keyed administrative gate through which every parameter this protocol has is written. That leaves the exit-liquidity term of the pooled-claim law open where the corpus closed it, and the choice is deliberate rather than an omission: what actually guarantees a supplier's exit here is that a withdrawal reverts when the reserve is short and the curve then pays borrowers to repay, which is an incentive and not one of the mechanisms the term offers.
+\end{remark}
+
+\subsection{JustLend V1}\label{sub:cat:lnd:justlend}
+
+A supplier deposits into a per-asset market and receives a token representing a pro-rata claim on it, whose redemption value rises through a growing exchange rate rather than through a growing balance. A borrower enters markets explicitly and a controller contract computes account liquidity from each entered collateral's collateral factor, valued by a push oracle whose price a permitted party writes rather than a feed the protocol pulls. Interest accrues into a per-market borrow index advanced every block a transaction touches the market, and the rate is quoted per block, so what a loan costs over a year depends on how fast the chain produces blocks. A liquidator repays at most a fixed fraction of the outstanding borrow and seizes collateral worth the repayment times a multiplicative premium, that fraction being a governed constant which does not vary with how far underwater the position is. The risk parameters carry permitted intervals checked in code; the rate curve carries none, and may be rewritten whole in a single call by one owner address.
+
+\begin{measurement}[Construction]\label{meas:cat:lnd:justlend}
+The construction $X = \{Aw,Ct,Ex,Gp,Ix,Li,Pl,Sh,Tg,Up\}$ has canonical form
+$\mathrm{ex}(X) = \{Aw,Ex,Gp,Ix,Li,Pl,Sh,Tg,Up\}$, deriving \{Ct\} rather than choosing it.
+It is admissible: no requirement term is open, every element is warranted, and it arms no prohibition. It discharges 10 of the 18 recorded obligations; 8 are residue. No composite of at most three corpus protocols equals it; no corpus protocol is contained in it.
+It is not minimal: \{Sh\} can be removed with every obligation still covered and admissibility intact.
+\end{measurement}
+
+\begin{remark}[What the construction cannot say]
+8 obligations of JustLend V1 have no element:
+\begin{itemize}
+  \item the rate is quoted and accrued per block rather than per second or per year, with a hard-coded 10,512,000 blocks per year matching a three-second chain, so the realised annual rate depends on how fast the chain produces blocks
+  \item one liquidation may repay at most a fixed fraction of the outstanding borrow, the fraction being a governed constant that does not depend on how far underwater the position is
+  \item the risk parameters are bounded in code at write time: a collateral factor may not exceed ninety per cent, a close factor must lie between five and ninety per cent, and a liquidation incentive must lie between one and one-and-a-half
+  \item the borrow rate is a memoryless two-slope jump-rate function of current utilisation, and the supply rate is utilisation times the borrow rate net of the reserve factor
+  \item nothing bounds what that curve may become: there is no maximum rate, no minimum or maximum kink, no requirement that the jump multiplier exceed the ordinary one, and no limit on how far a single update may move any of them
+  \item every risk and every rate parameter in the protocol is set directly by one administrative address, with no per-parameter envelope, no step limit, no cooldown and no delegate of any kind
+  \item the parameter changes that were actually executed are themselves committed to the repository as deployable contracts
+  \item no contract in this repository rents chain execution resources, so the resource-rental business the corpus attributes to this protocol is not part of the artefact decomposed here
+\end{itemize}
+The instructive residue here is an absence. Every other protocol in this category carries a bounded delegate over something, and this one carries none; its risk parameters are bounded in code while its rate parameters are bounded by nothing whatever, a line the protocol deliberately drew and the decomposition cannot record. An absent bound and a present bound yield the same element set, so the vocabulary reports that a delay exists and cannot report that the delay is the only protection there is. That the primitive is missing here also dates it: this is a fork of a design older than the bounded mandate, and the stewards, curators and automators elsewhere in the category all arrived later and in repositories separate from the cores they govern, so the gap in the vocabulary is one of vintage rather than of scope. The rest is the category's own --- a rate quoted per block, so that a property of consensus leaks into a credit parameter, and a liquidation allowance fixed as a constant where the largest protocol here computes one.
+\end{remark}
+
+\begin{remark}[Why this witness]
+The corpus records $Em$; the witness drops it, the controller having been read with no distribution mechanism in it, and adds $Aw$ for the single administrative address that writes every parameter and $Tg$ for the delay contract, the on-chain governor and the governance token standing behind it. Nothing else is added, and that is the point of this witness: it is the control in its category. No steward, no curator, no keeper and no bounded operator appears anywhere in the tree, and the decomposition would be identical whether the rate curve carried a permitted interval or none --- which is the strongest argument in the category that what is missing is a field on an element rather than an element. The corpus files the liquidation allowance here as though it were peculiar to this protocol and its ancestors; it is not, and the witness carries that residue under a category-wide reading with the three distinct policies the category actually runs.
+\end{remark}
+
+\subsection{Maple}\label{sub:cat:lnd:maple}
+
+A lender deposits a single asset into a pool contract implementing the standard vault interface and receives pool shares whose value rises as borrowers repay; who may deposit is decided by a permission manager, so the lender is a known party rather than any address. The money is lent by a named pool delegate as dated loan contracts to named borrowers, with a payment schedule, a grace period and a balloon at maturity, and a second module issues loans with no maturity at all. The price of credit is not an output of the protocol but a term of a bilateral contract: a fixed annualised rate written into the loan at origination, with a fee on late payment and a premium added to the rate while a payment is late, unbounded in the loan contract and unmoved until both parties agree a new one by hash commitment. Whether a loan has defaulted, and when, is a judgement the delegate makes and executes --- closing a bad loan is an authorised act by a named party rather than a race, and no third party is paid to perform it. A loss draws down the delegate's own posted capital before it reaches the pool, and a lender leaves through a queue rather than on demand.
+
+\begin{measurement}[Construction]\label{meas:cat:lnd:maple}
+The construction $X = \{Aw,Bs,Ct,Fd,Ft,Gp,Pl,Sh,Sl,Sv,Tg,Up,Wq\}$ has canonical form
+$\mathrm{ex}(X) = \{Aw,Bs,Fd,Ft,Gp,Pl,Sh,Sl,Sv,Tg,Up,Wq\}$, deriving \{Ct\} rather than choosing it.
+It is not admissible: it leaves the requirement term $L1:Ex\{\textbackslash\{\}mid\}Tp\{\textbackslash\{\}mid\}At$ open. It discharges 10 of the 23 recorded obligations; 13 are residue. No composite of at most three corpus protocols equals it; no corpus protocol is contained in it.
+\end{measurement}
+
+\begin{remark}[What the construction cannot say]
+13 obligations of Maple have no element:
+\begin{itemize}
+  \item the price of credit is a term of a bilateral contract, not an output of the protocol: a fixed annualised rate written into the loan at origination, alongside a closing rate, a late-fee rate and a premium that raises the interest rate once a payment is overdue past the grace period
+  \item the rate is agreed by the delegate and the borrower, and a loan cannot be funded until the borrower has accepted the terms
+  \item nothing in the loan contract bounds that rate: there is no maximum, no minimum and no permitted interval on any of the four rate fields
+  \item the rate does not move until both parties agree a new one: a change of terms is proposed as a hash commitment and takes effect only when the counterparty accepts it
+  \item closing a bad loan is an authorised act by a named party rather than a race: the delegate or a protocol admin triggers a default, no third party is paid to do it, and the process may span several transactions and be finished later by a second authorised call
+  \item the delegate may act only through instances the protocol registry recognises by kind -- a strategy, a liquidator factory, a withdrawal manager, a permission manager -- rather than through an enumerated list of addresses
+  \item the delegate cannot originate a loan while its own posted capital is below the protocol's floor, and cannot withdraw that capital below the same floor
+  \item the pool has a maximum size it may accept, and after configuration it is the protocol's admins and not the delegate who set it
+  \item nothing limits how fast the delegate may lend: within the cap it may originate at will, with no cooldown, no step limit and no throughput budget
+  \item the protocol's admins may replace the delegate, the registry alone may deactivate the pool, and every function in the pool manager stops while the protocol is paused
+  \item several powers exist only until the pool is configured and then move to a different party or vanish
+  \item there is no permissionless action anywhere on the credit side of this protocol: depositing is gated, originating is delegated, defaulting is authorised, and the only act anyone may take unbidden is to leave, which is queued
+  \item no price source exists in the pool layer at all: the pool manager holds no oracle, and where the secured book's collateral is valued is not established on chain
+\end{itemize}
+The residue at this protocol is the protocol. There is no curve, no oracle in the pool layer, no permissionless liquidation, and no permissionless action anywhere on the credit side: depositing is gated, originating is delegated, defaulting is authorised, and the only act left to a stranger is a queued exit. What cannot be named is therefore not a parameter but a form of authority --- discretion whose precondition is the agent's own stake, a domain fixed by registered kind rather than by address so that any future instance of a kind is admitted automatically, a cap set by the principal rather than by the agent and sized to the pool rather than to any exposure inside it, and powers that exist only until configuration completes and then move elsewhere or vanish; each of those is a field the mandate schema would need and has not got, and the last is not a field at all but a lifecycle. This is also where the cross-lane characterisation of the delegate as accountable only reputationally fails, and fails in code: the agent here is bonded, the sanction is financial and automatic rather than a matter of standing, and stake belongs in the schema as a slot whose default is empty rather than in the definition as a constant. And the largest part of the mechanism was never in the code to begin with --- the underwriting, the custody, the governing law and the recourse against a named borrower --- which is why an honest decomposition from source leaves the truth term open rather than fitting a symbol to something that is not there.
+\end{remark}
+
+\begin{remark}[Why this witness]
+The corpus records $At$, $Em$, $Ex$, $Ix$, $Li$ and $Uc$; the witness carries none of them and adds $Bs$, $Fd$ and $Sl$. $Ix$ goes because the pool layer holds no index object, the share price rising because the pool's assets rise; $Ex$ goes because the pool manager holds no oracle, which leaves the truth term of the credit law honestly open, valuation here being a human act performed off chain; $Li$ goes because it is refuted in both clauses of its own definition, default being triggered by the delegate or a protocol admin, possibly across more than one transaction, with no bounty paid to any caller; $Uc$ goes because a second lane measured this book overcollateralised, so carrying it would assert something false about the loans; $At$ and $Em$ go uncited. $Bs$ and $Sl$ arrive because the delegate's own posted capital is drawn down before the pool's, up to a governed fraction of it, with the waterfall in code and origination blocked outright while that capital sits below the protocol's floor --- and the same second lane, reading this protocol's documentation rather than its source, refutes $Bs$ and drops it, that documentation heading its section on first-loss capital as unused because most pools are managed by the sponsor. Both readings are recorded and neither is reconciled: the mechanism is present and enforced in code, its live balance was not read on chain by this lane, and a vocabulary that cannot distinguish a protocol with a backstop from one with a backstop contract deliberately left empty is the result rather than the confusion.
+\end{remark}
+
+\subsection{Morpho}\label{sub:cat:lnd:morpho}
+
+Credit is organised as many independent markets inside one contract, each fixed at creation by its loan asset, its collateral asset, its oracle, its interest-rate model and its loan-to-value, and anyone may create one from a combination governance has enabled. A lender supplies to a chosen market and receives shares of that market alone; a borrower posts that market's collateral asset and is tested against its single fixed loan-to-value at its own oracle. The rate is not a function but a controller --- a static curve around a target rate that itself drifts with the market's distance from target utilisation, clamped in code --- and no party sets it, every parameter of the controller being a compile-time constant. A liquidator repays an unhealthy position and seizes collateral at an incentive the protocol derives from that market's loan-to-value rather than from a parameter of its own, and a debt that survives with no collateral behind it is written down against that market's own suppliers and cannot reach another. Most depositor money arrives through a vault rather than directly: the vault, not the depositor, is the lender of record, and a curator decides which markets that money may enter and at what size while an allocator moves it between them.
+
+\begin{measurement}[Construction]\label{meas:cat:lnd:morpho}
+The construction $X = \{Aw,Ct,Ex,Fd,Gp,Im,Ix,Li,Pl,Sh,Sl,Tg\}$ has canonical form
+$\mathrm{ex}(X) = \{Aw,Ex,Fd,Gp,Im,Ix,Li,Pl,Sh,Sl,Tg\}$, deriving \{Ct\} rather than choosing it.
+It is admissible: no requirement term is open, every element is warranted, and it arms no prohibition. It discharges 11 of the 24 recorded obligations; 13 are residue. No composite of at most three corpus protocols equals it; no corpus protocol is contained in it.
+It is not minimal: \{Pl,Ix,Sl\} can be removed with every obligation still covered and admissibility intact.
+\end{measurement}
+
+\begin{remark}[What the construction cannot say]
+13 obligations of Morpho have no element:
+\begin{itemize}
+  \item anyone may create a market from any combination whose interest-rate model and loan-to-value are on governance's enabled lists, and nobody may edit it afterwards
+  \item the protocol checks nothing whatever about that oracle -- not its source, not its decimals, not its liveness -- and the address can never be changed for the life of the market
+  \item a borrow or a withdrawal is refused whenever it would leave the market's borrowed assets above its supplied assets, and that is the whole of a lender's exit guarantee -- there is no queue, no ordering, no buffer and no reserve
+  \item the borrow rate is produced by a closed-loop controller: a static curve of steepness four around a target rate, and that target rate itself drifts continuously toward whatever level drives utilisation to ninety per cent
+  \item no party may change any parameter of that controller: the steepness, the target, the adjustment speed and the bounds are compile-time constants in a contract with no setter and no admin
+  \item the controller's output is clamped in code: the target rate may never leave the band from one tenth of one per cent to two hundred per cent a year, so the realised borrow rate lies between 0.025 and 800 per cent a year
+  \item the only rate decision anyone ever makes is which interest-rate-model address a market is created with, and that address is then part of the market's identity and frozen for its life
+  \item no owner function can alter an existing market's oracle, model or loan-to-value, there is no proxy and no pause anywhere in the singleton, and the permitted lists may only be widened -- an enabled model or loan-to-value can never be disabled
+  \item the vault is itself a depositor in markets it does not control, so what a vault shareholder holds is a claim on a lender rather than a claim on a loan
+  \item the money may enter only markets the curator has admitted, and a market may not be admitted at all unless its loan asset is the vault's own asset and it already exists on the singleton, with at most thirty markets in the queue
+  \item no market may hold more of the vault's money than its own supply cap, checked on every allocation
+  \item the owner may remove the curator or any allocator at any moment, immediately and without a delay
+  \item an allocation must end where it began: the total withdrawn across markets in one call must equal the total supplied, so the allocator may permute the deposit and can never move value out of the vault
+\end{itemize}
+Here the residue is what the protocol is for. Its design claim is that a market's parameters are chosen once and never edited, that governance may widen a permitted set and may never narrow it, and that nobody at all may move the price of credit; the vocabulary can record only the absence of an upgrade path and of a pause, and the absence of a symbol means that nothing was observed, never that nothing can exist. The curator's mandate fares no better. Its delay is named, and named only because this instance happens to implement a delay as a queued change --- lowering a cap takes effect at once while raising one must wait --- where the same slot elsewhere in the category is a debounce, a one-sided cooldown or a refilling budget and is named by nothing; the set of markets the money may enter, the size each may hold, and the owner's power to remove the agent without notice are all residue. And the vault is itself a depositor in markets it does not control, so what a shareholder holds is a claim on a lender rather than a claim on a loan, which is a containment between protocols that a carrier composing by union of element sets cannot state at all.
+\end{remark}
+
+\begin{remark}[Why this witness]
+The corpus records $Em$, $Fl$ and $Sv$; the witness drops all three and adds $Fd$. $Fl$ goes because the singleton was read and holds no flash-loan facility, $Em$ because nothing in this lane's evidence cites one, and $Sv$ because the corpus's own marker concedes the point: $Sv$ names servicing and determination discretion over a loan, and a curator never touches a loan. $Gp$ is kept but belongs to the vault and not to the core --- the singleton has no pause, and the guardian's powers reach only changes that have been queued and not yet taken effect --- and this is where the corpus record fails on its sharpest claim, since the singleton cannot be upgraded and is not admin-less, its owner holding powers over ownership, over the permitted model and loan-to-value lists, over a bounded per-market fee and over the fee recipient. Among the alternatives the mandate's terms leave open, no element is forced onto the curator: its discretion is over which markets exist for a depositor's money and at what size, exercised before anything goes wrong, and $Sv$ would name a mechanism this protocol does not have.
+\end{remark}
+
+\subsection{SparkLend}\label{sub:cat:lnd:spark}
+
+A supplier deposits an asset into a single shared reserve and receives an interest-bearing claim token whose nominal balance grows with a per-reserve index; a borrower marks collateral, draws an open-ended loan with no maturity, and is monitored by one on-chain health factor. Closing is by repayment or by a third party repaying and seizing collateral at a bonus, permissionlessly, exactly as at the protocol this one forked. The price of credit is where the fork stops being a fork. The curve has the same two-slope kinked form, but its base rate and its rate at the kink are not stored numbers: they are a fixed spread over a savings rate read live, by direct call, out of another protocol's own accumulator. No party sets that rate in place --- the spreads are fixed in the strategy contract's constructor, the level is whatever the tracked protocol sets, and when that protocol moves its savings rate this one's kink moves on the next interaction with no transaction here at all.
+
+\begin{measurement}[Construction]\label{meas:cat:lnd:spark}
+The construction $X = \{Aw,Ct,Ex,Fl,Gp,Ix,Li,Pl,Rb,Tg,Up\}$ has canonical form
+$\mathrm{ex}(X) = \{Aw,Ex,Fl,Gp,Ix,Li,Pl,Rb,Tg,Up\}$, deriving \{Ct\} rather than choosing it.
+It is admissible: no requirement term is open, every element is warranted, and it arms no prohibition. It discharges 8 of the 24 recorded obligations; 16 are residue. No composite of at most three corpus protocols equals it; no corpus protocol is contained in it.
+It is not minimal: \{Pl,Rb,Up,Tg\} can be removed with every obligation still covered and admissibility intact.
+\end{measurement}
+
+\begin{remark}[What the construction cannot say]
+16 obligations of SparkLend have no element:
+\begin{itemize}
+  \item the borrow rate has the same two-slope kinked form as Aave's, but its base rate and its rate at the kink are not stored numbers -- they are read live, on every call, as a fixed spread over another protocol's savings rate
+  \item the quantity the rate tracks is fetched by a direct call into another protocol's own accumulator, not from any feed, medianizer or reporter
+  \item no party sets the rate in place: the spreads are fixed in the strategy contract's constructor and can only be changed by deploying a new strategy contract and repointing the reserve at it
+  \item nothing bounds the rate on SparkLend's own side: there is no maximum on the spread and no maximum on the level, which is whatever the tracked protocol sets
+  \item when the tracked protocol changes its savings rate, SparkLend's kink rate moves on the next interaction with no transaction on SparkLend at all
+  \item the lender of last resort is not a depositor: liquidity issued by another protocol is moved into SparkLend and into other venues by an operator acting on that other protocol's behalf
+  \item the keeper may act only on assets that have been given a configuration, and an asset with none is inert -- the computation returns its cap unchanged
+  \item each configured cap has a ceiling it may never exceed and a headroom it maintains above current usage, so the new cap is the lesser of current usage plus headroom and that ceiling
+  \item a cap may be lowered whenever the keeper likes but may not be raised again until a cooldown has passed since it was last raised, and no cap may be touched twice in one block
+  \item the admin may delete any asset's configuration and may remove the keeper's role outright
+  \item every permitted action is identified by a key naming an action and a venue together, and a key with no budget cannot be used at all
+  \item each key carries a ceiling that is the most the agent can move in any one action
+  \item spent budget refills continuously with elapsed time at a per-key rate, so what bounds the agent is not how often it acts but how much it may move per unit of time
+  \item the admin may also switch the bound off entirely for any single key in one transaction with no delay, after which the agent's budget is unlimited and the checks short-circuit
+  \item an oracle written and maintained in this protocol's own repository is supplied as the price source for markets in a different lending protocol
+  \item the protocol's code is a fork of one protocol and the price of its credit is a function of a second protocol's state, so it depends on two upstreams for two different things
+\end{itemize}
+Two mandates sit in this residue and they fill the same slot by different mechanisms: one keeper maintains a headroom above observed usage under a cooldown that applies to raising a cap and not to lowering it, and one controller spends a budget that refills continuously with elapsed time. The second bounds throughput and the first bounds frequency, and a schema with a single rate-of-change field records them as the same guarantee. Worse, the admin may switch the second bound off entirely for any one key in a single transaction with no delay, and the shape as this run has stated it has a slot for revoking the agent and none for revoking the bound, which is the more dangerous of the two. Underneath both sits the liquidity line itself, which is not a pool, there being no depositor and no claim, and is none of the other mechanisms the vocabulary offers for moving value between protocols. Above everything else stands the price of credit, which here is not administered but read: a direct call into another protocol's accumulator, so that the rate on this book moves when a different governance moves, and the code of this protocol depends on one upstream while the price of its credit depends on another.
+\end{remark}
+
+\begin{remark}[Why this witness]
+The corpus records $Em$ and $Im$; the witness drops both and adds $Aw$. $Im$ goes for the reason it goes upstream, the fork inheriting a reserve configuration that no longer carries a debt-ceiling field; $Em$ goes uncited; $Aw$ arrives for the named roles that move this protocol's caps and move another protocol's liquidity across venues. The corpus records this protocol and its upstream as identical, and that is refuted here on the one axis the corpus itself says matters most: same functional form, different setter, different bound, different latency, different party in control. The identity survives only because the vocabulary cannot see rates, which is the corpus's own thesis demonstrated rather than asserted --- and while the element set does stay close to a subset of the upstream's, the control machinery does not, since separate stop mechanisms, a cap automator, a health checker and a liquidity controller, each an independently audited repository, have no analogue upstream at all.
+\end{remark}
+
 \section{Collateralised-debt stablecoins}\label{sec:cat:cdp}
 
 Six protocols: Sky, Ethena, USDD, Lista, Liquity and crvUSD. The category

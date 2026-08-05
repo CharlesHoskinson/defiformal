@@ -2,33 +2,58 @@
   "app": "Aave V3",
   "category": "02-lending",
   "source": "C:\\defiformal-work\\02-lending\\01-research.md",
-  "construction": ["Pl", "Ix", "Rb", "Ct", "Ex", "Li", "Fl", "Fd", "Aw", "Gp", "Up", "Tg", "Xm"],
+  "construction": [
+    "Pl",
+    "Ix",
+    "Rb",
+    "Ct",
+    "Ex",
+    "Li",
+    "Fl",
+    "Fd",
+    "Aw",
+    "Gp",
+    "Up",
+    "Tg",
+    "Xm"
+  ],
   "functionalObligations": [
     {
       "id": "F1",
       "text": "a supplier deposits an ERC-20 into a single shared reserve and receives a transferable claim token one-for-one, and every supplier of that reserve holds the same undifferentiated claim on it",
-      "elements": ["Pl"],
+      "elements": [
+        "Pl"
+      ],
       "evidence": "https://aave.com/docs/developers/smart-contracts/pool (accessed 2026-08-04)",
       "note": "Pl is exact. FLAG FOR STAGE 3: law L2 (Pl implies a claim form plus an exit-liquidity term drawn from Sl, Ad, Bs, Tr, Cv, Wq, Rd, Ps, Sv, Im, Of) is discharged on its first term by Ix and Rb at F2 and is NOT discharged on its second by anything this lane can cite. The corpus discharged it with Im, Sl and Bs; this lane drops all three (Im at F12, Bs and Sl for want of any source read in stage 1 -- the Umbrella/Safety Module contracts were not fetched and stage 1 records Bs as UNCONFIRMED, not confirmed). Aave's real exit guarantee is that a withdrawal reverts when the reserve's available liquidity is short and the rate curve then pays borrowers to repay; that is an incentive, not a mechanism, and no element names it. A resulting INADMISSIBLE verdict is a statement about the evidence base and about L2's term list, not about Aave."
     },
     {
       "id": "F2",
       "text": "interest is capitalised into a per-reserve index recomputed on every state-changing interaction rather than billed, and the claim token's nominal balance grows with that index so a holder's displayed balance changes without a transfer",
-      "elements": ["Ix", "Rb"],
+      "elements": [
+        "Ix",
+        "Rb"
+      ],
       "evidence": "https://raw.githubusercontent.com/aave-dao/aave-v3-origin/main/src/contracts/misc/DefaultReserveInterestRateStrategyV2.sol (accessed 2026-08-04)",
       "note": "Two symbols for one mechanism, and the corpus marker for Rb (FORCED) is retained and sharpened: an aToken is a scaled balance multiplied by the reserve's liquidity index, so Ix is the internal object and Rb is the external presentation of the same object. The vocabulary charges twice and has no way to state that the two symbols denote one thing viewed from two sides. Confirms the corpus residue verbatim."
     },
     {
       "id": "F3",
       "text": "a borrower designates supplied reserves as collateral and draws an open-ended loan from the same shared reserve, with no maturity and no schedule, recorded as a debt token that accrues by the same index mechanism",
-      "elements": ["Pl", "Ix"],
+      "elements": [
+        "Pl",
+        "Ix"
+      ],
       "evidence": "https://aave.com/docs/developers/smart-contracts/pool (accessed 2026-08-04)",
       "note": "setUserUseReserveAsCollateral then borrow then repay. Ft is deliberately NOT emitted: there is no maturity date anywhere in the position, which is the axis on which Aave and Maple differ most and which the vocabulary does record."
     },
     {
       "id": "F4",
       "text": "solvency is a single scalar computed on chain from the oracle value of each collateral times that asset's liquidation threshold against the oracle value of the debt, and the position is closable when the scalar falls below one",
-      "elements": ["Ct", "Ex"],
+      "elements": [
+        "Ct",
+        "Ex"
+      ],
       "evidence": "https://aave.com/docs/developers/smart-contracts/pool (accessed 2026-08-04)",
       "note": "Ct is exact and, contrary to the corpus, first-class rather than derived: the health factor is a named quantity the protocol computes and stores intent against, not something a reader infers from other elements. The per-asset liquidation threshold and LTV are separate configuration fields (LIQUIDATION_THRESHOLD_MASK, LTV_MASK, both MAX_VALID 65535) at https://raw.githubusercontent.com/aave-dao/aave-v3-origin/main/src/contracts/protocol/libraries/configuration/ReserveConfiguration.sol (accessed 2026-08-04); Ct names the test and not that the test has two thresholds per asset."
     },
@@ -42,7 +67,9 @@
     {
       "id": "F6",
       "text": "a third party may repay part of a borrower's debt and seize the borrower's collateral at a bonus, in one permissionless transaction, with no authorisation and no queue",
-      "elements": ["Li"],
+      "elements": [
+        "Li"
+      ],
       "evidence": "https://raw.githubusercontent.com/aave-dao/aave-v3-origin/main/src/contracts/protocol/libraries/logic/LiquidationLogic.sol (accessed 2026-08-04)",
       "note": "Li is exact here and this is the lane's positive control for it: the clause 'third parties paid to close positions' is true in both halves, which it is not at Maple (see maple.json F13). The per-asset LIQUIDATION_BONUS_MASK is a configuration field (ReserveConfiguration.sol, accessed 2026-08-04); Li names the incentive and not that its size is a governed per-asset parameter."
     },
@@ -56,14 +83,18 @@
     {
       "id": "F8",
       "text": "the protocol withholds a fraction of borrower interest from suppliers and diverts a further share of the liquidator's bonus, both accruing to a treasury address",
-      "elements": ["Fd"],
+      "elements": [
+        "Fd"
+      ],
       "evidence": "https://raw.githubusercontent.com/aave-dao/aave-v3-origin/main/src/contracts/misc/DefaultReserveInterestRateStrategyV2.sol (accessed 2026-08-04)",
       "note": "CANDIDATE-REGISTER (Fd), retained from the corpus and extended. The reserve factor appears in the strategy's own output as liquidityRate = borrowRate * U_s * (1 - reserveFactor); RESERVE_FACTOR_MASK and LIQUIDATION_PROTOCOL_FEE_MASK (MAX_VALID 65535 each) are both live per-reserve fields at https://raw.githubusercontent.com/aave-dao/aave-v3-origin/main/src/contracts/protocol/libraries/configuration/ReserveConfiguration.sol (accessed 2026-08-04). DEPARTURE from the corpus, which files the liquidation protocol fee as residue: Fd does reach 'a share of a flow is routed to the protocol'. What Fd does not reach is that this particular share is CARVED OUT OF A THIRD PARTY'S INCENTIVE, so raising it weakens the liquidation guarantee -- a fee that is also a risk parameter. That much remains residue."
     },
     {
       "id": "F9",
       "text": "anyone may borrow any amount of an enabled reserve with no collateral provided it is returned inside the same transaction",
-      "elements": ["Fl"],
+      "elements": [
+        "Fl"
+      ],
       "evidence": "https://aave.com/docs/developers/smart-contracts/pool (accessed 2026-08-04)",
       "note": "Fl is exact. The facility is per-reserve switchable: FLASHLOAN_ENABLED_MASK at https://raw.githubusercontent.com/aave-dao/aave-v3-origin/main/src/contracts/protocol/libraries/configuration/ReserveConfiguration.sol (accessed 2026-08-04). Conditional prohibition X2 (Fl present with a manipulable pool price and Pl) is armed by construction; Aave prices from Ex rather than from a pool invariant, so the antecedent's second conjunct is not met inside this application."
     },
@@ -91,7 +122,9 @@
     {
       "id": "F13",
       "text": "those rate parameters live in a mutable per-reserve struct that only the pool configurator may write, and the configurator's own callers are addresses enumerated in an on-chain role registry that a default admin may add to and remove from",
-      "elements": ["Aw"],
+      "elements": [
+        "Aw"
+      ],
       "evidence": "https://raw.githubusercontent.com/aave-dao/aave-v3-origin/main/src/contracts/protocol/configuration/ACLManager.sol (accessed 2026-08-04)",
       "note": "FINDING 1: THE SETTER LOCUS -- a mutable parameter inside the protocol. Aw is APPROXIMATE and this lane emits it uniformly for address-keyed administrative gates, following the corpus's own FORCED use of Aw for role structure at Morpho and the 06-yield lane's use of it for mandate slot 1. DEPARTURE: the corpus does not carry Aw for Aave. What Aw names: the call is gated by address and the gate is mutable (POOL_ADMIN_ROLE, RISK_ADMIN_ROLE, EMERGENCY_ADMIN_ROLE, FLASH_BORROWER_ROLE, BRIDGE_ROLE, ASSET_LISTING_ADMIN_ROLE over OpenZeppelin AccessControl, with add/remove per role and setRoleAdmin under onlyRole(DEFAULT_ADMIN_ROLE)). What Aw does not name: that the gated thing is a DISCRETIONARY ECONOMIC AUTHORITY rather than a right to participate; and who holds each role, or how many of them there are, which stage 1 records as UNKNOWN for all five targets and the 07-bridges lane records as the party-sort gap. An architectural fact the corpus record predates: earlier Aave V3 deployed one strategy contract per reserve with immutable parameters, so this locus is itself a design that changed."
     },
@@ -112,7 +145,9 @@
     {
       "id": "F16",
       "text": "a single named address, held immutably by the contract, may change risk parameters directly without a governance vote",
-      "elements": ["Aw"],
+      "elements": [
+        "Aw"
+      ],
       "evidence": "https://raw.githubusercontent.com/aave-dao/aave-v3-risk-stewards/main/src/contracts/RiskSteward.sol (accessed 2026-08-04)",
       "note": "MANDATE SLOT 1 (named agent). Aw APPROXIMATE, same reading as F13. address public immutable RISK_COUNCIL with modifier onlyRiskCouncil reverting InvalidCaller. Two things Aw does not carry and neither does anything else. (a) THE AGENT MAY BE AN AUTOMATON: AaveStewardInjectorRates, ...Caps, ...EMode and ...DiscountRate read a recommendation from RiskOracle.sol and inject it inside the same envelope under Chainlink or Gelato automation (https://api.github.com/repos/aave-dao/aave-v3-risk-stewards/git/trees/main?recursive=1, accessed 2026-08-04), so 'named agent' must admit a machine acting on an oracle's advice. (b) MANDATE SLOT 6 (agent stake): EMPTY. The Risk Council posts no bond and is not paid by this contract; its only sanction is F20. Contrast Maple (maple.json F19), where the slot is filled and the cross-lane phrase 'accountable only reputationally' is refuted in code."
     },
@@ -147,23 +182,37 @@
     {
       "id": "F21",
       "text": "any reserve may be frozen or paused individually, and a distinct emergency role exists whose purpose is to do so",
-      "elements": ["Gp"],
+      "elements": [
+        "Gp"
+      ],
       "evidence": "https://raw.githubusercontent.com/aave-dao/aave-v3-origin/main/src/contracts/protocol/libraries/configuration/ReserveConfiguration.sol (accessed 2026-08-04)",
       "note": "Gp is supported. ACTIVE_MASK, FROZEN_MASK and PAUSED_MASK are per-reserve configuration bits, and EMERGENCY_ADMIN_ROLE is a declared role at https://raw.githubusercontent.com/aave-dao/aave-v3-origin/main/src/contracts/protocol/configuration/ACLManager.sol (accessed 2026-08-04). Gp names one halt; it does not name that there are THREE graduated states here (active, frozen -- no new positions but existing ones may be closed -- and paused), which is a lattice of degrees of stop and reads as a single boolean. Who holds the role is UNKNOWN."
     },
     {
       "id": "F22",
       "text": "the pool and its configurator sit behind admin-upgradeable proxies whose implementations may be replaced by an owner the source names as the governance",
-      "elements": ["Up"],
+      "elements": [
+        "Up"
+      ],
       "evidence": "https://raw.githubusercontent.com/aave-dao/aave-v3-origin/main/src/contracts/protocol/configuration/PoolAddressesProvider.sol (accessed 2026-08-04)",
       "note": "Up is exact. setPoolImpl, setPoolConfiguratorImpl, setAddressAsProxy and _updateImpl, all external override onlyOwner over Ownable, deploying InitializableImmutableAdminUpgradeabilityProxy; the contract's own comment reads 'Owned by the Aave Governance'. Law L15 (Up implies Tg or a bounded emergency process) is discharged by F23, subject to the caveat there. Prohibition X9 (Up with immediate single-key control) is NOT armed on this evidence and is not disarmed either: the owner's identity and quorum are UNKNOWN, which is exactly the 07-bridges lane's finding that the risk is a property of the holder and the vocabulary has no party sort."
     },
     {
       "id": "F23",
       "text": "a governance action arrives as a payload bridged from a separate governance chain, is queued on receipt, becomes executable by anyone only after a per-executor delay of between one and ten days, and expires if left unexecuted through a grace period",
-      "elements": ["Tg", "Xm"],
+      "elements": [
+        "Tg",
+        "Xm"
+      ],
       "evidence": "https://raw.githubusercontent.com/aave-dao/aave-governance-v3/main/src/contracts/payloads/PayloadsControllerCore.sol (accessed 2026-08-04)",
       "note": "Tg and Xm both supported, and both were carried by the corpus without a source; this lane supplies one. MIN_EXECUTION_DELAY 1 day, MAX_EXECUTION_DELAY 10 days, EXPIRATION_DELAY 35 days, GRACE_PERIOD 7 days; executionTime = payload.queuedAt + payload.delay and executePayload has no caller restriction beyond state validation. Xm is warranted by the payload arriving from the governance chain, not by any user asset movement -- so Aave's cross-domain element is a CONTROL-PLANE object, which the vocabulary places in the same group as bridged value and cannot distinguish. Two things Tg does not say and both matter here: that the delay is per-executor and configurable, and that it protects only THIS path -- the steward (F16 to F20) reaches the same parameters with no delay at all."
     }
-  ]
+  ],
+  "paper": {
+    "title": "Aave V3",
+    "label": "cat:lnd:aave",
+    "blurb": "A supplier deposits a fungible token into one shared reserve and receives a transferable claim token whose nominal balance grows as the reserve's index accrues. A borrower marks supplied reserves as collateral and draws an open-ended loan from the same reserve, with no maturity and no schedule, recorded as a debt token accruing by that same index. The price of the loan is a memoryless two-slope function of the reserve's current utilisation, held in a mutable per-reserve struct that only the pool configurator may write, and bounded at write time on its level, on where its kink may sit and on its shape. Solvency is a single scalar computed on chain from the oracle value of each collateral against the oracle value of the debt. A borrower closes by repaying; anyone else closes by repaying part of the debt and seizing collateral at a bonus, and how much of a position one liquidation may take is itself a computed quantity, falling out of how far underwater the position is and how large it is.",
+    "witnessReason": "The corpus records $Bs$, $Cd$, $Em$, $Im$ and $Sl$; the witness carries none of them and adds $Aw$. $Im$ goes because the reserve configuration in the current tree holds no debt-ceiling field at all --- the bitmap's own comment records the unoccupied bits left where one used to sit --- so the fenced market the corpus called forced is not merely forced but unsupported, and the same drop follows downstream at the protocol that forked this one. $Bs$ and $Sl$ go because the Safety Module contracts were not read and this lane carries no element on memory; $Cd$ and $Em$ go for the same reason; $Aw$ arrives for the address-keyed administrative gate through which every parameter this protocol has is written. That leaves the exit-liquidity term of the pooled-claim law open where the corpus closed it, and the choice is deliberate rather than an omission: what actually guarantees a supplier's exit here is that a withdrawal reverts when the reserve is short and the curve then pays borrowers to repay, which is an incentive and not one of the mechanisms the term offers.",
+    "residueNote": "The residue here is the entire surface a risk team manages. What the vocabulary keeps is that money is pooled, that an index accrues, that a test is run, and that someone is paid to close a failing position; what it loses is every quantity those mechanisms are actually set to --- the shape of the rate curve and the interval its parameters must lie in, the allowance one liquidation may take and the remainder it may not leave, the caps that bound an asset's whole population rather than any individual position, and the permitted drift of a price feed. The sharpest instance is the steward: a named address, fixed at deployment, may move rates, caps, collateral parameters, correlated-asset categories and oracle growth limits with no vote, and of that mandate the decomposition names only the agent, and names it only by stretching an address-keyed permission gate. The enumerated domains it may touch, the maximum step per update, the minimum interval before the same parameter of the same asset may move again, and the principal's power to empty the envelope while being unable to remove the agent are all residue --- and across every instance of this shape in the category the domain, the magnitude cap and the revocation are residue without exception. Here the parts are not merely present but factored into one reusable validator, and that validator bounds the rate through the same code that bounds the caps, which is why the price of credit and the delegated mandate are one gap stated twice rather than two gaps."
+  }
 }

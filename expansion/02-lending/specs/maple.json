@@ -2,33 +2,56 @@
   "app": "Maple",
   "category": "02-lending",
   "source": "C:\\defiformal-work\\02-lending\\01-research.md",
-  "construction": ["Pl", "Sh", "Aw", "Ct", "Ft", "Sv", "Bs", "Sl", "Wq", "Fd", "Up", "Tg", "Gp"],
+  "construction": [
+    "Pl",
+    "Sh",
+    "Aw",
+    "Ct",
+    "Ft",
+    "Sv",
+    "Bs",
+    "Sl",
+    "Wq",
+    "Fd",
+    "Up",
+    "Tg",
+    "Gp"
+  ],
   "functionalObligations": [
     {
       "id": "F1",
       "text": "a lender deposits a single asset into a pool contract implementing the standard vault interface and receives pool shares whose value rises as borrowers repay",
-      "elements": ["Pl", "Sh"],
+      "elements": [
+        "Pl",
+        "Sh"
+      ],
       "evidence": "https://api.github.com/repos/maple-labs/pool-v2/git/trees/main?recursive=1 (accessed 2026-08-04)",
       "note": "Pl and Sh are exact. Ix is deliberately NOT emitted and this is a DEPARTURE from the corpus: the share price rises because the pool's total assets rise, and there is no index object anywhere in the pool layer -- the same reading the 09-rwa lane reached independently on docs evidence for the syrupUSDC pool. Law L2's exit-liquidity term is discharged here, unusually for this lane, by Wq at F15. CROSS-LANE NOTE: this application is decomposed twice in the run. 09-rwa/02-decomp/maple-finance.json decomposes Maple Finance from published documentation and live measurement; this file decomposes it from repository source. Where they disagree the disagreement is recorded rather than reconciled -- see F12."
     },
     {
       "id": "F2",
       "text": "who may deposit is decided by a permission manager, so the lender is a known party rather than any address",
-      "elements": ["Aw"],
+      "elements": [
+        "Aw"
+      ],
       "evidence": "https://raw.githubusercontent.com/maple-labs/pool-v2/main/contracts/MaplePoolManager.sol (accessed 2026-08-04)",
       "note": "Aw in its EXACT sense -- the only place in this lane where it is not an approximate fit. setPoolPermissionManager on the pool manager, with pool-permission-manager as its own repository (https://api.github.com/orgs/maple-labs/repos?per_page=100&sort=pushed, accessed 2026-08-04). The 09-rwa lane established the gate's internals -- four strictness levels, a bitmap of off-chain criteria, transfer-time enforcement, and a default that returns TRUE when no bitmap is set -- so law L16 is discharged and the fail-open default is residue recorded there."
     },
     {
       "id": "F3",
       "text": "the money is lent as dated loan contracts with a payment schedule, a grace period and a balloon at maturity, and a second module issues loans with no maturity at all",
-      "elements": ["Ft"],
+      "elements": [
+        "Ft"
+      ],
       "evidence": "https://raw.githubusercontent.com/maple-labs/fixed-term-loan/main/contracts/MapleLoanStorage.sol (accessed 2026-08-04)",
       "note": "Ft confirmed and refined. _paymentInterval, _paymentsRemaining, _nextPaymentDueDate, _gracePeriod and _endingPrincipal are declared loan fields; and the org ships BOTH fixed-term-loan AND open-term-loan (https://api.github.com/orgs/maple-labs/repos?per_page=100&sort=pushed, accessed 2026-08-04), so FT COVERS HALF THE PRODUCT and the maturity of an asset is a per-strategy choice rather than a property of the protocol. RESIDUE INSIDE A NAMED OBLIGATION, agreeing with the 09-rwa lane: the LENDER's claim is perpetual and open-ended while the ASSET is dated, and the maturity mismatch between the two sides is the actual mechanism -- it is why F15 exists -- and no element states it."
     },
     {
       "id": "F4",
       "text": "a loan may require the borrower to post collateral into the loan contract itself, recorded as a required amount against a delivered amount",
-      "elements": ["Ct"],
+      "elements": [
+        "Ct"
+      ],
       "evidence": "https://raw.githubusercontent.com/maple-labs/fixed-term-loan/main/contracts/MapleLoanStorage.sol (accessed 2026-08-04)",
       "note": "Ct FORCED, and the corpus marker is retained with its reason sharpened. _collateralRequired and _collateral are loan fields, so a threshold exists on chain; what does not exist on chain is the MONITORING -- there is no oracle in the pool layer (F25) and the 09-rwa lane established that the margin call is computed and issued off chain by the delegate's operations team. Ct names an on-chain margin computation and here the computation is a drawdown check, not a solvency test. DEPARTURE: Uc is DROPPED. The corpus carries it FORCED 'in the other direction', and the 09-rwa lane measured the book at 147.72 per cent collateralisation, so emitting Uc asserts something false about the loans while law L3's warrants would then demand a structure Maple does not have. The identity, underwriting and recourse dimension that Uc bundles is real and is residue at F6 and F26."
     },
@@ -70,7 +93,9 @@
     {
       "id": "F10",
       "text": "whether a loan has defaulted, and when, is a judgement the delegate makes and executes",
-      "elements": ["Sv"],
+      "elements": [
+        "Sv"
+      ],
       "evidence": "https://raw.githubusercontent.com/maple-labs/pool-v2/main/contracts/MaplePoolManager.sol (accessed 2026-08-04)",
       "note": "CANDIDATE-REGISTER (Sv), and this is its INTENDED sense -- servicing and determination discretion over a loan -- which is why it fits here and does not fit the Morpho curator (morpho.json F24), where the corpus emits it over an allocation decision. Sv covers the determination. It does not cover that the determination is conditioned on the delegate's own stake (F13), and the 09-rwa lane found a further power at the same object that Sv also misses: a reversible provisional impairment that immediately reduces what an exiting lender receives, used explicitly to discourage exit."
     },
@@ -84,7 +109,10 @@
     {
       "id": "F12",
       "text": "a loss draws down the delegate's own posted capital first, up to a governed fraction of it, splitting the proceeds between the protocol treasury and the pool, and whatever remains is a straight reduction of the pool's assets borne by every remaining lender",
-      "elements": ["Bs", "Sl"],
+      "elements": [
+        "Bs",
+        "Sl"
+      ],
       "evidence": "https://raw.githubusercontent.com/maple-labs/pool-v2/main/contracts/MaplePoolManager.sol (accessed 2026-08-04)",
       "note": "Bs and Sl, both DEPARTURES from the corpus, which carries neither for Maple. _handleCover(losses_, platformFees_) draws from poolDelegateCover up to balanceOf(poolDelegateCover) * maxCoverLiquidationPercent / HUNDRED_PERCENT. Bs is 'slashable first-loss capital' and MaplePoolDelegateCover is exactly that, with the loss waterfall in code. CROSS-LANE CONFLICT, RECORDED NOT RECONCILED, AND IT MATTERS FOR THE STAKE FINDING: 09-rwa/02-decomp/maple-finance.json F8 REFUTES and DROPS Bs on documentation evidence -- Maple's own docs head the section 'First-Loss Capital (Unused)', noting the cover is unused because most pools are managed by Maple Direct, and stSYRUP was never slashable. The two lanes are looking at different things and both are right: THE MECHANISM IS PRESENT AND ENFORCED IN CODE, AND ITS LIVE BALANCE MAY BE ZERO. This lane performed no on-chain read, so the value of minCoverAmount on any live pool is UNKNOWN. Stage 3 should treat Bs here as CODE-LEVEL and stage 6 must not write that Maple's delegate is bonded in practice without a live figure. Sl is straightforward and is the only unconditional loss-absorption mechanism the protocol has."
     },
@@ -98,21 +126,27 @@
     {
       "id": "F14",
       "text": "a named delegate holds the pool's origination, default, servicing and refinancing authority, and succession is a two-step handover the delegate or a protocol admin may begin",
-      "elements": ["Aw"],
+      "elements": [
+        "Aw"
+      ],
       "evidence": "https://raw.githubusercontent.com/maple-labs/pool-v2/main/contracts/MaplePoolManager.sol (accessed 2026-08-04)",
       "note": "MANDATE SLOT 1 (named agent), the fifth instance in this lane counting SparkLend's two. Aw APPROXIMATE, uniform reading (see aave-v3.json F13). poolDelegate with onlyPoolDelegate and onlyPoolDelegateOrProtocolAdmins; setPendingPoolDelegate then acceptPoolDelegate. Note what is bounded here that is bounded nowhere else in the lane: ORIGINATION -- the act of creating an asset -- rather than a parameter, an allocation or a transfer. Six different bounded quantities across five instances in one category is the evidence that this is a schema over elements and not an element."
     },
     {
       "id": "F15",
       "text": "a lender leaves through a queue rather than on demand, and a loan may not be funded if doing so would leave the pool unable to serve the exits already queued",
-      "elements": ["Wq"],
+      "elements": [
+        "Wq"
+      ],
       "evidence": "https://raw.githubusercontent.com/maple-labs/pool-v2/main/contracts/MaplePoolManager.sol (accessed 2026-08-04)",
       "note": "Wq is exact. The org ships both a queue and a cyclical implementation (withdrawal-manager-queue, withdrawal-manager-cyclical), so WHICH SEMANTICS A GIVEN POOL HAS IS A DEPLOYMENT CHOICE and Wq names only one of the two -- the cyclical variant is window-based and closer to Ep, a distinction the 09-rwa lane drew against Centrifuge and which one symbol cannot hold. requestFunds additionally enforces balanceOf(pool) >= lockedLiquidity_ after the transfer, which is the queue REACHING BACK INTO THE ORIGINATION DECISION: the exit mechanism is also a constraint on the mandate, and nothing composes the two."
     },
     {
       "id": "F16",
       "text": "the pool charges a management fee to its operator's account, bounded by a hundred per cent at four-decimal precision, and after configuration it is the protocol's admins and not the operator who set it",
-      "elements": ["Fd"],
+      "elements": [
+        "Fd"
+      ],
       "evidence": "https://raw.githubusercontent.com/maple-labs/pool-v2/main/contracts/MaplePoolManager.sol (accessed 2026-08-04)",
       "note": "CANDIDATE-REGISTER (Fd). setDelegateManagementFeeRate is onlyProtocolAdminsOrNotConfigured, bounded by HUNDRED_PERCENT = 100_0000. CORRECTION OF FACT to the corpus, whose residue reads 'no element for management and performance fees charged on a lending pool BY ITS OPERATOR': the residue stands -- no element names the fee as the price of a mandate -- and the implied agency does not. THE OPERATOR DOES NOT SET ITS OWN FEE. The identical correction lands at MetaMorpho (morpho.json F24), where setFee is onlyOwner and not the curator, so in both protocols the delegate's compensation is the principal's decision, and a schema field 'performance fee' must record WHO SETS IT, not merely that it exists. The 09-rwa lane measured delegateManagementFeeRate() = 0 on the flagship syrupUSDC pool, so the flow may currently be zero."
     },
@@ -161,9 +195,20 @@
     {
       "id": "F23",
       "text": "the pool's contracts may be upgraded, by the delegate only through a call the registry has scheduled in advance and otherwise by a security administrator directly, and the whole protocol can be paused from one registry",
-      "elements": ["Up", "Tg", "Gp"],
+      "elements": [
+        "Up",
+        "Tg",
+        "Gp"
+      ],
       "evidence": "https://raw.githubusercontent.com/maple-labs/pool-v2/main/contracts/MaplePoolManager.sol (accessed 2026-08-04)",
       "note": "All three supported. upgrade is gated by globals_.isValidScheduledCall(..., 'PM:UPGRADE', msg.data) for the delegate and by globals_.securityAdmin() otherwise; setImplementation requires msg.sender == _factory(); whenNotPaused is protocol-wide from MapleGlobals. Law L15 (Up implies Tg or a bounded emergency process) is discharged NOMINALLY ONLY: the 09-rwa lane established from Maple's own documentation that timelock parameters are set by the Governor, can be changed at any time, and take RETROACTIVE effect on calls already scheduled, so a pending scheduled call becomes immediately executable the moment the Governor shortens the delay. Tg asserts delayed execution and cannot express A DELAY THE DELAYED PARTY CONTROLS, so the symbol reads as a protection that is nominal. THE GOVERNOR, SECURITY ADMIN AND OPERATIONAL ADMIN KEYS ARE UNKNOWN -- no on-chain read was performed, the same gap recorded for all five targets. LICENCE, a reproduction constraint on the paper: the GitHub API reports NOASSERTION across the product because the licence files are custom, and reading the source resolves it -- MapleLoanStorage.sol carries SPDX-License-Identifier BUSL-1.1, so the loan core is not open source and may not be reproduced in atlas.tex. Repo metadata alone gets this wrong; the SPDX header is the authority."
     }
-  ]
+  ],
+  "paper": {
+    "title": "Maple",
+    "label": "cat:lnd:maple",
+    "blurb": "A lender deposits a single asset into a pool contract implementing the standard vault interface and receives pool shares whose value rises as borrowers repay; who may deposit is decided by a permission manager, so the lender is a known party rather than any address. The money is lent by a named pool delegate as dated loan contracts to named borrowers, with a payment schedule, a grace period and a balloon at maturity, and a second module issues loans with no maturity at all. The price of credit is not an output of the protocol but a term of a bilateral contract: a fixed annualised rate written into the loan at origination, with a fee on late payment and a premium added to the rate while a payment is late, unbounded in the loan contract and unmoved until both parties agree a new one by hash commitment. Whether a loan has defaulted, and when, is a judgement the delegate makes and executes --- closing a bad loan is an authorised act by a named party rather than a race, and no third party is paid to perform it. A loss draws down the delegate's own posted capital before it reaches the pool, and a lender leaves through a queue rather than on demand.",
+    "witnessReason": "The corpus records $At$, $Em$, $Ex$, $Ix$, $Li$ and $Uc$; the witness carries none of them and adds $Bs$, $Fd$ and $Sl$. $Ix$ goes because the pool layer holds no index object, the share price rising because the pool's assets rise; $Ex$ goes because the pool manager holds no oracle, which leaves the truth term of the credit law honestly open, valuation here being a human act performed off chain; $Li$ goes because it is refuted in both clauses of its own definition, default being triggered by the delegate or a protocol admin, possibly across more than one transaction, with no bounty paid to any caller; $Uc$ goes because a second lane measured this book overcollateralised, so carrying it would assert something false about the loans; $At$ and $Em$ go uncited. $Bs$ and $Sl$ arrive because the delegate's own posted capital is drawn down before the pool's, up to a governed fraction of it, with the waterfall in code and origination blocked outright while that capital sits below the protocol's floor --- and the same second lane, reading this protocol's documentation rather than its source, refutes $Bs$ and drops it, that documentation heading its section on first-loss capital as unused because most pools are managed by the sponsor. Both readings are recorded and neither is reconciled: the mechanism is present and enforced in code, its live balance was not read on chain by this lane, and a vocabulary that cannot distinguish a protocol with a backstop from one with a backstop contract deliberately left empty is the result rather than the confusion.",
+    "residueNote": "The residue at this protocol is the protocol. There is no curve, no oracle in the pool layer, no permissionless liquidation, and no permissionless action anywhere on the credit side: depositing is gated, originating is delegated, defaulting is authorised, and the only act left to a stranger is a queued exit. What cannot be named is therefore not a parameter but a form of authority --- discretion whose precondition is the agent's own stake, a domain fixed by registered kind rather than by address so that any future instance of a kind is admitted automatically, a cap set by the principal rather than by the agent and sized to the pool rather than to any exposure inside it, and powers that exist only until configuration completes and then move elsewhere or vanish; each of those is a field the mandate schema would need and has not got, and the last is not a field at all but a lifecycle. This is also where the cross-lane characterisation of the delegate as accountable only reputationally fails, and fails in code: the agent here is bonded, the sanction is financial and automatic rather than a matter of standing, and stake belongs in the schema as a slot whose default is empty rather than in the definition as a constant. And the largest part of the mechanism was never in the code to begin with --- the underwriting, the custody, the governing law and the recourse against a named borrower --- which is why an honest decomposition from source leaves the truth term open rather than fitting a symbol to something that is not there."
+  }
 }
