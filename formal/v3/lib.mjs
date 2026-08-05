@@ -6,7 +6,17 @@ export const ELEMS = T.ELEMS;
 export const T_ = T;
 
 // --- membership in the model classes, as CLAUSE SATISFACTION (no operator anywhere)
-export const inR = X => T.gammaOpen(X).length === 0;            // X |= Law  (requirements)
+// Requirements under the RECORDED 29-row system (T.PARSED_NEW), which is what
+// the paper states every figure uses. This previously called T.gammaOpen, which
+// reads the reduced 11-row LSTAR; the two disagree on 387 of the 30,856
+// three-element subsets, so the structural measurements below and the
+// constructions in construct.mjs were computing in different models.
+// Semantics are construct.mjs's, including the !external filter.
+export const openReq = X => T.PARSED_NEW.flatMap(l =>
+  !l.subjects.some(s => X.has(s)) ? [] :
+  l.terms.filter(t => !t.external && !t.alts.some(a => X.has(a)))
+         .map(t => [l.id, t.alts.join("|")]));
+export const inR = X => openReq(X).length === 0;                // X |= Law  (requirements)
 export const inW = X => T.unwarranted(X).length === 0;          // X |= War  (warrants)
 export const grounded = X => !T.ungrounded(X);                  // X |= grounding clauses
 export const inH = X => T.bansCond(X).length === 0;             // X |= Haz  (prohibitions, as shipped)
