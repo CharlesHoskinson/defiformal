@@ -1058,6 +1058,114 @@ lending markets, which are exactly the protocols
 Proposition~\ref{prop:hostile} ranks as most hostile.
 \end{remark}
 
+\section{Constructions}\label{sec:construct}
+
+Everything above describes protocols that were decomposed. The question the
+algebra should also answer is the constructive one: given a statement of what an
+application does, can the vocabulary build something that does it? This section
+fixes what that means, because the question is easy to ask loosely and the loose
+version has no content.
+
+\begin{definition}[Functional obligation]\label{def:obligation}
+Let $A$ be an application. An \emph{obligation} for $A$ is a pair $(o, D)$ where
+$o$ is a statement of one thing $A$ does, checkable against a cited source, and
+$D \subseteq \El$ is the set of elements any one of which discharges it. We
+allow $D = \emptyset$, meaning no element names $o$.
+\end{definition}
+
+\begin{definition}[Construction, coverage, residue]\label{def:construction}
+A \emph{construction} for a finite obligation set $O$ is a set $X \subseteq \El$.
+It \emph{covers} $(o,D) \in O$ when $D \cap X \neq \emptyset$. The
+\emph{residue} of $X$ on $O$ is the set of obligations it does not cover;
+obligations with $D = \emptyset$ lie in the residue of every construction. $X$ is
+\emph{sound} when $X \in \Adm$.
+\end{definition}
+
+\begin{definition}[Justified, minimal]\label{def:minimal}
+An element $e \in X$ is \emph{justified} when $e \in D$ for some obligation $X$
+covers. $X$ is \emph{minimal} for $O$ when $X \in \Adm$, and for every
+$e \in X$ either $X \setminus \{e\}$ covers strictly fewer obligations or
+$X \setminus \{e\} \notin \Adm$.
+\end{definition}
+
+The definition of minimality has to name both conditions, because neither is
+implied by the other, and that is the substance of the next proposition.
+
+\begin{proposition}[Soundness is inherited in neither direction]\label{prop:neither}
+$\Adm$ is closed neither upward nor downward, so a minimal construction cannot
+be found by growing from below or by shrinking from above.
+\end{proposition}
+
+\begin{proof}
+Upward: $\{Cp,Sh,Fl\} \in \Adm$ and $\{Cp,Sh,Fl,Pl\} \notin \Adm$, the latter
+covering $X2$ and additionally leaving three requirement terms open. Downward:
+$\{Aw,Xf,At\} \in \Adm$ and its subset $\{Aw,Xf\} \notin \Adm$, since removing
+the attestation arms $X19^{*}$. The second witness uses a conditional
+prohibition carrying a negative literal, of the kind in
+Proposition~\ref{prop:mixed}; the listed clutter $\Haz$ alone is downward
+closed, being purely negative.
+\end{proof}
+
+\begin{remark}
+Proposition~\ref{prop:neither} is why the checker described below tests removal
+element by element rather than searching monotonically, and why a construction
+is exhibited with a witness rather than derived by an algorithm we could claim
+to be complete.
+\end{remark}
+
+\begin{measurement}[Minimal constructions are not unique, exhaustively]\label{meas:nonunique}
+Take the six obligations of a pooled lending market: a proportional claim
+($\{Sh,Ix,Rb\}$), pooled rather than bilateral borrowing ($\{Pl\}$), a
+collateral threshold ($\{Ct\}$), a price the threshold reads
+($\{Ex,Tp,At\}$), a way an unhealthy position is closed or its loss absorbed
+($\{Li,Ad,Sl,Bs\}$), and a way out for the depositor ($\{Wq,Rd,Im,Ps\}$). Over
+all $65{,}536$ subsets of the $16$ declared alternatives, $3{,}930$ are sound
+constructions covering all six obligations and exactly $60$ of those are
+minimal. All $60$ have size $6$, and all $60$ have distinct canonical forms.
+\end{measurement}
+
+\begin{corollary}\label{cor:notthe}
+There is no such thing as \emph{the} construction of an application. A
+statement that the algebra reproduces an application must exhibit a particular
+construction and say why that one, since the alternatives are exactly the
+choices left open by the disjunctive terms of the requirements.
+\end{corollary}
+
+\begin{remark}
+$Ct$ occurs in all $60$ minimal constructions of
+Measurement~\ref{meas:nonunique} --- it is forced, being the only element
+discharging the threshold obligation --- and in none of their canonical forms.
+Measurement~\ref{prop:ct} recorded that $Ct$ is a consequence in every corpus
+protocol that has it and a primitive in none; the same holds on constructions
+that are not in the corpus, which is evidence that the observation is a property
+of the requirement digraph rather than of the sample.
+\end{remark}
+
+\begin{remark}[Method]\label{rem:checker}
+Constructions are checked mechanically. The checker reports the four failure
+modes separately --- open requirement terms, unwarranted elements, armed
+prohibitions, grounding --- together with the canonical form, the covered and
+uncovered obligations, elements carried that discharge no obligation, the
+elements whose removal preserves both coverage and soundness, and any exact
+decomposition $A \oplus B$ or $A \oplus B \oplus C$ over the $72$ corpus
+protocols. Its self-test reproduces the numbers published above from its own
+predicates --- $61$ of $72$, $29$ compressing, $1{,}830$ pairs, $185$ failures,
+the cover of $X2$ by Uniswap composed with Aave, the six-venue $\{Ct,Ex,Li\}$
+signature and the exception --- so a change to any table breaks the test before
+it can reach a claim.
+\end{remark}
+
+\begin{remark}[What a construction does not establish]
+That a sound construction covers every stated obligation of an application is a
+statement about the vocabulary, not about the application: it says the recorded
+behaviour can be named and that naming it violates no recorded constraint. It
+does not say the two systems behave alike, and nothing here is a verification
+method. The interesting output is the residue, and
+Measurement~\ref{meas:vacuous58} is the reason to expect it: a vocabulary whose
+positive theory excludes nothing will not fail to cover an obligation by being
+over-constrained. It will fail by having no name.
+\end{remark}
+
 \section*{The corpus by category}\label{sec:atlas}
 
 The twelve sections that follow report the corpus one category at a time. The
