@@ -187,11 +187,11 @@ function main() {
     const d = JSON.parse(fs.readFileSync(`${dir}/${f}`, "utf8"));
     for (const s of Array.isArray(d) ? d : [d]) {
       const v = validate(s, f);
-      if (!v.ok) { console.error(); rejected++; continue; }
+      if (!v.ok) { console.error(`REJECTED ${f} [${s.app}]: ${v.err.join("; ")}`); rejected++; continue; }
       specs.push(s);
     }
   }
-  if (rejected) console.error();
+  if (rejected) console.error(`${rejected} spec(s) rejected as malformed; they are not counted below.\n`);
   const out = specs.map(s => verify(s, corpus));
   for (const r of out) {
     console.log(`\n=== ${r.app}  [${r.category}]  ${r.verdict}`);
