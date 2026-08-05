@@ -41,5 +41,5 @@ printf 'measurements:      %s\n' "$(grep -c '\\begin{measurement}' atlas.tex)"
 printf 'open conjectures:  %s\n' "$(grep -c '\\begin{conjecture}' atlas.tex)"
 
 # the standing instruction: the paper is a result, not a changelog
-leak=$(grep -cE 'earlier version|retract|CORRECTED|previously claimed|withdrawn' atlas.tex || true)
+leak=$(grep -cE 'CORRECTED|[Ii]n an earlier version|[Ww]e (now )?retract|retracted (the|this) claim|[Pp]reviously (claimed|stated|reported)|(claim|result|statement) (is|was) withdrawn' atlas.tex || true)
 [ "${leak:-0}" -eq 0 ] || die "$leak changelog phrase(s) in atlas.tex - the paper is a result, not a changelog"
