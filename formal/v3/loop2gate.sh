@@ -56,6 +56,8 @@ df=$(bash formal/v3/domain-fresh.sh 2>&1 | head -1); echo "  $df"
 case "$df" in *"DOMAIN GRAPH FRESH"*) echo "  ok   domain graph regenerates identically" ;; *) echo "  FAIL domain graph is stale"; fail=1 ;; esac
 
 echo
+fs=$(node formal/v3/verify-freeset.mjs 2>&1 | tail -1); echo "  $fs"
+case "$fs" in *"FREE-SET CLAIM VERIFIED"*) echo "  ok   free-set conjecture matches the algebra" ;; *) echo "  FAIL free-set claim"; fail=1 ;; esac
 bf=$(bash formal/v3/brief-fresh.sh 2>&1 | tail -1); echo "  $bf"
 case "$bf" in *"SECTION BRIEFS FRESH"*) echo "  ok   section briefs regenerate identically" ;; *) echo "  FAIL section briefs are stale"; fail=1 ;; esac
 
