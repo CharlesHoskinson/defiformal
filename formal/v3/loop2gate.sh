@@ -56,6 +56,9 @@ df=$(bash formal/v3/domain-fresh.sh 2>&1 | head -1); echo "  $df"
 case "$df" in *"DOMAIN GRAPH FRESH"*) echo "  ok   domain graph regenerates identically" ;; *) echo "  FAIL domain graph is stale"; fail=1 ;; esac
 
 echo
+bf=$(bash formal/v3/brief-fresh.sh 2>&1 | tail -1); echo "  $bf"
+case "$bf" in *"SECTION BRIEFS FRESH"*) echo "  ok   section briefs regenerate identically" ;; *) echo "  FAIL section briefs are stale"; fail=1 ;; esac
+
 echo "===== 4. citations: every protocol design claim carries a URL and a date"
 need formal/v3/evidence.mjs && node formal/v3/evidence.mjs 2>&1 | tail -2
 need formal/v3/cites.mjs && node formal/v3/cites.mjs 2>&1 | grep -iE 'without|missing|no url|no date|aggregator' | head -4

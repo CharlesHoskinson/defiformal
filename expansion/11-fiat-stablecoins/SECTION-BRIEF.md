@@ -142,7 +142,7 @@ This category is almost entirely residue, and I want to say it plainly: Tether �
 - Round-two research: `expansion/11-fiat-stablecoins/01-research-round2.md`
 - Obligation specs: `expansion/11-fiat-stablecoins/specs/`
 - Verdicts: `expansion/11-fiat-stablecoins/verdicts.json`
-- Knowledge graph: `expansion/11-fiat-stablecoins/graphify-out/graph.json` — 50 nodes, 47 links
+- Knowledge graph: `expansion/11-fiat-stablecoins/graphify-out/graph.json` — 88 nodes, 84 links
 
 ---
 

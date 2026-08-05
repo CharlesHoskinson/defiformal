@@ -31,27 +31,27 @@ The 'Xm'/'Xf'/'Of' split is far too coarse, and the evidence is that the top thr
 
 ## Stage 3: the constructions, machine-checked
 
-5 applications, 89 obligations, 28 discharged, 61 residue, coverage 31.5%.
+5 applications, 89 obligations, 25 discharged, 64 residue, coverage 28.1%.
 
 | application | construction | canonical form | verdict | obligations | residue |
 |---|---|---|---|---|---|
-| Binance Bitcoin (BTCB) | `At,Rd,Xf` | `At,Rd,Xf` | **PARTIAL** | 3/15 | 12 |
-| Coinbase Bridge (cbBTC and other wrapped assets) | `At,Aw,Fz,Gp,Rd,Up,Xf` | `At,Aw,Fz,Gp,Rd,Up,Xf` | **PARTIAL** | 7/18 | 11 |
+| Binance Bitcoin (BTCB) | `Rd,Xf` | `Rd,Xf` | **INADMISSIBLE** | 2/15 | 13 |
+| Coinbase Bridge (cbBTC and other wrapped assets) | `Aw,Fz,Gp,Rd,Up,Xf` | `Aw,Fz,Gp,Rd,Up,Xf` | **PARTIAL** | 6/18 | 12 |
 | Hyperliquid Bridge | `Gp,Gs,Vl,Wq,Xf,Xm` | `Gp,Gs,Vl,Wq,Xf,Xm` | **INADMISSIBLE** (L21:Au) | 7/19 | 12 |
 | LayerZero V2 | `Au,Gs,Xf,Xm` | `Gs,Xf,Xm` | **PARTIAL** | 6/18 | 12 |
-| WBTC | `At,Aw,Gp,Rd,Xf` | `At,Aw,Gp,Rd,Xf` | **PARTIAL** | 5/19 | 14 |
+| WBTC | `Aw,Gp,Rd,Xf` | `Aw,Gp,Rd,Xf` | **INADMISSIBLE** arms X19* | 4/19 | 15 |
 
 ### Where the corpus and the construction disagree
 
-- **Binance Bitcoin (BTCB)** — added `—`, dropped `Aw,Gp`.
-- **Coinbase Bridge (cbBTC and other wrapped assets)** — added `Fz`, dropped `—`.
+- **Binance Bitcoin (BTCB)** — added `—`, dropped `At,Aw,Gp`.
+- **Coinbase Bridge (cbBTC and other wrapped assets)** — added `Fz`, dropped `At`.
 - **Hyperliquid Bridge** — added `Gs`, dropped `Bs`.
 - **LayerZero V2** — added `Au,Gs`, dropped `Gp,Tg,Up`.
-- **WBTC** — added `—`, dropped `Tg`.
+- **WBTC** — added `—`, dropped `At,Tg`.
 
 ### Residue, verbatim
 
-**Binance Bitcoin (BTCB)** (12):
+**Binance Bitcoin (BTCB)** (13):
 
 - What secures the peg is Binance's statement that it holds an equivalent amount of bitcoin in multi-signature cold storage; there is no message, no proof, no verifier and no threshold of any kind.
 - Nothing is locked in a contract on either side: the issuer describes the mechanism as a swap in which 'their Bitcoin remains locked and can be redeemed by depositing BTCB back', with the lock being an internal custody arrangement rather than an escrow.
@@ -60,18 +60,20 @@ The 'Xm'/'Xf'/'Of' split is far too coarse, and the evidence is that the top thr
 - The on-chain artefact of a redemption is a self-burn -- burn(uint256) burns the caller's own balance -- with nothing in the transaction linking it to a bitcoin payout or to a redeeming party.
 - The entire on-chain governance surface is transferOwnership and renounceOwnership: the contract is Binance's standard BEP20Token template (solc 0.5.16, Apache-2.0, verified Exact Match, not a proxy) with no pause, no blacklist, no forced transfer, no upgrade path, no timelock, no multisig and no registry.
 - The authority over that surface is one key: not a quorum, not a contract, not a delay, with no published internal process binding its use.
+- The issuer publishes a Proof of Collateral page for its pegged tokens reporting BTC at 100%, with Proof of Assets of 68,200 BTC at a single published bitcoin address, against wrapped supplies of 2,900 on Ethereum, 128 on BEP2 and 65,222 on BEP20, plus Pioneer Burn 24 BTC and Token Recovered 49 BTC, covering 97 tokens.
 - The issuer discloses that the peg may not hold exactly: 'the amount of locked BTC may not be precisely the same as the wrapped BTC due to the delays caused by the extensive auditing process', with no bound stated on the discrepancy.
 - One reserve pool is drawn against by three pegged representations of the same asset on three different ledgers -- Ethereum, BEP2 and BEP20 -- so no single representation's backing is separable.
 - Two reserve claims exist over the same custodian and must not be added together: 68,200 BTC of pegged-token collateral on the Proof of Collateral page, and 640,780.255 BTC of exchange customer reserve on the Proof of Reserves page (monthly Merkle-tree and zk-SNARK snapshot, latest 01/07/26 00:00 UTC at BTC block 956,140, ratio 100.08%), the first page carrying an explicit disclaimer that it is not the exchange's proof of reserve.
 - No independent auditor attests to the BTCB collateral specifically; no such report was found.
 - A holder's transfers cannot be blocked and a holder's balance cannot be seized on-chain: the token has no freeze, no blacklist and no forced-transfer function.
 
-**Coinbase Bridge (cbBTC and other wrapped assets)** (11):
+**Coinbase Bridge (cbBTC and other wrapped assets)** (12):
 
 - What secures the peg is that Coinbase holds the underlying asset and continues to unwrap on demand; there is no message, no proof, no verifier set and no threshold anywhere in the system.
 - No contract escrows the underlying on any source chain, and five of the six source assets live on chains that cannot run a verification contract at all -- Bitcoin, XRP, Dogecoin, Cardano and Litecoin -- while the sixth, MegaETH, can.
 - The conversion is a side effect of a transfer rather than a transaction the user submits: the user asked to withdraw BTC, and the system delivered cbBTC; sending the wrapped token back to a Coinbase account auto-unwraps it.
 - The redemption right is conditioned on jurisdiction and asset: cbBTC cannot be sent or received by accounts in Canada, Japan and Georgia, and the other five wrapped assets are blocked in over a hundred jurisdictions including most of the EEA, Japan, Singapore, Hong Kong and New York State.
+- The issuer publishes a live per-address proof of reserves -- 96,065.18 BTC of reserve against 96,054.41 cbBTC of supply, 20 reserve addresses, refreshed 8/4/2026 8:45 PM, split 48,338.78 / 44,528.809 / 3,108.551 / 78.272 across four networks -- and the Ethereum-side supply reads 48,338.77958531 cbBTC on chain, matching the first bucket exactly.
 - Third parties treat the issuer's own reserve JSON as ground truth for the protocol's size: DefiLlama's adapter calls getConfig('coinbase-cbbtc-proof-of-reserves', 'https://www.coinbase.com/cbbtc/proof-of-reserves.json') and sums the declared addresses.
 - Minting is rate-limited with programmatic allowance replenishment: a MintForwarder contract lets a minter continuously mint up to N tokens over M time without a cold masterMinter key having to top the allowance back up.
 - The holders of these powers are single keys: eth_getCode returns empty for both owner and masterMinter, so there is no multisig contract and no timelock anywhere in the admin surface.
@@ -110,13 +112,14 @@ The 'Xm'/'Xf'/'Of' split is far too coarse, and the evidence is that the top thr
 - Fees may optionally be denominated in a protocol token, and this is a per-chain parameter: lzToken() is address(0) on Ethereum, so ZRO fee payment is not enabled there while it is elsewhere.
 - A received message can itself trigger further cross-domain calls through lzCompose, so a transfer composes horizontally into a sequence of domain-crossing actions.
 
-**WBTC** (14):
+**WBTC** (15):
 
 - A holder's bitcoin is taken into the custody of a named off-chain legal entity, and the equality of one WBTC to one BTC rests entirely on that entity continuing to hold, and to honour claims against, the bitcoin; no Ethereum contract holds, references or can reach the bitcoin.
 - Nothing on Ethereum verifies that the Bitcoin deposit occurred: Factory.confirmMintRequest() is gated by onlyCustodian, resolving through Controller.isCustodian() to the single address 0xb0f42d187145911c2ad1755831aded125619bd27, and the custodian's confirmation transaction is itself the bridge.
 - No contract escrows the underlying: the backing is a set of 20 Bitcoin addresses published by the issuer, so there is no on-chain object whose balance constitutes the reserve.
 - Before submitting a mint request the merchant performs KYC/AML on the requester, so entry to the system is conditioned on an identity check performed by a firm that the contracts never observe.
 - An ordinary WBTC holder has no contract-enforced way to obtain BTC and exits only by selling into a secondary market.
+- The issuer publishes a live proof-of-reserve listing every custodian address and its balance -- 116,514.34 BTC against 116,499.20 WBTC across 20 addresses -- and third parties consume that listing as the protocol's reserve, DefiLlama's adapter reading the same audit page.
 - Anyone can verify the balances of the 20 published addresses; nobody can verify that those addresses belong to the custodian, that the bitcoin in them is unencumbered, or that it is not rehypothecated.
 - The custodian mints only after six Bitcoin confirmations and pays out only after 25 Ethereum confirmations, which is the design's entire treatment of source-domain finality and reorg exposure.
 - No party can seize or freeze an individual holder's balance: the token has no blacklist and no forced transfer -- blacklister() and isBlacklisted(address) both revert and the source inherits only StandardToken, DetailedERC20, MintableToken, BurnableToken, PausableToken and OwnableContract.
