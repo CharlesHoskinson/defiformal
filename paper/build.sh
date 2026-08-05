@@ -46,6 +46,8 @@ sup_after=$(stat -c %Y supplement.pdf)
 sup_undef=$(grep -c 'undefined' supplement.log 2>/dev/null); sup_undef=${sup_undef:-0}
 [ "$sup_undef" = "0" ] || die "$sup_undef undefined reference(s) in the supplement"
 
+node ../formal/v3/totalgate.mjs >/dev/null 2>&1 || die "a headline total disagrees with the verdicts"
+
 pages=$(pdfinfo atlas.pdf 2>/dev/null | awk '/^Pages/{print $2}')
 printf '\033[1;32mOK\033[0m  atlas.pdf: %s pages, %s bytes\n' "${pages:-?}" "$(stat -c%s atlas.pdf)"
 printf 'proved items:      %s\n' "$(grep -c '\\begin{theorem}\|\\begin{proposition}\|\\begin{corollary}\|\\begin{lemma}' atlas.tex)"
