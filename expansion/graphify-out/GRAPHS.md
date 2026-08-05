@@ -120,3 +120,28 @@ Reported rather than papered over: isolated nodes concentrate in
 No paper claim depends on a lane graph: the article's figures come from
 `verdicts.json` through `emit-tex.mjs`, and the cross-category claims come from
 `domain-graph.json` above. The lane graphs are navigation.
+
+## Which graph covers which files
+
+Every source file under a lane is indexed by exactly one of the two graphs,
+and the split is not obvious from either one alone.
+
+**The lane graphs index prose only** — research documents, section briefs and
+section notes. Across all twelve lanes they contain **zero** nodes drawn from
+a spec. `graphify` tracks the spec files in nine of the twelve manifests and
+extracts no nodes from them; in the other three it does not track them at all.
+That manifest inconsistency is cosmetic — the graphs are uniform.
+
+**The domain graph indexes structure only** — all 60 specs, one protocol node
+each, with their 1,259 obligations, the 58 elements and the 12 categories.
+
+So comparing the specs on disk against the lane graphs shows 60 files
+apparently missing, and they are not missing.
+`formal/v3/lane-coverage.py` checks both halves and says so in one line,
+precisely so that this reading is not made twice.
+
+One measurement that is **not** worth pursuing: `graphify-out/manifest.json`
+records a per-file `mtime` and `ast_hash`. The hash is over the extracted
+AST, not the file bytes, so it cannot be recomputed without running the
+extractor, and `mtime` does not survive a fresh clone. A staleness check
+built on either is noise; `lane-coverage.py` is the check that holds.

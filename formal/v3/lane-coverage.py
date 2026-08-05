@@ -32,11 +32,32 @@ for slug in LANES:
     for f in missing:
         fail.append("%s: %s is on disk and not in the graph" % (slug, f))
 
+# The other half: specs are indexed by the domain graph, not the lane graphs.
+# No lane graph holds a spec node -- that is the division of labour, and saying
+# so here stops the next reader treating sixty files as missing.
+import glob as _glob
+dom = json.load(io.open("/root/defiformal/expansion/graphify-out/domain-graph.json",
+                        encoding="utf-8"))
+prot_src = {n.get("source_file") for n in dom["nodes"] if n.get("kind") == "protocol"}
+specs = sorted(_glob.glob("expansion/*/specs/*.json"))
+import subprocess
+root = subprocess.run(["git", "rev-parse", "--show-toplevel"],
+                      capture_output=True, text=True, cwd="/root/defiformal").stdout.strip()
+specs = sorted(os.path.relpath(f, root) for f in
+               _glob.glob(root + "/expansion/*/specs/*.json"))
+orphan = [f for f in specs if f not in prot_src]
+print()
+print("specs on disk: %d   with a protocol node in the domain graph: %d"
+      % (len(specs), len(specs) - len(orphan)))
+for f in orphan[:5]:
+    fail.append("%s has no protocol node in the domain graph" % f)
+
 print()
 if fail:
-    print("LANE COVERAGE INCOMPLETE")
+    print("COVERAGE INCOMPLETE")
     for f in fail:
         print("   ", f)
 else:
-    print("LANE COVERAGE COMPLETE: every markdown file in every lane is in its graph")
+    print("LANE COVERAGE COMPLETE: every markdown file is in its lane graph "
+          "and every spec is in the domain graph")
 sys.exit(1 if fail else 0)
