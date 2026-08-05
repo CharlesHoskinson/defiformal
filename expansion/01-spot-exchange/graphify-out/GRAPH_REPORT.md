@@ -1,36 +1,47 @@
-# Graph Report - .  (2026-08-04)
+# Graph Report - 01-spot-exchange  (2026-08-04)
 
 ## Corpus Check
-- cluster-only mode — file stats not available
+- 3 files · ~17,705 words
+- Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 25 nodes · 22 edges · 5 communities
-- Extraction: 59% EXTRACTED · 41% INFERRED · 0% AMBIGUOUS · INFERRED: 9 edges (avg confidence: 0.96)
+- 35 nodes · 20 edges · 15 communities (4 shown, 11 thin omitted)
+- Extraction: 90% EXTRACTED · 10% INFERRED · 0% AMBIGUOUS · INFERRED: 2 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `d6658fc1`
+- Built from commit: `4717d916`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
-- Community 0
-- Community 1
-- Community 2
-- Community 3
-- Community 4
+- PoolManager.sol
+- Swiss Stake AG
+- PancakeSwap Infinity
+- Raydium AMM v4
+- Fluid DEX v2
+- Raydium CLMM
+- BinPoolManager.rel
+- Curve Cryptoswap
+- Firepit
+- Uniswap v2
+- Uniswap v3
+- V3FeeAdapter
+- V4FeeAdapter
+- Section brief — Spot DEX / AMM
+- SECTION-NOTES.md
 
 ## God Nodes (most connected - your core abstractions)
-1. `Liquidity Layer` - 5 edges
-2. `Fluid` - 4 edges
-3. `Uniswap Protocol` - 3 edges
-4. `PancakeSwap Infinity` - 3 edges
-5. `Raydium Protocol` - 3 edges
-6. `Raydium` - 3 edges
-7. `Uniswap v4` - 2 edges
-8. `AMM v4` - 2 edges
-9. `DEX v2` - 2 edges
-10. `Vaults` - 2 edges
+1. `Section brief — Spot DEX / AMM` - 7 edges
+2. `PoolManager.sol` - 4 edges
+3. `Swiss Stake AG` - 3 edges
+4. `Uniswap v4` - 2 edges
+5. `PancakeSwap Infinity` - 2 edges
+6. `The question this category answers` - 1 edges
+7. `The corpus decomposition, as of 2026-08-04` - 1 edges
+8. `The category residue the original lane recorded` - 1 edges
+9. `Stage 3` - 1 edges
+10. `Sources` - 1 edges
 
 ## Surprising Connections (you probably didn't know these)
 - None detected - all connections are within the same source files.
@@ -39,46 +50,35 @@
 - None detected.
 
 ## Hyperedges (group relationships)
-- **Uniswap Protocol Versions** — 01-research_uniswap_v2, 01-research_uniswap_v3, 01-research_uniswap_v4 [EXTRACTED 1.00]
-- **PancakeSwap Infinity Modular Architecture** — 01-research_pancakeswap_vault, 01-research_pancakeswap_pool_managers [EXTRACTED 1.00]
-- **Raydium AMM Products** — 01-research_amm_v4, 01-research_clmm, 01-research_cpmm [EXTRACTED 1.00]
-- **Fluid Protocol Products** — 01-research_dex_v1, 01-research_dex_v2, 01-research_vaults [EXTRACTED 1.00]
-- **Fluid Smart Primitives** — 01-research_smart_collateral, 01-research_smart_debt [EXTRACTED 0.90]
+- **Uniswap Protocol Fee Unification** — token_jar, firepit, v3_fee_adapter, v4_fee_adapter [EXTRACTED 0.90]
+- **PancakeSwap Infinity Modular Architecture** — vault_sol, cl_pool_manager, bin_pool_manager [EXTRACTED 1.00]
+- **Curve Next-Generation Pools** — 01_research_stableswap_ng, 01_research_twocrypto_ng, 01_research_tricrypto_ng [EXTRACTED 1.00]
 
-## Communities (5 total, 0 thin omitted)
+## Communities (15 total, 11 thin omitted)
 
-### Community 0 - "Community 0"
-Cohesion: 0.38
-Nodes (7): DEX v1, DEX v2, Fluid, Liquidity Layer, Smart Collateral, Smart Debt, Vaults
+### Community 0 - "PoolManager.sol"
+Cohesion: 0.33
+Nodes (6): Hooks.sol, PoolManager.sol, ProtocolFees, TokenJar, Uniswap v4, V4FeePolicy
 
-### Community 1 - "Community 1"
-Cohesion: 0.40
-Nodes (5): AMM v4, CLMM, CPMM, OpenBook, Raydium
-
-### Community 2 - "Community 2"
-Cohesion: 0.40
-Nodes (5): Uniswap Protocol, Uniswap Protocol Fees System, Uniswap v2, Uniswap v3, Uniswap v4
-
-### Community 3 - "Community 3"
+### Community 1 - "Swiss Stake AG"
 Cohesion: 0.50
-Nodes (4): PancakeSwap Infinity, PancakeSwap Infinity Pool Managers, PancakeSwap Protocol, PancakeSwap Infinity Vault
+Nodes (4): stableswap-ng, Swiss Stake AG, tricrypto-ng, twocrypto-ng
 
-### Community 4 - "Community 4"
-Cohesion: 0.50
-Nodes (4): Raydium AMM v4, Raydium CLMM, Raydium CPMM, Raydium Protocol
+### Community 2 - "PancakeSwap Infinity"
+Cohesion: 0.67
+Nodes (3): CLPoolManager.sol, PancakeSwap Infinity, Vault.sol
+
+### Community 13 - "Section brief — Spot DEX / AMM"
+Cohesion: 0.25
+Nodes (7): Lane narrative, Section brief — Spot DEX / AMM, Sources, Stage 3, The category residue the original lane recorded, The corpus decomposition, as of 2026-08-04, The question this category answers
 
 ## Knowledge Gaps
-- **15 isolated node(s):** `Uniswap v2`, `Uniswap v3`, `Uniswap Protocol Fees System`, `PancakeSwap Protocol`, `PancakeSwap Infinity Vault` (+10 more)
+- **28 isolated node(s):** `The question this category answers`, `The corpus decomposition, as of 2026-08-04`, `The category residue the original lane recorded`, `Stage 3`, `Sources` (+23 more)
   These have ≤1 connection - possible missing edges or undocumented components.
+- **11 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Are the 2 inferred relationships involving `Liquidity Layer` (e.g. with `Smart Collateral` and `Smart Debt`) actually correct?**
-  _`Liquidity Layer` has 2 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 3 inferred relationships involving `Uniswap Protocol` (e.g. with `Uniswap v2` and `Uniswap v3`) actually correct?**
-  _`Uniswap Protocol` has 3 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 3 inferred relationships involving `Raydium Protocol` (e.g. with `Raydium AMM v4` and `Raydium CLMM`) actually correct?**
-  _`Raydium Protocol` has 3 INFERRED edges - model-reasoned connections that need verification._
-- **What connects `Uniswap v2`, `Uniswap v3`, `Uniswap Protocol Fees System` to the rest of the system?**
-  _15 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **What connects `The question this category answers`, `The corpus decomposition, as of 2026-08-04`, `The category residue the original lane recorded` to the rest of the system?**
+  _28 weakly-connected nodes found - possible documentation gaps or missing edges._

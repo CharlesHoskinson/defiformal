@@ -1,0 +1,162 @@
+{
+  "app": "Fluid",
+  "category": "01-spot-exchange",
+  "source": "C:\\defiformal-work\\01-spot-exchange\\01-research.md",
+  "construction": ["Cp", "Cl", "Sh", "Pl", "Ct", "Ex", "Tp", "Li", "Tg", "Up", "Gp"],
+  "functionalObligations": [
+    {
+      "id": "F1",
+      "text": "a DEX v1 pool quotes off x*y=k CONTRACTED INTO A RANGE — 'The DEX uses the x*y=k curve, but the liquidity is contracted within a range that is set by governance upon pool creation' — which Fluid describes as 'a combination of Uniswap v2 & Uniswap v3, otherwise known as a single auto rebalancing range order'",
+      "elements": ["Cp", "Cl"],
+      "evidence": "https://fluid.guides.instadapp.io/dex-protocol/protocol-details.md (accessed 2026-08-04)",
+      "note": "THE POOL INVARIANT, v1 answer. Cp is exact. Cl is APPROXIMATE here and this is where the corpus's forced marker is correct: there is exactly ONE range, it is a pool-level parameter set by governance, and no user chooses ticks — so 'range positions, ticks' names the geometry and misnames the ownership. Cp is ADDED relative to the corpus, which records Cl alone and therefore loses the fact that the curve inside the range is constant product."
+    },
+    {
+      "id": "F2",
+      "text": "a DEX v2 pool has ticks, a current tick and per-range positions: the singleton's DexKey is {token0, token1, fee, tickSpacing, controller}, pool state exposes currentTick, currentSqrtPriceX96, activeLiquidity and lpFee, and types 3 and 4 are explicitly range orders — 'Like Uniswap v3 range orders, but enhanced: the liquidity earns lending APR by default and can be used as collateral' (D3) and 'Create range orders on the debt side by borrowing assets' (D4)",
+      "elements": ["Cl"],
+      "evidence": "https://docs.fluid.instadapp.io/integrate/dex-v2-swaps.html (accessed 2026-08-04)",
+      "note": "THE CORRECTION THE CORPUS RECORD NEEDS. The corpus marks Cl FORCED with the reason 'Fluid's curve is a single self-rebalancing moderate-width range ... Cl names user-owned static ticks, which Fluid does not have — there are no per-user ranges to name'. That describes DEX v1. DEX v2 was announced 2026-05-09 and IS DEPLOYED, with tick spacing in the pool key, a current tick in pool state and per-range positions on both the collateral and the debt side, so for D3/D4 pools Cl is a GOOD fit and the forced marker is wrong as recorded. The forced reading survives only for v1 / Type-1 / Type-2 pools (F1). Announcement and type list at https://fluid.io/blog/protocol-introducing-fluid-dex-v2 (2026-08-04). Caveat for stage 3: DEX v2 is NOT in the public repository — at HEAD a9949b48ba1247d4f478cd0acb40896b5c8bf3f8 (2026-03-04) contracts/protocols/dex/ holds only poolT1 and smartLending, while the docs reference contracts/periphery/dexV2/router/main.sol and publish a live FluidDexV2Router on Polygon at 0x713fD04a47Db41AB5684AEC2A2063d5278A53616 — so every v2 claim here rests on documentation, not on source."
+    },
+    {
+      "id": "F3",
+      "text": "the pool moves its own centre without an owner action and without a profit test: the Center Price is 'the price at which the Pool rebalances itself once the Upper or Lower bounds are breached by the pool price', the move takes place over a Shift Time rather than instantaneously, and the centre may never leave [Center Min Price, Center Max Price]",
+      "elements": [],
+      "evidence": "https://fluid.guides.instadapp.io/dex-protocol/protocol-details.md (accessed 2026-08-04)",
+      "note": "RESIDUE — a PROFIT-INDEPENDENT, GOVERNANCE-BOUNDED, TIME-SMEARED recentering. Cl presumes user-chosen static ticks; Pm presumes an externally quoted price. And critically it is NOT Curve's profit-gated repeg (curve.json F3): Curve gates on a running profit ledger and may deadlock, Fluid gates on a bound breach and interpolates over a fixed duration under hard governance limits. So RECENTERING IS A FAMILY WITH AT LEAST TWO MEMBERS whose failure modes differ, and the vocabulary collapses both to nothing. Mechanism names corroborated by the DexLite resolver structs CenterPriceShift, RangeShift and ThresholdShift at https://docs.fluid.instadapp.io/ (2026-08-04)."
+    },
+    {
+      "id": "F4",
+      "text": "one unit of capital occupies three roles simultaneously: Smart Collateral 'is a single range order' that is lent into the Liquidity Layer earning supply yield, is borrowable against, AND is deployed as AMM inventory quoting swaps",
+      "elements": [],
+      "evidence": "https://fluid.guides.instadapp.io/dex-protocol/smart-collateral.md (accessed 2026-08-04)",
+      "note": "RESIDUE, and the reason the protocol exists — Fluid claims up to $39 of quoted liquidity per $1 of TVL. The vocabulary partitions Pool pricing (G02) and Credit (G05) into DISJOINT REGISTERS and provides no way to say that one position occupies both. 100% residue, exactly as the corpus records."
+    },
+    {
+      "id": "F5",
+      "text": "Smart Debt inverts it: the BORROWED PRINCIPAL is the AMM's inventory, so a swapper trades against someone else's liability and the trading fees pay that liability down — 'the first time debt can be transformed into a productive asset by using it as liquidity for the DEX', with borrowers 'even having the possibility of getting paid to borrow'",
+      "elements": [],
+      "evidence": "https://fluid.guides.instadapp.io/dex-protocol/smart-debt.md (accessed 2026-08-04)",
+      "note": "RESIDUE, two distinct gaps. (i) No symbol names a trade whose COUNTERPARTY INVENTORY IS A LIABILITY. (ii) No symbol names a FEE NETTING AGAINST AN INTEREST EXPENSE INSIDE ONE ACCOUNTING UNIT. Stage 1 strengthens the corpus's Pl marker here: the swapper is not merely transacting against the debt, the trade AMORTISES it. The vault taxonomy makes the product of the two choices explicit — Type 1 normal/normal, Type 2 smart collateral/normal debt, Type 3 normal collateral/smart debt, Type 4 smart/smart — and nothing in the 58 can be indexed by which leg it applies to."
+    },
+    {
+      "id": "F6",
+      "text": "the two sides carry different claim instruments: a lender receives a FUNGIBLE ERC-4626 fToken, while a borrower's vault position is an NFT that 'can be moved freely if needed. Each NFT comprises the Vault including its debt and collateral assets'",
+      "elements": ["Sh"],
+      "evidence": "https://fluid.guides.instadapp.io/liquidity-layer/protocols-on-fluid.md (accessed 2026-08-04)",
+      "note": "FUNGIBILITY OF THE POSITION, and Fluid answers it differently on each side. Sh discharges the fToken's pro-rata claim. RESIDUE for the other side: a TRANSFERABLE INSTRUMENT BUNDLING A COLLATERAL LEG AND A DEBT LEG is not a pro-rata claim on anything — selling it transfers an obligation, not just an asset — and neither Sh nor any credit symbol names an instrument with negative components. Vault taxonomy verbatim in the repo README at https://github.com/Instadapp/fluid-contracts-public (contracts/protocols/vault/README.md, 2026-08-04)."
+    },
+    {
+      "id": "F7",
+      "text": "one ledger serves several independent products: 'The Liquidity Layer serves as the foundation of Fluid upon which various protocols can be built. It acts as a singular layer that consolidates liquidity across protocols built on Fluid, eliminating the need for each protocol to independently attract liquidity' — the DEX, the vaults and the lending market all draw balances from it",
+      "elements": ["Pl"],
+      "evidence": "https://fluid.guides.instadapp.io/liquidity-layer/unifying-liquidity.md (accessed 2026-08-04)",
+      "note": "APPROXIMATE — Pl names a shared pool where LENDERS AND BORROWERS meet. What is shared here is a ledger that several distinct PRODUCT TYPES register against, which is structurally the SAME OBJECT as PancakeSwap Infinity's Vault (pancakeswap.json F10). One missing symbol, two independent appearances in this lane on protocols with no shared lineage — the strongest evidence in the category that this gap is real. Pl is retained because the debt side of the DEX is literally this pool's debt, but it is carrying two jobs."
+    },
+    {
+      "id": "F8",
+      "text": "capacity is a bound that RELAXES ON A SCHEDULE rather than a fixed cap: borrowing is governed by Base Limit, Current Limit, Max Limit, Expand Percentage ('the rate at which Limits would increase or decrease over the given duration') and Expand Duration, withdrawal by the same four plus Withdrawable, and the docs state the ceilings adjust 'in real-time based on utilization rates'",
+      "elements": [],
+      "evidence": "https://fluid.guides.instadapp.io/liquidity-layer/unifying-liquidity.md (accessed 2026-08-04)",
+      "note": "RESIDUE — a RATE-LIMITED CAPABILITY, not a cap. Gp is a switch and Tg is a delay; neither is a continuously-relaxing bound whose current value is a function of utilisation and elapsed time. Parameter glossary at https://fluid.guides.instadapp.io/dex-protocol/protocol-details.md (2026-08-04)."
+    },
+    {
+      "id": "F9",
+      "text": "a portion of the pool is reserved for an operation that has not happened yet: the Withdrawal Gap is a 'safety non-withdrawable amount to guarantee liquidations'",
+      "elements": [],
+      "evidence": "https://fluid.guides.instadapp.io/dex-protocol/protocol-details.md (accessed 2026-08-04)",
+      "note": "RESIDUE — reserved capacity for a FUTURE operation, which is neither a queue (Wq, which orders claims that have been made) nor a backstop (Bs, which is capital posted by a party and slashable). Nothing names 'this liquidity is unavailable so that a mechanism can still run'."
+    },
+    {
+      "id": "F10",
+      "text": "a position's solvency is tested by its debt-to-collateral ratio against the vault's liquidation threshold, with LTVs up to 95%, and there is an additional Max Liquidation Threshold above which 'a vault ... is liquidated automatically'",
+      "elements": ["Ct"],
+      "evidence": "https://fluid.guides.instadapp.io/vault-protocol/advanced-liquidation-mechanism/vault-liquidation.md (accessed 2026-08-04)",
+      "note": "DEPARTURE from the corpus, which lists Ct as DERIVED rather than as part of the canonical form. It is a first-class, per-vault parameterised test with TWO thresholds — one admitting partial liquidation, one forcing it — and it should be first-class in the construction. This is the same demotion error stage 1 found on the options lane (Aevo, Panoptic), which suggests the derivation rule itself is what is wrong, not the two decompositions."
+    },
+    {
+      "id": "F11",
+      "text": "the unit liquidated is an EQUIVALENCE CLASS, not a position: each position is assigned to a slot keyed by its ratio ('Drawing inspiration from Uniswap v3's slot-based liquidity'), and when a slot crosses the threshold 'the protocol aggregates all vaults in that slot for liquidation in a single transaction. Afterward, the system recalibrates the remaining vaults, adjusting their debt ratio positions down to the next slot' — taking only the minimum needed to restore health",
+      "elements": [],
+      "evidence": "https://fluid.guides.instadapp.io/vault-protocol/advanced-liquidation-mechanism.md (accessed 2026-08-04)",
+      "note": "RESIDUE. Li names third parties paid to close POSITIONS and the unit here is a slot; Ad's 'rank-ordered forced close' is close in spirit and wrong in mechanism, because there is no ranking — there is a QUANTISED KEY, and every member of a bucket is treated identically regardless of its position within the bucket. The user docs confirm the consequence: 'your position is not individually liquidated but instead a portion of all at risk positions is liquidated, all at once in one transaction' (https://fluid.guides.instadapp.io/vault-protocol/advanced-liquidation-mechanism/vault-liquidation.md, 2026-08-04)."
+    },
+    {
+      "id": "F12",
+      "text": "the liquidator is an ordinary trader who does not know they are one: liquidatable collateral is exposed at a discount inside DEX aggregator routes (1inch, Paraswap and 0x are named) so that 'traders participate in the liquidation process indirectly by completing normal swaps', making Fluid 'less reliant on Keepers'",
+      "elements": ["Li"],
+      "evidence": "https://fluid.guides.instadapp.io/vault-protocol/advanced-liquidation-mechanism.md (accessed 2026-08-04)",
+      "note": "APPROXIMATE, and only the weakest half of Li survives: a third party closes the position. There is NO BOUNTY — the incentive is delivered as PRICE IMPROVEMENT TO AN UNAWARE COUNTERPARTY on an unrelated trade — and no symbol expresses an incentive paid as execution quality to a party who has not opted in. The penalty figure needs a qualifier in any paper text: the Liquidity Layer page says 'as low as 0.1%' while the user docs put the ETH/USDC vault, the most common borrowing vault, at 1%, so 0.1% is a floor claim and not a typical value."
+    },
+    {
+      "id": "F13",
+      "text": "vault pricing reads an external stack arranged as a CHECKED FALLBACK LATTICE: ChainlinkOracleImpl, RedstoneOracleImpl, UniV3OracleImpl, PegOracleImpl, FallbackOracleImpl and UniV3CheckCLRSOracle (a Uniswap-v3-checked Chainlink/Redstone fallback), plus fluidCappedRate* and fluidCenterPrice* families and DEX-specific oracles — while at least one vault deliberately uses no market price at all: 'the weETH/wstETH Vault uses Contract Backing for the liquidation oracle'",
+      "elements": ["Ex"],
+      "evidence": "https://docs.fluid.instadapp.io/ (accessed 2026-08-04)",
+      "note": "APPROXIMATE, and stage 1 says Ex should be STRENGTHENED rather than weakened. Ex names 'push/pull/medianizer'; a lattice in which one source CHECKS another and a named fallback fires on failure is a different object, with a different failure model — and Ex cannot say that a price source is deliberately not a market price. The contract-backed leaf at https://fluid.guides.instadapp.io/vault-protocol/advanced-liquidation-mechanism/vault-liquidation.md (2026-08-04)."
+    },
+    {
+      "id": "F14",
+      "text": "the DEX publishes its OWN price series, as a price rather than an accumulator, and publishes more than a price: 'Fluid's DEX has an inbuilt most optimized TWAP oracle. It allows you to fetch the last 5 min data in <15k gas; Last 15 min data in <30k gas', and it 'returns additional data like: maxima & minima during that time frame'",
+      "elements": ["Tp"],
+      "evidence": "https://fluid.guides.instadapp.io/dex-protocol/oracles.md (accessed 2026-08-04)",
+      "note": "APPROXIMATE, and Tp is ADDED relative to the corpus, which records no price element for Fluid. THE PRICE-SERIES QUESTION: like Curve and unlike Uniswap and Raydium, the consumer reads a finished time-weighted price and integrates nothing. RESIDUE for the extrema: publishing the maximum and minimum over the window is STRICTLY MORE than Tp names, and it is the part a consumer needs to bound manipulation, so the symbol names the weaker of the two things the protocol supplies."
+    },
+    {
+      "id": "F15",
+      "text": "settlement is atomic on-chain against the shared Liquidity Layer rather than against per-pool inventory, and DEX v2 additionally advertises 'Flash Accounting (inspired by Uniswap v4)' alongside on-chain dynamic fees and on-chain limit orders that 'earn lending APR while waiting to be filled'",
+      "elements": [],
+      "evidence": "https://fluid.io/blog/protocol-introducing-fluid-dex-v2 (accessed 2026-08-04)",
+      "note": "RESIDUE — THE SETTLEMENT DISCIPLINE, and a third protocol in this lane whose settlement regime has no symbol. Fl is NOT assigned: the deferred-net-settlement claim rests on an announcement blog alone because DEX v2 is absent from the public repository (F2), and the run's cite-or-drop invariant will not carry a mechanism symbol on a marketing page. Stage 3 should treat this obligation as UNVERIFIED rather than as residue proper. A resting order that earns lending yield while unfilled is separately unnameable and is F4's three-roles gap appearing on the execution side."
+    },
+    {
+      "id": "F16",
+      "text": "the extension point is a CONTROLLER named per pool: the DexKey carries a controller address alongside tickSpacing, and the feature is documented as Hooks",
+      "elements": [],
+      "evidence": "https://docs.fluid.instadapp.io/integrate/dex-v2-swaps.html (accessed 2026-08-04)",
+      "note": "RESIDUE — EXTENSION POINT, permission-binding convention #3 of three in this lane, and the corpus records NO hook residue for Fluid at all. The three conventions are genuinely different objects: Uniswap MINES the permission set into the hook contract's address so it belongs to the code and is frozen at pool initialization; PancakeSwap packs a 16-bit permission bitmap into the pool key's parameters so it belongs to the pool and one hook may hold different powers in different pools; Fluid names a single controller in the DexKey and publishes NO PERMISSION BITMAP AT ALL, so the scope of what a controller may do is not expressed in the pool's identity. Nothing in the 58 names third-party code executing inside the settlement path, and a single symbol for it would make three different security models look identical."
+    },
+    {
+      "id": "F17",
+      "text": "which pools may exist is decided by governance: 'DEX v2 operates with pools that are permissioned and listed on the Fluid Money Market ... Each pool has been approved through Fluid governance', discoverable through getD3PermissionedDexes() and getD4PermissionedDexes(), with a stated future transition to permissionless pools discovered from LogInitialize(dexType, dexId, dexKey, sqrtPriceX96)",
+      "elements": [],
+      "evidence": "https://docs.fluid.instadapp.io/integrate/dex-v2-swaps.html (accessed 2026-08-04)",
+      "note": "RESIDUE. Aw was considered and REJECTED: Aw gates a PARTY's access to a mechanism, whereas this gates a MECHANISM'S EXISTENCE, and conflating them would make a permissioned pool list look like a KYC'd pool. Same two-level structure as Curve's DAO-gated implementation registry (curve.json F12) and Uniswap's monotone fee-tier ratchet (uniswap.json F14), approached from the restrictive end — third appearance in the lane."
+    },
+    {
+      "id": "F18",
+      "text": "governance can create new PRICING ENGINES, not merely new pools: 'At its core, Fluid DEX v2 runs on a singleton contract built atop the Fluid Liquidity Layer ... Governance can deploy infinite DEX types, each with its own logic and math', with four types at launch (v1 Smart Collateral, v1 Smart Debt, Smart Collateral Range Orders, Smart Debt Range Orders)",
+      "elements": [],
+      "evidence": "https://fluid.io/blog/protocol-introducing-fluid-dex-v2 (accessed 2026-08-04)",
+      "note": "RESIDUE — an authority over the SPACE OF ADMISSIBLE INVARIANTS. This is strictly stronger than F17: F17 governs which instances exist, this governs which kinds can. It also breaks the closure assumption behind any fixed decomposition of Fluid, because the set of pool-pricing obligations the protocol discharges is itself mutable by vote."
+    },
+    {
+      "id": "F19",
+      "text": "governance is a Compound GovernorBravo fork: the fluid-governance repository states 'Forked from Compound Governance' and ships GovernorBravoDelegate.sol, GovernorBravoDelegator.sol, Timelock.sol, TokenDelegate.sol, TokenDelegator.sol and a payloads/ directory",
+      "elements": ["Tg"],
+      "evidence": "https://github.com/Instadapp/fluid-governance (accessed 2026-08-04)",
+      "note": "Tg is retained on the presence of Timelock.sol and the Bravo lineage, NOT on a parameter: stage 1 could not confirm the proposal threshold, the quorum, the timelock delay, or the identity of any team multisig at a primary source, so no numeric governance claim may enter the paper for Fluid."
+    },
+    {
+      "id": "F20",
+      "text": "the implementation is mutable and configuration is delegated per-parameter: contracts/infiniteProxy/ implements an 'InfiniteProxy' with AdminInternals and CoreInternals, vault configuration is routed 'through the fallback which directs the call to adminModule', and authority is fanned out to named Auth contracts (LimitsAuth, LimitsAuthDex, WithdrawLimitAuth, WithdrawLimitAuthDex, RangeAuthDex, DexFeeAuth, RatesAuth, LiquidityTokenAuth, CollectRevenueAuth, VaultFeeRewardsAuth) plus AUTO-CONFIG HANDLERS (ExpandPercentHandler, MaxBorrowHandler, BufferRateHandler, EthenaRateHandler, DexFeeHandler with a DynamicFee abstract)",
+      "elements": ["Up"],
+      "evidence": "https://docs.fluid.instadapp.io/ (accessed 2026-08-04)",
+      "note": "Up fits and the corpus understates it — the repo ships a contract literally named infiniteProxy. RESIDUE for two further things. (i) Authority is partitioned BY PARAMETER rather than by delay or by holder, which the control register cannot express. (ii) The auto-config handlers are the yield and CDP lanes' BOUNDED DELEGATE MANDATE schema — named agent, bounded quantity, cap, step limit, revocation — appearing in a spot DEX, bounding a rate or an expansion percentage instead of an allocation. That is a third independent lane arriving at the same schema, which is the strongest cross-lane evidence in the run for a LEVEL above the element. Tree confirmed at https://github.com/Instadapp/fluid-contracts-public (2026-08-04)."
+    },
+    {
+      "id": "F21",
+      "text": "a guardian sits at the liquidity layer: the admin module's abstracts are GovernanceModule, GuardianModule, AuthModule and AuthInternals",
+      "elements": ["Gp"],
+      "evidence": "https://docs.fluid.instadapp.io/ (accessed 2026-08-04)",
+      "note": "Gp fits by name. Its scope, its holder and whether its powers are directional (as Curve's are, curve.json F21) were not established at a primary source."
+    },
+    {
+      "id": "F22",
+      "text": "value return runs through a governance-toggled Revenue Cut into an on-chain buyback: 'Revenue Cuts can be turned on through governance voting and could consist of a cut from trading fees and/or a fee from any Smart Vault', and the deployed contract index carries Periphery/Buyback/{FluidBuyback, FluidBuybackProxy, FluidBuybackCore}",
+      "elements": [],
+      "evidence": "https://fluid.guides.instadapp.io/dex-protocol/fees.md (accessed 2026-08-04)",
+      "note": "RESIDUE, and an HONEST GAP rather than a symbol. The corpus records NO value-return element for Fluid at all; a buyback contract is deployed, which puts Fluid in the same family as the other four. But WHICH CHANNEL it uses — destruction (Uniswap, PancakeSwap), accumulation (Raydium) or distribution to a claim class (Curve) — is not stated at any primary source reached by stage 1, nor is whether the buyback is currently running, so no element is assigned and the ambiguity is recorded instead of guessed. Note the shape of the failure: the ONE symbol the vocabulary offers here, Fd, would have been assigned by default in a decomposition that did not ask which channel, and it would have been wrong for three of the five and unproven for the fourth. Buyback contract index at https://docs.fluid.instadapp.io/ (2026-08-04); trading fees are themselves 'set to any trading fee by governance voting'."
+    }
+  ]
+}

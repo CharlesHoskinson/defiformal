@@ -1,0 +1,148 @@
+{
+  "app": "Lista CDP",
+  "category": "03-cdp-stablecoins",
+  "source": "C:\\defiformal-work\\03-cdp-stablecoins\\01-research.md",
+  "construction": ["Cd", "Ct", "Ex", "Ix", "Li", "Sl", "Ps", "As", "Wq", "Em", "Gp"],
+  "functionalObligations": [
+    {
+      "id": "F1",
+      "text": "a user deposits one of eight accepted collateral assets through a single front contract which routes it into the ledger and records the position, then borrows the stablecoin against it",
+      "elements": ["Cd"],
+      "evidence": "https://docs.bsc.lista.org/for-developer/collateral-debt-position/mechanics (accessed 2026-08-04)",
+      "note": "A MakerDAO DSS fork behind a Helio-era front contract on BSC. Interaction is 'a proxy for MakerDAO contracts'; GemJoin is the collateral treasury; HayJoin mints and burns lisUSD; ListaDistributor snapshots debt for reward accounting. Live core: VAT 0x33A34eAB3ee892D40420507B820347b1cA2201c4, JUG 0x787BdEaa29A253e40feB35026c3d05C18CbCA7B3, DOG 0xd57E7b53a1572d27A04d9c1De2c4D423f1926d0B, CLIP 0x2dcFb02CE33955b6Cc0aF34033189DE3ac4C0292, lisUSD 0x0782b6d8c4551B9760e74c0545a9bCD90bdc41E5. Accepted collateral: BNB, ETH, slisBNB, wBETH, BTCB, FDUSD, wstETH, USDT, with per-collateral modules deployed for eleven assets."
+    },
+    {
+      "id": "F2",
+      "text": "the position must remain above a per-collateral ratio, and each collateral type carries a debt cap set by vote",
+      "elements": ["Ct"],
+      "evidence": "https://docs.bsc.lista.org/for-developer/collateral-debt-position/mechanics (accessed 2026-08-04)",
+      "note": "The DSS test with spot written from the oracle of F3. Collateral rates and debt caps are named as governable in the governance page (https://docs.bsc.lista.org/governance/lista/governance.md, accessed 2026-08-04)."
+    },
+    {
+      "id": "F3",
+      "text": "each collateral is priced by an external oracle contract deployed on two chains",
+      "elements": ["Ex"],
+      "evidence": "https://docs.bsc.lista.org/for-developer/multi-oracle/multi-oracle-standard.md (accessed 2026-08-04)",
+      "note": "Resilient Oracle at 0xf3afD82A4071f272F403dC176916141f44E6c750 (BNB Chain) and 0xA64FE284EB8279B9b63946DD51813b0116099301 (Ethereum)."
+    },
+    {
+      "id": "F4",
+      "text": "that price is taken from an ordered chain of providers — a main source, a pivot and a fallback, drawn from four independent networks and differing per asset — and is then checked against a hard per-asset band and rejected outright if it falls outside it",
+      "elements": [],
+      "evidence": "https://docs.bsc.lista.org/for-developer/multi-oracle/multi-oracle-standard.md (accessed 2026-08-04)",
+      "note": "RESIDUE, new and not in the corpus. Chainlink, RedStone (including OEV feeds), Atlas and the Binance Oracle; BNB is RedStone OEV main, Atlas pivot, Chainlink fallback; a BoundValidator enforces per-asset upper and lower bounds, typically 1.01 and 0.99. Ex names 'external data oracle (push/pull/medianizer)'. Nothing names an ORDERED FALLBACK CHAIN — which is a failover policy with a defined degradation order, not an aggregation — and nothing names a PREDICATE THAT REJECTS A PRICE rather than incorporating it. L13 asks for freshness validation and gets validity validation, which is a different check with a different failure mode: a medianiser degrades gracefully under a bad feed and a rejecting validator halts."
+    },
+    {
+      "id": "F5",
+      "text": "debt accrues by a per-collateral accumulator folded across the ledger",
+      "elements": ["Ix"],
+      "evidence": "https://docs.bsc.lista.org/for-developer/collateral-debt-position/smart-contract.md (accessed 2026-08-04)",
+      "note": "JUG 0x787BdEaa29A253e40feB35026c3d05C18CbCA7B3, the DSS accumulator unchanged. Ix names the accrual and is blind to the level, which at Lista is set by F6."
+    },
+    {
+      "id": "F6",
+      "text": "the borrow rate is recomputed every fifteen minutes, and on any user interaction, as an exponential function of the deviation of the stablecoin's price from one dollar read from an exchange oracle, parameterised per collateral by a base rate and an amplification factor, and clipped at twenty per cent",
+      "elements": [],
+      "evidence": "https://docs.bsc.lista.org/introduction/collateral-debt-position-lisusd/lisusd/algorithmic-market-operations-amo.md (accessed 2026-08-04)",
+      "note": "RESIDUE, and the third of the four rate instruments this lane was sent to separate: a CLOSED-LOOP CONTROLLER ON PEG ERROR. Explicitly modelled on Curve's MonetaryPolicy. Worked example in the docs: at $0.98 with r0 = 8% and Beta = 2% the rate becomes about 21.746%, then clipped by the 20% cap; r0 itself is capped at 200%. REFUTATION, with evidence, of a recorded corpus residue: the corpus assigns Lista 'the same interest-rate-as-policy gap' as Sky. NO ONE VOTES ON THIS RATE. The gap Lista arms is the crvUSD gap the corpus records one row later — 'no element for a rate controller that reads the peg and sets the borrow rate automatically' — not the Sky gap. Nothing discharges it: As is quantity toward a peg rather than price; Ex supplies the input and does not name the feedback law; Ix names the accrual and not the level. Initial parameters were set by the core team with future changes routed to governance, so the CONTROLLER'S GAINS are governed while its OUTPUT is not — a two-level structure no symbol reaches."
+    },
+    {
+      "id": "F7",
+      "text": "anyone, including the borrower, may trigger a liquidation; the trigger is paid a fixed reward of five units of the stablecoin plus a proportional reward set by governance, paid both for the initial trigger and for each restart, and the debt to be covered is grossed up by a ten per cent penalty",
+      "elements": ["Li"],
+      "evidence": "https://docs.bsc.lista.org/introduction/collateral-debt-position-lisusd/collateral/loan-liquidation (accessed 2026-08-04)",
+      "note": "REFUTATION, with evidence, of a recorded corpus residue. The corpus records 'no element for gas-compensation-only liquidation incentives (the liquidator's reward is a gas rebate, not a collateral discount, which changes who shows up)'. THE DOCS SPECIFY A FIXED tip OF 5 lisUSD PLUS A GOVERNANCE-SET PROPORTIONAL chip, WITH A 10% PENALTY ON THE DEBT — the standard DSS chip/tip structure Sky uses, with the docs' own worked example grossing $13.2 of debt to a $14.52 auction target. The claim that Lista's liquidator receives only a gas rebate is not supported and the residue should be struck. The corpus's marker 'Li FORCED twice over' should accordingly be reduced to the single Dutch-auction objection recorded at F8."
+    },
+    {
+      "id": "F8",
+      "text": "the seized collateral is sold by an auction that opens at the unit price times 1.02 and declines linearly toward zero over a fixed horizon, pauses when it has run past a time bound or fallen about forty per cent, and must then be restarted by someone who is paid for restarting it",
+      "elements": [],
+      "evidence": "https://docs.bsc.lista.org/for-developer/collateral-debt-position/mechanics (accessed 2026-08-04)",
+      "note": "RESIDUE. top = unit price x 1.02, top x ((tau - dur)/tau), paused at tail or cusp (~40%). Reachable only through the contested symbol Da, which this lane declines to use. CROSS-PROTOCOL: the same engine as sky.json F12 and usdd.json F10 — same descent, same tail/cusp reset, same restart reward. Three of the five protocols in this category run one settlement implementation, which is a stronger argument for promoting Da than a usage count: promoting it would let the algebra see a shared engine rather than a shared style. Lista's Abaci is deployed twice (0xc1359eD77E6B0CBF9a8130a4C28FBbB87B9501b7 and a separate CLASSIC 0xbaf8b40a), so even the descent curve is per-vintage."
+    },
+    {
+      "id": "F9",
+      "text": "the stablecoin is minted one-for-one against two named reserve stablecoins out of a pre-minted facility",
+      "elements": ["Ps"],
+      "evidence": "https://docs.bsc.lista.org/introduction/collateral-debt-position-lisusd/lisusd/stable-pool-price-stability-module-psm (accessed 2026-08-04)",
+      "note": "USDT and USDC; launch cap 5M lisUSD pre-minted into the PSM contract. The only par exit: Rd is correctly ABSENT, so L7 is discharged through Ps alone — and F10 shows how much weight that single discharge is carrying."
+    },
+    {
+      "id": "F10",
+      "text": "that swap is free in one direction and taxed two per cent in the other, is capped in size, is subject to a daily redemption ceiling of five hundred thousand units, and is documented as taxed on exit in order to push exit onto a third-party automated market maker",
+      "elements": [],
+      "evidence": "https://docs.bsc.lista.org/introduction/collateral-debt-position-lisusd/lisusd/stable-pool-price-stability-module-psm (accessed 2026-08-04)",
+      "note": "RESIDUE, new and not in the corpus. Ps names a 1:1 reserve-backed swap. A gate that is free one way, taxed the other, capped per day, and designed to EXTERNALISE ITS OWN EXIT LIQUIDITY onto PancakeSwap is a materially different instrument, and the asymmetry is the instrument: it prices the exit and outsources it. The mint fee is 0% 'at launch' with the docs stating it may be introduced in 0.01% increments if the unit trades at a premium — a second administered price, discretionary and unbounded in the documentation. The daily ceiling is the same magnitude-per-time envelope as ethena.json F5 and sky.json F11. Against L7 this is the sharpest stress in the lane: the only par exit for a $324M unit is fee-gated at 2% and quota'd at 500k/day."
+    },
+    {
+      "id": "F11",
+      "text": "the protocol mints its stablecoin unbacked, directly into two third-party lending markets, to seed liquidity there, and takes the returns into its own treasury",
+      "elements": ["As"],
+      "evidence": "https://docs.bsc.lista.org/introduction/collateral-debt-position-lisusd/lisusd/d3m-direct-deposit-module.md (accessed 2026-08-04)",
+      "note": "APPROXIMATE, and a DEPARTURE: the corpus carries neither As nor Cd for this behaviour. The docs call it 'credit-based minting' into Venus Core Pool and Aave. As is 'algorithmic supply adjustment' and this is supply created by rule rather than against collateral, so the fit is real; but everywhere else in the corpus As is read as rebase or seigniorage against holder balances, and this is one-sided unbacked minting into a venue. Flagged rather than asserted. The corpus's own note that the D3M is 'closer to As than to Cd' is followed here."
+    },
+    {
+      "id": "F12",
+      "text": "the solvency of that minted supply then depends on two lending markets the protocol neither operates nor governs, and the rates its unit earns on those markets are themselves managed by its own controller",
+      "elements": [],
+      "evidence": "https://docs.bsc.lista.org/introduction/collateral-debt-position-lisusd/lisusd/d3m-direct-deposit-module.md (accessed 2026-08-04)",
+      "note": "RESIDUE. The corpus records this gap only for Sky/Spark; it appears here too, in a protocol an order of magnitude smaller, against venues (Venus, Aave) that Lista neither operates nor governs. This is the containment relation the intents and yield lanes independently found: a protocol whose balance sheet is a position in another protocol. Composition in this corpus is the union of element sets between peers, and there is no relation for one protocol consuming another — so 'Lista mints into Aave' and 'Lista and Aave both use Ix' are the same statement in the carrier."
+    },
+    {
+      "id": "F13",
+      "text": "a holder may deposit the stablecoin into a savings pool that compounds per block, capped at thirty million units",
+      "elements": ["Ix"],
+      "evidence": "https://docs.bsc.lista.org/introduction/collateral-debt-position-lisusd/lisusd/lisusd-saving-rate-lsr.md (accessed 2026-08-04)",
+      "note": "Jar 0x0a1Fd12F73432928C190CAF0810b3B767A59717e manages staking and interest distribution. The 30M pool cap is another magnitude envelope, this time on a savings product."
+    },
+    {
+      "id": "F14",
+      "text": "the rate that pool pays is a fixed number adjusted by hand, inside the same protocol whose borrow rate is set by a closed-loop controller",
+      "elements": [],
+      "evidence": "https://docs.bsc.lista.org/introduction/collateral-debt-position-lisusd/lisusd/lisusd-saving-rate-lsr.md (accessed 2026-08-04)",
+      "note": "RESIDUE, and a refinement of the lane's central finding that stage 4 should not lose. THE FOUR RATE INSTRUMENTS ARE NOT ONE PER PROTOCOL. Lista runs a controller on the borrow side (F6) and an administered number on the savings side, simultaneously, on the two sides of the same balance sheet. Sky does the same in reverse — one bounded delegate writing all three of its rates (sky.json F6-F10). So the taxonomy is a property of the INSTRUMENT, not of the protocol, and a repair that attaches one rate mechanism to one application will get Lista wrong."
+    },
+    {
+      "id": "F15",
+      "text": "a saver withdraws immediately if pool liquidity allows and otherwise within fourteen days",
+      "elements": ["Wq"],
+      "evidence": "https://docs.bsc.lista.org/introduction/collateral-debt-position-lisusd/lisusd/lisusd-saving-rate-lsr.md (accessed 2026-08-04)",
+      "note": "DEPARTURE: the corpus carries no queue element for Lista. Wq names the deferred exit; L14 (illiquid backing -> Wq | bounded liquidity reserve) is discharged. What Wq does not name is the CONDITIONAL structure — immediate when liquid, queued when not — which is two different products under one deposit."
+    },
+    {
+      "id": "F16",
+      "text": "borrowers are paid the protocol's governance token for holding debt",
+      "elements": ["Em"],
+      "evidence": "https://docs.bsc.lista.org/introduction/collateral-debt-position-lisusd/lisusd.md (accessed 2026-08-04)",
+      "note": "'Claim rewards in LISTA for borrowing lisUSD' — an emission paid for taking on a liability, which inverts the sign of the borrow rate of F6 for anyone who values the token. The two prices are set by different mechanisms and the vocabulary cannot net them: Em and the missing rate element do not compose."
+    },
+    {
+      "id": "F17",
+      "text": "parameters are changed by an off-chain vote on a hosted platform in which only core team members may submit a proposal, voting runs three days, a proposal passes on more than half of the tokens cast, and implementation follows by hand one to two weeks later",
+      "elements": [],
+      "evidence": "https://docs.bsc.lista.org/governance/lista/governance.md (accessed 2026-08-04)",
+      "note": "RESIDUE, and a DEPARTURE: the corpus carries Tg for Lista and this construction drops it. Snapshot at snapshot.org/#/listavote.eth. NO TIMELOCK IS DOCUMENTED AND NO VOTE IS ON-CHAIN. In the 58 symbols this whole arrangement decomposes to Gp and nothing else, which makes it indistinguishable from a timelocked on-chain DAO with an emergency pause. The absence of Tg reads as 'no timelock found' rather than 'governance is not on-chain at all', and those are opposite epistemic states. Governable per the same page: withdrawal and unlock fees, new collateral, collateral rates and debt caps, protocol fee sharing, and emission allocation — note that this list does NOT include the borrow rate, which F6 sets mechanically."
+    },
+    {
+      "id": "F18",
+      "text": "the core team retains a right to pause contracts and to reject unsafe gauges without a poll, subject only to an obligation to explain",
+      "elements": ["Gp"],
+      "evidence": "https://docs.bsc.lista.org/governance/lista/governance.md (accessed 2026-08-04)",
+      "note": "FORCED. Gp names an emergency pause. It does not name a VETO — a standing right to overrule the outcome of the franchise of F17 — which is a different authority with a different holder and a different justification. Combined with core-team-only proposal rights, the franchise is bounded on both ends by the same party, and the vocabulary records one bit. UNKNOWN, flagged for stage 3: the upgradeability and proxy structure of the CDP contracts is not documented at any page reached, although the archived source repository contains an upgrade/ directory. The corpus carries Up for Lista; it is dropped here for want of a citation, not because a proxy is believed absent."
+    },
+    {
+      "id": "F19",
+      "text": "the protocol accepts its own liquid-staking receipt as one of the assets backing its own stablecoin, so that one of its products' liabilities is another of its products' collateral",
+      "elements": [],
+      "evidence": "https://docs.bsc.lista.org/introduction/collateral-debt-position-lisusd/collateral/classic-collateral-options.md (accessed 2026-08-04)",
+      "note": "RESIDUE, confirmed but NARROWER than the corpus records. slisBNB is one of eight accepted collaterals, not 'the primary collateral'; per-collateral modules exist for eleven assets, and the weight slisBNB actually carries is not established by anything in the record. The reflexivity is real and its magnitude is UNKNOWN. Cd names the mint and nothing names the correlation between the collateral's solvency and the issuer's, so the risk is invisible rather than mis-stated. Prohibition X3 (protocol token as collateral AND oracle market AND backstop) is NOT armed — slisBNB is a staking receipt on BNB, not the governance token."
+    },
+    {
+      "id": "F20",
+      "text": "a shortfall the auction did not cover is booked against the system's surplus and deficit account",
+      "elements": ["Sl"],
+      "evidence": "https://docs.bsc.lista.org/for-developer/collateral-debt-position/smart-contract.md (accessed 2026-08-04)",
+      "note": "FORCED and thinly evidenced, as at USDD. The only citation is the deployed VOW at 0x2078A1969Ea581D618FDBEa2C0Dc13Fc15CB9fa7 in the published address table; no Lista page describes deficit handling, surplus auctions or debt auctions. Carried because the DSS skeleton cannot function without it; flagged so stage 3 weighs it below Sky's identically shaped obligation. NOTE ON THE REPOSITORY, which the corpus has no field for: the source of this live $324M system is lista-dao/lista-dao-contracts, ARCHIVED, carrying NO LICENCE, with a README that still opens '# HELIO' and describes borrowing DAI against a MakerDAO vault, while all current engineering happens in repositories that do not contain the CDP (gh api repos/lista-dao/lista-dao-contracts, accessed 2026-08-05)."
+    }
+  ]
+}

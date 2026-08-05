@@ -120,7 +120,7 @@ Element-set sizes 5, 9, 10, 12, 14.
 - Round-one research: `expansion/10-options/01-research.md`
 - Obligation specs: `expansion/10-options/specs/`
 - Verdicts: `expansion/10-options/verdicts.json`
-- Knowledge graph: `expansion/10-options/graphify-out/graph.json` — 38 nodes, 37 links
+- Knowledge graph: `expansion/10-options/graphify-out/graph.json` — 50 nodes, 47 links
 
 ---
 

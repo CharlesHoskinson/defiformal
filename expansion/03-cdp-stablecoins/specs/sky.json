@@ -1,0 +1,176 @@
+{
+  "app": "Sky (Sky Lending, ex-MakerDAO)",
+  "category": "03-cdp-stablecoins",
+  "source": "C:\\defiformal-work\\03-cdp-stablecoins\\01-research.md",
+  "construction": ["Cd", "Ct", "Ex", "Ix", "Sh", "Aw", "Li", "Sl", "Tr", "Fd", "Em", "Ps", "Tg", "Up", "Gp", "Xf"],
+  "functionalObligations": [
+    {
+      "id": "F1",
+      "text": "a user locks an approved collateral asset under a named collateral type and draws a newly issued stablecoin liability against it, recorded as normalised debt in one global ledger whose stated invariant is that the stablecoin cannot exist without collateral",
+      "elements": ["Cd"],
+      "evidence": "https://developers.skyeco.com/protocol/core/vat/ (accessed 2026-08-04)",
+      "note": "Vat holds ilks(Art, rate, spot, line, dust) and urns(ink, art); frob adjusts a position, fork splits it, grab confiscates it, fold advances the accumulator, suck/heal create and cancel unbacked stablecoin. Documented invariant: total debt = vice + sum over ilks of (Art x rate). Collateral enters through Join adapters."
+    },
+    {
+      "id": "F2",
+      "text": "a position may not be adjusted into a state where its debt exceeds its collateral valued at a safety-margined price, and its size is additionally bounded by a per-position debt floor, a per-collateral-type ceiling and a global ceiling",
+      "elements": ["Ct"],
+      "evidence": "https://developers.skyeco.com/protocol/core/vat/ (accessed 2026-08-04)",
+      "note": "Ct names the ratio test (art x rate <= ink x spot). It does not name dust, line or Line. Those ceilings are the instrument Sky actually uses to size a market, and the same object reappears as the Star credit line in F20 and as the liquidation throughput cap in F11. A quantity envelope on a permitted action recurs four times in this lane and has no symbol."
+    },
+    {
+      "id": "F3",
+      "text": "the safety-margined price of each collateral type is written from a per-collateral oracle that publishes a current and a queued next price one hour apart, readable only by whitelisted contracts, writable only by whitelisted feeds, and stoppable",
+      "elements": ["Ex"],
+      "evidence": "https://developers.skyeco.com/protocol/core/osm/ (accessed 2026-08-04)",
+      "note": "hop = 3600s, peek()/peep()/poke(), a wards mapping for admin and a buds whitelist for readers, with stop() and void() as kill switches; Spot reads the OSM and writes ilk.spot. Tp is REJECTED: a queued next price is a one-hour delay, not a time-weighted average, and the two have different manipulation profiles. The docs disclose a timing weakness the symbol cannot carry: poke() becomes callable when block.timestamp/hop increments, not a full hop after the last call. DEPARTURE: the corpus carries At for RWA vault backing, marked FORCED because 'the attestation is a PDF and a legal entity'. Stage 1 confirms PIP_* RWA keys in the ChainLog but records no on-chain attestation object, so At is not carried here; L27 (named attester, independence, stated assurance, staleness bound, recourse) cannot be checked from the evidence in hand. UNKNOWN, flagged for stage 3."
+    },
+    {
+      "id": "F4",
+      "text": "debt accrues continuously by a per-second compounding rate accumulator that is advanced by a permissionless call and folded across every position of a collateral type at once, so no per-position interest is ever written",
+      "elements": ["Ix"],
+      "evidence": "https://developers.skyeco.com/deep-dives/rate-mechanism/ (accessed 2026-08-04)",
+      "note": "Jug.drip(ilk) computes base + duty and calls Vat.fold. The docs warn that rate(base + duty) != rate(base) + rate(duty), i.e. the two components do not compose additively — a fact about the accumulator that Ix, which names only 'a global index changes claim value', cannot state. Read on-chain 2026-08-04: Jug.base = 0, so the whole fee is the per-ilk duty."
+    },
+    {
+      "id": "F5",
+      "text": "the level of the borrow rate, of the savings rate and of the savings-reserve rate is a written number: no utilisation curve, market, auction, target or measured quantity derives it anywhere in the system",
+      "elements": [],
+      "evidence": "https://developers.skyeco.com/protocol/rates/jug/ (accessed 2026-08-04)",
+      "note": "RESIDUE, and this is the category's headline gap in its Sky form. The Stability register holds Rd, Ps and As — a redemption right, a 1:1 swap and quantity adjustment. There is no price-of-credit instrument at all, and the price of credit is Sky's primary peg lever in both directions: raise the fee to contract supply, raise the savings rate to create demand. Ix names the accrual and is blind to the level; As names the wrong instrument (quantity, not price). Read on-chain 2026-08-04 via https://ethereum-rpc.publicnode.com against ChainLog addresses: Pot.dsr = 1000000000393915525145987602 ray (~1.25%/yr), sUSDS.ssr = 1000000001096988989836188433 ray (~3.52%/yr), stUSDS rate = 1000000001940295800728849590 ray (~6.31%/yr). Three simultaneous administered prices for the same issuer's liabilities."
+    },
+    {
+      "id": "F6",
+      "text": "an agent named in an on-chain permission set, which governance may add to or remove from at any time, may write those rates directly and in batches, with no executive vote and no governance delay",
+      "elements": ["Aw"],
+      "evidence": "https://github.com/sky-ecosystem/sp-beam (accessed 2026-08-05)",
+      "note": "MANDATE SLOT 1 — the named agent. PARTIAL FIT. MCD_SPBEAM (0x36B072ed8AFE665E3Aa6DaBa79Decbec63752b22), the Stability Parameter Bounded External Access Module, deployed by the 2025-04-17 executive spell (archive/2025-04-17-DssSpell/dependencies/sp-beam/SPBEAMInit.sol in sky-ecosystem/spells-mainnet). Aw names the caller enumeration and its mutability; it does not name that what is granted is a discretionary economic authority rather than a right to participate. Au is REJECTED: L17 requires bounded scope + revocation + expiry + nonce/domain separation, i.e. a session key over the principal's own assets; a facilitator has no expiry, no nonce, and acts over the whole system's economics. This is the same slot the yield lane found at Spark (spark-savings.json F5) and at MetaMorpho, bounding an allocation instead of a rate."
+    },
+    {
+      "id": "F7",
+      "text": "that agent may write only parameters drawn from an enumerated set of rate identifiers, each with its own configuration record, and cannot touch debt ceilings, collateral onboarding, liquidation parameters or anything else",
+      "elements": [],
+      "evidence": "https://github.com/sky-ecosystem/sp-beam (accessed 2026-08-05)",
+      "note": "MANDATE SLOT 2 — the bounded quantity. RESIDUE. The bounded quantity here is a rate: per-ilk duty, the DSR and the SSR. Live ids include 'SSR', 'DSR' and per-ilk stability fees. No symbol restricts a delegated decision to a domain. In the yield lane the identical slot bounded a venue list (spark-savings.json F18, twenty-nine enumerated actions) and a collateral list (MetaMorpho). Same slot, different quantity — which is the evidence that this is a schema over elements, not an element."
+    },
+    {
+      "id": "F8",
+      "text": "each value the agent writes must lie between a governance-set floor and ceiling for that identifier, and a write outside the band reverts",
+      "elements": [],
+      "evidence": "https://ethereum-rpc.publicnode.com (eth_call cfgs('SSR') on 0x36B072ed8AFE665E3Aa6DaBa79Decbec63752b22 = {min 200, max 3000, step 400}, accessed 2026-08-04)",
+      "note": "MANDATE SLOT 3 — the magnitude bounds. RESIDUE. Live band for the savings rate is 2% to 30%. Ct is a solvency test, not a parameter envelope; there is no symbol for a numeric domain restriction on a delegated decision. INHERITED READ: the live cfgs tuple was read by lane 06 and is recorded at C:\\defiformal-work\\06-yield-vaults\\02-decomp\\spark-savings.json F8; this lane did not re-read it. Stage 1 for this lane establishes the min/max/step structure from the repository README (https://github.com/sky-ecosystem/sp-beam, accessed 2026-08-05) without the numeric values."
+    },
+    {
+      "id": "F9",
+      "text": "a single update may move a rate by at most a governance-set step, and no update may occur within a cooldown of the previous one; the update then takes effect immediately",
+      "elements": [],
+      "evidence": "https://ethereum-rpc.publicnode.com (eth_call tau() = 57600 on 0x36B072ed8AFE665E3Aa6DaBa79Decbec63752b22, accessed 2026-08-04)",
+      "note": "MANDATE SLOT 4 — the rate-of-change limit. RESIDUE. Live step for the savings rate is 4 percentage points; live tau is 16 hours. Tg is wrong twice over: tau is a cooldown SINCE the last change, not a delay BEFORE execution, and the agent's write does not pass the governance pause that gates governance's own actions (F22). Ep is wrong: there are no periods, only a minimum spacing. INHERITED READ, as F8."
+    },
+    {
+      "id": "F10",
+      "text": "the whole rate-setting module can be disabled by a dedicated contract and by a pre-deployed emergency transaction, neither of which waits for the governance delay, after which no agent may write anything",
+      "elements": ["Gp"],
+      "evidence": "https://github.com/sky-ecosystem/dss-emergency-spells (accessed 2026-08-05)",
+      "note": "MANDATE SLOT 5 — revocation. PARTIAL FIT. SPBEAM_MOM disables the module without the GSM delay; EMSP_SPBEAM_HALT (src/spbeam-halt/SPBEAMHaltSpell.sol) is the pre-deployed circuit breaker. Gp names the kill switch and not the mandate it kills, and it cannot express that the right to halt is deliberately held by a different party from the right to act — the accountability design. Five slots, five obligations, one element and two partial fits: F6 Aw and F10 Gp. F7, F8 and F9 are empty. That is the measurement this lane was asked for."
+    },
+    {
+      "id": "F11",
+      "text": "any party may confiscate an unsafe position by a permissionless call which books the debt to the balance sheet and starts a settlement, is paid a flat fee plus a proportion of the debt for doing so, and charges the position owner a penalty",
+      "elements": ["Li"],
+      "evidence": "https://developers.skyeco.com/protocol/vaults/collateral-liquidation/ (accessed 2026-08-04)",
+      "note": "Dog.bark(); keeper paid tip (flat) + chip (proportional) from the Vow; owner charged chop. The docs explicitly warn that mis-calibration of tip and chip enables farming attacks — an incentive-design hazard Li cannot carry. SECOND RESIDUE INSIDE THIS OBLIGATION: simultaneous auction exposure is capped globally (Hole) and per collateral type (hole) against running totals (Dirt, dirt), so liquidation throughput is bounded independently of solvency. That is a magnitude cap on a safety-critical action — mandate slot 3 with no agent — and it has no symbol. It is the same object as Ethena's per-block issuance ceiling (ethena.json F5) and Spark's regenerating allowance (spark-savings.json F19). Stated invariants: sum of per-ilk dirt = global Dirt; auction collateral <= Vat gem balances."
+    },
+    {
+      "id": "F12",
+      "text": "settlement clears by a descending price: the auction opens above the oracle price, falls along a chosen curve, is bought atomically at the current price with an optional callback so the buyer needs no capital of their own, and is reset by anyone once it has run past a time bound or fallen below a price bound",
+      "elements": [],
+      "evidence": "https://developers.skyeco.com/protocol/vaults/collateral-liquidation/ (accessed 2026-08-04)",
+      "note": "RESIDUE. One Clipper per ilk: kick() at OSM price x buf, take() with a clipperCallee callback, redo() past tail or below cusp, chost = ilk.dust x ilk.chop to prevent dust remainders, descent by LinearDecrease / StairstepExponentialDecrease / ExponentialDecrease. Reachable only through the contested symbol Da, which the corpus declined to use and which this lane also declines to use, recording the behaviour here instead. CROSS-PROTOCOL: this is the same implementation, down to the parameter names buf/tail/cusp/chip/tip/chost/chop and the kick/take/redo interface, at USDD (usdd.json F10) and Lista (lista-cdp.json F8). Three of the five share a settlement engine, not merely a settlement style — which is a stronger argument for promoting Da than the 3-of-5 usage count the corpus recorded."
+    },
+    {
+      "id": "F13",
+      "text": "debt a settlement did not cover is queued against the balance sheet for a fixed waiting period and then charged against the protocol's surplus",
+      "elements": ["Sl"],
+      "evidence": "https://developers.skyeco.com/protocol/core/vow/ (accessed 2026-08-04)",
+      "note": "FORCED. Vow queues bad debt as sin[timestamp] for wait seconds, released by flog; heal and kiss cancel surplus against debt. Sl reads 'loss assigned to a claim class'. Here the loss lands first on the issuer's own balance sheet, which is not a claim class, and only reaches a class if the surplus is exhausted and the debt auction of F14 fires. Sl cannot distinguish a loss absorbed by the issuer from a loss allocated to holders."
+    },
+    {
+      "id": "F14",
+      "text": "the balance sheet mechanically converts imbalance into an auction in both directions: surplus above a high-water mark is sold off in fixed lots, and a deficit beyond a fixed lot triggers an auction of newly issued governance tokens for the stablecoin",
+      "elements": [],
+      "evidence": "https://developers.skyeco.com/protocol/core/vow/ (accessed 2026-08-04)",
+      "note": "RESIDUE, two distinct gaps in one mechanism. (a) A buffer with a high-water mark (hump) and a fixed lot (bump) that mechanically triggers an auction has no symbol. (b) Recapitalisation by governance-token dilution has no symbol: Sl assigns a loss to a class, Bs pre-stakes capital to be slashed, and neither says new equity is issued against the loss after the fact, which is a materially different promise to token holders. Both auction paths are deployed: MCD_FLAP 0x374D9c3d5134052Bc558F432Afa1df6575f07407 and MCD_FLOP 0xA41B6EF151E06da0e34B009B86E828308986736D. UNKNOWN, and it matters: the Vow page still says flop mints MKR and that dump is 'the starting amount of MKR offered', but MCD_ADM is Chief V3 on SKY and MKR converts one-way to SKY at 1:24,000. Which token a debt auction actually mints must be read on-chain before either is asserted."
+    },
+    {
+      "id": "F15",
+      "text": "the surplus lot is split by a fixed fraction between a leg that buys the governance token on an external AMM and redeposits both sides as protocol-owned liquidity, and a leg that funds a rewards contract, with acceptable slippage bounded against a reference oracle",
+      "elements": ["Fd", "Em"],
+      "evidence": "https://github.com/sky-ecosystem/dss-flappers/blob/dev/README.md (accessed 2026-08-04)",
+      "note": "Fd is CANDIDATE and FORCED: MCD_SPLIT withdraws vow.bump every hop seconds and divides it by burn; FlapperUniV2 swaps the stablecoin for the gem and then deposits BOTH sides back as LP to a receiver, so the 'burn' leg becomes protocol-owned liquidity rather than destroyed supply, while FlapperUniV2SwapOnly buys and forwards. Fd cannot distinguish burn, distribute and become-an-LP — three different claims on the same surplus with three different effects on float. Em covers the farm leg. want bounds slippage against FLAP_SKY_ORACLE 0xc2ffbb; SPLITTER_MOM and EMSP_SPLITTER_STOP can stop the whole route without governance delay."
+    },
+    {
+      "id": "F16",
+      "text": "a holder may deposit the stablecoin into a share token whose nominal balance never changes and whose redemption value rises by its own per-second accumulator, with no fee, and with fees that cannot be enabled later",
+      "elements": ["Sh", "Ix"],
+      "evidence": "https://developers.skyeco.com/protocol/tokens/susds/ (accessed 2026-08-04)",
+      "note": "sUSDS is ERC-4626 with real-time share/asset conversion even between drips. DEPARTURE: the corpus carries Ix for Sky but not Sh, while carrying Sh for the identically shaped sUSDe. 'Fees cannot be enabled on this route in the future' is a negative commitment written into the contract; the vocabulary has no way to record a foreclosed power, which is the same shortfall the options lane hit as discharge-by-construction and Liquity hits as immutability (liquity.json F21)."
+    },
+    {
+      "id": "F17",
+      "text": "the stablecoin swaps one-for-one against a named reserve stablecoin through a module holding pre-minted inventory, so a swap is two token transfers rather than a ledger operation, currently at zero fee in both directions",
+      "elements": ["Ps"],
+      "evidence": "https://developers.skyeco.com/protocol/liquidity/litepsm/ (accessed 2026-08-04)",
+      "note": "MCD_LITE_PSM_USDC_A 0xf6e72Db5454dd049d0788e411b06CfAF16853042 with its POCKET, JAR and LITE_PSM_MOM. tin and tout are not activated for either route but 'could change in the future' — a live fee of zero and a governable fee of zero are the same number and different instruments, and Ps carries neither. This is the sole par exit for the unit: Rd is correctly ABSENT for Sky, so law L7 (Cd -> Rd | Ps | liquidation capacity) is satisfied through Ps alone."
+    },
+    {
+      "id": "F18",
+      "text": "the issuer maintains two of its own liabilities simultaneously, converts between them one-for-one and permissionlessly, and pays a different savings rate on each",
+      "elements": [],
+      "evidence": "https://github.com/sky-ecosystem/usds (accessed 2026-08-05)",
+      "note": "RESIDUE. DAI at ~1.25% and USDS at ~3.52%, converted 1:1 at will through a permissionless converter over UsdsJoin/DaiJoin, with DAI_USDS 0x3225737a. Ps names a 1:1 swap backed by a RESERVE; here both sides are the issuer's own obligations and the rate spread is the migration incentive — the swap is a monetary-policy instrument, not a stability instrument. The same object appears at USDD as a Migrate contract off a deprecated liability (usdd.json F16)."
+    },
+    {
+      "id": "F19",
+      "text": "the savings claim and the stablecoin are issued on other domains as tokens minted and burned against the mainnet position",
+      "elements": ["Xf"],
+      "evidence": "https://chainlog.skyeco.com/api/mainnet/active.json (accessed 2026-08-04)",
+      "note": "SUSDS_OFT and sky-oapp-oft; STARKNET_ESCROW_MOM sits in the ChainLog as a domain-specific defensive key. Lane 06 established that the remote savings claim carries no accrual state and is redeemable only against local peg-module inventory, so the two claims are not economically identical (spark-savings.json F16); Xf asserts a transfer and cannot record that the remote claim has a weaker settlement guarantee than the local one."
+    },
+    {
+      "id": "F20",
+      "text": "a sub-entity receives its own collateral type backed by an oracle that returns a constant price, purely so that a nominal collateral balance makes its debt ceiling reachable, and its operators then draw and repay the stablecoin into an off-protocol buffer with no vote and no delay, whitelisted per action and rate-limited",
+      "elements": [],
+      "evidence": "https://github.com/sky-ecosystem/dss-allocator (accessed 2026-08-05)",
+      "note": "RESIDUE, and larger than the corpus records: eight allocator vault/buffer pairs are live in the ChainLog (SPARK, GROVE, BLOOM, INTERVAL, NOVA, OBEX, PATTERN, PRYSM), each with a sub-proxy and a StarGuard payload whitelist. Two gaps at once. (a) A credit line to a sub-entity that deploys the proceeds off-protocol has no symbol; Cd is wrong because there is no economic collateral. (b) AllocatorOracle is a deliberately uninformative oracle used as plumbing — Ex, Tp, Oa and At all presume the oracle carries information about the world, and this one is a constant 1:1 by design. The four actor tiers (Pause Proxy with the GSM delay, AllocatorDAO Proxy with its own delay, Operator with no spell and no delay inside rate limits, Keeper) are mandate slots 1 to 4 again, this time bounding a credit facility."
+    },
+    {
+      "id": "F21",
+      "text": "the franchise is exercised by locking the governance token into an approval-voting contract and approving a slate; the slate holding the most approvals is promoted, and only the promoted address may schedule an action",
+      "elements": [],
+      "evidence": "https://developers.skyeco.com/protocol/governance/chief/ (accessed 2026-08-04)",
+      "note": "RESIDUE, and this is the control-plane gap the lane was told to write out. MCD_ADM 0x929d9A1435662357F54AdcF64DcEE4d6b867a6f9 is DSChief V3; lock/free against IOU tokens; vote(address[]) or vote(bytes32) over an etch'd slate; lift(whom) requires approvals[whom] > approvals[hat]. THE VOTING TOKEN IS SKY, NOT MKR, and MKR converts one way at 1 MKR -> 24,000 SKY through 0xA1Ea1bA18E88C381C724a75F23a130420C403f9a; converting back requires an external exchange. Nothing in 58 symbols names a voting rule, a franchise, a quorum or a threshold. There is no fixed quorum here at all — the threshold is whatever the incumbent slate currently holds, which is a materially different governance risk from a fixed quorum and is invisible to the vocabulary. Contested Ve is REJECTED: DSChief locks without time-weighting and without escrow duration, so it is not vote-escrow."
+    },
+    {
+      "id": "F22",
+      "text": "every governance action executes only as a plan scheduled at least a fixed delay in the future, run by delegatecall from an isolated proxy after checking the target's code hash, and the delay itself can be changed only through a plan, so it cannot be shortened faster than the delay",
+      "elements": ["Tg", "Up"],
+      "evidence": "https://developers.skyeco.com/protocol/governance/pause/ (accessed 2026-08-04)",
+      "note": "MCD_PAUSE 0xbE28 is DSPause: plan = {usr, tag, fax, eta}, plot schedules with eta >= now + delay, exec checks the code hash against tag, drop cancels; execution runs in MCD_PAUSE_PROXY 0xBE8E3e whose isolated storage protects the pause. Up covers the UUPS/ERC-1967 proxies over sUSDS and stUSDS whose administrator is that proxy, so L15 (Up -> Tg) is satisfied. Live delay 172800s (48h) per the on-chain read recorded at C:\\defiformal-work\\06-yield-vaults\\02-decomp\\spark-savings.json F11; not re-read by this lane. Tg names the delay and not its holder: the vocabulary has no party sort, so 'a 48-hour delay held by a plurality-elected hat' and 'a 48-hour delay held by a 2-of-3 multisig' are the same symbol."
+    },
+    {
+      "id": "F23",
+      "text": "ten dedicated contracts hold narrowly scoped defensive powers — stop an oracle, freeze liquidations, lower a debt ceiling, halt the rate setter, stop the splitter, disable a direct-deposit module — which execute immediately and bypass the delay, and a standing library of pre-deployed single-purpose emergency transactions exists to be executed rather than written",
+      "elements": ["Gp"],
+      "evidence": "https://chainlog.skyeco.com/api/mainnet/active.json (accessed 2026-08-04)",
+      "note": "FORCED, and this is the sharpest control-plane residue in the lane. CLIPPER_MOM, OSM_MOM, LINE_MOM, LITE_PSM_MOM, DIRECT_MOM, SPLITTER_MOM, SPBEAM_MOM, STUSDS_MOM, STARKNET_ESCROW_MOM plus thirteen EMSP_* spells and factories. The structural fact is that the delay's LENGTH DEPENDS ON THE SIGN OF THE CHANGE: making the system safer is instant, making it riskier waits 48 hours. Tg names a delay and Gp names a pause; neither names a directionally asymmetric delay, and that asymmetry is the whole design of Sky's control plane rather than an accessory to it. Nor does any symbol name a standing library of pre-audited governance transactions. The liquidation circuit breaker alone has four escalating states — all enabled, no new liquidations, no resets, complete freeze — where Gp offers one bit."
+    },
+    {
+      "id": "F24",
+      "text": "the governance token is itself locked as collateral to borrow the stablecoin while its owner retains delegable voting power over the protocol that holds it, and a separate savings class documented as taking a greater share of system risk funds that borrowing at a higher rate",
+      "elements": ["Cd", "Tr"],
+      "evidence": "https://developers.skyeco.com/protocol/tokens/stusds/ (accessed 2026-08-04)",
+      "note": "DEPARTURE: the corpus carries neither Cd-on-the-governance-token nor Tr for Sky. LOCKSTAKE_ENGINE 0xCe01C9 with LOCKSTAKE_SKY, LOCKSTAKE_CLIP and LOCKSTAKE_ORACLE; the borrow position is non-transferable and the receipt token is non-transferable, but the voting power stays delegable (https://developers.skyeco.com/protocol/rewards/staking-engine/, accessed 2026-08-04). Tr is FORCED: stUSDS 0x99CD4Ec3f88A45940936F469E4bB72A2A701EEB9 is documented as the 'first Expert token' taking 'a greater share of system risk' at ~6.31%/yr against sUSDS's ~3.52%, but there are no attachment points and the seniority is documented rather than settled by a waterfall contract. TWO PROHIBITIONS TO CHECK AT STAGE 3: X3 (protocol token as collateral AND oracle market AND backstop) is partially armed — SKY is collateral, LOCKSTAKE_ORACLE prices it, and the FLOP path makes it the recapitalisation asset; X6 (borrowable voting power + immediate execution) is armed on its first conjunct and disarmed by the 48-hour pause of F22."
+    }
+  ]
+}

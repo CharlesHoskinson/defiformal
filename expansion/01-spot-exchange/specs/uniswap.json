@@ -1,0 +1,162 @@
+{
+  "app": "Uniswap",
+  "category": "01-spot-exchange",
+  "source": "C:\\defiformal-work\\01-spot-exchange\\01-research.md",
+  "construction": ["Cp", "Cl", "Sh", "Ix", "Tp", "Fl", "Tg", "Xf"],
+  "functionalObligations": [
+    {
+      "id": "F1",
+      "text": "a v2 pool quotes a swap off the constant-product invariant on its own two reserves: the swapper's marginal price moves monotonically against size, the LP fee is skimmed from the input, and the pair asserts that k is non-decreasing across the swap after fees",
+      "elements": ["Cp"],
+      "evidence": "https://raw.githubusercontent.com/Uniswap/v2-core/master/contracts/UniswapV2Factory.sol (accessed 2026-08-04)",
+      "note": "Cp fits exactly. THE POOL INVARIANT, first of two answers this protocol gives — the fungible-reserve answer."
+    },
+    {
+      "id": "F2",
+      "text": "a v3 or v4 pool applies the same constant-product curve to VIRTUAL reserves inside the active tick range, carrying sqrtPriceX96, a current tick, a tick bitmap, per-tick liquidityNet/liquidityGross and a pool-level active liquidity, so that liquidity is a step function of price rather than a constant",
+      "elements": ["Cl", "Cp"],
+      "evidence": "https://raw.githubusercontent.com/Uniswap/v3-core/main/contracts/UniswapV3Factory.sol (accessed 2026-08-04)",
+      "note": "THE POOL INVARIANT, second answer. Cl and Cp together are a genuinely good fit and this is the strongest case in the lane for the vocabulary's pool-pricing resolution being real: the pair states both the curve and its restriction to a range. Cross-checked against the v4 PoolKey (currency0, currency1, fee, tickSpacing, hooks) at https://github.com/Uniswap/v4-core/blob/v4.0.0/README.md (2026-08-04)."
+    },
+    {
+      "id": "F3",
+      "text": "a v2 liquidity provider holds a FUNGIBLE ERC-20 LP token representing a pro-rata claim on the entire reserve, redeemable at any time for its share of both assets",
+      "elements": ["Sh"],
+      "evidence": "https://raw.githubusercontent.com/Uniswap/v2-core/master/contracts/UniswapV2Factory.sol (accessed 2026-08-04)",
+      "note": "FUNGIBILITY OF THE POSITION, first answer. Sh fits exactly."
+    },
+    {
+      "id": "F4",
+      "text": "a v3 or v4 liquidity provider instead holds a position bounded by a lower and an upper tick which is NOT fungible: two providers in the same pool with different ranges hold economically different instruments, and the v3 periphery wraps each position in its own ERC-721",
+      "elements": [],
+      "evidence": "https://developers.uniswap.org/llms.mdx/docs/protocols/v4/concepts/flash-accounting (accessed 2026-08-04)",
+      "note": "RESIDUE — the per-range non-fungible instrument. FUNGIBILITY OF THE POSITION, second answer, and the vocabulary can only express the first. Cl names the curve shape and Sh names a pro-rata pool claim; neither names an individually owned position whose identity is (owner, tickLower, tickUpper). This confirms the corpus's third residue item verbatim."
+    },
+    {
+      "id": "F5",
+      "text": "fees accrue to a v3/v4 position as the difference between a range-local fee-growth index and the snapshot of that index taken when the position was opened, so the position is settled against an index rather than paid",
+      "elements": ["Ix"],
+      "evidence": "https://raw.githubusercontent.com/Uniswap/v3-core/main/contracts/UniswapV3Factory.sol (accessed 2026-08-04)",
+      "note": "APPROXIMATE — Ix names a GLOBAL index that changes claim value. Here feeGrowthInside is range-local, reconstructed as feeGrowthGlobal minus the outside-values recorded at both boundary ticks, so the index a position accrues against depends on the position's own bounds. Ix is ADDED relative to the corpus decomposition, which carries no accrual element for Uniswap at all."
+    },
+    {
+      "id": "F6",
+      "text": "the LP fee is taken out of the swap INPUT and left inside the pool rather than paid out, so a v2 provider realises it as appreciation of a fungible share and a v3/v4 provider realises it by collecting against the index",
+      "elements": ["Sh", "Ix"],
+      "evidence": "https://developers.uniswap.org/llms.mdx/docs/protocols/protocol-fee/overview (accessed 2026-08-04)",
+      "note": "Both symbols discharge the accounting; neither says which leg of the trade the fee is skimmed from, which is a free parameter other protocols in this lane set differently (Curve takes stableswap fees in the output token, Raydium fixes the leg per pool at creation)."
+    },
+    {
+      "id": "F7",
+      "text": "v2 and v3 publish an ACCUMULATOR, not a price: v2 stores price0CumulativeLast/price1CumulativeLast, described as 'a sum of the Uniswap price for every second in the entire history of the contract', and v3 stores a ring buffer of observations, so a consumer must read two points, difference them and divide by elapsed time to obtain a time-weighted price",
+      "elements": ["Tp"],
+      "evidence": "https://developers.uniswap.org/llms.mdx/docs/protocols/v2/concepts/oracles (accessed 2026-08-04)",
+      "note": "APPROXIMATE, and this is THE PRICE-SERIES QUESTION. The protocol supplies the integral; the consumer performs the differentiation and chooses the window. Tp names 'on-chain time-weighted price' and therefore names the consumer's output, not the protocol's obligation. Curve answers the same question the other way (it publishes a price directly), so the accumulator/price distinction is a real axis the single symbol Tp collapses."
+    },
+    {
+      "id": "F8",
+      "text": "v4 ships NO built-in price series at all: the observation machinery was removed from the core and a TWAP is now something a hook must implement",
+      "elements": [],
+      "evidence": "https://developers.uniswap.org/llms.mdx/docs/protocols/v4/concepts/hooks (accessed 2026-08-04)",
+      "note": "RESIDUE — the deliberate removal of a mechanism into third-party code. The vocabulary can record the presence of Tp and its absence, but not that the absence is a design decision that relocates the obligation to an extension point."
+    },
+    {
+      "id": "F9",
+      "text": "in v2 and v3 settlement is per-pool: each swap moves both tokens at the pool contract itself inside the transaction, so an n-hop route performs 2n token transfers and each pool must hold its own inventory",
+      "elements": [],
+      "evidence": "https://developers.uniswap.org/llms.mdx/docs/protocols/v4/concepts/flash-accounting (accessed 2026-08-04)",
+      "note": "RESIDUE — THE SETTLEMENT DISCIPLINE, first answer. No element in the 58 names a settlement discipline at all; it is smuggled in as an unstated assumption of the pool-pricing symbols, which is why F10 cannot be distinguished from this obligation by any construction."
+    },
+    {
+      "id": "F10",
+      "text": "in v4 settlement is deferred and net: an integrator calls unlock, the PoolManager calls back, any number of swap / modifyLiquidity / donate / take / settle / mint / burn operations run against the singleton, signed per-currency deltas are accumulated in EIP-1153 transient storage, and the only enforced condition is that every delta is zero when the unlock is released, so only the net moves",
+      "elements": [],
+      "evidence": "https://github.com/Uniswap/v4-core/blob/v4.0.0/README.md (accessed 2026-08-04)",
+      "note": "RESIDUE — THE SETTLEMENT DISCIPLINE, second answer, and the corpus's second residue item confirmed at the source. Fl names borrow-and-repay in one scope and does not fit: nothing is borrowed and nothing is repaid. The repo's own statement of the invariant — 'Any number of actions can be run on the pools, as long as the deltas accumulated during the unlock reach 0 by the unlock's release' — is a CONSERVATION LAW OVER A TRANSACTION, and no symbol in the 58 states a conservation law. Delta-zero wording cross-checked at https://developers.uniswap.org/llms.mdx/docs/protocols/v4/concepts/flash-accounting (2026-08-04)."
+    },
+    {
+      "id": "F11",
+      "text": "a caller may take assets out of a pool before paying for them within one settlement scope — v2/v3 flash swaps transfer out optimistically and call back before checking k, and v4 permits take() before settle() inside the unlock",
+      "elements": ["Fl"],
+      "evidence": "https://github.com/Uniswap/v4-core/blob/v4.0.0/README.md (accessed 2026-08-04)",
+      "note": "Fl fits: borrow-and-repay inside one settlement scope, with the invariant check deferred to the end. This is the obligation Fl was cut for, and it is DIFFERENT from F10 — conflating them is the error the corpus's residue note warns against."
+    },
+    {
+      "id": "F12",
+      "text": "a v4 pool may name a hook contract at initialization, and WHICH of the fourteen lifecycle callbacks fire is encoded in the low fourteen bits of that contract's ADDRESS (ALL_HOOK_MASK = (1<<14)-1), so the permission set is chosen by mining the deployment address and is frozen: 'which callbacks are executed on a pool cannot change after pool initialization'",
+      "elements": [],
+      "evidence": "https://raw.githubusercontent.com/Uniswap/v4-core/v4.0.0/src/libraries/Hooks.sol (accessed 2026-08-04)",
+      "note": "RESIDUE — EXTENSION POINT, permission-binding convention #1 of three in this lane. The permission set belongs to the CODE (its address) and is therefore a property of the hook, identical across every pool that names it. Nothing in the 58 names third-party code executing inside the settlement path, and nothing names a capability vector fixed at instantiation. Contrast PancakeSwap (bitmap in the pool key) and Fluid (a controller field in the pool key)."
+    },
+    {
+      "id": "F13",
+      "text": "four of the fourteen hook bits — BEFORE_SWAP_RETURNS_DELTA, AFTER_SWAP_RETURNS_DELTA, AFTER_ADD_LIQUIDITY_RETURNS_DELTA, AFTER_REMOVE_LIQUIDITY_RETURNS_DELTA — let the hook alter the accounting outcome of the operation rather than observe it, i.e. supply a custom curve in place of the pool's",
+      "elements": [],
+      "evidence": "https://raw.githubusercontent.com/Uniswap/v4-core/v4.0.0/src/libraries/Hooks.sol (accessed 2026-08-04)",
+      "note": "RESIDUE — and the sharpest instance of it. This is the boundary between 'a v4 pool' and 'an arbitrary AMM wearing a v4 costume': with a RETURNS_DELTA bit set, F2's invariant is no longer the pool's invariant. Any vocabulary that acquires a hook symbol will still miss the observer/pricer distinction unless the symbol is typed. Uniswap ships docs/security/Known_Effects_of_Hook_Permissions.pdf precisely because this code is untrusted and in the settlement path."
+    },
+    {
+      "id": "F14",
+      "text": "which curves may exist is itself a governed, MONOTONE registry: the v3 factory owner calls enableFeeAmount to add a (fee, tickSpacing) pair — seeded at 500/10, 3000/60 and 10000/200 — and a tier once added can never be removed",
+      "elements": [],
+      "evidence": "https://raw.githubusercontent.com/Uniswap/v3-core/main/contracts/UniswapV3Factory.sol (accessed 2026-08-04)",
+      "note": "RESIDUE — a pool-parameter registry acting as a ratchet on the space of admissible pools. Tg names the delay in front of the owner, not the registry, and cannot express one-directional growth of an admissible set. The same shape recurs three times in this lane (Curve's DAO-gated implementation registry, Fluid's governance-approved pool list)."
+    },
+    {
+      "id": "F15",
+      "text": "a live parameter surface is held behind a delay: UNI holders propose at a 1M threshold, vote after a 2-day delay for 7 days against a 40M quorum, and execution passes a 2-day Timelock which is v2's feeToSetter, is (through the fee adapter) v3's factory owner, and is the PoolManager's Owned.owner in v4",
+      "elements": ["Tg"],
+      "evidence": "https://developers.uniswap.org/llms.mdx/docs/ecosystem/governance/technical-reference (accessed 2026-08-04)",
+      "note": "DEPARTURE from the corpus marker, which reads 'the core pool contracts are immutable ... the mechanism is beyond authority'. That is too strong and stage 1 refutes it: the fee switch, the tier registry and the per-pool protocol-fee fraction are all owner-gated and all three were exercised on 2025-12-28. The accurate statement is no upgrade path, no pause, and a live owner-gated parameter surface — and Tg names only the delay, not the code/parameter split that is the actual design. Timelock 0x1a9C8182C09F50C8318d769245beA52c32BE35BC."
+    },
+    {
+      "id": "F16",
+      "text": "there is no pause anywhere in the v4 core: PoolManager.sol and ProtocolFees.sol at tag v4.0.0 contain no occurrence of 'pause', so no party can stop a pool",
+      "elements": [],
+      "evidence": "https://raw.githubusercontent.com/Uniswap/v4-core/v4.0.0/src/PoolManager.sol (accessed 2026-08-04)",
+      "note": "RESIDUE — the absence is the design. Gp names the presence of a guardian or pause; the vocabulary has no way to state that an obligation is DISCHARGED BY CONSTRUCTION because the facility deliberately does not exist. This is the options lane's stage-1 formalism finding appearing in a DEX, from the control plane rather than the solvency plane."
+    },
+    {
+      "id": "F17",
+      "text": "since December 2025 a protocol fee is skimmed off the LP fee on all three generations — v2 fixed in the pair at 1/6 of the swap fee (0.05% of the 0.30%), v3 at a per-tier 1/4 or 1/6, v4 resolved by an adapter — and accumulates in a per-chain immutable TokenJar exposing exactly one privileged role, a releaser that 'can atomically transfer the full balance of specified assets to a recipient'",
+      "elements": [],
+      "evidence": "https://github.com/Uniswap/protocol-fees (accessed 2026-08-04)",
+      "note": "RESIDUE — an immutable value sink with a single privileged role. Fd is DROPPED from this construction (see F18) and does not fit here either: accrual into a jar is not distribution to a claim class. Mainnet TokenJar 0xf38521f130fcCF29dB1961597bc5d2B60F995f85. Fee rates cross-checked at https://developers.uniswap.org/llms.mdx/docs/protocols/protocol-fee/overview (2026-08-04)."
+    },
+    {
+      "id": "F18",
+      "text": "THE VALUE-RETURN CHANNEL IS SUPPLY DESTRUCTION, exercised by a third party at a fixed price: Firepit.release() takes a fixed quantity of UNI from a searcher, releases the Jar's full balance of the named assets to that searcher's recipient, and sends the UNI to 0xdead; the protocol never places a market order and never holds the bought asset",
+      "elements": [],
+      "evidence": "https://blog.uniswap.org/unification (accessed 2026-08-04)",
+      "note": "RESIDUE, and the reason Fd is DROPPED from this construction relative to the corpus. The corpus marker calls this a 'UNI buy-and-burn' and files it with PancakeSwap and Raydium; stage 1 shows no buying happens on-protocol, and Raydium is not in this family at all (it accumulates — see raydium.json R11). Three separable things need naming and none is named: the sink (F17), the exercise (a standing, immutable, fixed-price call option on the fee inventory, exercisable by anyone, whose premium is the governance token), and the destruction. Fd names distribution to a claim class; nobody is distributed to. Mainnet Firepit 0x0D5Cd355e2aBEB8fb1552F56c965B867346d6721; architecture at https://github.com/Uniswap/protocol-fees (2026-08-04)."
+    },
+    {
+      "id": "F19",
+      "text": "on OP-Stack L2s the same channel completes on another domain: a searcher pays bridged UNI on the L2 above a 2000 UNI threshold, the Jar releases locally, and a bridge withdrawal is queued whose effect — L1 UNI sent to 0xdead — lands only after the 7-day challenge period",
+      "elements": ["Xf"],
+      "evidence": "https://github.com/Uniswap/protocol-fees (accessed 2026-08-04)",
+      "note": "APPROXIMATE. Xf discharges only the transfer leg. RESIDUE for the shape: an economic act that begins on one domain and completes on another after a challenge window, with the two halves not atomic. Xf is ADDED relative to the corpus. A Wormhole NTT path (SyntheticNttUni) covers non-OP chains, and the chain surface includes a Robinhood-operated chain, id 4663."
+    },
+    {
+      "id": "F20",
+      "text": "fee policy is a replaceable object held behind a non-replaceable adapter: V4FeeAdapter is registered permanently as the PoolManager's protocolFeeController, while V4FeePolicy is swappable by an owner, so governance can change fee strategy without ever re-handing the PoolManager privilege",
+      "elements": [],
+      "evidence": "https://github.com/Uniswap/protocol-fees (accessed 2026-08-04)",
+      "note": "RESIDUE — a deliberate split of PRIVILEGE from POLICY. This is neither Up (there is no proxy and no delegatecall; a whole contract is exchanged by reference) nor Tg (the swap is not the delay). PancakeSwap's setProtocolFeeController has the same shape (pancakeswap.json P14, P21), which is why Up is dropped there too. V4FeeAdapter 0x89A5D5bF00a27D55c02951E49078a5C5771051dB, V4FeePolicy 0x1cd822b70a0591420F65E94b9B3A0D0b0fB3a314."
+    },
+    {
+      "id": "F21",
+      "text": "the fee owed by a pool is resolved by an on-chain classifier over third-party code: the policy checks a per-pool override, else resolves a family by hookFamilyId[hook], else static-pool 255 ('native math'), else protocolFeeFlags plus flagRules, else 0, then applies pairClassFees then familyDefaults then defaultFee, with native-math pools priced on a piecewise-linear bucket schedule alpha + beta x (lpFee - floor)/1e6 capped at 16 buckets",
+      "elements": [],
+      "evidence": "https://github.com/Uniswap/protocol-fees (accessed 2026-08-04)",
+      "note": "RESIDUE — a governance-maintained on-chain TAXONOMY OF THIRD-PARTY CODE, keyed by hook address. Nothing in the 58 is close. Two roles govern it: owner (swap the policy, set the fee-setter) and feeSetter (everything else)."
+    },
+    {
+      "id": "F22",
+      "text": "the whole arrangement was installed in one governance act: proposal 93 executed 2025-12-28 17:55 with 125,342,017 FOR and 742 AGAINST, in eight on-chain actions including burning 100M UNI, handing v3 factory ownership to the fee controller, setting v2's feeToSetter to the Timelock and turning feeTo on, approving 40M UNI into UNIVester, and anchoring three legal agreements via AgreementAnchor",
+      "elements": ["Tg"],
+      "evidence": "https://vote.uniswapfoundation.org/proposals/93 (accessed 2026-08-04)",
+      "note": "Tg discharges only the delayed execution of the batch. RESIDUE for two of the eight actions: a retroactive one-off supply destruction of 100M UNI, and the on-chain anchoring of an off-chain legal agreement, neither of which any symbol names."
+    }
+  ]
+}

@@ -27,15 +27,113 @@ Element-set sizes 6, 7, 7, 8, 9.
 
 Three gaps span the whole category. (1) Extensibility: Uniswap V4, PancakeSwap Infinity and Fluid all build their differentiation on pluggable logic inside the settlement path and no symbol names a hook. (2) The value-return channel: three of the top four now route fees into a buyback-and-burn and Fd, the only nearby symbol, means distribution to a claim class. (3) Uniswap and PancakeSwap differ by exactly two symbols (Em, Up) — PancakeSwap decomposes as 'Uniswap with an emission schedule and a mutable admin', which is a fair summary of the products but erases everything about routing, chains and hook design. On the assigned Ve question: only one of the top five (Curve) still runs a vote-escrow gauge system. PancakeSwap retired veCAKE on 2025-04-23; Uniswap, Raydium and Fluid never had one. Balancer, named in the brief, is now $54.2M combined (V2 $26.7M + V3 $27.5M) — about 1/24th of Curve and nowhere near the top five — and the other live ve-gauge system, Aerodrome, is $247.5M at rank 7. So the contested symbol Ve is required by a shrinking minority of the category's TVL, which is itself an argument for leaving it contested and splitting it, not for promoting it.
 
-## Stage 3
+## Stage 3: the constructions, machine-checked
 
-*Not yet run for this category — no `verdicts.json`.*
+5 applications, 110 obligations, 46 discharged, 64 residue, coverage 41.8%.
+
+| application | construction | canonical form | verdict | obligations | residue |
+|---|---|---|---|---|---|
+| Curve | `Ag,Em,Fd,Gp,Sh,St,Tg,Tp` | `Ag,Em,Fd,Gp,Sh,St,Tg,Tp` | **PARTIAL** | 8/22 | 14 |
+| Fluid | `Cl,Cp,Ct,Ex,Gp,Li,Pl,Sh,Tg,Tp,Up` | `Cl,Cp,Ex,Gp,Li,Pl,Sh,Tg,Tp,Up` | **PARTIAL** | 11/22 | 11 |
+| PancakeSwap | `Cl,Cp,Em,Fl,Gp,Ix,Sh,St` | `Cl,Cp,Em,Fl,Gp,Ix,Sh,St` | **PARTIAL** | 9/22 | 13 |
+| Raydium | `Cl,Cp,Em,Gp,Ix,Sh,Tp,Up` | `Cl,Cp,Em,Gp,Ix,Sh,Tp,Up` | **PARTIAL** | 8/22 | 14 |
+| Uniswap | `Cl,Cp,Fl,Ix,Sh,Tg,Tp,Xf` | `Cl,Cp,Fl,Ix,Sh,Tg,Tp,Xf` | **INADMISSIBLE** arms X21 | 10/22 | 12 |
+
+### Where the corpus and the construction disagree
+
+- **Curve** — added `Gp`, dropped `—`.
+- **Fluid** — added `Cp,Tp`, dropped `—`.
+- **PancakeSwap** — added `Gp,Ix,St`, dropped `Fd,Tg,Up`.
+- **Raydium** — added `Gp,Ix,Tp`, dropped `Fd`.
+- **Uniswap** — added `Ix,Xf`, dropped `Fd`.
+
+### Residue, verbatim
+
+**Curve** (14):
+
+- a Cryptoswap pool quotes off the IDENTICAL algebraic form with a different leverage term — K*D^(N-1)*Sum(xi) + Prod(xi) = K*D^N + (D/N)^N with K0 = Prod(xi)*N^N/D^N and K = A*K0*gamma^2/(gamma+1-K0)^2 — solved by Newton's method first for D then for xj at about 35k gas, with balances first transformed by a price vector so the invariant is always evaluated near equilibrium: liquidity is concentrated around a MOVING internal price_scale rather than around parity
+- the pool moves its own centre of concentration only when TWO conditions hold: an exponential moving average of the pool's own price has moved past the adjustment_step, AND the loss of value of X_cp = (Prod D/(N*pi))^(1/N) 'doesn't exceed half the profit we've made', tracked as a monotone accumulator (xcp_profit) of that same functional
+- the protocol runs several mutually incompatible implementations of that repeg gate in production at once, and they cannot be distinguished by the version string the contracts publish: the deployed and the repository implementations both report version 'v2.1.0' while testing mathematically different predicates
+- the safety property in F3 has a documented deadlock: when the market price moves far from the last rebalance price the available liquidity falls, volume and fees fall with it, and 'without enough profit from fees, the pool cannot afford to rebalance and follow the price, leaving its liquidity stranded' — for which the protocol's own documented remedy includes wash-trading the pool with flash loans 'at a loss with no guarantee of a lasting fix'
+- the fee is a function of pool imbalance, not a constant: 'Cryptoswap and all new Stableswap pools feature dynamic fees that adjust to increase returns for LPs when their liquidity is in high demand', governed by mid_fee, out_fee and fee_gamma
+- which asset the fee is taken in is fixed by pool type: stableswap takes it in the OUTPUT coin, cryptoswap takes it in the pool's own LP token
+- the invariant's own parameter moves on a RAMP rather than a step: A is changed by ramp_A with a minimum ramp time of 86,400 seconds, so the curve is time-varying by construction and a swap quoted at t and the same swap quoted at t+dt are priced by different invariants
+- settlement is atomic and per-pool — each pool holds its own coins and there is no netting layer — and a metapool composes by making one of its coins another pool's LP TOKEN, tradeable through to the base coins but not depositable in them because of the contract size limit
+- anyone may deploy a pool, but only the DAO may register the implementation it is deployed FROM: per-generation factories (CurveStableSwapFactoryNG, TwocryptoFactory, CurveTricryptoFactory, CurveL2TricryptoFactory) take the full parameter vector under asserted bounds (0 < adjustment_step < 1e18+1, allowed_extra_profit < 1e18+1, fee_max = 10*1e9, 86 < ma_exp_time < 872542), only set_pool_implementation is DAO-gated, and 'Pools created through the Factory are owned by the factory admin (DAO)'
+- WHERE those emissions go is decided by a vote: veCRV holders vote a weight vector over gauges in the GaugeController, and that vector parameterises the emission function
+- voting power is a non-transferable, non-reversible time-decaying lock: VotingEscrow.vy (Vyper 0.2.4, 0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2) with MAXTIME = 4*365*86400, a one-week minimum, unlock times rounded down to whole weeks, one lock per user, and power stored as a (bias, slope) piecewise-linear function with scheduled slope_changes so decay needs no user action
+- the lock also multiplies an LP's own emission rate, RIVALROUSLY: LiquidityGaugeV6._update_liquidity_limit sets working_balance = min(l, l*40/100 + L*voting_balance/voting_total*60/100) and the reward rate is working_balance/working_supply, so an unboosted LP earns 40% of their nominal share, a fully boosted LP earns 100%, and one LP's boost lowers every other LP's yield through the shared denominator
+- the protocol does not price its own fee stream: admin fees arriving in arbitrary tokens are converted by posting CoW Protocol CONDITIONAL ORDERS through CowSwapBurner (Ethereum 0xC0fC3dDfec95ca45A0D2393F518D3EA1ccF44f8b, Gnosis 0x566b9F24200A9B51b76792D4e81B569AF27eda83), and on chains without CoW the superseded route still runs — burn to MIM, bridge to mainnet, burn MIM to 3CRV
+- the reference path for exercising that governance runs through another protocol: Curve's own voting library creates DAO votes through the Convex voter proxy 0x989AEB4D175E16225E39E87D0D97A3360524AD80
+
+**Fluid** (11):
+
+- the pool moves its own centre without an owner action and without a profit test: the Center Price is 'the price at which the Pool rebalances itself once the Upper or Lower bounds are breached by the pool price', the move takes place over a Shift Time rather than instantaneously, and the centre may never leave [Center Min Price, Center Max Price]
+- one unit of capital occupies three roles simultaneously: Smart Collateral 'is a single range order' that is lent into the Liquidity Layer earning supply yield, is borrowable against, AND is deployed as AMM inventory quoting swaps
+- Smart Debt inverts it: the BORROWED PRINCIPAL is the AMM's inventory, so a swapper trades against someone else's liability and the trading fees pay that liability down — 'the first time debt can be transformed into a productive asset by using it as liquidity for the DEX', with borrowers 'even having the possibility of getting paid to borrow'
+- capacity is a bound that RELAXES ON A SCHEDULE rather than a fixed cap: borrowing is governed by Base Limit, Current Limit, Max Limit, Expand Percentage ('the rate at which Limits would increase or decrease over the given duration') and Expand Duration, withdrawal by the same four plus Withdrawable, and the docs state the ceilings adjust 'in real-time based on utilization rates'
+- a portion of the pool is reserved for an operation that has not happened yet: the Withdrawal Gap is a 'safety non-withdrawable amount to guarantee liquidations'
+- the unit liquidated is an EQUIVALENCE CLASS, not a position: each position is assigned to a slot keyed by its ratio ('Drawing inspiration from Uniswap v3's slot-based liquidity'), and when a slot crosses the threshold 'the protocol aggregates all vaults in that slot for liquidation in a single transaction. Afterward, the system recalibrates the remaining vaults, adjusting their debt ratio positions down to the next slot' — taking only the minimum needed to restore health
+- settlement is atomic on-chain against the shared Liquidity Layer rather than against per-pool inventory, and DEX v2 additionally advertises 'Flash Accounting (inspired by Uniswap v4)' alongside on-chain dynamic fees and on-chain limit orders that 'earn lending APR while waiting to be filled'
+- the extension point is a CONTROLLER named per pool: the DexKey carries a controller address alongside tickSpacing, and the feature is documented as Hooks
+- which pools may exist is decided by governance: 'DEX v2 operates with pools that are permissioned and listed on the Fluid Money Market ... Each pool has been approved through Fluid governance', discoverable through getD3PermissionedDexes() and getD4PermissionedDexes(), with a stated future transition to permissionless pools discovered from LogInitialize(dexType, dexId, dexKey, sqrtPriceX96)
+- governance can create new PRICING ENGINES, not merely new pools: 'At its core, Fluid DEX v2 runs on a singleton contract built atop the Fluid Liquidity Layer ... Governance can deploy infinite DEX types, each with its own logic and math', with four types at launch (v1 Smart Collateral, v1 Smart Debt, Smart Collateral Range Orders, Smart Debt Range Orders)
+- value return runs through a governance-toggled Revenue Cut into an on-chain buyback: 'Revenue Cuts can be turned on through governance voting and could consist of a cut from trading fees and/or a fee from any Smart Vault', and the deployed contract index carries Periphery/Buyback/{FluidBuyback, FluidBuybackProxy, FluidBuybackCore}
+
+**PancakeSwap** (13):
+
+- an Infinity LBAMM ('Liquidity Book') pool prices instead on DISCRETE BINS: liquidity sits in a bin at a fixed price, the invariant WITHIN a bin is constant sum — 'LBAMM follows the constant sum formula (X + Y = K)' — so a trade inside one bin has zero price impact, and the bin step rather than a tick spacing is carried in the pool key
+- a v3 or CLAMM liquidity provider holds a per-range NON-FUNGIBLE position, wrapped as an ERC-721 by the NonfungiblePositionManager
+- settlement in Infinity is deferred and net against an immutable ledger: vault.lock() then lockAcquired(data), operations run against a pool manager which calls vault.accountAppBalanceDelta(...), and the caller reconciles with take / settle / mint / burn (plus clear() for dust and the three-step sync-transfer-settle), with unsettled deltas counted in transient storage by SettlementGuard through UNSETTLED_DELTAS_COUNT and CURRENCY_DELTA
+- custody and pricing are SPLIT ACROSS CONTRACTS: an immutable Vault holds all balances and the accounting, while pricing lives in independent singleton pool managers (CLPoolManager and BinPoolManager) that register against it, so two AMM families share one ledger and tokens are transferred to the Vault rather than to the pool manager
+- a pool may name a hook, and WHICH callbacks fire is carried in the POOL'S OWN KEY: the first 16 bits of the bytes32 parameters field are the hook registration bitmap and the next field is tick spacing (CL) or bin step (Bin) — the docs decode 0x...0a00c2 as permission bits 0000 0000 1100 0010 (afterInitialize, beforeSwap, afterSwap) with tick spacing 10 — so one hook contract may be registered with DIFFERENT permission sets by different pools and no address mining is required
+- the current generation publishes no protocol-level price series: Infinity ships no oracle in the core and a custom oracle is an advertised hook use case
+- the protocol's share of the fee is set by a swappable controller: ProtocolFeeController is Ownable2Step with protocolFeeSplitRatio = 33 * 1e4 (33% of the total fee in hundredths of a bip) and defaultProtocolFeeForDynamicFeePool = 300, rejects a dynamic-pool default greater than 0.4%, and exposes owner-only setProtocolFeeSplitRatio, setDefaultProtocolFeeForDynamicFeePool, per-pool setProtocolFee and collectProtocolFee
+- the swap fee is split THREE WAYS at the protocol level, per tier, with the burn as one of the three legs: EVM v3 tiers pay LP 67 / burn 15 / treasury 18 at 0.01%, 66 / 15 / 19 at 0.05%, and 68 / 23 / 9 at both 0.25% and 1%, while Solana pools pay a uniform 84 / 8 / 8
+- THE VALUE-RETURN CHANNEL IS SUPPLY DESTRUCTION, funded from five named sources: spot trading 15-23% of trading fees, perpetual trading 20% of all profits, CAKE.PADs 100% of fees, Prediction 3% of each round and Lottery 20% of CAKE played, targeting 'an annual deflation rate of at least ~4% per year and a total CAKE supply reduction of ~20% by 2030'
+- the terminal bound on supply is itself governable: the CAKE hard cap was lowered from 450M to 400M by a proposal that passed 2026-01-16
+- the emission is directed across pools by an admin-mutable allocation-point vector, and the docs do not name the authority that sets it, calling it only 'the Chefs'
+- the core is not upgradeable — the Vault is stated immutable and the docs assert 'The non-upgradeable core ensures stability' — while ownership of the pool-manager owner and of the fee controller moves by 2-step transfer, and the identity of the owner and of the pausable role is not published
+- the protocol RETIRED a whole mechanism and settled the holders of a third party's derivative of it: veCAKE, gauge voting, farm boosting and the 5% revenue share ended on 2025-04-23 (final gauge vote Epoch 37), Epoch 38 ran 2025-04-25 to 05-06, accrual and revenue share stopped 2025-05-07, a 6-month redemption window for directly staked CAKE closed 2025-10-23, third-party locker protocols were handled by whitelisting delegator addresses for 1:1 redemption, and the freed revenue-share allocation was 'redirected to the CAKE burn mechanism, increasing the burn rate for these pools from 10% to 15%'
+
+**Raydium** (14):
+
+- a Stable AMM program is deployed and live at 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h, and no invariant for it is stated at any primary source: the program is closed source and publishes no IDL
+- a CLMM liquidity provider instead holds a POSITION NFT — a supply-1 mint whose mint authority is the program — against a chosen price range, claims fees explicitly, and closes by decreasing liquidity to zero, collecting, then burning the NFT
+- which leg the fee is taken from is fixed at pool creation and can never change: CLMM's CollectFeeOn is one of FromInput, Token0Only or Token1Only, so a pool may take its fee out of swap OUTPUT rather than input, changing the quoting equation by direction
+- a pool's fee tier is a reference to an immutable AmmConfig chosen at creation and can NEVER be changed for that pool, with 19 live CPMM configs spanning 0.005%-4% and 18 live CLMM configs spanning 0.01%-4%
+- the trading fee is split at the protocol level: CLMM and CPMM pay 84% to LPs, 12% to buyback and 4% to treasury, while AMM v4 pays 88/12 with no treasury slice — verified against every live config, all of which carry protocolFeeRate 120000 and fundFeeRate 40000 on a 1,000,000 denominator, whereas AMM v4 uses a 10,000 denominator on which 25 means 0.25%
+- CPMM additionally charges a CREATOR fee that is not a slice of the trade fee at all — live configs show creatorFeeRate from 500 to 14,950 — plus a flat createPoolFee of 150,000,000 lamports (0.15 SOL) on CPMM and AMM v4
+- THE VALUE-RETURN CHANNEL IS ACCUMULATION: the 12% buys RAY on the open market and HOLDS it in a protocol-controlled account, DdHDoz94o2WJmD9myRobHCwtx1bESpHTd4SSPe6VEZaz, which holds about 83.54M RAY across six token accounts, while RAY total supply stands at 554,997,631.209468 against a 555,000,000 maximum — on the order of 2,400 RAY has ever been destroyed
+- settlement is atomic within one Solana instruction against per-pool vaults, and multi-hop is bounded: the AMM Routing program CPIs across at most two pools in a transaction
+- the protocol's on-chain state footprint can only GROW: CLMM TickArrayState accounts (60 ticks each, lazily initialised) can never be closed and their rent is permanently locked even when no tick in them is initialised, and CPMM pools and their PDAs are never closed even at zero liquidity
+- AMM v4 retains a FOSSILISED INTERFACE for a mechanism that no longer exists: the 2026-07-22 upgrade removed the OpenBook/Serum dependency, all related CPIs and seven instructions (Initialize(0), MonitorStep(2), MigrateToOpenBook(5), WithdrawSrm(8), PreInitialize(10), SimulateInfo(12), AdminCancelOrders(13)), yet AmmInfo/StateData remain byte-compatible with inline open_orders / market / market_program fields as inert references and v1 swaps still demand 17-18 accounts of which several are never validated, with SwapBaseInV2/SwapBaseOutV2 (tags 16/17, 8 accounts) as the recommended path
+- LaunchLab issues a new token against a bonding curve with NO pre-seeded liquidity, with curve_type fixed at Initialize: 0 = constant product on VIRTUAL reserves, (V_q + dq)(V_b + b_rem - b_out) = V_q*V_b, 1 = fixed price, 2 = linear price
+- the launch GRADUATES into a pool price-continuously and permissionlessly: base_supply_graduation is typically 0.8 x base_supply_max with the remaining 20% seeding the pool, so the pre-graduation invariant is literally the post-graduation CPMM invariant; graduation fires when quote_vault.balance >= quote_reserve_target, and 'Graduate is permissionless' — anyone may call it — whereupon the program CPIs CPMM CreatePool, revokes the base mint authority and sets LaunchState.status to Graduated
+- the graduated pool's LP is split three ways by PlatformConfig under strict equality, platform_scale + creator_scale + burn_scale = 1,000,000 checked by MigrateNftInfo::check, where the leg named 'burn' routes to the Lock program with is_burn = true and the docs concede 'Despite the name, the LP tokens / position NFT are LOCKED in a program-owned escrow, not destroyed', while Burn&Earn mints a transferable Raydium Fee Key NFT carrying the perpetual right to collectFees
+- no registry attests that any deployed program matches any published source: OtterSec reports is_verified false for AMM v4, CPMM, CLMM and LaunchLab, CPMM's record carries an empty executable_hash, and the docs' stated mitigation — expected hashes per deploy in the repositories' releases — does not exist, because all three program repos have zero tags and zero releases
+
+**Uniswap** (12):
+
+- a v3 or v4 liquidity provider instead holds a position bounded by a lower and an upper tick which is NOT fungible: two providers in the same pool with different ranges hold economically different instruments, and the v3 periphery wraps each position in its own ERC-721
+- v4 ships NO built-in price series at all: the observation machinery was removed from the core and a TWAP is now something a hook must implement
+- in v2 and v3 settlement is per-pool: each swap moves both tokens at the pool contract itself inside the transaction, so an n-hop route performs 2n token transfers and each pool must hold its own inventory
+- in v4 settlement is deferred and net: an integrator calls unlock, the PoolManager calls back, any number of swap / modifyLiquidity / donate / take / settle / mint / burn operations run against the singleton, signed per-currency deltas are accumulated in EIP-1153 transient storage, and the only enforced condition is that every delta is zero when the unlock is released, so only the net moves
+- a v4 pool may name a hook contract at initialization, and WHICH of the fourteen lifecycle callbacks fire is encoded in the low fourteen bits of that contract's ADDRESS (ALL_HOOK_MASK = (1<<14)-1), so the permission set is chosen by mining the deployment address and is frozen: 'which callbacks are executed on a pool cannot change after pool initialization'
+- four of the fourteen hook bits — BEFORE_SWAP_RETURNS_DELTA, AFTER_SWAP_RETURNS_DELTA, AFTER_ADD_LIQUIDITY_RETURNS_DELTA, AFTER_REMOVE_LIQUIDITY_RETURNS_DELTA — let the hook alter the accounting outcome of the operation rather than observe it, i.e. supply a custom curve in place of the pool's
+- which curves may exist is itself a governed, MONOTONE registry: the v3 factory owner calls enableFeeAmount to add a (fee, tickSpacing) pair — seeded at 500/10, 3000/60 and 10000/200 — and a tier once added can never be removed
+- there is no pause anywhere in the v4 core: PoolManager.sol and ProtocolFees.sol at tag v4.0.0 contain no occurrence of 'pause', so no party can stop a pool
+- since December 2025 a protocol fee is skimmed off the LP fee on all three generations — v2 fixed in the pair at 1/6 of the swap fee (0.05% of the 0.30%), v3 at a per-tier 1/4 or 1/6, v4 resolved by an adapter — and accumulates in a per-chain immutable TokenJar exposing exactly one privileged role, a releaser that 'can atomically transfer the full balance of specified assets to a recipient'
+- THE VALUE-RETURN CHANNEL IS SUPPLY DESTRUCTION, exercised by a third party at a fixed price: Firepit.release() takes a fixed quantity of UNI from a searcher, releases the Jar's full balance of the named assets to that searcher's recipient, and sends the UNI to 0xdead; the protocol never places a market order and never holds the bought asset
+- fee policy is a replaceable object held behind a non-replaceable adapter: V4FeeAdapter is registered permanently as the PoolManager's protocolFeeController, while V4FeePolicy is swappable by an owner, so governance can change fee strategy without ever re-handing the PoolManager privilege
+- the fee owed by a pool is resolved by an on-chain classifier over third-party code: the policy checks a per-pool override, else resolves a family by hookFamilyId[hook], else static-pool 255 ('native math'), else protocolFeeFlags plus flagRules, else 0, then applies pairClassFees then familyDefaults then defaultFee, with native-math pools priced on a piecewise-linear bucket schedule alpha + beta x (lpFee - floor)/1e6 capped at 16 buckets
 
 ## Sources
 
 - Round-one research: `expansion/01-spot-exchange/01-research.md`
 - Obligation specs: `expansion/01-spot-exchange/specs/`
-- Knowledge graph: `expansion/01-spot-exchange/graphify-out/graph.json` — 25 nodes, 12 links
+- Verdicts: `expansion/01-spot-exchange/verdicts.json`
+- Knowledge graph: `expansion/01-spot-exchange/graphify-out/graph.json` — 48 nodes, 25 links
 
 ---
 

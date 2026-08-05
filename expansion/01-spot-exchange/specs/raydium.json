@@ -1,0 +1,162 @@
+{
+  "app": "Raydium",
+  "category": "01-spot-exchange",
+  "source": "C:\\defiformal-work\\01-spot-exchange\\01-research.md",
+  "construction": ["Cp", "Cl", "Sh", "Ix", "Tp", "Em", "Up", "Gp"],
+  "functionalObligations": [
+    {
+      "id": "F1",
+      "text": "an AMM v4 or CPMM pool quotes a swap off x*y=k on its two vault reserves, consulting no external oracle during a swap, deposit or withdrawal — 'Raydium's core products don't depend on external oracles for pricing: the pool state IS the oracle'",
+      "elements": ["Cp"],
+      "evidence": "https://docs.raydium.io/security/oracle-and-token-risks (accessed 2026-08-04)",
+      "note": "THE POOL INVARIANT, first of three live answers. Cp fits exactly. Program IDs: AMM v4 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8, CPMM CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C, per https://docs.raydium.io/reference/program-addresses (2026-08-04)."
+    },
+    {
+      "id": "F2",
+      "text": "a CLMM pool quotes off sqrt-price and tick arithmetic with price(i) = 1.0001^i and MIN/MAX_TICK = -/+443636, carrying sqrt_price_x64, a current tick, fee-growth globals, an inline bitmap covering +/-1,024 tick arrays, and Uniswap v3's liquidity_gross / liquidity_net accounting",
+      "elements": ["Cl", "Cp"],
+      "evidence": "https://docs.raydium.io/products/clmm/ticks-and-positions (accessed 2026-08-04)",
+      "note": "THE POOL INVARIANT, second answer. Cl and Cp fit together as for Uniswap. CLMM program CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK."
+    },
+    {
+      "id": "F3",
+      "text": "a Stable AMM program is deployed and live at 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h, and no invariant for it is stated at any primary source: the program is closed source and publishes no IDL",
+      "elements": [],
+      "evidence": "https://docs.raydium.io/reference/program-addresses (accessed 2026-08-04)",
+      "note": "RESIDUE OF A DIFFERENT KIND — not unnameable, UNVERIFIABLE. St was considered and rejected: assigning it would be an inference from the product's name, and the run's cite-or-drop invariant forbids that. Only three of Raydium's nine programs are open source (raydium-amm, raydium-cp-swap, raydium-clmm); Stable AMM, AMM Routing, Burn&Earn/LP Lock and the three Farm programs have no public source, and four of those have no IDL either, so any construction claiming to reproduce 'Raydium' reproduces a prose description for a substantial part of it."
+    },
+    {
+      "id": "F4",
+      "text": "an AMM v4 or CPMM liquidity provider holds a FUNGIBLE SPL LP token and exits by burning it for a pro-rata slice of both vaults; there is no collect-fees instruction on either program, so fees remain in the vaults, inflate k, and are realised only implicitly at exit",
+      "elements": ["Sh"],
+      "evidence": "https://docs.raydium.io/products/cpmm/fees (accessed 2026-08-04)",
+      "note": "FUNGIBILITY OF THE POSITION, first answer. Sh names the pro-rata claim. RESIDUE for the ABSENCE OF A CLAIM STEP: an LP earning that can only be realised by exiting is a different instrument from one with a callable accrual, and no symbol registers the difference."
+    },
+    {
+      "id": "F5",
+      "text": "a CLMM liquidity provider instead holds a POSITION NFT — a supply-1 mint whose mint authority is the program — against a chosen price range, claims fees explicitly, and closes by decreasing liquidity to zero, collecting, then burning the NFT",
+      "elements": [],
+      "evidence": "https://docs.raydium.io/products/clmm/ticks-and-positions (accessed 2026-08-04)",
+      "note": "RESIDUE — FUNGIBILITY OF THE POSITION, second answer, and the same gap as Uniswap F4 and PancakeSwap F6. Third protocol in this lane holding both instrument shapes at once with no way to index a symbol by pool type."
+    },
+    {
+      "id": "F6",
+      "text": "fees accrue to a CLMM position against the pool's fee-growth globals, differenced against the position's own PersonalPositionState checkpoint",
+      "elements": ["Ix"],
+      "evidence": "https://docs.raydium.io/products/clmm/fees (accessed 2026-08-04)",
+      "note": "APPROXIMATE for the same reason as Uniswap F5 — the effective index is range-local. Ix is ADDED relative to the corpus."
+    },
+    {
+      "id": "F7",
+      "text": "which leg the fee is taken from is fixed at pool creation and can never change: CLMM's CollectFeeOn is one of FromInput, Token0Only or Token1Only, so a pool may take its fee out of swap OUTPUT rather than input, changing the quoting equation by direction",
+      "elements": [],
+      "evidence": "https://docs.raydium.io/products/clmm/fees (accessed 2026-08-04)",
+      "note": "RESIDUE — no symbol distinguishes which leg a fee is skimmed from. The same gap appears on Curve as a pool-type property (curve.json F8), so this is category-level. CLMM also supports an optional dynamic volatility-surcharge fee, which is Curve's dynamic-fee residue (curve.json F7) appearing on a second protocol."
+    },
+    {
+      "id": "F8",
+      "text": "a pool's fee tier is a reference to an immutable AmmConfig chosen at creation and can NEVER be changed for that pool, with 19 live CPMM configs spanning 0.005%-4% and 18 live CLMM configs spanning 0.01%-4%",
+      "elements": [],
+      "evidence": "https://api-v3.raydium.io/main/cpmm-config (accessed 2026-08-04)",
+      "note": "RESIDUE — a pool-parameter registry, the same shape as Uniswap's tier ratchet (uniswap.json F14) with the mutability moved: Uniswap's registry grows monotonically and the pool follows it, Raydium's pool is frozen to the config it was born with. Neither is nameable. The commonly circulated '0.01/0.25/1%' triple is wrong; CLMM config list at https://api-v3.raydium.io/main/clmm-config (2026-08-04)."
+    },
+    {
+      "id": "F9",
+      "text": "the trading fee is split at the protocol level: CLMM and CPMM pay 84% to LPs, 12% to buyback and 4% to treasury, while AMM v4 pays 88/12 with no treasury slice — verified against every live config, all of which carry protocolFeeRate 120000 and fundFeeRate 40000 on a 1,000,000 denominator, whereas AMM v4 uses a 10,000 denominator on which 25 means 0.25%",
+      "elements": [],
+      "evidence": "https://docs.raydium.io/ray/protocol-fees (accessed 2026-08-04)",
+      "note": "RESIDUE — Fd is DROPPED from this construction (see F11). A three-way protocol-level split has no symbol, as on PancakeSwap (pancakeswap.json F15). Rates verified live against https://api-v3.raydium.io/main/cpmm-config and /clmm-config (2026-08-04) rather than the docs, because the docs contradict themselves here: /reference/fee-comparison claims CPMM is '100% LP (protocol share currently 0%)' and that AMM v4/CLMM's 12% goes '100% to treasury', both refuted by all 37 live configs and by /ray/protocol-fees on the same site."
+    },
+    {
+      "id": "F10",
+      "text": "CPMM additionally charges a CREATOR fee that is not a slice of the trade fee at all — live configs show creatorFeeRate from 500 to 14,950 — plus a flat createPoolFee of 150,000,000 lamports (0.15 SOL) on CPMM and AMM v4",
+      "elements": [],
+      "evidence": "https://docs.raydium.io/products/cpmm/fees (accessed 2026-08-04)",
+      "note": "RESIDUE — an additive fee accruing to a party who is neither the LP nor the protocol, sitting outside the fee split entirely. Nothing in the 58 names a third fee beneficiary, and nothing names a fee charged for the act of creating a mechanism."
+    },
+    {
+      "id": "F11",
+      "text": "THE VALUE-RETURN CHANNEL IS ACCUMULATION: the 12% buys RAY on the open market and HOLDS it in a protocol-controlled account, DdHDoz94o2WJmD9myRobHCwtx1bESpHTd4SSPe6VEZaz, which holds about 83.54M RAY across six token accounts, while RAY total supply stands at 554,997,631.209468 against a 555,000,000 maximum — on the order of 2,400 RAY has ever been destroyed",
+      "elements": [],
+      "evidence": "https://docs.raydium.io/ray/treasury (accessed 2026-08-04)",
+      "note": "RESIDUE, and THE CORRECTION THAT INVALIDATES THE CORPUS'S GROUPING. The corpus files Raydium with Uniswap and PancakeSwap under a shared 'burn/buyback ambiguity'. Uniswap DESTROYS UNI, PancakeSwap DESTROYS CAKE, Raydium BUYS AND HOLDS — the docs' own row label is 'Bought-back RAY accumulation' and the chain agrees. Three channels, three different effects on the supply model, and the vocabulary names only the fourth (Fd, distribution to a claim class) which none of the three uses. Fd is therefore DROPPED from this construction. Supply and balances re-run against the Solana RPC by stage 1; buyback rate at https://docs.raydium.io/ray/ray-buybacks (2026-08-04)."
+    },
+    {
+      "id": "F12",
+      "text": "CPMM and CLMM each maintain an on-chain price series as a 100-entry ring in an ObservationState PDA — CPMM storing (block_timestamp, cumulative price), CLMM storing cumulative TICK — which downstream protocols consume; AMM v4, which holds the largest share of the TVL, has no observation account at all and publishes nothing",
+      "elements": ["Tp"],
+      "evidence": "https://docs.raydium.io/products/clmm/accounts (accessed 2026-08-04)",
+      "note": "APPROXIMATE, and Tp is ADDED relative to the corpus, which records no price element for Raydium. THE PRICE-SERIES QUESTION: this is an ACCUMULATOR the consumer must difference and divide, as on Uniswap and unlike Curve — and CLMM accumulates TICK rather than price, so the consumer must also exponentiate, which no symbol registers. RESIDUE for the scoping: a decomposition assigns Tp to 'Raydium' and thereby asserts it of a program that does not have it."
+    },
+    {
+      "id": "F13",
+      "text": "settlement is atomic within one Solana instruction against per-pool vaults, and multi-hop is bounded: the AMM Routing program CPIs across at most two pools in a transaction",
+      "elements": [],
+      "evidence": "https://docs.raydium.io/reference/program-addresses (accessed 2026-08-04)",
+      "note": "RESIDUE — THE SETTLEMENT DISCIPLINE: per-pool transfers, no deferred netting, and no symbol names either regime. Ag was considered and REJECTED: the router is single-venue, capped at two hops, closed source and without an IDL, so 'multi-venue route construction' is false of it on three counts. Routing program routeUGWgWzqBWFcrCfv8tritsqukccJPu3q5GPP3xS."
+    },
+    {
+      "id": "F14",
+      "text": "the protocol's on-chain state footprint can only GROW: CLMM TickArrayState accounts (60 ticks each, lazily initialised) can never be closed and their rent is permanently locked even when no tick in them is initialised, and CPMM pools and their PDAs are never closed even at zero liquidity",
+      "elements": [],
+      "evidence": "https://docs.raydium.io/products/clmm/accounts (accessed 2026-08-04)",
+      "note": "RESIDUE — nothing names state that can only be created, and it is a design commitment with a monetary cost, not an implementation detail."
+    },
+    {
+      "id": "F15",
+      "text": "AMM v4 retains a FOSSILISED INTERFACE for a mechanism that no longer exists: the 2026-07-22 upgrade removed the OpenBook/Serum dependency, all related CPIs and seven instructions (Initialize(0), MonitorStep(2), MigrateToOpenBook(5), WithdrawSrm(8), PreInitialize(10), SimulateInfo(12), AdminCancelOrders(13)), yet AmmInfo/StateData remain byte-compatible with inline open_orders / market / market_program fields as inert references and v1 swaps still demand 17-18 accounts of which several are never validated, with SwapBaseInV2/SwapBaseOutV2 (tags 16/17, 8 accounts) as the recommended path",
+      "elements": [],
+      "evidence": "https://docs.raydium.io/reference/changelog/2026-07-22-amm-v4-openbook-removal (accessed 2026-08-04)",
+      "note": "RESIDUE — the on-chain TYPE is provably wider than the on-chain SEMANTICS, and the width is load-bearing for integrators. The corpus's residue reads 'a mechanism that exists in the bytecode but is switched off'; that is now superseded by a datable event, verified at bytecode level by stage 1: a scan of the deployed 1,406,384-byte ELF at ProgramData A7ZG7ByDi8DpzT9Ab7CiXhvgYTJQmaDPJkMDoPitaCQV found zero 'serum' strings and neither OpenBook program ID as a 32-byte constant, with the SPL Token ID present as a positive control. The residue changed register from DEAD CODE to DEAD INTERFACE, which is the harder thing to name. Ob remains correctly unused. Repo HEAD 27f461dd439086c774055f771b253fb0fbc52008, 'Remove openbook dependency (#69)'."
+    },
+    {
+      "id": "F16",
+      "text": "LaunchLab issues a new token against a bonding curve with NO pre-seeded liquidity, with curve_type fixed at Initialize: 0 = constant product on VIRTUAL reserves, (V_q + dq)(V_b + b_rem - b_out) = V_q*V_b, 1 = fixed price, 2 = linear price",
+      "elements": [],
+      "evidence": "https://docs.raydium.io/products/launchlab/bonding-curve (accessed 2026-08-04)",
+      "note": "RESIDUE. Cp was considered and REJECTED even for curve_type 0: Cp presumes a pool of reserves someone deposited and holds a claim on, whereas the curve here prices ISSUANCE against reserves that do not exist, with no LP and no claim. Only the contested-register Bc is near this and it is outside the 58. LaunchLab program LanMV9sAd7wArD4vJFi2qDdfnVhFxYSUg6eADduJ3uj."
+    },
+    {
+      "id": "F17",
+      "text": "the launch GRADUATES into a pool price-continuously and permissionlessly: base_supply_graduation is typically 0.8 x base_supply_max with the remaining 20% seeding the pool, so the pre-graduation invariant is literally the post-graduation CPMM invariant; graduation fires when quote_vault.balance >= quote_reserve_target, and 'Graduate is permissionless' — anyone may call it — whereupon the program CPIs CPMM CreatePool, revokes the base mint authority and sets LaunchState.status to Graduated",
+      "elements": [],
+      "evidence": "https://docs.raydium.io/products/launchlab/overview (accessed 2026-08-04)",
+      "note": "RESIDUE, three separable pieces and no symbol for any: the threshold gate on a vault balance, the price-continuous handoff between two different mechanisms, and the fact that firing the transition is a PUBLIC GOOD anyone may perform. The failure mode is likewise unnameable: a curve that never reaches its threshold leaves buyers 'stuck with tokens they can only sell back to the curve (at worse prices)'."
+    },
+    {
+      "id": "F18",
+      "text": "the graduated pool's LP is split three ways by PlatformConfig under strict equality, platform_scale + creator_scale + burn_scale = 1,000,000 checked by MigrateNftInfo::check, where the leg named 'burn' routes to the Lock program with is_burn = true and the docs concede 'Despite the name, the LP tokens / position NFT are LOCKED in a program-owned escrow, not destroyed', while Burn&Earn mints a transferable Raydium Fee Key NFT carrying the perpetual right to collectFees",
+      "elements": [],
+      "evidence": "https://docs.raydium.io/user-flows/burn-and-earn (accessed 2026-08-04)",
+      "note": "RESIDUE — a TRANSFERABLE PERPETUAL CLAIM ON A LOCKED POSITION'S FEE STREAM, which is a security manufactured out of an LP position and is neither Sh (it is not a claim on the inventory) nor Py (there is no principal leg to separate). Note also that a leg named 'burn' is an escrow: the value-return vocabulary problem (F11) recurs inside a single instruction, where even the protocol's own naming is wrong. Split parameters at https://docs.raydium.io/products/launchlab/platform-config (2026-08-04)."
+    },
+    {
+      "id": "F19",
+      "text": "ecosystem farms emit rewards against escrowed LP tokens in a separate MasterChef-style program (Farm v6, FarmqiPv5eAj3j1GMdMCMUGXqPUvmquZtMy86QH6rzhG) that escrows the LP token against PRE-FUNDED emissions and never calls the pool",
+      "elements": ["Em"],
+      "evidence": "https://docs.raydium.io/reference/program-addresses (accessed 2026-08-04)",
+      "note": "APPROXIMATE — Em names PROTOCOL-FUNDED emissions, and here the reward vault is funded at farm creation, so the funder may be a third-party project rather than the protocol; the three farm programs are closed source with no IDL (F3), so the funding party could not be established at a primary source. Em is retained because RAY emissions to farms are documented, but it is the weakest member of this construction."
+    },
+    {
+      "id": "F20",
+      "text": "every program's code can be replaced wholesale by ONE authority: all eight queried programs use BPF Loader Upgradeable and share the single upgrade authority FytDrVzDybM1TwFQPGb8qaxZR7dBCzNeqT3vtQsceZQK, none is immutable, and the docs concede 'Raydium has not set any program's upgrade authority to null'",
+      "elements": ["Up"],
+      "evidence": "https://docs.raydium.io/security/admin-and-multisig (accessed 2026-08-04)",
+      "note": "APPROXIMATE, and the corpus is right to mark it forced. Up names a proxy delegating to a swappable implementation; here the bytecode at the SAME ADDRESS is replaced entirely, with no delegatecall, no implementation slot, and no way for an integrator to diff what changed. RESIDUE also for the holder: the docs claim a 3/4 Squads multisig with a 24-hour timelock for upgrades and a separate 3/5 with NO timelock for treasury (which also holds program-admin powers and is described as 'an interim arrangement'), but stage 1 found the authority address to be a System-Program-owned zero-data account, consistent with a Squads vault PDA and NOT with a settings account, so the threshold and the delay are docs-only and Tg cannot be asserted. There is no on-chain token voting anywhere in Raydium."
+    },
+    {
+      "id": "F21",
+      "text": "pools can be stopped and creation disabled by that same admin: AMM v4 exposes SetParams(param=Status), CPMM exposes UpdatePoolStatus, and an AmmConfig carries disable_create_pool",
+      "elements": ["Gp"],
+      "evidence": "https://docs.raydium.io/security/admin-and-multisig (accessed 2026-08-04)",
+      "note": "APPROXIMATE, and Gp is ADDED relative to the corpus. Gp names an EMERGENCY guardian; this is a routine per-pool status word held by the same authority that sweeps protocol fees, so the emergency framing is wrong and the concentration is the risk. The 2022-12-16 exploit was executed THROUGH this surface with a compromised pool-owner key — SetParams combined with AmmParams::SyncNeedTake to inflate need_take_pc/need_take_coin, then withdrawPNL (the same instruction that collects the 12%) drained the vaults — for a loss of $4,417,202.04 across nine pairs by the protocol's own published Total Loss Per Vault.csv, against a postmortem that says eight pools. SyncNeedTake was subsequently removed. https://github.com/raydium-io/dec_16_exploit (2026-08-04)."
+    },
+    {
+      "id": "F22",
+      "text": "no registry attests that any deployed program matches any published source: OtterSec reports is_verified false for AMM v4, CPMM, CLMM and LaunchLab, CPMM's record carries an empty executable_hash, and the docs' stated mitigation — expected hashes per deploy in the repositories' releases — does not exist, because all three program repos have zero tags and zero releases",
+      "elements": [],
+      "evidence": "https://verify.osec.io/status/CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C (accessed 2026-08-04)",
+      "note": "RESIDUE — VERIFIABILITY IS A PROPERTY OF THE DEPLOYMENT, NOT OF THE CODE, and the vocabulary has no way to record its absence. This is not proof of divergence, only that nothing attests to a match. It compounds F3: a construction of 'Raydium' is a construction of three published programs plus six prose descriptions, none of which is attested to be what is running."
+    }
+  ]
+}
