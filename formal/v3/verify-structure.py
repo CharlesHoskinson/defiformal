@@ -1,36 +1,42 @@
-"""Count subsections per category section BY POSITION.
+"""Structure check across the submission.
 
-The first attempt matched subsection labels against the section's label key -
-sec:cat:lend against sub:cat:lnd:*, sec:cat:yield against sub:cat:yld:* - and
-reported five categories at zero because the prefixes were chosen
-independently. Position is the thing that actually determines which section a
-subsection renders under, so count that.
+The article carries twelve category sections and four case studies; the
+remaining fifty-six profiles are in the supplement. The invariant is that every
+category has five profiles somewhere in the submission, and that no label is
+duplicated within or across the two documents.
 """
-import io, re
+import io, re, sys
 
-s = io.open("/root/defiformal/paper/atlas.tex", encoding="utf-8").read()
+art = io.open("/root/defiformal/paper/atlas.tex", encoding="utf-8").read()
+sup = io.open("/root/defiformal/paper/supplement.tex", encoding="utf-8").read()
 
-secs = [(m.start(), m.group(1), m.group(2))
-        for m in re.finditer(r"\\section\{([^}]*)\}\\label\{(sec:cat:[a-z]+)\}", s)]
-# every \section, so we know where each category section ends
-allsec = [m.start() for m in re.finditer(r"\\section\*?\{", s)]
-subs = [(m.start(), m.group(1), m.group(2))
-        for m in re.finditer(r"\\subsection\{([^}]*)\}\\label\{(sub:[^}]*)\}", s)]
+secs = re.findall(r"\\section\{([^}]*)\}\\label\{sec:cat:([a-z]+)\}", art)
+labels_art = re.findall(r"\\label\{(sub:cat:[a-z]+:[a-z0-9]+)\}", art)
+labels_sup = re.findall(r"\\label\{(sub:cat:[a-z]+:[a-z0-9]+)\}", sup)
+allp = labels_art + labels_sup
 
-print(f"category sections: {len(secs)}   application subsections: {len(subs)}")
+print(f"category sections in the article: {len(secs)}")
+print(f"profiles: {len(labels_art)} in the article, {len(labels_sup)} in the supplement, {len(allp)} total")
+
+MAP = {"dex":"dex","lend":"lnd","cdp":"cdp","lsd":"lsd","perp":"perp",
+       "yield":"yld","bridge":"bri","intent":"int","rwa":"rwa","opt":"opt",
+       "fiat":"fiat","pred":"prd"}
+by = {}
+for l in allp:
+    by.setdefault(l.split(":")[2], []).append(l)
+
 ok = True
-for pos, name, lab in secs:
-    end = min([p for p in allsec if p > pos], default=len(s))
-    mine = [t for t in subs if pos < t[0] < end]
-    flag = "ok " if len(mine) == 5 else "** "
-    if len(mine) != 5:
-        ok = False
-    print(f"  {flag}{name:<42} {len(mine)}  [{lab}]")
-    for _, t, l in mine:
-        print(f"        {t:<34} {l}")
+if len(secs) != 12:
+    print(f"  FAIL expected 12 category sections, found {len(secs)}"); ok = False
+for name, key in secs:
+    got = len(by.get(MAP.get(key, key), []))
+    mark = "ok " if got == 5 else "** "
+    print(f"  {mark}{name:<38} {got} profiles")
+    if got != 5: ok = False
 
-print()
-print("ALL TWELVE CATEGORIES CARRY FIVE SUBSECTIONS" if ok else "INCOMPLETE")
+dupes = [l for l in set(allp) if allp.count(l) > 1]
+print(f"duplicate labels: {len(dupes)}{'  ' + str(dupes[:4]) if dupes else ''}")
+if dupes: ok = False
 
-dups = [l for _, _, l in subs]
-print(f"duplicate subsection labels: {len(dups) - len(set(dups))}")
+print("\nSUBMISSION STRUCTURE COMPLETE" if ok else "\nINCOMPLETE")
+sys.exit(0 if ok else 1)
