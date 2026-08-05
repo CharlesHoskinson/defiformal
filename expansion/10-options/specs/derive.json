@@ -2,12 +2,29 @@
   "app": "Derive (formerly Lyra V2)",
   "category": "10-options",
   "source": "C:\\defiformal-work\\10-options\\01-research.md",
-  "construction": ["Ct", "Em", "Ex", "Fd", "Ix", "Li", "Ob", "Op", "Pf", "Rf", "Sl", "Up", "Xf", "Xm"],
+  "construction": [
+    "Ct",
+    "Em",
+    "Ex",
+    "Fd",
+    "Ix",
+    "Li",
+    "Ob",
+    "Op",
+    "Pf",
+    "Rf",
+    "Sl",
+    "Up",
+    "Xf",
+    "Xm"
+  ],
   "functionalObligations": [
     {
       "id": "F1",
       "text": "A user buys or writes an option on any of ~57 supported currencies at any listed strike and expiry up to 400 days, held as a position inside a self-custodial subaccount.",
-      "elements": ["Op"],
+      "elements": [
+        "Op"
+      ],
       "evidence": "https://docs.derive.xyz/docs/supported-products-1.md (accessed 2026-08-04); 884 live ETH option instruments and 57 currencies returned by POST https://api.lyra.finance/public/get_instruments and public/get_all_currencies (accessed 2026-08-04)",
       "note": "`Op` is used for the instrument only. It names 'strike/expiry/collateralized settlement' and says nothing about exercise style, settlement medium, underwriting topology, premium timing, margin regime or pricing regime; F2, F3, F10, F11, F12/F13 and F7/F8 are the six axes it collapses."
     },
@@ -35,7 +52,9 @@
     {
       "id": "F5",
       "text": "Five feeds per market — spot, forward, perp, implied volatility and risk-free rate — are signed off-chain and submitted on-chain by a named data submitter, and are the protocol's source of truth for margin and mark.",
-      "elements": ["Ex"],
+      "elements": [
+        "Ex"
+      ],
       "evidence": "https://docs.derive.xyz/docs/oracles-1.md (accessed 2026-08-04); src/feeds/{BaseLyraFeed,LyraSpotFeed,LyraForwardFeed,LyraVolFeed,LyraRateFeed,LyraSpotDiffFeed,SFPSpotFeed}.sol at https://github.com/derivexyz/v2-core/tree/96796a61dcb1dc852e25518b00cc1a79fb3caeeb/src/feeds (accessed 2026-08-04 via gh api contents)",
       "note": "`Ex` fits: a push oracle with signed off-chain data posted on-chain."
     },
@@ -56,7 +75,9 @@
     {
       "id": "F8",
       "text": "Execution prices are formed by a continuous central limit order book with pro-rata allocation above a FIFO floor (pro_rata_fraction 0.8, fifo_min_allocation 10).",
-      "elements": ["Ob"],
+      "elements": [
+        "Ob"
+      ],
       "evidence": "https://docs.derive.xyz/reference/overview (accessed 2026-08-04); matching parameters from POST https://api.lyra.finance/public/get_instruments (accessed 2026-08-04)",
       "note": "FLAGGED FORCED FIT, axis (f) second half. `Ob` says ON-CHAIN order book; Derive's book is 'a centralized limit order book' matched off-chain by the exchange operator, and only matched trades settle on-chain. One of the symbol's two clauses is false. Retained because price formation by a double auction is the mechanism and nothing else in the 58 names it; the falsified clause is carried as F9."
     },
@@ -70,7 +91,9 @@
     {
       "id": "F10",
       "text": "Both sides of every option are user subaccounts matched against each other; the protocol is never the counterparty, and an RFQ rail lets a maker return a signed quote on a multi-leg structure with its own fee schedule (cheapest leg free, second and third half price).",
-      "elements": ["Rf"],
+      "elements": [
+        "Rf"
+      ],
       "evidence": "https://docs.derive.xyz/reference/overview and https://docs.derive.xyz/reference/fees-1.md (accessed 2026-08-04)",
       "note": "`Rf` fits the quote rail and stage 1 confirms it is a first-class parallel rail (private/send_rfq, send_quote, execute_quote, rfq_get_best_quote), not a consequence of `Ob`; the corpus listed it in `elements` but not in `canonicalForm`. RESIDUE within this obligation, axis (c): no element names the underwriting topology itself — that the writer is a peer rather than a pool — nor a per-leg fee schedule used as market-making policy."
     },
@@ -84,7 +107,9 @@
     {
       "id": "F12",
       "text": "A writer may margin each position on its own under Standard Margin, a per-position collateral requirement evaluated continuously against the subaccount's balance.",
-      "elements": ["Ct"],
+      "elements": [
+        "Ct"
+      ],
       "evidence": "https://docs.derive.xyz/docs/portfolio-margin-1.md and https://docs.derive.xyz/docs/pm2.md (accessed 2026-08-04); StandardManager.sol at https://github.com/derivexyz/v2-core/tree/96796a61dcb1dc852e25518b00cc1a79fb3caeeb/src/risk-managers (accessed 2026-08-04 via gh api contents); srm 0x28c9ddF9A3B29c2E6a561c1BC520954e5A33de5D in deployments/957/core.json",
       "note": "This is the one genuinely `Ct`-shaped computation in the protocol, and it is what makes Derive the only member of this category the requirement tables accept."
     },
@@ -98,7 +123,9 @@
     {
       "id": "F14",
       "text": "When an account falls below maintenance margin a two-stage Dutch auction opens: solvent bidding at a discount rising linearly from 5% to 30% over 15 minutes, with a per-bidder cap; and if that reaches 100% without clearing, an insolvent auction whose offer rises from portfolio mark-to-market to maintenance margin over 60 minutes and permits 100% of the account.",
-      "elements": ["Li"],
+      "elements": [
+        "Li"
+      ],
       "evidence": "https://docs.derive.xyz/docs/liquidations-1.md (accessed 2026-08-04); liquidation/DutchAuction.sol, auction 0x141919f1FA90F99A3fbafFb0b111e4f84AB5aB52 in deployments/957/core.json at https://github.com/derivexyz/v2-core/tree/96796a61dcb1dc852e25518b00cc1a79fb3caeeb (accessed 2026-08-04 via gh api contents)",
       "note": "`Li` names paid third-party closure and that much is right. It does not name the descending-price schedule (`Da`, contested register, not used), the two-stage escalation, or the change of price basis between the stages."
     },
@@ -112,42 +139,57 @@
     {
       "id": "F16",
       "text": "If the Security Module cannot cover the deficit, the shortfall is charged to all USDC depositors as a temporary withdrawal fee equal to unpaid insolvent debt / (unpaid insolvent debt + deposited USDC), levied until the deficit clears.",
-      "elements": ["Sl"],
+      "elements": [
+        "Sl"
+      ],
       "evidence": "https://docs.derive.xyz/docs/liquidations-1.md (accessed 2026-08-04)",
       "note": "APPROXIMATE. `Sl` names loss assigned to a claim class and the class — USDC depositors — is right, so with `Li` it discharges the loss-absorption term that `Bs` was carrying. What `Sl` does not carry: the loss is collected as a flow on exits rather than as a haircut on balances, so the levy is escapable by staying and unavoidable by leaving, which inverts the usual incentive to run. Added to the construction; the corpus omitted it."
     },
     {
       "id": "F17",
       "text": "USDC cash balances accrue interest through the cash asset's interest-rate model, and while the Security Module is short, 100% of interest payments (SM_FEE = 100%) are routed to it until it is whole.",
-      "elements": ["Ix", "Fd"],
+      "elements": [
+        "Ix",
+        "Fd"
+      ],
       "evidence": "https://docs.derive.xyz/docs/liquidations-1.md (accessed 2026-08-04); src/assets/CashAsset.sol and src/assets/InterestRateModel.sol, cash 0x57B03E14d409ADC7fAb6CFc44b5886CAD2D5f02b in deployments/957/core.json at https://github.com/derivexyz/v2-core/tree/96796a61dcb1dc852e25518b00cc1a79fb3caeeb (accessed 2026-08-04 via gh api contents)",
       "note": "`Fd` is candidate register, used for the surplus-routing rule that names the Security Module as residual claimant. The underlying cash market is in substance a pooled lending market (`Pl`: negative cash balances borrow from depositors), but stage 1 did not read InterestRateModel.sol, so `Pl` is not carried — cite or drop."
     },
     {
       "id": "F17a",
       "text": "The same subaccount may hold perpetual futures beside its options, settled continuously against the index through a funding transfer, and both are margined by one risk manager under one collateral pool.",
-      "elements": ["Pf", "Ct"],
+      "elements": [
+        "Pf",
+        "Ct"
+      ],
       "evidence": "https://docs.derive.xyz/reference/overview and https://docs.derive.xyz/docs/settlements.md (accessed 2026-08-04); src/assets/PerpAsset.sol at https://github.com/derivexyz/v2-core/tree/96796a61dcb1dc852e25518b00cc1a79fb3caeeb/src/assets and the perp contingency factor (0.03 MM / 0.04 IM) in https://docs.derive.xyz/docs/pm2.md (accessed 2026-08-04)",
       "note": "`Pf` fits the funding transfer. RESIDUE inside the obligation, shared with Aevo F12: nothing names that one collateral pool secures two instrument types, so a loss on the perp consumes the option's margin. X8 names the failure mode of the opposite arrangement and there is no way to record cross-margining as disclosed design. Note that L4 (Pf -> Ex + Ct + Li + (Ad|Sl|Bs)) is discharged here by `Sl` (F16) rather than by `Bs`, which is what the stage-1 correction to the Security Module leaves standing."
     },
     {
       "id": "F18",
       "text": "Collateral moves between Ethereum and Derive Chain, an OP-Stack optimistic rollup, with the L2 side of the protocol deployed as its own contract set.",
-      "elements": ["Xf", "Xm"],
+      "elements": [
+        "Xf",
+        "Xm"
+      ],
       "evidence": "https://docs.derive.xyz/reference/overview (accessed 2026-08-04); src/l2/ and deployments/{901,957}/ at https://github.com/derivexyz/v2-core/tree/96796a61dcb1dc852e25518b00cc1a79fb3caeeb (accessed 2026-08-04 via gh api contents)",
       "note": ""
     },
     {
       "id": "F19",
       "text": "The PM2 risk manager is deployed behind an upgradeable proxy with a named proxyAdmin, and the contract set is controlled by the Derive DAO multi-sig with an intention to move to on-chain governance.",
-      "elements": ["Up"],
+      "elements": [
+        "Up"
+      ],
       "evidence": "deployments/957/ETH_2.json recording pmrm2, pmrm2Imp and proxyAdmin 0x6ecce6823743c5F40505dB287bB77190E83b0916, and src/risk-managers/BaseManagerUpgradeable.sol at https://github.com/derivexyz/v2-core/tree/96796a61dcb1dc852e25518b00cc1a79fb3caeeb (accessed 2026-08-04 via gh api contents); https://docs.derive.xyz/docs/how-do-i-know-my-funds-are-safe.md (accessed 2026-08-04)",
       "note": "L15 (Up -> Tg | bounded emergency process) is left open: no timelock is documented. X9 ('Up with immediate single-key control') is not asserted armed, because the controller is a multisig — but no delay is evidenced either, so the corpus's blanket armedProhibitions: [] is unsupported rather than confirmed. `Gp` is dropped from the corpus element set: stage 1 found no citation for a pause or guardian mechanism, and invariant 5 is cite-or-drop."
     },
     {
       "id": "F20",
       "text": "DRV is staked 1:1 for stDRV, which receives roughly 250,000 stDRV per week of protocol-funded rewards and unlocks after 28 days or immediately at a 20% penalty.",
-      "elements": ["Em"],
+      "elements": [
+        "Em"
+      ],
       "evidence": "https://docs.derive.xyz/docs/staking-rewards-program.md (accessed 2026-08-04)",
       "note": "`Em` covers the emission. RESIDUE inside the obligation: nothing names a fixed unbonding cooldown with a priced early-exit penalty — `Wq` names a queue that clears against liquidity, which this is not. `Sh` is dropped from the corpus element set: stDRV is 1:1 rather than pro-rata on a growing pool, and no obligation here is discharged by pro-rata share accounting."
     },
@@ -158,5 +200,12 @@
       "evidence": "https://docs.derive.xyz/docs/how-are-strikes-and-expiries-selected.md (accessed 2026-08-04)",
       "note": "RESIDUE. Nothing names a listing process, let alone a state-dependent one: the set of tradeable instruments is a function of the market's own state, so the instrument universe moves as the market moves."
     }
-  ]
+  ],
+  "paper": {
+    "title": "Derive",
+    "label": "cat:opt:derive",
+    "blurb": "The only member of the category the corpus decomposition admitted. Options are quoted on a book, margined against a portfolio rather than position by position, and settled in cash against an index. The construction departs from the corpus in one place that matters: the venue's security module is an owner-funded treasury with no stake and no slashing, so the staked-backstop element is not supported and socialised loss carries the obligation instead.",
+    "witnessReason": "Among the alternatives the loss-absorption term leaves open, the witness takes the one the code supports rather than the one the corpus recorded. That is the whole content of the departure: an element is carried when a mechanism answers to it, and a treasury that cannot be slashed does not answer to a bond.",
+    "residueNote": "What the venue prices --- a volatility surface, and the model that turns it into a quote --- has no element at all, and it is the thing the venue competes on."
+  }
 }

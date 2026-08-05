@@ -1870,6 +1870,174 @@ whole missing mechanisms, of which a pricing model and a volatility surface are
 the largest.
 \end{remark}
 
+\subsection{Aevo}\label{sub:cat:opt:aevo}
+
+An order-book venue in the same lineage as Derive and, the corpus recorded, identical to it. They are not identical: they differ in index construction, in loss-absorption topology, and in whether auto-deleveraging exists at all. This venue has it and its counterpart does not.
+
+\begin{measurement}[Construction]\label{meas:cat:opt:aevo}
+The construction $X = \{Ad,Ct,Ex,Fd,Li,Ob,Op,Pf,Rf,Xf,Xm\}$ has canonical form
+$\mathrm{ex}(X) = \{Ad,Fd,Ob,Op,Pf,Rf,Xf,Xm\}$, deriving \{Ct,Ex,Li\} rather than choosing them.
+It is admissible: no requirement term is open, every element is warranted, and it arms no prohibition. It discharges 10 of the 21 recorded obligations; 11 are residue. No composite of at most three corpus protocols equals it; no corpus protocol is contained in it.
+It is not minimal: \{Pf,Xf,Xm\} can be removed with every obligation still covered and admissibility intact.
+\end{measurement}
+
+\begin{remark}[What the construction cannot say]
+11 obligations of Aevo (Ribbon Finance lineage) have no element:
+\begin{itemize}
+  \item Exercise is never elected: the option is European and pays automatically at the 08:00 UTC expiry.
+  \item The payoff is paid in USDC as a cash difference against the Aevo index; no underlying is delivered.
+  \item The premium is paid in full at execution.
+  \item Both sides of every option are user accounts; the peer-to-pool layer that gave the protocol its name — the Ribbon DeFi Options Vaults, which sold weekly options into an auction — was exploited on 2025-12-12 for roughly \$2.7M (about 32\% of the affected vault) following an oracle upgrade, and has been halted and is being decommissioned with a compensation mechanism, leaving the exchange unaffected.
+  \item Collateral may be posted in several accepted assets under a cross-margin collateral framework, including aeUSD with its own deposit, redemption and composition regime, plus a spot-convert feature.
+  \item Under Portfolio Margin the requirement is Scenario Margin plus Floor Margin: fifteen scenarios formed from three spot-movement levels crossed with five IV-shift positions, at maximum spot movement +/-20\% and IV shift +50\% / -25\% in the initial ETH phase, with initial margin 1.25 times maintenance.
+  \item Floor Margin = Net Short Exposure(Option) x Unit Floor Margin, at 0.01 ETH per unit in the initial ETH phase, added to the scenario result.
+  \item If the book cannot absorb the seized position, the insurance fund takes it at a markup, and a liquidation fee is charged on insurance-fund fills as well.
+  \item The three loss-absorption venues escalate in a fixed order — book workout, then insurance fund, then auto-deleveraging — and each transfers the position on a different price basis: limit orders, then a markup, then mark price.
+  \item The settlement-price observation window at expiry is not documented anywhere in the exchange's documentation.
+  \item Mark prices and per-instrument greeks including implied volatility are computed by the exchange and published through /markets; no pricing model, surface parameterisation or margin-model source is published.
+\end{itemize}
+The residue that remains is the category's own: one symbol carries the whole of options, and the six axes it collapses --- exercise style, settlement in cash or in kind, who underwrites, whether premium is upfront or streamed, how margin is computed, and whether the price comes from a model or a book --- are each unnameable.
+\end{remark}
+
+\begin{remark}[Why this witness]
+This is one of the two rejections in the category that turn out to be decomposition artefacts. The corpus left the loss-absorption term open and the venue was rejected for it; the witness restores the collateral test, which is an order-gating engine rather than a derived consequence, and the auto-deleveraging mechanism, which has its own documentation page and which the corpus omitted. The term closes and the rejection disappears. Nothing about the protocol changed.
+\end{remark}
+
+The five venues of the category are treated below. Two of the four rejections
+recorded above turn out to be artefacts of the corpus decomposition and vanish
+once the record is corrected; two survive, and they are exactly the venues that
+escrow the maximum payoff at trade time, whose obligations are therefore closed
+by construction rather than left unspecified. Each subsection exhibits one
+construction with the reason for that witness among the alternatives the
+disjunctive terms leave open (Corollary~\ref{cor:notthe}). Every figure in the
+measurement environments is emitted from the checker output.
+
+\subsection{Derive}\label{sub:cat:opt:derive}
+
+The only member of the category the corpus decomposition admitted. Options are quoted on a book, margined against a portfolio rather than position by position, and settled in cash against an index. The construction departs from the corpus in one place that matters: the venue's security module is an owner-funded treasury with no stake and no slashing, so the staked-backstop element is not supported and socialised loss carries the obligation instead.
+
+\begin{measurement}[Construction]\label{meas:cat:opt:derive}
+The construction $X = \{Ct,Em,Ex,Fd,Ix,Li,Ob,Op,Pf,Rf,Sl,Up,Xf,Xm\}$ has canonical form
+$\mathrm{ex}(X) = \{Em,Fd,Ix,Ob,Op,Pf,Rf,Sl,Up,Xf,Xm\}$, deriving \{Ct,Ex,Li\} rather than choosing them.
+It is admissible: no requirement term is open, every element is warranted, and it arms no prohibition. It discharges 12 of the 22 recorded obligations; 10 are residue. No composite of at most three corpus protocols equals it; no corpus protocol is contained in it.
+It is not minimal: \{Fd,Ix,Pf,Xf,Xm\} can be removed with every obligation still covered and admissibility intact.
+\end{measurement}
+
+\begin{remark}[What the construction cannot say]
+10 obligations of Derive (formerly Lyra V2) have no element:
+\begin{itemize}
+  \item Exercise is never elected: the option is European, cannot be exercised early, and pays at expiry with no action by the holder.
+  \item The payoff is paid in USDC as a cash difference; no underlying is ever delivered.
+  \item The payoff is fixed against a 30-minute, one-minute-sampled TWAP of the index (SETTLEMENT\_TWAP\_PERIOD = 30), and over that final window the option's mark migrates linearly from the forward price into the running average.
+  \item Each feed carries a confidence score between 0 and 1, and low confidence raises the account's initial margin through an Oracle Contingency term.
+  \item Implied volatility is supplied as a five-parameter SVI curve per expiry, with log-moneyness bounded at four standard deviations, total implied volatility capped at 24.0 and total variance at 144.0, produced by Block Scholes and posted on-chain.
+  \item Order entry, matching and ordering are performed by a centralized operator; only settlement, collateral and liquidation are on-chain, and a user may exit unilaterally through a block-explorer escape hatch if the matching engine or interface fails.
+  \item The premium is paid in full at execution, as a single transfer, and never streams.
+  \item Under Portfolio Margin 2 an account's maintenance margin is portfolio mark-to-market plus a maxLoss taken as the minimum over four scenario families — 23 joint spot/volatility shocks over spot -18\%..+18\% in 4.5\% steps, a damped tail family at roughly +/-20-25\%, two skew scenarios and a forward-basis family at +/-4.5\% — plus collateral-haircut, perp, option and oracle contingencies; and a PM account may hold derivatives on only one base asset, under per-asset open-interest caps.
+  \item If the auction leaves the account short, the Security Module pays the deficit from an owner-funded subaccount that a whitelisted set of modules may draw on.
+  \item Instruments are listed on a rolling calendar — 2 daily, 3 weekly and 3 monthly expiries, auto-replaced on expiry — with strike increments that are a function of the option's delta and time to expiry (ETH 40-60 delta: \$25 at under a day rising to \$200 beyond 35 days).
+\end{itemize}
+What the venue prices --- a volatility surface, and the model that turns it into a quote --- has no element at all, and it is the thing the venue competes on.
+\end{remark}
+
+\begin{remark}[Why this witness]
+Among the alternatives the loss-absorption term leaves open, the witness takes the one the code supports rather than the one the corpus recorded. That is the whole content of the departure: an element is carried when a mechanism answers to it, and a treasury that cannot be slashed does not answer to a bond.
+\end{remark}
+
+\subsection{Hegic}\label{sub:cat:opt:hegic}
+
+A peer-to-pool venue: buyers take the other side of a single pool, and the pool underwrites every position. Like Rysk it closes its solvency obligation at write time, by an inequality on the pool's balance sheet rather than by a test on an individual position.
+
+\begin{measurement}[Construction]\label{meas:cat:opt:hegic}
+The construction $X = \{Bs,Ep,Ex,Fd,Gp,Op,Sh\}$ has canonical form
+$\mathrm{ex}(X) = \{Bs,Ep,Ex,Fd,Gp,Op,Sh\}$, so every element is primitive in it.
+It is not admissible: it leaves the requirement term $L1:Ct$ open. It discharges 7 of the 15 recorded obligations; 8 are residue. No composite of at most three corpus protocols equals it; no corpus protocol is contained in it.
+\end{measurement}
+
+\begin{remark}[What the construction cannot say]
+8 obligations of Hegic have no element:
+\begin{itemize}
+  \item The Hegic Operational Treasury is the writer of every position; there is no counterparty user anywhere in the system.
+  \item At purchase the treasury locks negativePNL — the maximum possible payoff of that position — out of its USDC and adds the premium to lockedPremium; the reservation is released by unlock at expiry.
+  \item Every write is admitted only if totalLocked + lockedPremium <= totalBalance() + coverPool.availableForPayment(), checked on the write itself, and refused otherwise.
+  \item DISCHARGED BY CONSTRUCTION: there is no margin engine, no health factor, no liquidator and no liquidation path for any position on either side.
+  \item The buyer realises the payoff by calling payOff before expiry, which pays the strategy's net P\&L in USDC; exercise is permitted only inside exerciseWindowDuration before expiry, and an in-the-money position not claimed in that window pays nothing, its reservation returning to the treasury.
+  \item The premium is computed on-chain at purchase by that instrument's own PriceCalculator: either a single admin-set impliedVolRate scalar, or five admin-set int256 polynomial coefficients over the holding period; strikes are scaled to spot at purchase by a priceCorrectionRate.
+  \item Composed payoffs — straddles, strangles, straps, strips, spreads, inverse butterflies and inverse condors — are each their own deployed contract with its own pricer and its own limit, rather than compositions a user assembles from legs.
+  \item DEFAULT\_ADMIN\_ROLE can withdraw an arbitrary amount from the Operational Treasury to an arbitrary address, set the implied-volatility scalar and the polynomial coefficients, set period limits and the benchmark, set the next epoch's conversion price, set the payoff pool and close epochs — with no timelock in the code read, and against plain non-proxy contracts.
+\end{itemize}
+A balance-sheet inequality checked when a contract is written and a threshold test evaluated while it is open are different mechanisms with the same purpose. The vocabulary has a name for the second and none for the first, so a venue that cannot become insolvent in the relevant sense is recorded as one that has not said how it avoids it.
+\end{remark}
+
+\begin{remark}[Why this witness]
+The narrower of the two by-construction cases, and the difference is instructive. This venue does carry a first-loss layer --- staked capital that absorbs losses ahead of the pool --- so the loss-absorption term closes and only the collateral-test term stays open. One rejection where the corpus recorded two, and the remaining one is again an obligation that cannot arise.
+\end{remark}
+
+\subsection{Panoptic}\label{sub:cat:opt:panoptic}
+
+A venue that manufactures option-like payoffs out of concentrated liquidity positions rather than writing contracts, so its collateral, its pricing and its liquidation all run through an automated market maker. It is described as oracle-free, which is true of external feeds and false of prices.
+
+\begin{measurement}[Construction]\label{meas:cat:opt:panoptic}
+The construction $X = \{Cl,Ct,Fd,Gp,Ix,Li,Op,Pl,Sh,Sl,Sr,Tp\}$ has canonical form
+$\mathrm{ex}(X) = \{Cl,Fd,Gp,Ix,Li,Op,Pl,Sh,Sl,Sr,Tp\}$, deriving \{Ct\} rather than choosing it.
+It is admissible: no requirement term is open, every element is warranted, and it arms no prohibition. It discharges 13 of the 23 recorded obligations; 10 are residue. No composite of at most three corpus protocols equals it; no corpus protocol is contained in it.
+It is not minimal: \{Sh\} can be removed with every obligation still covered and admissibility intact.
+\end{measurement}
+
+\begin{remark}[What the construction cannot say]
+10 obligations of Panoptic V2 have no element:
+\begin{itemize}
+  \item A position has no strike and no expiry: it is a tick range, up to four legs, encoded in one ERC-1155 tokenId, and it never expires and is never exercised at a price.
+  \item The payoff is realised continuously as the underlying range position's composition changes with price; closing a position burns it and returns tokens, and there is no terminal fixing to determine.
+  \item The rate of streamia is the Uniswap swap fee the removed liquidity would have generated, multiplied by a spread multiplier that grows with how much of that specific chunk has been removed (VEGOID = 8, nu = 1/VEGOID).
+  \item The counterparty to a buyer is whoever's liquidity chunk was removed, the funding for both sides comes from a shared pool, and the payoff shape is the AMM's own.
+  \item Collateral requirements scale with pool utilisation up to SATURATED\_POOL\_UTIL = 9,000,000, and leverage of up to 10x buying and 5x selling holds only under normal conditions and changes in response to pool utilisation.
+  \item A shortfall remaining after liquidation costs and bonus is absorbed first by a haircut on the account's unsettled premia.
+  \item A seller may force-exercise a buyer's out-of-range long position to reclaim the liquidity, paying the exercised user a fee that decays exponentially with distance from strike (FORCE\_EXERCISE\_COST = 30,000 scaled units, floored at ONE\_BPS = 1000).
+  \item PanopticFactoryV3 and PanopticFactoryV4 will open an options market on any Uniswap V3 or V4 pool permissionlessly, on any ERC20 pair.
+  \item Every user action funnels through dispatch() / dispatchFrom(), which will revert when the current tick is further than MAX\_TWAP\_DELTA\_DISPATCH from the TWAP tick.
+  \item The protocol lends against, and prices with, the same Uniswap pool its instruments are written on, and mitigates the resulting manipulation channel with a median ring buffer, a four-EMA ensemble, a clamp on median movement, the dispatch TWAP-delta bound and safe mode.
+\end{itemize}
+That an option can be assembled from a liquidity range, rather than written as a contract, is the venue's whole design and has no expression here. The vocabulary has a symbol for the payoff and a symbol for the range, and no way to say that one is being built out of the other.
+\end{remark}
+
+\begin{remark}[Why this witness]
+The second artefact. The corpus carried no price source for this venue at all, having read oracle-free as price-free, and demoted its collateral test --- a substantial audited risk engine --- to a derived consequence. The witness restores both: an on-chain time-weighted price is a price, and a risk engine is a threshold test. The rejection disappears with them.
+\end{remark}
+
+\subsection{Rysk}\label{sub:cat:opt:rysk}
+
+A venue where the writer escrows the maximum loss at the moment of trade. There is no margin call because there is no margin: the worst case is already held, and settlement can only pay out of it.
+
+\begin{measurement}[Construction]\label{meas:cat:opt:rysk}
+The construction $X = \{At,Ep,Ex,Gp,Op,Rf,Sh,Sv,Up,Wq\}$ has canonical form
+$\mathrm{ex}(X) = \{At,Ep,Ex,Gp,Op,Rf,Sh,Sv,Up,Wq\}$, so every element is primitive in it.
+It is not admissible: it leaves the requirement terms $L1:Ct$, $L1:Li\{\textbackslash\{\}mid\}Ad\{\textbackslash\{\}mid\}Sl\{\textbackslash\{\}mid\}Bs$ open. It discharges 8 of the 20 recorded obligations; 12 are residue. No composite of at most three corpus protocols equals it; 1 corpus protocols are contained in it, and together they supply every element except \{At,Ct,Ep,Rf,Sv,Wq\}.
+\end{measurement}
+
+\begin{remark}[What the construction cannot say]
+12 obligations of Rysk V12 have no element:
+\begin{itemize}
+  \item Quotes are aggregated over a fixed two-second window with live competitiveness feedback to makers, and exactly one winning quote is surfaced and filled.
+  \item Options are European, expire at 08:00 UTC, cannot be exercised early, and cannot be closed, bought back or offset before expiry.
+  \item Settlement exchanges the collateral itself at the strike: a cash-secured put delivers stablecoins for the underlying at the lower strike; the covered-call side is documented both as cash-settled and as physically settled.
+  \item The counterparty is a market maker taking the other side bilaterally; Rysk Premium adds a curated pool that takes the maker side over the same rail.
+  \item The premium is paid in full at execution, in USD, deducted from the maker's pre-deposited balance in the accounting contract and credited to the seller against oTokens.
+  \item The seller posts the entire maximum payoff at trade time — the underlying for a covered call, stablecoins equal to strike x size for a cash-secured put — into a MarginPool where it is locked for the life of the trade, never rehypothecated and never shared with any other position.
+  \item DISCHARGED BY CONSTRUCTION: no maintenance-margin or health test exists or can exist, because no position can ever become under-secured.
+  \item DISCHARGED BY CONSTRUCTION: there is no liquidation path, no liquidator, no auction and no health-driven forced close anywhere in the protocol.
+  \item DISCHARGED BY CONSTRUCTION: there is no insurance fund, no backstop, no socialised loss and no auto-deleveraging, because the protocol has no loss channel for them to absorb.
+  \item A maker's quote is only executable if the maker's USDT0 balance already deposited in the accounting contract covers the premium.
+  \item A named curator selects which instruments the pool writes and receives a share of the option-sale fee, and governance sets the epoch prices and may withdraw fees independently.
+  \item DISCHARGED BY CONSTRUCTION: the protocol runs no hedging loop, no rebalancing and no directional book of its own — every position is fully collateralised at inception and left untouched until expiry.
+\end{itemize}
+This is the sharpest case in the paper of a requirement discharged \emph{by construction}. The requirement language admits one way to satisfy a term --- name an element that discharges it --- so it reads an obligation that cannot arise as an obligation left unspecified. The rejection is correct about the tables and wrong about the protocol, and the repair is to the constraint language rather than to the vocabulary.
+\end{remark}
+
+\begin{remark}[Why this witness]
+The witness deliberately carries no collateral test and no backstop, and the construction is rejected for exactly that. This is not a defect in the witness. Escrowing the maximum payoff makes the obligations those elements would discharge unable to arise, and the honest decomposition records that as residue rather than fitting a symbol to a mechanism the venue does not have.
+\end{remark}
+
 \section{Reserve-backed stablecoins}\label{sec:cat:fiat}
 
 Five issuers: Tether USDT, Circle USDC, USD1, USDG and PYUSD. The category
