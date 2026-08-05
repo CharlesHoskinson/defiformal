@@ -130,15 +130,22 @@ claim entered the paper. Commit if clean; if not, fix before advancing.
 
 Every ingested lane carries its own graphify graph at
 `expansion/<slug>/graphify-out/`, and the twelve merge into one cross-lane
-graph. Built by `bash /root/kg.sh <slug>`, which runs two passes:
+graph. Built by `bash /root/kg.sh <slug>`, which runs two passes and **keeps
+whichever produced more nodes**:
 
 1. **AST pass** — `graphify update .`, deterministic, no LLM, always succeeds.
-   This is what LOOP-3 gates on.
+   Snapshotted before the second pass runs.
 2. **Semantic pass** — `graphify extract . --backend ollama --model gemma4:26b`,
-   which runs locally on the 5090 and adds cross-document edges. It may fail
-   without losing the graph.
+   local on the 5090.
 
-Neither pass costs API credit. Three facts the tooling does not advertise:
+Neither pass costs API credit. **Measured on this corpus 2026-08-04:** the AST
+pass returns roughly one node per structural element (37 on a 485-line file),
+while the local 26B semantic pass returns 11–25 *regardless of document size*
+and **replaces** the graph rather than adding to it — so running it second
+silently destroyed the better graph on three lanes before the guard was added.
+Both counts are reported per lane; "the semantic pass lost" is a fact worth
+recording, not hiding. If graphs stay thin, the next lever is a stronger local
+model (`qwen3.6:27b`) or accepting AST-only, not more passes. Three facts the tooling does not advertise:
 `graphify` runs from `/opt/conda/envs/graphify`, so the ollama backend needs
 `openai` installed **in that env** (`/opt/conda/envs/graphify/bin/pip install
 openai`) — installed 2026-08-04; `graph.json` calls its edges `links`, not

@@ -486,7 +486,414 @@ Bytecode verification against the repo: **UNKNOWN**, not performed.
 
 ## Curve
 
-<!-- CURVE-SECTION-PLACEHOLDER -->
+### 1. WHAT IT DOES
+
+A user deposits one or more of a pool's coins — not necessarily balanced — and receives a
+fungible LP token representing a pro-rata claim on the pool's whole reserve; they exit by
+burning it, either balanced across all coins or imbalanced into one, paying a fee in the
+imbalanced case so that "a swap between USDC and USDT would pay roughly the same amount of
+fees as depositing USDC into the pool and then withdrawing USDT". Pricing depends on which
+of two invariants the pool implements. **Stableswap** targets a *fixed* peg (1 USDC = 1
+USDT), concentrating liquidity around it, with the amplification coefficient `A` setting how
+imbalanced the pool may get before the price departs from parity. **Cryptoswap** ("Curve v2";
+the docs deprecate that name) applies the same machinery but concentrates around a *moving*
+internal price called `price_scale`, which the pool re-centres itself — passively, with no
+external oracle and no action from the LP. Settlement is atomic. Beyond the pool there is a
+second, larger machine: CRV emissions are minted weekly, and where they go is decided by
+veCRV holders voting a weight vector over gauges, while an LP's own emission rate is
+multiplied up to 2.5× by their veCRV balance. Half of every trading fee is an admin fee,
+collected, converted through CowSwap into a single token, and distributed to veCRV lockers.
+A position ends when the LP withdraws; there is no liquidation in the DEX, because there is
+no debt. (Curve's crvUSD and Llamalend do have debt and liquidation — via LLAMMA — but those
+are separate products and belong to other categories.)
+
+### 2. DESIGN
+
+**Stableswap — the invariant, from the whitepaper.** Egorov, *"StableSwap — efficient
+mechanism for Stablecoin liquidity"*, 2019-11-10. The construction is explicit: take the
+constant-sum and constant-product invariants generalised to `n` coins, `Σxᵢ = D` and
+`Πxᵢ = (D/n)ⁿ`, where "the constant D has a meaning of total amount of coins when they have
+an equal price"; scale the constant-sum leg by a leverage `χ` and add:
+
+```
+χ·D^(n−1)·Σxᵢ + Πxᵢ  =  χ·Dⁿ + (D/n)ⁿ
+```
+
+which is constant-product at `χ = 0` and constant-sum at `χ = ∞`. Then make `χ` *dynamic* so
+that the curve degrades toward constant product as the pool goes out of balance:
+
+```
+χ = A·Πxᵢ / (D/n)ⁿ
+```
+
+Substituting gives the StableSwap invariant as published:
+
+```
+A·nⁿ·Σxᵢ + D  =  A·D·nⁿ + D^(n+1) / (nⁿ·Πxᵢ)
+```
+
+`D` and `xⱼ` are recovered by iterative convergence inside the contract, in integer
+arithmetic. The paper's own simulation over DAI/USDC/USDT price feeds, May–Oct 2019, at
+$30,000 liquidity, reports "Optimal 'amplification coefficient' ('leverage'): A = 85;
+Optimal fee: 0.06% per trade".
+
+In the docs: "Curve achieves extremely efficient stablecoin trades by implementing the
+Stableswap invariant, which has significantly lower slippage for stablecoin trades than many
+other prominent invariants (e.g., constant-product)." The controlling parameter is `A`, "the
+amplification coefficient … determines a pool's tolerance for imbalance between the assets
+within it. A higher value means that trades will incur slippage sooner as the assets within
+the pool become imbalanced." Guidance in the docs: high `A` (1,000–20,000) concentrates
+tightly around the peg with sharp drop-off if the peg breaks; low `A` (50–200) spreads more
+evenly. `A` is stored scaled by `A_PRECISION = 100`, and is changed by `ramp_A` with a
+minimum ramp time of 86,400 s — i.e. parameter changes are rate-limited, not instantaneous.
+Pool flavours: plain pools, metapools (a coin paired against another pool's LP token, e.g.
+`GUSD/3CRV`, tradeable through to the base coins but not depositable in them, because of the
+contract size limit), and legacy lending pools. Pools expose `kill_me` / `is_killed`. Fee is
+taken in the *output* token for stableswap.
+
+**Cryptoswap — the invariant and the repeg condition, from the whitepaper.** Egorov,
+*"Automatic market-making with dynamic peg"*, Curve Finance (Swiss Stake GmbH), 2021-06-09.
+The paper states the thesis in one sentence: "We concentrate liquidity given by the current
+'internal oracle' price but only move that price when the loss is smaller than part of the
+profit which the system makes." Mechanically: balances are transformed by a price vector
+`p` (called `price_scale` in the code), `b = T(b′,p) = (b′₀p₀, b′₁p₁, …)`, so the invariant is
+always evaluated near equilibrium. The **CurveCrypto invariant** is stableswap's shape with a
+different leverage term:
+
+```
+K·D^(N−1)·Σxᵢ + Πxᵢ  =  K·D^N + (D/N)^N
+K₀ = Πxᵢ·N^N / D^N
+K  = A·K₀·γ² / (γ + 1 − K₀)²
+```
+
+"where A is amplification coefficient and γ > 0 (but usually a small number) has a meaning of
+distance between two dashed curve in Fig. 1. The invariant works approximately as a
+superposition of constant-product and stableswap invariants." Solved as `F(x,D)=0` by Newton's
+method, first for `D` then for `xⱼ`, "about 35k gas" per solve, with the paper giving the
+required initial values and the fuzz-determined convergence limits
+(`0.1 ≤ D ≤ 10¹⁵ [USD]`, `5·10⁻³ < xᵢ/D < 200`, `10⁻⁸ ≤ γ ≤ 10⁻²`).
+
+The profit gate is defined against an explicit measure. The paper defines
+
+```
+X_cp = ( Π D/(N·pᵢ) )^(1/N)
+```
+
+as "a robust measure of profit … the value of constant-product invariant at equilibrium
+point", and then: **"We allow the reduction in X_cp but only such that the loss of value of
+X_cp doesn't exceed half the profit we've made (which we track by tracking the increase of
+X_cp)."** That sentence is the whole mechanism: a state transition (moving the peg) gated on
+a running ledger of the protocol's own realised profit. `X_cp` is `xcp_profit` in the code.
+
+Two shape parameters, per the docs: "`A`: controls liquidity concentration in the center of
+the bonding curve" and "`gamma`: controls whether liquidity drops off gradually or sharply
+away from the center". Liquidity is centred on `price_scale`. The re-centring — the mechanism
+the corpus correctly flags as unnamed — is stated by Curve as a two-condition gate:
+
+> "Cryptoswap only rebalances when two conditions are met: 1. The internal price must move
+> beyond a minimum threshold, known as the **adjustment step**. 2. The cost of rebalancing
+> must be less than 50% of the trading fees earned by LPs. **This core safeguard ensures that
+> impermanent loss is only realized when it is sufficiently offset by trading profits.**"
+
+and, on the trigger: "rebalances are triggered not by the last price of the pool, but by an
+**Exponential Moving Average** (EMA) of all recent prices. This internal price oracle helps
+prevent manipulation of rebalances." The implementation names are `tweak_price`,
+`price_scale`, `xcp_profit` / `xcp_profit_a`, and the deploy-time parameters are
+`A, gamma, mid_fee, out_fee, fee_gamma, allowed_extra_profit, adjustment_step, ma_exp_time,
+initial_prices` with bounds asserted in the factory (`0 < adjustment_step < 1e18 + 1`,
+`allowed_extra_profit < 1e18 + 1`, `fee_max = 10 * 10^9`, `86 < ma_exp_time < 872542`).
+Fee for cryptoswap pools is taken **in the LP token of the pool**, not in a coin.
+
+The mechanism has a documented pathology that a construction must reproduce: **stale pools.**
+"A Cryptoswap pool's main safety feature is its refusal to rebalance at a loss to LPs.
+However, this can sometimes cause a pool to become **stuck** … As the market price moves away
+from the pool's last rebalance price, the available liquidity for traders decreases. This
+leads to fewer swaps and, consequently, lower fee generation. Without enough profit from
+fees, the pool cannot afford to rebalance and follow the price, leaving its liquidity
+stranded." The docs list the remedies, one of which is "**Wash Trade the Pool** … generating
+high trading volume (often via flash loans) to create enough fee profit for the pool to
+rebalance … performed at a loss with no guarantee of a lasting fix". That is a protocol whose
+recovery procedure is an intentional loss-making trade by a third party.
+
+**Dynamic fees.** "Cryptoswap and all new Stableswap pools feature **dynamic fees** that
+adjust to increase returns for LPs when their liquidity is in high demand", governed by
+`mid_fee`, `out_fee` and `fee_gamma`. Note this applies to Stableswap-NG too, so "Curve
+charges a flat fee" is wrong for the current generation.
+
+**Factories and registry.** Pools are deployed through per-generation factories —
+`CurveStableSwapFactoryNG.vy`, `TwocryptoFactory.vy`, `CurveTricryptoFactory.vy` /
+`CurveL2TricryptoFactory.vy` — each with `deploy_pool` / `deploy_metapool` taking the full
+parameter vector, and each with a set of registered *implementations* that only the DAO can
+add (`set_pool_implementation`). "Pools created through the Factory are 'owned' by the factory
+`admin` (DAO)." Discovery across generations is unified by `MetaRegistry` (a separate repo)
+behind an `AddressProvider`.
+
+**veCRV, gauges, boost.** `VotingEscrow.vy` at
+`0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2`, written in Vyper 0.2.4:
+`MAXTIME = 4 * 365 * 86400` (four years), minimum one week, all unlock times rounded down to
+whole weeks. "veCRV is a non-standard ERC-20 implementation"; locking "is **not reversible**
+and veCRV tokens are **non-transferable**"; a user "cannot have multiple locks with different
+expiry dates". Voting power decays linearly and is stored as a (bias, slope) piecewise-linear
+function with scheduled `slope_changes`, so no user check-in is needed. 1 CRV locked 4 years
+= 1 veCRV; n years = n/4.
+
+The boost is a *separate* mechanism on the same lock, implemented in `LiquidityGaugeV6` by
+`_update_liquidity_limit`:
+
+```vyper
+lim: uint256 = l * TOKENLESS_PRODUCTION / 100          # TOKENLESS_PRODUCTION = 40
+if voting_total > 0:
+    lim += L * voting_balance / voting_total * (100 - TOKENLESS_PRODUCTION) / 100
+lim = min(l, lim)
+self.working_balances[addr] = lim
+```
+
+"Provided liquidity is boosted by the veCRV balance of the user, allowing for boosts up to
+2.5 times… If a user has no boost at all, their `working_balance` will be 40% of their LP
+tokens. If the position is fully boosted (2.5x), their `working_balance` will be equal to
+their LP tokens." So the "2.5×" is a ratio between the unboosted floor (0.4) and the cap
+(1.0) — the emission rate is `working_balance / working_supply`, and *one LP's boost dilutes
+every other LP*, because `working_supply` is shared. `GaugeController` holds the weight vote;
+`Minter` mints CRV against gauge-reported integrals.
+
+**Fees to lockers.** "50% of the fee is distributed to veCRV holders" (the factory's own
+docstring on the `_fee` parameter, max 1% = 1e8 at 1e10 precision). Since June 2024 the
+route is: `FeeCollector` (entry point, accepts any token) → `CowSwapBurner` (converts via
+**CoW Protocol conditional orders** into the target token; deployed on Ethereum
+`0xC0fC3dDfec95ca45A0D2393F518D3EA1ccF44f8b` and Gnosis
+`0x566b9F24200A9B51b76792D4e81B569AF27eda83`) → `Hooker` → `FeeAllocator` (splits by
+basis-point weights, "with a maximum total weight of 5,000 bps (50%). The remaining portion
+(at least 50%) always flows to the `FeeDistributor`") → `FeeDistributor` → veCRV claimants.
+`FeeSplitter` handles crvUSD-market fees separately. On chains without CoW, the *original*
+architecture still runs: burn to MIM, bridge to mainnet, burn MIM to 3CRV.
+
+**Control plane.** Aragon, with **two DAOs** and distinct thresholds:
+`OWNERSHIP` — agent `0x40907540d8a6C65c637785e8f8B742ae6b0b9968`, voting
+`0xE478de485ad2fe566d49342Cbd03E49ed7DB3356`, quorum 30%, support 51%; `PARAMETER` — agent
+`0x4eeb3ba4f221ca16ed4a0cc7254e2e32df948c5f`, voting `0xbcff8b0b9419b9a88c44546519b1e909cf330399`,
+quorum 15%, support 60%. Both use veCRV (`0x5f3b…`) as the voting token. Votes are Aragon EVM
+scripts. Separately an **EmergencyDAO**, "a **5-of-9 multisig**", deployed at
+`0x467947EE34aF926cF1DCac093870f613C96B1E0c` on Ethereum and `0x6d447e544D01a59cb0774763bf15526574CffFeD`
+on every other chain; its scope was widened by proposal 1252 and is deliberately bounded —
+"cannot move or withdraw any user funds", limited to pausing the Peg Stability Reserve,
+*reducing but never increasing* debt ceilings, adjusting Llamalend AMM fees and monetary
+policy "without triggering liquidation for any users", and setting lending-vault deposit
+limits. Its nine members are named publicly in the docs. There is also cross-chain governance
+(`x-gov`: agents, broadcaster, relayer, vault) and a veCRV oracle for L2s.
+
+**The external vote market is visible inside Curve's own tooling.** Curve's `voting` library
+creates DAO votes through "the Convex voter proxy
+(`0x989AEB4D175E16225E39E87D0D97A3360524AD80`)" — i.e. the reference path for creating a
+governance vote runs through a third-party protocol's veCRV position. This is direct
+corroboration of the corpus's residue item about rented mechanisms.
+
+**Price sources.** Cryptoswap's `price_oracle` is the internal EMA (`ma_exp_time` /
+`ma_half_time`), used by the pool itself for rebalancing and exported for third parties.
+Stableswap-NG exposes an EMA oracle with `_ma_exp_time` set as `time_in_seconds / ln(2)`.
+No external oracle is consulted by the DEX.
+
+**Failure path.** No liquidation. Pools have `kill_me`/`is_killed`, gauges can be killed by
+the DAO (removing emissions without touching deposits), and the distinctive failure is the
+stale-pool trap above.
+
+### 3. REPO
+
+**Load-bearing finding: Curve's current-generation pool code is source-available but NOT open
+source.** `stableswap-ng`, `twocrypto-ng`, `tricrypto-ng`, `curve-core` and the legacy
+`curve-contract` all ship a `LICENSE` reading:
+
+> "(c) Swiss Stake AG, 2020-2026 … (a) all intellectual property (including all source code,
+> designs and protocols) contained in this repository has been published for informational
+> purposes only; (b) no license, right of reproduction or distribution or other right with
+> respect thereto is granted or implied; and (c) all moral, intellectual property and other
+> rights are hereby reserved by the copyright holder."
+
+GitHub reports these as `NOASSERTION`. Only the DAO layer and tooling are MIT:
+`curve-dao-contracts` (MIT, "Copyright (c) 2020 Curve Finance"), `metaregistry` (MIT),
+`curve-js` (MIT).
+
+| Repo | Ref inspected | Licence | Lang |
+|---|---|---|---|
+| curvefi/stableswap-ng | `main` HEAD `2abe778f40206a6c0fd108a0a53ad3266cbedeee` (2026-04-25); tags are **chain names** (`zksync`, `xlayer`, `mantle`, `fraxtal`, `fraxtal_deployment`), not versions | all-rights-reserved, Swiss Stake AG 2020-2026 | Vyper |
+| curvefi/twocrypto-ng | `main` HEAD `5cbe558902402e8fcb331463089db65fc56c11f9` (2026-03-13); tags `zksync`, `yb-init`, `xlayer`, `mantle`, `lite-0.3.10` | all-rights-reserved, 2023-2026 | Vyper |
+| curvefi/tricrypto-ng | `main` HEAD `ecaa8161c240f21dd7c3712eefc5637e1dac742b` (2026-03-20); tags `zksync`, `xlayer`, `mantle`, `fraxtal` | all-rights-reserved, 2024-2026 | Vyper |
+| curvefi/curve-core | `main` HEAD `6222dda9959091db94d61f6d6378234a624cdd66` (2026-07-17); **no tags** | all-rights-reserved, 2025-2026 (`LICENSE.md`) | Vyper |
+| curvefi/curve-dao-contracts | `master` HEAD `fa127b1cb7bf83e4f3d605f7244b7b4ed5ebe053` (2025-05-26); tags v1.0.0–**v1.3.0** | **MIT** | Python/Vyper |
+| curvefi/curve-contract (v1 legacy) | `master`, last push 2025-05-29 | all-rights-reserved, "(c) Curve.Fi, 2020" | Python/Vyper |
+| curvefi/curve-crypto-contract | `master`, pushed 2026-07-26 | **no LICENSE file at all** | Python/Vyper |
+| curvefi/metaregistry | `main` | MIT | Vyper |
+
+Directory layout, `stableswap-ng`: `contracts/{ProxyAdmin.vy, main/, mocks/} deployments/
+scripts/ tests/ ape-config.yaml pyproject.toml LICENSE README.md`. `contracts/main/` =
+`CurveStableSwapNG.vy CurveStableSwapMetaNG.vy CurveStableSwapNGMath.vy
+CurveStableSwapNGViews.vy CurveStableSwapFactoryNG.vy CurveStableSwapFactoryNGHandler.vy
+LiquidityGauge.vy MetaZapNG.vy`.
+`twocrypto-ng/contracts/main/` = `Twocrypto.vy TwocryptoFactory.vy TwocryptoMath.vy
+TwocryptoView.vy LiquidityGauge.vy lp_token.vy constants.vy params.vy packing_utils.vy`.
+`tricrypto-ng/contracts/main/` = `CurveTricryptoOptimized.vy CurveTricryptoOptimizedWETH.vy
+CurveCryptoMathOptimized3.vy CurveCryptoViews3Optimized.vy CurveTricryptoFactory.vy
+CurveL2TricryptoFactory.vy CurveTricryptoFactoryHandler.vy LiquidityGauge.vy`, plus
+`contracts/{old,reference,experimental,zksync}/`.
+
+**Language: Vyper throughout**, which is a real difference from every other protocol in this
+lane. The exact compiler version per contract is stated in the docs per page (e.g.
+`VotingEscrow.vy` at Vyper 0.2.4, `CowSwapBurner.vy` at 0.3.10, `FeeAllocator.vy` at 0.4.1
+using a Snekmate `ownable` module) — so Curve runs **at least four different Vyper major
+lines in production simultaneously**.
+
+**Deployed↔repo correspondence.** Each repo carries a `deployments/` directory and, for the
+crypto pools, a `deployments.yaml`; the docs publish per-contract addresses with Etherscan
+links. Independent bytecode verification was **not** performed by this lane → recorded as
+*stated by the docs*, **UNKNOWN** as a verified fact. The chain-named tags
+(`zksync`/`xlayer`/`mantle`/`fraxtal`) indicate that per-chain deployments are cut from
+*divergent branches*, which is a correspondence hazard a later lane should note: there is no
+single commit that describes all deployments.
+
+### 4. EVIDENCE
+
+All 2026-08-04. Note that Curve's documentation sites were **recently unified** — the old
+`resources.curve.finance` paths now return 404 with the message "Curve docs were recently
+unified—you may have followed an old link", and even `docs.curve.finance/llms.txt` publishes
+some stale URLs. Working URLs below were taken from `docs.curve.finance/sitemap.xml`
+(276 entries), and the page text was read from `docs.curve.finance/llms-full.txt`
+(4,731,851 bytes, downloaded in full) to avoid summariser paraphrase.
+
+1. https://docs.curve.finance/llms-full.txt — the complete docs corpus; source of every quote below unless another URL is given.
+2. https://docs.curve.finance/sitemap.xml — 276 live URLs; used to recover the post-unification paths.
+3. https://docs.curve.finance/developer/amm/cryptoswap-in-depth — "Cryptoswap only rebalances when two conditions are met… the **adjustment step**… less than 50% of the trading fees earned by LPs"; the internal EMA oracle note; `A` and `gamma`; dynamic fees "Cryptoswap and all new Stableswap pools"; the **stale pool** section and the wash-trade remedy.
+4. https://docs.curve.finance/developer/amm/factory/tricrypto-ng/deployer-api — the full `deploy_pool` parameter vector and the asserted bounds (`allowed_extra_profit < 10**18+1`, `0 < adjustment_step < 10**18+1`, `fee_max = 10*10**9`, `86 < ma_exp_time < 872542`); "50% of the fee is distributed to veCRV holders"; `_ma_exp_time` "= time_in_seconds / ln(2)".
+5. https://docs.curve.finance/developer/amm/legacy/stableswap-overview — "Curve achieves extremely efficient stablecoin trades by implementing the Stableswap invariant"; metapool semantics and the bytecode-size reason; the `A_PRECISION = 100` scaling; `ramp_A` minimum 86400 s; `kill_me`.
+6. https://docs.curve.finance/developer/curve-dao/voting-escrow/ — `VotingEscrow.vy`, Vyper 0.2.4, `0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2`; `MAXTIME: constant(uint256) = 4 * 365 * 86400`; "maximum lock duration is four years and the minimum is one week"; non-transferable, non-reversible, one lock per user; the bias/slope/`slope_changes` design.
+7. https://docs.curve.finance/developer/gauges/gauges/liquidity-gauge-v6 — the `_update_liquidity_limit` source with `TOKENLESS_PRODUCTION`; "boosts up to 2.5 times"; "If a user has no boost at all, their `working_balance` will be 40% of their LP tokens."
+8. https://docs.curve.finance/developer/fees/overview — the FeeCollector → CowSwapBurner → Hooker → FeeDistributor flow; **"There are actually two `FeeDistributors` deployed, as rewards were distributed in `3CRV` tokens, before a DAO vote changed the reward token to `crvUSD`."**; the CoW-only chain limitation.
+9. https://docs.curve.finance/developer/fees/fee-allocator — "a maximum total weight of 5,000 bps (50%). The remaining portion (at least 50%) always flows to the `FeeDistributor`"; crvUSD as the fee token.
+10. https://docs.curve.finance/developer/fees/cow-swap-burner — CoW conditional orders; deployed on Ethereum `0xC0fC3dDfec95ca45A0D2393F518D3EA1ccF44f8b` and Gnosis `0x566b9F24200A9B51b76792D4e81B569AF27eda83`.
+11. https://docs.curve.finance/developer/fees/original-architecture/overview and `/sidechains` — the superseded architecture, explicitly banner-flagged "PARTLY OUTDATED… In June 2024, Curve deployed a new system"; the MIM→3CRV sidechain route.
+12. https://docs.curve.finance/developer/curve-dao/governance/overview and `/voting-library` — the two DAO types with quorum 30%/51% and 15%/60%, and their agent/voting/token addresses; Aragon EVM scripts; the Convex voter proxy `0x989AEB4D175E16225E39E87D0D97A3360524AD80` used by Curve's own vote tooling.
+13. https://docs.curve.finance/governance (Emergency DAO section) — "a **5-of-9 multisig**"; proposal 1252; "cannot move or withdraw any user funds"; the four scope bullets; deployments `0x467947EE34aF926cF1DCac093870f613C96B1E0c` and `0x6d447e544D01a59cb0774763bf15526574CffFeD`; the nine named members.
+14. https://docs.curve.finance/developer/amm/factory/stableswap-ng/deployer-api — factory ownership: "Pools created through the Factory are 'owned' by the factory `admin` (DAO)"; `commit_transfer_ownership`/`accept_transfer_ownership`.
+15. GitHub REST API on `curvefi/{stableswap-ng, twocrypto-ng, tricrypto-ng, curve-core, curve-dao-contracts, curve-contract, curve-crypto-contract, metaregistry, curve-js}` — languages, licence fields, default branches, HEAD shas and dates, tag lists, and the `contracts/` trees. **All run by this lane.**
+16. GitHub contents API on each repo's `LICENSE` / `LICENSE.md` — the Swiss Stake AG all-rights-reserved text quoted above; MIT for `curve-dao-contracts` and `metaregistry`; **no LICENSE file** in `curve-crypto-contract`. **All run by this lane.**
+17. https://api.llama.fi/protocols (filtered locally) — Curve DEX $1,277.3M, rank 3.
+18. https://docs.curve.finance/pdf/whitepapers/whitepaper_stableswap.pdf (byte-identical to https://curve.finance/files/stableswap-paper.pdf, 273,774 bytes, 6 pages) — Michael Egorov, "StableSwap - efficient mechanism for Stablecoin liquidity", 2019-11-10. The derivation `χD^(n−1)Σxᵢ + Πxᵢ = χDⁿ + (D/n)ⁿ`, `χ = A·Πxᵢ/(D/n)ⁿ`, and the published invariant `A·nⁿ·Σxᵢ + D = A·D·nⁿ + D^(n+1)/(nⁿ·Πxᵢ)`; "The constant D has a meaning of total amount of coins when they have an equal price"; the simulation result A = 85, fee 0.06%. **Downloaded and text-extracted by this lane.**
+19. https://docs.curve.finance/pdf/whitepapers/whitepaper_cryptoswap.pdf (200,945 bytes, 5 pages) — Michael Egorov, Curve Finance (Swiss Stake GmbH), "Automatic market-making with dynamic peg", 2021-06-09. "We concentrate liquidity given by the current 'internal oracle' price but only move that price when the loss is smaller than part of the profit which the system makes"; the `price_scale` transform `b = T(b′,p)`; `X_cp = (Π D/(N·pᵢ))^(1/N)`; **"We allow the reduction in X_cp but only such that the loss of value of X_cp doesn't exceed half the profit we've made"**; the CurveCrypto invariant with `K₀ = Πxᵢ·N^N/D^N` and `K = A·K₀·γ²/(γ+1−K₀)²`; Newton solve "about 35k gas"; the convergence limits. **Downloaded and text-extracted by this lane.**
+20. https://docs.curve.finance/user/reference/whitepapers — the canonical whitepaper index and publication dates (Stableswap 2019-11-10, Curve DAO 2020, Cryptoswap 2021-06-09, crvUSD 2022-10-09).
+
+**Blocked/failed:** `resources.curve.finance/reward-gauges/boosting-your-crv-rewards/` and
+`/crv-token/claiming-trading-fees/` return 403 to WebFetch and 404 via scrapling (docs
+unification). `curve.fi/files/*` 301-redirects to `curve.finance/files/*`, which then returns
+403 to WebFetch; the PDFs were retrieved with scrapling (which lands on `www.curve.finance`)
+and parsed locally with PyMuPDF. `curve.finance/files/crypto-pools-paper.pdf` is **not** a PDF
+— it returns a 3,655-byte HTML error page; the Cryptoswap whitepaper lives only at the
+`docs.curve.finance/pdf/whitepapers/` path.
+
+### 5. WHAT LOOKS UNNAMEABLE
+
+- **A profit-gated re-centring.** The corpus names this and it is confirmed verbatim: the pool
+  moves its own concentration centre only when (a) an EMA of its own price has moved past
+  `adjustment_step` and (b) the drawdown in `X_cp` is under half the accumulated `X_cp` gain.
+  Three separable things need naming, not one: the *self-referential price* (the pool's own
+  EMA is its own oracle and the input to its own state transition); the *profit functional*
+  (`X_cp`, a named scalar of the pool state that only ratchets up); and the *ratio-bounded
+  state transition* conditioned on that functional. `St`, `Cl` and `Pm` miss all three.
+- **A protocol whose safety property has a documented deadlock, and whose escape is a
+  loss-making third-party trade.** The stale-pool trap is not a bug report; it is in the
+  official docs with a remedy list. A formalism that reproduces Cryptoswap and cannot exhibit
+  the stuck state has not reproduced Cryptoswap.
+- **Gauge weight voting.** A vote that produces a *weight vector over pools* which then
+  parameterises the emission function. `Em` says tokens are emitted and is silent on direction;
+  `Ve` names the lock and is silent on the vote.
+- **The boost, as a dilutive shared denominator.** `working_balance` is capped at the LP's own
+  balance and floored at 40% of it, and the reward rate is `working_balance / working_supply`
+  — so boosting is *rivalrous*: your boost lowers everyone else's yield. This is a third
+  mechanism on the same lock and it is not a multiplier on an independent quantity.
+- **A vote-rental market that the protocol's own tooling routes through.** Curve's reference
+  vote-creation path goes through Convex's voter proxy. The vocabulary has no way to say that
+  the effective controller of a mechanism is a third-party protocol.
+- **Two governance bodies with different quorums over disjoint action sets**, plus a third
+  emergency body whose powers are *directional* (may reduce a ceiling, may never raise it;
+  may adjust fees but may not cause a liquidation). `Tg` names delay; `Gp` names pause.
+  Neither names a monotone-restricted authority.
+- **A permissionless pool factory with a DAO-gated implementation registry.** Anyone may
+  deploy a pool; only the DAO may add the *implementation* it is deployed from. That is a
+  two-level permission structure — free instantiation over a governed set of types — and the
+  same shape recurs as Fluid's "governance can deploy infinite DEX types" and Uniswap's
+  `enableFeeAmount`. Three appearances in this lane.
+- **Fee conversion as an outsourced auction.** Admin fees in arbitrary tokens are converted by
+  posting *CoW Protocol conditional orders*; the protocol does not price its own fee stream,
+  it delegates that to another protocol's batch auction. `Ba` exists in the vocabulary but
+  belongs to the other protocol; nothing names "this protocol's fee plumbing is a client of
+  that protocol's clearing mechanism".
+- **A rate-limited parameter change** (`ramp_A`, minimum 86,400 s): `A` moves along a ramp
+  rather than jumping, so the invariant itself is time-varying by construction. No symbol
+  names a continuously-interpolated invariant parameter.
+
+### 6. DELTA vs the corpus record
+
+- **Rank basis reproduces**: $1,277.3M today vs corpus $1,277.0M.
+- **The repository licence is the biggest correction.** A reader of the corpus would assume
+  Curve is open source. The current pool generation is **all-rights-reserved by Swiss Stake AG,
+  "published for informational purposes only", with "no license, right of reproduction or
+  distribution … granted or implied"**. Only `curve-dao-contracts` and `metaregistry` are MIT,
+  and `curve-crypto-contract` has no LICENSE file at all. Any construction claiming to
+  reimplement Curve's AMM must be built from the whitepapers, not the repos. (Ev. 15, 16.)
+- **Fees to veCRV are distributed in crvUSD, not 3CRV.** Curve's own fee page states there are
+  two FeeDistributors "as rewards were distributed in `3CRV` tokens, before a DAO vote changed
+  the reward token to `crvUSD`", and the whole June-2024 architecture (FeeCollector →
+  CowSwapBurner → Hooker → FeeAllocator → FeeDistributor) supersedes the 3CRV burner path,
+  which the docs banner as "PARTLY OUTDATED". The corpus's `Fd` marker ("admin fees are
+  converted and distributed to veCRV lockers") is still true, but a decomposition that assumes
+  the 3CRV route will be describing a retired system — and the *conversion* now happens through
+  a third-party batch auction, which is new residue. (Ev. 8, 9, 10, 11.)
+- **The `St` FORCED marker is right, and the corpus's reason for it can be strengthened.** The
+  corpus says `St` "covers the stableswap pools (the majority of TVL) but not the
+  tricrypto/twocrypto pools". Correct — and additionally, **Stableswap-NG itself now has
+  dynamic fees**, which `St` (constant-sum near parity) does not imply. "All new Stableswap
+  pools feature dynamic fees." (Ev. 3.)
+- **The corpus's `Ag` FORCED marker stands and is if anything understated.** Curve's own
+  router is single-venue, but discovery is `MetaRegistry` behind an `AddressProvider` across
+  *generations* of factory, which is a registry problem rather than a routing problem.
+- **`Tp` is in the corpus's element set and is justified, but the object is unusual.** Curve's
+  oracle is an *internal EMA that the protocol consumes itself* to decide when to re-centre —
+  not a TWAP published for others (though others do read it). `Tp` names "on-chain
+  time-weighted price"; the load-bearing part here is that the price feed is an input to the
+  pool's own state transition. (Ev. 3.)
+- **New: the Emergency DAO is a 5-of-9 multisig with directional powers, and the corpus records
+  no `Gp` for Curve.** Curve's element set is `Ag, Em, Fd, Sh, St, Tg, Tp` (+`Ve`); there is a
+  live emergency body that can pause contracts and reduce ceilings. `Gp` looks required. (Ev. 13.)
+- **New: two DAOs with different quorums** (OWNERSHIP 30%/51%, PARAMETER 15%/60%). `Tg` treats
+  governance as one delayed authority; Curve has two, over disjoint action sets, with different
+  thresholds. (Ev. 12.)
+- **The corpus's "external vote-rental market (Convex/Votium)" residue is confirmed from inside
+  Curve's own repository tooling**, not merely from third-party reporting: Curve's `voting`
+  library creates DAO votes via the Convex voter proxy. That upgrades the residue from an
+  observation about the ecosystem to a fact about the protocol's own reference path. (Ev. 12.)
+- **The permissionless-pool-factory residue is confirmed but is really two things**: deployment
+  is permissionless, *implementation registration is not*. The corpus records only the first.
+  (Ev. 14.)
+- **Repo hygiene note for later lanes:** the NG repos' tags are **chain names**, not versions
+  (`zksync`, `xlayer`, `mantle`, `fraxtal`), so per-chain deployments come off divergent
+  branches and there is no single commit describing the deployed set. Curve also runs at least
+  four Vyper major lines in production simultaneously (0.2.4, 0.3.10, 0.4.1, plus the NG pool
+  compilers). (Ev. 15, 6, 9, 10.)
+- **The corpus's headline Curve residue is now stated exactly, in the protocol's own algebra,
+  and it is sharper than the corpus's paraphrase.** The corpus describes "a concentrated curve
+  whose center is an internal EMA that ratchets only when the repeg is profitable". The
+  whitepaper's condition is not "profitable" but a *specific bounded drawdown against a running
+  profit ledger*: `X_cp = (Π D/(N·pᵢ))^(1/N)` is tracked, and a peg move is permitted only if
+  the reduction in `X_cp` "doesn't exceed half the profit we've made". So the gate is (i) on a
+  named scalar functional of the pool state, (ii) monotone-accumulating, and (iii) a *ratio*
+  constraint, not a sign constraint. Any construction that models the gate as "repeg if
+  profitable" will admit behaviours Curve forbids. (Ev. 19.)
+- **`St` and the crypto invariant are the same equation with different `K`.** Stableswap is
+  `χD^(n−1)Σxᵢ + Πxᵢ = χDⁿ + (D/n)ⁿ` with `χ = A·Πxᵢ/(D/n)ⁿ`; CurveCrypto is the identical form
+  with `K = A·K₀·γ²/(γ+1−K₀)²`. This is a strong hint for the algebra: the two are one
+  parameterised family, not two symbols, and the corpus's split (`St` for stableswap, residue
+  for cryptoswap) may be the wrong cut. (Ev. 18, 19.)
+- Remaining **UNKNOWN** for Curve: whether the deployed bytecode matches the repos (not checked
+  by this lane, and complicated by the chain-named branch tags); the identity of the
+  `FeeAllocator`'s current receiver set and weights; and whether the CowSwap fee system has
+  since shipped on Arbitrum (the docs say "soon").
 
 ---
 
