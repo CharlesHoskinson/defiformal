@@ -1,0 +1,162 @@
+{
+  "app": "Maple Finance (syrupUSDC / institutional pools)",
+  "category": "09-rwa",
+  "source": "C:\\defiformal-work\\09-rwa\\01-research.md",
+  "construction": ["Aw", "Ct", "Fd", "Ft", "Gp", "Pl", "Sh", "Sl", "Sv", "Tg", "Up", "Wq", "Xf", "Xm"],
+  "functionalObligations": [
+    {
+      "id": "F1",
+      "text": "a lender deposits a stablecoin into a shared pool and receives a vault share whose redemption value rises as borrowers repay",
+      "elements": ["Pl", "Sh"],
+      "evidence": "https://docs.maple.finance/technical-resources/protocol-overview/smart-contract-architecture.md (accessed 2026-08-04)",
+      "note": "Each pool inherits the ERC-4626 standard, which informs how the LP tokens accrue value from borrower repayments. Measured live on 2026-08-04 at the syrupUSDC pool 0x80ac24aA929eaF5013f6436cdA2a7ba190f5Cc0b: totalSupply 932,261,251.64, totalAssets 1,097,084,773.24, convertToAssets(1e6) = 1,176,799, unrealizedLosses 0. Ix was considered and not emitted: the share price rises because totalAssets rises, and there is no global index object separate from the pool's own accounting. L2 (Pl implies a claim form plus exit liquidity) is discharged by Sh plus Wq at F9."
+    },
+    {
+      "id": "F2",
+      "text": "the pooled deposits are lent to named institutional borrowers as dated loan contracts, on terms agreed off chain, with both fixed-term and open-term forms in use",
+      "elements": ["Pl", "Ft"],
+      "evidence": "https://docs.maple.finance/technical-resources/protocol-overview/smart-contract-architecture.md (accessed 2026-08-04)",
+      "note": "Pool to PoolManager to LoanManagers attached as strategies to MapleLoan instances. Ft SHARPENED from the corpus marker: Maple runs both fixed-term and open-term loan managers, so the maturity of the asset is a choice per strategy rather than a fixed property of the protocol. The corpus marker still stands on the other side: the LENDER's claim is perpetual and open-ended, so Ft describes only the asset side and the maturity mismatch between the two is the actual mechanism and is unnamed."
+    },
+    {
+      "id": "F3",
+      "text": "borrowers post collateral into the loan contract itself, and the protocol reports the ratio of collateral to loans as a live figure",
+      "elements": ["Ct"],
+      "evidence": "https://docs.maple.finance/integrate/technical-resources/collateral-and-yield-disclosure.md (accessed 2026-08-04)",
+      "note": "DEPARTURE: the corpus records Ct as DERIVED and that is wrong; it is real and on-chain. Maple's own API on 2026-08-04 returns collateralValue $1,921,120,739.50 against loansValue $1,300,514,362.23, a collateralRatio of 147.72 per cent (https://api.maple.finance/v2/graphql, accessed 2026-08-04). CORRECTION to the corpus residue: the claim that collateral is held in off-chain qualified custody under a tri-party control agreement is REFUTED at the protocol layer; no primary source names BitGo, Anchorage, Copper or any control agreement, and the documented default procedure repossesses collateral on chain before liquidating it. The accurate statement is a SPLIT: custody and accounting of collateral are on-chain, and price monitoring and the act of selling are off-chain. Uc is NOT emitted and is refuted on the facts: at 147.72 per cent this is over-collateralised secured lending, while the risk remains entirely in the underwriting judgement, which no symbol reaches."
+    },
+    {
+      "id": "F4",
+      "text": "the solvency test itself runs off chain: an operations team watches three price feeds around the clock, gives a borrower twenty-four hours to top up, and then sells the collateral through over-the-counter desks under the loan agreement",
+      "elements": [],
+      "evidence": "https://docs.maple.finance/maple-institutional-for-lenders/defaults-and-impairments-1.md (accessed 2026-08-04)",
+      "note": "RESIDUE, and Li is genuinely ABSENT rather than approximate: there is no liquidator contract, no auction, no keeper and no liquidation bonus anywhere in the repositories or the docs. Verbatim: Maple liquidates their collateral as part of the legal agreement with the borrower, with CEXs or DEXs as a fallback. The sharpened residue is that THE PROTOCOL CAN SEIZE BUT CANNOT SELL, and the vocabulary has no way to record a negative, no symbol meaning solvency is accounted on-chain and enforced off-chain. L1d is discharged by Sl at F6 and not by Li."
+    },
+    {
+      "id": "F5",
+      "text": "on default the pool delegate chooses whether to repossess at all, and the same human judgement decides when a loan is impaired",
+      "elements": ["Sv"],
+      "evidence": "https://docs.maple.finance/technical-resources/loans/defaults.md (accessed 2026-08-04)",
+      "note": "CANDIDATE-REGISTER (Sv), and this is its intended sense: the delegate has the OPTION to repossess the loan after a grace period. Sv covers the determination. The corpus marker stands and is sharpened at F22: the delegate also SELECTS COUNTERPARTIES and SIZES EXPOSURE, which is an allocation act, and Sv does not reach it."
+    },
+    {
+      "id": "F6",
+      "text": "any loss remaining after collateral and cover are exhausted is a straight reduction in the pool's assets, borne pro rata by every remaining lender",
+      "elements": ["Sl"],
+      "evidence": "https://docs.maple.finance/technical-resources/loans/defaults.md (accessed 2026-08-04)",
+      "note": "DEPARTURE, and the most consequential omission in the corpus decomposition. Remaining losses are represented to LPs as a decrease in totalAssets, which is exactly what Sl names. With Bs removed (F8), Sl becomes the ONLY loss-absorption mechanism Maple has, and law L1d (Pl implies one of Li, Ad, Sl, Bs) is then satisfied by Sl alone. This very plausibly explains the corpus's recorded satisfiesRequirementsAndWarrants: false, which would have been a decomposition artefact rather than a fact about Maple."
+    },
+    {
+      "id": "F7",
+      "text": "a manager may declare a paper loss that immediately reduces what an exiting lender receives, may reverse it, and the protocol states the purpose is to incentivise current lenders to remain",
+      "elements": [],
+      "evidence": "https://docs.maple.finance/technical-resources/loans/impairments.md (accessed 2026-08-04)",
+      "note": "RESIDUE. impairLoan writes unrealizedLosses, which is factored into the pool's value for withdrawals, incentivizing current Liquidity Providers to remain in the Pool. Neither Sv (discretion) nor Sl (loss allocation) names A REVERSIBLE PROVISIONAL LOSS USED AS AN EXIT DETERRENT. Second residue in the same object: the override is ASYMMETRIC between two discretionary authorities, since a Governor impairment cannot be reversed by the delegate while a delegate impairment can be reversed by the Governor. The vocabulary treats authority as a set, not a lattice, which is the same party-sort gap the 07-bridges lane recorded in a different dress."
+    },
+    {
+      "id": "F8",
+      "text": "the first-loss module exists in the code and is deliberately empty, and the staked governance token was never slashable and no longer earns anything",
+      "elements": [],
+      "evidence": "https://docs.maple.finance/technical-resources/loans/defaults.md (accessed 2026-08-04)",
+      "note": "RESIDUE, and Bs is REFUTED twice over, so it is DROPPED from the corpus construction. The docs' own heading reads First-Loss Capital (Unused), noting the Pool Delegate Cover is unused due to most pools being managed by Maple Direct. Separately, staking rewards were sunset with MIP-019, the interface supports only unstaking, and stSYRUP can be unstaked at any time without limits or penalties (https://docs.maple.finance/maple-for-token-holders/syrup-tokenomics/staking.md, accessed 2026-08-04). Maple currently has no slashable first-loss capital of any kind. The vocabulary cannot distinguish a protocol that has a backstop from one that has a backstop CONTRACT that is deliberately empty, and the difference is the whole of the lender's protection."
+    },
+    {
+      "id": "F9",
+      "text": "an exiting lender joins a first-in first-out queue served as liquidity appears, normally within a day and contractually within thirty",
+      "elements": ["Wq"],
+      "evidence": "https://docs.maple.finance/syrupusdc-usdt-usdg-for-lenders/risk.md (accessed 2026-08-04)",
+      "note": "Wq is exact here. WithdrawalManager queue variant 0x1bc47a0dd0fdab96e9ef982fdf1f34dc6207cfe3 for syrupUSDC; assets are pushed to the lender without a second transaction, and a pending request can be reduced or cancelled with the shares returned. Ep is deliberately NOT emitted and the corpus's silence is correct: the older cyclical withdrawal manager was window-based, and the current syrup pools use the queue. This is the exact mirror image of Centrifuge, where Ep carries the mechanism and Wq is at best a loose description, and a decomposition that gives both symbols to both protocols loses the distinction."
+    },
+    {
+      "id": "F10",
+      "text": "the instant exit is not a protocol facility at all: a lender who will not wait sells the share token into third-party automated market makers the protocol does not control",
+      "elements": [],
+      "evidence": "https://docs.maple.finance/syrupusdc-usdt-usdg-for-lenders/risk.md (accessed 2026-08-04)",
+      "note": "RESIDUE. As an alternative to withdrawals, users can swap syrupUSDC via Uniswap or Balancer, which enables instant liquidity for users that do not want to wait. Wq names the queue; nothing names THE REDEMPTION RIGHT IS SLOW AND THE REAL EXIT IS A THIRD-PARTY MARKET, and nothing marks an element as inherited from a dependency. The same defect was recorded independently in the 06-yield lane for Huma and Spark."
+    },
+    {
+      "id": "F11",
+      "text": "who may lend is decided by matching a lender's bitmap of off-chain criteria against the pool's required bitmap, at four configurable strictness levels, and the check follows the share token on transfer",
+      "elements": ["Aw"],
+      "evidence": "https://docs.maple.finance/technical-resources/singletons/pool-permission-manager.md (accessed 2026-08-04)",
+      "note": "Aw is present but structurally far richer than a bit. Source constants PRIVATE 0, FUNCTION_LEVEL 1, POOL_LEVEL 2, PUBLIC 3, verified at https://raw.githubusercontent.com/maple-labs/pool-permission-manager/main/contracts/MaplePoolPermissionManager.sol (accessed 2026-08-04); levels 1 and 2 evaluate (poolBitmap AND lenderBitmaps[lender]) == poolBitmap, where each bit represents a criterion a lender must meet off chain. Transfer-time enforcement is documented, so L16 is discharged. MEASURED CORRECTION to the corpus: syrupUSDC is NOT permissionless. PoolPermissionManager.permissionLevels(0x7ad5ffa5fdf509e30186f4609c2f6269f4b6158f) returns 1, FUNCTION_LEVEL. It follows that the corpus's laundering residue, a wrapper that turns a permissioned claim into a permissionless one, DOES NOT DESCRIBE MAPLE; Maple's own FAQ also states that new unique pools were established for syrupUSDC to ensure proceeds and risks are segmented from existing pools, so the syrup pools and the institutional pools are not the same loan book. That residue belongs to Centrifuge's deRWA tokens and is recorded there."
+    },
+    {
+      "id": "F12",
+      "text": "the permission check returns true by default: if a pool's criteria bitmap was never set, everyone passes, and the protocol documents this as intentional",
+      "elements": [],
+      "evidence": "https://docs.maple.finance/technical-resources/singletons/pool-permission-manager.md (accessed 2026-08-04)",
+      "note": "RESIDUE. The hasPermission function will always return true if the bitmaps are not set. This is by design. Aw has no notion of a gate's DEFAULT, let alone a permissive one. A gate that fails open and a gate that fails closed are different security objects and carry the same symbol."
+    },
+    {
+      "id": "F13",
+      "text": "a pool may be made permissionless once and can never be made permissioned again",
+      "elements": [],
+      "evidence": "https://docs.maple.finance/technical-resources/singletons/pool-permission-manager.md (accessed 2026-08-04)",
+      "note": "RESIDUE. Once a lending pool is set to public, it cannot be changed back to permissioned, recorded as invariant D. This is an irreversible transition in the ACCESS REGIME OVER TIME, a property of the gate's history rather than its state, and Aw is a state predicate that cannot carry it."
+    },
+    {
+      "id": "F14",
+      "text": "fees are split between the pool delegate and the protocol on chain, and a quarter of protocol revenue is directed to buying back the governance token",
+      "elements": ["Fd"],
+      "evidence": "https://docs.maple.finance/maple-for-token-holders/syrup-tokenomics/staking.md (accessed 2026-08-04)",
+      "note": "CANDIDATE-REGISTER (Fd), confirmed, with a measurement that qualifies it: delegateManagementFeeRate() on the syrupUSDC PoolManager is 0, so the split the corpus cites as a real on-chain flow is currently zero on the flagship pool. DEPARTURE in the same area: Em is REFUTED and DROPPED. Both protocol-funded emission channels are closed, staking rewards sunset by MIP-019 and the Drips lender programme phased out, verified on chain at syrupDrip 0x509712F368255E92410893Ba2E488f40f7E986EA whose deadline() is 1771416000, that is 2026-02-18T15:00:00Z, five and a half months before the access date. Surviving lender incentives are distributed via Merkl and funded by ECOSYSTEM PARTNERS, which is precisely what protocol-funded emissions are not. Also on default: all liquidated collateral and cover first goes towards recovering fees owed to the protocol, a genuine priority ordering over recovery proceeds, Tr-shaped but at the fee layer over a pool that has no tranches, and that ordering is residue."
+    },
+    {
+      "id": "F15",
+      "text": "the protocol's contracts can be upgraded, only to implementations the governance has approved, after a scheduled delay, and a separate security administrator can pause every function immediately",
+      "elements": ["Up", "Tg", "Gp"],
+      "evidence": "https://docs.maple.finance/technical-resources/admin-functions/timelocks.md (accessed 2026-08-04)",
+      "note": "PoolManager.upgrade(), LoanManager.upgrade() and WithdrawalManager.upgrade() route through MapleGlobals.scheduleCall() with a documented two-week wait; the Governor is GovernorTimelock 0x2eFFf88747EB5a3FF00d4d8d0f0800E306C0426b managed by a multisig with schedule, delay and execution window; factories are allowlisted in Globals so protocol contracts can verify on-chain that contracts have been vetted. L15 (Up implies Tg or a bounded emergency process) is discharged, subject to F16."
+    },
+    {
+      "id": "F16",
+      "text": "the delay protecting those upgrades is set by the same authority the delay is meant to restrain, can be changed at any time, and the change applies retroactively to calls already scheduled",
+      "elements": [],
+      "evidence": "https://docs.maple.finance/technical-resources/admin-functions/timelocks.md (accessed 2026-08-04)",
+      "note": "RESIDUE, and arguably a defect the vocabulary should be able to name. Verbatim: timelock parameters are set by the Governor and can be changed at any time, having a retroactive effect, and the docs give the worked example in which a pending scheduled call becomes immediately executable once the Governor shortens the delay. Tg asserts delayed execution; it cannot express A DELAY THE DELAYED PARTY CONTROLS, so the protection is nominal and the symbol reads as though it were not. Compare Centrifuge, whose 48-hour timelock sits under an immutable Root, and BUIDL, which has an EOA: three protocols carry or lack the same symbol and the control planes are not comparable."
+    },
+    {
+      "id": "F17",
+      "text": "the share token exists on several other chains, moved under Chainlink's cross-chain messaging with a documented path for recovering failed messages",
+      "elements": ["Xf", "Xm"],
+      "evidence": "https://docs.maple.finance/technical-resources/crosschain.md (accessed 2026-08-04)",
+      "note": "DEPARTURE: the corpus records neither symbol and both are supported. syrupUSDC and syrupUSDT are available on Solana, Arbitrum, Base, Plasma and others through a CCIP-based crosschain receiver developed in partnership with Chainlink, with failed-message retry and recovery; a SyrupOftAdapter also exists for the SYRUP token. L26 (Aw plus Xf implies destination-enforced eligibility) is NOT evidenced here: nothing fetched states that the destination chains re-run the bitmap check, and the syrup pools are FUNCTION_LEVEL gated on Ethereum. Flag for stage 3 rather than assert."
+    },
+    {
+      "id": "F18",
+      "text": "the holder must know who owes them the money, and here the claim runs to a pool contract that holds loan contracts funded to named institutions under bilateral agreements whose governing law and recourse are not published",
+      "elements": [],
+      "evidence": "https://docs.maple.finance/maple-institutional-for-lenders/risk.md (accessed 2026-08-04)",
+      "note": "RESIDUE. The obligor chain is two steps and only the first is on chain. A MapleLoan is the contract that represents the agreement between a Lender and a Borrower, while the enforceable obligation lives in a document the protocol cannot read; Maple positions itself as a technology services provider and states that MAPLE IS NOT A LENDER. CORRECTION: the corpus asserts NY or English law; no governing law is evidenced anywhere and no agreement template is published, so it is UNKNOWN and must not be asserted. No element names an obligor, and none names the fact that a default is resolved by lawyers rather than by code."
+    },
+    {
+      "id": "F19",
+      "text": "the holder must know whether the chain is the register, and here it is: the pool contract is the authoritative ledger of the lender's claim, and Maple is the only one of the five whose investor register is on chain",
+      "elements": [],
+      "evidence": "https://docs.maple.finance/maple-institutional-for-lenders/lending.md (accessed 2026-08-04)",
+      "note": "RESIDUE, and the contrast is the value. Three of the five products place the chain BELOW an off-chain book by three different legal devices; Maple does not, because the lender's claim is created by the ERC-4626 contract and by nothing else, with no transfer agent, no share registry and no certificate. The vocabulary cannot state either side of that difference: it has no symbol meaning the chain IS the register and none meaning it is a mirror, so a decomposition of Maple and a decomposition of BUIDL are silent on the single question that most determines what each holder owns. The mirror relation reappears one level down, since the loan ASSET is a document the protocol cannot read (F18)."
+    },
+    {
+      "id": "F20",
+      "text": "the holder must know whether their claim is perfected against the borrower's estate, and here no security trustee, control agreement or perfection step is evidenced anywhere, only possession of collateral by a contract",
+      "elements": [],
+      "evidence": "https://docs.maple.finance/technical-resources/loans/defaults.md (accessed 2026-08-04)",
+      "note": "RESIDUE. The loan contract holds the collateral and can repossess it, which is possession, not perfection; whether that possession is recognised against a borrower's insolvency estate in the borrower's jurisdiction is undetermined and no document addresses it. No security agent is named, no financing statement is mentioned, and the master loan agreement that would settle it is not published. Of the five products in this category exactly one asserts a perfected security interest, and it is not this one."
+    },
+    {
+      "id": "F21",
+      "text": "the holder must know what backs the claim and who holds it, and here the answer is unusually good: collateral is custodied by the loan contracts on chain and the ratio is published, while the disposal of it is off chain",
+      "elements": [],
+      "evidence": "https://docs.maple.finance/integrate/technical-resources/collateral-and-yield-disclosure.md (accessed 2026-08-04)",
+      "note": "RESIDUE, and it is the category's positive control. Custody is on-chain in the loan contracts, so unlike the four fund products there is no custodian whose failure is the dominant tail risk. What remains unnameable is the composition of the loan book itself, since the identity, jurisdiction and financials of the borrowers are not on chain, and Maple publishes its own figures rather than an attested reserve report. At is NOT emitted: the API is self-published by the protocol with no independent attester, no assurance level and no recourse, so L27 could not be discharged. Measured 2026-08-04: assets $80.9M plus loans $1,544.2M plus collateral $1,900.3M, that is $3.525B by the docs' own AUM formula, against loansValue $1.3005B; these measure different things and the paper must say which."
+    },
+    {
+      "id": "F22",
+      "text": "the holder must know who may change what the money is lent against, and here one delegate selects the counterparties, sets the rate and the size, and no concentration limit is enforced on chain",
+      "elements": [],
+      "evidence": "https://docs.maple.finance/maple-institutional-for-lenders/risk.md (accessed 2026-08-04)",
+      "note": "RESIDUE, and the sharpest instance in this category of the cross-lane finding. Interest is determined by the loan terms set by Maple's credit underwriting and risk management, and the borrower's ability to meet margin calls is checked pre-issuance and monitored on an ongoing basis; nothing on chain represents diligence, financials or a covenant package. UNKNOWN, leaning policy-only: no per-borrower concentration parameter exists in PoolManager, Globals or the docs; liquidityCap() is 2,500,000,000 on syrupUSDC and caps the POOL, not exposure to any one borrower. The vocabulary offers a symbol for the balance-sheet shape (Ct, F3) and none for the judgement, and here the balance sheet says secured lending while the risk is entirely in the judgement. This is the 06-yield and 03-CDP delegated allocation mandate again, with the bounded quantity being credit exposure: named agent yes, domain whitelist yes, magnitude cap only at the pool level, rate-of-change limit none, revocation via the Governor."
+    }
+  ]
+}
