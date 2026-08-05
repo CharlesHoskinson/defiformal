@@ -210,8 +210,9 @@ function main() {
     if (r.composition) {
       console.log(`  exact compositions from the corpus (k<=3): ${r.composition.exactFound}`);
       for (const h of r.composition.exact) console.log(`     k=${h.k}: ${h.parts.join("  (+)  ")}`);
-      if (r.composition.reachableByUnionOfContained.length)
-        console.log(`     no corpus protocol supplies: ${r.composition.reachableByUnionOfContained.join(",")}`);
+      console.log(`     corpus protocols contained in the construction: ${r.composition.containedCount}`);
+      if (r.composition.notSuppliedByAnyContainedProtocol.length)
+        console.log(`     supplied by no contained corpus protocol: ${r.composition.notSuppliedByAnyContainedProtocol.join(",")}`);
     }
   }
   const i = process.argv.indexOf("--json");
