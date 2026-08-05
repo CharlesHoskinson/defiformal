@@ -52,6 +52,8 @@ one "emission invariant"   "python3 formal/v3/verify-emission.py" "HOLDS"
 one "graph claims"         "python3 formal/v3/verify-graphs.py"   "VERIFIED"
 one "extensions"           "node formal/v3/verify-extensions.mjs" "0 mismatch"
 one "submission structure" "python3 formal/v3/verify-structure.py" "COMPLETE"
+mf=$(bash formal/v3/merged-fresh.sh 2>&1 | tail -1); echo "  $mf"
+case "$mf" in *"MERGED GRAPH FRESH"*) echo "  ok   merged graph regenerates identically" ;; *) echo "  FAIL merged graph is stale"; fail=1 ;; esac
 df=$(bash formal/v3/domain-fresh.sh 2>&1 | head -1); echo "  $df"
 case "$df" in *"DOMAIN GRAPH FRESH"*) echo "  ok   domain graph regenerates identically" ;; *) echo "  FAIL domain graph is stale"; fail=1 ;; esac
 
