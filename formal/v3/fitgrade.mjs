@@ -20,14 +20,19 @@ const root = process.argv[2];
 if (!root) { console.error("usage: node fitgrade.mjs <expansion-root> [--json out]"); process.exit(2); }
 const jsonAt = process.argv.indexOf("--json");
 
-// The markers the specs actually use, in the specs' own capitals. EXACT is a
-// positive marker and is not a qualification; the rest are.
-const QUALIFIERS = ["APPROXIMATE", "FORCED", "UNKNOWN", "ABSENT", "PARTIAL"];
-const ALL = [...QUALIFIERS, "EXACT"];
-const RE = new RegExp(`\\b(${ALL.join("|")})\\b`);
+// The qualification rule is the paper's, not this script's. meas:covsens states
+// 205 of 570 assigned rows and a 29.0% strict reading; that figure is produced
+// by case-insensitive stem matching on approximat, forced and partial. An
+// earlier version here matched five uppercase markers exactly, adding UNKNOWN
+// and ABSENT and missing inflected forms, and reported 193 and 29.9% instead.
+// Two scripts computing one quantity by two rules is the defect that took the
+// law systems a whole review round to find, so this defers to the paper.
+const QUAL_RE = /(approximat|forced|partial)/i;
+const MARKERS = ["APPROXIMATE", "FORCED", "PARTIAL", "UNKNOWN", "ABSENT", "EXACT"];
+const RE = new RegExp(`\\b(${MARKERS.join("|")})\\b`);
 
 const lanes = readdirSync(root).filter(d => /^\d\d-/.test(d)).sort();
-const perMarker = Object.fromEntries(ALL.map(m => [m, 0]));
+const perMarker = Object.fromEntries(MARKERS.map(m => [m, 0]));
 const perLane = [];
 let rows = 0, assigned = 0, qualified = 0, clean = 0;
 
@@ -47,7 +52,7 @@ for (const lane of lanes) {
       let m; const re = new RegExp(RE.source, "g");
       while ((m = re.exec(text)) !== null) found.add(m[1]);
       for (const k of found) perMarker[k]++;
-      const q = [...found].some(k => QUALIFIERS.includes(k));
+      const q = QUAL_RE.test(text);   // the paper's rule, not the marker set
       if (q) { qualified++; lQual++; } else clean++;
     }
   }
@@ -62,7 +67,7 @@ console.log(`  of those, self-qualified         ${qualified}   (${pc(qualified, 
 console.log(`  of those, unqualified            ${clean}   (${pc(clean, assigned)}% of assigned)`);
 console.log();
 console.log("markers, counted per row (a row may carry more than one):");
-for (const k of ALL) {
+for (const k of MARKERS) {
   if (!perMarker[k]) continue;
   console.log(`  ${k.padEnd(12)} ${String(perMarker[k]).padStart(4)}   ${pc(perMarker[k], assigned)}% of assigned`);
 }

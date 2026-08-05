@@ -58,6 +58,8 @@ case "$df" in *"DOMAIN GRAPH FRESH"*) echo "  ok   domain graph regenerates iden
 echo
 lc=$(python3 formal/v3/lane-coverage.py 2>&1 | tail -1); echo "  $lc"
 case "$lc" in *"LANE COVERAGE COMPLETE"*) echo "  ok   every lane document is in its lane graph" ;; *) echo "  FAIL a lane document is missing from its graph"; fail=1 ;; esac
+cv=$(node formal/v3/verify-coverage.mjs 2>&1 | tail -1); echo "  $cv"
+case "$cv" in *"COVERAGE SENSITIVITY VERIFIED"*) echo "  ok   coverage sensitivity matches the ledger" ;; *) echo "  FAIL coverage sensitivity"; fail=1 ;; esac
 fs=$(node formal/v3/verify-freeset.mjs 2>&1 | tail -1); echo "  $fs"
 case "$fs" in *"FREE-SET CLAIM VERIFIED"*) echo "  ok   free-set conjecture matches the algebra" ;; *) echo "  FAIL free-set claim"; fail=1 ;; esac
 bf=$(bash formal/v3/brief-fresh.sh 2>&1 | tail -1); echo "  $bf"
