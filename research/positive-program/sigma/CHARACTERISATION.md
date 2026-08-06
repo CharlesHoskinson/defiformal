@@ -47,7 +47,17 @@ written.
 
 ---
 
-## 2. Claim 1 — every basis family is permission-free
+## 2. Claim 1 — REFUTED, see `sigma/COUNCIL.md`
+
+> **This claim is false.** The table below omits `Post`, one of the four
+> primitives, and `Post` is *definitionally* authority-parameterised —
+> `BASIS.md` P4: "parameterised by an authority `n ∈ N` … defined iff `n` is the
+> declared writer". That is a guard reading an identity, so `Post` is not
+> permission-free and the induction in §3 has no base case for it. §5's Theorem
+> fails at its first premise. The corrected obstruction — **cyclicity of role
+> revocation against P4.2's acyclic `R_Φ`** — is in `sigma/COUNCIL.md`.
+
+## 2. Claim 1 — every basis family is permission-free (REFUTED)
 
 Checked against the definitions, not assumed:
 
