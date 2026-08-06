@@ -556,6 +556,10 @@ module huma {
   /// it scored FROZEN in SURJECTIVITY.md: the guard was present and the GRANT
   /// was deleted, which is Perm's first law.
   var lenders: str -> bool
+  /// GHOST -- has `u1` ever lost the lender role? Read only by
+  /// `wit_lenderRoleCycle`, which asks whether R_Phi's acyclicity is actually
+  /// violated by the corpus rather than merely by two unrelated transitions.
+  var u1EverRevoked: bool
 
   var lastOp: str               // GHOST — trace label, see header
   /// JUSTIFIED LINT FINDING (D2), and it is a 6h artifact rather than a defect.
@@ -788,6 +792,7 @@ module huma {
     epochId' = INIT_EPOCH,
     lastEpochTranchesFilled' = 0,
     lenders' = HUMA_PRINCIPALS.mapBy(p => p == "u1"),
+    u1EverRevoked' = false,
     lastOp' = OP_INIT,
   }
 
@@ -820,6 +825,7 @@ module huma {
       epochId' = epochId,
       lastEpochTranchesFilled' = 0,
       lenders' = lenders,
+    u1EverRevoked' = u1EverRevoked,
       lastOp' = OP_DEP_SENIOR,
     }
   }
@@ -852,6 +858,7 @@ module huma {
       epochId' = epochId,
       lastEpochTranchesFilled' = 0,
       lenders' = lenders,
+    u1EverRevoked' = u1EverRevoked,
       lastOp' = OP_DEP_JUNIOR,
     }
   }
@@ -880,6 +887,7 @@ module huma {
     epochId' = epochId,
     lastEpochTranchesFilled' = 0,
     lenders' = lenders,
+    u1EverRevoked' = u1EverRevoked,
     lastOp' = OP_DRAWDOWN,
   }
 
@@ -910,6 +918,7 @@ module huma {
       epochId' = epochId,
       lastEpochTranchesFilled' = 0,
       lenders' = lenders,
+    u1EverRevoked' = u1EverRevoked,
       lastOp' = OP_PROFIT,
     }
   }
@@ -941,6 +950,7 @@ module huma {
       epochId' = epochId,
       lastEpochTranchesFilled' = 0,
       lenders' = lenders,
+    u1EverRevoked' = u1EverRevoked,
       lastOp' = OP_LOSS,
     }
   }
@@ -971,6 +981,7 @@ module huma {
     epochId' = epochId,
     lastEpochTranchesFilled' = 0,
     lenders' = lenders,
+    u1EverRevoked' = u1EverRevoked,
     lastOp' = OP_REQ_SENIOR,
   }
 
@@ -998,6 +1009,7 @@ module huma {
     epochId' = epochId,
     lastEpochTranchesFilled' = 0,
     lenders' = lenders,
+    u1EverRevoked' = u1EverRevoked,
     lastOp' = OP_REQ_JUNIOR,
   }
 
@@ -1039,6 +1051,7 @@ module huma {
       lastEpochTranchesFilled' = (if (sFill._1 > 0) 1 else 0)
                                    + (if (jFill._1 > 0) 1 else 0),
       lenders' = lenders,
+    u1EverRevoked' = u1EverRevoked,
       lastOp' = OP_EPOCH,
     }
   }
@@ -1068,6 +1081,7 @@ module huma {
     epochId' = epochId,
     lastEpochTranchesFilled' = 0,
     lenders' = lenders,
+    u1EverRevoked' = u1EverRevoked,
     lastOp' = OP_DISBURSE,
   }
 
@@ -1083,6 +1097,7 @@ module huma {
     LENDER_CANDIDATES.contains(who),
     not(lenders.get(who)),
     lenders' = lenders.put(who, true),
+    u1EverRevoked' = u1EverRevoked,
     seniorAssets' = seniorAssets,
     juniorAssets' = juniorAssets,
     seniorSupply' = seniorSupply,
@@ -1116,6 +1131,12 @@ module huma {
     // wit_lenderRevoked.  Inventing a guard is the deletion this phase
     // exists to catch, committed here inside a repair.
     lenders' = lenders.put(who, false),
+    // PARENTHESES ARE LOAD-BEARING. Without them this parses as
+    // (u1EverRevoked' = u1EverRevoked) or (who == "u1"), whose LEFT
+    // disjunct is a valid assignment that succeeds and short-circuits, so the
+    // ghost was framed and never set -- and wit_lenderRoleCycle reported [ok],
+    // i.e. NO CYCLE, which would have been a false negative.
+    u1EverRevoked' = (u1EverRevoked or who == "u1"),
     seniorAssets' = seniorAssets,
     juniorAssets' = juniorAssets,
     seniorSupply' = seniorSupply,
@@ -1159,6 +1180,7 @@ module huma {
     epochId' = epochId,
     lastEpochTranchesFilled' = 0,
     lenders' = lenders,
+    u1EverRevoked' = u1EverRevoked,
     lastOp' = OP_CLOSE,
   }
 
@@ -1269,6 +1291,17 @@ module huma {
   /// THE GRANT is reachable — `u2` holds LENDER_ROLE only because the pool
   /// operator approved it (TrancheVault.sol:192).  Must be [violation].
   val wit_lenderGranted: bool = not(lenders.get("u2"))
+
+  /// THE CYCLE ITSELF.  A reachable state in which `u1` has been revoked at some
+  /// point AND currently holds the role: grant -> revoke -> re-grant on ONE
+  /// principal.  P4.2 confines post_Phi writes to an acyclic R_Phi, so if this is
+  /// reachable the corpus contains a role transition no post_Phi can express.
+  /// [violation] means the cycle EXISTS.  [ok] would mean the obstruction has no
+  /// evidence and COUNCIL.md section 3 must be withdrawn.
+  val wit_lenderRoleCycle: bool = not(and {
+    u1EverRevoked,
+    lenders.get("u1"),
+  })
 
   /// THE OPERATOR CAN STRAND A CLAIM.  `removeApprovedLender` carries no balance
   /// check, so a lender still holding shares can lose the role and with it the
