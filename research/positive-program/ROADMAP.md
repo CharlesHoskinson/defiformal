@@ -112,7 +112,7 @@ a negative result — it exhibits a finite basis and delimits it exactly.
 |---|---|---|
 | 0.1 Q/Σ invariant testable | **RESOLVED — claim false, `\|P\|=4` WITHDRAWN** | `sigma/QSIGMA-VERDICT.md`; the prior "three operationalisations" were two, and both scanned `init` |
 | 0.2 `F9` irreducible | **empirically settled, theorem open** | zero extremal selections corpus-wide |
-| 1.1a recount witnesses corpus-wide | **OPEN — unblocked** | `sigma/GATE-1.1-WITNESSES.md`; 31/19/2 on lane-local counts, which is not the corpus question |
+| 1.1a recount witnesses corpus-wide | **OPEN — search method refuted** | `sigma/GATE-1.1A-RECOUNT.md`; 28 of 28 rows reaching >=2 are shared-`common.qnt` reuse, **0 independent**; `layerzero` proves search under-counts |
 | 1.1b a law per family | **OPEN — unmet for all 52 rows** | rationales, not laws; 4 of 52 contain an equation, none separates neighbours |
 | 1.2 pairwise independence | not started | needs 1.1b |
 | 1.3 non-degeneracy and sufficiency | not started | needs 1.1b |
@@ -713,3 +713,45 @@ record.
 evidence cannot presently distinguish "one witness in the corpus" from "one
 witness in this lane", and pruning on a bookkeeping artifact is precisely the
 error `qsigma2` made by scanning `init`. Recount first, then prune.
+
+
+---
+
+## Sub-gate 1.1a — the recount was attempted, and the method is refuted
+
+Full argument in `sigma/GATE-1.1A-RECOUNT.md`.
+
+**The search under-counts, demonstrably.** `ATTESTED_MESSAGE_ONCE` is recorded
+"CCTP, LayerZero (2)"; identifier search finds only `cctp`. But `layerzero.qnt`
+implements once-only delivery through its own `type PacketStatus = Sent |
+Verified | Delivered`, keyed by nonce — the same primitive under different names.
+Identifier reuse is not mechanism instantiation, and searching for the first
+cannot settle a question about the second.
+
+**What the attempt did establish is worse than the number it failed to produce.**
+Of the 28 rows reaching >= 2 witnesses by search, **28 are shared-`common.qnt`
+reuse and 0 are independent re-implementations.** The protocol-local definitions
+that exist — `justlend`'s `exchangeRate`, `convex`'s `lockCrv`, `layerzero`'s
+`PacketStatus` — all belong to rows scoring *under* 2. The two categories are
+nearly complementary.
+
+**So condition 1, as currently measurable, tests whether a definition sits in a
+`common.qnt`.** The lane refactoring created the shared helpers; the helpers then
+produced the witness counts. The measurement is a function of the harness — the
+same shape as the `init` scan that sank gate 0.1, and as the deleted mechanisms
+that motivated Phase 2.
+
+**Condition 1 must be restated before it is measured again:**
+
+> Every family has >= 2 **independent** corpus witnesses, where two specs calling
+> the same `common.qnt` definition are **one** witness.
+
+Two protocols sharing a helper is a fact about the spec authors. Two protocols
+arriving at the same mechanism through different code is evidence the mechanism
+is forced by the domain — which is the claim a basis makes. Under the restated
+condition the current evidence base supports approximately nothing, and that is
+the honest position.
+
+**Do not quote 31/19/2 or 28/50 as evidence for or against any family.** Both
+measure identifier provenance. They are recorded so they are not re-derived and
+believed later.

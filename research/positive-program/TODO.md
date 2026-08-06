@@ -97,13 +97,24 @@ composition, then construction.
       family has >= 2 corpus witnesses and a law that fails for its neighbours.
       **First scoring done — `sigma/GATE-1.1-WITNESSES.md`. The gate is not
       answerable on the current evidence base**, and splits into two:
-  - [ ] **1.1a — recount witnesses corpus-wide.** The 52 section-5 rows carry
-        *lane-local* counts ("Maple (1 **in lane**; appears in other
-        categories)"), and the gate asks a corpus question. Recorded: 31 rows at
-        >= 2, 19 at exactly 1, 2 unreadable prose. The 19 is an upper bound on
-        failures and a lower bound on nothing. Do **not** prune singletons before
-        this recount — that would delete families for a bookkeeping artifact,
-        the same error `qsigma2` made with `init`.
+  - [ ] **1.1a — recount witnesses corpus-wide.** *Attempted by identifier
+        search and the method failed — `sigma/GATE-1.1A-RECOUNT.md`.*
+        `layerzero` implements once-only delivery with its own `PacketStatus`
+        machine and never calls `common.canDeliverOnce`, so search scores 0 where
+        the ledger correctly counts 2. Identifier reuse is not mechanism
+        instantiation.
+        **What the attempt did establish: of the 28 rows reaching >= 2 witnesses,
+        28 are shared-`common.qnt` reuse and 0 are independent
+        re-implementations.** Condition 1 as measurable is a test of whether a
+        definition sits in a common file.
+        - [ ] **Restate condition 1 first:** two specs calling the same
+              `common.qnt` definition are ONE witness. Otherwise the recount
+              re-certifies shared helpers.
+        - [ ] **Then recount by reading**, per row, against the 51 protocol
+              specs. Do not quote 31/19/2 or 28/50 as evidence — both measure
+              identifier provenance, not instantiation.
+        - [ ] Still do **not** prune singletons: a row scoring 1 may have an
+              independent second implementation no search will surface.
   - [ ] **1.1b — write one law per surviving family**, each failing for its
         nearest neighbour. **Condition 2 is unmet for all 52 rows** and no
         witness recount touches it: the ledgers carry a `why it is primitive`
