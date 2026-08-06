@@ -30,10 +30,26 @@ composition, then construction.
       firm holding a role, not a protocol, which is why it never had a spec. Its
       mechanism is MetaMorpho and is now specced (`metamorpho.qnt`). Record a
       stated position, not a missing spec.
-      Still open: resolve 72-vs-68, and adopt 6h before commissioning or all
-      inherit the defect blocking Phase 1.
-  - [ ] **Re-read the `residue` fields across all 68 applications as a source of
-        basis candidates and refuters.** Never done. On the two read so far the
+      Still open: adopt 6h before commissioning, or all inherit the defect
+      blocking Phase 1. (72-vs-68 is now resolved — see the residue item below.)
+  - [x] **Residue mined — `sigma/RESIDUE-MINED.md`, artifact
+        `sigma/residue-index.json` (324 entries, 72 protocol entries, bucketed).**
+        **72-vs-68 RESOLVED**: 72 raw entries, 4 of them the same application in
+        two lanes, 68 distinct. 2.2 precondition 1 settled; the 19 stands.
+        **authority/discretion is the largest classified bucket** — 69 entries
+        across 40 of 72 applications. Narrowed to a party exercising discretion
+        over assets it does not own: **4 distinct protocols across 4 categories**
+        (Morpho, Liquity V2 batch managers, Steakhouse, Grove), and Liquity's own
+        residue notes unprompted that it is "the same shape as Morpho's curator
+        gap, appearing in a completely different category".
+        **That makes the delegated mandate the only object in the corpus with
+        genuinely INDEPENDENT multi-witness support** — 1.1a showed all 28 basis
+        rows reaching >=2 did so via shared `common.qnt` reuse. The one thing the
+        basis cannot express is better evidenced than anything it contains.
+  - [ ] **131 residue entries are UNCLASSIFIED across 59 applications** — more
+        than any bucket. Second pass with better classification before the
+        residue is called read. Do not quote the bucket counts as findings; they
+        are navigation. On the two read so far the
         hit rate is 3 for 3: Steakhouse's residue names the curator refuter *and*
         the owner/curator/allocator role split (convention 6h), and CIAN's names
         keeper-liveness — which is pair 4's autonomy law, identified by the corpus

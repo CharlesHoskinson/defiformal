@@ -1148,3 +1148,48 @@ reason Phase 1 cannot proceed.
 **New task, and it looks cheap:** re-read the `residue` field across all 68
 applications as a source of basis candidates and refuters. The data is on disk.
 On the two read so far the hit rate is three for three.
+
+
+---
+
+## The residue, mined — and the refuter turns out to be the best-witnessed object in the corpus
+
+Artifact: `sigma/residue-index.json`, 324 entries across 72 protocol entries.
+Full note in `sigma/RESIDUE-MINED.md`.
+
+**72-vs-68 resolved.** The lane JSONs carry 72 protocol entries; four are one
+application filed in two lanes (Steakhouse appears under both *Yield / vaults*
+and *Prediction markets & other*). 68 distinct. **2.2 precondition 1 is settled
+and the work-list of 19 stands.**
+
+**Authority/discretion is the largest classified bucket** — 69 entries across
+**40 of 72 applications**. (Caveat: 131 entries remain UNCLASSIFIED across 59
+applications, more than any bucket. The buckets are keyword-based navigation, not
+a result.)
+
+**Narrowed to a party exercising discretion over assets it does not own: four
+distinct protocols in four categories.**
+
+| protocol | category |
+|---|---|
+| Morpho | Lending — MetaMorpho curator, caps, performance fee |
+| Liquity (V1+V2) | CDP — V2 batch managers set rates on borrowers' behalf |
+| Steakhouse Financial | Yield / Risk Curators — *"This is the entire protocol"* |
+| Grove Finance | uncategorized — on-chain capital into off-chain credit |
+
+**Liquity's own residue names the shape-identity unprompted:** *"This is the same
+shape as Morpho's curator gap, appearing in a completely different category."*
+
+**Why that is the important sentence in this pass.** `GATE-1.1A-RECOUNT.md`
+established that every candidate primitive reaching >= 2 witnesses did so through
+shared-`common.qnt` reuse — 28 of 28, **zero** independent re-implementations.
+These four are the opposite: different protocols, categories and lanes, no shared
+code, converging on one mechanism.
+
+**So the single object with genuinely independent multi-witness support is the one
+the basis cannot express**, and under gate 1.1's own condition 1 it is better
+evidenced than any family the basis contains. It should be carried as a candidate
+primitive, not only as a refuter.
+
+**Also confirmed:** the `liveness/keeper` cluster — CIAN, Yearn, Beefy, Jupiter —
+is pair 4's autonomy property, named by four protocols before Phase 1 tested it.
