@@ -112,7 +112,10 @@ a negative result — it exhibits a finite basis and delimits it exactly.
 |---|---|---|
 | 0.1 Q/Σ invariant testable | **RESOLVED — claim false, `\|P\|=4` WITHDRAWN** | `sigma/QSIGMA-VERDICT.md`; the prior "three operationalisations" were two, and both scanned `init` |
 | 0.2 `F9` irreducible | **empirically settled, theorem open** | zero extremal selections corpus-wide |
-| 1.x fix the basis | not started | blocked on 0.1 |
+| 1.1a recount witnesses corpus-wide | **OPEN — unblocked** | `sigma/GATE-1.1-WITNESSES.md`; 31/19/2 on lane-local counts, which is not the corpus question |
+| 1.1b a law per family | **OPEN — unmet for all 52 rows** | rationales, not laws; 4 of 52 contain an equation, none separates neighbours |
+| 1.2 pairwise independence | not started | needs 1.1b |
+| 1.3 non-degeneracy and sufficiency | not started | needs 1.1b |
 | 2.0 find all ten deletions | **PASSED** | `phase2/P2-SCOPE.md`, all ten with line numbers |
 | 2.0b fidelity criterion | **PASSED** | `phase2/P2-FIDELITY.md`, quotient formulation |
 | 2.0c regression guard | **PASSED** | `phase2/respec_lint.py`; v1 baseline **180 findings / 57 specs** |
@@ -679,3 +682,34 @@ is `BASIS.md`'s own definition of a `Sigma`.
 depended on the six-sort split. The replacement/update partition is available to
 1.1 as a candidate law about update form, on the same terms as any other family:
 at least two corpus witnesses and a law that fails for its neighbours.
+
+
+---
+
+## Gate 1.1 — scored for the first time, and it does not yet have an answer
+
+`sigma/gate11_witnesses.py` scores the 52 recorded section-5 rows against 1.1's
+own two conditions. Full argument in `sigma/GATE-1.1-WITNESSES.md`.
+
+**Condition 1 (>= 2 witnesses): 31 rows pass, 19 record exactly one, 2 are
+prose.** But the ledgers are lane-scoped and say so in their own cells — "Maple
+(1 **in lane**; appears in other categories)", "Polymarket (1 **in lane**; CTF
+family)", "Spark — n=1 **in lane** but structural". The gate asks for corpus
+witnesses. **19 is an upper bound on the failures and a lower bound on nothing**,
+and the recount that would settle it has never been done. That work was not
+visible as missing until the gate was scored.
+
+**Condition 2 (a law that fails for its neighbours): unmet for all 52 rows.** The
+`why it is primitive` column is a rationale; 4 of 52 contain an equation and none
+separates a neighbour. This is the harder half and no witness recount touches it.
+
+**The estimate's weak end is now visible.** Of the families ROADMAP 1.1 names,
+trading function (n=6), rate curves via `UTILIZATION_TWO_SLOPE` (n=4) and custody
+via `CUSTODIAL_WRAPPED_SUPPLY` (n=3) are well witnessed. Tranche subordination,
+delegation and batch clearing rest on **one protocol each** on the current
+record.
+
+**A caution carried from gate 0.1.** Do not prune the 19 singletons yet. The
+evidence cannot presently distinguish "one witness in the corpus" from "one
+witness in this lane", and pruning on a bookkeeping artifact is precisely the
+error `qsigma2` made by scanning `init`. Recount first, then prune.

@@ -95,6 +95,21 @@ composition, then construction.
       invariant every composite preserves and extremal selection breaks.
 - [ ] **1.1 — enumerate the ~16 families with signatures and laws.** Gate: every
       family has >= 2 corpus witnesses and a law that fails for its neighbours.
+      **First scoring done — `sigma/GATE-1.1-WITNESSES.md`. The gate is not
+      answerable on the current evidence base**, and splits into two:
+  - [ ] **1.1a — recount witnesses corpus-wide.** The 52 section-5 rows carry
+        *lane-local* counts ("Maple (1 **in lane**; appears in other
+        categories)"), and the gate asks a corpus question. Recorded: 31 rows at
+        >= 2, 19 at exactly 1, 2 unreadable prose. The 19 is an upper bound on
+        failures and a lower bound on nothing. Do **not** prune singletons before
+        this recount — that would delete families for a bookkeeping artifact,
+        the same error `qsigma2` made with `init`.
+  - [ ] **1.1b — write one law per surviving family**, each failing for its
+        nearest neighbour. **Condition 2 is unmet for all 52 rows** and no
+        witness recount touches it: the ledgers carry a `why it is primitive`
+        rationale, only 4 of 52 contain an equation, and none separates
+        neighbours. Start with `PRO_RATA_SHARES` vs `INDEX_ACCRUAL` — both reduce
+        to `mulDivDown(a,b,c)`, so whatever separates them is the real content.
 - [ ] **1.2 — pairwise independence**, each with a separating trace, as `F7` got
       via the interest-only trace.
 - [ ] **1.3 — sufficiency.** The failure list (<= 15 colour classes) gives only
