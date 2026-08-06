@@ -1302,3 +1302,58 @@ and backed by four independent corpus witnesses where no basis family has two.
 **Still open, and §8 says so:** `Perm`'s atomicity is not claimed (given a
 role-reading primitive the mandate decomposes immediately — that is the point),
 and the generation theorem for `P ∪ {Perm}` is untouched.
+
+
+---
+
+## `Perm` survives a falsification test — and gate 0.1's failure is explained
+
+`sigma/PERM-CONFIRMED.md`.
+
+**The test.** `mandate = Perm ⋈ Led.move` was derived from one witness, which
+makes it a description rather than a characterisation. Tested against Liquity V2
+batch managers (`BorrowerOperations.sol:905`, contracts on disk):
+
+    mandate_morpho   =  Perm ⋈ Led.move        moves balances
+    mandate_liquity  =  Perm ⋈ Post(rate)      sets a rate on others' debt
+
+**Different gated operation, same gate.** `Perm` is the invariant factor and what
+it gates varies — the outcome that distinguishes a characterisation from a curve
+fitted to one instance. The five laws survive with different instruments: bounded
+discretion is a per-manager rate *range* rather than a per-market supply cap.
+
+**And gate 0.1's failure is now explained.** `BASIS.md`:29-31 defines the sort
+split: *"a `Σ` may be **overwritten by an external writer** … a `Q` never is."*
+That is a permission predicate. Both cited witnesses model no writer —
+`applyPostPrice(old, p, t)` and `shockPrice(p)` take no caller.
+
+**So `Q`/`Σ` is a distinction in `R`, stated as a distinction in `P`** — and all
+four operationalisations (`qsigma`, `qsigma2/3`, `qsigma4`, `qsigma5`) were
+predicates on `P`. `QSIGMA-VERDICT` §3 concluded "no syntactic test on assignment
+form will separate provenance" and stopped there. This is why: **provenance is
+the permission coordinate.**
+
+**Corollary: `Post` is a decapitated `Perm`.** `BASIS.md` merges F1/F6 into
+`Prop` + `Post`, with `Post(Σ)` "supplying the ratio exogenously" — that is *a
+principal writes a value*, with the principal unmodelled. So the basis does not
+merely lack `Perm`; it contains a family that is `Perm ⋈ assignment` with the gate
+deleted. Deletion class 11, in the basis rather than in a spec. It also explains
+why F6 merged so readily: with the gate gone, "supplied exogenously" and "read
+off two totals" differ only in provenance.
+
+### Five findings, one absence
+
+| finding | what it was |
+|---|---|
+| gate 0.1 — `\|P\|=4` withdrawn | a permission split stated arithmetically |
+| deletion class 11 | `R` deleted from the specs |
+| pair 4 — autonomy untestable | needs `R` |
+| the refuter | a `Perm`-gated transition |
+| F1/F6 merging | `Post` is `Perm` minus its gate |
+
+The programme has been circling one absence for its whole life.
+
+**Limits, recorded:** two witnesses is two — Steakhouse operates MetaMorpho so it
+is not independent of witness 1, and Grove has no contracts on disk. And
+`Post`-is-decapitated-`Perm` is an argument from `BASIS.md`'s wording plus two
+unmodelled call sites, not a proof that F6 is non-primitive.

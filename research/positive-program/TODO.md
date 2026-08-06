@@ -121,9 +121,31 @@ composition, then construction.
         `(caller, n ↦ Δpos(n))`. Conservation sees only `Σ pos` — machine-checked
         that two disjoint allocations share one value — and share accounting sees
         only the caller's column, which `reallocate` leaves fixed.
-  - [ ] Generation theorem for the extended basis `P ∪ {Perm}`. §8 is explicit
-        that irreducibility of `Perm` says nothing about completeness once it is
-        added.
+  - [x] **`Perm` confirmed against a second, independent witness —
+        `sigma/PERM-CONFIRMED.md`.** Liquity V2 batch managers
+        (`BorrowerOperations.sol:905`): same gate, **different gated operation**.
+        `mandate_morpho = Perm ⋈ Led.move`; `mandate_liquity = Perm ⋈ Post(rate)`
+        — the manager sets a rate governing accrual on other people's debt, and
+        nothing is transferred. **`Perm` is the invariant factor and what it
+        gates varies**, which is the outcome that distinguishes a
+        characterisation from a curve fitted to one instance. The five laws
+        survive with different instruments.
+  - [x] **Gate 0.1's failure EXPLAINED.** `BASIS.md`:29-31 defines `Σ` as "may be
+        overwritten by **an external writer**" — a permission predicate — and
+        both cited witnesses model no writer (`applyPostPrice(old, p, t)`,
+        `shockPrice(p)`). So `Q`/`Σ` is a distinction in `R` stated as one in `P`,
+        and all four operationalisations were predicates on `P`. That is why
+        `QSIGMA-VERDICT` §3's "no syntactic test on assignment form will separate
+        provenance" is true: **provenance is the permission coordinate.**
+        Corollary: `Post` (F6) is `Perm ⋈ assignment` with the gate deleted —
+        deletion class 11 occurring in the basis itself — which is also why F6
+        merged so readily into `Prop`.
+  - [ ] Generation theorem for the extended basis `P ∪ {Perm}`. §8 of
+        `CHARACTERISATION.md` is explicit that irreducibility of `Perm` says
+        nothing about completeness once it is added.
+  - [ ] **Re-derive F6 once `R` exists.** If `Post` is a decapitated `Perm`, the
+        family list shortens again and for a principled reason rather than a
+        lane-naming one.
         **Attempted and reformulated — `sigma/OWNER-LOCALITY.md`.** The
         `pure def`/`action` split is not a proxy for owner-locality: 83 `pure
         def`, 16 `type`, **6 `action`**, 4 `var`, 4 unresolved. All six actions
