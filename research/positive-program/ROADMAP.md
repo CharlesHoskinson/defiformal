@@ -120,9 +120,10 @@ a negative result — it exhibits a finite basis and delimits it exactly.
 | 2.0e plan review | **repairs delivered** | R1+R4 applied to `P2-FIDELITY`; R2/R3/R5 in `phase2/P2-CONTRACT.md` |
 | 2.0f close three carry-forwards | **CLOSED** | CF1 closed (constant-crossing rule); CF2 closed as convention 6g, half-lintable; CF3 resolved then **corrected** |
 | 2.1a pilot (`uniswap_v2`) | **PASSED** | lint 0, typecheck clean, `inv_conservation` ok, 13 `wit_*` all violated as required; 22 T0 vectors |
-| 2.1b the remaining nine | **IN FLIGHT** | four workers by technique, against pilot conventions |
+| 2.1b the remaining nine | **DELIVERED, record incomplete** | all 10 targets present; 13/13 typecheck and lint 5/13 re-verified pass 7; **W2 has no delivery section** |
+| 2.1c close W1's curve carry-in | **PASSED** | K=8 does not truncate — the guard refuses; `inv_all` ok to depth 20 |
 | 2.2 spec the missing 21 | not started | 72 named, 51 specced |
-| 2.3 re-run generation | blocked | needs 2.1 |
+| 2.3 re-run generation | blocked | needs 2.1b's record closed |
 
 **Next gate: 2.0f — close three carry-forwards.** The five repairs landed, but
 delivering them surfaced three items that must be closed before any re-spec is
@@ -574,3 +575,61 @@ it to the instant with `lastOp == OP_EPOCH` fixed it.
 Verified after all three: v1 `liquity` reports **2 x D4a**, v2 `liquity` reports
 **1 x D4b**, the pilot stays clean, and `startAuction` splits `u` -> D4a,
 `sid` -> D4b.
+
+---
+
+## Pass 7 — independent re-verification of the Phase 2 artifacts
+
+Everything below was re-run rather than read off the prior record.
+
+**Confirmed as claimed.**
+
+| claim | command | result |
+|---|---|---|
+| 13/13 v2 specs typecheck | `quint typecheck *.qnt` | 13 OK |
+| lint 5 findings / 13 files | `respec_lint.py *.qnt` | 5 (apex D4a, derive D4a+D4b, liquity D4b, polymarket D4a) |
+| curve invariants hold | `quint run curve.qnt --invariant=inv_all --max-steps=20 --max-samples=2000` | `[ok]`, 3317 traces/s |
+| K=8 truncates at 10^6 | `evidence/curve_k.py` | worst converging 12 iters at (214396, 1); 97 of 4900 over K=8 |
+
+**Gate 2.1c — W1's curve carry-in is closed, and the roadmap's own recommendation
+was the wrong question.** This roadmap told W1 to either cap curve at 10^5 or
+raise K >= 12. The shipped spec did neither, and is nonetheless sound: the K=8
+unrolling **refuses rather than approximates**. `newtonDFull` carries the `done`
+flag, every action conjoins the convergence of the state it leaves and the state
+it enters (`addLiquidity` guards all three of `st0/st1/st2`; `exchange*` guards
+`st`, `sy` and `after`), and `inv_dConverged` re-asserts it at every reached
+state. A converging-but-slow pair therefore costs a *transition*, not a *value*.
+That is an (E<=) restriction, which `P2-FIDELITY` permits and which the spec
+declares.
+
+The general lesson, since this phase collects them: **"the bound is too small"
+and "the spec is unsound" are different claims, and the second does not follow
+from the first when the unrolling carries a termination flag.** The roadmap
+asserted the second from the first.
+
+**Correction found while closing it.** `curve.qnt:79` declares "36 of 4900
+balance pairs never break". The pairs the `done` guard actually refuses on
+`curve_k.py`'s uniform 10^6 grid number **117 of 4900** — 20 non-converging plus
+97 needing more than 8 iterations (`evidence/curve_refused.py`, new). The
+populations are genuinely different — the spec means its own reachable grid, the
+sweep means a uniform one — but **both are 4900**, so the figures are trivially
+confusable and one of them is silently the wrong denominator for the other's
+claim. Carried into TODO as a disambiguation item.
+
+**The one real gap: W2 has no delivery record.** `P2-SCOPE` §110 assigns
+`compound_v3`, `morpho_blue` and `gmx` to W2. All three specs are present,
+typecheck, and are substantive rather than thin —
+
+| spec | T0 refs | `wit_*` | `inv_*` |
+|---|---|---|---|
+| compound_v3 | 50 | 18 | 7 |
+| morpho_blue | 41 | 19 | 7 |
+| gmx | 48 | 16 | 7 |
+
+— comparable to W1, W3 and W4 on every column. But this roadmap has a
+"W1 delivered", a "W3 and W4 delivered" and **no W2 section**, so three of the
+ten protocols carry no recorded corrections. Every other lane produced
+load-bearing ones: W1 five, W3/W4 seven, the pilot two. A lane that produced zero
+is not a lane that found nothing; it is a lane nobody wrote down. **2.1b must not
+be marked closed, and 2.3 must not be run, until W2's three specs get the same
+cold read the others got.**
