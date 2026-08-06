@@ -1014,3 +1014,51 @@ never once detected a deleted mechanism"*. Here conservation fails to detect a
 `REFUTER-DELEGATED-ALLOCATION.md` §5: owner-locality verified across every family
 rather than seven by hand, and preservation under `⋈` proved. The witness closes
 the third item on that list, not the first two.
+
+
+---
+
+## Owner-locality measured across all 52 families — and my own framing corrected
+
+Full argument in `sigma/OWNER-LOCALITY.md`.
+
+`REFUTER-DELEGATED-ALLOCATION.md` §5 item 1 asked for owner-locality to be
+verified across every family rather than the seven read by hand. Running that
+check showed **the test was the wrong one.**
+
+| identifiers introduced as | count |
+|---|---|
+| `pure def` | 83 |
+| `type` | 16 |
+| **`action`** | **6** |
+| `var` | 4 |
+| unresolved | 4 |
+
+So "every family is a `pure def`, hence a function" is **false** — six
+identifiers across four rows are actions. All six were then read by hand and all
+are deterministic given their arguments.
+
+**That does not rescue the argument, because `reallocate` is deterministic given
+its arguments too.** In `metamorpho.qnt` it is
+`reallocate(caller, mFrom, mTo, amt)`; fix those and the post-state is fixed. The
+discretion is in *which arguments the allocator supplies* — equally true of
+`requestRedeem(u, sh)`, where the user picks `sh`.
+
+**Neither `pure def` vs `action` nor determinism separates the mandate.** Both
+are properties of a definition's shape. Owner-locality — *a transition changes
+only positions attributable to its caller* — is about **who called**, and that
+appears in neither.
+
+**Which is deletion class 11 arriving from a fourth direction.** `processRedeem(u)`
+is owner-local if a depositor calls it for themselves and non-local if a pool
+delegate calls it for someone else; the spec has no caller and cannot say.
+
+**And `triggerDefault` may be a second witness rather than a counterexample.**
+Its comment reads *"Delegate triggers default — cover absorbs first loss"*: a
+named party choosing when to realise a loss borne by depositors. `VERDICT.md` §1
+names Maple pool delegates as an instance of the same mandate, alongside Morpho
+curators. The spec deleted the delegate, so any caller may fire it.
+
+**Net:** the exhibit stands; no claim that the basis is provably function-only
+stands; completeness is still not recorded as refuted. Every remaining route to
+the theorem now passes through convention 6h.

@@ -97,9 +97,15 @@ cannot separate it; and the reason it was never formalised.
 
 **Not yet a theorem.** Three things are missing, and none should be glossed:
 
-1. **Owner-locality must be verified for every family, not the seven read here.**
-   The claim is that it holds for all of `P`. Seven definitions across three
-   `common.qnt` files were checked by hand. That is evidence, not a proof.
+1. **Owner-locality is not checkable on the v1 corpus at all** — reformulated
+   after measurement; see `sigma/OWNER-LOCALITY.md`. The original wording said
+   the property must be "verified for every family, not the seven read here",
+   which presumed a `pure def` / `action` split would serve as a proxy. It does
+   not. 46 of 52 rows resolve to functions, the other 6 are deterministic
+   actions, and **`reallocate` is deterministic given its arguments too**. What
+   separates them is *who may supply those arguments*, which no v1 spec records.
+   Verifying owner-locality needs convention 6h adopted first, then a per-family
+   check against re-specs that carry callers.
 2. **The closure argument must be written.** The intuition is that owner-locality
    is preserved by composition — if each generator touches only its caller's
    positions, so does any composite — hence no composite reaches `reallocate`.

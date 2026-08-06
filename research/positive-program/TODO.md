@@ -52,6 +52,15 @@ composition, then construction.
         `withdraw` added; lint went 2 -> 0.
   - [ ] Verify owner-locality across every family, and prove it is preserved by
         `⋈`. That is what turns the exhibit into the refutation.
+        **Attempted and reformulated — `sigma/OWNER-LOCALITY.md`.** The
+        `pure def`/`action` split is not a proxy for owner-locality: 83 `pure
+        def`, 16 `type`, **6 `action`**, 4 `var`, 4 unresolved. All six actions
+        read by hand and all are deterministic given their arguments — **but so
+        is `reallocate`.** What separates them is who may supply the arguments,
+        which no v1 spec records. **Blocked on 6h**, like everything else.
+        `triggerDefault` ("Delegate triggers default") is plausibly a SECOND
+        witness to the refuter rather than a counterexample — `VERDICT.md` §1
+        names Maple pool delegates alongside Morpho curators.
 - [ ] **2.3 — re-run generation against the honest corpus.** This is the payoff.
       Everything since the eight-family refutation has been building the ability
       to measure; this is the measurement. Compare against the v1 figure of
