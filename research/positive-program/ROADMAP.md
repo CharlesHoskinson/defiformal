@@ -110,7 +110,7 @@ a negative result — it exhibits a finite basis and delimits it exactly.
 
 | gate | state | evidence / blocker |
 |---|---|---|
-| 0.1 Q/Σ invariant testable | **FAILED** | three operationalisations give a trivial partition; `\|P\|=4` unsupported |
+| 0.1 Q/Σ invariant testable | **RESOLVED — claim false, `\|P\|=4` WITHDRAWN** | `sigma/QSIGMA-VERDICT.md`; the prior "three operationalisations" were two, and both scanned `init` |
 | 0.2 `F9` irreducible | **empirically settled, theorem open** | zero extremal selections corpus-wide |
 | 1.x fix the basis | not started | blocked on 0.1 |
 | 2.0 find all ten deletions | **PASSED** | `phase2/P2-SCOPE.md`, all ten with line numbers |
@@ -633,3 +633,49 @@ load-bearing ones: W1 five, W3/W4 seven, the pilot two. A lane that produced zer
 is not a lane that found nothing; it is a lane nobody wrote down. **2.1b must not
 be marked closed, and 2.3 must not be run, until W2's three specs get the same
 cold read the others got.**
+
+
+---
+
+## Gate 0.1 — resolved, and `|P| = 4` is withdrawn
+
+Full argument and reproduction in `sigma/QSIGMA-VERDICT.md`. Three points.
+
+**The gate was FAILED for a harness bug, not a fact about the corpus.** The
+"three good-faith operationalisations" were two — `qsigma3.py` is byte-identical
+to `qsigma2.py` but for its output filename — and both scanned `init`, whose
+literal assignments are replacements by construction, so `Q` collapsed to empty
+before any protocol was consulted. Excluding the initialiser makes the partition
+non-trivial immediately. Seven passes restated "gate 0.1 remains FAILED" without
+re-running it.
+
+This is the mirror of the phase's recurring trap. There: *a check passes because
+the stressing states were removed.* Here: **a check fails because states that
+were never in scope were included.** Both are the harness deciding the answer.
+
+**The partition is real and does not mean what the basis needs.**
+
+| | Q | Sigma | balances in Q | prices in Sigma |
+|---|---|---|---|---|
+| qsigma2/3 (init included) | 0 | 388 | 0.0% | 0.0% |
+| qsigma4 (init excluded) | 300 | 88 | 86.0% | 42.9% |
+| qsigma5 (+ binding resolution) | 334 | 54 | **95.5%** | **36.5%** |
+
+The balance axis is sharp. The price axis fails, because accrual indices
+(`liquidityIndex`, `variableBorrowIndex`, `baseSupplyIndex`, `rateMul`, …) evolve
+multiplicatively from their own prior value. They are **exogenous in provenance
+and endogenous in update form**, and no syntactic test on assignment form
+separates provenance. That is the finding, not an artifact to tune away.
+
+**`BASIS.md`'s own witness refutes it.** The claim is argued from USDT's reserve
+"moving only in lockstep", citing `L6/usdt.qnt:51,68`. The variable is also
+assigned at `:157` — `reserve' = newReserve` in `attestReserve`, commented at
+`:148` as *external*, with the spec recording at `:191` that `inv_reserve_covers`
+fails when that action is in `step`. A wholesale overwrite by an external writer
+is `BASIS.md`'s own definition of a `Sigma`.
+
+**Consequence for the roadmap.** Phase 1 is unblocked, and unblocked *without*
+`|P| = 4`. 1.1 proceeds on the independent ~16-family estimate, which never
+depended on the six-sort split. The replacement/update partition is available to
+1.1 as a candidate law about update form, on the same terms as any other family:
+at least two corpus witnesses and a law that fails for its neighbours.

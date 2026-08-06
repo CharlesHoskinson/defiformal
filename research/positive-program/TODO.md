@@ -71,13 +71,24 @@ composition, then construction.
 
 ## Blocked — Phase 0/1, and deliberately visible
 
-- [ ] **0.1 — state the `Q`/`Sigma` invariant testably, or withdraw `|P| = 4`.**
-      **This gate is FAILED.** Three good-faith operationalisations
-      (`sigma/qsigma{,2,3}.py`) all produce a trivial partition. `|P| = 4` and
-      the six-sort split are the deepest claims in the programme and the only
-      load-bearing ones with no script behind them. The Phase-2 loop restates
-      each pass that it will never act on this, precisely so it does not become
-      an assumption by neglect. **Someone must pick it up deliberately.**
+- [x] **0.1 — state the `Q`/`Sigma` invariant testably, or withdraw `|P| = 4`.**
+      **RESOLVED — see `sigma/QSIGMA-VERDICT.md`. The invariant as stated is
+      false; `|P| = 4` and the six-sort split are withdrawn.**
+      The "three operationalisations" were two — `qsigma3.py` is a byte copy of
+      `qsigma2.py` — and both returned the empty `Q` because they scanned `init`,
+      whose literal assignments are replacements by construction. Excluding it
+      (`qsigma4.py`) makes the partition non-trivial at once; resolving local
+      `val` bindings too (`qsigma5.py`) gives **Q 334 / Sigma 54**, with 95.5% of
+      balances never replaced. But only 36.5% of prices/rates ARE replaced,
+      because accrual indices evolve multiplicatively from their own prior value
+      — exogenous in provenance, endogenous in update form. And `BASIS.md`'s own
+      cited witness refutes it: `usdt.qnt:157` overwrites `reserve` wholesale in
+      `attestReserve`, an external writer, which the citation omits and the spec
+      documents two lines below.
+      **Follow-on for Phase 1:** the replacement/update partition survives as a
+      statement about update form. If 1.1 wants it, it must earn its place as a
+      law with witnesses like any other family. Do not attempt a sixth
+      operationalisation to rescue the semantic reading.
 - [ ] **0.2 — prove `F9` (extremal allocation) irreducible.** Settled
       empirically: every fold in all 57 v1 specs is a commutative sum, and there
       is not one extremal selection in the corpus. Needs the theorem — an
