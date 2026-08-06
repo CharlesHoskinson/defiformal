@@ -125,8 +125,20 @@ composition, then construction.
         back **reversed**: index call sites write a ratio component 100% of the
         time against pro-rata's 70%). **0 of 8 separate — they are one family**,
         which confirms `BASIS.md`'s F1/F6 merge on tested grounds.
-        - [ ] Run the same test on every remaining adjacent pair, hardest first.
-              Each non-separation collapses two families into one.
+        - [x] **Pairs 2 and 3 tested — `sigma/GATE-1.1B-PAIRS23.md`. Both
+              collapse.** L3 `RateLimit` vs L6 `RateLimit` are extensionally
+              identical on all 165 well-formed states (the 20 disagreements are
+              guard clauses at `capacity<=0`/`slope<=0`). `isHealthy` vs
+              `maintainsMargin`: 0 of 5 laws separate — P4 died to asymmetric
+              test design, P5 to a domain that never crossed the health
+              threshold. **Three pairs tested, three collapses, zero separating
+              laws.**
+        - [ ] Next pair: the deferred-claim cluster — `WITHDRAWAL_QUEUE` /
+              `DelayedExit queue` / `ASYNC_REQUEST_CLAIM` /
+              `TWO_PHASE_CUSTODIAN_REQUEST`, four names for what may be one
+              two-phase-request mechanism.
+        - [ ] Check every future law against the five-class artifact taxonomy in
+              `GATE-1.1B-PAIRS23.md` before reporting it.
         - [ ] Every proposed law ships with its audit: exact-arithmetic check,
               law-vs-signature statement, and a measurement against the 51 specs.
               Never report a separation count without the audit column — pass

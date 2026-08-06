@@ -113,7 +113,7 @@ a negative result — it exhibits a finite basis and delimits it exactly.
 | 0.1 Q/Σ invariant testable | **RESOLVED — claim false, `\|P\|=4` WITHDRAWN** | `sigma/QSIGMA-VERDICT.md`; the prior "three operationalisations" were two, and both scanned `init` |
 | 0.2 `F9` irreducible | **empirically settled, theorem open** | zero extremal selections corpus-wide |
 | 1.1a recount witnesses corpus-wide | **OPEN — search method refuted** | `sigma/GATE-1.1A-RECOUNT.md`; 28 of 28 rows reaching >=2 are shared-`common.qnt` reuse, **0 independent**; `layerzero` proves search under-counts |
-| 1.1b a law per family | **OPEN — first pair tested, 0 of 8 laws separate** | `sigma/GATE-1.1B-LAWS.md`; `PRO_RATA_SHARES` and `INDEX_ACCRUAL` are ONE family; 3 apparent separators all died under audit |
+| 1.1b a law per family | **OPEN — 3 pairs tested, 3 collapses, 0 separating laws** | `GATE-1.1B-LAWS.md`, `GATE-1.1B-PAIRS23.md`; six named families collapse to three; 5 apparent separators all died under audit |
 | 1.2 pairwise independence | not started | needs 1.1b |
 | 1.3 non-degeneracy and sufficiency | not started | needs 1.1b |
 | 2.0 find all ten deletions | **PASSED** | `phase2/P2-SCOPE.md`, all ten with line numbers |
@@ -796,3 +796,47 @@ signatures dressed as laws, and rows asserted from a mental model rather than
 measured. The third is the most dangerous — it produced a confident table entry
 that the corpus flatly contradicts. **Never report a separation count without the
 audit column.** Pass one's headline was "3 of 8 separate"; the true figure is 0.
+
+
+---
+
+## Sub-gate 1.1b — pairs 2 and 3, and the artifact taxonomy
+
+Full argument in `sigma/GATE-1.1B-PAIRS23.md`.
+
+**Pair 2, L3 `RateLimit` vs L6 `RateLimit`: extensionally identical.** Agree on
+**165 of 165 well-formed states**; all 20 disagreements sit at `capacity <= 0` or
+`slope <= 0`, where L6 carries guard clauses and L3 does not. Defensiveness in one
+transcription, not a different mechanism. **One family.**
+
+**Pair 3, `isHealthy` vs `maintainsMargin`: 0 of 5 laws separate.** Two appeared
+to, and the exact-arithmetic replay cleared both of being fixed-point artifacts.
+Both died anyway:
+
+- **P4 to asymmetric test design.** Both predicates are monotone in their
+  favourable argument and anti-monotone in their adverse one — `isHealthy` up in
+  `collPrice` and down in `debtPrice`, `maintainsMargin` up for Long and down for
+  Short. Pass one compared one mechanism's good argument against the other's bad
+  one.
+- **P5 to a domain that never crossed the threshold.** The surplus was negative
+  in 0 of 36 cases because the domain held no unhealthy states. Widened: **54 of
+  90**. Both mechanisms carry a signed health quantity that goes negative exactly
+  when the predicate fails.
+
+P5 is worth naming precisely: it is a violation of **convention 8c**, the
+programme's own constant-crossing rule, committed in a Phase 1 law test rather
+than a Phase 2 spec. The convention was written to stop a spec certifying a
+mechanism its domain could not reach; here it stopped a law test certifying a
+separation its domain could not reach.
+
+**Tally: three pairs, three collapses, zero separating laws.** Five apparent
+separators across the three pairs, all dead under audit. The artifact taxonomy is
+now five classes — floor artifact, signature dressed as law, asserted-not-measured,
+asymmetric test design, and non-crossing domain — and every future law must be
+checked against all five.
+
+**What it means.** This is not yet evidence the basis is small. It is evidence
+the *naming* was lane-local: the same mechanism, met in two lanes, was written
+down twice. Same root cause as 1.1a's finding that every witness count was
+shared-`common.qnt` reuse — the lane structure generated both the duplicate
+families and the counts that appeared to support them.
