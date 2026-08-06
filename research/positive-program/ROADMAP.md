@@ -113,7 +113,7 @@ a negative result — it exhibits a finite basis and delimits it exactly.
 | 0.1 Q/Σ invariant testable | **RESOLVED — claim false, `\|P\|=4` WITHDRAWN** | `sigma/QSIGMA-VERDICT.md`; the prior "three operationalisations" were two, and both scanned `init` |
 | 0.2 `F9` irreducible | **empirically settled, theorem open** | zero extremal selections corpus-wide |
 | 1.1a recount witnesses corpus-wide | **OPEN — search method refuted** | `sigma/GATE-1.1A-RECOUNT.md`; 28 of 28 rows reaching >=2 are shared-`common.qnt` reuse, **0 independent**; `layerzero` proves search under-counts |
-| 1.1b a law per family | **OPEN — 3 pairs tested, 3 collapses, 0 separating laws** | `GATE-1.1B-LAWS.md`, `GATE-1.1B-PAIRS23.md`; six named families collapse to three; 5 apparent separators all died under audit |
+| 1.1b a law per family | **BLOCKED ON THE HONEST CORPUS** | 3 pairs collapsed, pair 4 is **untestable** — `GATE-1.1B-PAIR4.md`; 0 of 17 gate actions model caller authority, so the autonomy law cannot be evaluated |
 | 1.2 pairwise independence | not started | needs 1.1b |
 | 1.3 non-degeneracy and sufficiency | not started | needs 1.1b |
 | 2.0 find all ten deletions | **PASSED** | `phase2/P2-SCOPE.md`, all ten with line numbers |
@@ -840,3 +840,47 @@ the *naming* was lane-local: the same mechanism, met in two lanes, was written
 down twice. Same root cause as 1.1a's finding that every witness count was
 shared-`common.qnt` reuse — the lane structure generated both the duplicate
 families and the counts that appeared to support them.
+
+
+---
+
+## Sub-gate 1.1b pair 4 — Phase 1 is blocked on Phase 2, and here is the proof
+
+Full argument in `sigma/GATE-1.1B-PAIR4.md`.
+
+The deferred-claim cluster is four names for one skeleton — request, wait, claim
+— differing in exactly one place: **what opens the gate.** Nothing (L1), time
+(L3), a posted price (L5), an authority (L4). The separating law is therefore
+**autonomy**: can the holder claim without another party's cooperation? It would
+split the cluster 2-2 rather than collapse it, it is a liveness property rather
+than arithmetic, and it says something a user would actually care about — whether
+their exit can be blocked.
+
+**It cannot be tested. 0 of 17 gate-opening actions across the four mechanisms
+carry any caller or authority guard.** All four score autonomous; the law
+separates nothing.
+
+`wbtc.confirmMint` is the clean witness. Its comment reads *"onlyCustodian"* and
+its signature is `(id: int)`. The custodian's authority **is** the primitive —
+that row exists because mint authority is split merchant-request /
+custodian-confirm — and it is absent from the spec. The name survives, the
+mechanism does not.
+
+**This is an eleventh deletion, outside `P2-SCOPE`'s ten.** `wbtc` was never on
+the re-spec list, and its deletion is the `morpho_blue.qnt:156` shape exactly.
+The ten were the ten found by looking at ten protocols. Phase 1 found an eleventh
+by asking a different question, and there is no reason to think it is the last.
+
+**The consequence reorders the roadmap.** Phase 1 was recorded as blocked on 0.1
+alone, and 0.1 is withdrawn — so Phase 1 looked free. It is not. 1.1b needs laws,
+laws need mechanisms, and the v1 specs deleted the mechanisms. The three earlier
+pairs collapsed, which could be read as lane-local duplicate naming. This pair
+does not collapse; it is **untestable**, which is worse, because it means the
+corpus cannot answer the question at all. The autonomy law is almost certainly
+real and nothing in the corpus can confirm it.
+
+Three consequences, all now in TODO: add **caller authority** to the Phase 2
+fidelity criterion, where no convention currently requires it; record `wbtc` as
+deletion 11 and re-scan the other 41 unre-specced specs for the class; and run
+**2.2 before the rest of 1.1b**, since the remaining pairs will hit this wall
+wherever their law depends on something that was deleted.

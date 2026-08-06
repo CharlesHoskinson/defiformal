@@ -133,10 +133,24 @@ composition, then construction.
               test design, P5 to a domain that never crossed the health
               threshold. **Three pairs tested, three collapses, zero separating
               laws.**
-        - [ ] Next pair: the deferred-claim cluster — `WITHDRAWAL_QUEUE` /
-              `DelayedExit queue` / `ASYNC_REQUEST_CLAIM` /
-              `TWO_PHASE_CUSTODIAN_REQUEST`, four names for what may be one
-              two-phase-request mechanism.
+        - [x] **Pair 4, the deferred-claim cluster — UNTESTABLE, and this is
+              Phase 1's real blocker. `sigma/GATE-1.1B-PAIR4.md`.** The four rows
+              differ only in what opens the gate (nothing / time / a posted
+              price / an authority), so the separating law is **autonomy** — can
+              the holder claim without another party's cooperation. **0 of 17
+              gate-opening actions carry any caller guard**, so all four score
+              autonomous and the law separates nothing. `wbtc.confirmMint` is the
+              witness: comment "onlyCustodian", signature `(id: int)`.
+        - [ ] **Add caller authority to the Phase 2 fidelity criterion.**
+              `P2-FIDELITY`/`P2-CONTRACT` have no convention requiring a re-spec
+              to model who may call what. It is load-bearing for Phase 1 and
+              belongs alongside 6g.
+        - [ ] **Record `wbtc` as deletion 11** — same class as
+              `morpho_blue.qnt:156`, but outside `P2-SCOPE`'s ten. Re-scan the
+              other 41 unre-specced specs for the class before trusting any
+              Phase 1 result drawn from them.
+        - [ ] **Re-order: 2.2 before the rest of 1.1b.** Remaining pairs will hit
+              the same wall wherever their law depends on a deleted mechanism.
         - [ ] Check every future law against the five-class artifact taxonomy in
               `GATE-1.1B-PAIRS23.md` before reporting it.
         - [ ] Every proposed law ships with its audit: exact-arithmetic check,
