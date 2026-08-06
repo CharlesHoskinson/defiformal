@@ -103,3 +103,47 @@ The ten v2 re-specs are already written and none carries authority. Retrofitting
 is real work. The alternative is that 2.2's twenty-one new specs inherit the
 defect, and Phase 1 stays blocked on a corpus that grew without ever gaining the
 one thing it needs.
+
+
+---
+
+## 6h addendum — the surjectivity test, and the FROZEN verdict
+
+Both came out of applying 6h to the ten re-specs; see `sigma/APEX-LIQUIDATE.md`
+and `sigma/SURJECTIVITY.md`.
+
+### When is an OMITTED entry sound?
+
+> An omission is `(E<=)`-safe iff the **transition** is reachable by an arbitrary
+> principal along some path — not iff the function is directly callable.
+
+Relay patterns are surjective and safe to omit: apex's `Margin.liquidate` is
+`routerMap`-gated but reached by any user through an open `Router.liquidate`;
+huma's `distributeProfit` requires the caller to *be* the `Credit` contract, yet
+any borrower's `makePayment` causes it.
+
+Role grants are not surjective and are **unsound** to omit:
+`uniswap_v2.setFeeTo` (`feeToSetter`, a closed cycle), `huma.disburse`
+(`LENDER_ROLE`, granted by a pool operator), `huma.closePool`
+(`onlyPoolOwnerOrHumaOwner`).
+
+### A third verdict
+
+> **FROZEN** — the guard is present, but the authority is a constant where the
+> contract mutates it.
+
+`huma.qnt:463`'s `pure val LENDERS` is the example: lender status is guarded, and
+the contract grants and revokes it via `addApprovedLender`/`removeApprovedLender`
+(`onlyPoolOperator`). Freezing is sound as an `(E<=)` restriction on role
+configurations **and deletes the grant mechanism**, which is `Perm`'s first law.
+
+**FROZEN is where a mandate hides.** A frozen role set cannot exhibit a
+grant witness, so the permission coordinate is present but cannot be shown to be
+contingent.
+
+### Known defect in the tooling
+
+`phase2/auth_scan.py` scores MODELLED on a caller-ish first parameter, not on a
+guard against **mutable** authority state, so it reports FROZEN entries as
+MODELLED. huma's four are FROZEN. The MODELLED count is inflated accordingly and
+must not be quoted until the scan distinguishes `var` from `pure val`.
