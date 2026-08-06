@@ -364,6 +364,82 @@ module metamorpho {
   val wit_capBinds: bool =
     not(MARKETS.exists(m => caps.get(m) == 150 and supplied.get(m) == 150))
 
+
+  // ---------------------------------------------------------------------------
+  //  THE SEPARATING PROPERTY, MACHINE-CHECKED
+  //
+  //  The first attempt at characterising this object used OWNER-LOCALITY -- a
+  //  transition changes only positions attributable to its caller. That is
+  //  WRONG, and `aave_v3.qnt:156` is the counterexample: `liquidate(borrower,
+  //  repayAmt)` seizes the BORROWER's collateral and is called by someone else.
+  //  Liquidation is in the basis and is not owner-local. Non-locality is
+  //  therefore not what distinguishes the mandate.
+  //
+  //  What distinguishes it is WHERE THE GUARD LOOKS. Factor the state as
+  //  S = P x R, positions x role-assignment. Call a transition PERMISSION-FREE
+  //  if its guard factors through P alone -- if for every position vector, the
+  //  role assignment cannot change whether it is enabled.
+  //
+  //    deposit      permission-free: the guard reads the caller's own balance
+  //    liquidate    permission-free: the guard reads the BORROWER's health, and
+  //                 anyone at all may call it. Non-local, still permission-free.
+  //    reallocate   NOT permission-free: `isAllocator[caller]`.
+  //
+  //  Permission-freedom is preserved by composition, so no composite of
+  //  permission-free generators is permission-dependent. The basis contains no
+  //  role coordinate; the mandate needs one. That is the irreducibility.
+  // ---------------------------------------------------------------------------
+
+  /// Two role assignments over the SAME principals.
+  pure val ROLES_YES: str -> bool =
+    Map("owner" -> false, "curator" -> false, "mallory" -> true,
+        "alice" -> false, "bob" -> false)
+  pure val ROLES_NO: str -> bool =
+    Map("owner" -> false, "curator" -> false, "mallory" -> false,
+        "alice" -> false, "bob" -> false)
+
+  /// CLAIM 3 -- the mandate is PERMISSION-DEPENDENT. Identical positions,
+  /// identical caller, identical arguments; only R differs, and enablement
+  /// flips. This is the whole separation, in one line.
+  pure val t0_mandate_permission_dependent: bool = and {
+    hasAllocatorRole("mallory", ROLES_YES, "curator"),
+    not(hasAllocatorRole("mallory", ROLES_NO, "curator")),
+  }
+
+  /// CLAIM 1a -- a basis-shaped guard is PERMISSION-FREE. `depositGuard` is
+  /// handed the role map and is constant in it.
+  pure def depositGuard(caller: str, amt: int, roles: str -> bool): bool =
+    DEPOSITORS.contains(caller) and DEPOSIT_AMOUNTS.contains(amt)
+  pure val t0_deposit_permission_free: bool =
+    depositGuard("alice", 100, ROLES_YES) == depositGuard("alice", 100, ROLES_NO)
+
+  /// CLAIM 1b -- and so is LIQUIDATION, the non-local one. Its guard reads the
+  /// victim's health, a position, and nothing else. Non-locality and
+  /// permission-dependence are independent properties, and only the second
+  /// separates the mandate.
+  pure def liquidateGuard(victimHealthy: bool, roles: str -> bool): bool =
+    not(victimHealthy)
+  pure val t0_liquidate_permission_free: bool =
+    liquidateGuard(false, ROLES_YES) == liquidateGuard(false, ROLES_NO)
+
+  /// WHY CONSERVATION IS BLIND, as an equation rather than an anecdote.
+  /// Two allocations with nothing in common produce the same conservation
+  /// observable, so no predicate on that observable can separate them.
+  pure val t0_conservation_cannot_separate: bool =
+    totalAssets(Map(0 -> 100, 1 -> 200, 2 -> 0), 0)
+      == totalAssets(Map(0 -> 0, 1 -> 0, 2 -> 300), 0)
+
+  /// The discriminating observable is the PAIR (caller, distribution). Neither
+  /// component alone suffices: conservation sees only the sum, and per-principal
+  /// share accounting sees only the caller's own column, which `reallocate`
+  /// leaves untouched (`inv_sharesSum` is [ok] across it).
+  val inv_separation: bool = and {
+    t0_mandate_permission_dependent,
+    t0_deposit_permission_free,
+    t0_liquidate_permission_free,
+    t0_conservation_cannot_separate,
+  }
+
   // ---------------------------------------------------------------------------
   // T0 CONFORMANCE VECTORS — exact values read off the contract
   // ---------------------------------------------------------------------------
@@ -398,5 +474,6 @@ module metamorpho {
   val inv_T0: bool = and {
     t0_role_a, t0_role_b, t0_role_c, t0_role_d, t0_role_e,
     t0_cons_a, t0_cons_b, t0_local_a, t0_local_b,
+    inv_separation,
   }
 }

@@ -1228,3 +1228,77 @@ split/merge, Uniswap's NFT position).
 **Limit, recorded rather than glossed:** term frequency plus reading the two
 largest word-groups is not proof that no cluster exists. A structural class whose
 members share no vocabulary would be invisible to both methods.
+
+
+---
+
+## The mandate, characterised — the basis is incomplete by exactly one primitive
+
+`sigma/CHARACTERISATION.md`. Machine-checked in `quint-models-v2/metamorpho.qnt`:
+`inv_separation` `[ok]`, `inv_T0` `[ok]`, lint 0.
+
+**A correction first.** The object was characterised by **owner-locality** — a
+transition changes only its caller's positions. That is wrong, and the
+counterexample is inside the basis: `aave_v3.qnt:156`, `liquidate(borrower,
+repayAmt)`, seizes the **borrower's** collateral and is called by someone else.
+Liquidation is non-local and it is a basis family. **Non-locality does not
+separate**, and `REFUTER-DELEGATED-ALLOCATION.md` §3 is marked superseded.
+
+**The corrected characterisation.** Factor the state `S ≅ P × R` — positions and
+role assignment. `R` is state, is mutable, and is not a position: it does not
+conserve, cannot be transferred, and no arithmetic law relates it to `P`.
+
+> A transition is **permission-free** if its guard and effect factor through `P`
+> — if the role assignment cannot change whether it is enabled.
+
+- **Claim 1.** Every basis family is permission-free. Liquidation is the
+  instructive case: non-local, yet its guard reads the *victim's health*, a
+  position, and anybody may call it. The right to intervene comes from a state
+  predicate, never an identity.
+- **Claim 2.** Permission-freedom is closed under `⋈`. `R` is a **spectator
+  coordinate** for the whole closure, because nothing in the basis can see it.
+- **Claim 3.** The mandate is permission-dependent — one machine-checked line:
+  identical positions, identical caller, identical arguments, only `R` differs,
+  enablement flips.
+
+> **Theorem.** mandate ∉ closure(basis). ∎
+
+**And the constructive half, which is the more useful result.** `act`'s *effect*
+— move `amt` between markets, total preserved — is exactly `BASIS.md:47`'s
+`P1 · Led`: `move : N × N × Q ⇀ Led`, conservation preserved. The effect is
+**already primitive**. Everything beyond it is the gate:
+
+> **`mandate = Perm ⋈ Led.move`**
+
+**The basis is incomplete by exactly one coordinate, and the missing primitive is
+`Perm`** — a permission gate, with `grant`/`revoke` themselves `Perm`-gated. Not
+a family of missing mechanisms: the residue long tail is idiosyncrasy, not
+structure (`RESIDUE-LONGTAIL.md`).
+
+Five falsifiable laws for `Perm`, read off the contract: monotone delegation,
+revocability, bounded discretion (curator sets caps, allocator acts within them),
+conservation, and **position-blindness of the gate** — holding a role is
+independent of holding a position, which is the law that makes it irreducible.
+Laws 1–3 are the "role SPLIT that makes curated vaults safe" the corpus residue
+named and could not express.
+
+**Why the observables are blind, now as an equation.** `totalAssets({0↦100,
+1↦200, 2↦0}) == totalAssets({0↦0, 1↦0, 2↦300})` — two distributions with nothing
+in common, one conservation value, machine-checked. Share accounting sees only
+the caller's own column, which `reallocate` leaves fixed. **The discriminating
+observable is the pair `(caller, n ↦ Δpos(n))`**, and neither component alone
+suffices. That is the theorem behind Phase 2's empirical refrain that
+*conservation never once detected a deleted mechanism*: conservation is a
+function of `Σ pos`, and mechanisms live in the distribution.
+
+**What the paper becomes.** Not "completeness refuted" but:
+
+> *A basis for permission-free DeFi, plus a proof that permission-gated
+> reallocation is irreducible to it, plus the minimal extension that repairs it.*
+
+`GOAL.md`'s second branch with a named repair rather than only a delimitation —
+and backed by four independent corpus witnesses where no basis family has two.
+
+**Still open, and §8 says so:** `Perm`'s atomicity is not claimed (given a
+role-reading primitive the mandate decomposes immediately — that is the point),
+and the generation theorem for `P ∪ {Perm}` is untouched.

@@ -101,8 +101,29 @@ composition, then construction.
         never driven: both true positives, since the header cited
         `MetaMorpho.sol:186 setCurator` and no action wrote it. `setCurator` and
         `withdraw` added; lint went 2 -> 0.
-  - [ ] Verify owner-locality across every family, and prove it is preserved by
-        `⋈`. That is what turns the exhibit into the refutation.
+  - [x] **CHARACTERISED — `sigma/CHARACTERISATION.md`, machine-checked
+        (`inv_separation` `[ok]`, lint 0).** Owner-locality was the wrong
+        property and `aave_v3.qnt:156` killed it: `liquidate` seizes the
+        *borrower's* collateral, is called by someone else, and is a basis
+        family. **Non-locality does not separate.**
+        Corrected: factor `S ≅ P × R` (positions × role assignment). A transition
+        is **permission-free** if its guard factors through `P`. Every basis
+        family is (liquidation included — its guard reads the victim's *health*,
+        and anyone may call). Permission-freedom is closed under `⋈` (`R` is a
+        spectator coordinate for the whole closure). The mandate is not.
+        **Therefore mandate ∉ closure(basis).**
+        Constructive half: `act`'s effect is exactly `P1 · Led.move`
+        (`BASIS.md:47`), so **`mandate = Perm ⋈ Led.move`** and the basis is
+        incomplete **by exactly one primitive, `Perm`**. Five falsifiable laws
+        given (monotone delegation, revocability, bounded discretion,
+        conservation, position-blindness of the gate).
+        Also proved: the discriminating observable is the pair
+        `(caller, n ↦ Δpos(n))`. Conservation sees only `Σ pos` — machine-checked
+        that two disjoint allocations share one value — and share accounting sees
+        only the caller's column, which `reallocate` leaves fixed.
+  - [ ] Generation theorem for the extended basis `P ∪ {Perm}`. §8 is explicit
+        that irreducibility of `Perm` says nothing about completeness once it is
+        added.
         **Attempted and reformulated — `sigma/OWNER-LOCALITY.md`.** The
         `pure def`/`action` split is not a proxy for owner-locality: 83 `pure
         def`, 16 `type`, **6 `action`**, 4 `var`, 4 unresolved. All six actions

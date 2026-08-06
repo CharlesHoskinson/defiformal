@@ -54,7 +54,16 @@ between Morpho Blue markets. Its constraints are exactly three:
 - `:402` `supplyAssets + suppliedAssets > supplyCap` reverts — `SupplyCapExceeded`;
 - `:414` `totalWithdrawn != totalSupplied` reverts — `InconsistentReallocation`.
 
-## 3. The property that fails — owner-locality
+## 3. The property that fails — SUPERSEDED, see `CHARACTERISATION.md`
+
+> **This section is wrong and is kept for the record.** Owner-locality fails for
+> `liquidate` too (`aave_v3.qnt:156` seizes the *borrower's* collateral and is
+> called by someone else), and liquidation is a basis family. Non-locality is not
+> the separating property. The corrected characterisation is
+> **permission-dependence** — whether the guard reads the role coordinate — and
+> it is in `sigma/CHARACTERISATION.md`, machine-checked.
+
+## 3. The property that fails — owner-locality (superseded)
 
 Every family in the basis is a `pure def`: a **function** of the state and of
 amounts supplied by the caller, and it moves only balances attributable to **that
