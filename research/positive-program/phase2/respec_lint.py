@@ -225,7 +225,31 @@ def analyse(path):
                 # indexes protocol state, i.e. it names WHICH element; unkeyed
                 # is usually an exogenous quantity (an amount), which is
                 # legitimate.
-                if keyed:
+                # 6h EXEMPTION (D4c). A caller modelled per convention 6h is a
+                # driver-supplied identity BY DESIGN, and D4 cannot distinguish
+                # it from a deleted selection. The test is not the name of the
+                # parameter but whether it is USED AS A CALLER: passed to an
+                # authority predicate, or compared against authority state.
+                # Reported, not suppressed -- an invisible exemption is how a
+                # linter stops being trusted.
+                authority = None
+                if formal:
+                    fesc = re.escape(formal)
+                    m6 = (re.search(r"\b((?:is|has|only)[A-Z]\w*)\s*\(\s*%s\b"
+                                    % fesc, window)
+                          or re.search(r"%s\s*==\s*([A-Z][A-Z0-9_]{2,})" % fesc,
+                                       window)
+                          or re.search(r"%s\s*==\s*(curator|owner|admin|operator|"
+                                       r"custodian|guardian|manager)\b" % fesc,
+                                       window, re.I))
+                    if m6:
+                        authority = m6.group(1)
+                if authority:
+                    findings.append(("D4c", f"{act}({a})",
+                                     f"`{a}` is a caller modelled under convention "
+                                     f"6h, guarded by `{authority}` — exempt from "
+                                     f"D4a/D4b, not counted"))
+                elif keyed:
                     findings.append(("D4a", f"{act}({a})",
                                      f"driver picks `{a}` from {nondets[a]} and the "
                                      f"selection action uses it as a map key — the "
@@ -260,7 +284,9 @@ def main():
         print(f"\n=== {p}")
         for code, where, why in f:
             print(f"  [{code}] {where}: {why}")
-        total += len(f)
+        # D4c is a 6h caller exemption: printed so it can be audited, not
+        # counted, because it is a compliance marker rather than a defect.
+        total += len([x for x in f if x[0] != "D4c"])
     print(f"\n{'-'*60}\nTOTAL FINDINGS: {total} across {len(paths)} spec(s)")
     return 1 if total else 0
 

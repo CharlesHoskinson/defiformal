@@ -293,3 +293,67 @@ T0 grants shape-plus-value credit at zero reachability cost.
 
 One vector reachable as a transition is the difference between a spec that contains the
 mechanism and a spec that merely knows its value.
+
+
+---
+
+## Convention 6h — caller authority (ADOPTED)
+
+**Every state-changing action must resolve its caller into exactly one of three
+states, and say which.**
+
+| verdict | meaning | obligation |
+|---|---|---|
+| **MODELLED** | the contract restricts the caller and the spec guards it | take the caller as an argument; guard it against modelled authority state |
+| **OMITTED** | the contract restricts the caller and the spec does not | declare it in the header with the contract file:line and the restriction dropped |
+| **PERMISSIONLESS** | the contract restricts nobody | declare it with the file:line checked. This is a **positive, falsifiable claim**, not an absence of evidence |
+
+A fourth outcome, **UNRESOLVED**, is permitted only as a temporary marker and
+must name what could not be found. It is not a synonym for permissionless.
+
+**Why the third row exists.** Without it, "no authority modelled" is
+indistinguishable from "no authority in the contract" — which is exactly the
+defect `DELETION-11.md` found and `GATE-1.1B-PAIR4.md` showed blocks Phase 1.
+`wbtc.addMintRequest` hardcoding `requester: MERCHANT` is an accidental
+declaration; `wbtc.confirmMint` taking `(id: int)` is a deletion; today a
+reviewer cannot tell them apart. The declaration is what separates them.
+
+**Authority state is `var`, not a constant**, wherever the contract lets it
+change. Freezing it deletes the *granting* of authority, which is itself a
+mechanism — see `CHARACTERISATION.md`: the mandate is `Perm ⋈ Led.move`, and
+`grant`/`revoke` are `Perm`-gated.
+
+**Cost is bounded.** Authority sets are small — one custodian, one operator, a
+two-element allocator set — so convention 8a's cap of 8 enumerated values per
+`nondet` is not threatened. Where a role is open-ended, model two principals: one
+holding it and one not. That hosts every witness the autonomy law needs.
+
+### Tooling
+
+`phase2/auth_scan.py` produces the evidence: for each action in each re-spec it
+locates the contract function and reports whether the caller is restricted.
+
+**It scans function bodies, not only modifiers, and the first version did not.**
+That version reported 50 actions permissionless, including `huma.closePool` and
+`huma.distributeProfit`, both of which are gated in the body:
+
+    function closePool() external {
+        poolConfig.onlyPoolOwnerOrHumaOwner(msg.sender);
+
+    function distributeLoss(uint256 loss) external {
+        if (msg.sender != address(creditManager)) revert ...
+
+Huma also carries `@custom:access` NatSpec, read where present as the author's own
+statement. Any future access-control detector must assume the same failure.
+
+### Current state of the ten re-specs
+
+| verdict | actions |
+|---|---|
+| MODELLED | 10 |
+| **GATED — the retrofit work-list** | **10** |
+| PERMISSIONLESS | 38 |
+| UNMATCHED — needs a hand lookup | 18 |
+
+The 18 unmatched are **not** evidence of absence and must not be recorded as
+permissionless.
