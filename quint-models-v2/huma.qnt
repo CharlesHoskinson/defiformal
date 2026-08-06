@@ -418,14 +418,16 @@
 //  restricts nobody.  UNRESOLVED means no contract function matched by
 //  name; it is NOT a synonym for permissionless.
 //
-//    closePool                 OMITTED         contracts/liquidity/Pool.sol:152  onlyPoolOwnerOrHum
-//    disburse                  OMITTED         contracts/liquidity/TrancheVault.sol:451  @custom:ac
 //    distributeLoss            OMITTED         contracts/liquidity/Pool.sol:190  msg.sender !=
 //    distributeProfit          OMITTED         contracts/liquidity/Pool.sol:183  _onlyCreditOrCredi
+//    addApprovedLender         MODELLED        contracts/liquidity/TrancheVault.sol:192  onlyPoolOp
 //    addRedemptionRequestJuni  MODELLED        contracts/liquidity/TrancheVault.sol:328  msg.sender
 //    addRedemptionRequestSeni  MODELLED        contracts/liquidity/TrancheVault.sol:328  msg.sender
+//    closePool                 MODELLED        contracts/liquidity/Pool.sol:152  onlyPoolOwnerOrHum
 //    depositJunior             MODELLED        contracts/liquidity/TrancheVault.sol:312  _onlyLende
 //    depositSenior             MODELLED        contracts/liquidity/TrancheVault.sol:312  _onlyLende
+//    disburse                  MODELLED        contracts/liquidity/TrancheVault.sol:451  @custom:ac
+//    removeApprovedLender      MODELLED        contracts/liquidity/TrancheVault.sol:223  onlyPoolOp
 //    closeEpoch                PERMISSIONLESS  contracts/liquidity/EpochManager.sol:104  no caller 
 //    drawdown                  PERMISSIONLESS  contracts/credit/CreditLine.sol:15  no caller check 
 //
@@ -433,7 +435,7 @@
 //  does not.  Each is an (E<=) restriction ONLY IF the dropped
 //  authority cannot create a transition the contract lacks; where
 //  it could, the spec is UNSOUND until the caller is modelled.
-//  Outstanding: closePool, disburse, distributeLoss, distributeProfit
+//  Outstanding: distributeLoss, distributeProfit
 // --------------------------------------------------------------------------
 module huma {
   import kernel.* from "./kernel"
@@ -460,7 +462,16 @@ module huma {
   /// EpochManager.minPoolBalanceForRedemption (:264, :276)
   pure val MIN_POOL_BALANCE: int = 50
 
-  pure val LENDERS: Set[str] = Set("u1", "u2")
+  /// The candidate lender population.  `u1` is approved at genesis and `u2` is
+  /// not, so both sides of the role are reachable — one in, one out.
+  pure val LENDER_CANDIDATES: Set[str] = Set("u1", "u2")
+  /// PoolConfig.onlyPoolOperator (TrancheVault.sol:193) and
+  /// onlyPoolOwnerOrHumaOwner (Pool.sol:153).  Distinct principals: an operator
+  /// approves lenders, an owner closes the pool, and neither is a lender.
+  pure val POOL_OPERATOR: str = "op"
+  pure val POOL_OWNER: str = "owner"
+  pure val HUMA_PRINCIPALS: Set[str] =
+    LENDER_CANDIDATES.union(Set("op", "owner"))
 
   // ---------------------------------------------------------------------------
   // DECLARED DOMAIN 𝒟 (convention 8a; see BOUNDS for 8b and 8c)
@@ -523,7 +534,23 @@ module huma {
   var seniorLossTaken: int      // Pool tranchesLosses.seniorLoss
   var juniorLossTaken: int      // Pool tranchesLosses.juniorLoss
   var epochId: int              // currentEpoch.id
+  /// AUTHORITY (6h).  LENDER_ROLE, TrancheVault.sol:817.  A `var` and not the
+  /// former `pure val LENDER_CANDIDATES`, because the contract grants and revokes it
+  /// (:192 addApprovedLender, onlyPoolOperator; removeApprovedLender).  Freezing
+  /// it scored FROZEN in SURJECTIVITY.md: the guard was present and the GRANT
+  /// was deleted, which is Perm's first law.
+  var lenders: str -> bool
+
   var lastOp: str               // GHOST — trace label, see header
+  /// JUSTIFIED LINT FINDING (D2), and it is a 6h artifact rather than a defect.
+  /// D2 fires on `len(nontrivial) == 1 and frames >= 2`. This var has exactly one
+  /// substantive write (`closeEpoch`) and had fewer than two frame no-ops until
+  /// `addApprovedLender` and `removeApprovedLender` were added — each authority
+  /// action frames every var, so the frame count crossed the gate without the
+  /// var changing at all. It is not dead: `wit_arity_bothTranches` and
+  /// `wit_arity_oneTranche` both read it and both report [violation].
+  /// The detector is NOT weakened, because the same rule caught the genuine gmx
+  /// `impactPool` defect. See CONVENTION-6H-AUTHORITY.md, "known interactions".
   var lastEpochTranchesFilled: int  // GHOST — tranches served by the last epoch
 
   // ===========================================================================
@@ -744,6 +771,7 @@ module huma {
     juniorLossTaken' = INIT_LOSS,
     epochId' = INIT_EPOCH,
     lastEpochTranchesFilled' = 0,
+    lenders' = HUMA_PRINCIPALS.mapBy(p => p == "u1"),
     lastOp' = OP_INIT,
   }
 
@@ -751,7 +779,7 @@ module huma {
   /// The available cap at :644 is where subordination is enforced on the ENTRY,
   /// which is the only side v1 modelled.
   action depositSenior(u: str, amt: int): bool = all {
-    LENDERS.contains(u),
+    lenders.get(u),
     not(poolClosed),
     amt >= MIN_DEPOSIT,
     amt <= seniorAvailableCap(seniorAssets, juniorAssets, maxRatio, LIQUIDITY_CAP),
@@ -775,6 +803,7 @@ module huma {
       juniorLossTaken' = juniorLossTaken,
       epochId' = epochId,
       lastEpochTranchesFilled' = 0,
+      lenders' = lenders,
       lastOp' = OP_DEP_SENIOR,
     }
   }
@@ -782,7 +811,7 @@ module huma {
   /// TrancheVault.deposit into the junior tranche.  Bounded by the liquidity cap
   /// alone: nothing is subordinated to junior.
   action depositJunior(u: str, amt: int): bool = all {
-    LENDERS.contains(u),
+    lenders.get(u),
     not(poolClosed),
     amt >= MIN_DEPOSIT,
     amt <= juniorAvailableCap(seniorAssets, juniorAssets, LIQUIDITY_CAP),
@@ -806,6 +835,7 @@ module huma {
       juniorLossTaken' = juniorLossTaken,
       epochId' = epochId,
       lastEpochTranchesFilled' = 0,
+      lenders' = lenders,
       lastOp' = OP_DEP_JUNIOR,
     }
   }
@@ -833,6 +863,7 @@ module huma {
     juniorLossTaken' = juniorLossTaken,
     epochId' = epochId,
     lastEpochTranchesFilled' = 0,
+    lenders' = lenders,
     lastOp' = OP_DRAWDOWN,
   }
 
@@ -862,6 +893,7 @@ module huma {
       juniorLossTaken' = juniorLossTaken,
       epochId' = epochId,
       lastEpochTranchesFilled' = 0,
+      lenders' = lenders,
       lastOp' = OP_PROFIT,
     }
   }
@@ -892,6 +924,7 @@ module huma {
       poolClosed' = poolClosed,
       epochId' = epochId,
       lastEpochTranchesFilled' = 0,
+      lenders' = lenders,
       lastOp' = OP_LOSS,
     }
   }
@@ -900,7 +933,7 @@ module huma {
   /// lender's balance into the epoch summary; the supply is untouched until the
   /// epoch is processed.
   action addRedemptionRequestSenior(u: str, shares: int): bool = all {
-    LENDERS.contains(u),
+    lenders.get(u),
     not(poolClosed),
     shares > 0,
     shares <= seniorOf.get(u),
@@ -921,12 +954,13 @@ module huma {
     juniorLossTaken' = juniorLossTaken,
     epochId' = epochId,
     lastEpochTranchesFilled' = 0,
+    lenders' = lenders,
     lastOp' = OP_REQ_SENIOR,
   }
 
   /// TrancheVault.addRedemptionRequest (:328) on the junior tranche.
   action addRedemptionRequestJunior(u: str, shares: int): bool = all {
-    LENDERS.contains(u),
+    lenders.get(u),
     not(poolClosed),
     shares > 0,
     shares <= juniorOf.get(u),
@@ -947,6 +981,7 @@ module huma {
     juniorLossTaken' = juniorLossTaken,
     epochId' = epochId,
     lastEpochTranchesFilled' = 0,
+    lenders' = lenders,
     lastOp' = OP_REQ_JUNIOR,
   }
 
@@ -987,13 +1022,17 @@ module huma {
       juniorLossTaken' = juniorLossTaken,
       lastEpochTranchesFilled' = (if (sFill._1 > 0) 1 else 0)
                                    + (if (jFill._1 > 0) 1 else 0),
+      lenders' = lenders,
       lastOp' = OP_EPOCH,
     }
   }
 
   /// TrancheVault.disburse (:451) — the processed amount leaves the pool for the
   /// lenders.  Aggregated across lenders; see ABSTRACTED.
-  action disburse: bool = all {
+  action disburse(caller: str): bool = all {
+    // AUTHORITY (6h): TrancheVault.sol:451, @custom:access Only the lender.
+    HUMA_PRINCIPALS.contains(caller),
+    lenders.get(caller),
     seniorProcessedAmt + juniorProcessedAmt > 0,
     seniorProcessedAmt' = 0,
     juniorProcessedAmt' = 0,
@@ -1012,6 +1051,7 @@ module huma {
     juniorLossTaken' = juniorLossTaken,
     epochId' = epochId,
     lastEpochTranchesFilled' = 0,
+    lenders' = lenders,
     lastOp' = OP_DISBURSE,
   }
 
@@ -1020,7 +1060,70 @@ module huma {
   /// is `processEpochAfterPoolClosure` (:167), which is the same internal call
   /// as `closeEpoch`.  This is the other side of :350 and it is unreachable in
   /// v1, which has no `closePool` at all.
-  action closePool: bool = all {
+  /// TrancheVault.sol:192 addApprovedLender — onlyPoolOperator.  THE GRANT, and
+  /// the transition the former `pure val LENDERS` deleted.
+  action addApprovedLender(caller: str, who: str): bool = all {
+    caller == POOL_OPERATOR,
+    LENDER_CANDIDATES.contains(who),
+    not(lenders.get(who)),
+    lenders' = lenders.put(who, true),
+    seniorAssets' = seniorAssets,
+    juniorAssets' = juniorAssets,
+    seniorSupply' = seniorSupply,
+    juniorSupply' = juniorSupply,
+    seniorOf' = seniorOf,
+    juniorOf' = juniorOf,
+    seniorReq' = seniorReq,
+    juniorReq' = juniorReq,
+    seniorProcessedAmt' = seniorProcessedAmt,
+    juniorProcessedAmt' = juniorProcessedAmt,
+    availableCash' = availableCash,
+    maxRatio' = maxRatio,
+    poolClosed' = poolClosed,
+    seniorLossTaken' = seniorLossTaken,
+    juniorLossTaken' = juniorLossTaken,
+    epochId' = epochId,
+    lastOp' = lastOp,
+    lastEpochTranchesFilled' = lastEpochTranchesFilled,
+  }
+
+  /// removeApprovedLender — onlyPoolOperator.  THE REVOKE.
+  action removeApprovedLender(caller: str, who: str): bool = all {
+    caller == POOL_OPERATOR,
+    LENDER_CANDIDATES.contains(who),
+    lenders.get(who),
+    // NO zero-balance requirement: TrancheVault.sol:223-232 revokes the
+    // role unconditionally.  A first cut of this action added
+    // `seniorOf.get(who) == 0 and juniorOf.get(who) == 0`, a constraint
+    // the contract does not have -- and since both candidates hold shares
+    // at init it made the revoke UNREACHABLE and silently killed
+    // wit_lenderRevoked.  Inventing a guard is the deletion this phase
+    // exists to catch, committed here inside a repair.
+    lenders' = lenders.put(who, false),
+    seniorAssets' = seniorAssets,
+    juniorAssets' = juniorAssets,
+    seniorSupply' = seniorSupply,
+    juniorSupply' = juniorSupply,
+    seniorOf' = seniorOf,
+    juniorOf' = juniorOf,
+    seniorReq' = seniorReq,
+    juniorReq' = juniorReq,
+    seniorProcessedAmt' = seniorProcessedAmt,
+    juniorProcessedAmt' = juniorProcessedAmt,
+    availableCash' = availableCash,
+    maxRatio' = maxRatio,
+    poolClosed' = poolClosed,
+    seniorLossTaken' = seniorLossTaken,
+    juniorLossTaken' = juniorLossTaken,
+    epochId' = epochId,
+    lastOp' = lastOp,
+    lastEpochTranchesFilled' = lastEpochTranchesFilled,
+  }
+
+  action closePool(caller: str): bool = all {
+    // AUTHORITY (6h): Pool.sol:152, onlyPoolOwnerOrHumaOwner.  NON-SURJECTIVE —
+    // no user reaches this role by any action of their own.
+    caller == POOL_OWNER,
     not(poolClosed),
     poolClosed' = true,
     maxRatio' = RATIO_DISABLED,
@@ -1039,6 +1142,7 @@ module huma {
     juniorLossTaken' = juniorLossTaken,
     epochId' = epochId,
     lastEpochTranchesFilled' = 0,
+    lenders' = lenders,
     lastOp' = OP_CLOSE,
   }
 
@@ -1047,11 +1151,14 @@ module huma {
   /// nothing here that the driver is told; in particular no `nondet` supplies a
   /// fill amount, a share count to burn, or a tranche split.
   action step: bool = {
-    nondet u = LENDERS.oneOf()
+    nondet u = LENDER_CANDIDATES.oneOf()
     nondet amt = DEPOSIT_AMOUNTS.oneOf()
     nondet flow = FLOW_AMOUNTS.oneOf()
     nondet shares = REDEEM_SHARES.oneOf()
+    nondet who = LENDER_CANDIDATES.oneOf()
     any {
+      addApprovedLender(POOL_OPERATOR, who),
+      removeApprovedLender(POOL_OPERATOR, who),
       depositSenior(u, amt),
       depositJunior(u, amt),
       drawdown(flow),
@@ -1060,8 +1167,8 @@ module huma {
       addRedemptionRequestSenior(u, shares),
       addRedemptionRequestJunior(u, shares),
       closeEpoch,
-      disburse,
-      closePool,
+      disburse(u),
+      closePool(POOL_OWNER),
     }
   }
 
@@ -1074,8 +1181,8 @@ module huma {
   /// deposit and burned only by a processed redemption.  This is the T2
   /// invariant.
   val inv_conservation: bool = and {
-    LENDERS.fold(0, (acc, u) => acc + seniorOf.get(u)) + seniorReq == seniorSupply,
-    LENDERS.fold(0, (acc, u) => acc + juniorOf.get(u)) + juniorReq == juniorSupply,
+    LENDER_CANDIDATES.fold(0, (acc, u) => acc + seniorOf.get(u)) + seniorReq == seniorSupply,
+    LENDER_CANDIDATES.fold(0, (acc, u) => acc + juniorOf.get(u)) + juniorReq == juniorSupply,
   }
 
   val inv_bounds: bool = and {
@@ -1091,7 +1198,7 @@ module huma {
     seniorLossTaken >= 0,
     juniorLossTaken >= 0,
     epochId >= INIT_EPOCH,
-    LENDERS.forall(u => seniorOf.get(u) >= 0 and juniorOf.get(u) >= 0),
+    LENDER_CANDIDATES.forall(u => seniorOf.get(u) >= 0 and juniorOf.get(u) >= 0),
   }
 
   /// THE INVARIANT v1 ABANDONED, correctly qualified.  See FINDINGS F-1: the
@@ -1128,6 +1235,36 @@ module huma {
   /// `juniorLossTaken == 0`.
   val inv_juniorFirstLoss: bool =
     seniorLossTaken > 0 implies juniorLossTaken > 0
+
+  // -------------------------------------------------------------------------
+  //  AUTHORITY WITNESSES (6h).  These are what the former `pure val LENDERS`
+  //  could not host: with a frozen role set, holding the role is not contingent
+  //  on anything and no trace can show the grant.  That is why FROZEN is where
+  //  a mandate hides (SURJECTIVITY.md).
+  // -------------------------------------------------------------------------
+
+  /// PERMISSION-DEPENDENCE: same pool, same amounts, different role map.
+  pure def mayDisburse(who: str, ls: str -> bool): bool = ls.get(who)
+  pure val t0_lender_permission_dependent: bool = and {
+    mayDisburse("u1", Map("u1" -> true, "u2" -> false)),
+    not(mayDisburse("u2", Map("u1" -> true, "u2" -> false))),
+  }
+
+  /// THE GRANT is reachable — `u2` holds LENDER_ROLE only because the pool
+  /// operator approved it (TrancheVault.sol:192).  Must be [violation].
+  val wit_lenderGranted: bool = not(lenders.get("u2"))
+
+  /// THE OPERATOR CAN STRAND A CLAIM.  `removeApprovedLender` carries no balance
+  /// check, so a lender still holding shares can lose the role and with it the
+  /// ability to `disburse`.  A third Perm instance in huma and a sharper one
+  /// than `closePool`: discretion over somebody else's claim.
+  val wit_strandedClaim: bool = not(and {
+    not(lenders.get("u1")),
+    seniorOf.get("u1") + juniorOf.get("u1") > 0,
+  })
+
+  /// And THE REVOKE — `u1` starts approved and can end unapproved.
+  val wit_lenderRevoked: bool = lenders.get("u1")
 
   val inv_all: bool = and {
     inv_T0,

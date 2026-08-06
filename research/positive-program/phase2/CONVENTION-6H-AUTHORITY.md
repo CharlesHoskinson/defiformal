@@ -147,3 +147,37 @@ contingent.
 guard against **mutable** authority state, so it reports FROZEN entries as
 MODELLED. huma's four are FROZEN. The MODELLED count is inflated accordingly and
 must not be quoted until the scan distinguishes `var` from `pure val`.
+
+
+---
+
+## Known interactions with the existing linters
+
+Adopting 6h perturbs three detectors. All three are recorded rather than
+silenced, because a detector that is quietly weakened stops being evidence.
+
+**1. D4 — nondet selection.** A caller modelled under 6h is a driver-supplied
+identity *by design*, which is exactly the shape D4 exists to catch. Resolved by
+**D4c**: the argument is reported with the authority guard that exempts it, and
+is printed but not counted. Fixed in `respec_lint.py`.
+
+**2. D2 — dead state.** D2 fires on `len(nontrivial) == 1 and frames >= 2`. Every
+authority action added to a spec frames **every** var, so the frame count of an
+untouched variable can cross the gate purely because the spec grew. `huma`'s
+`lastEpochTranchesFilled` did exactly that: one substantive write in `closeEpoch`,
+read by `wit_arity_bothTranches` and `wit_arity_oneTranche`, both `[violation]`.
+
+**Not fixed in the detector, deliberately.** The same rule caught the genuine
+`gmx.impactPool` defect, and loosening the frame gate risks losing it. The
+instance is justified in the spec header instead, which is this phase's standing
+convention for a finding that is real-looking and explained.
+
+**Expect this on every retrofit.** A spec gaining authority actions may pick up
+D2 findings on vars nobody touched. Check whether the var is read by a live
+witness before treating it as a defect.
+
+**3. MODELLED is over-reported by `auth_scan.py`.** The scan scores MODELLED on a
+caller-ish first parameter, not on 6h's actual requirement — a guard against
+**mutable** authority state. That is why `huma`'s four were reported MODELLED when
+they were FROZEN. Fixing this needs the scan to distinguish `var` from
+`pure val` on the guarded identifier. **Outstanding.**

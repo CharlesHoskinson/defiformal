@@ -188,17 +188,12 @@
 //  restricts nobody.  UNRESOLVED means no contract function matched by
 //  name; it is NOT a synonym for permissionless.
 //
-//    setFeeTo   OMITTED         contracts/UniswapV2Factory.sol:40  require(msg.sende
-//    burn       PERMISSIONLESS  contracts/UniswapV2Pair.sol:134  no caller check fou
-//    mint       PERMISSIONLESS  contracts/UniswapV2Pair.sol:110  no caller check fou
-//    swap0for1  UNRESOLVED      no contract function matched by name
-//    swap1for0  UNRESOLVED      no contract function matched by name
-//
-//  OMITTED means the contract restricts the caller and this spec
-//  does not.  Each is an (E<=) restriction ONLY IF the dropped
-//  authority cannot create a transition the contract lacks; where
-//  it could, the spec is UNSOUND until the caller is modelled.
-//  Outstanding: setFeeTo
+//    setFeeTo        MODELLED        contracts/UniswapV2Factory.sol:40  require(msg.sende
+//    setFeeToSetter  MODELLED        contracts/UniswapV2Factory.sol:45  require(msg.sende
+//    burn            PERMISSIONLESS  contracts/UniswapV2Pair.sol:134  no caller check fou
+//    mint            PERMISSIONLESS  contracts/UniswapV2Pair.sol:110  no caller check fou
+//    swap0for1       UNRESOLVED      no contract function matched by name
+//    swap1for0       UNRESOLVED      no contract function matched by name
 // --------------------------------------------------------------------------
 module uniswap_v2 {
   import kernel.* from "./kernel"
@@ -251,6 +246,12 @@ module uniswap_v2 {
   // STATE
   // ---------------------------------------------------------------------------
 
+  /// AUTHORITY principals (6h).  `gov` holds feeToSetter at genesis; `mallory`
+  /// never can, absent a handover from `gov`.  Two principals — one in the role
+  /// and one out — is what hosts the permission witnesses.
+  pure val GOV: str = "gov"
+  pure val AUTHORITIES: Set[str] = Set("gov", "mallory")
+
   var reserve0: int          // token0
   var reserve1: int          // token1
   var totalSupply: int       // LP shares
@@ -258,6 +259,11 @@ module uniswap_v2 {
   var kLast: int             // token0*token1 at the last liquidity event (:28)
   var feeOn: bool            // Factory.feeTo != address(0)   (:90-91)
   var lastOp: str            // GHOST — trace label, see header
+  /// AUTHORITY (6h).  UniswapV2Factory.sol:40,45 — both `setFeeTo` and
+  /// `setFeeToSetter` require `msg.sender == feeToSetter`, so the role is a
+  /// closed cycle: no account outside it can ever enter.  A `var`, not a
+  /// constant, because :45 lets the holder pass it on.
+  var feeToSetter: str
 
   // ===========================================================================
   //  THE MECHANISM, as named `pure def`s (convention 3 / 6b).
@@ -383,6 +389,7 @@ module uniswap_v2 {
     lpBalance' = ACCOUNTS.mapBy(_ => INIT_BALANCE),
     kLast' = INIT_KLAST,
     feeOn' = INIT_FEE_ON,
+    feeToSetter' = GOV,
     lastOp' = OP_INIT,
   }
 
@@ -414,7 +421,8 @@ module uniswap_v2 {
         .put(recipient, lpBalance.get(recipient) + liquidity),
       kLast' = if (feeOn) r0n * r1n else 0,
       feeOn' = feeOn,
-      lastOp' = OP_MINT,
+      feeToSetter' = feeToSetter,
+    lastOp' = OP_MINT,
     }
   }
 
@@ -441,7 +449,8 @@ module uniswap_v2 {
         .put(holder, lpBalance.get(holder) - shares),
       kLast' = if (feeOn) r0n * r1n else 0,
       feeOn' = feeOn,
-      lastOp' = OP_BURN,
+      feeToSetter' = feeToSetter,
+    lastOp' = OP_BURN,
     }
   }
 
@@ -465,7 +474,8 @@ module uniswap_v2 {
       lpBalance' = lpBalance,
       kLast' = kLast,
       feeOn' = feeOn,
-      lastOp' = OP_SWAP0,
+      feeToSetter' = feeToSetter,
+    lastOp' = OP_SWAP0,
     }
   }
 
@@ -488,14 +498,18 @@ module uniswap_v2 {
       lpBalance' = lpBalance,
       kLast' = kLast,
       feeOn' = feeOn,
-      lastOp' = OP_SWAP1,
+      feeToSetter' = feeToSetter,
+    lastOp' = OP_SWAP1,
     }
   }
 
   /// UniswapV2Factory.setFeeTo (:40-43).  Governance flips the switch; kLast is
   /// NOT touched here.  The teardown at UniswapV2Pair.sol:104-106 happens on the
   /// next liquidity event, which is where `kLast' = if (feeOn) ... else 0` sits.
-  action setFeeTo(switchOn: bool): bool = all {
+  action setFeeTo(caller: str, switchOn: bool): bool = all {
+    // AUTHORITY (6h): UniswapV2Factory.sol:40, msg.sender == feeToSetter.
+    AUTHORITIES.contains(caller),
+    caller == feeToSetter,
     switchOn != feeOn,
     reserve0' = reserve0,
     reserve1' = reserve1,
@@ -503,6 +517,25 @@ module uniswap_v2 {
     lpBalance' = lpBalance,
     kLast' = kLast,
     feeOn' = switchOn,
+    feeToSetter' = feeToSetter,
+    lastOp' = OP_SETFEE,
+  }
+
+  /// UniswapV2Factory.sol:45 `setFeeToSetter` — the handover, and the reason
+  /// `feeToSetter` is state rather than a constant.  Authority over the
+  /// authority: the holder alone decides who holds it next.
+  action setFeeToSetter(caller: str, who: str): bool = all {
+    AUTHORITIES.contains(caller),
+    AUTHORITIES.contains(who),
+    caller == feeToSetter,
+    who != feeToSetter,
+    feeToSetter' = who,
+    reserve0' = reserve0,
+    reserve1' = reserve1,
+    totalSupply' = totalSupply,
+    lpBalance' = lpBalance,
+    kLast' = kLast,
+    feeOn' = feeOn,
     lastOp' = OP_SETFEE,
   }
 
@@ -516,12 +549,15 @@ module uniswap_v2 {
     nondet shares = BURN_SHARES.oneOf()
     nondet amountIn = SWAP_INPUTS.oneOf()
     nondet switchOn = FEE_SWITCH.oneOf()
+    nondet auth = AUTHORITIES.oneOf()
+    nondet auth2 = AUTHORITIES.oneOf()
     any {
+      setFeeToSetter(auth, auth2),
       mint(caller, a0, a1),
       burn(caller, shares),
       swap0for1(amountIn),
       swap1for0(amountIn),
-      setFeeTo(switchOn),
+      setFeeTo(auth, switchOn),
     }
   }
 
@@ -531,6 +567,22 @@ module uniswap_v2 {
 
   /// CONSERVATION — LP shares are neither created nor destroyed outside mint,
   /// burn and the protocol cut.  This is the T2 command's invariant.
+  // -------------------------------------------------------------------------
+  //  AUTHORITY WITNESSES (6h)
+  // -------------------------------------------------------------------------
+
+  /// PERMISSION-DEPENDENCE: same reserves, same switch, different holder,
+  /// different enablement.
+  pure def maySetFee(who: str, holder: str): bool = who == holder
+  pure val t0_feeAuthority_permission_dependent: bool = and {
+    maySetFee("gov", "gov"),
+    not(maySetFee("mallory", "gov")),
+  }
+
+  /// NON-SURJECTIVE (SURJECTIVITY.md): `mallory` reaches the role only by a
+  /// handover from `gov` — never by any action of its own.  Must be [violation].
+  val wit_feeAuthorityHandedOver: bool = not(feeToSetter == "mallory")
+
   val inv_conservation: bool =
     ACCOUNTS.fold(0, (acc, a) => acc + lpBalance.get(a)) == totalSupply
 
