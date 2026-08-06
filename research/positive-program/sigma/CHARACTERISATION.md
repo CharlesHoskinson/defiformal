@@ -110,6 +110,23 @@ guard reading `isAllocator[caller]`. Machine-checked, one line:
 Identical positions, identical caller, identical arguments; only `R` differs and
 enablement flips.
 
+## 4b. Necessary but not sufficient — see `APEX-LIQUIDATE.md`
+
+Permission-dependence alone does **not** identify a mandate. `apex.liquidate`
+reads `R` — `routerMap`, mutable by the owner — and is not a mandate: the router
+relays and exercises no discretion. The additional condition is that the gate be
+**non-surjective**, i.e. the permission cannot be self-acquired:
+
+- MetaMorpho's `isAllocator` is reachable only through `setIsAllocator`
+  (`onlyOwner`) — non-surjective, a mandate.
+- apex's router path is reachable by any user through an open `Router.liquidate`
+  — surjective, not a mandate.
+
+**The theorem below is unaffected**, because the basis contains no `R`-reading
+generator at all and so fails the first condition already. The refinement matters
+for classifying `R`-reading transitions once convention 6h puts them in the
+corpus.
+
 ## 5. Theorem
 
 > **The mandate is not in the closure of the basis.**
