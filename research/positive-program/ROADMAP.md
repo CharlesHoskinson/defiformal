@@ -113,7 +113,7 @@ a negative result — it exhibits a finite basis and delimits it exactly.
 | 0.1 Q/Σ invariant testable | **RESOLVED — claim false, `\|P\|=4` WITHDRAWN** | `sigma/QSIGMA-VERDICT.md`; the prior "three operationalisations" were two, and both scanned `init` |
 | 0.2 `F9` irreducible | **empirically settled, theorem open** | zero extremal selections corpus-wide |
 | 1.1a recount witnesses corpus-wide | **OPEN — search method refuted** | `sigma/GATE-1.1A-RECOUNT.md`; 28 of 28 rows reaching >=2 are shared-`common.qnt` reuse, **0 independent**; `layerzero` proves search under-counts |
-| 1.1b a law per family | **OPEN — unmet for all 52 rows** | rationales, not laws; 4 of 52 contain an equation, none separates neighbours |
+| 1.1b a law per family | **OPEN — first pair tested, 0 of 8 laws separate** | `sigma/GATE-1.1B-LAWS.md`; `PRO_RATA_SHARES` and `INDEX_ACCRUAL` are ONE family; 3 apparent separators all died under audit |
 | 1.2 pairwise independence | not started | needs 1.1b |
 | 1.3 non-degeneracy and sufficiency | not started | needs 1.1b |
 | 2.0 find all ten deletions | **PASSED** | `phase2/P2-SCOPE.md`, all ten with line numbers |
@@ -755,3 +755,44 @@ the honest position.
 **Do not quote 31/19/2 or 28/50 as evidence for or against any family.** Both
 measure identifier provenance. They are recorded so they are not re-derived and
 believed later.
+
+
+---
+
+## Sub-gate 1.1b — the first law test, and it returns a negative
+
+Full argument in `sigma/GATE-1.1B-LAWS.md`. This is the first gate condition a
+harness cannot fake: a witness count can be an artifact of where a definition
+sits, but a law either separates its neighbour or it does not.
+
+**The pair.** `PRO_RATA_SHARES` vs `INDEX_ACCRUAL`, the hardest in the corpus —
+both reduce to `mulDivDown(a,b,c)`, and the corpus already implements the same
+observable both ways (Morpho mutates totals with no index; Aave stores
+`liquidityIndex`).
+
+**Eight laws tested, three appeared to separate, all three died.**
+
+- **L5 is an integer-flooring artifact.** In exact arithmetic pro-rata deposit
+  preserves `A/S` identically — `(A+a)/(S + aS/A) = A/S`. Preserved in every case
+  under `Fraction`, only some under `mulDivDown`. A property of the fixed-point
+  encoding, not the mechanism.
+- **L1 is a signature difference.** Scale *both* components of the index pair and
+  invariance holds exactly. L1 separates signatures — one takes its denominator
+  as a parameter, the other fixes it as a constant — and a signature difference
+  is not a law.
+- **L8 was asserted rather than measured, and the measurement reverses it.**
+  Pass one hardcoded "index conversions never write the index". Measured over the
+  51 specs: index call sites write a ratio component **100%** of the time (13 of
+  13), pro-rata only **70%** (7 of 10), because real lending protocols accrue
+  before they act. The corpus contradicts the assertion outright.
+
+**Result: 0 of 8. `PRO_RATA_SHARES` and `INDEX_ACCRUAL` are one family**,
+confirming `BASIS.md`'s F1/F6 merge on tested grounds rather than by argument.
+Two of the ~16 named families collapse into one, and the collapse happened on the
+first pair tried.
+
+**Three failure modes to carry forward**, since each will recur: floor artifacts,
+signatures dressed as laws, and rows asserted from a mental model rather than
+measured. The third is the most dangerous — it produced a confident table entry
+that the corpus flatly contradicts. **Never report a separation count without the
+audit column.** Pass one's headline was "3 of 8 separate"; the true figure is 0.

@@ -116,11 +116,21 @@ composition, then construction.
         - [ ] Still do **not** prune singletons: a row scoring 1 may have an
               independent second implementation no search will surface.
   - [ ] **1.1b — write one law per surviving family**, each failing for its
-        nearest neighbour. **Condition 2 is unmet for all 52 rows** and no
-        witness recount touches it: the ledgers carry a `why it is primitive`
-        rationale, only 4 of 52 contain an equation, and none separates
-        neighbours. Start with `PRO_RATA_SHARES` vs `INDEX_ACCRUAL` — both reduce
-        to `mulDivDown(a,b,c)`, so whatever separates them is the real content.
+        nearest neighbour. **Condition 2 is unmet for all 52 rows.**
+        **First pair tested and it returns a NEGATIVE —
+        `sigma/GATE-1.1B-LAWS.md`.** Eight laws against `PRO_RATA_SHARES` vs
+        `INDEX_ACCRUAL`; three appeared to separate and all three died under
+        audit (an integer-flooring artifact, a signature difference dressed as a
+        law, and one row asserted rather than measured whose measurement came
+        back **reversed**: index call sites write a ratio component 100% of the
+        time against pro-rata's 70%). **0 of 8 separate — they are one family**,
+        which confirms `BASIS.md`'s F1/F6 merge on tested grounds.
+        - [ ] Run the same test on every remaining adjacent pair, hardest first.
+              Each non-separation collapses two families into one.
+        - [ ] Every proposed law ships with its audit: exact-arithmetic check,
+              law-vs-signature statement, and a measurement against the 51 specs.
+              Never report a separation count without the audit column — pass
+              one's headline was "3 of 8", the true figure is 0.
 - [ ] **1.2 — pairwise independence**, each with a separating trace, as `F7` got
       via the interest-only trace.
 - [ ] **1.3 — sufficiency.** The failure list (<= 15 colour classes) gives only
