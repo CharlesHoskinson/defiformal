@@ -1193,3 +1193,38 @@ primitive, not only as a refuter.
 
 **Also confirmed:** the `liveness/keeper` cluster — CIAN, Yearn, Beefy, Jupiter —
 is pair 4's autonomy property, named by four protocols before Phase 1 tested it.
+
+
+---
+
+## The unclassified residue is a long tail — and that is the useful answer
+
+`sigma/RESIDUE-LONGTAIL.md`.
+
+The open question after mining was whether the 131 unclassified entries hid a
+second object the size of the delegated mandate. **They do not.**
+
+Term frequency over the unclassified subset has no dominant term — `price` leads
+at **12 of 131 (9%)**, against `authority/discretion`'s 69 entries across 40 of
+72 applications. The two largest word-groups were then read in full and both
+dissolve: `price`/`oracle` is **17 entries naming 15 different mechanisms**
+(Curve's repegging invariant, Hyperliquid's validator-median oracle, GMX's
+open-interest price impact, Yearn's profit-unlock drip, Centrifuge's cross-chain
+NAV push …), and `claim` is **11 naming 11**. They share a word, not a mechanism.
+
+**Consequence for the paper.** The corpus contains *one* structural gap with
+independent multi-protocol support — the delegated allocation mandate — plus a
+long tail of protocol idiosyncrasy that no basis of any size was going to absorb.
+That is a cleaner story than "many gaps": there is a single large irreducible
+object to characterise.
+
+Two weak sub-themes recorded but not promoted: **execution-quality attribution**
+(~6 entries — Jupiter route quality, GMX bid/ask spread, Kyber gas-aware routing,
+DFlow order-flow segmentation, CoW surplus attribution, all in the DEX/intents
+category `VERDICT.md` already scores worst) and **claim transformation** (~4 —
+Pendle YT decay, Convex's liquid wrapper of a locked position, Polymarket
+split/merge, Uniswap's NFT position).
+
+**Limit, recorded rather than glossed:** term frequency plus reading the two
+largest word-groups is not proof that no cluster exists. A structural class whose
+members share no vocabulary would be invisible to both methods.

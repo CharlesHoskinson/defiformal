@@ -46,10 +46,18 @@ composition, then construction.
         genuinely INDEPENDENT multi-witness support** — 1.1a showed all 28 basis
         rows reaching >=2 did so via shared `common.qnt` reuse. The one thing the
         basis cannot express is better evidenced than anything it contains.
-  - [ ] **131 residue entries are UNCLASSIFIED across 59 applications** — more
-        than any bucket. Second pass with better classification before the
-        residue is called read. Do not quote the bucket counts as findings; they
-        are navigation. On the two read so far the
+  - [x] **The unclassified 131 are a LONG TAIL — `sigma/RESIDUE-LONGTAIL.md`.**
+        No dominant term (top is `price` at 12 of 131 = 9%, against
+        authority/discretion's 69 across 40 of 72 applications). The two largest
+        word-groups dissolve on reading: `price`/`oracle` is 17 entries naming 15
+        different mechanisms, `claim` is 11 naming 11.
+        **So the residue does NOT hide a second refuter-sized class.** The corpus
+        has one structural gap with independent multi-protocol support and a long
+        tail of protocol idiosyncrasy no basis was going to absorb.
+        Two weak sub-themes named but not promoted: execution-quality attribution
+        (~6, all DEX/intents) and claim transformation (~4).
+        Limit recorded: a class whose members share no vocabulary would be
+        invisible to both methods used. On the two read so far the
         hit rate is 3 for 3: Steakhouse's residue names the curator refuter *and*
         the owner/curator/allocator role split (convention 6h), and CIAN's names
         keeper-liveness — which is pair 4's autonomy law, identified by the corpus
