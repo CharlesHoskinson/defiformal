@@ -3,3 +3,4 @@ import Defialgebra.ConvexGeometry
 import Defialgebra.Polarity
 import Defialgebra.Lattice
 import Defialgebra.Discharge
+import Defialgebra.Permission
