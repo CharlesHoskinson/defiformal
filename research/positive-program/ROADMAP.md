@@ -1062,3 +1062,41 @@ curators. The spec deleted the delegate, so any caller may fire it.
 **Net:** the exhibit stands; no claim that the basis is provably function-only
 stands; completeness is still not recorded as refuted. Every remaining route to
 the theorem now passes through convention 6h.
+
+
+---
+
+## Gate 2.2 finally has a work-list
+
+`sigma/GATE-2.2-WORKLIST.md`. `ROADMAP` has read "72 named, 51 specced" since it
+was written and never named a single one of the missing. **19 are now
+enumerated.**
+
+**Three things the list says.**
+
+**The refuter's own protocol is on it.** `Steakhouse Financial` is unspecced —
+independent confirmation of what `REFUTER-DELEGATED-ALLOCATION.md` argued from
+the other direction, that the programme recorded it as a known refuter while
+never formalising it. `CIAN Yield Layer` sits beside it, a second
+delegated-allocation instance, also unspecced.
+
+**Intents is four of the nineteen** — `Binance Wallet`, `DFlow`, `LiquidMesh`,
+`OKX DEX`. `VERDICT.md` scores intents at **~25%**, the worst of any category.
+Where the vocabulary already failed hardest, the formalisation is also thinnest.
+
+**The counts disagree with this roadmap:** 68 named not 72, 50 specs not 51, 19
+unspecced not 21. Reported, not reconciled — **four named applications are
+currently unaccounted for**, and that should be settled before 19 specs are
+commissioned.
+
+**The matcher needed three passes and two of its failures were silent.** The
+first stripped `\bv\d+\b` before punctuation, so "Aave V3" and `aave_v3`
+normalised differently — 48 unspecced, 28 orphan, a work-list that would have
+commissioned specs for protocols that already have them. The third pass added an
+explicit alias table rather than loosening the matcher, and one alias key was
+itself wrong. Every containment and alias match is printed.
+
+**Three preconditions before commissioning**, all in TODO: resolve 72-vs-68;
+check contract availability per protocol, since `protocol-repos/` skews toward
+the already-specced and several of the 19 may have no public contracts; and adopt
+6h first, or all 19 inherit the defect that blocks Phase 1.

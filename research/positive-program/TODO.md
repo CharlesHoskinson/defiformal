@@ -12,8 +12,18 @@ composition, then construction.
 
 ## Now — Phase 2, the honest corpus
 
-- [ ] **2.2 — spec the 21 unspecced applications.** The corpus names 72; only 51
-      had specs. **Now the active gate** — Phase 1 is blocked behind it
+- [ ] **2.2 — spec the unspecced applications. WORK-LIST NOW EXISTS:
+      `sigma/GATE-2.2-WORKLIST.md` enumerates 19** (not 21 — measured 68 named /
+      50 specced against `ROADMAP`'s 72/51; the discrepancy is reported, not
+      reconciled, and **four named applications are unaccounted for**).
+      Highlights: **`Steakhouse Financial` is on the list**, confirming
+      independently that the refuter was never formalised; `CIAN Yield Layer`
+      beside it is a second delegated-allocation instance; and **four of the 19
+      are Intents**, the category `VERDICT.md` scores worst at ~25%.
+      Before commissioning: resolve 72-vs-68, check contract availability per
+      protocol (`protocol-repos/` skews toward already-specced ones), and adopt
+      6h first or all 19 inherit the defect blocking Phase 1.
+      The corpus names 72; only 51 had specs. **Now the active gate** — Phase 1 is blocked behind it
       (`GATE-1.1B-PAIR4.md`).
       **CORRECTION to this item's own claim.** It read: Steakhouse Financial "is
       a known refuter (delegated allocation authority) and needs no further work
