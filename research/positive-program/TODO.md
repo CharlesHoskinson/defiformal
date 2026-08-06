@@ -13,9 +13,29 @@ composition, then construction.
 ## Now — Phase 2, the honest corpus
 
 - [ ] **2.2 — spec the 21 unspecced applications.** The corpus names 72; only 51
-      had specs. One of the unformalised, **Steakhouse Financial**, is a known
-      refuter (delegated allocation authority) and needs no further work to
-      count against completeness.
+      had specs. **Now the active gate** — Phase 1 is blocked behind it
+      (`GATE-1.1B-PAIR4.md`).
+      **CORRECTION to this item's own claim.** It read: Steakhouse Financial "is
+      a known refuter (delegated allocation authority) and needs no further work
+      to count against completeness." That was a refutation *asserted*, not
+      exhibited, and `GOAL.md` demands a **statable object**. An unformalised
+      protocol is not one. The reason it was never formalised is now known:
+      stating the mechanism needs caller identity, and 0 of 17 gate-opening
+      actions model it.
+      **Now exhibited against source** — `sigma/REFUTER-DELEGATED-ALLOCATION.md`,
+      from `metamorpho` rev `58e758b`. `reallocate` (`MetaMorpho.sol:366`,
+      `onlyAllocatorRole`) redistributes depositors' assets on an allocator's
+      arbitrary calldata vector, bounded only by caps (`:400`, `:402`) and exact
+      conservation (`:414`). The property it violates is **owner-locality** — a
+      transition changes only positions attributable to its caller — which every
+      basis family satisfies. **Not yet a theorem:** owner-locality is verified
+      for 7 families by hand not all of `P`, the closure argument under `⋈` is
+      unwritten, and there is no Quint witness until 6h lands. Do **not** record
+      completeness as refuted.
+  - [ ] Write the Quint witness for `reallocate` once 6h is adopted — the first
+        spec in the corpus that models a principal acting on another's assets.
+  - [ ] Verify owner-locality across every family, and prove it is preserved by
+        `⋈`. That is what turns the exhibit into the refutation.
 - [ ] **2.3 — re-run generation against the honest corpus.** This is the payoff.
       Everything since the eight-family refutation has been building the ability
       to measure; this is the measurement. Compare against the v1 figure of
@@ -141,10 +161,16 @@ composition, then construction.
               gate-opening actions carry any caller guard**, so all four score
               autonomous and the law separates nothing. `wbtc.confirmMint` is the
               witness: comment "onlyCustodian", signature `(id: int)`.
-        - [ ] **Add caller authority to the Phase 2 fidelity criterion.**
-              `P2-FIDELITY`/`P2-CONTRACT` have no convention requiring a re-spec
-              to model who may call what. It is load-bearing for Phase 1 and
-              belongs alongside 6g.
+        - [x] **Caller authority drafted as convention 6h —
+              `phase2/CONVENTION-6H-AUTHORITY.md`.** Every state-changing action
+              must either model its caller against modelled authority state, or
+              carry an `AUTHORITY OMITTED` declaration naming the contract line.
+              Branching cost is bounded (authority sets are small; two principals
+              — one holding the role, one not — host every witness the autonomy
+              law needs). D7a/D7b lint sketched, with the two false-positive
+              traps recorded. **Not yet adopted into `P2-CONTRACT`** — that is a
+              decision, not a drafting task, and it retrofits the ten existing
+              v2 re-specs.
         - [x] **Deletion class 11 scanned and hand-audited —
               `sigma/DELETION-11.md`. 4 confirmed, in `coinbase`, `usdc` and
               `wbtc`, all outside `P2-SCOPE`'s ten.** The raw scan said 7; hand

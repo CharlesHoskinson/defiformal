@@ -922,3 +922,52 @@ action, or declare the omission with the contract line it drops.**
 `wbtc.addMintRequest` shows what a declared restriction looks like;
 `confirmMint` shows what a deletion looks like; today the two are
 indistinguishable in review.
+
+
+---
+
+## The refuter, exhibited — and 2.2 becomes the active gate
+
+Two documents landed: `sigma/REFUTER-DELEGATED-ALLOCATION.md` and
+`phase2/CONVENTION-6H-AUTHORITY.md`.
+
+**`TODO`'s refuter claim was an assertion, and it is now an exhibit.** The item
+read that Steakhouse Financial "is a known refuter … and needs no further work to
+count against completeness". `GOAL.md` demands a *statable object*; an
+unformalised protocol is not one. And the reason it was never formalised is the
+same reason the autonomy law could not be tested — stating the mechanism requires
+caller identity, which no spec models.
+
+**MetaMorpho is the formalisable instance**, on disk at rev `58e758b`.
+`reallocate` (`MetaMorpho.sol:366`, `onlyAllocatorRole`) redistributes
+depositors' assets on an allocator's arbitrary calldata vector, constrained by
+exactly three things: a non-zero cap (`:400`), the cap bound (`:402`), and
+**exact conservation** (`:414`).
+
+**The property it violates is owner-locality** — *a transition changes only
+positions attributable to its caller.* Every basis family satisfies it; they are
+`pure def`s over the caller's own amounts. The allocator moves other people's
+deposits.
+
+**And the corpus's whole invariant vocabulary is blind to it**, because
+`reallocate` is genuinely conservative. Phase 2 found that *"conservation never
+once detected a deleted mechanism"*; here conservation holds precisely, and is
+still the wrong observable. What distinguishes the mandate is **who chose**, and
+no conservation law has a term for that.
+
+**It is not yet a theorem, and the record says so.** Owner-locality is verified
+for seven families by hand rather than all of `P`; the closure argument under `⋈`
+is unwritten; there is no Quint witness until 6h is adopted. Completeness is
+**not** recorded as refuted.
+
+**Convention 6h is drafted.** Every state-changing action models its caller
+against modelled authority state, or declares the omission with the contract
+line. It is supported by three independent findings — pair 4's untestable
+autonomy law, deletion 11's four confirmed cases, and a refuter that cannot be
+written down without it. Adoption is a decision, not a drafting task: it
+retrofits the ten existing v2 re-specs.
+
+**Gate order changed.** 2.2 is now the active gate, with Phase 1 blocked behind
+it. This reverses the recommendation of three passes ago, and the reason changed:
+Phase 1 was blocked on a withdrawn claim, and is now blocked on missing evidence
+that only 2.2 produces.
