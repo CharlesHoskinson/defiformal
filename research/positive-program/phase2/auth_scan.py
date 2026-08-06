@@ -44,6 +44,43 @@ REPO = {
 }
 
 ACTION = re.compile(r"^\s*action\s+([a-zA-Z_][A-Za-z0-9_]*)\s*(\(([^)]*)\))?", re.M)
+IDENT_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
+
+
+def spec_symbols(src):
+    """(mutable state, constants) declared in a spec."""
+    mut = set(re.findall(r"^\s*var\s+([A-Za-z_][A-Za-z0-9_]*)", src, re.M))
+    con = set(re.findall(r"^\s*pure\s+val\s+([A-Za-z_][A-Za-z0-9_]*)", src, re.M))
+    return mut, con
+
+
+def guard_region(src, start):
+    """An action body up to its first primed assignment: the guards."""
+    nxt = re.search(r"^\s*action\s", src[start:], re.M)
+    body = src[start: start + (nxt.start() if nxt else 4000)]
+    prime = re.search(r"[A-Za-z_][A-Za-z0-9_]*'\s*=", body)
+    return body[: prime.start()] if prime else body
+
+
+def authority_kind(src, start, caller, mut, con):
+    """-> ('modelled'|'frozen'|None, evidence). Which symbols guard `caller`?"""
+    if not caller:
+        return None, ""
+    region = guard_region(src, start)
+    hits = set()
+    for line in region.splitlines():
+        if not re.search(r"\b%s\b" % re.escape(caller), line):
+            continue
+        for w in IDENT_RE.findall(line):
+            if w != caller and (w in mut or w in con):
+                hits.add(w)
+    if not hits:
+        return None, ""
+    live = sorted(h for h in hits if h in mut)
+    frozen = sorted(h for h in hits if h in con)
+    if live:
+        return "modelled", "guards on var " + ",".join(live[:2])
+    return "frozen", "guards on const " + ",".join(frozen[:2])
 MODIFIER = re.compile(
     r"\b(only[A-Z]\w*|auth\b|requiresAuth|restricted|onlyRole\([^)]*\))\b")
 # access control performed inside the body
@@ -128,7 +165,9 @@ def best(idx, action):
     return idx[sorted(c, key=lambda k: -len(k))[0]] if c else None
 
 
-totals = {"MODELLED": 0, "GATED": 0, "PERMISSIONLESS": 0, "UNMATCHED": 0}
+totals = {"MODELLED": 0, "FROZEN": 0, "GATED": 0,
+          "PERMISSIONLESS": 0, "UNMATCHED": 0}
+frozen_list = []
 work = []
 print(f"{'spec':<13} {'action':<24} {'verdict':<15} evidence")
 print("-" * 108)
@@ -136,11 +175,15 @@ for spec, repo in REPO.items():
     idx = index(repo)
     src = open(f"{ROOT}/quint-models-v2/{spec}.qnt",
                encoding="utf-8", errors="replace").read()
+    MUT, CON = spec_symbols(src)
     for m in ACTION.finditer(src):
         name, params = m.group(1), m.group(3) or ""
         if name in ("init", "step"):
             continue
-        modelled = bool(CALLERISH.search(params.split(",")[0])) if params else False
+        first = params.split(",")[0] if params else ""
+        caller = first.split(":")[0].strip() if CALLERISH.search(first) else None
+        kind, kev = authority_kind(src, m.end(), caller, MUT, CON)
+        modelled = kind == "modelled"
         hit = best(idx, name)
         if hit is None:
             v, ev = "UNMATCHED", "no contract function matched by name"
@@ -150,10 +193,19 @@ for spec, repo in REPO.items():
                 h = gated[0]
                 why = (",".join(h["mods"]) or h["body_gate"]
                        or ("@custom:access " + (h["natspec"] or "")))
-                v = "MODELLED" if modelled else "GATED"
+                if modelled:
+                    v = "MODELLED"
+                elif kind == "frozen":
+                    v = "FROZEN"
+                else:
+                    v = "GATED"
                 ev = f"{h['file']}:{h['line']}  {why}"
+                if kev:
+                    ev += f"  [spec {kev}]"
                 if v == "GATED":
                     work.append((spec, name, ev))
+                if v == "FROZEN":
+                    frozen_list.append((spec, name, ev))
             else:
                 h = hit[0]
                 v = "PERMISSIONLESS"
@@ -162,8 +214,14 @@ for spec, repo in REPO.items():
         print(f"{spec:<13} {name[:24]:<24} {v:<15} {ev[:60]}")
 
 print("\n" + "=" * 108)
-for k in ("MODELLED", "GATED", "PERMISSIONLESS", "UNMATCHED"):
+for k in ("MODELLED", "FROZEN", "GATED", "PERMISSIONLESS", "UNMATCHED"):
     print(f"  {k:<15} {totals[k]}")
 print(f"\nRETROFIT WORK-LIST (GATED): {len(work)} actions")
 for s, n, e in work:
     print(f"   {s:<13} {n:<24} {e[:60]}")
+
+print(f"\nFROZEN: {len(frozen_list)} — guard present, authority is a constant")
+print("where the contract mutates it. Sound as an (E<=) restriction, and it")
+print("deletes the grant, so no grant witness can exist. See SURJECTIVITY.md.")
+for s, n, e in frozen_list:
+    print(f"   {s:<13} {n:<24} {e[:66]}")

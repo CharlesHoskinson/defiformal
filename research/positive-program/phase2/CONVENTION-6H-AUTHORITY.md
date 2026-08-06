@@ -181,3 +181,57 @@ caller-ish first parameter, not on 6h's actual requirement — a guard against
 **mutable** authority state. That is why `huma`'s four were reported MODELLED when
 they were FROZEN. Fixing this needs the scan to distinguish `var` from
 `pure val` on the guarded identifier. **Outstanding.**
+
+
+---
+
+## The delegation regress, and where 6h terminates
+
+Teaching `auth_scan.py` to separate `var` from `pure val` (see FROZEN, above)
+immediately found **four FROZEN entries — all of them in authority actions
+written to satisfy 6h**:
+
+| action | spec guard | contract |
+|---|---|---|
+| `polymarket.addOperator` | `caller == ADMIN`, a `pure val` | `addAdmin`/`removeAdmin`, both `onlyAdmin` |
+| `huma.addApprovedLender` | `caller == POOL_OPERATOR`, a `pure val` | `POOL_OPERATOR_ROLE`, an AccessControl role |
+| `huma.removeApprovedLender` | same | same |
+| `huma.closePool` | `caller == POOL_OWNER`, a `pure val` | same |
+
+**Modelling one level of authority moves FROZEN up a level.** The granted role
+became a `var`; the *granting* role stayed a constant, and every one of those
+granting roles is mutable on-chain. Left unstated, 6h regresses forever: an
+operator is granted by an admin, an admin by an admin, a pool operator by an
+owner.
+
+### The termination rule
+
+> A frozen role is acceptable **only if it is the root of the delegation order** —
+> nothing in the contract can change it. Otherwise it is a deletion, and the spec
+> must model the grant or **declare the root explicitly**, with the contract line
+> that would have changed it.
+
+**None of the four above is a root.** `Auth.sol:49 addAdmin` is `onlyAdmin`, so
+the admin set is a closed cycle exactly like `uniswap_v2`'s `feeToSetter` — which
+*was* modelled, in `setFeeToSetter`. The inconsistency is real and is recorded
+rather than hidden.
+
+### What to do, and the trade
+
+Declaring is **sound**: freezing a role is an `(E<=)` restriction on role
+configurations and adds no transition. The cost is precise and worth stating —
+**a frozen root cannot host a grant witness**, so the spec cannot show that
+holding the root is contingent. Where the root's mutability is itself the
+mechanism under study, model it; otherwise declare it.
+
+Closed cycles (`addAdmin` onlyAdmin, `setFeeToSetter` feeToSetter-only) are cheap
+to model and terminate immediately, so they are the first candidates to promote
+from declaration to model.
+
+### Standing guidance
+
+Every spec's AUTHORITY block must name its **frozen roots** and cite the contract
+function that mutates them. A frozen role with no declaration is
+indistinguishable from a role the contract never lets move — the same ambiguity
+between OMITTED and PERMISSIONLESS that motivated 6h in the first place, arriving
+one level up.

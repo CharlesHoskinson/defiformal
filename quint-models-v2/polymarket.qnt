@@ -302,6 +302,14 @@
 //    split                 MODELLED        src/adapters/CtfCollateralAdapter.sol:61  onlyUnpaus
 //    postOrder             UNRESOLVED      no contract function matched by name
 //    resolveMarket         UNRESOLVED      no contract function matched by name
+//
+//  FROZEN AUTHORITY ROOT (6h).  `ADMIN` is a `pure val`, and the contract
+//  lets the admin set move: Auth.sol:49 addAdmin / :68 removeAdmin, both
+//  onlyAdmin -- a CLOSED CYCLE, so no outside account can ever enter it.
+//  Declared, not modelled: the (E<=) cost is that no trace can witness an
+//  admin handover, so `ADMIN`'s tenure is not shown to be contingent.
+//  Cheap to promote to a model later, since the cycle terminates at once
+//  -- as `uniswap_v2.setFeeToSetter` already does.
 // --------------------------------------------------------------------------
 module polymarket {
   import kernel.* from "./kernel"

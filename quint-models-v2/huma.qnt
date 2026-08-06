@@ -436,6 +436,15 @@
 //  authority cannot create a transition the contract lacks; where
 //  it could, the spec is UNSOUND until the caller is modelled.
 //  Outstanding: distributeLoss, distributeProfit
+//
+//  FROZEN AUTHORITY ROOTS (6h).  `POOL_OPERATOR` and `POOL_OWNER` are
+//  `pure val`s, and both are AccessControl roles the contract can grant
+//  and revoke (PoolConfig.sol:105 POOL_OPERATOR_ROLE, :646
+//  onlyPoolOperator; Pool.sol:152 onlyPoolOwnerOrHumaOwner).  Declared,
+//  not modelled.  The (E<=) cost: `lenders` can be shown to be granted
+//  and revoked (wit_lenderGranted / wit_lenderRevoked), but the operator's
+//  OWN tenure cannot, so one level of the delegation order is visible and
+//  the next is not.
 // --------------------------------------------------------------------------
 module huma {
   import kernel.* from "./kernel"
