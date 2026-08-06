@@ -20,9 +20,26 @@ composition, then construction.
       independently that the refuter was never formalised; `CIAN Yield Layer`
       beside it is a second delegated-allocation instance; and **four of the 19
       are Intents**, the category `VERDICT.md` scores worst at ~25%.
-      Before commissioning: resolve 72-vs-68, check contract availability per
-      protocol (`protocol-repos/` skews toward already-specced ones), and adopt
-      6h first or all 19 inherit the defect blocking Phase 1.
+      **Precondition 2 SETTLED — `sigma/GATE-2.2-AVAILABILITY.md`: 0 of 19 have
+      contracts in `protocol-repos/`.** All 56 repos there correspond to
+      already-specced protocols. 2.2's real cost is ~19 contract acquisitions,
+      then 19 specs, plus an explicit declaration wherever the mechanism is not
+      on-chain (Kalshi, BUIDL, USYC, the Binance products).
+      **Steakhouse comes off the list:** the lane JSON's own `rank_basis` says
+      the biggest vaults in DeFi are *curated Morpho vaults* — Steakhouse is a
+      firm holding a role, not a protocol, which is why it never had a spec. Its
+      mechanism is MetaMorpho and is now specced (`metamorpho.qnt`). Record a
+      stated position, not a missing spec.
+      Still open: resolve 72-vs-68, and adopt 6h before commissioning or all
+      inherit the defect blocking Phase 1.
+  - [ ] **Re-read the `residue` fields across all 68 applications as a source of
+        basis candidates and refuters.** Never done. On the two read so far the
+        hit rate is 3 for 3: Steakhouse's residue names the curator refuter *and*
+        the owner/curator/allocator role split (convention 6h), and CIAN's names
+        keeper-liveness — which is pair 4's autonomy law, identified by the corpus
+        before Phase 1 ever tested it. The residue was filed as a post-mortem on
+        the 58 symbols; it is actually a list of mechanisms that need caller
+        identity to state.
       The corpus names 72; only 51 had specs. **Now the active gate** — Phase 1 is blocked behind it
       (`GATE-1.1B-PAIR4.md`).
       **CORRECTION to this item's own claim.** It read: Steakhouse Financial "is

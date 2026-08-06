@@ -1100,3 +1100,51 @@ itself wrong. Every containment and alias match is printed.
 check contract availability per protocol, since `protocol-repos/` skews toward
 the already-specced and several of the 19 may have no public contracts; and adopt
 6h first, or all 19 inherit the defect that blocks Phase 1.
+
+
+---
+
+## 2.2 precondition 2 settled — and the residue already knew
+
+`sigma/GATE-2.2-AVAILABILITY.md`.
+
+**0 of the 19 unspecced applications have contracts in `protocol-repos/`.** All
+56 repos there correspond to already-specced protocols; the collection was built
+to support the specs that exist and offers nothing toward the ones that do not.
+2.2's real cost is **~19 contract acquisitions, then 19 specs**, plus an explicit
+declaration wherever the mechanism is not on-chain at all — Kalshi, BUIDL, USYC
+and the Binance products are candidates.
+
+*(Matcher note: a first cut using tokens of length >= 3 returned six matches, all
+false — "Binance staked ETH" -> `tethercoin_USDT` on "eth" inside "tether", "CIAN
+Yield Layer" -> `LayerZero` on "layer". Fourth detector this session to fail on
+first run, fourth caught by reading the output instead of the total.)*
+
+**Steakhouse comes off the work-list.** The lane JSON's own `rank_basis` records
+that *"the biggest 'vaults' in DeFi are curated Morpho/Euler vaults"*. Steakhouse
+is a **firm holding a role**, not a protocol with contracts — which is exactly why
+it never got a spec, and why `TODO` could carry it as a refuter for so long
+without anyone noticing the refutation had never been exhibited. There was no
+artifact to exhibit. Its mechanism is MetaMorpho, which is now specced.
+
+### The residue already named all three of this session's findings
+
+Reading the lane JSON `residue` fields:
+
+- **Steakhouse** — *"No element for the CURATOR: a named … third party with
+  discretionary authority to allocate other people's deposits …"* — that is the
+  refuter.
+- **Steakhouse** — *"No element for the role SPLIT that makes curated vaults safe
+  (owner / curator / allocator …)"* — that is convention 6h.
+- **CIAN** — *"an off-chain agent must call rebalance, and if it stops, the vault
+  drifts into liquidation. Nothing in the vocabulary records that a mechanism
+  requires an external caller to be alive."* — that is pair 4's autonomy law.
+
+All three were written down before this session, in three different lanes, and
+filed as **vocabulary gaps** — things the 58 symbols could not name. They were
+never carried into the basis work, where they are not naming gaps at all but the
+reason Phase 1 cannot proceed.
+
+**New task, and it looks cheap:** re-read the `residue` field across all 68
+applications as a source of basis candidates and refuters. The data is on disk.
+On the two read so far the hit rate is three for three.
