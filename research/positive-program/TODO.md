@@ -145,10 +145,18 @@ composition, then construction.
               `P2-FIDELITY`/`P2-CONTRACT` have no convention requiring a re-spec
               to model who may call what. It is load-bearing for Phase 1 and
               belongs alongside 6g.
-        - [ ] **Record `wbtc` as deletion 11** — same class as
-              `morpho_blue.qnt:156`, but outside `P2-SCOPE`'s ten. Re-scan the
-              other 41 unre-specced specs for the class before trusting any
-              Phase 1 result drawn from them.
+        - [x] **Deletion class 11 scanned and hand-audited —
+              `sigma/DELETION-11.md`. 4 confirmed, in `coinbase`, `usdc` and
+              `wbtc`, all outside `P2-SCOPE`'s ten.** The raw scan said 7; hand
+              checking found `usdc.mint` models its minter via
+              `canMintWithAllowance` (false positive), `coinbase.init` is an
+              initialiser, and `wbtc.addMintRequest`'s single `MERCHANT` is a
+              declared (E<=) restriction rather than a deletion.
+              **The method's ceiling is the finding:** it only sees restrictions
+              the author documented, and silent omission is the normal case. Nine
+              documented claims across 51 specs is implausibly few. **Do not
+              quote a size for this class** — 4 is a lower bound of unknown
+              tightness, and closing the gap needs the contracts, not the specs.
         - [ ] **Re-order: 2.2 before the rest of 1.1b.** Remaining pairs will hit
               the same wall wherever their law depends on a deleted mechanism.
         - [ ] Check every future law against the five-class artifact taxonomy in

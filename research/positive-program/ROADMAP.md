@@ -884,3 +884,41 @@ fidelity criterion, where no convention currently requires it; record `wbtc` as
 deletion 11 and re-scan the other 41 unre-specced specs for the class; and run
 **2.2 before the rest of 1.1b**, since the remaining pairs will hit this wall
 wherever their law depends on something that was deleted.
+
+
+---
+
+## Deletion class 11 — scanned across all 51 specs, and bounded rather than counted
+
+Full argument in `sigma/DELETION-11.md`.
+
+Scanning for actions whose own comment asserts an access restriction while the
+code models no caller: **9 such claims corpus-wide, 7 modelling nothing.** All
+seven hand-checked, because two detectors in this programme have already produced
+false positives by trusting a regex.
+
+**4 confirmed deletions** — `coinbase.mint` ("onlyCallers", signature
+`(dst, amt)`), `usdc.configureMinter` (the masterMinter role absent),
+`wbtc.confirmMint` and `wbtc.rejectMint` (both "onlyCustodian", both
+`(id: int)`). Three rejected: `usdc.mint` genuinely models its minter via
+`canMintWithAllowance` and the detector missed it on a lowercase name;
+`coinbase.init` is an initialiser; `wbtc.addMintRequest`'s hardcoded `MERCHANT`
+is a declared (E<=) scope restriction, not a deleted mechanism.
+
+**All three affected specs are outside `P2-SCOPE`'s ten.**
+
+**The ceiling matters more than the count.** The scan fires only where the author
+wrote the restriction down and then did not implement it. The normal deletion is
+silent — a spec that never mentions `setOracle` is `onlyGovernance` leaves nothing
+to match, and is indistinguishable from a function with no access control at all.
+Nine documented claims across 51 specs is implausibly few for a DeFi corpus.
+**4 is a floor of a floor, and the gap closes only by reading contracts** — the
+method Phase 2's re-specs use and nothing else in the programme does.
+
+This strengthens pair 4 rather than merely adding to it: Phase 1's dependency on
+an honest corpus is not one awkward protocol, it is structural. A new Phase 2
+convention follows — **every re-spec must model who may call each state-changing
+action, or declare the omission with the contract line it drops.**
+`wbtc.addMintRequest` shows what a declared restriction looks like;
+`confirmMint` shows what a deletion looks like; today the two are
+indistinguishable in review.
