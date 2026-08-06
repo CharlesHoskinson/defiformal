@@ -42,7 +42,18 @@ carriers at all and permission-freedom is ill-typed rather than merely false.
 **Adjudication: Referee B's reduction is the better reading, and it fails anyway —
 on `P4.2`.**
 
-## 3. The corrected obstruction: cyclicity
+## 3. The corrected obstruction: cyclicity — REFUTED, see `sigma/RETRACTION.md`
+
+> **This section is wrong and is kept for the record.** A fourth referee refuted it
+> on every line. Acyclicity of `R_Φ` is *descriptive*, not definitional — P4.3 says
+> "**When** `R_X` is acyclic…" and P4.4 admits `(x,x) ∈ R_X`, which a DAG cannot
+> have. The corpus contains role cycles already (`L6/usdc.qnt:105-125`,
+> `blacklist`/`unblacklist` on `restricted : str ⇀ bool`). And a monotone encoding
+> with `grants, revokes : N ⇀ T` reproduces a cyclic role from acyclic `post_T`
+> writes. The table below also cites two *different* principals, so it witnesses an
+> antichain rather than a cycle.
+
+## 3. The corrected obstruction: cyclicity (REFUTED)
 
 `BASIS.md` P4.2, *R-respect*:
 
