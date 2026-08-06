@@ -971,3 +971,46 @@ retrofits the ten existing v2 re-specs.
 it. This reverses the recommendation of three passes ago, and the reason changed:
 Phase 1 was blocked on a withdrawn claim, and is now blocked on missing evidence
 that only 2.2 produces.
+
+
+---
+
+## The refuter has a machine-checked witness — `quint-models-v2/metamorpho.qnt`
+
+The first spec in the corpus written under convention 6h, and therefore the first
+that can state the delegated allocation mandate at all.
+
+| check | result |
+|---|---|
+| `quint typecheck` | clean |
+| `respec_lint.py` | **0 findings** |
+| `inv_all`, `inv_T0`, `inv_conservation`, `inv_capsRespected`, `inv_nonNegative`, `inv_sharesSum` | all **`[ok]`** (20 steps x 3000 samples) |
+| `wit_nonLocalReallocation`, `wit_outsiderMovesDepositorAssets`, `wit_mandateGranted`, `wit_capBinds` | all **`[violation]`** — reachable, as required |
+
+**The demonstration.** `mallory` holds no shares and is not a depositor. The
+owner grants the allocator role (`setIsAllocator`, `MetaMorpho.sol:195`), and
+`mallory` then redistributes assets that `alice` and `bob` deposited — reachable,
+machine-checked by `wit_outsiderMovesDepositorAssets`. Across that same reachable
+space, **every invariant the corpus knows how to write reports `[ok]`**:
+conservation, share-sum, cap bounds, non-negativity.
+
+That is the refutation made concrete. Phase 2 established that *"conservation
+never once detected a deleted mechanism"*. Here conservation fails to detect a
+**present** one, for the same structural reason — it has no term for *who chose*.
+
+**Two harness catches worth recording**, since the programme collects them:
+
+1. `inv_T0` died with `QNT507`: Quint evaluates `alloc.get(who)` even when a
+   later disjunct of the `or` would succeed, so a vector querying `"curator"`
+   against `Map("mallory" -> false)` crashes rather than short-circuiting. Caught
+   by the T0 vectors, which is precisely their purpose.
+2. `respec_lint` D2 flagged `curator` and `totalShares` as state declared but
+   never driven. **Both true positives.** The header cited
+   `MetaMorpho.sol:186 setCurator` as an authority-granting transition and no
+   action wrote it — a 6h violation inside the first 6h spec. `setCurator` and
+   `withdraw` added; lint 2 -> 0.
+
+**What remains before this is a theorem** is unchanged and stated in
+`REFUTER-DELEGATED-ALLOCATION.md` §5: owner-locality verified across every family
+rather than seven by hand, and preservation under `⋈` proved. The witness closes
+the third item on that list, not the first two.

@@ -32,8 +32,24 @@ composition, then construction.
       for 7 families by hand not all of `P`, the closure argument under `⋈` is
       unwritten, and there is no Quint witness until 6h lands. Do **not** record
       completeness as refuted.
-  - [ ] Write the Quint witness for `reallocate` once 6h is adopted — the first
-        spec in the corpus that models a principal acting on another's assets.
+  - [x] **Quint witness DELIVERED — `quint-models-v2/metamorpho.qnt`.** The
+        first spec in the corpus that models caller authority, written under
+        convention 6h. Typechecks; **lint 0**; six invariants `[ok]`; four
+        `wit_*` all `[violation]` as required.
+        **The demonstration is machine-checked:** `inv_conservation`,
+        `inv_sharesSum`, `inv_capsRespected` and `inv_nonNegative` all hold over
+        20 steps x 3000 samples, while `wit_outsiderMovesDepositorAssets` is
+        reachable — `mallory`, who holds no shares and never can, redistributes
+        assets alice and bob deposited. **The corpus's entire invariant
+        vocabulary is [ok] across the refuter.**
+        Two bugs the harness caught, both worth keeping: `inv_T0` died with
+        QNT507 because `alloc.get(who)` is evaluated even when a later disjunct
+        would succeed, so a vector querying `"curator"` against
+        `Map("mallory" -> ...)` crashes — exactly what T0 vectors are for. And
+        `respec_lint` D2 flagged `curator` and `totalShares` as declared but
+        never driven: both true positives, since the header cited
+        `MetaMorpho.sol:186 setCurator` and no action wrote it. `setCurator` and
+        `withdraw` added; lint went 2 -> 0.
   - [ ] Verify owner-locality across every family, and prove it is preserved by
         `⋈`. That is what turns the exhibit into the refutation.
 - [ ] **2.3 — re-run generation against the honest corpus.** This is the payoff.
