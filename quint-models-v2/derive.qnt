@@ -444,9 +444,9 @@
 //  restricts nobody.  UNRESOLVED means no contract function matched by
 //  name; it is NOT a synonym for permissionless.
 //
-//    setTrustedRiskAssessor  MODELLED        src/risk-managers/BaseManager.sol:171  onlyOwner
-//    withdrawBase            MODELLED        src/SecurityModule.sol:73  onlyOwner
-//    withdrawCash            MODELLED        src/SecurityModule.sol:73  onlyOwner
+//    setTrustedRiskAssessor  MODELLED        src/risk-managers/BaseManager.sol:171  onlyOwner  [s
+//    withdrawBase            MODELLED        src/SecurityModule.sol:73  onlyOwner  [spec guards o
+//    withdrawCash            MODELLED        src/SecurityModule.sol:73  onlyOwner  [spec guards o
 //    depositBase             PERMISSIONLESS  src/assets/WLWrappedERC20Asset.sol:57  no caller che
 //    depositCash             PERMISSIONLESS  src/assets/WLWrappedERC20Asset.sol:57  no caller che
 //    startAuction            PERMISSIONLESS  src/liquidation/DutchAuction.sol:148  no caller chec

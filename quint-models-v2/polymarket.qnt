@@ -294,22 +294,25 @@
 //  restricts nobody.  UNRESOLVED means no contract function matched by
 //  name; it is NOT a synonym for permissionless.
 //
-//    addOperator           MODELLED        src/exchange/mixins/Auth.sol:59  onlyAdmin
-//    matchOrders           MODELLED        src/exchange/CTFExchange.sol:48  onlyOperator
+//    addAdmin              MODELLED        src/exchange/mixins/Auth.sol:49  onlyAdmin  [spec gu
+//    addOperator           MODELLED        src/exchange/mixins/Auth.sol:59  onlyAdmin  [spec gu
+//    matchOrders           MODELLED        src/exchange/CTFExchange.sol:48  onlyOperator  [spec
 //    merge                 MODELLED        src/adapters/CtfCollateralAdapter.sol:89  onlyUnpaus
 //    redeemPositions       MODELLED        src/adapters/CtfCollateralAdapter.sol:117  onlyUnpau
-//    renounceOperatorRole  MODELLED        src/exchange/mixins/Auth.sol:87  onlyOperator
+//    removeAdmin           MODELLED        src/exchange/mixins/Auth.sol:68  onlyAdmin  [spec gu
+//    removeOperator        MODELLED        src/exchange/mixins/Auth.sol:79  onlyAdmin  [spec gu
+//    renounceOperatorRole  MODELLED        src/exchange/mixins/Auth.sol:87  onlyOperator  [spec
 //    split                 MODELLED        src/adapters/CtfCollateralAdapter.sol:61  onlyUnpaus
 //    postOrder             UNRESOLVED      no contract function matched by name
 //    resolveMarket         UNRESOLVED      no contract function matched by name
 //
-//  FROZEN AUTHORITY ROOT (6h).  `ADMIN` is a `pure val`, and the contract
-//  lets the admin set move: Auth.sol:49 addAdmin / :68 removeAdmin, both
-//  onlyAdmin -- a CLOSED CYCLE, so no outside account can ever enter it.
-//  Declared, not modelled: the (E<=) cost is that no trace can witness an
-//  admin handover, so `ADMIN`'s tenure is not shown to be contingent.
-//  Cheap to promote to a model later, since the cycle terminates at once
-//  -- as `uniswap_v2.setFeeToSetter` already does.
+//  AUTHORITY ROOT (6h) — MODELLED, not declared.  `admins` is a `var` and the
+//  cycle is closed in the spec: Auth.sol:49 addAdmin and :68 removeAdmin are
+//  both onlyAdmin, so admins appoint admins and no outside account can enter
+//  the set.  Promoted from a declaration once the termination rule made closed
+//  cycles the first candidates -- they terminate immediately.
+//  :68's `adminCount > 1` is carried as `inv_adminNonEmpty`: the contract can
+//  never be left adminless.  There is no frozen role left in this spec.
 // --------------------------------------------------------------------------
 module polymarket {
   import kernel.* from "./kernel"
@@ -334,7 +337,14 @@ module polymarket {
   /// AUTHORITY principals (6h).  `op1` holds the operator role at init, `op2`
   /// does not and can only acquire it from ADMIN.  Two principals -- one holding
   /// the role and one not -- is what hosts the permission witnesses.
-  pure val ADMIN: str = "admin"
+  /// Auth.sol:26 — the constructor makes ONE address both admin and operator.
+  pure val DEPLOYER: str = "admin"
+
+  /// Auth.sol:68 `adminCount`.  Derived rather than stored: the contract keeps a
+  /// counter, and it is exactly the cardinality of the admin set, so computing
+  /// it is equal rather than an approximation.
+  pure def adminCount(a: str -> bool, ags: Set[str]): int =
+    ags.fold(0, (n, g) => if (a.get(g)) n + 1 else n)
   pure val AGENTS: Set[str] = USERS.union(Set("admin", "op1", "op2"))
 
   /// Auth.onlyOperator (src/exchange/mixins/Auth.sol:23).
@@ -443,6 +453,9 @@ module polymarket {
   /// GRANTING of the role is itself a transition -- freezing it would delete the
   /// mechanism, which is what the header previously called "ABSTRACTED (roles)".
   var operators: str -> bool
+  /// Auth.sol:15 `admins`.  A `var`, not the former `pure val ADMIN`: :49/:68
+  /// let the admin set move, so freezing it was a FROZEN finding under 6h.
+  var admins: str -> bool
 
   // ===========================================================================
   //  THE MECHANISM, as named `pure def`s (convention 3 / 6b).
@@ -820,7 +833,8 @@ module polymarket {
     phase' = PHASE_OPEN,
     payout' = NO_PAYOUT,
     lastOp' = OP_INIT,
-    operators' = AGENTS.mapBy(a => a == "op1"),
+    operators' = AGENTS.mapBy(a => a == DEPLOYER),
+    admins' = AGENTS.mapBy(a => a == DEPLOYER),
   }
 
   /// ConditionalTokens.splitPosition called directly by a holder.
@@ -838,6 +852,7 @@ module polymarket {
     payout' = payout,
     lastOp' = OP_SPLIT,
     operators' = operators,
+    admins' = admins,
   }
 
   /// ConditionalTokens.mergePositions called directly by a holder.
@@ -857,6 +872,7 @@ module polymarket {
     payout' = payout,
     lastOp' = OP_MERGE,
     operators' = operators,
+    admins' = admins,
   }
 
   /// ENVIRONMENT action: a maker signs an order and rests it.  Not an on-chain
@@ -877,6 +893,7 @@ module polymarket {
     payout' = payout,
     lastOp' = OP_POST,
     operators' = operators,
+    admins' = admins,
   }
 
   /// CTFExchange.matchOrders -> Trading._matchOrders.  THE SIGNATURE IS THE
@@ -926,6 +943,7 @@ module polymarket {
                 else if (r.mergeTotal > 0) OP_MATCH_MERGE
                 else OP_MATCH_COMP,
       operators' = operators,
+      admins' = admins,
     }
   }
 
@@ -945,6 +963,7 @@ module polymarket {
       lockedCollateral' = lockedCollateral,
       lastOp' = OP_RESOLVE,
       operators' = operators,
+      admins' = admins,
     }
   }
 
@@ -965,6 +984,7 @@ module polymarket {
       payout' = payout,
       lastOp' = OP_REDEEM,
       operators' = operators,
+      admins' = admins,
     }
   }
 
@@ -973,10 +993,52 @@ module polymarket {
   /// and nothing here names the makers a taker crosses.
   /// Auth.addOperator — onlyAdmin (src/exchange/mixins/Auth.sol:59).  The GRANT.
   action addOperator(caller: str, who: str): bool = all {
-    caller == ADMIN,
+    admins.get(caller),
     AGENTS.contains(who),
     not(operators.get(who)),
     operators' = operators.put(who, true),
+    admins' = admins,
+    book' = book, cash' = cash, posYes' = posYes, posNo' = posNo,
+    lockedCollateral' = lockedCollateral, phase' = phase, payout' = payout,
+    lastOp' = OP_INIT,
+  }
+
+  /// Auth.sol:49 addAdmin — onlyAdmin.  The cycle: admins appoint admins, so no
+  /// account outside the set can ever enter it.
+  action addAdmin(caller: str, who: str): bool = all {
+    admins.get(caller),
+    AGENTS.contains(who),
+    not(admins.get(who)),
+    admins' = admins.put(who, true),
+    operators' = operators,
+    book' = book, cash' = cash, posYes' = posYes, posNo' = posNo,
+    lockedCollateral' = lockedCollateral, phase' = phase, payout' = payout,
+    lastOp' = OP_INIT,
+  }
+
+  /// Auth.sol:68 removeAdmin — onlyAdmin, and `adminCount > 1`.  THE ADMIN SET
+  /// CAN NEVER BE EMPTIED; `inv_adminNonEmpty` asserts what that guarantees.
+  action removeAdmin(caller: str, who: str): bool = all {
+    admins.get(caller),
+    AGENTS.contains(who),
+    admins.get(who),
+    adminCount(admins, AGENTS) > 1,
+    admins' = admins.put(who, false),
+    operators' = operators,
+    book' = book, cash' = cash, posYes' = posYes, posNo' = posNo,
+    lockedCollateral' = lockedCollateral, phase' = phase, payout' = payout,
+    lastOp' = OP_INIT,
+  }
+
+  /// Auth.sol:79 removeOperator — onlyAdmin.  An ADMIN-INITIATED revoke, and a
+  /// different mechanism from :87's self-renounce: here the operator does not
+  /// consent.  Missed on the first pass, which modelled only the renounce.
+  action removeOperator(caller: str, who: str): bool = all {
+    admins.get(caller),
+    AGENTS.contains(who),
+    operators.get(who),
+    operators' = operators.put(who, false),
+    admins' = admins,
     book' = book, cash' = cash, posYes' = posYes, posNo' = posNo,
     lockedCollateral' = lockedCollateral, phase' = phase, payout' = payout,
     lastOp' = OP_INIT,
@@ -987,6 +1049,7 @@ module polymarket {
   action renounceOperatorRole(caller: str): bool = all {
     isOperator(caller, operators),
     operators' = operators.put(caller, false),
+    admins' = admins,
     book' = book, cash' = cash, posYes' = posYes, posNo' = posNo,
     lockedCollateral' = lockedCollateral, phase' = phase, payout' = payout,
     lastOp' = OP_INIT,
@@ -999,8 +1062,12 @@ module polymarket {
     nondet pi = POST_IDX.oneOf()
     nondet k = PAYOUT_IDX.oneOf()
     nondet ag = AGENTS.oneOf()
+    nondet ag2 = AGENTS.oneOf()
     any {
-      addOperator(ADMIN, ag),
+      addOperator(ag, ag2),
+      removeOperator(ag, ag2),
+      addAdmin(ag, ag2),
+      removeAdmin(ag, ag2),
       renounceOperatorRole(ag),
       split(u, amount),
       merge(u, amount),
@@ -1027,6 +1094,22 @@ module polymarket {
   //  AUTHORITY WITNESSES (6h).  Polymarket is the second protocol in which the
   //  permission coordinate is machine-checked; the first is metamorpho.qnt.
   // -------------------------------------------------------------------------
+
+  /// Auth.sol:68's `adminCount > 1`.  The contract cannot be left adminless, so
+  /// the delegation root is always occupied by somebody.
+  val inv_adminNonEmpty: bool = adminCount(admins, AGENTS) >= 1
+
+  /// THE CYCLE CLOSES: an outsider becomes an admin only because an admin said
+  /// so.  Must be [violation].
+  val wit_adminGranted: bool = not(admins.get("op1"))
+
+  /// And an admin can be removed, provided it is not the last.
+  val wit_adminRemoved: bool = admins.get(DEPLOYER)
+
+  /// An operator revoked BY AN ADMIN rather than by itself — Auth.sol:79 versus
+  /// :87.  The operator does not consent, which is the whole difference.
+  val wit_operatorRevokedByAdmin: bool =
+    not(and { admins.get(DEPLOYER), not(operators.get("op1")) })
 
   /// PERMISSION-DEPENDENCE.  Same book, same order, same everything -- only the
   /// operator map differs, and enablement flips.  This is CHARACTERISATION.md
@@ -1086,6 +1169,7 @@ module polymarket {
     TAKER_IDX.forall(i => matchIsOrdered(book, TAKERS[i], cash, posYes, posNo))
 
   val inv_all: bool = and {
+    inv_adminNonEmpty,
     inv_T0,
     inv_conservation,
     inv_bounds,

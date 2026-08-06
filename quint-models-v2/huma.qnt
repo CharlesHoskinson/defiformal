@@ -418,18 +418,25 @@
 //  restricts nobody.  UNRESOLVED means no contract function matched by
 //  name; it is NOT a synonym for permissionless.
 //
+//    addApprovedLender         FROZEN          contracts/liquidity/TrancheVault.sol:192  onlyPoolOp
+//    closePool                 FROZEN          contracts/liquidity/Pool.sol:152  onlyPoolOwnerOrHum
+//    removeApprovedLender      FROZEN          contracts/liquidity/TrancheVault.sol:223  onlyPoolOp
 //    distributeLoss            OMITTED         contracts/liquidity/Pool.sol:190  msg.sender !=
 //    distributeProfit          OMITTED         contracts/liquidity/Pool.sol:183  _onlyCreditOrCredi
-//    addApprovedLender         MODELLED        contracts/liquidity/TrancheVault.sol:192  onlyPoolOp
 //    addRedemptionRequestJuni  MODELLED        contracts/liquidity/TrancheVault.sol:328  msg.sender
 //    addRedemptionRequestSeni  MODELLED        contracts/liquidity/TrancheVault.sol:328  msg.sender
-//    closePool                 MODELLED        contracts/liquidity/Pool.sol:152  onlyPoolOwnerOrHum
 //    depositJunior             MODELLED        contracts/liquidity/TrancheVault.sol:312  _onlyLende
 //    depositSenior             MODELLED        contracts/liquidity/TrancheVault.sol:312  _onlyLende
 //    disburse                  MODELLED        contracts/liquidity/TrancheVault.sol:451  @custom:ac
-//    removeApprovedLender      MODELLED        contracts/liquidity/TrancheVault.sol:223  onlyPoolOp
 //    closeEpoch                PERMISSIONLESS  contracts/liquidity/EpochManager.sol:104  no caller 
 //    drawdown                  PERMISSIONLESS  contracts/credit/CreditLine.sol:15  no caller check 
+//
+//  FROZEN means the guard is present and the authority is a
+//  `pure val` where the contract mutates it, so the GRANT is
+//  deleted and no grant witness can exist.  Acceptable ONLY at the
+//  root of the delegation order; otherwise model it.  Each frozen
+//  role must be named with the contract function that moves it.
+//  Frozen here: addApprovedLender, closePool, removeApprovedLender
 //
 //  OMITTED means the contract restricts the caller and this spec
 //  does not.  Each is an (E<=) restriction ONLY IF the dropped
