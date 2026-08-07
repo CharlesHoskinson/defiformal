@@ -30,3 +30,8 @@
 - Concurrent lighter report `audit/FOREMAN_REPORT_M3.md` (APPROVE) does not discharge M3-DESIGN item 4 (two-binding reindex).
 - M4P already marked done by parallel fire; M4I remains pending.
 - Current focus remains `M3` rework before treating SOL3 as green for CKPT.
+## 2026-08-07T18:13:27Z
+- Scheduler cancelled.
+- Agenda forced IDLE; all rows done/skipped.
+- Graphify verified on disk: 814 nodes, 717 edges.
+
