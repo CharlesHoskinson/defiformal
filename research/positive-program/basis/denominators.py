@@ -37,8 +37,6 @@ def protocol_defs(d):
 
 
 def ungen_from_compare():
-    if os.environ.get("SKIP_COMPARE"):
-        return None, None
     proc = subprocess.run(
         [sys.executable, str(BASIS / "compare_v1_v2.py")],
         capture_output=True,
@@ -75,24 +73,21 @@ def main():
     print("-" * 56)
     print(f"{'TOTAL':<18} {t1:>17} {t2:>17}")
     print()
+    c1, c2 = ungen_from_compare()
+    if c1 is None:
+        raise SystemExit(
+            "compare_v1_v2.py failed; cannot compute or validate numerators"
+        )
     if "UNGEN_V1" in os.environ or "UNGEN_V2" in os.environ:
         if "UNGEN_V1" not in os.environ or "UNGEN_V2" not in os.environ:
             raise SystemExit("set both UNGEN_V1 and UNGEN_V2, or neither")
         u1, u2 = int(os.environ["UNGEN_V1"]), int(os.environ["UNGEN_V2"])
-        # Validate against compare when available
-        c1, c2 = ungen_from_compare()
-        if c1 is not None and (c1, c2) != (u1, u2):
+        if (c1, c2) != (u1, u2):
             raise SystemExit(
                 f"UNGEN_V1/V2={(u1,u2)} disagree with compare_v1_v2={(c1,c2)}"
             )
-        print("Numerators from UNGEN_V1/UNGEN_V2 env (validated against compare).")
+        print("Numerators from env, validated against compare_v1_v2.py.")
     else:
-        c1, c2 = ungen_from_compare()
-        if c1 is None:
-            raise SystemExit(
-                "cannot derive numerators: compare_v1_v2.py failed; "
-                "fix that or set validated UNGEN_V1/UNGEN_V2"
-            )
         u1, u2 = c1, c2
         print("Numerators derived from compare_v1_v2.py this run.")
     print(f"ungenerated protocol defs   v1 {u1:>4} / {t1:<4} = {100 * u1 / t1:5.1f}%")
