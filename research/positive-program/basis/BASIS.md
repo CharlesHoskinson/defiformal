@@ -135,7 +135,37 @@ authority `n ∈ N` and a relation `R_X ⊆ X × X`; `post_X(n, x, x′)` is def
 **Laws.**
 1. *`Q`-exclusion.* `post_Q` does not exist. This is the non-degeneracy axiom.
 2. *`R`-respect.* Every write lies in `R_X`; `R_T` is `<` (clocks advance),
-   `R_Φ` is the acyclic status DAG, `R_Σ` is `Σ_{>0} × Σ_{>0}` (free).
+   `R_Σ` is `Σ_{>0} × Σ_{>0}` (free), and **`R_Φ` is per-instance — acyclic for
+   status machines, cyclic for toggles.**
+
+   > **CORRECTION.** This clause previously read "`R_Φ` is the acyclic status
+   > DAG". That is false of the corpus this basis was extracted from, and the
+   > surrounding laws already said so: P4.3 is conditional — "***When*** `R_X` is
+   > acyclic the sequence of writes is a chain" — which is vacuous if P4.2 had
+   > fixed acyclicity; and P4.4's idempotence admits `(x,x) ∈ R_X`, which a DAG
+   > has no room for. Acyclicity described the `ReqStatus`/`ReqPhase`/
+   > `FillStatus`/`IntentStatus` instances sampled for §1, not the sort.
+   >
+   > **Measured** (`basis/phi_cycles.py`): of the finite protocol-written boolean
+   > carriers in the 51 protocol specs, **18 are driven both ways and 9 only one
+   > way**, with a cyclic carrier in **14 of 51 specs**. Witnesses:
+   > `L6/usdc.qnt` `paused` (`pause`/`unpause`, :127-145) and `restricted`
+   > (`blacklist`/`unblacklist`, :105-125); `L1/uniswap_v4.unlocked`;
+   > `L1/pancakeswap.unlocked`; `L3/spark.frozen`; `L6/usdg.paused`;
+   > `L6/usdt.restricted`; `L5/panoptic.poolLocked`.
+   >
+   > The 9 "monotone" carriers are an **upper bound on acyclicity, not a
+   > measurement of it**: several are one-way only because the spec omits the
+   > inverse. `L6/usdc.isMinter` is granted by `configureMinter` and never
+   > revoked, yet the contract carries `removeMinter`
+   > (`FiatTokenV1.sol:346`), which `usdc.qnt:5` records as covered and the spec
+   > does not model. The true cyclic population is larger than 18.
+   >
+   > **Consequence.** The *once* law (P4.3) holds only of the acyclic instances,
+   > and no argument may quantify over all `Φ` writes and assume a chain. A role
+   > assignment — granted, revoked, re-granted — is a legal `Φ` carrier under the
+   > corrected clause, which is why `post_Φ` reaches it. See
+   > `sigma/RETRACTION.md`.
 3. *Irreversibility.* When `R_X` is acyclic the sequence of writes is a chain — this is
    the *once* law: `markUsed` (L4/common.qnt:108) grows monotonically, `applyClaim`
    reaches a terminal phase.
