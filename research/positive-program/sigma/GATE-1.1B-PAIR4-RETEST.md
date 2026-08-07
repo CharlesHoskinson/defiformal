@@ -81,3 +81,19 @@ pairs and families have laws or honest collapses recorded.
 cd quint-models-v2
 quint typecheck wbtc.qnt
 ```
+
+
+---
+
+## Cluster model (all four classes)
+
+File: `quint-models-v2/deferred_claim_cluster.qnt` — typecheck EXIT 0.
+
+Encodes L1 liquidity claim, L3 time gate, L5 pricer gate, L4 custodian gate in one
+module under 6h. Pure vals:
+
+- `autonomy_L1 = true`, `autonomy_L3 = true`
+- `autonomy_L5 = false`, `autonomy_L4 = false`
+- `law_separates_2_2 = true`
+
+Plus machine-checked `inv_l4_confirm_auth`.
