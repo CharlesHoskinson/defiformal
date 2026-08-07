@@ -190,10 +190,14 @@ module pendle {
   // Index is a high-water mark relative to any past stored (monotone on update)
   val indexNonNeg: bool = index.stored > 0 and syRate > 0
 
-  // SY locked covers PT notional at current index (pre-expiry)
+  // SY locked covers PT notional at the TRUE exchange rate (pre-expiry).
+  // Evaluated at syRate, not max(index.stored, syRate): the ratchet is a
+  // high-water mark for accounting, but collateral adequacy must not hide
+  // behind a stale higher index when setSyRate permits drawdowns.
+  // (Council witness wit_staleIndexBacking; INTERFACE-COUNCIL 2026-08-06.)
   val backing: bool =
     if (expired) syLocked >= 0
-    else pyBackingHolds(syLocked, ptSupply, ytSupply, max(index.stored, syRate), SCALE) or
+    else pyBackingHolds(syLocked, ptSupply, ytSupply, syRate, SCALE) or
          ptSupply == 0
 
   // ---------------------------------------------------------------------

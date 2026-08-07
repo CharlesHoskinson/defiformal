@@ -17,3 +17,18 @@ open Defialgebra
 #check @Defialgebra.adm_univ_of_consistent
 #check @Defialgebra.Polarity.req_models_union_closed
 #check @Defialgebra.Polarity.warrant_models_union_closed
+
+-- M1 Interface
+#print axioms Defialgebra.Interface.cons_of_portConfined
+#print axioms Defialgebra.Interface.cons_broken_if_sup_is_port
+-- M2 FlowPolarity
+#print axioms Defialgebra.FlowPolarity.antiCaller_settle
+#print axioms Defialgebra.FlowPolarity.DirectedEdge.antiCaller_both
+#print axioms Defialgebra.FlowPolarity.antiCaller_broken_if_polarity_flipped
+#print axioms Defialgebra.FlowPolarity.directedEdge_broken_if_same_polarity
+
+-- M3 Nary
+#print axioms Defialgebra.Nary.agrees_union_assoc
+#print axioms Defialgebra.Nary.pairLocal_excludes_skip
+#print axioms Defialgebra.Nary.skip_not_pairLocal_witness
+
