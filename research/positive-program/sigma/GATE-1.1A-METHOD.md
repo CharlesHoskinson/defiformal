@@ -38,4 +38,4 @@ fixed; number not yet produced.
 
 ## Status
 
-**OPEN — method fixed, census not complete.**
+**MEASURED (partial)** — see GATE-1.1A-CENSUS-V1.md. Extend PRIM for full close.
