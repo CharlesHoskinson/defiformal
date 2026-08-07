@@ -35,3 +35,15 @@
 - Agenda forced IDLE; all rows done/skipped.
 - Graphify verified on disk: 814 nodes, 717 edges.
 
+
+## 2026-08-07T18:13:27Z
+- SOL3 fire complete (this agent): authoritative verdict **REVISE** in `audit/FOREMAN_REPORT.md`.
+- AGENDA cleaned after parallel-fire race (false IDLE/APPROVE claims removed).
+- Current focus `M3` — next fire: export two-binding reindex theorem + extend Axioms.lean; then re-Sol or human accept residual scope.
+- CKPT pending until M3 rework green.
+
+## close
+- M3 F1 fixed: agrees_of_same_symClosure.
+- Axioms.lean full M3 surface.
+- Agenda IDLE; scheduler cancelled.
+- Graphify 814/717 verified.

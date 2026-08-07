@@ -24,6 +24,9 @@ plus **n-ary composition over a global binding set**.
 * `agrees_union`, `union_assoc`, `agrees_union_assoc` — multi-party composition
   is constraint-union; union is associative, so bracketing does not change
   agreement.
+* `agrees_of_same_symClosure` — **two-binding reindex:** if two bindings have
+  equal symmetric closures, they induce the same agreement predicate (listing
+  order / pair orientation / redundant reverse edges do not matter).
 * `pairLocal_excludes_skip` — **negative companion.** Pair-local edges on a
   binary cut cannot include a skip edge with both ends on the same side.
 * `skip_not_pairLocal_witness` — concrete three-port witness.
@@ -103,6 +106,15 @@ theorem union_comm (B₁ B₂ : Binding Idx) :
 theorem agrees_union_assoc (B₁ B₂ B₃ : Binding Idx) (s : St Idx) :
     Agrees ((B₁.union B₂).union B₃) s ↔ Agrees (B₁.union (B₂.union B₃)) s := by
   rw [union_assoc]
+
+/-- **Two-binding reindex (M3-DESIGN item 4).** Bindings with the same symmetric
+closure of pairs induce the same agreement predicate. Parenthesization of n-ary
+composition is already ; this covers reordering and
+re-orienting the declared pair list. -/
+theorem agrees_of_same_symClosure (B₁ B₂ : Binding Idx) (s : St Idx)
+    (h : symClosure B₁.pairs = symClosure B₂.pairs) :
+    Agrees B₁ s ↔ Agrees B₂ s := by
+  rw [agrees_iff_agrees_sym, agrees_iff_agrees_sym, h]
 
 structure BinaryCut (Idx : Type*) where
   left : Finset Idx

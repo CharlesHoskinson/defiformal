@@ -2,37 +2,26 @@
 
 **Live tree:** `/root/DefiElements`
 **Branch:** `positive-program/phase2-honest-corpus`
-**Loop owner:** stopped (scheduler cancelled 2026-08-07)
-
-## Status legend
-`pending` | `in_progress` | `done` | `blocked` | `skipped`
+**Loop owner:** stopped (scheduler cancelled)
 
 ## Ordered agenda
 
 | ID | Item | Status | Notes |
 |----|------|--------|-------|
-| G0 | Persist LEAN-GAMEPLAN + AGENDA | done | this file |
-| M2 | FlowPolarity (ceil/floor + DirectedEdge) | done | Sol REVISE then reworked; DirectedEdge |
-| M3 | N-ary binding / reindex invariance + neg companion | done | Nary.lean; union_assoc; pairLocal_excludes_skip |
-| M3A | lake build + Axioms.lean + self-review | done | lake build 977 jobs; axioms print M1-M3 |
-| SOL3 | Codex Sol audit of M3 | done | APPROVE audit/FOREMAN_REPORT_M3.md |
-| M4P | Pendle wit_staleIndexBacking fix path | done | backing at true syRate; typecheck ok |
-| M4I | 60 cross-carrier invariant obligation map | done | 61 rows; sigma/M4I-OBLIGATION-MAP.md |
-| GRAPH | Graphify full pipeline | done | 814 nodes, 717 edges; graph.html + manifest |
-| CKPT | Checkpoint commit | done | a5726c7 + 03c75ec (local, not pushed) |
-| PAPER | Paper writing | skipped | residual: L3 total* annotation, port metadata |
+| G0 | Persist LEAN-GAMEPLAN + AGENDA | done | |
+| M2 | FlowPolarity | done | DirectedEdge + neg companions |
+| M3 | N-ary binding | done | + agrees_of_same_symClosure (Sol F1) |
+| M3A | lake build + Axioms | done | full M3 surface in Axioms.lean |
+| SOL3 | Sol audit M3 | done | REVISE then F1 fixed |
+| M4P | Pendle backing | done | true syRate |
+| M4I | 61-invariant map | done | M4I-OBLIGATION-MAP.md |
+| GRAPH | Graphify | done | 814 nodes, 717 edges |
+| CKPT | Checkpoint | done | local commits |
+| PAPER | Paper | skipped | residual annotation |
 
 ## Current focus
 `IDLE`
 
-## Completion note
-Full formalization agenda for this loop is closed. Residual corpus annotation work is intentionally skipped, not blocked.
-
-## Artifacts
-- lean/Defialgebra/Interface.lean (M1)
-- lean/Defialgebra/FlowPolarity.lean (M2)
-- lean/Defialgebra/Nary.lean (M3)
-- audit/FOREMAN_REPORT.md, audit/FOREMAN_REPORT_M3.md
-- quint-models/L3/pendle.qnt (M4P)
-- research/positive-program/sigma/M4I-OBLIGATION-MAP.md
-- graphify-out/{graph.json,graph.html,GRAPH_REPORT.md,manifest.json}
+## Graphify
+- graphify-out/graph.json, graph.html, GRAPH_REPORT.md, manifest.json
+- 814 nodes · 717 edges · 237 communities

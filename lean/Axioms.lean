@@ -27,8 +27,13 @@ open Defialgebra
 #print axioms Defialgebra.FlowPolarity.antiCaller_broken_if_polarity_flipped
 #print axioms Defialgebra.FlowPolarity.directedEdge_broken_if_same_polarity
 
--- M3 Nary
+-- M3 Nary (full surface)
+#print axioms Defialgebra.Nary.agrees_iff_agrees_sym
+#print axioms Defialgebra.Nary.agrees_union
+#print axioms Defialgebra.Nary.union_assoc
+#print axioms Defialgebra.Nary.union_comm
 #print axioms Defialgebra.Nary.agrees_union_assoc
+#print axioms Defialgebra.Nary.agrees_of_same_symClosure
 #print axioms Defialgebra.Nary.pairLocal_excludes_skip
 #print axioms Defialgebra.Nary.skip_not_pairLocal_witness
 
