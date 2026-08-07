@@ -1,0 +1,36 @@
+I'll start by loading the Quint skills and surveying the L1 workspace layout, then model the spot-exchange and lending protocols from source.Next I'll pull the core state machines from the protocol repos and check whether other lanes already left patterns I can reuse.I have enough source context. Building shared primitives and protocol specs next, starting with `common.qnt` and the core DEX/lending models.Writing `common.qnt` and the protocol specs.I accidentally overwrote a protocol-repo file — restoring it from git immediately.Typechecking every spec and fixing errors until they're clean.All specs typecheck. Running invariants next.All invariants passed. Writing the insight ledger.## L1 deliverables complete
+
+### Specs (`/root/DefiElements/quint-models/L1/`)
+
+| File | Protocol | Invariant (run OK) |
+|---|---|---|
+| `common.qnt` | Shared primitives | — |
+| `uniswap_v2.qnt` | Uni V2 CPAMM | `lpConservation` |
+| `uniswap_v3.qnt` | Uni V3 concentrated | `activeBounded` |
+| `uniswap_v4.qnt` | Uni V4 delta settlement | `lockedImpliesSettled` |
+| `raydium_cp.qnt` | Raydium CPMM + fee vaults | `lpConservation` |
+| `curve.qnt` | Stableswap (approx D) | `lpConservation` |
+| `pancakeswap.qnt` | Infinity vault+deltas | `lockedImpliesSettled` |
+| `fluid.qnt` | Liquidity layer + DEX | `layerSolvency` |
+| `aave_v3.qnt` | Dual-index pool | `reserveSolvency` |
+| `morpho_blue.qnt` | Isolated share market | `liquidityInvariant` |
+| `compound_v3.qnt` | Signed principal + absorb | `indicesPositive` |
+| `justlend.qnt` | cToken exchange rate | `cTokenConservation` |
+| `sparklend.qnt` | Aave + external SSR | `reserveSolvency` |
+| `maple.qnt` | Permissioned loan + queue | `shareConservation` |
+
+All **14** files `quint typecheck` clean. Every protocol has at least one invariant passing under `quint run --max-steps=20 --max-samples=200`.
+
+### Ledger
+
+`/root/DefiElements/research/positive-program/insights/INSIGHT-L1.md` — all 10 schema sections filled.
+
+### Highest-value empirical findings
+
+1. **`NET_DELTA_SETTLEMENT`** (Uni V4 / Pancake) is not `Fl` — pure conservation over unlock scope, no borrow.
+2. **`Li` collapses three automata:** race-seize (Aave/Morpho/JustLend), protocol-absorb (Comet), authorised-default (Maple).
+3. **`Ix` is four bookkeeping machines:** dual-index, exchange-rate, mutate-totals (Morpho), signed-principal (Comet).
+4. **No symbol** for Spark’s exogenous SSR rate stream, Fluid’s triple-role capital, or Raydium fee accumulation.
+5. **Morpho’s** `totalBorrow ≤ totalSupply` is a hard code require — a local law of isolated markets, not universal for `Pl` (Maple exits via `Wq` instead).
+
+Honest gaps recorded: Curve Newton/`Cryptoswap` repeg, Uni V3 tick bitmap, Fluid slot liquidation, Maple multi-loan managers.

@@ -1,0 +1,39 @@
+I'll load the Quint modeling and language skills first, then map the L2 protocol sources and begin modelling from code.Next I'll check any existing L2 work and read the CDP/LSD supplement profiles for orientation.I'll extract core state and transitions from the available protocol repos next.I have enough from the code to write shared primitives and the protocol specs. Building `common.qnt` and the core models next.Typechecking all specs and fixing any errors.Fixing the `keys` name clash and restructuring `val` bindings so they scope correctly across actions.All specs typecheck. Running invariant checks next.Liquity's invariant failed because SP deposits weren't tracked as part of circulating BOLD. Fixing that accounting.Full redemption was zeroing the trove but only subtracting the redeemed collateral — fixing residual coll accounting.All invariants pass. Writing the insight ledger.## L2 complete
+
+All deliverables are on disk, every kept spec typechecks, and every `safety` invariant passed under `quint run` (20 steps × 200 samples).
+
+### Artifacts
+
+| Path | Role |
+|---|---|
+| `quint-models/L2/common.qnt` | Shared primitives (share math, index accrual, ICR/health, queue entry) |
+| `quint-models/L2/liquity.qnt` | BOLD V2: troves, SP offset, redeem |
+| `quint-models/L2/crvusd.qnt` | Controller: create_loan, rate_mul, health liquidate |
+| `quint-models/L2/sky.qnt` | sDAI chi vault + Dai↔USDS (partial) |
+| `quint-models/L2/usdd_psm.qnt` | PSM only (partial) |
+| `quint-models/L2/lido.qnt` | stETH shares + rebase + WQ |
+| `quint-models/L2/eigenlayer.qnt` | Strategy shares + magnitude budget + slash |
+| `quint-models/L2/etherfi.qnt` | Dual value pool + weETH + withdraw |
+| `quint-models/L2/babylon.qnt` | BTC delegation SM (no custody) |
+| `research/positive-program/insights/INSIGHT-L2.md` | Insight ledger |
+
+### Coverage
+
+- **8 code-backed models** (2 partial: Sky, USDD — repos lack full CDP core)
+- **3 profile-only**: Ethena, Lista, Binance WBETH (no clones)
+
+### Highest-value findings (ledger §§6–8, 10)
+
+1. **EigenLayer magnitude budget** — slashability conserved separately from principal; no vocabulary symbol.
+2. **Babylon holds nothing** — custody-free referenced stake; `Vl`/`Rs` assume held capital.
+3. **`Cd`/`Li` collapse hard-liq vs LLAMMA soft-bands vs auctions** — state machines differ.
+4. **Liquity rate = redemption priority** — not a protocol credit instrument.
+5. **Invariant failure → modelling finding**: full redeem must route residual coll (CollSurplusPool); fixed in-spec.
+6. **Ethena is mis-categorised as CDP** — profile itself shows no debt/liquidation.
+
+### Verification
+
+```
+typecheck: 9/9 OK
+run --invariant=safety: 8/8 OK
+```

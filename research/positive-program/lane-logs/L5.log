@@ -1,0 +1,35 @@
+I'll load the Quint skills first, then map the L5 repos and supplements before modeling.Next I'll pull the supplement profiles and sample existing lane specs so we match style and scope.Reading core contracts for the five available repos to extract state machines.I have enough code structure. Writing `common.qnt` and the five protocol specs next.Typechecking all specs, then running invariants.Fixing reserved names (`keys`, `size`) and `val` scoping issues.All typechecks passed. Running invariants next.All invariants hold. Checking vocabulary symbols, then writing the insight ledger.## L5 complete
+
+### Deliverables
+
+**Specs** (`/root/DefiElements/quint-models/L5/`):
+
+| File | Protocol | Invariants run |
+|---|---|---|
+| `common.qnt` | Shared primitives | typechecks |
+| `ondo.qnt` | Ondo USDY RWAHub | `mintAccounting`, `balancesNonNeg` |
+| `centrifuge.qnt` | Centrifuge async vault | `shareConservation` |
+| `hegic.qnt` | Hegic OperationalTreasury | `writeSolvency`, `lockAccounting` |
+| `derive.qnt` | Derive/Lyra v2 options | `settlementCorrect`, `cashNonNeg` |
+| `panoptic.qnt` | Panoptic CL-options | `assetShareConsistency` |
+
+All six typecheck clean. All listed invariants: **no violation** at 200 samples × 20 steps.
+
+**Ledger:** `/root/DefiElements/research/positive-program/insights/INSIGHT-L5.md`
+
+### Coverage
+
+- **Code-backed (5):** Ondo, Centrifuge, Hegic, Derive, Panoptic  
+- **Profile-only (5):** BUIDL, USYC, Maple, Rysk, Aevo — repos not cloned
+
+### Highest-value findings (ledger §§5–7)
+
+1. **`FULLY_RESERVED_WRITE`** (Hegic/Rysk) discharges solvency at write time — vocabulary forces `Ct`/`Li` and falsely rejects them.
+2. **`Op` collapses four machines:** Euro cash-settle, pool max-loss lock, full bilateral escrow, CL-range perpetual.
+3. **`ASYNC_REQUEST_CLAIM` ≠ `Wq`:** issuer-priced batch (Ondo/Centrifuge) vs FIFO liquidity queue (Maple).
+4. **`ADMIN_POSTED_PRICE` ≠ `At`:** single-writer NAV with no challenge bond is not reserve attestation.
+5. **No symbol for:** force-exercise, dual register-of-record, off-chain `assetSender` paymaster, CL→option construction.
+
+### Candidate primitives in `common.qnt`
+
+`NAV_PRICE_EXCHANGE`, `ASYNC_REQUEST_CLAIM`, `ADMIN_POSTED_PRICE`, `FULLY_RESERVED_WRITE`, `CASH_SETTLED_EUROPEAN`, `PORTFOLIO_CASH_MARGIN`, `UTILIZATION_COLLATERAL`, `SHARE_SUPPLY_LEDGER`.
