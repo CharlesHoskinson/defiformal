@@ -228,7 +228,7 @@ composition, then construction.
       statement about update form. If 1.1 wants it, it must earn its place as a
       law with witnesses like any other family. Do not attempt a sixth
       operationalisation to rescue the semantic reading.
-- [ ] **0.2 — prove `F9` (extremal allocation) irreducible.** Settled
+- [x] **0.2 — prove `F9` (extremal allocation) irreducible.** Settled
       empirically: every fold in all 57 v1 specs is a commutative sum, and there
       is not one extremal selection in the corpus. Needs the theorem — an
       invariant every composite preserves and extremal selection breaks.

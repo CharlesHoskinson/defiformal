@@ -37,3 +37,7 @@ open Defialgebra
 #print axioms Defialgebra.Nary.pairLocal_excludes_skip
 #print axioms Defialgebra.Nary.skip_not_pairLocal_witness
 
+
+-- Gate 0.2 F9 extremal irreducibility
+#print axioms Defialgebra.Extremal.extremal_not_local
+#print axioms Defialgebra.Extremal.f9_irreducible_to_sum_local

@@ -19,10 +19,12 @@ six-sort split are unsupported.
 *Gate:* a script produces a non-trivial partition, or `|P| = 4` is withdrawn.
 
 **0.2 Prove `F9` (extremal allocation) irreducible.**
-Settled empirically — every fold in the corpus is `fold(0, (acc,x) => acc + …)`,
-a commutative sum; zero extremal selections. Needs the theorem: an invariant
-every `⋈`-composite preserves and extremal selection breaks.
-*Gate:* theorem, or a counterexample construction.
+**CLOSED.** Mechanised in `lean/Defialgebra/Extremal.lean` as
+`f9_irreducible_to_sum_local`: no sum-local selection predicate reproduces
+extremal prefix fill on the two-claim separation (see `sigma/GATE-0.2-F9.md`).
+Corpus evidence (zero extremal folds) remains the link from the abstraction to
+the measured specs.
+*Gate:* theorem — discharged.
 
 ---
 
@@ -111,7 +113,7 @@ a negative result — it exhibits a finite basis and delimits it exactly.
 | gate | state | evidence / blocker |
 |---|---|---|
 | 0.1 Q/Σ invariant testable | **RESOLVED — claim false, `\|P\|=4` WITHDRAWN** | `sigma/QSIGMA-VERDICT.md`; the prior "three operationalisations" were two, and both scanned `init` |
-| 0.2 `F9` irreducible | **empirically settled, theorem open** | zero extremal selections corpus-wide |
+| 0.2 `F9` irreducible | **CLOSED** | Lean `Extremal.f9_irreducible_to_sum_local`; `sigma/GATE-0.2-F9.md` |
 | 1.1a recount witnesses corpus-wide | **OPEN — search method refuted** | `sigma/GATE-1.1A-RECOUNT.md`; 28 of 28 rows reaching >=2 are shared-`common.qnt` reuse, **0 independent**; `layerzero` proves search under-counts |
 | 1.1b a law per family | **BLOCKED ON THE HONEST CORPUS** | 3 pairs collapsed, pair 4 is **untestable** — `GATE-1.1B-PAIR4.md`; 0 of 17 gate actions model caller authority, so the autonomy law cannot be evaluated |
 | 1.2 pairwise independence | not started | needs 1.1b |
