@@ -196,6 +196,21 @@ module pendle {
     else pyBackingHolds(syLocked, ptSupply, ytSupply, max(index.stored, syRate), SCALE) or
          ptSupply == 0
 
+  // ---------------------------------------------------------------------
+  //  WITNESS (added by the interface-discipline council, 2026-08-06).
+  //  `backing` (:196) is evaluated at max(index.stored, syRate) -- the RATCHETED
+  //  index (common.qnt:71) -- while setSyRate (:104) permits syRate to FALL.
+  //  If a reachable state has the index above the true rate, backing can hold on
+  //  the stale index while failing on the real one. This asserts that cannot
+  //  happen; [violation] means it can.
+  // ---------------------------------------------------------------------
+  val wit_staleIndexBacking: bool = not(and {
+    syRate < index.stored,
+    ptSupply > 0,
+    not(pyBackingHolds(syLocked, ptSupply, ytSupply, syRate, SCALE)),
+    backing,
+  })
+
   // User balances match supplies
   val supplyMatch: bool =
     USERS.fold(0, (acc, u) => acc + ptOf.get(u)) == ptSupply and
