@@ -118,7 +118,7 @@ a negative result — it exhibits a finite basis and delimits it exactly.
 | 0.2 `F9` irreducible | **CLOSED** | sum-local prog class vs general extremalFill; fold census 52+1; `GATE-0.2-F9.md` |
 | 1.1a recount witnesses corpus-wide | **OPEN — search method refuted** | `sigma/GATE-1.1A-RECOUNT.md`; 28 of 28 rows reaching >=2 are shared-`common.qnt` reuse, **0 independent**; `layerzero` proves search under-counts |
 | 1.1b a law per family | **PARTIAL** | P={Led,Prop,Cmp,Post} characteristic laws + pair4 autonomy; GATE-1.1B-STATUS / P-LAWS / PAIR4-RETEST |
-| 1.2 pairwise independence | not started | needs 1.1b |
+| 1.2 pairwise independence | **OPEN — witnesses drafted** | corpus non-definability cites in GATE-1.2-WITNESSES.md; formal close pending |
 | 1.3 non-degeneracy and sufficiency | not started | needs 1.1b |
 | 2.0 find all ten deletions | **PASSED** | `phase2/P2-SCOPE.md`, all ten with line numbers |
 | 2.0b fidelity criterion | **PASSED** | `phase2/P2-FIDELITY.md`, quotient formulation |
