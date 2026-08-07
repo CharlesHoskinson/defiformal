@@ -24,3 +24,9 @@
 - Graphify complete: 814 nodes, 717 edges, graph.html + manifest.
 - Agenda to IDLE (full agenda closed).
 
+
+## 2026-08-07T18:13:10Z
+- Reconcile SOL3: authoritative Codex Sol (`gpt-5.6-sol`) verdict is **REVISE** in `audit/FOREMAN_REPORT.md`.
+- Concurrent lighter report `audit/FOREMAN_REPORT_M3.md` (APPROVE) does not discharge M3-DESIGN item 4 (two-binding reindex).
+- M4P already marked done by parallel fire; M4I remains pending.
+- Current focus remains `M3` rework before treating SOL3 as green for CKPT.
