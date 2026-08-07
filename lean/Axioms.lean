@@ -38,6 +38,13 @@ open Defialgebra
 #print axioms Defialgebra.Nary.skip_not_pairLocal_witness
 
 
--- Gate 0.2 F9 extremal irreducibility
+
+-- Gate 0.2 F9 / sum-local vs extremal prefix
 #print axioms Defialgebra.Extremal.extremal_not_local
+#print axioms Defialgebra.Extremal.extremal_not_sumLocalProg
 #print axioms Defialgebra.Extremal.f9_irreducible_to_sum_local
+#print axioms Defialgebra.Extremal.sort_AB
+#print axioms Defialgebra.Extremal.sort_AC
+#print axioms Defialgebra.Extremal.extremal_AB
+#print axioms Defialgebra.Extremal.extremal_AC
+#print axioms Defialgebra.Extremal.localSel_and

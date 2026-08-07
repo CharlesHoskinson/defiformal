@@ -1,26 +1,50 @@
-# Gate 0.2 — F9 extremal allocation irreducible
+# Gate 0.2 — extremal prefix vs sum-local filter class
 
-**Status: CLOSED (2026-08-07)**
+**Status: CLOSED (formal claim below), 2026-08-07 — reworked after Sol REVISE**
 
-## Claim
-An invariant preserved by sum-local selection (the measured corpus fragment) is
-broken by extremal prefix allocation (F9).
+## Precise claim (what Lean proves)
 
-## Mechanisation
-`lean/Defialgebra/Extremal.lean`
+In `lean/Defialgebra/Extremal.lean`:
 
-- `LocalSel phi` — selection by `phi : Claim -> SumAgg -> Bool` (own fields + sum aggregates only).
-- `extremalFill` — sort by priority, take demand-bounded prefix.
-- `f9_irreducible_to_sum_local` / `extremal_not_local` — no `phi` matches extremal on both:
-  - claims priorities (5,10), demand 1 → fill id 0
-  - claims priorities (5,3), demand 1 → fill id 2
-  Same local view of claim A (size 1, prio 5, SumAgg (2,2,1)) is accepted then rejected.
+1. **`extremalFill`** — general definition: `insertionSort` by priority-then-id,
+   then demand-bounded prefix with partial last fill (`takeDemand`).
+2. **`SumLocalProg`** — grammar of sum-local filter programs: atomic
+   `phi : Claim → SumAgg → Bool` and `and`. Evaluation is always a single `phi`.
+3. **Closure:** conjunction stays inside the class (`eval_and`, `localSel_and`).
+4. **Separation:** `f9_irreducible_to_sum_local` /
+   `extremal_not_sumLocalProg` — no program matches extremal fill ids on both
+   two-claim unit-demand witnesses (same local view of claim A accepted then rejected).
 
-## Corpus link
-Every fold in the v1 corpus is commutative sum (`REFUTATION.md` / ROADMAP). That is
-the class `LocalSel` abstracts. Liquity-style redemption is `extremalFill`.
+`SumAgg = (totalSize, count, demand)` is the **fixed observation interface** of
+the formal class (not “every possible sum of claim fields”).
 
-## Scope
-Does not mechanise full operational `bowtie` of BASIS.md machines; abstracts the
-sum-local invariant the corpus actually exhibits. Delegated allocation is a separate
-refuter (`REFUTER-DELEGATED-ALLOCATION.md`).
+## Corpus bridge (empirical, reproducible)
+
+`sigma/GATE-0.2-FOLD-CENSUS.md` / `sigma/fold_census.py`: balanced-fold scan of
+`quint-models/L*/*.qnt` finds **52/53** folds with `acc + …` and **1/53**
+accumulator-preserving identity fold (Apex, no population order statistics).
+That motivates the sum-local class; it is not a mechanised Quint-AST reduction
+to `LocalSel`.
+
+## Witnesses
+
+| Population | Priorities | Demand | Extremal ids |
+|------------|------------|--------|--------------|
+| cA, cB | 5, 10 | 1 | [0] |
+| cA, cC | 5, 3 | 1 | [2] |
+
+Shared `SumAgg (2,2,1)` and claim A fields `(id=0,size=1,priority=5)`.
+
+## Out of scope (honest)
+
+* Full F9 record (settlement price, limit vectors, conservation games) from
+  `REFUTATION.md` definition block.
+* Operational `⋈` of BASIS machines.
+* Delegated-allocation mandate (`REFUTER-DELEGATED-ALLOCATION.md`).
+* Claim that every Quint composite (including multi-step state machines) is a
+  `SumLocalProg`.
+
+## Axioms
+
+`#print axioms` on headline theorems: only `propext` / `Quot.sound` (see
+`lean/Axioms.lean`).
