@@ -129,10 +129,10 @@ a negative result — it exhibits a finite basis and delimits it exactly.
 | 2.1a pilot (`uniswap_v2`) | **PASSED** | lint 0, typecheck clean, `inv_conservation` ok, 13 `wit_*` all violated as required; 22 T0 vectors |
 | 2.1b the remaining nine | **CLOSED** | W2 delivery `sigma/GATE-2.1b-W2.md`; all 10 present; typecheck+lint re-verified |
 | 2.1c close W1's curve carry-in | **PASSED** | K=8 does not truncate — the guard refuses; `inv_all` ok to depth 20 |
-| 2.2 spec the missing apps | **OPEN — ACTIVE (18 remain)** | `GATE-2.2-STATUS.md`; 0/19 contracts in protocol-repos |
+| 2.2 spec the missing apps | **CLOSED** | 6 specs + 12 formal exclusions; `GATE-2.2-ACQUISITION.md` |
 | 2.3 re-run generation | **MEASURED (repo-reproducible)** | committed IR + compare_v1_v2 re-ran 28/119; historical run before W2 write-up |
 
-**Active gate: 2.2 — acquire/spec the remaining 18 applications** (2.0f closed; 2.1b closed; 2.3 measured). The five repairs landed, but
+**Active gate: Phase 1 (1.1b) — blocked on honest corpus autonomy evaluation; Gate 2.2 CLOSED.**
 delivering them surfaced three items that must be closed before any re-spec is
 written.
 
