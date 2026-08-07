@@ -132,7 +132,13 @@ a negative result — it exhibits a finite basis and delimits it exactly.
 | 2.2 spec the missing apps | **CLOSED** | 6 specs + 12 formal exclusions; `GATE-2.2-ACQUISITION.md` |
 | 2.3 re-run generation | **MEASURED (repo-reproducible)** | committed IR + compare_v1_v2 re-ran 28/119; historical run before W2 write-up |
 
-**Active gate: extend 1.1a full census optional; Phase 3 packaging; gate table Phase1 closed.**
+| 3.1 generation | **MEASURED** | inherits 2.3; GATE-3.1-GENERATION.md |
+| 3.2 composition by construction | **PARTIAL** | M1-M3+F9 Lean; GATE-3.2-COMPOSITION.md |
+| 3.3 construction certificate | **MEASURED (seed)** | gate33_cert_check.py PASS |
+| 3.4 Lean mechanisation | **PARTIAL** | Independence+interface+extremal |
+| 4.0 paper | **OUTLINE** | PHASE4-OUTLINE.md |
+
+**Active gate: none — see AGENDA-COMPLETE.md (residuals listed).**
 delivering them surfaced three items that must be closed before any re-spec is
 written.
 
