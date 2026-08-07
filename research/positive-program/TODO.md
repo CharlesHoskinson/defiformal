@@ -345,3 +345,17 @@ Two rules that follow, and are not negotiable:
 2. **Conservation never once detected a deleted mechanism** — across morpho,
    compound, gmx, liquity and derive, `inv_conservation` reported `[ok]` on every
    mutant. A spec whose only invariant is conservation has tested nothing.
+
+- [x] **2.3 restricted to the ten — MEASURED. `sigma/GATE-2.3-TEN.md`.**
+      Same ten protocols, same basis, same criterion; `generate.py` unmodified,
+      run over synthetic IR with `kernel.qnt` as SPEC CONTENT.
+      **Ungenerated protocol-definition rate: 16.7% (v1) -> 16.6% (v2).** The
+      absolute count went 28 -> 119 because v2 has 4.3x the protocol definitions,
+      but the rate did not move.
+      **The roadmap's "743/820 is a floor" claim is not supported.** The restored
+      mechanisms ARE ungenerated — `geometricMint`, `exchangeDy`, `markPriceAccBase`,
+      `impactUsd`, `matchOrders`, liquity's `redeemPrefix` family — exactly as
+      `P2-SCOPE` predicted qualitatively. But they arrived alongside newly
+      generated plumbing in the same proportion. The deletions changed WHICH
+      definitions fail, not how many as a fraction.
+      Consequence: **2.2 must be justified as coverage, not as correction.**
