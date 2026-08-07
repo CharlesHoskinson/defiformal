@@ -5,9 +5,24 @@
 protocols against the same basis. The roadmap has said since pass 3 that 743/820
 was "a floor" because the difficulty had been deleted. On rate, it was not.**
 
-Scripts: `basis/compare_v1_v2.py`, `basis/denominators.py`. `generate.py` was **not
-modified** — two synthetic IR directories were built with the shape it expects so
-the criterion is bit-identical on both sides.
+
+**Reproduction (2026-08-07):** IR trees under `sigma/gen-ir-v1ten` and
+`sigma/gen-ir-v2ten`. Re-run:
+
+```bash
+cd research/positive-program/basis
+python3 compare_v1_v2.py    # protocol ungen totals 28 and 119
+python3 denominators.py     # dens 168 / 716 -> 16.7% / 16.6%
+```
+
+Fresh re-run reproduced **v1 protocol ungenerated 28, v2 protocol ungenerated 119**.
+
+**Execution-order note:** measurement was first recorded before the W2 delivery
+write-up; W2 cold-read (`GATE-2.1b-W2.md`) is retrospective validation of the
+same closed specs. Logical order is 2.1b before 2.3; historical write order was
+2.3 then 2.1b record.
+
+Scripts: `basis/compare_v1_v2.py`, `basis/denominators.py`, `basis/generate.py` (`GEN_IR`). IR is committed under `sigma/gen-ir-v*ten/`.
 
 ---
 

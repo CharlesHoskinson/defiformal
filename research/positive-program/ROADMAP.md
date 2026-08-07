@@ -127,12 +127,12 @@ a negative result — it exhibits a finite basis and delimits it exactly.
 | 2.0e plan review | **repairs delivered** | R1+R4 applied to `P2-FIDELITY`; R2/R3/R5 in `phase2/P2-CONTRACT.md` |
 | 2.0f close three carry-forwards | **CLOSED** | CF1 closed (constant-crossing rule); CF2 closed as convention 6g, half-lintable; CF3 resolved then **corrected** |
 | 2.1a pilot (`uniswap_v2`) | **PASSED** | lint 0, typecheck clean, `inv_conservation` ok, 13 `wit_*` all violated as required; 22 T0 vectors |
-| 2.1b the remaining nine | **DELIVERED, record incomplete** | all 10 targets present; 13/13 typecheck and lint 5/13 re-verified pass 7; **W2 has no delivery section** |
+| 2.1b the remaining nine | **CLOSED** | W2 delivery `sigma/GATE-2.1b-W2.md`; all 10 present; typecheck+lint re-verified |
 | 2.1c close W1's curve carry-in | **PASSED** | K=8 does not truncate — the guard refuses; `inv_all` ok to depth 20 |
-| 2.2 spec the missing 21 | not started | 72 named, 51 specced |
-| 2.3 re-run generation | blocked | needs 2.1b's record closed |
+| 2.2 spec the missing apps | **OPEN — ACTIVE (18 remain)** | `GATE-2.2-STATUS.md`; 0/19 contracts in protocol-repos |
+| 2.3 re-run generation | **MEASURED (repo-reproducible)** | committed IR + compare_v1_v2 re-ran 28/119; historical run before W2 write-up |
 
-**Next gate: 2.0f — close three carry-forwards.** The five repairs landed, but
+**Active gate: 2.2 — acquire/spec the remaining 18 applications** (2.0f closed; 2.1b closed; 2.3 measured). The five repairs landed, but
 delivering them surfaced three items that must be closed before any re-spec is
 written.
 
@@ -585,6 +585,81 @@ Verified after all three: v1 `liquity` reports **2 x D4a**, v2 `liquity` reports
 
 ---
 
+# Gate 2.1b — W2 delivery record (compound_v3, morpho_blue, gmx)
+
+**Status: CLOSED (2026-08-07)**
+**Specs:** `quint-models-v2/{compound_v3,morpho_blue,gmx}.qnt`
+**Mutants:** `quint-models-v2/mutants/{compound_v3_M1,morpho_blue_M1a,morpho_blue_M1b,gmx_M1}.qnt`
+
+This section was missing from ROADMAP.md while W1/W3/W4 had delivery write-ups.
+Pass 7 already measured that the three specs are present and substantive. This
+file is the cold-read delivery record required before 2.1b may close.
+
+## Re-verification (this close)
+
+| claim | command | result |
+|---|---|---|
+| compound_v3 typechecks | quint typecheck compound_v3.qnt | EXIT 0 |
+| morpho_blue typechecks | quint typecheck morpho_blue.qnt | EXIT 0 |
+| gmx typechecks | quint typecheck gmx.qnt | EXIT 0 |
+| respec_lint on all three | respec_lint.py | 0 findings each |
+| M1 mutants typecheck | four mutants above | EXIT 0 each |
+
+Counts:
+
+| spec | T0-ish refs | wit_* | inv_* |
+|---|---:|---:|---:|
+| compound_v3 | 50 | 18 | 7 |
+| morpho_blue | 41 | 19 | 7 |
+| gmx | 48 | 16 | 7 |
+
+## What v1 deleted (restored)
+
+| protocol | restored mechanism | primary mutant |
+|---|---|---|
+| compound_v3 | store-front discounted absorb credit | compound_v3_M1 |
+| morpho_blue | bad-debt socialisation + liquidation incentive | morpho_blue_M1a, M1b |
+| gmx | non-linear price impact (convex exponent) | gmx_M1 linearisation |
+
+## Load-bearing corrections
+
+### Shared (all three)
+
+inv_conservation and most mechanism invariants do not kill the primary deletion
+mutant (still ok). Discrimination is by T0 vectors and live-state /
+configuration-sensitive witnesses. Same meta-result as W1/W3/W4.
+
+### compound_v3
+
+1. Store-front residue is reachable under honest absorb; under M1 residue is 0.
+2. T0 must pin the function, not only explicit arguments the mutant still takes.
+3. Explicit non-use of kernel.isqrtFloor (not a silent sqrt drop).
+
+### morpho_blue
+
+1. Worst corpus deletion: identity assignments under a comment naming socialisation.
+2. M1a vs M1b: two mutants, different kills; T0 not always tripped by M1a alone.
+3. Multi-market drop is explicit (E<=) deviation D-a with LIF branch witnesses.
+4. Conservation/liquidity hold on M1a — not discriminators.
+
+### gmx
+
+1. Linearisation revoked as droppable (P2-CONTRACT A.7); restored as M1 contrast.
+2. wit_used_impactUsd dies on mutant too — usage witnesses insufficient;
+   convexity / same-side T0 separates.
+3. Same T0 lesson as compound_v3.
+
+## Structural result
+
+W2 independently reproduces: conservation does not detect restored mechanisms;
+T0 and configuration-sensitive witnesses are load-bearing. Lint 0 on re-run.
+
+## Gate consequence
+
+All four delivery lanes (pilot, W1, W2, W3/W4) now have write-ups. 2.1b CLOSED.
+2.3 unblocked — measurement remains sigma/GATE-2.3-TEN.md.
+
+
 ## Pass 7 — independent re-verification of the Phase 2 artifacts
 
 Everything below was re-run rather than read off the prior record.
@@ -638,8 +713,7 @@ typecheck, and are substantive rather than thin —
 ten protocols carry no recorded corrections. Every other lane produced
 load-bearing ones: W1 five, W3/W4 seven, the pilot two. A lane that produced zero
 is not a lane that found nothing; it is a lane nobody wrote down. **2.1b must not
-be marked closed, and 2.3 must not be run, until W2's three specs get the same
-cold read the others got.**
+be marked closed, and 2.3 must not be run, until W2's three specs get the same cold read — **DONE** (`sigma/GATE-2.1b-W2.md`).**
 
 
 ---

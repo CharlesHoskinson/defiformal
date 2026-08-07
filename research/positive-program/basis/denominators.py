@@ -1,21 +1,24 @@
-"""Denominators: how many PROTOCOL definitions does each version actually have?
-
-28 -> 119 ungenerated is an absolute count. The v2 re-specs decompose more finely
-and carry apparatus v1 never had, so a rate needs the matching denominator or the
-increase is inflated.
-
-Counts, per version, the definitions that are neither apparatus (t0_/wit_/inv_/h\\d\\d)
-nor kernel (isqrt/newton/mulDiv/ceilDiv/geometricMintExact/check*).
-"""
+#!/usr/bin/env python3
+"""Denominators for the ten-protocol generation rate (repo-local IR)."""
 import json
 import os
 import re
+import subprocess
+import sys
+from pathlib import Path
+
+BASIS = Path(__file__).resolve().parent
+SIGMA = BASIS.parent / "sigma"
+IR1 = Path(os.environ.get("GEN_IR_V1", SIGMA / "gen-ir-v1ten"))
+IR2 = Path(os.environ.get("GEN_IR_V2", SIGMA / "gen-ir-v2ten"))
 
 APPARATUS = re.compile(
-    r"^(t0_|T0_|wit_|inv_|check[A-Z]|h\d\d$|sqrtOk$|kernel[A-Z]|kernelOk$)")
+    r"^(t0_|T0_|wit_|inv_|check[A-Z]|h\d\d$|sqrtOk$|kernel[A-Z]|kernelOk$)"
+)
 KERNEL = re.compile(
     r"^(isqrt|newton|geometricMintExact|mulDivDown$|mulDivUp$|ceilDiv$|"
-    r"checkBoundary$|checkDecades$|checkSmall$|checkSquares$)")
+    r"checkBoundary$|checkDecades$|checkSmall$|checkSquares$)"
+)
 
 
 def protocol_defs(d):
@@ -33,23 +36,61 @@ def protocol_defs(d):
     return n
 
 
-print(f"{'spec':<18} {'v1 protocol defs':>17} {'v2 protocol defs':>17}")
-print("-" * 56)
-t1 = t2 = 0
-for fn in sorted(os.listdir("/root/gen-ir-v1ten")):
-    spec = fn[:-5]
-    a = protocol_defs(json.load(open(f"/root/gen-ir-v1ten/{fn}")))
-    b = protocol_defs(json.load(open(f"/root/gen-ir-v2ten/{fn}")))
-    t1 += a
-    t2 += b
-    print(f"{spec.replace('__','/'):<18} {a:>17} {b:>17}")
-print("-" * 56)
-print(f"{'TOTAL':<18} {t1:>17} {t2:>17}")
-print()
-u1, u2 = 28, 119
-print(f"ungenerated protocol defs   v1 {u1:>4} / {t1:<4} = {100*u1/t1:5.1f}%")
-print(f"                            v2 {u2:>4} / {t2:<4} = {100*u2/t2:5.1f}%")
-print()
-print("The v1 corpus-wide headline was 743/820 generated = 90.6%, i.e. 9.4%")
-print("ungenerated. Compare the v2 rate above, on the same ten protocols and the")
-print("same basis, with the deleted mechanisms restored.")
+def ungen_from_compare():
+    if os.environ.get("SKIP_COMPARE"):
+        return None, None
+    proc = subprocess.run(
+        [sys.executable, str(BASIS / "compare_v1_v2.py")],
+        capture_output=True,
+        text=True,
+        cwd=str(BASIS),
+    )
+    if proc.returncode != 0:
+        return None, None
+    u1 = u2 = None
+    for line in proc.stdout.splitlines():
+        m = re.search(r"v1 protocol ungenerated:\s*(\d+)", line)
+        if m:
+            u1 = int(m.group(1))
+        m = re.search(r"v2 protocol ungenerated:\s*(\d+)", line)
+        if m:
+            u2 = int(m.group(1))
+    return u1, u2
+
+
+def main():
+    if not IR1.is_dir() or not IR2.is_dir():
+        raise SystemExit(f"missing IR:\n  {IR1}\n  {IR2}")
+    print(f"{'spec':<18} {'v1 protocol defs':>17} {'v2 protocol defs':>17}")
+    print("-" * 56)
+    t1 = t2 = 0
+    for fn in sorted(os.listdir(IR1)):
+        if not fn.endswith(".json"):
+            continue
+        a = protocol_defs(json.load(open(IR1 / fn)))
+        b = protocol_defs(json.load(open(IR2 / fn)))
+        t1 += a
+        t2 += b
+        print(f"{fn[:-5].replace('__','/'):<18} {a:>17} {b:>17}")
+    print("-" * 56)
+    print(f"{'TOTAL':<18} {t1:>17} {t2:>17}")
+    print()
+    if "UNGEN_V1" in os.environ and "UNGEN_V2" in os.environ:
+        u1, u2 = int(os.environ["UNGEN_V1"]), int(os.environ["UNGEN_V2"])
+        print("Numerators from UNGEN_V1/UNGEN_V2 env.")
+    else:
+        c1, c2 = ungen_from_compare()
+        if c1 is not None:
+            u1, u2 = c1, c2
+            print("Numerators derived from compare_v1_v2.py this run.")
+        else:
+            u1, u2 = 28, 119
+            print("WARNING: compare unavailable; using last measured 28/119.")
+    print(f"ungenerated protocol defs   v1 {u1:>4} / {t1:<4} = {100 * u1 / t1:5.1f}%")
+    print(f"                            v2 {u2:>4} / {t2:<4} = {100 * u2 / t2:5.1f}%")
+    print(f"IR_V1={IR1}")
+    print(f"IR_V2={IR2}")
+
+
+if __name__ == "__main__":
+    main()
