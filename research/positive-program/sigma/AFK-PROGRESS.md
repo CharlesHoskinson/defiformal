@@ -1,35 +1,25 @@
 # AFK agenda loop — progress log
 
-Scheduler: every 5 minutes, durable, foreground.  
-Repo: `/root/DefiElements` · `positive-program/phase2-honest-corpus`
+Scheduler: `019fde3097da` every 5 minutes (durable).
+Branch tip tracks local commits (ahead of origin ~22).
 
-## Commits this session (local, not pushed)
+## Session commits (newest first)
 
-| commit | summary |
+| commit | work |
 |---|---|
-| ec08329 | **2.2 CLOSED** — 6 Quint specs + 18-row acquisition ledger |
-| 607b6b9 | 1.1b WBTC 6h re-spec unblocks autonomy |
-| 1460b78 | deferred-claim cluster model separates 2-2 |
-| c060a56 | 1.1 status + 1.1a method |
-| 461db99 | 1.1a census seed (layerzero/cctp/wbtc independent hits) |
-| 5712515 | 1.1b P-laws for \|P\|=4 |
+| bbb96dd+ | Phase 3/4 packaging, 1.3 sketch |
+| c421a1f | 1.1a expanded census |
+| 45f6583 | 1.2 corpus witnesses |
+| 5712515 | 1.1b P-laws |
+| 1460b78 / 607b6b9 | pair4 autonomy + WBTC 6h |
+| ec08329 | **2.2 CLOSED** 6 specs + ledger |
 
-## Gate board
+## Verification (this pass)
 
-| gate | status |
-|---|---|
-| 0.x / F9 | CLOSED (prior) |
-| 2.1b / 2.3 | CLOSED / MEASURED (prior) |
-| **2.2** | **CLOSED** |
-| 1.1a | OPEN — method fixed, seed census started |
-| 1.1b | **PARTIAL** — pair4 + P-laws |
-| 1.2 | sketch only |
-| 1.3 | not started |
-| Phase 3–4 | not started |
+- 8 new Quint specs typecheck PASS
+- `lake build` SUCCESS (978 jobs)
 
-## Next fires should
+## Still open for AGENDA-COMPLETE
 
-1. Expand 1.1a census primitives beyond N6 + custodian
-2. Corpus witnesses for 1.2 non-definability (option 2)
-3. Not re-open closed Phase 2 gates
-4. No push unless authorized
+1.1a full census (human-confirm), 1.1b/1.2 formal close, 1.3 run, 3.3 construction checker, Phase 4 prose.
+Phase 2 and Phase 0 closed. Do not idle — next fire continues open gates.
