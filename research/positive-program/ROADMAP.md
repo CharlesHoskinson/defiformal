@@ -119,7 +119,7 @@ a negative result — it exhibits a finite basis and delimits it exactly.
 | 1.1a recount witnesses corpus-wide | **MEASURED (partial sample)** | GATE-1.1A-CENSUS-V1.md; 5/9 primitives meet >=2 independent; N6 strict fails with 1 |
 | 1.1b a law per family | **PARTIAL** | P={Led,Prop,Cmp,Post} characteristic laws + pair4 autonomy; GATE-1.1B-STATUS / P-LAWS / PAIR4-RETEST |
 | 1.2 pairwise independence | **OPEN — IR deletion measured** | GATE-1.2-DELETION-IR.md + WITNESSES; formal non-definability pending |
-| 1.3 non-degeneracy and sufficiency | **OPEN — sketched** | GATE-1.3-SKETCH; sufficiency already fails on 2.3 rates |
+| 1.3 non-degeneracy and sufficiency | **MEASURED** | non-deg PASS; sufficiency FAIL on 2.3; GATE-1.3-MEASURED.md |
 | 2.0 find all ten deletions | **PASSED** | `phase2/P2-SCOPE.md`, all ten with line numbers |
 | 2.0b fidelity criterion | **PASSED** | `phase2/P2-FIDELITY.md`, quotient formulation |
 | 2.0c regression guard | **PASSED** | `phase2/respec_lint.py`; v1 baseline **180 findings / 57 specs** |
