@@ -8,3 +8,4 @@ import Defialgebra.Interface
 import Defialgebra.FlowPolarity
 import Defialgebra.Nary
 import Defialgebra.Extremal
+import Defialgebra.Independence

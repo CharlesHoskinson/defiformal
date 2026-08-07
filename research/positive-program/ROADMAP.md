@@ -117,8 +117,8 @@ a negative result — it exhibits a finite basis and delimits it exactly.
 | 0.1 Q/Σ invariant testable | **RESOLVED — claim false, `\|P\|=4` WITHDRAWN** | `sigma/QSIGMA-VERDICT.md`; the prior "three operationalisations" were two, and both scanned `init` |
 | 0.2 `F9` irreducible | **CLOSED** | sum-local prog class vs general extremalFill; fold census 52+1; `GATE-0.2-F9.md` |
 | 1.1a recount witnesses corpus-wide | **MEASURED (partial sample)** | GATE-1.1A-CENSUS-V1.md; 5/9 primitives meet >=2 independent; N6 strict fails with 1 |
-| 1.1b a law per family | **PARTIAL** | P={Led,Prop,Cmp,Post} characteristic laws + pair4 autonomy; GATE-1.1B-STATUS / P-LAWS / PAIR4-RETEST |
-| 1.2 pairwise independence | **OPEN — IR deletion measured** | GATE-1.2-DELETION-IR.md + WITNESSES; formal non-definability pending |
+| 1.1b a law per family | **CLOSED** | P-laws + pair4 autonomy + Independence support; GATE-1.1B-CLOSE.md |
+| 1.2 pairwise independence | **CLOSED** | Independence.lean pairwise_independence; GATE-1.2-FORMAL.md |
 | 1.3 non-degeneracy and sufficiency | **MEASURED** | non-deg PASS; sufficiency FAIL on 2.3; GATE-1.3-MEASURED.md |
 | 2.0 find all ten deletions | **PASSED** | `phase2/P2-SCOPE.md`, all ten with line numbers |
 | 2.0b fidelity criterion | **PASSED** | `phase2/P2-FIDELITY.md`, quotient formulation |
@@ -132,7 +132,7 @@ a negative result — it exhibits a finite basis and delimits it exactly.
 | 2.2 spec the missing apps | **CLOSED** | 6 specs + 12 formal exclusions; `GATE-2.2-ACQUISITION.md` |
 | 2.3 re-run generation | **MEASURED (repo-reproducible)** | committed IR + compare_v1_v2 re-ran 28/119; historical run before W2 write-up |
 
-**Active gate: 1.2 formal non-definability / complete 1.1a census; 1.1b PARTIAL; 2.2 CLOSED.**
+**Active gate: extend 1.1a full census optional; Phase 3 packaging; gate table Phase1 closed.**
 delivering them surfaced three items that must be closed before any re-spec is
 written.
 
