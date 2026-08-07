@@ -117,7 +117,7 @@ a negative result — it exhibits a finite basis and delimits it exactly.
 | 0.1 Q/Σ invariant testable | **RESOLVED — claim false, `\|P\|=4` WITHDRAWN** | `sigma/QSIGMA-VERDICT.md`; the prior "three operationalisations" were two, and both scanned `init` |
 | 0.2 `F9` irreducible | **CLOSED** | sum-local prog class vs general extremalFill; fold census 52+1; `GATE-0.2-F9.md` |
 | 1.1a recount witnesses corpus-wide | **OPEN — search method refuted** | `sigma/GATE-1.1A-RECOUNT.md`; 28 of 28 rows reaching >=2 are shared-`common.qnt` reuse, **0 independent**; `layerzero` proves search under-counts |
-| 1.1b a law per family | **OPEN — pair 4 now testable** | WBTC 6h re-spec + autonomy classification separates 2-2; `GATE-1.1B-PAIR4-RETEST.md`; pairs 1-3 remain collapsed |
+| 1.1b a law per family | **PARTIAL** | P={Led,Prop,Cmp,Post} characteristic laws + pair4 autonomy; GATE-1.1B-STATUS / P-LAWS / PAIR4-RETEST |
 | 1.2 pairwise independence | not started | needs 1.1b |
 | 1.3 non-degeneracy and sufficiency | not started | needs 1.1b |
 | 2.0 find all ten deletions | **PASSED** | `phase2/P2-SCOPE.md`, all ten with line numbers |
