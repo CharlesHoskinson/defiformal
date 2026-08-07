@@ -40,8 +40,8 @@ also shallow-cloned ethena, lista, cian, okx router, usd1, aevo-sdk, rysk CLI, j
 
 | Gate | Status | Next action |
 |---|---|---|
-| **1.1a** recount witnesses | OPEN — method refuted | redesign search or accept 0 independent |
-| **1.1b** law per family | BLOCKED on honest corpus | re-evaluate autonomy with 6h corpus (incl. new specs) |
+| **1.1a** recount witnesses | OPEN — method fixed | semantic independent census; GATE-1.1A-METHOD.md |
+| **1.1b** law per family | OPEN — pair4 separates via autonomy | laws for remaining families; see GATE-1.1B-STATUS.md |
 | 1.2 pairwise independence | not started | needs 1.1b |
 | 1.3 non-degeneracy | not started | needs 1.1b |
 | Phase 3 / 4 | not started | after Phase 1 |
