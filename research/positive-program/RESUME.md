@@ -1,46 +1,42 @@
-# RESUME — 2026-08-07 AFK loop
+# RESUME — 2026-08-07 AFK loop (fire update)
 
-Branch `positive-program/phase2-honest-corpus` · tip ~`c421a1f` · **local ahead of origin**
+Branch `positive-program/phase2-honest-corpus` · tip ~`069d2a8` · local ahead of origin
 
 ---
 
 ## One-line state
 
-**Phase 2 fully closed (2.1b, 2.2, 2.3). Phase 0 closed. Phase 1 in progress:
-1.1b PARTIAL, 1.1a method+census, 1.2 witnesses drafted.**
+**Phase 0–2 closed/measured. Phase 1 largely measured: 1.1a partial census,
+1.1b PARTIAL, 1.2 deletion evidence, 1.3 MEASURED. Formal 1.2 + full 1.1a remain.**
 
 ---
 
-## Closed / measured
+## Gate board
 
-| item | status | tip evidence |
-|---|---|---|
-| Gate 0.1 Q/Σ | RESOLVED false | QSIGMA-VERDICT |
-| Gate 0.2 F9 | CLOSED | Extremal.lean; Sol APPROVE |
-| M1–M3 interface | CLOSED | Interface/FlowPolarity/Nary |
-| 2.1b nine re-specs | CLOSED | GATE-2.1b-W2 |
-| 2.3 generation | MEASURED 16.7%/16.6% | GATE-2.3-TEN; Sol APPROVE |
-| **2.2 unspecced apps** | **CLOSED** | 6 specs + 12 exclusions; GATE-2.2-ACQUISITION |
+| gate | status |
+|---|---|
+| 0.x / F9 / M1–M3 | CLOSED |
+| 2.1b / 2.2 / 2.3 | CLOSED / CLOSED / MEASURED |
+| **1.1a** | **MEASURED (partial)** — CENSUS-V1; 5/9 meet ≥2 independent under strict method |
+| **1.1b** | **PARTIAL** — P-laws + pair4 autonomy |
+| **1.2** | **OPEN** — witnesses + IR deletion; formal non-definability pending |
+| **1.3** | **MEASURED** — non-deg PASS; sufficiency FAIL |
+| 3.1 generation | MEASURED via 2.3 |
+| 3.2 composition | PARTIAL (Lean discipline) |
+| 3.3 construction | seed only |
+| 3.4 Lean | PARTIAL |
+| Phase 4 | outline only |
 
-### New v2 specs (typecheck OK)
+## Next fire priority
 
-`ethena`, `lista`, `cian`, `usd1`, `okx_dex`, `jupiter_perps` (IDL partial), `wbtc` (6h), `deferred_claim_cluster`
+1. Formalize 1.2 non-definability (Lean toy or signature checker), or
+2. Extend 1.1a PRIM to full BASIS N/F rows with OVERRIDES
+3. 3.3 certificate checker beyond keywords
+4. No re-open of closed Phase 2
 
----
+## Verify
 
-## Open
-
-| gate | status | next |
-|---|---|---|
-| 1.1a | OPEN — method fixed | expand census; human-confirm independents |
-| 1.1b | PARTIAL | Lean formalize P-laws or accept BASIS packaging |
-| 1.2 | OPEN — witnesses | IR deletion experiment or Lean non-definability |
-| 1.3 | not started | after 1.2 |
-| Phase 3–4 | not started | after Phase 1 |
-
----
-
-## AFK loop
-
-Scheduler id `019fde3097da` every 5m until agenda complete.
-Do not push without authorization. protocol-repos/ gitignored — use `tooling/clone_repos_2.2.sh`.
+```
+python3 research/positive-program/sigma/gate11a_census_v1.py
+python3 research/positive-program/sigma/gate12_deletion_ir.py
+```
