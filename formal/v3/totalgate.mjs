@@ -69,7 +69,7 @@ let tot = 0, cov = 0, inad = 0, assigned = 0, approx = 0;
 // files of five. A totals gate that will not state how many things it counted
 // cannot know it counted them all, so this number is checked against the
 // manuscript alongside the other totals.
-let specFiles = 0, slugsCounted = 0;
+let specFiles = 0, slugsCounted = 0, verdictRecords = 0, obligationItems = 0;
 for (const slug of slugs) {
   const vp = path.join(ROOT, slug, "verdicts.json");
   // existsSync returns false when the slug DIRECTORY is unreadable, so an
@@ -112,6 +112,7 @@ for (const slug of slugs) {
   // zero times: tot/cov silently omit this slug while approx still counts its
   // specs, and the comparison proceeds on a short total.
   if (!verdicts.length) blocked(`${vp} is empty; this category's obligations cannot be counted`);
+  verdictRecords += verdicts.length;
   for (const v of verdicts) {
     if (v === null || typeof v !== "object") blocked(`${vp} holds a ${v === null ? "null" : typeof v} verdict`);
     if (!Number.isFinite(v.obligationsTotal) || !Number.isFinite(v.obligationsCovered)) {
@@ -149,6 +150,7 @@ for (const slug of slugs) {
     // every total agrees while having measured no assignment at all.
     // validate.mjs already rejects an empty FO array; this gate did not consult it.
     if (!obs.length) blocked(`${path.join(sd, f)} has an empty functionalObligations array`);
+    obligationItems += obs.length;
     for (const o of obs) {
       if (o === null || typeof o !== "object") blocked(`${path.join(sd, f)} holds a null obligation`);
       if (!(o.elements || []).length) continue;
@@ -167,6 +169,25 @@ if (tot === 0) blocked(`examined ${slugs.length} slug(s) but 0 obligations - not
 // published a strict-coverage disagreement about a corpus the gate had not
 // finished reading. A short walk means the measurement could not be completed:
 // exit 3, act on the environment -- never exit 1, which blames the manuscript.
+// The two independent sources must agree before anything is compared to the
+// manuscript. This needs no hardcoded corpus size: verdicts/ and specs/ each
+// carry the same two quantities, and a walk that came up short on either side
+// shows up as a disagreement between them rather than as a disagreement with
+// the paper. Truncating a verdicts array moves `tot`; making every obligation
+// residue moves `assigned`. Both now block instead of publishing.
+if (tot !== obligationItems) {
+  blocked(`verdicts report ${tot} obligations but specs hold ${obligationItems} items; ` +
+          `the corpus is internally inconsistent and the totals cannot be trusted`);
+}
+if (cov !== assigned) {
+  blocked(`verdicts report ${cov} covered but specs hold ${assigned} assigned; ` +
+          `the corpus is internally inconsistent and the coverage cannot be trusted`);
+}
+if (verdictRecords !== specFiles) {
+  blocked(`walked ${verdictRecords} verdict records against ${specFiles} spec files; ` +
+          `one app is described in only one of the two`);
+}
+
 const EXPECT_CATEGORIES = 12, EXPECT_SPEC_FILES = 60;
 if (slugsCounted !== EXPECT_CATEGORIES) {
   blocked(`walked ${slugsCounted} categories, expected ${EXPECT_CATEGORIES}; the corpus is incomplete`);
@@ -174,7 +195,9 @@ if (slugsCounted !== EXPECT_CATEGORIES) {
 if (specFiles !== EXPECT_SPEC_FILES) {
   blocked(`walked ${specFiles} spec files, expected ${EXPECT_SPEC_FILES}; the corpus is incomplete`);
 }
-console.log(`ok   walked ${slugsCounted} categories, ${specFiles} spec files`);
+console.log(`ok   walked ${slugsCounted} categories, ${specFiles} spec files, ` +
+            `${verdictRecords} verdict records, ${obligationItems} obligation items`);
+console.log(`ok   the two sources agree: ${tot} obligations, ${cov} covered`);
 
 const res = tot - cov, pct = (100 * cov / tot).toFixed(1);
 const strict = (100 * (cov - approx) / tot).toFixed(1);

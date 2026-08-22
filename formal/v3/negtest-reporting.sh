@@ -681,7 +681,15 @@ mk_two "$FX/k2"
 ls "$FX/k2/expansion/03-cdp-stablecoins/specs/"*.json | tail -4 | xargs rm -f
 out=$(DEFIFORMAL_ROOT="$FX/k2" node formal/v3/totalgate.mjs 2>&1); rc=$?
 want_rc  "complete: a partial specs/ blocks" 3 "$rc"
-want_has "complete: the denominator is what blocks" "$out" "the corpus is incomplete"
+# Either guard is a correct answer here: the cross-source check fires first
+# (specs hold fewer items than verdicts report) and the file-count check
+# would fire next. Assert that it blocks for a stated corpus reason, not
+# that it produced one particular sentence.
+if printf '%s' "$out" | grep -qE "internally inconsistent|the corpus is incomplete"; then
+  caught "complete: a partial specs/ blocks for a stated corpus reason"
+else
+  missed "complete: a partial specs/ blocked without naming a corpus reason"
+fi
 want_not "complete: strict is not silently short" "$out" "FAIL strict coverage 29.0"
 
 # (c) THE SILENT PASS. An empty functionalObligations array in EVERY spec file:
@@ -709,6 +717,55 @@ want_has "complete: the gate reports categories counted" "$out" "walked 12 categ
 mk_two "$FX/k4"
 DEFIFORMAL_ROOT="$FX/k4" node formal/v3/totalgate.mjs >/dev/null 2>&1
 want_rc "complete: intact corpus still passes (control)" 0 "$?"
+
+echo
+echo "===== 3l. the two sources must agree before anything is published ====="
+# Round 10's guard counted FILES and CATEGORIES. Round 11 found the non-empty
+# pole: a TRUNCATED verdicts array and an ALL-RESIDUE obligations array both
+# keep 12/60 intact while the item-level walk comes up short. Guarding counts
+# one level deeper would only move the pole again. verdicts/ and specs/ carry
+# the same two quantities independently, so a short walk on either side now
+# shows up as the two disagreeing with EACH OTHER rather than with the paper.
+
+# (a) a truncated verdicts array -- non-empty, so every earlier guard passes
+mk_two "$FX/x1"
+python3 - "$FX/x1/expansion/02-lending/verdicts.json" <<'PY'
+import json, sys
+p = sys.argv[1]
+d = json.load(open(p))
+json.dump(d[:1], open(p, "w"))     # keep one record of five
+PY
+out=$(DEFIFORMAL_ROOT="$FX/x1" node formal/v3/totalgate.mjs 2>&1); rc=$?
+want_rc  "sources: a truncated verdicts array blocks" 3 "$rc"
+want_has "sources: names the inconsistency" "$out" "internally inconsistent"
+want_not "sources: not blamed on the manuscript" "$out" "out of step"
+
+# (b) every obligation made residue -- the array stays non-empty, the files are
+# all counted, and before this fix the gate reported that every total agreed.
+mk_two "$FX/x2"
+for f in "$FX/x2/expansion/"*/specs/*.json; do
+  python3 - "$f" <<'PY'
+import json, sys
+p = sys.argv[1]
+d = json.load(open(p))
+for o in d.get("functionalObligations", []):
+    o["elements"] = []
+json.dump(d, open(p, "w"))
+PY
+done
+out=$(DEFIFORMAL_ROOT="$FX/x2" node formal/v3/totalgate.mjs 2>&1); rc=$?
+want_rc  "sources: all-residue obligations block" 3 "$rc"
+want_not "sources: NOT a silent pass" "$out" "all headline totals agree"
+
+# (c) the gate states both denominators, so a reader can see what it counted
+out=$(node formal/v3/totalgate.mjs 2>&1)
+want_has "sources: reports the item denominators" "$out" "1259 obligation items"
+want_has "sources: reports the agreement"         "$out" "the two sources agree"
+
+# control: the cross-check must not be always-on
+mk_two "$FX/x3"
+DEFIFORMAL_ROOT="$FX/x3" node formal/v3/totalgate.mjs >/dev/null 2>&1
+want_rc "sources: intact corpus still passes (control)" 0 "$?"
 
 echo
 echo "===== 3i. loop2gate says plainly that no citation checker exists ====="
