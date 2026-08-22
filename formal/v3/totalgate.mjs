@@ -230,7 +230,10 @@ const visible = tex
 // conditional -- is the same mistake repeated. The gate refuses to guess
 // instead: a conditional anywhere in a claim region means the gate cannot know
 // what the reader sees, and that is a blocked check.
-const CONDITIONAL = /\\(if[a-zA-Z@]*|else|fi)\b/;
+// `\iff` is the math operator "if and only if" and `\ifthenelse` is a package
+// macro; neither is a TeX conditional. The manuscript uses \iff at line 914.
+// Match the real primitives and \newif-defined names, not anything starting "if".
+const CONDITIONAL = /\\(ifnum|ifdim|ifodd|ifvmode|ifhmode|ifmmode|ifinner|ifcat|ifx|ifvoid|ifhbox|ifvbox|ifeof|iftrue|iffalse|ifcase|ifdefined|ifcsname|else|fi)\b/;
 const noConditional = (region, what) => {
   const m = region.match(CONDITIONAL);
   if (m) {
@@ -271,7 +274,20 @@ const numRe = (n) => {
   const esc = (x) => x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   return new RegExp(`(^|[^0-9.,{])(\\$?${esc(gp(n))}\\$?|\\$?${esc(String(n))}\\$?)([^0-9.,}]|$)`);
 };
-const claimsNumIn = (n, blocks) => blocks.every(b => numRe(n).test(b));
+// The last first-generation matcher. Presence in a block is not a check of a
+// claim: a decoy carrying the same number elsewhere in the block satisfied it
+// while the real figure was mutated. Same rule its siblings have had since
+// ab63cfa -- more than one candidate means the gate cannot tell which the
+// reader sees.
+const claimsNumIn = (n, blocks) => blocks.every(b => {
+  const all = b.match(new RegExp(numRe(n).source, "g"));
+  if (!all || !all.length) return false;
+  if (all.length > 1) {
+    blocked(`the figure ${n} appears ${all.length} times in one claim block; ` +
+            `the gate cannot tell which occurrence is the claim`);
+  }
+  return true;
+});
 
 // The total row is a ROW: cells carry meaning by position. Testing that each
 // number occurs somewhere in the table let the cells be permuted -- including
@@ -326,6 +342,10 @@ const STRICT_CLAIM   = /Counting those as residue gives[\s\S]{0,40}/;
 // edit shipped an internally inconsistent paper at exit 0 -- the mirror of the
 // defect the whole-document search had.
 const RESIDUE_CLAIM  = /The sixty constructions leave[\s\S]{0,40}/;
+// "Of the $570$\nassigned rows, $205$ --- $36.0\%$ --- carry a note ..."
+// Presence in the block was this figure's ONLY check, so a decoy elsewhere in
+// the block satisfied it while the stated figure was mutated.
+const APPROX_CLAIM   = /assigned rows,[\s\S]{0,20}/;
 // "The ledgers hold 1{,}259 obligations across 60 applications" -- a third site
 // for the flagship total, outside both meas:covsens and tab:categories. Found by
 // counting visible occurrences mechanically after hand enumeration missed it twice.
@@ -389,7 +409,7 @@ const must = [
   // Each of these occurs exactly ONCE in visible text, so the every-site rule
   // applies cleanly. They were unregistered, not unregisterable -- the register
   // overstated the limit by generalising from `inad`'s six collisions.
-  [`approximate-fit rows ${approx}`, claimsNumIn(approx, [COVSENS])],
+  [`approximate-fit rows ${approx}`, claimsNumAt(approx, APPROX_CLAIM)],
   [`approximate share ${(100 * approx / cov).toFixed(1)}%`,
                                  claimsPctAt((100 * approx / cov).toFixed(1), /Of the[\s\S]{0,120}/)],
   [`coverage ${pct}%`,           claimsPctAt(pct, COVERAGE_CLAIM)],

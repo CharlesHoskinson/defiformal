@@ -1236,6 +1236,64 @@ DEFIFORMAL_ROOT="$FX/v_ok" node formal/v3/totalgate.mjs >/dev/null 2>&1
 want_rc "conditional: the untouched manuscript still passes (control)" 0 "$?"
 
 echo
+echo "===== 3w. \\iff is not a conditional; a decoy in a block is not a claim ====="
+# The conditional detector matched `if[a-zA-Z@]*`, so \iff -- the math operator
+# the manuscript uses at line 914 -- read as a TeX conditional. Not a live
+# false-block, but a wrong detector.
+mk_two "$FX/w1"
+python3 - "$FX/w1/paper/atlas.tex" <<'PYW'
+import io, sys
+p = sys.argv[1]
+s = io.open(p, encoding="utf-8").read()
+old = "The sixty constructions leave $689$"
+if old not in s:
+    print("PERTURBATION DID NOT APPLY", file=sys.stderr); sys.exit(3)
+io.open(p,"w",encoding="utf-8").write(
+    s.replace(old, "The sixty constructions leave $689$ ($a \\iff b$)", 1))
+PYW
+out=$(DEFIFORMAL_ROOT="$FX/w1" node formal/v3/totalgate.mjs 2>&1); rc=$?
+want_rc  "iff: the math operator does not block a correct paper" 0 "$rc"
+want_not "iff: not misreported as a conditional" "$out" "TeX conditional"
+
+# a real conditional in the same place still blocks
+mk_two "$FX/w2"
+python3 - "$FX/w2/paper/atlas.tex" <<'PYW'
+import io, sys
+p = sys.argv[1]
+s = io.open(p, encoding="utf-8").read()
+old = "The sixty constructions leave $689$"
+io.open(p,"w",encoding="utf-8").write(
+    s.replace(old, "The sixty constructions leave \\ifnum1=1 $689$\\fi", 1))
+PYW
+out=$(DEFIFORMAL_ROOT="$FX/w2" node formal/v3/totalgate.mjs 2>&1); rc=$?
+want_rc  "iff: a real conditional still blocks" 3 "$rc"
+
+# G2: a decoy carrying the same number elsewhere in the block
+mk_two "$FX/w3"
+python3 - "$FX/w3/paper/atlas.tex" <<'PYW'
+import io, sys
+p = sys.argv[1]
+s = io.open(p, encoding="utf-8").read()
+old = "$205$"
+if old not in s:
+    print("PERTURBATION DID NOT APPLY", file=sys.stderr); sys.exit(3)
+# mutate the real figure and plant a decoy of the old value in the same block
+s = s.replace(old, "$206$", 1)
+s = s.replace("Of the $570$", "Of the $570$ (was $205$)", 1)
+io.open(p,"w",encoding="utf-8").write(s)
+PYW
+out=$(DEFIFORMAL_ROOT="$FX/w3" node formal/v3/totalgate.mjs 2>&1); rc=$?
+if [ "$rc" = "0" ]; then
+  missed "decoy: a planted 205 satisfied the approx check while the real figure said 206"
+else
+  caught "decoy: a planted duplicate is refused (exit $rc)"
+fi
+
+mk_two "$FX/w4"
+DEFIFORMAL_ROOT="$FX/w4" node formal/v3/totalgate.mjs >/dev/null 2>&1
+want_rc "iff: the untouched manuscript still passes (control)" 0 "$?"
+
+echo
 echo "===== 3i. loop2gate says plainly that no citation checker exists ====="
 # Routing evidence.mjs / cites.mjs through one() replaced "no verdict" with a
 # WRONG verdict: evidence.mjs is the supplement emitter (no failure path, its
