@@ -65,18 +65,26 @@ echo "===== 3. every numeric claim recomputed from a committed script"
 one () { # label script-cmd needle
   # capture the WHOLE output before judging it -- truncating to the last line
   # first discards the very evidence that marks a blocked run.
-  full=$(eval "$2" 2>&1); printf '  %s\n' "$(printf '%s' "$full" | tail -1)"
-  # grep the WHOLE output, per this file's own header: matching against tail -n
-  # once made a reproducing harness read as drift.
-  case "$full" in
-    *"$3"*) echo "  ok   $1" ;;
+  full=$(eval "$2" 2>&1); orc=$?
+  printf '  %s\n' "$(printf '%s' "$full" | tail -1)"
+  # The EXIT CODE is the verdict; the needle only confirms a zero exit said what
+  # it claims. Grepping the whole output for a substring is not safe on its own:
+  # totalgate's provenance NOTE echoes a filesystem path into the output, so a
+  # path containing the needle turned a real FAIL into ok (found at
+  # /tmp/agree-check against the needle "agree"). Contract: 0 holds, 3 blocked.
+  case "$orc" in
+    0) case "$full" in
+         *"$3"*) echo "  ok   $1" ;;
+         *) echo "  FAIL $1 (exited 0 without '$3')"; fail=1 ;;
+       esac ;;
+    3) echo "  BLOCKED $1 (could not run; nothing measured)"; blkd=1 ;;
     *) if blocked_out "$full"; then echo "  BLOCKED $1 (could not run; nothing measured)"; blkd=1
-       else echo "  FAIL $1"; fail=1; fi ;;
+       else echo "  FAIL $1 (exit $orc)"; fail=1; fi ;;
   esac
 }
 one "109 category claims" "node formal/v3/claims.mjs"           ", 0 failed"
 one "22 checker self-tests" "node formal/v3/selftest.mjs"        ", 0 failed"
-one "headline totals"      "node formal/v3/totalgate.mjs"        "agree"
+one "headline totals"      "node formal/v3/totalgate.mjs"        "all headline totals agree with the verdicts"
 one "emission invariant"   "python3 formal/v3/verify-emission.py" "HOLDS"
 one "graph claims"         "python3 formal/v3/verify-graphs.py"   "VERIFIED"
 one "extensions"           "node formal/v3/verify-extensions.mjs" "0 mismatch"
