@@ -21,7 +21,10 @@
   Recorded ACTIONED before the manuscript was edited: atlas.tex still read "a primitive in none"
   at two sites and titled the measurement "never primitive" until the law-table commit. The
   three protocols were recomputed at that point and confirmed under the 29-row system.
-- **Arc count contradiction, 13 versus 15.** ACTIONED - one figure, twelve distinct arcs.
+- **Arc count contradiction, 13 versus 15.** ACTIONED - one figure, fifteen distinct arcs.
+  This entry read "twelve" until audited. `node formal/v2/digraph.mjs` reports 16 arcs with
+  multiplicity over the laws and 15 distinct; atlas.tex says 15 at four sites and "fifteen"
+  at a fifth. The manuscript and the code agreed with each other and not with this log.
 - **59 percent and 90.3 percent stated as each other.** ACTIONED.
 - **meas:width has no producing code.** ACTIONED - downgraded to an explicitly indicative remark, and no inference depends on it.
 - **Degenerate sampler affects specific figures.** ACTIONED - named in the provenance remark; the meet-violation count replaced by the rerun range.
@@ -33,7 +36,10 @@
 
 - **Naked attributions (8).** ACTIONED. Cites added for Avron, Tarski (twice), Caspard-Monjardet, Edelman-Jamison, Edelman 1980, Isbell/Edmonds-Fulkerson, and Grotschel-Lovasz-Schrijver. The remaining grep hit is a false positive: Schaefer is named on one line and cited on the next. Bibliography is now 20 entries with zero bibtex warnings.
 
-- **meas:frag outstanding major from Referee B.** ACTIONED by downgrade rather than repair. Its only stored output terminates in an uncaught TypeError, so the certification rate it reported is not reproducible. The measurement is now a conjecture asserting only the witnessed lower bound of 11026, with the rate explicitly not claimed. If the computation is repaired it can be promoted back.
+- **meas:frag outstanding major from Referee B.** ACTIONED by downgrade rather than repair. Its only stored output terminates in an uncaught TypeError, so the certification rate it reported is not reproducible. The measurement is now a conjecture asserting only a witnessed lower bound, with the rate explicitly not claimed. If the computation is repaired it can be promoted back.
+  The bound recorded here was 11026 and is stale: conj:frag now witnesses $2^{22} = 4{,}194{,}304$
+  by exhibiting twenty-two free elements whose every subset is admissible. The paper's bound is
+  the larger one and the log was the smaller.
 
 - Step 4, the honest question: meas:frag was the claim I could not have defended, which is why it was downgraded in the same turn rather than recorded as pending.
 
@@ -60,4 +66,25 @@
 
 - **Step 4: conj:perfect claimed falsifiability by a finite search at our scale.** Indefensible - |Adm| is of order 10^16. ACTIONED by strengthening rather than downgrading: the trace reduction is now a stated proposition, so the graph is a blow-up of a quotient on the trace space and perfection may be decided there, citing Lovasz replication for blow-ups. The accompanying measurement records that the quotient is currently complete, so perfection presently holds trivially - one enforceable prohibition row of five elements, and no union of sampled protocols covers it.
 - Naked attributions: three grep hits, all false positives with the cite on the adjacent line. Verified by inspection.
-- All majors from all three referees are actioned; none outstanding.
+- All majors from all three referees are actioned. "None outstanding" was written above two
+  OUTSTANDING bullets in this same file and is withdrawn: Referee A's bibliography/related-work
+  item is resolved, but Referee B's meas:frag recomputation stands open by the downgrade rather
+  than by repair. A closing line that contradicts the entries above it is worth less than no
+  closing line.
+
+## Audit, 2026-08-22
+
+Every ACTIONED claim above was checked against the manuscript rather than taken. Four entries
+disagreed with the text they described:
+
+- `prop:ct` was recorded ACTIONED while atlas.tex still said "a primitive in none" at two sites
+  and titled the measurement "never primitive". Fixed in the manuscript.
+- the arc count in this log said twelve where the code and the paper both say fifteen.
+- the meas:frag bound in this log was stale by three orders of magnitude.
+- the closing line contradicted the OUTSTANDING entries above it.
+
+Two defects in the manuscript that no LaTeX pass can see were found in the same sweep and fixed:
+`conj:frag` was cross-referenced as a Measurement twice, and two ties read
+`Measurement~\nMeasurement~\ref{...}`, typesetting as "Measurement Measurement 7".
+atlas.log reports zero undefined references in every case, because both halves are well formed.
+`formal/v3/xref-kinds.py` now checks the first class across all 134 labelled environments.

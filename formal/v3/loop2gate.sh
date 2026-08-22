@@ -115,6 +115,10 @@ one "every set-membership claim holds in the algebra" "node formal/v3/verify-set
 one "coverage sensitivity matches the ledger" "node formal/v3/verify-coverage.mjs" "COVERAGE SENSITIVITY VERIFIED"
 one "free-set conjecture matches the algebra" "node formal/v3/verify-freeset.mjs" "FREE-SET CLAIM VERIFIED"
 one "section briefs regenerate identically" "bash formal/v3/brief-fresh.sh" "SECTION BRIEFS FRESH"
+# A cross-reference can name the wrong KIND of environment with both halves
+# well formed, so atlas.log reports zero undefined references either way.
+# conj:frag was called a Measurement at two sites until this was written.
+one "cross-references name their target's kind" "python3 formal/v3/xref-kinds.py" "0 mismatched"
 
 echo "===== 4. citations: every protocol design claim carries a URL and a date"
 # These two printed their output and set no verdict at all, so a crashed
