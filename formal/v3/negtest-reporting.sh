@@ -888,6 +888,54 @@ want_has "register: records the correction rather than amending it" "$reg" "Corr
 want_has "register: names the cardinality-preserving variant"       "$reg" "cardinality-preserving"
 
 echo
+echo "===== 3p. a claim in a comment is not a claim ====="
+# claimsNumAt used tex.match(), so the FIRST occurrence anywhere won -- including
+# inside a LaTeX comment, which never typesets. Plant the old sentence in a
+# comment, edit the visible one, leave the table: the gate reported agreement
+# about a manuscript that would print 690 in prose and 689 in the table.
+
+mk_two "$FX/p1"
+python3 - "$FX/p1/paper/atlas.tex" <<'PY'
+import io, sys
+p = sys.argv[1]
+s = io.open(p, encoding="utf-8").read()
+real = "The sixty constructions leave $689$"
+if real not in s:
+    print("PERTURBATION DID NOT APPLY", file=sys.stderr); sys.exit(3)
+s = s.replace(real, "The sixty constructions leave $690$", 1)   # visible text edited
+s = "% " + real + " obligations that no element discharges.\n" + s  # decoy comment
+io.open(p, "w", encoding="utf-8").write(s)
+PY
+out=$(DEFIFORMAL_ROOT="$FX/p1" node formal/v3/totalgate.mjs 2>&1); rc=$?
+want_not "comment: a commented decoy does not satisfy the claim" "$out" "all headline totals agree"
+if [ "$rc" = "0" ]; then
+  missed "comment: exit 0 on a manuscript that prints 690 in prose and 689 in the table"
+else
+  caught "comment: the decoy is refused (exit $rc)"
+fi
+
+# a duplicated VISIBLE claim is ambiguous, not a pass: the gate cannot tell
+# which sentence the reader sees.
+mk_two "$FX/p2"
+python3 - "$FX/p2/paper/atlas.tex" <<'PY'
+import io, sys
+p = sys.argv[1]
+s = io.open(p, encoding="utf-8").read()
+real = "The sixty constructions leave $689$ obligations that no element discharges."
+if real not in s:
+    print("PERTURBATION DID NOT APPLY", file=sys.stderr); sys.exit(3)
+io.open(p, "w", encoding="utf-8").write(s.replace(real, real + "\n" + real, 1))
+PY
+out=$(DEFIFORMAL_ROOT="$FX/p2" node formal/v3/totalgate.mjs 2>&1); rc=$?
+want_rc  "comment: a duplicated claim blocks" 3 "$rc"
+want_has "comment: says it cannot tell which is typeset" "$out" "cannot tell"
+
+# control: the real manuscript, with its real comments, still passes
+mk_two "$FX/p3"
+DEFIFORMAL_ROOT="$FX/p3" node formal/v3/totalgate.mjs >/dev/null 2>&1
+want_rc "comment: the untouched manuscript still passes (control)" 0 "$?"
+
+echo
 echo "===== 3i. loop2gate says plainly that no citation checker exists ====="
 # Routing evidence.mjs / cites.mjs through one() replaced "no verdict" with a
 # WRONG verdict: evidence.mjs is the supplement emitter (no failure path, its

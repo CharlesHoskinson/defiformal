@@ -213,17 +213,21 @@ try {
 // matches because the same digits appear in an unrelated sentence is a silent
 // pass, and grok constructed exactly that (approx driven to 0, strict becomes
 // "45.3", satisfied by the coverage literal eleven lines above).
+// A LaTeX comment is never typeset, so it cannot carry a claim -- but a
+// first-match search finds it anyway. Strip comments before any claim matching.
+// `%` is only a comment when not escaped as `\%`.
+const visible = tex.replace(/(^|[^\\])%.*$/gm, "$1");
 const block = (label, env) => {
-  const at = tex.indexOf(`\\label{${label}}`);
+  const at = visible.indexOf(`\\label{${label}}`);
   if (at < 0) blocked(`atlas.tex has no \\label{${label}}; the claim site is gone`);
   // The label can sit anywhere inside its environment -- near the top of a
   // measurement, but inside the CAPTION of a table, below the tabular body.
   // Bound the block by the environment, not by the label's position.
-  const start = tex.lastIndexOf(`\\begin{${env}}`, at);
+  const start = visible.lastIndexOf(`\\begin{${env}}`, at);
   if (start < 0) blocked(`\\label{${label}} is not inside a \\begin{${env}}`);
-  const end = tex.indexOf(`\\end{${env}}`, at);
+  const end = visible.indexOf(`\\end{${env}}`, at);
   if (end < 0) blocked(`\\label{${label}} is not closed by \\end{${env}}`);
-  return tex.slice(start, end);
+  return visible.slice(start, end);
 };
 const COVSENS = block("meas:covsens", "measurement");
 const CATTAB  = block("tab:categories", "table");
@@ -247,9 +251,16 @@ const claimsNumIn = (n, blocks) => blocks.every(b => numRe(n).test(b));
 // be satisfied by the coverage literal eleven lines above -- a silent PASS.
 const claimsPctAt = (v, contextRe) => {
   const esc = String(v).replace(".", "\\.");
-  const m = COVSENS.match(contextRe);
-  if (!m) blocked(`atlas.tex no longer states this figure where the gate expects it: ${contextRe}`);
-  return new RegExp(`(^|[^0-9.])${esc}\\\\%`).test(m[0]);
+  const all = COVSENS.match(new RegExp(contextRe.source, contextRe.flags.includes("g")
+    ? contextRe.flags : contextRe.flags + "g"));
+  if (!all || !all.length) {
+    blocked(`atlas.tex no longer states this figure where the gate expects it: ${contextRe}`);
+  }
+  if (all.length > 1) {
+    blocked(`atlas.tex states this claim ${all.length} times; the gate cannot tell ` +
+            `which one is typeset: ${contextRe}`);
+  }
+  return new RegExp(`(^|[^0-9.])${esc}\\\\%`).test(all[0]);
 };
 // Bounded windows, not sentence-terminated: the figures contain dots
 // ($45.3\%$), so a [^.] window closes before the number it is meant to capture.
@@ -263,9 +274,20 @@ const STRICT_CLAIM   = /Counting those as residue gives[\s\S]{0,40}/;
 // defect the whole-document search had.
 const RESIDUE_CLAIM  = /The sixty constructions leave[\s\S]{0,40}/;
 const claimsNumAt = (n, contextRe) => {
-  const m = tex.match(contextRe);
-  if (!m) blocked(`atlas.tex no longer states this figure where the gate expects it: ${contextRe}`);
-  return numRe(n).test(m[0]);
+  // Search the VISIBLE text, and require the claim to be unique. A first-match
+  // search let a decoy -- in a comment, or simply earlier in the body -- stand
+  // in for the sentence that actually prints. Two candidates means the gate
+  // cannot tell which one the reader sees, and that is a blocked check.
+  const all = visible.match(new RegExp(contextRe.source, contextRe.flags.includes("g")
+    ? contextRe.flags : contextRe.flags + "g"));
+  if (!all || !all.length) {
+    blocked(`atlas.tex no longer states this figure where the gate expects it: ${contextRe}`);
+  }
+  if (all.length > 1) {
+    blocked(`atlas.tex states this claim ${all.length} times; the gate cannot tell ` +
+            `which one is typeset: ${contextRe}`);
+  }
+  return numRe(n).test(all[0]);
 };
 const gp = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, "{,}");
 
