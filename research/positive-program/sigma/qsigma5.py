@@ -25,8 +25,19 @@ import glob
 import json
 import re
 from collections import defaultdict
+import os as _os
+from pathlib import Path as _Path
+# Resolved from this file's own location, the pattern gate33_cert_check.py uses.
+# DEFIFORMAL_ROOT overrides and says so.
+_SELF = _Path(__file__).resolve().parents[3]
+_REPO = _Path(_os.environ.get("DEFIFORMAL_ROOT", _SELF))
+if str(_REPO) != str(_SELF):
+    import sys as _sys
+    print("%s: NOTE - reading %s (DEFIFORMAL_ROOT), not %s"
+          % (_Path(__file__).name, _REPO, _SELF), file=_sys.stderr)
 
-SPECS = sorted(glob.glob("/root/DefiElements/quint-models/L*/*.qnt"))
+
+SPECS = sorted(glob.glob(str(_REPO / "quint-models/L*/*.qnt")))
 IDENT = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 CONTAINER = re.compile(r"\.(put|set|append|tail|head|replaceAt)\s*\(")
 # spans are ACTIONS AND DEFS ONLY -- never `val`, which is what broke qsigma4
@@ -180,6 +191,6 @@ for k in inv:
 print(f"   total: {len(inv)}")
 
 json.dump({"Q": sorted(list(k) for k in Q), "Sigma": sorted(list(k) for k in S)},
-          open("/root/DefiElements/research/positive-program/sigma/qsigma5.json",
+          open(str(_REPO / "research/positive-program/sigma/qsigma5.json"),
                "w"), indent=2)
 print("\nwritten: sigma/qsigma5.json")

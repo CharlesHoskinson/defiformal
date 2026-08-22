@@ -1,7 +1,18 @@
 import re, json, glob, itertools, random
 import networkx as nx
+import os as _os
+from pathlib import Path as _Path
+# Resolved from this file's own location, the pattern gate33_cert_check.py uses.
+# DEFIFORMAL_ROOT overrides and says so.
+_SELF = _Path(__file__).resolve().parents[3]
+_REPO = _Path(_os.environ.get("DEFIFORMAL_ROOT", _SELF))
+if str(_REPO) != str(_SELF):
+    import sys as _sys
+    print("%s: NOTE - reading %s (DEFIFORMAL_ROOT), not %s"
+          % (_Path(__file__).name, _REPO, _SELF), file=_sys.stderr)
 
-raw = open("/root/DefiElements/paper/formal-data.tex").read()
+
+raw = open(str(_REPO / "paper/formal-data.tex")).read()
 MID = "$" + chr(92) + "mid$"
 ELEM = {m.group(1): (m.group(3), int(m.group(4)))
         for m in re.finditer(r"^\$([A-Za-z]{2})\$ & (.*?) & (G\d\d) & ([0-4])\\\\", raw, re.M)}
@@ -58,7 +69,7 @@ for tag, clq in (("star", False), ("clique", True)):
 
 # ---- applications
 apps = []
-for f in glob.glob("/root/DefiElements/expansion/*/specs/*.json"):
+for f in glob.glob(str(_REPO / "expansion/*/specs/*.json")):
     d = json.load(open(f))
     con = sorted(set(c for c in d.get("construction", []) if c in ELEM))
     if con: apps.append((d.get("app", f), con))
