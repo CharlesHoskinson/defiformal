@@ -20,7 +20,11 @@ const blocked = (msg) => {
 };
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const REPO = process.env.DEFIFORMAL_ROOT || path.resolve(HERE, "..", "..");
+const SELF_ROOT = path.resolve(HERE, "..", "..");
+const REPO = process.env.DEFIFORMAL_ROOT || SELF_ROOT;
+// A stale DEFIFORMAL_ROOT would otherwise redirect the check to a different tree
+// than the one just typeset, silently and with no provenance in the output.
+if (REPO !== SELF_ROOT) console.error(`totalgate: NOTE - checking ${REPO} (DEFIFORMAL_ROOT), not ${SELF_ROOT}`);
 const ROOT = path.join(REPO, "expansion");
 const TEXPATH = path.join(REPO, "paper", "atlas.tex");
 
@@ -32,11 +36,31 @@ try {
 }
 if (!slugs.length) blocked(`no NN-* category slugs under ${ROOT}`);
 
+// Reading the corpus is never a statement about the manuscript. EVERY read and
+// parse below is a blocked-check candidate: an unguarded throw exits 1, which is
+// the "a headline total disagrees" code. Guarding only readdir left the original
+// defect alive one directory deeper.
+const readJson = (fp, what) => {
+  let raw;
+  try {
+    raw = fs.readFileSync(fp, "utf8");
+  } catch (e) {
+    blocked(`cannot read ${what} ${fp}: ${e.code || e.message}`);
+  }
+  try {
+    return JSON.parse(raw);
+  } catch (e) {
+    blocked(`cannot parse ${what} ${fp}: ${e.message}`);
+  }
+};
+
 let tot = 0, cov = 0, inad = 0, assigned = 0, approx = 0;
 for (const slug of slugs) {
   const vp = path.join(ROOT, slug, "verdicts.json");
   if (!fs.existsSync(vp)) continue;
-  for (const v of JSON.parse(fs.readFileSync(vp, "utf8"))) {
+  const verdicts = readJson(vp, "verdicts");
+  if (!Array.isArray(verdicts)) blocked(`${vp} is not an array of verdicts`);
+  for (const v of verdicts) {
     tot += v.obligationsTotal; cov += v.obligationsCovered;
     if (v.verdict === "INADMISSIBLE") inad++;
   }
@@ -47,12 +71,19 @@ for (const slug of slugs) {
   } catch (e) {
     blocked(`cannot read specs for ${slug}: ${e.code || e.message}`);
   }
-  for (const f of specs)
-    for (const o of JSON.parse(fs.readFileSync(path.join(sd, f), "utf8")).functionalObligations) {
+  for (const f of specs) {
+    const spec = readJson(path.join(sd, f), "spec");
+    const obs = spec.functionalObligations;
+    if (!Array.isArray(obs)) blocked(`${path.join(sd, f)} has no functionalObligations array`);
+    for (const o of obs) {
       if (!(o.elements || []).length) continue;
       assigned++;
       if (/approx|forced|partial|stretch/i.test(o.note || "")) approx++;
     }
+  }
+}
+if (!Number.isFinite(tot) || !Number.isFinite(cov)) {
+  blocked("a verdict carried a non-numeric obligation count; totals are not computable");
 }
 if (tot === 0) blocked(`examined ${slugs.length} slug(s) but 0 obligations - nothing to check`);
 

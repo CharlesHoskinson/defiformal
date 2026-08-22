@@ -61,12 +61,13 @@ function main() {
       for (const w of r.warn) console.log(`   warn: ${w}`);
     }
   }
-  console.log(`\n${n} specs, ${bad} rejected`);
-  // Zero specs examined is not zero specs rejected. Exit 3 = could not check.
+  // Zero specs examined is not zero specs rejected, and "0 specs, 0 rejected"
+  // reads as a result, so it is not printed at all. Exit 3 = could not check.
   if (n === 0) {
     console.error(`BLOCKED - no specs found in ${dir}; nothing was validated`);
     process.exit(3);
   }
+  console.log(`\n${n} specs, ${bad} rejected`);
   process.exit(bad ? 1 : 0);
 }
 if (import.meta.url === `file://${process.argv[1]}`) main();

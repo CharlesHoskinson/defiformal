@@ -66,8 +66,9 @@ def collect_names(d) -> list[str]:
 
 def main() -> int:
     if not IR.is_dir():
-        print("FAIL: missing IR", IR, file=sys.stderr)
-        return 2
+        # A missing corpus is a blocked check, not a failed certificate.
+        print("BLOCKED - missing IR", IR, file=sys.stderr)
+        return 3
     files = {}
     total = Counter()
     for fp in sorted(IR.glob("*.json")):

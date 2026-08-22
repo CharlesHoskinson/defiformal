@@ -4,7 +4,10 @@ cd "$(dirname "$0")/../.." || exit 3   # an unguarded cd once turned EACCES into
 # A cd into a directory that merely EXISTS also succeeds, and the harnesses then
 # report content verdicts about a tree holding no corpus. Landing in the wrong
 # place is a blocked check, never a finding about the corpus.
-if [ ! -f paper/atlas.tex ] || [ ! -d expansion ] || [ ! -d corpus50 ]; then
+# Names alone are not a repo: three empty files of the right name walk straight
+# past a existence check. Require content that only this corpus has.
+if [ ! -s paper/atlas.tex ] || [ ! -d expansion ] || ! ls corpus50/lanes/*.json >/dev/null 2>&1 \
+   || ! grep -q 'begin{measurement}' paper/atlas.tex 2>/dev/null; then
   printf 'GATE BLOCKED: %s is not a defiformal tree; nothing was measured\n' "$PWD" >&2
   exit 3
 fi
@@ -13,13 +16,20 @@ blkd=0
 say() { printf '\n===== %s\n' "$1"; }
 
 say "1. paper build"
-out=$(cd paper && ./build.sh 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+out=$(cd paper && ./build.sh 2>&1); brc=$?
+out=$(printf '%s' "$out" | sed 's/\x1b\[[0-9;]*h*[0-9;]*m//g')
 printf '%s\n' "$out" | tail -6
-if printf '%s' "$out" | grep -qE 'OK[[:space:]]+atlas\.pdf: [0-9]+ pages'; then
-  echo "GATE: build OK"
-else
-  echo "GATE: BUILD FAILED"; fail=1
-fi
+# The caller must learn the contract too, or the fix stops at build.sh's own
+# stdout: exit 3 means the build could not check something, not that it failed.
+case "$brc" in
+  0) if printf '%s' "$out" | grep -qE 'OK[[:space:]]+atlas\.pdf: [0-9]+ pages'; then
+       echo "GATE: build OK"
+     else
+       echo "GATE: BUILD reported success without the OK line"; fail=1
+     fi ;;
+  3) echo "GATE: BUILD BLOCKED - a build check could not run; nothing was measured"; blkd=1 ;;
+  *) echo "GATE: BUILD FAILED (exit $brc)"; fail=1 ;;
+esac
 undef=$(grep -c 'undefined' paper/atlas.log 2>/dev/null); undef=${undef:-0}
 echo "undefined references in atlas.log: $undef"
 [ "$undef" = "0" ] || { echo "GATE: undefined references present"; fail=1; }
@@ -33,10 +43,18 @@ a=$(node formal/v2/antiexchange.mjs 2>&1); printf '%s\n' "$a" | grep -E 'VIOLATI
 
 # A harness that could not run has not refuted anything. Reporting its silence
 # as "FAIL 61 of 72" is a corpus verdict about a corpus nothing read.
-blocked_out() { printf '%s' "$1" | grep -qE 'EACCES|ENOENT|ERR_MODULE_NOT_FOUND|Cannot find module|BLOCKED|PermissionError|FileNotFoundError|Errno 13|Errno 2|Traceback \(most recent'; }
+# Signatures of a harness that could not RUN. Deliberately narrow: a bare
+# "BLOCKED" or a lone "Traceback" also appears in output from a harness that ran
+# and failed on content, and classifying that as blocked would hide a real defect
+# behind a reassuring word -- the same lie in the opposite direction.
+blocked_out() {
+  printf '%s' "$1" | grep -qE 'Error: (EACCES|ENOENT)|ERR_MODULE_NOT_FOUND|Cannot find module|(PermissionError|FileNotFoundError|ModuleNotFoundError): \[?Errno|^totalgate: BLOCKED|GATE BLOCKED'
+}
+# ORDER MATTERS. A harness that produced the expected answer is never blocked,
+# however noisy its stderr. Only then does the blocked classifier get a say.
 chk() {
-  if blocked_out "$2"; then echo "  BLOCKED $1 (harness could not run; nothing measured)"; blkd=1
-  elif printf '%s' "$2" | grep -q -- "$3"; then echo "  ok   $1"
+  if printf '%s' "$2" | grep -q -- "$3"; then echo "  ok   $1"
+  elif blocked_out "$2"; then echo "  BLOCKED $1 (harness could not run; nothing measured)"; blkd=1
   else echo "  FAIL $1 (wanted '$3')"; fail=1; fi
 }
 chk "61 of 72 satisfy laws+warrants" "$p" "61/72"

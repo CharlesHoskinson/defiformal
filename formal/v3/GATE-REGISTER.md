@@ -56,9 +56,51 @@ apart deliberately; this is the candidate for the next one.
 `import.meta.url`, and the six `formal/v2` scripts that re-read `corpus50/lanes`
 by absolute path use the exported `ROOT`. All three README reproduce commands
 run and all seven published figures reproduce (61/72, 1830, 185, 29/72, 20/61,
-15 arcs, 0 violations). `gate.sh` went from ten blocked checks to four.
+15 arcs, 0 violations). `gate.sh` went from **ten blocked checks to three**, with
+seven now `ok`.
 
-The four that remain are blocked by a single line: `formal/v3/construct.mjs:59`,
-`loadCorpus(root = "/root/DefiElements")`. It gates `claims.mjs`, `selftest.mjs`
-and therefore `smoke.sh`. Fifty-two `formal/v3` scripts also still import by
-absolute ESM specifier.
+An earlier revision of this file said "four". That count came from an unanchored
+`grep -c 'BLOCKED'` which also matched the `GATE RESULT: BLOCKED` summary line —
+the same defect this register exists to catch, committed by its own author. Both
+independent reviewers caught it. Anchored: `grep -cE '^  BLOCKED'` = 3, `^  ok `
+= 7, and 7 + 3 = 10 reconciles.
+
+The three that remain do **not** share one cause:
+
+| Blocked check | Actual blocker |
+|---|---|
+| 109-claim checker (`claims.mjs`) | `formal/v3/construct.mjs:59`, `loadCorpus(root = "/root/DefiElements")` |
+| smoke (via `selftest.mjs`) | the same line |
+| graph claims (`verify-graphs.py`) | its **own** `ROOT = "/root/defiformal/expansion"` — not `construct.mjs` |
+
+Fifty-two `formal/v3` scripts also still import by absolute ESM specifier.
+
+## Adversarial review of this register's own change
+
+Two independent reviewers (grok-4.6 at xhigh, claude-fable-5) were given the
+diff and told to attack it. Confirmed findings, all now fixed:
+
+- **The exit contract stopped at `readdir`.** Every `readFileSync` / `JSON.parse`
+  of a verdict or spec was unguarded, so an `EACCES` or malformed JSON one
+  directory deeper threw, node exited 1, and `build.sh` reported a totals
+  disagreement — the original defect, alive, one syscall further in. Now every
+  read and parse in the corpus walk is a blocked-check candidate.
+- **The callers never learned the contract.** `gate.sh` and `loop2gate.sh` grepped
+  `build.sh`'s stdout for `OK`, so a blocked build read as a failure at the
+  integration layer. Both now branch on the exit code.
+- **`blocked_out` was over-broad** — a bare `Traceback` or the word `BLOCKED` in
+  ordinary output would reclassify a genuine content failure as blocked, hiding a
+  real defect behind a reassuring word. Patterns narrowed, and the ordering
+  inverted so that a harness which produced the expected answer is never called
+  blocked however noisy its stderr.
+- **The repo sentinel was a name check.** Three empty files of the right name
+  walked past it. It now requires `corpus50/lanes/*.json` and a `measurement`
+  environment in `atlas.tex`.
+- **The harness locked one `chmod` and the editorial sentence**, but never
+  asserted exit 3 *through* `build.sh`, never exercised `tot === 0`, and
+  truncated the orphan `gate.sh` case with `head -20`. All three now asserted.
+- Counting and attribution errors, above.
+
+`negtest-reporting.sh` went from 25 assertions to **43**, all passing. The five
+new sections exist because a reviewer found the gap, not because the author
+predicted it.

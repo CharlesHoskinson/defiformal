@@ -99,14 +99,18 @@ echo "===== 2. paper/build.sh reports the two failures differently ====="
 rm -rf "$FX/b2"; mkdir -p "$FX/b2/paper" "$FX/b2/expansion/01-spot-exchange"
 cp "$R/paper/atlas.tex" "$FX/b2/paper/atlas.tex"
 chmod 000 "$FX/b2/expansion"
-out=$(cd "$R" && DEFIFORMAL_ROOT="$FX/b2" ./paper/build.sh 2>&1 | sed 's/\x1b\[[0-9;]*m//g'); rc=${PIPESTATUS[0]}
+out=$(cd "$R" && DEFIFORMAL_ROOT="$FX/b2" ./paper/build.sh 2>&1); rc=$?
+out=$(printf '%s' "$out" | sed 's/\x1b\[[0-9;]*m//g')
 chmod 755 "$FX/b2/expansion"
+want_rc  "build BLOCKED: exit code" 3 "$rc"
 want_has "build BLOCKED: says the totals were not checked" "$out" "were NOT checked"
 want_not "build BLOCKED: does NOT say a total disagrees"   "$out" "a headline total disagrees"
 want_has "build BLOCKED: surfaces the gate diagnosis"      "$out" "EACCES"
 
 # --- 2b. VIOLATED through build.sh --------------------------------------
-out=$(cd "$R" && DEFIFORMAL_ROOT="$FX/violated" ./paper/build.sh 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+out=$(cd "$R" && DEFIFORMAL_ROOT="$FX/violated" ./paper/build.sh 2>&1); rc=$?
+out=$(printf '%s' "$out" | sed 's/\x1b\[[0-9;]*m//g')
+want_rc  "build VIOLATED: exit code" 1 "$rc"
 want_has "build VIOLATED: says a total disagrees"    "$out" "a headline total disagrees"
 want_not "build VIOLATED: does NOT say it was blocked" "$out" "were NOT checked"
 
@@ -123,8 +127,100 @@ want_not "gate.sh no longer hardcodes /root" "$guard" "/root/defiformal"
 # a resolution that must fail: run a copy from a directory with no repo above it
 mkdir -p "$FX/orphan"
 cp formal/v3/gate.sh "$FX/orphan/gate.sh"
-out=$(cd "$FX/orphan" && bash ./gate.sh 2>&1 | head -20); rc=$?
+out=$(cd "$FX/orphan" && bash ./gate.sh 2>&1); rc=$?
+want_rc  "gate.sh orphan: exit code" 3 "$rc"
+want_has "gate.sh orphan: says BLOCKED"                 "$out" "GATE BLOCKED"
 want_not "gate.sh emits no corpus verdict when blocked" "$out" "FAIL 61 of 72"
+
+# a fake tree of correctly-NAMED but empty files must not pass the sentinel
+rm -rf "$FX/fake"; mkdir -p "$FX/fake/paper" "$FX/fake/expansion" "$FX/fake/corpus50/lanes" "$FX/fake/formal/v3"
+: > "$FX/fake/paper/atlas.tex"
+cp formal/v3/gate.sh "$FX/fake/formal/v3/gate.sh"
+out=$(cd "$FX/fake/formal/v3" && bash ./gate.sh 2>&1); rc=$?
+want_rc  "sentinel: empty look-alike tree is blocked" 3 "$rc"
+want_has "sentinel: names it"                         "$out" "not a defiformal tree"
+
+echo
+echo "===== 3b. the contract holds INSIDE the corpus walk ====="
+# The first version of this change guarded readdir and left every readFileSync /
+# JSON.parse unguarded: an EACCES or malformed JSON one directory deeper threw,
+# node exited 1, and build.sh called it a totals disagreement. Same lie, next
+# syscall. These lock the depth.
+
+mk_real () {   # a fixture holding ONE real slug, so totals are computable
+  rm -rf "$1"; mkdir -p "$1/paper"
+  cp "$R/paper/atlas.tex" "$1/paper/atlas.tex"
+  mkdir -p "$1/expansion"
+  cp -r "$R/expansion/01-spot-exchange" "$1/expansion/"
+}
+
+# 3b.1 unreadable verdicts.json (real EACCES at the real syscall)
+mk_real "$FX/inner1"
+chmod 000 "$FX/inner1/expansion/01-spot-exchange/verdicts.json"
+out=$(DEFIFORMAL_ROOT="$FX/inner1" node formal/v3/totalgate.mjs 2>&1); rc=$?
+chmod 644 "$FX/inner1/expansion/01-spot-exchange/verdicts.json"
+want_rc  "inner: unreadable verdicts.json" 3 "$rc"
+want_not "inner: not called a disagreement" "$out" "out of step with the verdicts"
+
+# 3b.2 malformed spec JSON
+mk_real "$FX/inner2"
+sp=$(ls "$FX/inner2/expansion/01-spot-exchange/specs/"*.json | head -1)
+printf '{ this is not json' > "$sp"
+out=$(DEFIFORMAL_ROOT="$FX/inner2" node formal/v3/totalgate.mjs 2>&1); rc=$?
+want_rc  "inner: malformed spec JSON" 3 "$rc"
+want_has "inner: names the parse failure" "$out" "cannot parse"
+
+# 3b.3 tot === 0 -- slugs present, no obligations. Unguarded this is NaN and
+# every `has` test fails, so the gate would exit 1 and announce a disagreement.
+mk_real "$FX/inner3"
+printf '[]' > "$FX/inner3/expansion/01-spot-exchange/verdicts.json"
+out=$(DEFIFORMAL_ROOT="$FX/inner3" node formal/v3/totalgate.mjs 2>&1); rc=$?
+want_rc  "inner: zero obligations" 3 "$rc"
+want_not "inner: zero obligations is not a disagreement" "$out" "out of step"
+
+# 3b.4 the same, through build.sh -- the caller must not relabel it.
+# The fault must be LIVE for this run: with permissions restored the fixture is a
+# one-slug corpus and the gate correctly reports a real disagreement, which is
+# not what this case is testing.
+chmod 000 "$FX/inner1/expansion/01-spot-exchange/verdicts.json"
+out=$(cd "$R" && DEFIFORMAL_ROOT="$FX/inner1" ./paper/build.sh 2>&1); rc=$?
+chmod 644 "$FX/inner1/expansion/01-spot-exchange/verdicts.json"
+want_rc  "inner through build.sh: exit code" 3 "$rc"
+want_not "inner through build.sh: no disagreement claim" "$out" "a headline total disagrees"
+
+# and the control for that control: with the fault CLEARED, the same one-slug
+# fixture must report a genuine disagreement, exit 1. Without this, 3b.4 would
+# pass against a build.sh that called everything blocked.
+out=$(cd "$R" && DEFIFORMAL_ROOT="$FX/inner1" ./paper/build.sh 2>&1); rc=$?
+want_rc  "inner control: readable one-slug fixture really disagrees" 1 "$rc"
+
+echo
+echo "===== 3c. blocked_out must not hide a content failure ====="
+# blocked_out is a new lie in the opposite direction if it is over-broad: a
+# harness that RAN and got the wrong answer, but whose output also carries a
+# traceback, must read FAIL -- not BLOCKED.
+. /dev/stdin <<'SNIP'
+blocked_out() {
+  printf '%s' "$1" | grep -qE 'Error: (EACCES|ENOENT)|ERR_MODULE_NOT_FOUND|Cannot find module|(PermissionError|FileNotFoundError|ModuleNotFoundError): \[?Errno|^totalgate: BLOCKED|GATE BLOCKED'
+}
+SNIP
+if blocked_out "Traceback (most recent call last):
+  File x
+ValueError: computed 60 of 72"; then
+  missed "blocked_out hides a content failure that merely traced back"
+else
+  caught "blocked_out does not hide a bare traceback"
+fi
+if blocked_out "PermissionError: [Errno 13] Permission denied: '/root/x'"; then
+  caught "blocked_out still recognises a real PermissionError"
+else
+  missed "blocked_out no longer recognises a real PermissionError"
+fi
+if blocked_out "pairs: 1830   BLOCKED-looking word in normal output"; then
+  missed "blocked_out trips on the bare word BLOCKED in ordinary output"
+else
+  caught "blocked_out ignores the bare word BLOCKED in ordinary output"
+fi
 
 echo
 echo "===== 4. vacuity guards on the other gates ====="

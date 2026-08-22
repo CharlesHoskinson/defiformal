@@ -14,7 +14,9 @@ fail=0
 need () { [ -f "$1" ] || { echo "  FAIL missing script: $1"; fail=1; return 1; }; }
 
 echo "===== 1. paper build"
-b=$(cd paper && ./build.sh 2>&1)
+b=$(cd paper && ./build.sh 2>&1); brc=$?
+# exit 3 = a build check could not run; it is not a build failure.
+[ "${brc:-0}" = "3" ] && printf 'LOOP2: BUILD BLOCKED - nothing was measured\n' >&2
 echo "$b" | sed 's/\x1b\[[0-9;]*m//g' | tail -6
 case "$b" in *"OK"*) echo "  ok   build reports OK" ;;
              *) echo "  FAIL build did not report OK"; fail=1 ;; esac
