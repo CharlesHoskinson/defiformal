@@ -1137,6 +1137,66 @@ DEFIFORMAL_ROOT="$FX/t_ok" node formal/v3/totalgate.mjs >/dev/null 2>&1
 want_rc "register: the untouched manuscript still passes (control)" 0 "$?"
 
 echo
+echo "===== 3u. the ambiguity rule applies to every matcher ====="
+# ab63cfa established that a duplicated claim blocks -- the gate cannot tell
+# which one the reader sees. Two matchers enforced it and two resolved by FIRST
+# MATCH, so a decoy row or label could stand in for the typeset one.
+
+# a second total row hidden inside \iffalse ... \fi, which the reader never sees
+mk_two "$FX/u1"
+python3 - "$FX/u1/paper/atlas.tex" <<'PYU'
+import io, sys
+p = sys.argv[1]
+s = io.open(p, encoding="utf-8").read()
+real = "total & --- & 1259 & 570 & 689 & 15"
+if real not in s:
+    print("PERTURBATION DID NOT APPLY", file=sys.stderr); sys.exit(3)
+# corrupt the TYPESET row, and hide a correct-looking decoy above it
+s = s.replace(real, "\\iffalse\n" + real + " \\\\\n\\fi\n" +
+                    "total & --- & 1259 & 689 & 570 & 15", 1)
+io.open(p, "w", encoding="utf-8").write(s)
+PYU
+out=$(DEFIFORMAL_ROOT="$FX/u1" node formal/v3/totalgate.mjs 2>&1); rc=$?
+want_not "ambiguity: an \\iffalse decoy row is not vouched for" "$out" "all headline totals agree"
+if [ "$rc" = "0" ]; then
+  missed "ambiguity: exit 0 with a corrupted typeset row behind an \\iffalse decoy"
+else
+  caught "ambiguity: the \\iffalse decoy is refused (exit $rc)"
+fi
+
+# two visible total rows: ambiguous, so blocked
+mk_two "$FX/u2"
+python3 - "$FX/u2/paper/atlas.tex" <<'PYU'
+import io, sys
+p = sys.argv[1]
+s = io.open(p, encoding="utf-8").read()
+real = "total & --- & 1259 & 570 & 689 & 15"
+io.open(p, "w", encoding="utf-8").write(s.replace(real, real + " \\\\\n" + real, 1))
+PYU
+out=$(DEFIFORMAL_ROOT="$FX/u2" node formal/v3/totalgate.mjs 2>&1); rc=$?
+want_rc  "ambiguity: two total rows block" 3 "$rc"
+want_has "ambiguity: says it cannot tell which is typeset" "$out" "cannot"
+
+# a duplicated label is ambiguous too
+mk_two "$FX/u3"
+python3 - "$FX/u3/paper/atlas.tex" <<'PYU'
+import io, sys
+p = sys.argv[1]
+s = io.open(p, encoding="utf-8").read()
+lab = "\\label{meas:covsens}"
+if lab not in s:
+    print("PERTURBATION DID NOT APPLY", file=sys.stderr); sys.exit(3)
+io.open(p, "w", encoding="utf-8").write(s.replace(lab, lab + "\n" + lab, 1))
+PYU
+out=$(DEFIFORMAL_ROOT="$FX/u3" node formal/v3/totalgate.mjs 2>&1); rc=$?
+want_rc  "ambiguity: a duplicated label blocks" 3 "$rc"
+
+# control
+mk_two "$FX/u4"
+DEFIFORMAL_ROOT="$FX/u4" node formal/v3/totalgate.mjs >/dev/null 2>&1
+want_rc "ambiguity: the untouched manuscript still passes (control)" 0 "$?"
+
+echo
 echo "===== 3i. loop2gate says plainly that no citation checker exists ====="
 # Routing evidence.mjs / cites.mjs through one() replaced "no verdict" with a
 # WRONG verdict: evidence.mjs is the supplement emitter (no failure path, its

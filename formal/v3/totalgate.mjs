@@ -220,10 +220,19 @@ try {
 // backslashes before % leaves the % live, so `\\%` (a table row's line break
 // followed by a comment) starts a real comment while `\%` is a literal percent.
 // Consume the pairs inside the match so both cases resolve correctly.
-const visible = tex.replace(/(^|[^\\])((?:\\\\)*)%.*$/gm, "$1$2");
+const visible = tex
+  // `\iffalse ... \fi` is not typeset, so it cannot carry a claim -- and the
+  // comment stripper does not touch it, which made it a hiding place for a decoy.
+  .replace(/\\iffalse[\s\S]*?\\fi/g, "")
+  .replace(/(^|[^\\])((?:\\\\)*)%.*$/gm, "$1$2");
 const block = (label, env) => {
+  const hits = visible.split(`\\label{${label}}`).length - 1;
+  if (hits === 0) blocked(`atlas.tex has no \\label{${label}}; the claim site is gone`);
+  // Same rule the sibling matchers enforce: two claim sites means the gate
+  // cannot tell which one the reader sees.
+  if (hits > 1) blocked(`atlas.tex defines \\label{${label}} ${hits} times; the gate ` +
+                        `cannot tell which environment is the claim site`);
   const at = visible.indexOf(`\\label{${label}}`);
-  if (at < 0) blocked(`atlas.tex has no \\label{${label}}; the claim site is gone`);
   // The label can sit anywhere inside its environment -- near the top of a
   // measurement, but inside the CAPTION of a table, below the tabular body.
   // Bound the block by the environment, not by the label's position.
@@ -254,9 +263,17 @@ const claimsNumIn = (n, blocks) => blocks.every(b => numRe(n).test(b));
 // number occurs somewhere in the table let the cells be permuted -- including
 // into an arithmetically impossible order -- while every check said ok.
 const TOTAL_ROW = (() => {
-  const m = CATTAB.match(/^\s*total\s*&[^\\]*\\\\/m);
-  if (!m) blocked("tab:categories has no `total & ...` row; the gate cannot read the totals row");
-  const cells = m[0].replace(/\\\\\s*$/, "").split("&").map(c => c.trim());
+  const rows = CATTAB.match(/^\s*total\s*&[^\\]*\\\\/gm);
+  if (!rows || !rows.length) {
+    blocked("tab:categories has no `total & ...` row; the gate cannot read the totals row");
+  }
+  // The same ambiguity rule. First-match resolution let a second total row --
+  // hidden where the reader never sees it -- stand in for the typeset one.
+  if (rows.length > 1) {
+    blocked(`tab:categories has ${rows.length} \`total & ...\` rows; the gate cannot ` +
+            `tell which one is typeset`);
+  }
+  const cells = rows[0].replace(/\\\\\s*$/, "").split("&").map(c => c.trim());
   return cells;
 })();
 // total & --- & obligations & covered & residue & inadmissible
