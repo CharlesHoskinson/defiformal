@@ -977,6 +977,61 @@ DEFIFORMAL_ROOT="$FX/p3" node formal/v3/totalgate.mjs >/dev/null 2>&1
 want_rc "comment: the untouched manuscript still passes (control)" 0 "$?"
 
 echo
+echo "===== 3q. the whole total row is vouched for, not half of it ====="
+# `total & --- & 1259 & 570 & 689 & 15`. The gate checked 1259 and 689, left 570
+# and 15 unmeasured, and printed "all headline totals agree" -- vouching for a
+# row of which it had measured half.
+
+# covered: edit the table cell only
+mk_two "$FX/q1"
+python3 - "$FX/q1/paper/atlas.tex" <<'PYQ'
+import io, sys
+p = sys.argv[1]
+s = io.open(p, encoding="utf-8").read()
+old = "total & --- & 1259 & 570 & 689 & 15"
+if old not in s:
+    print("PERTURBATION DID NOT APPLY", file=sys.stderr); sys.exit(3)
+io.open(p, "w", encoding="utf-8").write(s.replace(old, "total & --- & 1259 & 571 & 689 & 15"))
+PYQ
+out=$(DEFIFORMAL_ROOT="$FX/q1" node formal/v3/totalgate.mjs 2>&1); rc=$?
+want_rc  "row: a wrong covered cell is caught" 1 "$rc"
+want_has "row: covered is what fails" "$out" "FAIL covered total"
+
+# inadmissible: the cell nothing had ever checked
+mk_two "$FX/q2"
+python3 - "$FX/q2/paper/atlas.tex" <<'PYQ'
+import io, sys
+p = sys.argv[1]
+s = io.open(p, encoding="utf-8").read()
+old = "total & --- & 1259 & 570 & 689 & 15"
+if old not in s:
+    print("PERTURBATION DID NOT APPLY", file=sys.stderr); sys.exit(3)
+io.open(p, "w", encoding="utf-8").write(s.replace(old, "total & --- & 1259 & 570 & 689 & 16"))
+PYQ
+out=$(DEFIFORMAL_ROOT="$FX/q2" node formal/v3/totalgate.mjs 2>&1); rc=$?
+want_rc  "row: a wrong inadmissible cell is caught" 1 "$rc"
+want_has "row: inadmissible is what fails" "$out" "FAIL inadmissible total"
+
+# and covered must agree at BOTH its sites, like tot
+mk_two "$FX/q3"
+python3 - "$FX/q3/paper/atlas.tex" <<'PYQ'
+import io, sys
+p = sys.argv[1]
+s = io.open(p, encoding="utf-8").read()
+old = "Of the $570$"
+if old not in s:
+    print("PERTURBATION DID NOT APPLY", file=sys.stderr); sys.exit(3)
+io.open(p, "w", encoding="utf-8").write(s.replace(old, "Of the $571$", 1))
+PYQ
+out=$(DEFIFORMAL_ROOT="$FX/q3" node formal/v3/totalgate.mjs 2>&1); rc=$?
+want_rc  "row: a prose-only covered edit is caught" 1 "$rc"
+
+# control: the untouched row still passes
+mk_two "$FX/q4"
+DEFIFORMAL_ROOT="$FX/q4" node formal/v3/totalgate.mjs >/dev/null 2>&1
+want_rc "row: the untouched total row still passes (control)" 0 "$?"
+
+echo
 echo "===== 3i. loop2gate says plainly that no citation checker exists ====="
 # Routing evidence.mjs / cites.mjs through one() replaced "no verdict" with a
 # WRONG verdict: evidence.mjs is the supplement emitter (no failure path, its

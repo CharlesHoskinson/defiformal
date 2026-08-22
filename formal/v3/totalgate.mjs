@@ -301,6 +301,11 @@ const must = [
   // res is stated in the table only.
   [`obligations total ${tot}`,   claimsNumIn(tot, [COVSENS, CATTAB])],
   [`residue total ${res}`,       claimsNumIn(res, [CATTAB]) && claimsNumAt(res, RESIDUE_CLAIM)],
+  // The other two cells of the same total row. They were accumulated and never
+  // compared, while the gate printed "all headline totals agree" -- vouching for
+  // a row of which it had measured half.
+  [`covered total ${cov}`,       claimsNumIn(cov, [COVSENS, CATTAB])],
+  [`inadmissible total ${inad}`, claimsNumIn(inad, [CATTAB])],
   [`coverage ${pct}%`,           claimsPctAt(pct, COVERAGE_CLAIM)],
   [`strict coverage ${strict}%`, claimsPctAt(strict, STRICT_CLAIM)],
 ];
