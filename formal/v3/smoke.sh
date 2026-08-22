@@ -50,5 +50,9 @@ if has "$out" 'NO VERDICT'; then ok "emit-tex fails loud"; else bad "emit-tex fa
 rm -f fixtures/zz-tmp-broken.json
 rm -rf "$tmp"
 
+step "negtest-reporting: the reporters distinguish a false property from a blocked check"
+out=$(bash negtest-reporting.sh 2>&1 | tail -1)
+if has "$out" '0 missed'; then ok "reporting polarities"; else bad "reporting polarities"; printf '%s\n' "$out"; fi
+
 printf '\n%s\n' "$([ $fail -eq 0 ] && echo 'SMOKE OK' || echo 'SMOKE FAILED')"
 exit $fail

@@ -1,0 +1,26 @@
+# BASELINE - paper/build.sh reports a totals disagreement that does not exist
+# captured 2026-08-21T22:55:59-06:00 on 3fb901b
+
+$ ./paper/build.sh
+
+BUILD FAILED: a headline total disagrees with the verdicts
+exit=1
+
+# but the PDFs rendered and the references resolved:
+$ pdfinfo paper/atlas.pdf | grep Pages
+Pages:           39
+$ pdfinfo paper/supplement.pdf | grep Pages
+Pages:           120
+$ grep -c undefined paper/atlas.log
+0
+
+# the real cause, which line 49 discards with >/dev/null 2>&1:
+$ cd paper && node ../formal/v3/totalgate.mjs
+node:fs:1570
+  const result = binding.readdir(
+                         ^
+
+Error: EACCES: permission denied, scandir '/root/defiformal/expansion'
+    at Object.readdirSync (node:fs:1570:26)
+    at file:///home/charl/defiformal/formal/v3/totalgate.mjs:10:23
+    at ModuleJob.run (node:internal/modules/esm/module_job:439:25)

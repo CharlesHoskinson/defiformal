@@ -1,14 +1,29 @@
 import json
 import glob
+import os
+import sys
+import pathlib
 from itertools import combinations
 from fractions import Fraction
 
+# Resolve the corpus from this file's location, and refuse to report a result
+# over an empty one: the glob previously matched zero files on any tree but the
+# author's, printed "X21-armed pairs (60-app basis): 0 of 0" and exited 0 -- a
+# live pass with an empty denominator. Exit 3 means the check could not run.
+REPO = pathlib.Path(os.environ.get(
+    "DEFIFORMAL_ROOT", pathlib.Path(__file__).resolve().parents[3]))
+PATTERN = str(REPO / "expansion" / "*" / "specs" / "*.json")
+
 specs = {}
-for f in sorted(glob.glob("/root/DefiElements/expansion/*/specs/*.json")):
+for f in sorted(glob.glob(PATTERN)):
     d = json.load(open(f))
     specs[d.get("app", f)] = frozenset(d.get("construction", []))
 
-print("spec files:", len(specs))
+if not specs:
+    print("BLOCKED - no spec files matched", PATTERN, file=sys.stderr)
+    sys.exit(3)
+
+print("spec files:", len(specs), "(denominator)")
 distinct = set(specs.values())
 print("distinct construction sets:", len(distinct))
 print("C(distinct,2) =", len(distinct) * (len(distinct) - 1) // 2)

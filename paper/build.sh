@@ -4,7 +4,13 @@
 set -uo pipefail
 cd "$(dirname "$0")"
 
-die() { printf '\n\033[1;31mBUILD FAILED\033[0m: %s\n' "$1" >&2; exit 1; }
+# Two distinct failures, never merged. `die` means a check ran and the property
+# is false -- act on the manuscript. `blocked` means a check could not run at all
+# -- act on the environment. Reporting the second as the first once sent readers
+# hunting a totals disagreement that did not exist. Exit 3 for blocked follows
+# the negtest-*.sh convention ("PERTURBATION DID NOT APPLY", sys.exit(3)).
+die()     { printf '\n\033[1;31mBUILD FAILED\033[0m: %s\n' "$1" >&2; exit 1; }
+blocked() { printf '\n\033[1;33mCHECK BLOCKED\033[0m: %s\n' "$1" >&2; exit 3; }
 
 run_tex() {
   local pass="$1" log
@@ -36,17 +42,30 @@ undef=$(grep -c 'undefined' atlas.log 2>/dev/null || true)
 
 # the supplement carries the sixty profiles and is built from the same source
 sup_before=$(stat -c %Y supplement.pdf 2>/dev/null || echo 0)
-pdflatex -interaction=nonstopmode -halt-on-error supplement.tex >/dev/null 2>&1 \
-  || die "supplement.tex failed to build"
-pdflatex -interaction=nonstopmode -halt-on-error supplement.tex >/dev/null 2>&1 \
-  || die "supplement.tex failed on the second pass"
+sup_log=$(pdflatex -interaction=nonstopmode -halt-on-error supplement.tex 2>&1) || {
+  printf '%s\n' "$sup_log" | grep -E '^(!|l\.[0-9]+)' | head -20 >&2
+  die "supplement.tex failed to build"
+}
+sup_log=$(pdflatex -interaction=nonstopmode -halt-on-error supplement.tex 2>&1) || {
+  printf '%s\n' "$sup_log" | grep -E '^(!|l\.[0-9]+)' | head -20 >&2
+  die "supplement.tex failed on the second pass"
+}
 [ -f supplement.pdf ] || die "no supplement.pdf produced"
 sup_after=$(stat -c %Y supplement.pdf)
 [ "$sup_after" -gt "$sup_before" ] || die "supplement.pdf was not rewritten"
 sup_undef=$(grep -c 'undefined' supplement.log 2>/dev/null); sup_undef=${sup_undef:-0}
 [ "$sup_undef" = "0" ] || die "$sup_undef undefined reference(s) in the supplement"
 
-node ../formal/v3/totalgate.mjs >/dev/null 2>&1 || die "a headline total disagrees with the verdicts"
+# The gate's own diagnosis is the only thing that distinguishes a real totals
+# disagreement from an unreadable input, so it is never discarded.
+gate_out=$(node ../formal/v3/totalgate.mjs 2>&1); gate_rc=$?
+case "$gate_rc" in
+  0) ;;
+  1) printf '%s\n' "$gate_out" >&2
+     die "a headline total disagrees with the verdicts" ;;
+  *) printf '%s\n' "$gate_out" >&2
+     blocked "totalgate exited $gate_rc - the headline totals were NOT checked" ;;
+esac
 
 pages=$(pdfinfo atlas.pdf 2>/dev/null | awk '/^Pages/{print $2}')
 printf '\033[1;32mOK\033[0m  atlas.pdf: %s pages, %s bytes\n' "${pages:-?}" "$(stat -c%s atlas.pdf)"

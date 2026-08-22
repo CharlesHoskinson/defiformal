@@ -62,6 +62,11 @@ function main() {
     }
   }
   console.log(`\n${n} specs, ${bad} rejected`);
+  // Zero specs examined is not zero specs rejected. Exit 3 = could not check.
+  if (n === 0) {
+    console.error(`BLOCKED - no specs found in ${dir}; nothing was validated`);
+    process.exit(3);
+  }
   process.exit(bad ? 1 : 0);
 }
 if (import.meta.url === `file://${process.argv[1]}`) main();
