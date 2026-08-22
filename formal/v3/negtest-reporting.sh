@@ -43,6 +43,14 @@ want_not () { if printf '%s' "$2" | grep -qF -- "$3"; then missed "$1 -- $3 pres
 cleanup () { chmod -R u+rwX "$FX" 2>/dev/null; rm -rf "$FX"; }
 trap cleanup EXIT
 
+# A COMPLETE twelve-category fixture. Defined here, not mid-file: it is used by
+# 3b.4's control, which runs long before the section that first introduced it.
+mk_two () {   # $1 = dest
+  rm -rf "$1"; mkdir -p "$1/paper" "$1/expansion"
+  cp "$R/paper/atlas.tex" "$1/paper/atlas.tex"
+  cp -r "$R"/expansion/[0-9][0-9]-* "$1/expansion/" 2>/dev/null
+}
+
 build_fixture () {  # $1 = fixture dir; expansion symlinked, atlas.tex copied
   rm -rf "$1"; mkdir -p "$1/paper"
   ln -s "$R/expansion" "$1/expansion"
@@ -188,11 +196,25 @@ chmod 644 "$FX/inner1/expansion/01-spot-exchange/verdicts.json"
 want_rc  "inner through build.sh: exit code" 3 "$rc"
 want_not "inner through build.sh: no disagreement claim" "$out" "a headline total disagrees"
 
-# and the control for that control: with the fault CLEARED, the same one-slug
-# fixture must report a genuine disagreement, exit 1. Without this, 3b.4 would
-# pass against a build.sh that called everything blocked.
-out=$(cd "$R" && DEFIFORMAL_ROOT="$FX/inner1" ./paper/build.sh 2>&1); rc=$?
-want_rc  "inner control: readable one-slug fixture really disagrees" 1 "$rc"
+# The control for that control: without it, 3b.4 would pass against a build.sh
+# that called everything blocked. It used to use this one-slug fixture, but a
+# one-slug tree no longer reaches the comparison at all -- the denominator guard
+# blocks it (12 categories expected, 1 walked). A genuine disagreement now means
+# a COMPLETE corpus whose manuscript states the wrong number.
+mk_two "$FX/innerctl"
+python3 - "$FX/innerctl/paper/atlas.tex" <<'PY'
+import io, sys
+p = sys.argv[1]
+s = io.open(p, encoding="utf-8").read()
+old, new = "$1{,}259$", "$1{,}260$"
+if old not in s:
+    print("PERTURBATION DID NOT APPLY: anchor absent", file=sys.stderr); sys.exit(3)
+io.open(p, "w", encoding="utf-8").write(s.replace(old, new))
+PY
+out=$(cd "$R" && DEFIFORMAL_ROOT="$FX/innerctl" ./paper/build.sh 2>&1); rc=$?
+out=$(printf '%s' "$out" | sed 's/\x1b\[[0-9;]*m//g')
+want_rc  "inner control: a complete corpus really can disagree" 1 "$rc"
+want_has "inner control: and says so"  "$out" "a headline total disagrees"
 
 echo
 echo "===== 3d. the contract holds at the TYPE, not just the parse ====="
@@ -579,11 +601,6 @@ echo "===== 3h. a missing verdicts.json is a blocked check, not a disagreement =
 # BUILD FAILED: a headline total disagrees -- the published lie through the one
 # `continue` that had never been examined. Two slugs minimum, or the tot===0
 # guard returns 3 for an unrelated reason and the assertion locks nothing.
-mk_two () {   # $1 = dest
-  rm -rf "$1"; mkdir -p "$1/paper" "$1/expansion"
-  cp "$R/paper/atlas.tex" "$1/paper/atlas.tex"
-  cp -r "$R"/expansion/[0-9][0-9]-* "$1/expansion/" 2>/dev/null
-}
 mk_two "$FX/v1"; rm -f "$FX/v1/expansion/02-lending/verdicts.json"
 out=$(DEFIFORMAL_ROOT="$FX/v1" node formal/v3/totalgate.mjs 2>&1); rc=$?
 want_rc  "verdicts: a deleted verdicts.json blocks" 3 "$rc"
@@ -643,6 +660,55 @@ want_has "specs: missing dir keeps its own message" "$out" "cannot read specs fo
 mk_two "$FX/s5"
 DEFIFORMAL_ROOT="$FX/s5" node formal/v3/totalgate.mjs >/dev/null 2>&1
 want_rc "specs: intact corpus still passes (control)" 0 "$?"
+
+echo
+echo "===== 3k. completeness, not just non-emptiness ====="
+# Every guard before this round was count-based -- zero versus non-zero -- which
+# says nothing about four files of five, or about an array that is well-formed
+# and empty. Three defects of that shape, one of them a SILENT PASS.
+
+# (a) an empty verdicts array. `[]` IS an array, so the type check passed, the
+# loop ran zero times, tot/cov omitted the slug while approx still counted its
+# specs, and the comparison proceeded on a short total.
+mk_two "$FX/k1"; printf '[]' > "$FX/k1/expansion/02-lending/verdicts.json"
+out=$(DEFIFORMAL_ROOT="$FX/k1" node formal/v3/totalgate.mjs 2>&1); rc=$?
+want_rc  "complete: an empty verdicts array blocks" 3 "$rc"
+want_not "complete: empty verdicts is not a disagreement" "$out" "out of step"
+
+# (b) four of five spec files deleted -- one remains, so the zero-file guard
+# stays silent, approx comes up short and strict is compared.
+mk_two "$FX/k2"
+ls "$FX/k2/expansion/03-cdp-stablecoins/specs/"*.json | tail -4 | xargs rm -f
+out=$(DEFIFORMAL_ROOT="$FX/k2" node formal/v3/totalgate.mjs 2>&1); rc=$?
+want_rc  "complete: a partial specs/ blocks" 3 "$rc"
+want_has "complete: the denominator is what blocks" "$out" "the corpus is incomplete"
+want_not "complete: strict is not silently short" "$out" "FAIL strict coverage 29.0"
+
+# (c) THE SILENT PASS. An empty functionalObligations array in EVERY spec file:
+# each file is counted, no assignment is, and before this fix the gate reported
+# that every headline total agreed while having measured no assignment at all.
+mk_two "$FX/k3"
+for f in "$FX/k3/expansion/"*/specs/*.json; do
+  python3 - "$f" <<'PY'
+import json,sys
+p=sys.argv[1]
+d=json.load(open(p)); d["functionalObligations"]=[]
+json.dump(d,open(p,"w"))
+PY
+done
+out=$(DEFIFORMAL_ROOT="$FX/k3" node formal/v3/totalgate.mjs 2>&1); rc=$?
+want_rc  "complete: empty obligations everywhere blocks" 3 "$rc"
+want_not "complete: NOT a silent pass" "$out" "all headline totals agree"
+
+# (d) the gate states its denominator at all
+out=$(node formal/v3/totalgate.mjs 2>&1)
+want_has "complete: the gate reports spec files walked" "$out" "60 spec files"
+want_has "complete: the gate reports categories counted" "$out" "walked 12 categories"
+
+# control: intact corpus still passes
+mk_two "$FX/k4"
+DEFIFORMAL_ROOT="$FX/k4" node formal/v3/totalgate.mjs >/dev/null 2>&1
+want_rc "complete: intact corpus still passes (control)" 0 "$?"
 
 echo
 echo "===== 3i. loop2gate says plainly that no citation checker exists ====="

@@ -64,6 +64,12 @@ const readJson = (fp, what) => {
 };
 
 let tot = 0, cov = 0, inad = 0, assigned = 0, approx = 0;
+// The denominator the specs walk actually visited. Every guard before this one
+// was count-based -- zero versus non-zero -- which says nothing about four
+// files of five. A totals gate that will not state how many things it counted
+// cannot know it counted them all, so this number is checked against the
+// manuscript alongside the other totals.
+let specFiles = 0, slugsCounted = 0;
 for (const slug of slugs) {
   const vp = path.join(ROOT, slug, "verdicts.json");
   // existsSync returns false when the slug DIRECTORY is unreadable, so an
@@ -102,6 +108,10 @@ for (const slug of slugs) {
   }
   const verdicts = readJson(vp, "verdicts");
   if (!Array.isArray(verdicts)) blocked(`${vp} is not an array of verdicts`);
+  // `[]` IS an array, so the type check above passes and the loop below runs
+  // zero times: tot/cov silently omit this slug while approx still counts its
+  // specs, and the comparison proceeds on a short total.
+  if (!verdicts.length) blocked(`${vp} is empty; this category's obligations cannot be counted`);
   for (const v of verdicts) {
     if (v === null || typeof v !== "object") blocked(`${vp} holds a ${v === null ? "null" : typeof v} verdict`);
     if (!Number.isFinite(v.obligationsTotal) || !Number.isFinite(v.obligationsCovered)) {
@@ -127,10 +137,18 @@ for (const slug of slugs) {
   if (!specs.length) {
     blocked(`slug ${slug} has no *.json under specs/; its assignments cannot be counted`);
   }
+  slugsCounted++;
+  specFiles += specs.length;
   for (const f of specs) {
     const spec = readJson(path.join(sd, f), "spec");
     const obs = spec.functionalObligations;
     if (!Array.isArray(obs)) blocked(`${path.join(sd, f)} has no functionalObligations array`);
+    // Same shape again: `[]` passes the type check, the loop runs zero times,
+    // the file is counted but its assignments are not. One slug produces a
+    // FAIL-blame; ALL sixty produce a SILENT PASS -- the gate reporting that
+    // every total agrees while having measured no assignment at all.
+    // validate.mjs already rejects an empty FO array; this gate did not consult it.
+    if (!obs.length) blocked(`${path.join(sd, f)} has an empty functionalObligations array`);
     for (const o of obs) {
       if (o === null || typeof o !== "object") blocked(`${path.join(sd, f)} holds a null obligation`);
       if (!(o.elements || []).length) continue;
@@ -143,6 +161,20 @@ if (!Number.isFinite(tot) || !Number.isFinite(cov)) {
   blocked("a verdict carried a non-numeric obligation count; totals are not computable");
 }
 if (tot === 0) blocked(`examined ${slugs.length} slug(s) but 0 obligations - nothing to check`);
+
+// The denominator is a completeness question, not a manuscript question. Four
+// spec files of five left the zero-file guard silent, shortened `approx`, and
+// published a strict-coverage disagreement about a corpus the gate had not
+// finished reading. A short walk means the measurement could not be completed:
+// exit 3, act on the environment -- never exit 1, which blames the manuscript.
+const EXPECT_CATEGORIES = 12, EXPECT_SPEC_FILES = 60;
+if (slugsCounted !== EXPECT_CATEGORIES) {
+  blocked(`walked ${slugsCounted} categories, expected ${EXPECT_CATEGORIES}; the corpus is incomplete`);
+}
+if (specFiles !== EXPECT_SPEC_FILES) {
+  blocked(`walked ${specFiles} spec files, expected ${EXPECT_SPEC_FILES}; the corpus is incomplete`);
+}
+console.log(`ok   walked ${slugsCounted} categories, ${specFiles} spec files`);
 
 const res = tot - cov, pct = (100 * cov / tot).toFixed(1);
 const strict = (100 * (cov - approx) / tot).toFixed(1);
