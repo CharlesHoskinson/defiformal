@@ -28,6 +28,17 @@ import { PARSED_NEW, MECH, CONSUME, ELEMS, bansCond, ungrounded } from "../v2/ta
 import { validate } from "./validate.mjs";
 import fs from "node:fs";
 
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+// Resolved from this file's own location so the harness runs in any clone.
+// Was "/root/DefiElements", which held gate.sh's claim checker, selftest and
+// smoke at BLOCKED on every machine but the author's.
+const SELF_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
+const REPO_ROOT = process.env.DEFIFORMAL_ROOT || SELF_ROOT;
+if (REPO_ROOT !== SELF_ROOT) {
+  console.error(`construct.mjs: NOTE - corpus from ${REPO_ROOT} (DEFIFORMAL_ROOT), not ${SELF_ROOT}`);
+}
+
 export const E = MECH.slice();
 export const asSet = a => new Set(a.filter(e => E.includes(e)));
 
@@ -56,7 +67,7 @@ export const cn = A => { const R = new Set(A); for (const a of A) for (const b o
 export const oplus = (A, B) => cn(new Set([...A, ...B]));
 
 /* ---------- the corpus, for the composition question */
-export function loadCorpus(root = "/root/DefiElements") {
+export function loadCorpus(root = REPO_ROOT) {
   const P = [];
   const L = `${root}/corpus50/lanes`;
   for (const f of fs.readdirSync(L).sort()) {

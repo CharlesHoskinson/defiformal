@@ -7,7 +7,15 @@ category pair. Both are checked here against the graphs themselves.
 import io, json, os, re, sys
 from collections import Counter, defaultdict
 
-ROOT = "/root/defiformal/expansion"
+import os
+import pathlib as _pathlib
+# Resolved from this file's own location; DEFIFORMAL_ROOT overrides and says so.
+_SELF = _pathlib.Path(__file__).resolve().parents[2]
+_REPO = _pathlib.Path(os.environ.get("DEFIFORMAL_ROOT", _SELF))
+if str(_REPO) != str(_SELF):
+    print("verify-graphs.py: NOTE - reading %s (DEFIFORMAL_ROOT), not %s" % (_REPO, _SELF),
+          file=__import__("sys").stderr)
+ROOT = "%s/expansion" % _REPO
 OUT = "%s/graphify-out" % ROOT
 LANES = ["01-spot-exchange", "02-lending", "03-cdp-stablecoins", "04-liquid-staking",
          "05-perpetuals", "06-yield-vaults", "07-bridges", "08-intents", "09-rwa",
