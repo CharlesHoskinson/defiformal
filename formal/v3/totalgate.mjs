@@ -216,7 +216,11 @@ try {
 // A LaTeX comment is never typeset, so it cannot carry a claim -- but a
 // first-match search finds it anyway. Strip comments before any claim matching.
 // `%` is only a comment when not escaped as `\%`.
-const visible = tex.replace(/(^|[^\\])%.*$/gm, "$1");
+// Backslash PARITY, not the single preceding character. An even number of
+// backslashes before % leaves the % live, so `\\%` (a table row's line break
+// followed by a comment) starts a real comment while `\%` is a literal percent.
+// Consume the pairs inside the match so both cases resolve correctly.
+const visible = tex.replace(/(^|[^\\])((?:\\\\)*)%.*$/gm, "$1$2");
 const block = (label, env) => {
   const at = visible.indexOf(`\\label{${label}}`);
   if (at < 0) blocked(`atlas.tex has no \\label{${label}}; the claim site is gone`);

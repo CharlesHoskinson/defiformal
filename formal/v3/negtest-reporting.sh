@@ -914,6 +914,47 @@ else
   caught "comment: the decoy is refused (exit $rc)"
 fi
 
+# The stripper tested ONE preceding character, but LaTeX comment semantics are
+# backslash PARITY: `\%` is a literal percent, `\\%` is a line break followed by
+# a LIVE comment. A decoy after a table row's `\\` was never stripped, and with
+# the real sentence reworded off the anchor it became the ONLY candidate --
+# uniqueness passed and the gate exited 0 over an inconsistent paper.
+mk_two "$FX/p1b"
+python3 - "$FX/p1b/paper/atlas.tex" <<'PYP'
+import io, sys
+p = sys.argv[1]
+s = io.open(p, encoding="utf-8").read()
+real = "The sixty constructions leave $689$ obligations that no element discharges."
+if real not in s:
+    print("PERTURBATION DID NOT APPLY: real sentence absent", file=sys.stderr); sys.exit(3)
+# reword the genuine sentence OFF the anchor
+s = s.replace(real, "These sixty constructions leave $690$ obligations that none discharges.", 1)
+# plant the decoy behind a DOUBLE backslash: `\\%` is a line break followed by a
+# LIVE comment, which the single-preceding-character stripper never removed.
+marker = "\\begin{document}"
+if marker not in s:
+    print("PERTURBATION DID NOT APPLY: no begin document", file=sys.stderr); sys.exit(3)
+s = s.replace(marker, marker + "\n\\\\% " + real, 1)
+io.open(p, "w", encoding="utf-8").write(s)
+PYP
+out=$(DEFIFORMAL_ROOT="$FX/p1b" node formal/v3/totalgate.mjs 2>&1); rc=$?
+want_rc  "parity: a decoy behind a double backslash is refused" 3 "$rc"
+want_not "parity: not reported as agreement" "$out" "all headline totals agree"
+
+# the parity rule itself, both polarities, on the exact shapes that matter
+node -e '
+const strip = t => t.replace(/(^|[^\\])((?:\\\\)*)%.*$/gm, "$1$2");
+const cases = [
+  ["plain % c",              "plain ",              "0 backslashes strips"],
+  ["esc \\% literal",         "esc \\% literal",      "1 backslash keeps"],
+  ["row \\\\% decoy",          "row \\\\",             "2 backslashes strips"],
+  ["deep \\\\\\% literal",      "deep \\\\\\% literal",  "3 backslashes keeps"],
+];
+let bad = 0;
+for (const [i, w, why] of cases) { if (strip(i) !== w) { bad++; console.log("BAD " + why); } }
+process.exit(bad ? 1 : 0);
+' && caught "parity: the stripping rule is correct at 0/1/2/3 backslashes"   || missed "parity: the stripping rule is wrong at some backslash count"
+
 # a duplicated VISIBLE claim is ambiguous, not a pass: the gate cannot tell
 # which sentence the reader sees.
 mk_two "$FX/p2"
