@@ -155,6 +155,15 @@ export const bansCond = S => {
 const RISKG = new Set(["G05", "G06", "G07", "G13", "G16"]);
 export const ungrounded = S => [...S].some(e => RISKG.has(ELEMS[e].group)) && ![...S].some(e => ELEMS[e].stratum <= 2);
 
+// SUPERSEDED for anything the paper reports. This reads gammaOpen, i.e. the
+// reduced 11-row L*; every published figure is computed against the recorded
+// 29-row system through formal/v3/construct.mjs's `admissibility`. The two
+// disagree on 387 of the 30,856 subsets tested, and the disagreement reaches the
+// results: under L* the applied section's agreement on {Ct, Ex, Li} weakens to
+// {Ct} and Ct becomes primitive in a fourth protocol (REFEREE-B, B4). Kept
+// because the L* comparison is itself reported as a robustness check -- use it
+// deliberately, not by reaching for the first admissibility predicate in the
+// repository. See paper/atlas.tex, remark [Method].
 export function admissible(S, parts = false) {
   const f = gammaOpen(S), w = unwarranted(S), h = bansCond(S), g = ungrounded(S);
   const ok = !(f.length || w.length || h.length || g);

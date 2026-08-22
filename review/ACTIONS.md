@@ -18,6 +18,9 @@
 
 - **prop:perps false: seven perpetuals, not eight; Jupiter Perpetual Exchange excluded from its own enumeration.** ACTIONED, and the exception is now the result. Six order-book venues drop the same three mechanisms; Jupiter, the only oracle-priced pool venue, drops nothing because it carries Pm and no Pf so no arc reaches them. The canonical form separates the two microstructures without being told about either.
 - **prop:ct: Ct is primitive in three protocols.** ACTIONED - Jupiter Perps, CIAN and Kalshi named.
+  Recorded ACTIONED before the manuscript was edited: atlas.tex still read "a primitive in none"
+  at two sites and titled the measurement "never primitive" until the law-table commit. The
+  three protocols were recomputed at that point and confirmed under the 29-row system.
 - **Arc count contradiction, 13 versus 15.** ACTIONED - one figure, twelve distinct arcs.
 - **59 percent and 90.3 percent stated as each other.** ACTIONED.
 - **meas:width has no producing code.** ACTIONED - downgraded to an explicitly indicative remark, and no inference depends on it.

@@ -50,6 +50,10 @@ export const openRequirements = X => PARSED_NEW.flatMap(l =>
 export const unwarranted = X => [...X].filter(e => CONSUME[e] && !CONSUME[e].some(c => X.has(c))).sort();
 export const armed = X => bansCond(X);
 
+// NORMATIVE. Reads openRequirements, i.e. the recorded 29-row system, which is
+// the table every published figure uses (paper/atlas.tex, remark [Method]).
+// formal/v2/tables.mjs's `admissible` is the L* variant and is superseded for
+// reporting purposes.
 export function admissibility(X) {
   const req = openRequirements(X), war = unwarranted(X), haz = armed(X), grd = ungrounded(X);
   return { admissible: !(req.length || war.length || haz.length || grd), req, war, haz, ground: grd };
