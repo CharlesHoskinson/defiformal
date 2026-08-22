@@ -70,8 +70,12 @@ for (const slug of slugs) {
   // EACCES here used to be silently skipped -- the slug's obligations vanished
   // from the totals and the short total was then reported as a disagreement.
   // Absent is a skip; unreadable is a blocked check.
+  const sdir = path.join(ROOT, slug);
+  let st;
+  try { st = fs.statSync(sdir); } catch (e) { blocked(`cannot stat slug ${slug}: ${e.code || e.message}`); }
+  if (!st.isDirectory()) continue;   // a slug-shaped file is not a category
   try {
-    fs.accessSync(path.join(ROOT, slug), fs.constants.R_OK | fs.constants.X_OK);
+    fs.accessSync(sdir, fs.constants.R_OK | fs.constants.X_OK);
   } catch (e) {
     blocked(`cannot enter slug ${slug}: ${e.code || e.message}`);
   }

@@ -9,7 +9,11 @@
 # Both are why every check below greps the WHOLE output and why the harness
 # names are asserted to exist before they are run.
 cd "$(dirname "$0")/../.." || exit 3
-if [ ! -s paper/atlas.tex ] || ! ls corpus50/lanes/*.json >/dev/null 2>&1; then
+# Same strength as gate.sh's: a look-alike tree of correctly-named files walked
+# past the weaker version and emitted "FAIL 61 of 72" about a corpus nothing read.
+if [ ! -s paper/atlas.tex ] || [ ! -d expansion ] || ! ls corpus50/lanes/*.json >/dev/null 2>&1 \
+   || ! grep -q 'begin{measurement}' paper/atlas.tex 2>/dev/null \
+   || [ ! -f formal/v2/pairs.mjs ]; then
   printf 'LOOP2 BLOCKED: %s is not a defiformal tree; nothing was measured\n' "$PWD" >&2
   exit 3
 fi
@@ -22,7 +26,7 @@ need () { [ -f "$1" ] || { echo "  FAIL missing script: $1"; fail=1; return 1; }
 # "Traceback" also appears when a harness ran and failed on content, and
 # classifying that as blocked would hide a real defect behind a reassuring word.
 blocked_out() {
-  printf '%s' "$1" | grep -qE 'Error: (EACCES|ENOENT)|ERR_MODULE_NOT_FOUND|Cannot find module|(PermissionError|FileNotFoundError|ModuleNotFoundError): \[?Errno|Permission denied|^totalgate: BLOCKED|GATE BLOCKED|LOOP2 BLOCKED'
+  printf '%s' "$1" | grep -qE 'Error: (EACCES|ENOENT)|ERR_MODULE_NOT_FOUND|Cannot find module|(PermissionError|FileNotFoundError|ModuleNotFoundError): \[?Errno|: Permission denied|cd: .*: Permission denied|^totalgate: BLOCKED|GATE BLOCKED|LOOP2 BLOCKED'
 }
 
 echo "===== 1. paper build"
@@ -41,24 +45,32 @@ echo "  undefined-reference lines: $(echo "$b" | grep -ciE 'undefined (reference
 
 echo
 echo "===== 2. the four harnesses (whole output searched, not the tail)"
+# Each harness is kept SEPARATE with its own exit code. Concatenating them and
+# judging blocked against the union let one broken sibling mask a real content
+# regression in a healthy harness as BLOCKED.
+declare -A HOUT HRC
 allout=""
 for h in pairs canonical safe antiexchange; do
-  need "formal/v2/$h.mjs" || continue
+  need "formal/v2/$h.mjs" || { HOUT[$h]="MISSING"; HRC[$h]=127; continue; }
+  HOUT[$h]="$(node formal/v2/$h.mjs 2>&1)"; HRC[$h]=$?
   allout="$allout
-$(node formal/v2/$h.mjs 2>&1)"
+${HOUT[$h]}"
 done
-want () { # label regex
-  # expected string wins first; only then may the blocked classifier speak.
-  if echo "$allout" | grep -qE "$2"; then echo "  ok   $1"
-  elif blocked_out "$allout"; then echo "  BLOCKED $1 (harness could not run; nothing measured)"; blkd=1
-  else echo "  FAIL $1 (/$2/ not in harness output)"; fail=1; fi
+want () { # label regex harness
+  local h="$3" out rc
+  out="${HOUT[$h]}"; rc="${HRC[$h]:-1}"
+  # expected string wins first; then this harness's OWN output decides blocked.
+  if printf '%s' "$out" | grep -qE "$2"; then echo "  ok   $1"
+  elif [ "${rc:-1}" != "0" ] && blocked_out "$out"; then
+    echo "  BLOCKED $1 ($h could not run; nothing measured)"; blkd=1
+  else echo "  FAIL $1 (/$2/ not in $h output)"; fail=1; fi
 }
-want "61 of 72 protocols satisfy laws+warrants" 'laws\+warrants: 61/72'
-want "1830 pairs"                               'pairs: 1830'
-want "185 failures"                             'fail: 185'
-want "20 of 61 universally composable"          'EVERY other in the corpus: 20/61'
-want "15 definite arcs"                         'arcs 15'
-want "0 anti-exchange violations"               'NON-unique: 0'
+want "61 of 72 protocols satisfy laws+warrants" 'laws\+warrants: 61/72' "pairs"
+want "1830 pairs"                               'pairs: 1830' "pairs"
+want "185 failures"                             'fail: 185' "pairs"
+want "20 of 61 universally composable"          'EVERY other in the corpus: 20/61' "safe"
+want "15 definite arcs"                         'arcs 15' "canonical"
+want "0 anti-exchange violations"               'NON-unique: 0' "antiexchange"
 
 echo
 echo "===== 3. every numeric claim recomputed from a committed script"

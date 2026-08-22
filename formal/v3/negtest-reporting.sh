@@ -220,16 +220,36 @@ printf '[{"obligationsTotal":"many","obligationsCovered":1,"verdict":"OK"}]' \
   > "$FX/t3/expansion/01-spot-exchange/verdicts.json"
 out=$(DEFIFORMAL_ROOT="$FX/t3" node formal/v3/totalgate.mjs 2>&1); rc=$?
 want_rc  "type: non-numeric obligation count" 3 "$rc"
+# The parent `!Number.isFinite(tot)` guard also returns 3 here, so exit code
+# alone does not lock the per-element check. Assert its OWN message.
+want_has "type: blocked BY the per-verdict check" "$out" "has a non-numeric obligation count"
 
 # 3d.4 an unreadable slug DIRECTORY. existsSync returns false here, so the slug
 # used to be silently skipped and its obligations vanished from the totals --
 # the short total was then compared and reported as a real disagreement.
-mk_real "$FX/t4"
-chmod 000 "$FX/t4/expansion/01-spot-exchange"
+# TWO slugs, deliberately. With one, an unreadable slug leaves zero obligations
+# and the pre-existing tot===0 guard returns 3 regardless -- the assertion stays
+# green against the reverted fix and locks nothing. With two, the readable slug
+# still contributes, the short total is compared, and the unfixed code exits 1
+# with "out of step": the silent-skip disagreement this fix exists to prevent.
+rm -rf "$FX/t4"; mkdir -p "$FX/t4/paper" "$FX/t4/expansion"
+cp "$R/paper/atlas.tex" "$FX/t4/paper/atlas.tex"
+cp -r "$R/expansion/01-spot-exchange" "$FX/t4/expansion/"
+cp -r "$R/expansion/02-lending"       "$FX/t4/expansion/"
+chmod 000 "$FX/t4/expansion/02-lending"
 out=$(DEFIFORMAL_ROOT="$FX/t4" node formal/v3/totalgate.mjs 2>&1); rc=$?
-chmod 755 "$FX/t4/expansion/01-spot-exchange"
-want_rc  "type: unreadable slug directory" 3 "$rc"
+chmod 755 "$FX/t4/expansion/02-lending"
+want_rc  "type: unreadable slug among readable ones" 3 "$rc"
+want_has "type: names the slug it could not enter" "$out" "cannot enter slug 02-lending"
 want_not "type: unreadable slug is not silently skipped" "$out" "out of step"
+
+# a slug-shaped FILE is not a category and must be skipped, not blocked
+rm -rf "$FX/t5"; mkdir -p "$FX/t5/paper" "$FX/t5/expansion"
+cp "$R/paper/atlas.tex" "$FX/t5/paper/atlas.tex"
+cp -r "$R/expansion/01-spot-exchange" "$FX/t5/expansion/"
+: > "$FX/t5/expansion/99-not-a-dir"
+out=$(DEFIFORMAL_ROOT="$FX/t5" node formal/v3/totalgate.mjs 2>&1); rc=$?
+want_not "type: a slug-shaped file does not block the run" "$out" "cannot enter slug 99-not-a-dir"
 
 echo
 echo "===== 3e. loop2gate.sh derives its verdict from the exit code ====="
@@ -241,12 +261,37 @@ want_not "loop2gate: no longer hardcodes /root"  "$(cat formal/v3/loop2gate.sh)"
 # block AFTER the script's existing `exit`, so the new branch was dead code and
 # a grep for it still passed. Assert there is no statement after the terminal
 # exit, and assert the BLOCKED path actually reaches stdout.
-tail_after=$(awk '/^===== LOOP-2 RESULT|^  printf .===== LOOP-2 RESULT/{seen=1} seen&&/^exit /{after=1;next} after&&NF{print}' formal/v3/loop2gate.sh)
-if [ -z "$(printf '%s' "$tail_after" | tr -d '[:space:]')" ]; then
-  caught "loop2gate: no dead code after the terminal exit"
-else
-  missed "loop2gate: statements follow the terminal exit"
-fi
+# The previous version of this check looked for a line beginning `exit `, but
+# the terminal block puts `exit` on the same line as its printf, so the pattern
+# never matched and the assertion passed against ANY file -- including the dead
+# code it was written to catch. Behavioural instead: implant a marker after the
+# terminal block in a copy and confirm it never prints.
+# The probe needs a tree whose ../.. is a real defiformal root, or the sentinel
+# exits 3 first and BOTH the probe and its control pass/fail vacuously.
+probe_tree () {   # $1 = dest; symlinks only, nothing written inside the repo
+  rm -rf "$1"; mkdir -p "$1/formal/v3"
+  for d in paper expansion corpus50 research; do ln -s "$R/$d" "$1/$d"; done
+  ln -s "$R/formal/v2" "$1/formal/v2"
+  for f in "$R"/formal/v3/*; do
+    b=$(basename "$f"); [ "$b" = "loop2gate.sh" ] && continue
+    ln -s "$f" "$1/formal/v3/$b"
+  done
+}
+probe_tree "$FX/pdead"
+cp formal/v3/loop2gate.sh "$FX/pdead/formal/v3/loop2gate.sh"
+printf '\necho DEAD-CODE-MARKER\n' >> "$FX/pdead/formal/v3/loop2gate.sh"
+dout=$(bash "$FX/pdead/formal/v3/loop2gate.sh" 2>&1)
+want_not "loop2gate: nothing executes after the terminal block" "$dout" "DEAD-CODE-MARKER"
+want_not "loop2gate: dead-code probe reached the terminal block" "$dout" "is not a defiformal tree"
+
+# Control: the same marker placed BEFORE the terminal block MUST print. Without
+# this, the check above passes against a script that exited long before either
+# block -- which is exactly how the previous two versions of it were vacuous.
+probe_tree "$FX/plive"
+awk '/^if \[ "\$fail" -ne 0 \]; then/ && !d {print "echo DEAD-CODE-MARKER"; d=1} {print}' \
+  formal/v3/loop2gate.sh > "$FX/plive/formal/v3/loop2gate.sh"
+lout=$(bash "$FX/plive/formal/v3/loop2gate.sh" 2>&1)
+want_has "loop2gate: the dead-code probe can fail (control)" "$lout" "DEAD-CODE-MARKER"
 mkdir -p "$FX/orphan2"
 cp formal/v3/loop2gate.sh "$FX/orphan2/loop2gate.sh"
 out=$(cd "$FX/orphan2" && bash ./loop2gate.sh 2>&1); rc=$?
@@ -262,6 +307,39 @@ want_has "loop2gate: says BLOCKED"                  "$l2" "LOOP-2 RESULT: BLOCKE
 want_has "loop2gate: fail flag is zero"             "$l2" "fail=0"
 want_not "loop2gate: no stale-brief content verdict" "$l2" "FAIL section briefs are stale"
 want_not "loop2gate: no free-set content verdict"    "$l2" "FAIL free-set claim"
+
+# F1: a blocked sibling harness must not mask a measured content failure in a
+# healthy one. want() previously judged blocked against the union of all four.
+rm -rf "$FX/attrib"; mkdir -p "$FX/attrib"
+cat > "$FX/attrib/probe.sh" <<'SNIP'
+declare -A HOUT HRC
+HOUT[pairs]="pairs: 1830"; HRC[pairs]=0
+HOUT[safe]="Error [ERR_MODULE_NOT_FOUND]: Cannot find module"; HRC[safe]=1
+fail=0; blkd=0
+blocked_out() { printf '%s' "$1" | grep -qE 'ERR_MODULE_NOT_FOUND|Cannot find module'; }
+want () {
+  local h="$3" out rc
+  out="${HOUT[$h]}"; rc="${HRC[$h]:-1}"
+  if printf '%s' "$out" | grep -qE "$2"; then echo "ok $1"
+  elif [ "${rc:-1}" != "0" ] && blocked_out "$out"; then echo "BLOCKED $1"; blkd=1
+  else echo "FAIL $1"; fail=1; fi
+}
+want "healthy harness, wrong number" 'pairs: 9999' pairs
+want "genuinely blocked harness"     'EVERY other' safe
+SNIP
+aout=$(bash "$FX/attrib/probe.sh" 2>&1)
+want_has "attribution: a wrong number in a healthy harness is FAIL" "$aout" "FAIL healthy harness"
+want_has "attribution: the blocked harness is BLOCKED"              "$aout" "BLOCKED genuinely blocked"
+
+# F5: loop2gate's sentinel must be as strong as gate.sh's
+rm -rf "$FX/fake2"
+mkdir -p "$FX/fake2/paper" "$FX/fake2/corpus50/lanes" "$FX/fake2/formal/v3"
+echo "hello atlas" > "$FX/fake2/paper/atlas.tex"
+echo '{}' > "$FX/fake2/corpus50/lanes/x.json"
+cp formal/v3/loop2gate.sh "$FX/fake2/formal/v3/loop2gate.sh"
+out=$(cd "$FX/fake2/formal/v3" && bash ./loop2gate.sh 2>&1); rc=$?
+want_rc  "loop2gate sentinel: look-alike tree is blocked" 3 "$rc"
+want_not "loop2gate sentinel: emits no corpus verdict"    "$out" "FAIL 61 of 72"
 
 echo
 echo "===== 3f. the inline blocked_out sites are inverted too ====="
