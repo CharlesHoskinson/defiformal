@@ -10,11 +10,11 @@
 # the repository dirty and tripped gate.sh's cleanliness assertion.
 set -uo pipefail
 # Resolved from this script's own location; see merged-fresh.sh.
-cd "$(dirname "$0")/../.." || exit 9
-[ -f formal/v3/brief-fresh.sh ] || { echo "SECTION BRIEFS BLOCKED: not the repository root"; exit 9; }
+cd "$(dirname "$0")/../.." || exit 3
+[ -f formal/v3/brief-fresh.sh ] || { echo "SECTION BRIEFS BLOCKED: not the repository root"; exit 3; }
 ROOT=$(pwd)
 
-B=$(mktemp -d) || exit 9
+B=$(mktemp -d) || exit 3
 restore () {
   for f in "$B"/*.md; do
     [ -e "$f" ] || continue
@@ -30,10 +30,10 @@ for d in expansion/*/; do
   [ -f "$d/SECTION-BRIEF.md" ] && cp "$d/SECTION-BRIEF.md" "$B/$s.md"
 done
 n=$(ls "$B" | wc -l)
-[ "$n" -gt 0 ] || { echo "SECTION BRIEFS BLOCKED: no briefs found"; exit 9; }
+[ "$n" -gt 0 ] || { echo "SECTION BRIEFS BLOCKED: no briefs found"; exit 3; }
 
 node formal/v3/section-brief.mjs "$ROOT/expansion" > /dev/null 2>&1 || {
-  echo "SECTION BRIEFS BLOCKED: generator failed (nothing measured)"; exit 9; }
+  echo "SECTION BRIEFS BLOCKED: generator failed (nothing measured)"; exit 3; }
 
 stale=0
 for f in "$B"/*.md; do

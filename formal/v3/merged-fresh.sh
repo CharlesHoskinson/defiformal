@@ -18,15 +18,15 @@ set -uo pipefail
 export PATH="$HOME/.local/bin:$PATH"
 # Resolved from this script's own location. A `cd` to a hardcoded root that does
 # not exist here is how this check spent its life reporting BLOCKED.
-cd "$(dirname "$0")/../.." || exit 9
-[ -f formal/v3/merged-fresh.sh ] || { echo "MERGED GRAPH CHECK BLOCKED: not the repository root"; exit 9; }
+cd "$(dirname "$0")/../.." || exit 3
+[ -f formal/v3/merged-fresh.sh ] || { echo "MERGED GRAPH CHECK BLOCKED: not the repository root"; exit 3; }
 
 M=expansion/graphify-out/merged-graph.json
-[ -f "$M" ] || { echo "MERGED GRAPH CHECK BLOCKED: $M absent"; exit 9; }
-BAK=$(mktemp) || exit 9
+[ -f "$M" ] || { echo "MERGED GRAPH CHECK BLOCKED: $M absent"; exit 3; }
+BAK=$(mktemp) || exit 3
 # Always restore: this check reports, it does not mutate the tree.
 trap 'cp "$BAK" "$M" 2>/dev/null; rm -f "$BAK"' EXIT
-cp "$M" "$BAK" || exit 9
+cp "$M" "$BAK" || exit 3
 
 graphify merge-graphs \
   expansion/01-spot-exchange/graphify-out/graph.json \
@@ -45,7 +45,7 @@ graphify merge-graphs \
 rc=$?
 if [ $rc -ne 0 ]; then
   echo "MERGED GRAPH CHECK BLOCKED: merge-graphs exited $rc (nothing measured)"
-  exit 9
+  exit 3
 fi
 
 python3 - "$BAK" "$M" <<'PY'

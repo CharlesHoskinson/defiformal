@@ -154,5 +154,5 @@ if (written === 0) {
   console.error(`section-brief.mjs: CORPUS ABSENT - no lane corpus at ${CORPUS_DIR}`);
   console.error(`  set DEFIFORMAL_CORPUS to the directory holding <NN-slug>.json`);
   console.error(`  wrote 0 of ${lanes.length} briefs; nothing was checked`);
-  process.exit(9);
+  process.exit(3);
 }

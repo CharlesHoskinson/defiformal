@@ -471,15 +471,34 @@ out=$(cd "$FX/orphan2" && bash ./loop2gate.sh 2>&1); rc=$?
 want_rc  "loop2gate orphan: exit code" 3 "$rc"
 want_not "loop2gate orphan: emits no build verdict" "$out" "FAIL build did not report OK"
 
-# Behavioural, not a source grep: on this tree many v3 harnesses cannot run, so
-# loop2gate must report BLOCKED with fail=0, never content verdicts about a
-# corpus nothing read. Before this fix it printed ten of them and exited 1.
-l2=$(bash formal/v3/loop2gate.sh 2>&1); l2rc=$?
+# Behavioural, not a source grep: on a tree whose harnesses cannot READ, loop2gate
+# must report BLOCKED with fail=0, never content verdicts about a corpus nothing
+# opened. Before that fix it printed ten of them and exited 1.
+#
+# This block used to run against the LIVE repository. That only passed because
+# dead /root/... roots stopped the harnesses running here -- an environmental
+# accident promoted to an expected result. Once the roots resolved from the
+# files' own locations the live tree ran, and all three failed. Build a tree that
+# is DELIBERATELY unreadable instead: expansion/ present so the tree sentinel
+# passes, empty so every corpus harness hits ENOENT.
+rm -rf "$FX/pblocked"; probe_tree "$FX/pblocked"
+rm -f "$FX/pblocked/expansion"; mkdir -p "$FX/pblocked/expansion"
+cp formal/v3/loop2gate.sh "$FX/pblocked/formal/v3/loop2gate.sh"
+l2=$(cd "$FX/pblocked" && bash formal/v3/loop2gate.sh 2>&1); l2rc=$?
 want_rc  "loop2gate: blocked tree gives exit 3, not 1" 3 "$l2rc"
 want_has "loop2gate: says BLOCKED"                  "$l2" "LOOP-2 RESULT: BLOCKED"
 want_has "loop2gate: fail flag is zero"             "$l2" "fail=0"
 want_not "loop2gate: no stale-brief content verdict" "$l2" "FAIL section briefs are stale"
 want_not "loop2gate: no free-set content verdict"    "$l2" "FAIL free-set claim"
+
+# The control the original had no way to state, because the live tree was the
+# subject. A fixture that reports BLOCKED proves nothing unless the same script
+# demonstrably runs somewhere: without this, re-breaking every root would leave
+# all five assertions above green.
+l2live=$(bash formal/v3/loop2gate.sh 2>&1)
+want_has "loop2gate control: the live tree runs checks, so BLOCKED means blocked" \
+         "$l2live" "  ok "
+rm -rf "$FX/pblocked"
 
 # F1: a blocked sibling harness must not mask a measured content failure in a
 # healthy one. want() previously judged blocked against the union of all four.
