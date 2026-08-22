@@ -5,9 +5,16 @@
 // laws, the warrants, grounding, a conditional prohibition or a listed one.
 import { readFileSync, readdirSync } from "node:fs";
 import { PARSED_NEW, MECH, CONSUME, bansCond, ungrounded, armedListed }
-  from "/root/DefiElements/formal/v2/tables.mjs";
+  from "../v2/tables.mjs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+// Resolved from this file's own location; DEFIFORMAL_ROOT overrides and says so.
+const SELF_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
+const REPO_ROOT = process.env.DEFIFORMAL_ROOT || SELF_ROOT;
+if (REPO_ROOT !== SELF_ROOT) console.error(`${path.basename(fileURLToPath(import.meta.url))}: NOTE - reading ${REPO_ROOT} (DEFIFORMAL_ROOT), not ${SELF_ROOT}`);
 
-const tex = readFileSync("/root/defiformal/paper/atlas.tex", "utf8");
+
+const tex = readFileSync(`${REPO_ROOT}/paper/atlas.tex`, "utf8");
 const E = MECH.slice();
 const S2 = a => new Set((a ?? []).filter(e => E.includes(e)));
 const sat = X => PARSED_NEW.every(l =>
@@ -15,8 +22,8 @@ const sat = X => PARSED_NEW.every(l =>
 const warranted = X => [...X].every(e => !CONSUME[e] || CONSUME[e].some(c => X.has(c)));
 
 const P = [];
-for (const f of readdirSync("/root/DefiElements/corpus50/lanes")) {
-  const d = JSON.parse(readFileSync(`/root/DefiElements/corpus50/lanes/${f}`, "utf8"));
+for (const f of readdirSync(`${REPO_ROOT}/corpus50/lanes`)) {
+  const d = JSON.parse(readFileSync(`${REPO_ROOT}/corpus50/lanes/${f}`, "utf8"));
   for (const c of d.categories) for (const p of c.protocols)
     P.push({ name: p.name, cat: c.category, S: S2(p.elements) });
 }

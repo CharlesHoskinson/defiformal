@@ -2,7 +2,7 @@
 // does not (L1a unsatisfied). Sampling 194,775 pairs from R: 1,923 fail intersection-closure,
 // 0 fail union-closure."
 import * as L from "./lib.mjs";
-import * as T from "/root/DefiElements/formal/v2/tables.mjs";
+import * as T from "../v2/tables.mjs";
 
 console.log("=== meas:closureprops ===\n");
 

@@ -1,7 +1,7 @@
 // Is R genuinely intersection-closed under PARSED_NEW, or is that an artifact
 // of restricting to size <= 3? A negative result the paper leans on must not be
 // replaced by a positive one on the strength of a small-size sample.
-import * as T from "/root/DefiElements/formal/v2/tables.mjs";
+import * as T from "../v2/tables.mjs";
 const E = T.MECH;
 
 const openP = X => T.PARSED_NEW.filter(l =>

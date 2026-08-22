@@ -4,10 +4,18 @@ Finds each emitted block by its first subsection, replaces it up to the next
 \\section, and leaves the authored lead-in paragraphs untouched.
 """
 import io, os, re, subprocess
+import os as _os, pathlib as _pl, sys as _sys
+# Resolved from this file's own location; DEFIFORMAL_ROOT overrides and says so.
+_SELF = _pl.Path(__file__).resolve().parents[2]
+_REPO = _pl.Path(_os.environ.get("DEFIFORMAL_ROOT", _SELF))
+if str(_REPO) != str(_SELF):
+    print("%s: NOTE - reading %s (DEFIFORMAL_ROOT), not %s"
+          % (_pl.Path(__file__).name, _REPO, _SELF), file=_sys.stderr)
 
-TEX = "/root/defiformal/paper/atlas.tex"
-ROOT = "/root/defiformal/expansion"
-V3 = "/root/defiformal/formal/v3"
+
+TEX = str(_REPO / "paper/atlas.tex")
+ROOT = str(_REPO / "expansion")
+V3 = str(_REPO / "formal/v3")
 
 s = io.open(TEX, encoding="utf-8").read()
 changed = 0

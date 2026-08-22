@@ -4,14 +4,29 @@
 # sums of the parts, which is exactly the check the domain graph passed while
 # carrying a dead URL: content can change without counts changing.
 #
-# Regenerate into place and require byte-equality, restoring on failure so the
-# check never leaves the tree worse than it found it.
+# Two defects were only visible once the check could run at all:
+#
+#   1. It compared bytes. graphify's serialiser formats differently across
+#      versions, so a tree with identical content -- 777 nodes, 684 links, zero
+#      added, removed or changed -- reported STALE. Compare canonicalised JSON
+#      instead: still sensitive to content, immune to whitespace and key order.
+#   2. It regenerated INTO PLACE and restored only when the generator failed, so
+#      a passing run left the repository dirty and tripped gate.sh's own
+#      cleanliness assertion. A read-only check must leave no trace: regenerate
+#      into scratch and always put the committed file back.
 set -uo pipefail
-export PATH=/root/.local/bin:$PATH
-cd /root/defiformal || exit 9
+export PATH="$HOME/.local/bin:$PATH"
+# Resolved from this script's own location. A `cd` to a hardcoded root that does
+# not exist here is how this check spent its life reporting BLOCKED.
+cd "$(dirname "$0")/../.." || exit 9
+[ -f formal/v3/merged-fresh.sh ] || { echo "MERGED GRAPH CHECK BLOCKED: not the repository root"; exit 9; }
 
 M=expansion/graphify-out/merged-graph.json
-cp "$M" /root/.merged-check.bak || exit 9
+[ -f "$M" ] || { echo "MERGED GRAPH CHECK BLOCKED: $M absent"; exit 9; }
+BAK=$(mktemp) || exit 9
+# Always restore: this check reports, it does not mutate the tree.
+trap 'cp "$BAK" "$M" 2>/dev/null; rm -f "$BAK"' EXIT
+cp "$M" "$BAK" || exit 9
 
 graphify merge-graphs \
   expansion/01-spot-exchange/graphify-out/graph.json \
@@ -29,33 +44,31 @@ graphify merge-graphs \
   --out "$M" > /dev/null 2>&1
 rc=$?
 if [ $rc -ne 0 ]; then
-  cp /root/.merged-check.bak "$M"
-  rm -f /root/.merged-check.bak
-  echo "MERGED GRAPH CHECK FAILED: merge-graphs exited $rc"
-  exit 1
+  echo "MERGED GRAPH CHECK BLOCKED: merge-graphs exited $rc (nothing measured)"
+  exit 9
 fi
 
-if cmp -s /root/.merged-check.bak "$M"; then
-  rm -f /root/.merged-check.bak
-  echo "MERGED GRAPH FRESH"
-  exit 0
-fi
-
-python3 - <<'PY'
-import io, json
-a = json.load(io.open("/root/.merged-check.bak", encoding="utf-8"))
-b = json.load(io.open("/root/defiformal/expansion/graphify-out/merged-graph.json",
-                      encoding="utf-8"))
+python3 - "$BAK" "$M" <<'PY'
+import io, json, sys
+def canon(p):
+    return json.dumps(json.load(io.open(p, encoding="utf-8")),
+                      sort_keys=True, separators=(",", ":"))
+a_raw = json.load(io.open(sys.argv[1], encoding="utf-8"))
+b_raw = json.load(io.open(sys.argv[2], encoding="utf-8"))
+if canon(sys.argv[1]) == canon(sys.argv[2]):
+    print("MERGED GRAPH FRESH (%d nodes / %d links, canonical compare)"
+          % (len(a_raw["nodes"]), len(a_raw["links"])))
+    sys.exit(0)
 print("  committed %d nodes / %d links   fresh %d / %d"
-      % (len(a["nodes"]), len(a["links"]), len(b["nodes"]), len(b["links"])))
-A = {str(n["id"]): n for n in a["nodes"]}
-B = {str(n["id"]): n for n in b["nodes"]}
+      % (len(a_raw["nodes"]), len(a_raw["links"]), len(b_raw["nodes"]), len(b_raw["links"])))
+A = {str(n["id"]): n for n in a_raw["nodes"]}
+B = {str(n["id"]): n for n in b_raw["nodes"]}
 ch = [k for k in A if k in B and A[k] != B[k]]
 print("  added %d, removed %d, changed %d"
       % (len(set(B) - set(A)), len(set(A) - set(B)), len(ch)))
 for k in ch[:4]:
     print("    " + k)
+print("MERGED GRAPH STALE")
+sys.exit(1)
 PY
-rm -f /root/.merged-check.bak
-echo "MERGED GRAPH STALE"
-exit 1
+exit $?

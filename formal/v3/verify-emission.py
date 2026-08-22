@@ -7,11 +7,19 @@ construction measurement, which holds every figure, must be byte-equal, and only
 the enumerated residue may be elided.
 """
 import io, os, re, subprocess, sys
+import os as _os, pathlib as _pl, sys as _sys
+# Resolved from this file's own location; DEFIFORMAL_ROOT overrides and says so.
+_SELF = _pl.Path(__file__).resolve().parents[2]
+_REPO = _pl.Path(_os.environ.get("DEFIFORMAL_ROOT", _SELF))
+if str(_REPO) != str(_SELF):
+    print("%s: NOTE - reading %s (DEFIFORMAL_ROOT), not %s"
+          % (_pl.Path(__file__).name, _REPO, _SELF), file=_sys.stderr)
 
-ROOT = "/root/defiformal/expansion"
-V3 = "/root/defiformal/formal/v3"
-art = io.open("/root/defiformal/paper/atlas.tex", encoding="utf-8").read()
-sup = io.open("/root/defiformal/paper/supplement.tex", encoding="utf-8").read()
+
+ROOT = str(_REPO / "expansion")
+V3 = str(_REPO / "formal/v3")
+art = io.open(str(_REPO / "paper/atlas.tex"), encoding="utf-8").read()
+sup = io.open(str(_REPO / "paper/supplement.tex"), encoding="utf-8").read()
 
 emitted = {}
 for slug in sorted(d for d in os.listdir(ROOT) if re.match(r"^\d\d-", d)):

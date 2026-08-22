@@ -10,8 +10,16 @@ The check is deliberately shallow: it asks whether the ingest saw the document a
 all, not whether it extracted it well.
 """
 import glob, io, json, os, re, sys
+import os as _os, pathlib as _pl, sys as _sys
+# Resolved from this file's own location; DEFIFORMAL_ROOT overrides and says so.
+_SELF = _pl.Path(__file__).resolve().parents[2]
+_REPO = _pl.Path(_os.environ.get("DEFIFORMAL_ROOT", _SELF))
+if str(_REPO) != str(_SELF):
+    print("%s: NOTE - reading %s (DEFIFORMAL_ROOT), not %s"
+          % (_pl.Path(__file__).name, _REPO, _SELF), file=_sys.stderr)
 
-ROOT = "/root/defiformal/expansion"
+
+ROOT = str(_REPO / "expansion")
 LANES = sorted(d for d in os.listdir(ROOT) if re.match(r"^\d\d-", d))
 
 fail = []
@@ -36,13 +44,13 @@ for slug in LANES:
 # No lane graph holds a spec node -- that is the division of labour, and saying
 # so here stops the next reader treating sixty files as missing.
 import glob as _glob
-dom = json.load(io.open("/root/defiformal/expansion/graphify-out/domain-graph.json",
+dom = json.load(io.open(str(_REPO / "expansion/graphify-out/domain-graph.json"),
                         encoding="utf-8"))
 prot_src = {n.get("source_file") for n in dom["nodes"] if n.get("kind") == "protocol"}
 specs = sorted(_glob.glob("expansion/*/specs/*.json"))
 import subprocess
 root = subprocess.run(["git", "rev-parse", "--show-toplevel"],
-                      capture_output=True, text=True, cwd="/root/defiformal").stdout.strip()
+                      capture_output=True, text=True, cwd=str(_REPO)).stdout.strip()
 specs = sorted(os.path.relpath(f, root) for f in
                _glob.glob(root + "/expansion/*/specs/*.json"))
 orphan = [f for f in specs if f not in prot_src]

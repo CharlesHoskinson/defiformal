@@ -4,8 +4,8 @@
 //
 // oplus(X,Y) = Cn(X u Y), so this is not the same as union-closure: Cn adds the
 // definite consequences, and the question is whether the result stays in P.
-import * as T from "/root/DefiElements/formal/v2/tables.mjs";
-import { inRW } from "/root/defiformal/formal/v3/lib.mjs";
+import * as T from "../v2/tables.mjs";
+import { inRW } from "./lib.mjs";
 
 const E = T.MECH;
 

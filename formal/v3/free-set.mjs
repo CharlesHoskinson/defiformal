@@ -1,8 +1,8 @@
 // Extend the 16-element free set as far as it goes. A free set is one whose
 // every subset is admissible; its powerset is then a union-closed family inside
 // Admf and can be exhibited by naming the elements.
-import * as T from "/root/DefiElements/formal/v2/tables.mjs";
-import { adm } from "/root/defiformal/formal/v3/lib.mjs";
+import * as T from "../v2/tables.mjs";
+import { adm } from "./lib.mjs";
 
 const E = T.MECH;
 let cur = ["Ag", "At", "Ba", "Cl", "Cp", "Ep", "In", "Ix",

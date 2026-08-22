@@ -6,7 +6,14 @@
 // Generate the appendix from the tables the scripts read, so the publication
 // carries the object its proofs are about.
 import { writeFileSync } from "node:fs";
-import * as T from "/root/DefiElements/formal/v2/tables.mjs";
+import * as T from "../v2/tables.mjs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+// Resolved from this file's own location; DEFIFORMAL_ROOT overrides and says so.
+const SELF_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
+const REPO_ROOT = process.env.DEFIFORMAL_ROOT || SELF_ROOT;
+if (REPO_ROOT !== SELF_ROOT) console.error(`${path.basename(fileURLToPath(import.meta.url))}: NOTE - reading ${REPO_ROOT} (DEFIFORMAL_ROOT), not ${SELF_ROOT}`);
+
 
 const esc = s => String(s)
   .replace(/\\/g, "\\textbackslash{}")
@@ -92,7 +99,7 @@ L.push("the article, in the proposition on the third clause class.");
 L.push("");
 
 const out = L.join("\n") + "\n";
-writeFileSync("/root/defiformal/paper/formal-data.tex", out);
+writeFileSync(`${REPO_ROOT}/paper/formal-data.tex`, out);
 console.log(`wrote paper/formal-data.tex: ${els.length} elements, ` +
             `${T.PARSED_NEW.length} requirement rows, ${cons.length} warrant entries, ` +
             `${haz.length} prohibition rows, ${out.length} bytes`);

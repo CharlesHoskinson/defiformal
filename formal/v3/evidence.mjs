@@ -6,8 +6,14 @@
  * claims are checkable from the publication rather than from a repository. */
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
+// Resolved from this file's own location; DEFIFORMAL_ROOT overrides and says so.
+const SELF_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
+const REPO_ROOT = process.env.DEFIFORMAL_ROOT || SELF_ROOT;
+if (REPO_ROOT !== SELF_ROOT) console.error(`${path.basename(fileURLToPath(import.meta.url))}: NOTE - reading ${REPO_ROOT} (DEFIFORMAL_ROOT), not ${SELF_ROOT}`);
 
-const ROOT = "/root/defiformal/expansion";
+
+const ROOT = `${REPO_ROOT}/expansion`;
 const esc = s => String(s)
   .replace(/\\/g, "\\textbackslash{}")
   .replace(/([&%$#_{}])/g, "\\$1")
@@ -44,5 +50,5 @@ for (const slug of fs.readdirSync(ROOT).filter(d => /^\d\d-/.test(d)).sort()) {
     out.push("\\end{itemize}", "");
   }
 }
-fs.writeFileSync("/root/evidence.tex", out.join("\n"));
+fs.writeFileSync(`${REPO_ROOT}/formal/v3/evidence.tex`, out.join("\n"));
 console.error(`evidence section: ${total} references, ${uniq.size} distinct sources`);

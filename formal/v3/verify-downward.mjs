@@ -3,7 +3,7 @@
  * The LISTED clutter is purely negative, so its model class must be downward
  * closed. The CONDITIONAL prohibitions carry negative literals in their
  * antecedents, so removing an element can arm one. Test each alone. */
-import { armedListed, bansCond, MECH } from "/root/defiformal/formal/v2/tables.mjs";
+import { armedListed, bansCond, MECH } from "../v2/tables.mjs";
 
 const U = ["Fl","Cp","Cl","Pl","Cd","Im","Xf","Rl","Of","Oa","Li","Ex","Aw","At"];
 const run = (name, pred) => {

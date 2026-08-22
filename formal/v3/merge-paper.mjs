@@ -9,12 +9,18 @@
  */
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
+// Resolved from this file's own location; DEFIFORMAL_ROOT overrides and says so.
+const SELF_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
+const REPO_ROOT = process.env.DEFIFORMAL_ROOT || SELF_ROOT;
+if (REPO_ROOT !== SELF_ROOT) console.error(`${path.basename(fileURLToPath(import.meta.url))}: NOTE - reading ${REPO_ROOT} (DEFIFORMAL_ROOT), not ${SELF_ROOT}`);
+
 
 const slug = process.argv[2];
 if (!slug) { console.error("usage: node merge-paper.mjs <slug>"); process.exit(2); }
 
 const src = `/mnt/c/defiformal-work/${slug}/paper.json`;
-const dir = `/root/defiformal/expansion/${slug}/specs`;
+const dir = `${REPO_ROOT}/expansion/${slug}/specs`;
 if (!fs.existsSync(src)) { console.error(`no paper.json for ${slug}`); process.exit(2); }
 if (!fs.existsSync(dir)) { console.error(`no specs dir for ${slug}`); process.exit(2); }
 

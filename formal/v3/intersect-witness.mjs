@@ -8,7 +8,7 @@
 // alternatives a1 != a2. Build A from {s,a1} and B from {s,a2}, each completed
 // to a model. Then s is in A n B, and if neither a1 nor a2 survives the
 // intersection, that term is open and A n B is not a model.
-import * as T from "/root/DefiElements/formal/v2/tables.mjs";
+import * as T from "../v2/tables.mjs";
 const E = T.MECH;
 
 const openP = X => T.PARSED_NEW.filter(l =>

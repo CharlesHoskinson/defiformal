@@ -11,8 +11,14 @@
  */
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
+// Resolved from this file's own location; DEFIFORMAL_ROOT overrides and says so.
+const SELF_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
+const REPO_ROOT = process.env.DEFIFORMAL_ROOT || SELF_ROOT;
+if (REPO_ROOT !== SELF_ROOT) console.error(`${path.basename(fileURLToPath(import.meta.url))}: NOTE - reading ${REPO_ROOT} (DEFIFORMAL_ROOT), not ${SELF_ROOT}`);
 
-const root = process.argv[2] || "/root/defiformal/expansion";
+
+const root = process.argv[2] || `${REPO_ROOT}/expansion`;
 const rows = [];
 for (const slug of fs.readdirSync(root).filter(d => /^\d\d-/.test(d))) {
   const vp = path.join(root, slug, "verdicts.json");

@@ -1,6 +1,6 @@
 // Replacement witnesses under PARSED_NEW for the proofs whose witnesses were
 // computed under LSTAR and are invalid under the recorded rows.
-import * as T from "/root/DefiElements/formal/v2/tables.mjs";
+import * as T from "../v2/tables.mjs";
 const E = T.MECH;
 
 const openP = X => T.PARSED_NEW.filter(l =>

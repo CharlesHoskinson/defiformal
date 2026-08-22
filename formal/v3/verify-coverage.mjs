@@ -6,9 +6,16 @@
 // arithmetic and nothing caught it, which is the same shape as the two law
 // systems.
 import { readFileSync, readdirSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+// Resolved from this file's own location; DEFIFORMAL_ROOT overrides and says so.
+const SELF_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
+const REPO_ROOT = process.env.DEFIFORMAL_ROOT || SELF_ROOT;
+if (REPO_ROOT !== SELF_ROOT) console.error(`${path.basename(fileURLToPath(import.meta.url))}: NOTE - reading ${REPO_ROOT} (DEFIFORMAL_ROOT), not ${SELF_ROOT}`);
 
-const ROOT = "/root/defiformal/expansion";
-const tex = readFileSync("/root/defiformal/paper/atlas.tex", "utf8");
+
+const ROOT = `${REPO_ROOT}/expansion`;
+const tex = readFileSync(`${REPO_ROOT}/paper/atlas.tex`, "utf8");
 let fail = 0;
 const say = (ok, m) => { console.log(`  ${ok ? "ok  " : "FAIL"} ${m}`); if (!ok) fail++; };
 

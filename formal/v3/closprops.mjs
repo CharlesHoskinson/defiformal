@@ -2,7 +2,7 @@
 // The paper states 179,864,061 pairs and 68,058 intersection failures; both are
 // LSTAR's. Recompute under PARSED_NEW, which is the system the paper says it
 // uses.
-import * as T from "/root/DefiElements/formal/v2/tables.mjs";
+import * as T from "../v2/tables.mjs";
 const E = T.MECH;
 
 const inR_L = X => T.gammaOpen(X).length === 0;

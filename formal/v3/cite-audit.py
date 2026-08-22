@@ -13,13 +13,21 @@ so the two together cover 120 of the 638 without overlap.
 """
 import glob, io, json, re, subprocess, sys
 from collections import OrderedDict, Counter
+import os as _os, pathlib as _pl, sys as _sys
+# Resolved from this file's own location; DEFIFORMAL_ROOT overrides and says so.
+_SELF = _pl.Path(__file__).resolve().parents[2]
+_REPO = _pl.Path(_os.environ.get("DEFIFORMAL_ROOT", _SELF))
+if str(_REPO) != str(_SELF):
+    print("%s: NOTE - reading %s (DEFIFORMAL_ROOT), not %s"
+          % (_pl.Path(__file__).name, _REPO, _SELF), file=_sys.stderr)
+
 
 import sys as _s
 OFFSET = int(_s.argv[1]) if len(_s.argv) > 1 else 5
 SAMPLE = int(_s.argv[2]) if len(_s.argv) > 2 else 60
 
 urls = OrderedDict()
-for f in sorted(glob.glob("/root/defiformal/expansion/*/specs/*.json")):
+for f in sorted(glob.glob(str(_REPO / "expansion/*/specs/*.json"))):
     spec = json.load(io.open(f, encoding="utf-8"))
     app = spec.get("app") or f.split("/")[-1]
     for o in spec.get("functionalObligations") or []:
@@ -32,7 +40,7 @@ sample = [k for i, k in enumerate(keys) if i % step == OFFSET % step][:SAMPLE]
 
 # Which strata have been audited before? Offsets are residue classes mod step,
 # so distinct offsets are disjoint by construction and the union is exact.
-LEDGER = "/root/defiformal/formal/v3/.cite-audit-offsets"
+LEDGER = str(_REPO / "formal/v3/.cite-audit-offsets")
 try:
     done = {int(x) for x in io.open(LEDGER).read().split() if x.strip()}
 except OSError:

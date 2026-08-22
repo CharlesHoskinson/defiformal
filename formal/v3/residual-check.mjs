@@ -5,7 +5,7 @@
 // the relation that pairs an element with the subjects that can require it:
 // e is "consumed by" s exactly when some law with subject s has a term in which
 // e appears as an alternative. Build that and compare.
-import * as T from "/root/DefiElements/formal/v2/tables.mjs";
+import * as T from "../v2/tables.mjs";
 
 const residual = {};
 for (const l of T.PARSED_NEW)
