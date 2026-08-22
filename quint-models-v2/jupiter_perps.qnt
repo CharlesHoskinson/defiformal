@@ -85,8 +85,6 @@ module jupiter_perps {
     lastAction != "liquidate" or lastActor == KEEPER
   val inv_all: bool = inv_open_has_size and inv_liq_auth
 
-  pure val t0_max_lev: bool = true
-
   action step: bool = any {
     nondet c = USERS.oneOf(); nondet s = SIZES.oneOf(); nondet col = COLLATERALS.oneOf(); openLong(c, s, col),
     nondet c = USERS.oneOf(); closePosition(c),

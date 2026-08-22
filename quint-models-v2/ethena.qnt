@@ -164,9 +164,6 @@ module ethena {
   val inv_all: bool =
     inv_usde_accounting and inv_mint_authority and inv_reward_authority
 
-  pure val t0_only_minter_mints: bool = true
-  pure val t0_1to1_mint_burn: bool = true
-
   action step: bool = any {
     nondet c = ACTORS.oneOf(); nondet w = ACTORS.oneOf(); setMinter(c, w),
     nondet c = ACTORS.oneOf(); nondet b = USERS.oneOf(); nondet a = AMOUNTS.oneOf(); mintUSDe(c, b, a),

@@ -148,8 +148,6 @@ module wbtc {
   val inv_all: bool =
     inv_confirm_auth and inv_reject_auth and inv_supply_nonneg
 
-  pure val t0_autonomy_false_for_mint: bool = true
-
   action step: bool = any {
     nondet c = ACTORS.oneOf(); nondet a = AMOUNTS.oneOf(); addMintRequest(c, a),
     nondet c = ACTORS.oneOf(); nondet i = REQ_IDS.oneOf(); confirmMint(c, i),
