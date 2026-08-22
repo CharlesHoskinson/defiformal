@@ -120,8 +120,17 @@ echo "===== 4. citations: every protocol design claim carries a URL and a date"
 # These two printed their output and set no verdict at all, so a crashed
 # citation checker could not prevent LOOP-2 RESULT: PASS. Route them through
 # one() like every other check.
-one "citation evidence" "node formal/v3/evidence.mjs" "evidence"
-one "citation URLs and dates" "node formal/v3/cites.mjs" "cites"
+# There is NO citation checker in this tree, and pretending otherwise is the
+# defect this gate exists to remove. evidence.mjs is the supplement emitter --
+# no process.exit, no throw, stderr always contains "evidence", so a one() on it
+# reports ok having verified nothing. cites.mjs likewise has no failure path and
+# never prints "cites", so a one() on it reports a false FAIL. Both also read a
+# foreign root. Say the true thing instead: this check does not exist.
+echo "  BLOCKED citations - no citation checker exists in this tree."
+echo "          evidence.mjs is the supplement emitter (no failure path);"
+echo "          cites.mjs has no failure path and reads a foreign root."
+echo "          Recorded in formal/v3/GATE-REGISTER.md as CANNOT FAIL."
+blkd=1
 
 echo
 echo "===== 5. paper shape"

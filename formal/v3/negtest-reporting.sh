@@ -573,6 +573,57 @@ want_not "validate: no '0 specs, 0 rejected' line" "$vout" "0 specs, 0 rejected"
 want_has "validate: says it was blocked"           "$vout" "BLOCKED"
 
 echo
+echo "===== 3h. a missing verdicts.json is a blocked check, not a disagreement ====="
+# Measured before fixing: 12 of 12 slugs carry a verdicts.json, so absence is a
+# corpus defect. Deleting one gave exit 1, "3 total(s) out of step", and
+# BUILD FAILED: a headline total disagrees -- the published lie through the one
+# `continue` that had never been examined. Two slugs minimum, or the tot===0
+# guard returns 3 for an unrelated reason and the assertion locks nothing.
+mk_two () {   # $1 = dest
+  rm -rf "$1"; mkdir -p "$1/paper" "$1/expansion"
+  cp "$R/paper/atlas.tex" "$1/paper/atlas.tex"
+  cp -r "$R"/expansion/[0-9][0-9]-* "$1/expansion/" 2>/dev/null
+}
+mk_two "$FX/v1"; rm -f "$FX/v1/expansion/02-lending/verdicts.json"
+out=$(DEFIFORMAL_ROOT="$FX/v1" node formal/v3/totalgate.mjs 2>&1); rc=$?
+want_rc  "verdicts: a deleted verdicts.json blocks" 3 "$rc"
+want_has "verdicts: names the slug"                 "$out" "02-lending has no verdicts.json"
+want_not "verdicts: not blamed on the manuscript"   "$out" "out of step"
+
+mk_two "$FX/v2"
+mv "$FX/v2/expansion/03-cdp-stablecoins/verdicts.json" "$FX/v2/expansion/03-cdp-stablecoins/verdicts.json.bak"
+out=$(DEFIFORMAL_ROOT="$FX/v2" node formal/v3/totalgate.mjs 2>&1); rc=$?
+want_rc  "verdicts: a renamed verdicts.json blocks" 3 "$rc"
+
+# and through build.sh, which is where the lie was actually published
+mk_two "$FX/v3"; rm -f "$FX/v3/expansion/05-perpetuals/verdicts.json"
+bout=$(cd "$R" && DEFIFORMAL_ROOT="$FX/v3" ./paper/build.sh 2>&1); brc=$?
+bout=$(printf '%s' "$bout" | sed 's/\x1b\[[0-9;]*m//g')
+want_rc  "verdicts: through build.sh, exit code" 3 "$brc"
+want_not "verdicts: build.sh does not blame the manuscript" "$bout" "a headline total disagrees"
+
+# control: the intact fixture must still pass, or the guard is always-on
+mk_two "$FX/v4"
+DEFIFORMAL_ROOT="$FX/v4" node formal/v3/totalgate.mjs >/dev/null 2>&1
+want_rc "verdicts: intact corpus still passes (control)" 0 "$?"
+
+echo
+echo "===== 3i. loop2gate says plainly that no citation checker exists ====="
+# Routing evidence.mjs / cites.mjs through one() replaced "no verdict" with a
+# WRONG verdict: evidence.mjs is the supplement emitter (no failure path, its
+# stderr always carries the needle) and cites.mjs never prints its needle and
+# cannot fail. On a host where /root/defiformal exists, one() would have called
+# the emitter ok and the checker FAIL.
+l2src=$(cat formal/v3/loop2gate.sh)
+want_not "citations: no one() on the emitter"  "$l2src" 'one "citation evidence"'
+want_not "citations: no one() on cites.mjs"    "$l2src" 'one "citation URLs'
+want_has "citations: states no checker exists" "$l2src" "no citation checker exists"
+# and both are registered as CANNOT FAIL rather than counted as gates
+reg=$(cat formal/v3/GATE-REGISTER.md)
+want_has "citations: evidence.mjs registered CANNOT FAIL" "$reg" "formal/v3/evidence.mjs"
+want_has "citations: cites.mjs registered CANNOT FAIL"    "$reg" "formal/v3/cites.mjs"
+
+echo
 echo "===== 3c. blocked_out must not hide a content failure ====="
 # blocked_out is a new lie in the opposite direction if it is over-broad: a
 # harness that RAN and got the wrong answer, but whose output also carries a

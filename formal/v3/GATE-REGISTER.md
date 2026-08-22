@@ -35,6 +35,9 @@ false · `3` check could not be performed. Exit 3 follows the pre-existing
 | `formal/v3/validate.mjs` | Rejects malformed construction specs | Yes, both polarities | Real spec dir → exit 0; empty dir → exit 3. Unblocked by the `formal/v2` root fix; the guard the previous change could only *record* is now demonstrated | `DISCRIMINATES` |
 | `research/positive-program/basis/denominators.py` | Ten-protocol generation rate (`v2 119/716 = 16.6%`) | Yes | Missing IR → exit 1; `UNGEN_V1/V2` mismatch → exit 1 | `DISCRIMINATES` those two. **The 16.6% figure itself is not a threshold** — any rate prints and exits 0 |
 
+| `formal/v3/evidence.mjs` | cited by loop2gate §4 as a citation check | **No** — it is the supplement *emitter*, not a checker: no `process.exit`, no `throw`, and its stderr always contains the string a needle would match | — | `CANNOT FAIL` |
+| `formal/v3/cites.mjs` | cited by loop2gate §4 as a citation check | **No** — no failure path; prints `<-- invariant 5 violation` and still exits 0. Never emits the needle it was matched on | — | `CANNOT FAIL` |
+
 ## Rows that carry no evidence
 
 `gate12_deletion_ir.py` and `gate11a_census_v1.py` are `CANNOT FAIL`. Both write

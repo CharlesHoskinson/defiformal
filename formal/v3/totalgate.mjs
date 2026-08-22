@@ -92,7 +92,14 @@ for (const slug of slugs) {
   } catch (e) {
     blocked(`cannot enter slug ${slug}: ${e.code || e.message}`);
   }
-  if (!fs.existsSync(vp)) continue;
+  // Every category slug in this corpus carries a verdicts.json (12 of 12,
+  // measured). A missing one is a corpus defect, not a category that legitimately
+  // has no verdicts -- and skipping it drops that slug's obligations, so the
+  // short total is then compared and blamed on the manuscript. Deleting one
+  // produced exit 1 and "3 total(s) out of step" before this guard.
+  if (!fs.existsSync(vp)) {
+    blocked(`slug ${slug} has no verdicts.json; its obligations cannot be counted`);
+  }
   const verdicts = readJson(vp, "verdicts");
   if (!Array.isArray(verdicts)) blocked(`${vp} is not an array of verdicts`);
   for (const v of verdicts) {
