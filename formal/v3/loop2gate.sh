@@ -117,8 +117,11 @@ one "free-set conjecture matches the algebra" "node formal/v3/verify-freeset.mjs
 one "section briefs regenerate identically" "bash formal/v3/brief-fresh.sh" "SECTION BRIEFS FRESH"
 
 echo "===== 4. citations: every protocol design claim carries a URL and a date"
-need formal/v3/evidence.mjs && node formal/v3/evidence.mjs 2>&1 | tail -2
-need formal/v3/cites.mjs && node formal/v3/cites.mjs 2>&1 | grep -iE 'without|missing|no url|no date|aggregator' | head -4
+# These two printed their output and set no verdict at all, so a crashed
+# citation checker could not prevent LOOP-2 RESULT: PASS. Route them through
+# one() like every other check.
+one "citation evidence" "node formal/v3/evidence.mjs" "evidence"
+one "citation URLs and dates" "node formal/v3/cites.mjs" "cites"
 
 echo
 echo "===== 5. paper shape"

@@ -319,6 +319,45 @@ else
   missed "could not lift loop2gate's blocked_out()"
 fi
 
+# --- lock the exit-code gating that round 7 measured as untested ----------
+# Reverting each of these left only the dirty-tree assertion red, i.e. the
+# headline fix of ab5f334 was locked by nothing. Each probe drives the REAL
+# function lifted from source.
+
+# (i) want()'s ok-path must require rc=0
+cat > "$FX/w_rc.sh" <<SNIP
+declare -A HOUT HRC
+HOUT[pairs]="pairs: 1830"; HRC[pairs]=7
+fail=0; blkd=0
+. "$FX/attrib/fns.sh"
+want "died but printed the needle" 'pairs: 1830' pairs
+SNIP
+wout=$(bash "$FX/w_rc.sh" 2>&1)
+want_not "want(): a dead harness is not ok on a stray needle" "$wout" "  ok   died but printed"
+
+# (ii) chk()'s BLOCKED branch must require a non-zero exit
+cat > "$FX/c_blk.sh" <<SNIP
+fail=0; blkd=0
+$(awk '/^blocked_out\(\) \{/,/^\}/' formal/v3/gate.sh)
+$(awk '/^chk\(\) \{/,/^\}/' formal/v3/gate.sh)
+chk "ran clean, wrong numbers, noisy" "computed 60 of 72
+Error: EACCES: permission denied" "61/72" 0
+SNIP
+cout=$(bash "$FX/c_blk.sh" 2>&1)
+want_not "chk(): a clean-exit content failure is not relabelled BLOCKED" "$cout" "  BLOCKED ran clean"
+want_has "chk(): it is reported as FAIL"                                  "$cout" "  FAIL ran clean"
+
+# (iii) the three inline gate.sh ladders must require rc=0 before ok
+for pair in "cl:109-claim checker:, 0 failed" "sm:smoke:SMOKE OK" "gr:graph claims:GRAPH CLAIMS VERIFIED"; do
+  v=${pair%%:*}; rest=${pair#*:}; lbl=${rest%%:*}; ndl=${rest#*:}
+  ladder=$(grep -n "${v}rc:-1" formal/v3/gate.sh | head -1)
+  if printf '%s' "$ladder" | grep -q '= "0" \] &&'; then
+    caught "inline $lbl requires a zero exit before ok"
+  else
+    missed "inline $lbl issues ok without checking ${v}rc"
+  fi
+done
+
 # E: gate.sh's chk() must not call a non-zero harness ok on a stray needle
 gchk=$(awk '/^chk\(\) \{/,/^\}/' formal/v3/gate.sh)
 if printf '%s' "$gchk" | grep -q '\${4:-0}'; then
@@ -435,7 +474,16 @@ lift () { # $1 = file, $2 = function name, $3 = dest
   awk -v fn="$2" 'index($0, fn "()")==1 || index($0, fn " ()")==1 {inside=1}
                   inside {print}
                   inside && /^\}/ {exit}' "$1" > "$3"
-  [ -s "$3" ] && [ "$(tail -1 "$3")" = "}" ] && grep -qc . "$3"
+  # `tail -1 == }` alone is NOT enough. A one-lined definition has no terminator
+  # of its own, so the range runs on to the next function's closing brace: the
+  # tail check passes while the extract carries script body. Measured on a
+  # one-lined blocked_out: 40 lines, 5 of them body, and lift returned 0.
+  [ -s "$3" ] || return 1
+  [ "$(tail -1 "$3")" = "}" ] || return 1
+  # exactly one definition, and nothing that is plainly script body
+  [ "$(grep -cE '^[A-Za-z_][A-Za-z0-9_]* *\(\) *\{' "$3")" = "1" ] || return 1
+  grep -qE '^(echo|one |want "|chk "|===== |[a-z]+=\$\()' "$3" && return 1
+  return 0
 }
 : > "$FX/attrib/fns.sh"
 for fn in blocked_out want; do
@@ -453,6 +501,29 @@ if grep -qE '^(echo|one |want "|===== )' "$FX/attrib/fns.sh"; then
   missed "attribution probe: the lift swallowed script body beyond the function"
 else
   caught "attribution probe: the lift is bounded to the function body"
+fi
+# F3: the guards above have no positive control -- nothing proved they FIRE on a
+# defeating reformat, so the guard mechanism could be reverted with every
+# assertion staying green. Construct the reformat: a one-line definition has no
+# ^} terminator, which is what defeats a range-based lift.
+mkdir -p "$FX/reformat"
+# Collapse the whole blocked_out body onto one line -- the shape that has no
+# ^} terminator and therefore defeats a range-based lift.
+awk 'BEGIN{d=0}
+     /^blocked_out\(\) \{/ {d=1; printf "blocked_out() { printf %s \"$1\" | grep -q X; }  # one-lined\n", "'"'"'%s'"'"'"; next}
+     d && /^\}/ {d=0; next}
+     d {next}
+     {print}' formal/v3/loop2gate.sh > "$FX/reformat/l2.sh"
+if lift "$FX/reformat/l2.sh" blocked_out "$FX/reformat/out.sh"; then
+  missed "lift(): a one-lined definition is not detected (guard does not fire)"
+else
+  caught "lift(): a one-lined definition is refused (guard fires)"
+fi
+# and the control for the control: the unmodified file must still lift cleanly
+if lift formal/v3/loop2gate.sh blocked_out "$FX/reformat/ok.sh"; then
+  caught "lift(): the real definition still lifts (guard is not always-on)"
+else
+  missed "lift(): refuses the real definition"
 fi
 cat > "$FX/attrib/probe.sh" <<SNIP
 declare -A HOUT HRC
