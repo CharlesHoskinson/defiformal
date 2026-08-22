@@ -346,6 +346,24 @@ const RESIDUE_CLAIM  = /The sixty constructions leave[\s\S]{0,40}/;
 // Presence in the block was this figure's ONLY check, so a decoy elsewhere in
 // the block satisfied it while the stated figure was mutated.
 const APPROX_CLAIM   = /assigned rows,[\s\S]{0,20}/;
+
+// sec:extend states the residue and then splits it: "performed on the $385$ ...
+// The remaining $304$ are not classified here". The split must reconcile with
+// the residue total. It did not -- 385 + 301 = 686, which is the withdrawn
+// round-2 residue this gate blacklists as a literal, arrived at here by
+// addition and so invisible to the blacklist.
+const splitReconciles = () => {
+  const m = noConditional(
+    (visible.match(/The grouping below was performed on the[\s\S]{0,400}?not classified here/) || [""])[0],
+    "the sec:extend residue split");
+  if (!m) blocked("sec:extend no longer states the residue split where the gate expects it");
+  const nums = [...m.matchAll(/\$(\d+)\$/g)].map(x => Number(x[1]));
+  if (nums.length < 2) {
+    blocked(`the sec:extend split states ${nums.length} figure(s); the gate cannot reconcile it`);
+  }
+  const classified = nums[0], unclassified = nums[1];
+  return classified + unclassified === res;
+};
 // "The ledgers hold 1{,}259 obligations across 60 applications" -- a third site
 // for the flagship total, outside both meas:covsens and tab:categories. Found by
 // counting visible occurrences mechanically after hand enumeration missed it twice.
@@ -401,6 +419,7 @@ const must = [
   // res is stated in the table only.
   [`obligations total ${tot}`,   cellIs(2, tot) && claimsNumIn(tot, [COVSENS]) && claimsNumAt(tot, LEDGERS_CLAIM)],
   [`residue total ${res}`,       cellIs(4, res) && claimsNumAt(res, RESIDUE_CLAIM)],
+  [`sec:extend split sums to ${res}`, splitReconciles()],
   // The other two cells of the same total row. They were accumulated and never
   // compared, while the gate printed "all headline totals agree" -- vouching for
   // a row of which it had measured half.

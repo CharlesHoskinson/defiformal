@@ -1294,6 +1294,42 @@ DEFIFORMAL_ROOT="$FX/w4" node formal/v3/totalgate.mjs >/dev/null 2>&1
 want_rc "iff: the untouched manuscript still passes (control)" 0 "$?"
 
 echo
+echo "===== 3x. the sec:extend split must reconcile with the residue ====="
+# The section stated the residue as 689 and split it 385 + 301 = 686 -- the
+# withdrawn round-2 residue this gate blacklists as a LITERAL, arrived at here by
+# addition and so invisible to the blacklist. It stood until a reviewer summed it.
+mk_two "$FX/x1s"
+python3 - "$FX/x1s/paper/atlas.tex" <<'PYX'
+import io, sys
+p = sys.argv[1]
+s = io.open(p, encoding="utf-8").read()
+old = "remaining $304$ are not classified here"
+if old not in s:
+    print("PERTURBATION DID NOT APPLY", file=sys.stderr); sys.exit(3)
+io.open(p,"w",encoding="utf-8").write(s.replace(old, "remaining $301$ are not classified here", 1))
+PYX
+out=$(DEFIFORMAL_ROOT="$FX/x1s" node formal/v3/totalgate.mjs 2>&1); rc=$?
+want_rc  "split: a split that does not sum is caught" 1 "$rc"
+want_has "split: names the reconciliation" "$out" "FAIL sec:extend split sums to"
+
+# and if the section stops stating the split where the gate looks, that is a
+# blocked check -- not a silent pass
+mk_two "$FX/x2s"
+python3 - "$FX/x2s/paper/atlas.tex" <<'PYX'
+import io, sys
+p = sys.argv[1]
+s = io.open(p, encoding="utf-8").read()
+old = "The grouping below was performed on the"
+io.open(p,"w",encoding="utf-8").write(s.replace(old, "The classification was made over the", 1))
+PYX
+out=$(DEFIFORMAL_ROOT="$FX/x2s" node formal/v3/totalgate.mjs 2>&1); rc=$?
+want_rc  "split: a moved split statement blocks" 3 "$rc"
+
+mk_two "$FX/x3s"
+DEFIFORMAL_ROOT="$FX/x3s" node formal/v3/totalgate.mjs >/dev/null 2>&1
+want_rc "split: the corrected paper passes (control)" 0 "$?"
+
+echo
 echo "===== 3i. loop2gate says plainly that no citation checker exists ====="
 # Routing evidence.mjs / cites.mjs through one() replaced "no verdict" with a
 # WRONG verdict: evidence.mjs is the supplement emitter (no failure path, its
