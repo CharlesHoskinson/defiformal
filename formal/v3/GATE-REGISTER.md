@@ -1,5 +1,9 @@
 # Gate register
 
+**See also:** `docs/wiki/` for why these rules exist, and
+`.claude/skills/defi-footguns/SKILL.md` for the symptom-first version that fires
+while you work.
+
 Every gate, what it claims, and whether it has been *observed* failing on a
 known-bad input. A checker never seen to fail is not evidence, and a row marked
 `CANNOT FAIL` contributes none to any claim in the paper.
