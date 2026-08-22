@@ -277,6 +277,28 @@ const STRICT_CLAIM   = /Counting those as residue gives[\s\S]{0,40}/;
 // edit shipped an internally inconsistent paper at exit 0 -- the mirror of the
 // defect the whole-document search had.
 const RESIDUE_CLAIM  = /The sixty constructions leave[\s\S]{0,40}/;
+// "The ledgers hold 1{,}259 obligations across 60 applications" -- a third site
+// for the flagship total, outside both meas:covsens and tab:categories. Found by
+// counting visible occurrences mechanically after hand enumeration missed it twice.
+const LEDGERS_CLAIM  = /The ledgers hold[\s\S]{0,40}/;
+// "and $29.0\%$ is the strict one" -- a second site for the strict figure, in
+// the remark following the measurement, outside COVSENS.
+const STRICT_REMARK  = /is the strict one/;
+const claimsPctAnywhereAt = (v, contextRe) => {
+  const esc = String(v).replace(".", "\\.");
+  const all = visible.match(new RegExp(contextRe.source, "g"));
+  if (!all || !all.length) {
+    blocked(`atlas.tex no longer states this figure where the gate expects it: ${contextRe}`);
+  }
+  if (all.length > 1) {
+    blocked(`atlas.tex states this claim ${all.length} times; the gate cannot tell ` +
+            `which one is typeset: ${contextRe}`);
+  }
+  // the remark states the figure just before the phrase, so widen backwards
+  const at = visible.indexOf(all[0]);
+  const window = visible.slice(Math.max(0, at - 40), at + all[0].length);
+  return new RegExp(`(^|[^0-9.])${esc}\\\\%`).test(window);
+};
 const claimsNumAt = (n, contextRe) => {
   // Search the VISIBLE text, and require the claim to be unique. A first-match
   // search let a decoy -- in a comment, or simply earlier in the body -- stand
@@ -299,7 +321,7 @@ let bad = 0;
 const must = [
   // tot is stated twice: in meas:covsens and in the tab:categories total row.
   // res is stated in the table only.
-  [`obligations total ${tot}`,   claimsNumIn(tot, [COVSENS, CATTAB])],
+  [`obligations total ${tot}`,   claimsNumIn(tot, [COVSENS, CATTAB]) && claimsNumAt(tot, LEDGERS_CLAIM)],
   [`residue total ${res}`,       claimsNumIn(res, [CATTAB]) && claimsNumAt(res, RESIDUE_CLAIM)],
   // The other two cells of the same total row. They were accumulated and never
   // compared, while the gate printed "all headline totals agree" -- vouching for
@@ -307,7 +329,7 @@ const must = [
   [`covered total ${cov}`,       claimsNumIn(cov, [COVSENS, CATTAB])],
   [`inadmissible total ${inad}`, claimsNumIn(inad, [CATTAB])],
   [`coverage ${pct}%`,           claimsPctAt(pct, COVERAGE_CLAIM)],
-  [`strict coverage ${strict}%`, claimsPctAt(strict, STRICT_CLAIM)],
+  [`strict coverage ${strict}%`, claimsPctAt(strict, STRICT_CLAIM) && claimsPctAnywhereAt(strict, STRICT_REMARK)],
 ];
 for (const [what, ok] of must) {
   console.log(`${ok ? "ok  " : "FAIL"} ${what}`);

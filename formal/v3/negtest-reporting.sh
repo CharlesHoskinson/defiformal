@@ -1032,6 +1032,47 @@ DEFIFORMAL_ROOT="$FX/q4" node formal/v3/totalgate.mjs >/dev/null 2>&1
 want_rc "row: the untouched total row still passes (control)" 0 "$?"
 
 echo
+echo "===== 3r. the sites hand enumeration had missed ====="
+# Counting visible occurrences mechanically found a THIRD site for the flagship
+# total (atlas.tex:217) and a SECOND for the strict figure (:1314), both outside
+# every registered anchor. Hand enumeration had missed them twice.
+mk_two "$FX/r1"
+python3 - "$FX/r1/paper/atlas.tex" <<'PYR'
+import io, sys
+p = sys.argv[1]
+s = io.open(p, encoding="utf-8").read()
+old = "The ledgers hold 1{,}259"
+if old not in s:
+    print("PERTURBATION DID NOT APPLY", file=sys.stderr); sys.exit(3)
+io.open(p, "w", encoding="utf-8").write(s.replace(old, "The ledgers hold 1{,}260", 1))
+PYR
+out=$(DEFIFORMAL_ROOT="$FX/r1" node formal/v3/totalgate.mjs 2>&1); rc=$?
+want_rc  "sites: the ledgers-hold site is checked" 1 "$rc"
+want_has "sites: obligations total is what fails" "$out" "FAIL obligations total"
+
+mk_two "$FX/r2"
+python3 - "$FX/r2/paper/atlas.tex" <<'PYR'
+import io, sys
+p = sys.argv[1]
+s = io.open(p, encoding="utf-8").read()
+old = "is the strict one"
+if old not in s:
+    print("PERTURBATION DID NOT APPLY", file=sys.stderr); sys.exit(3)
+i = s.index(old)
+w = s[max(0,i-40):i]
+if "29.0" not in w:
+    print("PERTURBATION DID NOT APPLY: no figure before the phrase", file=sys.stderr); sys.exit(3)
+s = s[:max(0,i-40)] + w.replace("29.0", "29.1", 1) + s[i:]
+io.open(p, "w", encoding="utf-8").write(s)
+PYR
+out=$(DEFIFORMAL_ROOT="$FX/r2" node formal/v3/totalgate.mjs 2>&1); rc=$?
+want_rc  "sites: the strict-remark site is checked" 1 "$rc"
+
+mk_two "$FX/r3"
+DEFIFORMAL_ROOT="$FX/r3" node formal/v3/totalgate.mjs >/dev/null 2>&1
+want_rc "sites: the untouched manuscript still passes (control)" 0 "$?"
+
+echo
 echo "===== 3i. loop2gate says plainly that no citation checker exists ====="
 # Routing evidence.mjs / cites.mjs through one() replaced "no verdict" with a
 # WRONG verdict: evidence.mjs is the supplement emitter (no failure path, its
