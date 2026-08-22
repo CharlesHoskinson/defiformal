@@ -1,12 +1,19 @@
 // The witness for thm:noncong, from the corpus lanes where the named
 // decompositions actually live.
 import fs from "node:fs";
-import * as T from "/root/DefiElements/formal/v2/tables.mjs";
-import { adm, inR, inW, inH, grounded } from "/root/defiformal/formal/v3/lib.mjs";
+import * as T from "../v2/tables.mjs";
+import { adm, inR, inW, inH, grounded } from "./lib.mjs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+// Resolved from this file's own location; DEFIFORMAL_ROOT overrides and says so.
+const SELF_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
+const REPO_ROOT = process.env.DEFIFORMAL_ROOT || SELF_ROOT;
+if (REPO_ROOT !== SELF_ROOT) console.error(`${path.basename(fileURLToPath(import.meta.url))}: NOTE - reading ${REPO_ROOT} (DEFIFORMAL_ROOT), not ${SELF_ROOT}`);
+
 
 const CORPUS = [];
-for (const f of fs.readdirSync("/root/DefiElements/corpus50/lanes")) {
-  const d = JSON.parse(fs.readFileSync(`/root/DefiElements/corpus50/lanes/${f}`, "utf8"));
+for (const f of fs.readdirSync(`${REPO_ROOT}/corpus50/lanes`)) {
+  const d = JSON.parse(fs.readFileSync(`${REPO_ROOT}/corpus50/lanes/${f}`, "utf8"));
   for (const c of d.categories) for (const p of c.protocols)
     CORPUS.push({ name: p.name, els: p.elements ?? p.mechanisms ?? [] });
 }

@@ -1,7 +1,7 @@
 // Round 5, finding 1: the closure proposition's H witness is false.
 // It says {Cd,Cp,Fl,Im,Pl,St,Uc,Wg} and {Bs,Cd,Cl,Sl,Uc,Wg} lie in H.
-import * as T from "/root/DefiElements/formal/v2/tables.mjs";
-import { inH, inR, inW, adm } from "/root/defiformal/formal/v3/lib.mjs";
+import * as T from "../v2/tables.mjs";
+import { inH, inR, inW, adm } from "./lib.mjs";
 
 const S = a => new Set(a);
 const A = S(["Cd", "Cp", "Fl", "Im", "Pl", "St", "Uc", "Wg"]);

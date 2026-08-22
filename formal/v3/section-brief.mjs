@@ -8,17 +8,27 @@
  * the findings that are judgement rather than arithmetic - appended verbatim.
  */
 import fs from "node:fs";
-import path from "node:path";
 import { PARSED_NEW, MECH, ELEMS } from "../v2/tables.mjs";
 import { asSet, ex, admissibility, loadCorpus } from "./construct.mjs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+// Resolved from this file's own location; DEFIFORMAL_ROOT overrides and says so.
+const SELF_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
+const REPO_ROOT = process.env.DEFIFORMAL_ROOT || SELF_ROOT;
+if (REPO_ROOT !== SELF_ROOT) console.error(`${path.basename(fileURLToPath(import.meta.url))}: NOTE - reading ${REPO_ROOT} (DEFIFORMAL_ROOT), not ${SELF_ROOT}`);
 
-const root = process.argv[2] || "/root/defiformal/expansion";
-const CORPUS_DIR = "/mnt/c/defiformal-work/corpus";
+
+const root = process.argv[2] || `${REPO_ROOT}/expansion`;
+// The lane corpus is not committed to this repository. DEFIFORMAL_CORPUS
+// points at it; the default is the working tree it was authored against.
+const CORPUS_DIR = process.env.DEFIFORMAL_CORPUS || "/mnt/c/defiformal-work/corpus";
 const P = loadCorpus();
 
 const pct = (a, b) => b ? (100 * a / b).toFixed(1) + "%" : "n/a";
 
-for (const slug of fs.readdirSync(root).filter(d => /^\d\d-/.test(d))) {
+const lanes = fs.readdirSync(root).filter(d => /^\d\d-/.test(d));
+let written = 0;
+for (const slug of lanes) {
   const dir = path.join(root, slug);
   const cpath = path.join(CORPUS_DIR, `${slug}.json`);
   if (!fs.existsSync(cpath)) continue;
@@ -133,5 +143,16 @@ for (const slug of fs.readdirSync(root).filter(d => /^\d\d-/.test(d))) {
   }
 
   fs.writeFileSync(path.join(dir, "SECTION-BRIEF.md"), L.join("\n"));
+  written++;
   console.log(`${slug}: brief written (${L.length} lines)${V ? "" : " [no verdicts yet]"}`);
+}
+
+// Zero lanes written means the corpus was not found, not that the briefs are
+// current. Exiting 0 here is what made brief-fresh.sh vacuous: it diffed the
+// committed briefs against themselves and reported 12 of 12 identical.
+if (written === 0) {
+  console.error(`section-brief.mjs: CORPUS ABSENT - no lane corpus at ${CORPUS_DIR}`);
+  console.error(`  set DEFIFORMAL_CORPUS to the directory holding <NN-slug>.json`);
+  console.error(`  wrote 0 of ${lanes.length} briefs; nothing was checked`);
+  process.exit(3);
 }

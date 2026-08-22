@@ -1,6 +1,17 @@
 import pathlib
+import os as _os
+from pathlib import Path as _Path
+# Resolved from this file's own location, the pattern gate33_cert_check.py uses.
+# DEFIFORMAL_ROOT overrides and says so.
+_SELF = _Path(__file__).resolve().parents[3]
+_REPO = _Path(_os.environ.get("DEFIFORMAL_ROOT", _SELF))
+if str(_REPO) != str(_SELF):
+    import sys as _sys
+    print("%s: NOTE - reading %s (DEFIFORMAL_ROOT), not %s"
+          % (_Path(__file__).name, _REPO, _SELF), file=_sys.stderr)
 
-p = pathlib.Path("/root/DefiElements/research/positive-program/phase2/P2-FIDELITY.md")
+
+p = pathlib.Path(str(_REPO / "research/positive-program/phase2/P2-FIDELITY.md"))
 t = p.read_text(encoding="utf-8")
 
 banner = """> ## AMENDED 2026-08-05 after plan review (`P2-REVIEW.md`)

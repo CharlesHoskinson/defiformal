@@ -1,6 +1,6 @@
 /* Verify council findings 4, 5 and 6 against the predicates, not the prose. */
-import { asSet, admissibility, ex } from "/root/defiformal/formal/v3/construct.mjs";
-import { MECH, HAZ_PROJ } from "/root/defiformal/formal/v2/tables.mjs";
+import { asSet, admissibility, ex } from "./construct.mjs";
+import { MECH, HAZ_PROJ } from "../v2/tables.mjs";
 
 const A = a => admissibility(asSet(a));
 

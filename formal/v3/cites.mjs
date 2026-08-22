@@ -8,8 +8,14 @@
  */
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
+// Resolved from this file's own location; DEFIFORMAL_ROOT overrides and says so.
+const SELF_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
+const REPO_ROOT = process.env.DEFIFORMAL_ROOT || SELF_ROOT;
+if (REPO_ROOT !== SELF_ROOT) console.error(`${path.basename(fileURLToPath(import.meta.url))}: NOTE - reading ${REPO_ROOT} (DEFIFORMAL_ROOT), not ${SELF_ROOT}`);
 
-const root = process.argv[2] || "/root/defiformal/expansion";
+
+const root = process.argv[2] || `${REPO_ROOT}/expansion`;
 const URL_RE = /https?:\/\/[^\s)\]<>"']+/g;
 const DATE_RE = /\b20\d{2}-\d{2}-\d{2}\b/;
 

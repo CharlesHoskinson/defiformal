@@ -2,7 +2,7 @@
  * one for the footprint, one for composition. Every column computed. */
 import fs from "node:fs";
 import path from "node:path";
-import { asSet, admissibility, loadCorpus } from "/root/defiformal/formal/v3/construct.mjs";
+import { asSet, admissibility, loadCorpus } from "./construct.mjs";
 
 const NAME = {
   "01-spot-exchange": ["Spot exchange", "Spot DEX / AMM"],

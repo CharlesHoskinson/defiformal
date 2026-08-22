@@ -1,4 +1,4 @@
-import * as T from "/root/DefiElements/formal/v2/tables.mjs";
+import * as T from "../v2/tables.mjs";
 const E = T.MECH;
 
 // LSTAR rows are [id, subjects[], terms[][]]; PARSED_NEW rows are objects.

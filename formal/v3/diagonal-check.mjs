@@ -1,8 +1,8 @@
 // thm:bilattice turns on |R n W| >= 2: the diagonal is a product only if the
 // set has at most one element. Check the side condition rather than assert it,
 // and check the two obvious witnesses.
-import * as T from "/root/DefiElements/formal/v2/tables.mjs";
-import { inRW } from "/root/defiformal/formal/v3/lib.mjs";
+import * as T from "../v2/tables.mjs";
+import { inRW } from "./lib.mjs";
 
 const empty = new Set();
 const top = new Set(T.MECH);

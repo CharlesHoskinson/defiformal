@@ -1,9 +1,17 @@
 """Re-emit the four retained case studies in the article, and any stale profile
 in the supplement, from the current verdicts."""
 import io, os, re, subprocess
+import os as _os, pathlib as _pl, sys as _sys
+# Resolved from this file's own location; DEFIFORMAL_ROOT overrides and says so.
+_SELF = _pl.Path(__file__).resolve().parents[2]
+_REPO = _pl.Path(_os.environ.get("DEFIFORMAL_ROOT", _SELF))
+if str(_REPO) != str(_SELF):
+    print("%s: NOTE - reading %s (DEFIFORMAL_ROOT), not %s"
+          % (_pl.Path(__file__).name, _REPO, _SELF), file=_sys.stderr)
 
-ROOT = "/root/defiformal/expansion"
-V3 = "/root/defiformal/formal/v3"
+
+ROOT = str(_REPO / "expansion")
+V3 = str(_REPO / "formal/v3")
 
 emitted = {}
 for slug in sorted(d for d in os.listdir(ROOT) if re.match(r"^\d\d-", d)):
@@ -19,7 +27,7 @@ for slug in sorted(d for d in os.listdir(ROOT) if re.match(r"^\d\d-", d)):
         lab = re.search(r"\\label\{(sub:cat:[^}]*)\}", p)
         emitted[lab.group(1)] = p.strip()
 
-for path in ["/root/defiformal/paper/atlas.tex", "/root/defiformal/paper/supplement.tex"]:
+for path in [str(_REPO / "paper/atlas.tex"), str(_REPO / "paper/supplement.tex")]:
     s = io.open(path, encoding="utf-8").read()
     fixed = 0
     for lab, body in emitted.items():

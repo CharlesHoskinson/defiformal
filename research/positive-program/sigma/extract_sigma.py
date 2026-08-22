@@ -10,9 +10,20 @@ import subprocess
 import glob
 import os
 from collections import defaultdict, Counter
+import os as _os
+from pathlib import Path as _Path
+# Resolved from this file's own location, the pattern gate33_cert_check.py uses.
+# DEFIFORMAL_ROOT overrides and says so.
+_SELF = _Path(__file__).resolve().parents[3]
+_REPO = _Path(_os.environ.get("DEFIFORMAL_ROOT", _SELF))
+if str(_REPO) != str(_SELF):
+    import sys as _sys
+    print("%s: NOTE - reading %s (DEFIFORMAL_ROOT), not %s"
+          % (_Path(__file__).name, _REPO, _SELF), file=_sys.stderr)
 
-MODELS = "/root/DefiElements/quint-models"
-OUT = "/root/DefiElements/research/positive-program/sigma"
+
+MODELS = str(_REPO / "quint-models")
+OUT = str(_REPO / "research/positive-program/sigma")
 os.makedirs(OUT, exist_ok=True)
 
 specs = sorted(glob.glob(f"{MODELS}/L*/*.qnt"))

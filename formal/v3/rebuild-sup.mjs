@@ -1,11 +1,17 @@
 /* Rebuild the supplement with twelve category headings holding all sixty
  * profiles uniformly, then the evidence. Round 3, finding 5. */
 import fs from "node:fs";
-import path from "node:path";
 import { execFileSync } from "node:child_process";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+// Resolved from this file's own location; DEFIFORMAL_ROOT overrides and says so.
+const SELF_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
+const REPO_ROOT = process.env.DEFIFORMAL_ROOT || SELF_ROOT;
+if (REPO_ROOT !== SELF_ROOT) console.error(`${path.basename(fileURLToPath(import.meta.url))}: NOTE - reading ${REPO_ROOT} (DEFIFORMAL_ROOT), not ${SELF_ROOT}`);
 
-const ROOT = "/root/defiformal/expansion";
-const V3 = "/root/defiformal/formal/v3";
+
+const ROOT = `${REPO_ROOT}/expansion`;
+const V3 = `${REPO_ROOT}/formal/v3`;
 const NAME = {
   "01-spot-exchange": "Spot exchange", "02-lending": "Lending",
   "03-cdp-stablecoins": "Collateralised-debt stablecoins",
@@ -58,10 +64,10 @@ for (const [slug, title] of Object.entries(NAME)) {
   count += (out.match(/\\subsection\{/g) || []).length;
 }
 
-L.push(fs.readFileSync("/root/defiformal/paper/formal-data.tex", "utf8").trim());
+L.push(fs.readFileSync(`${REPO_ROOT}/paper/formal-data.tex`, "utf8").trim());
 L.push("");
-L.push(fs.readFileSync("/root/evidence.tex", "utf8").trim());
+L.push(fs.readFileSync(`${REPO_ROOT}/formal/v3/evidence.tex`, "utf8").trim());
 L.push("");
 L.push("\\end{document}");
-fs.writeFileSync("/root/defiformal/paper/supplement.tex", L.join("\n"));
+fs.writeFileSync(`${REPO_ROOT}/paper/supplement.tex`, L.join("\n"));
 console.log(`supplement rebuilt: 12 category headings, ${count} profiles`);

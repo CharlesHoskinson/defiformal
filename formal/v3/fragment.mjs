@@ -5,8 +5,8 @@
 // The cleanest witness is a set of elements E0 every subset of which is
 // admissible: its powerset is union-closed by construction and sits inside
 // Admf, so it exhibits 2^|E0| sets and can be printed in full.
-import * as T from "/root/DefiElements/formal/v2/tables.mjs";
-import { adm, inRW } from "/root/defiformal/formal/v3/lib.mjs";
+import * as T from "../v2/tables.mjs";
+import { adm, inRW } from "./lib.mjs";
 
 const E = T.MECH;
 

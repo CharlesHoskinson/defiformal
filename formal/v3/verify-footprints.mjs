@@ -5,14 +5,21 @@
 // 60 exhibited constructions. Its footprint column is therefore not the category
 // table's element column and the two must not be cross-checked.
 import { readFileSync, readdirSync } from "node:fs";
-import * as T from "/root/DefiElements/formal/v2/tables.mjs";
+import * as T from "../v2/tables.mjs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+// Resolved from this file's own location; DEFIFORMAL_ROOT overrides and says so.
+const SELF_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
+const REPO_ROOT = process.env.DEFIFORMAL_ROOT || SELF_ROOT;
+if (REPO_ROOT !== SELF_ROOT) console.error(`${path.basename(fileURLToPath(import.meta.url))}: NOTE - reading ${REPO_ROOT} (DEFIFORMAL_ROOT), not ${SELF_ROOT}`);
+
 const VOCAB = new Set(T.MECH);   // the corpus carries symbols outside the 58, e.g. Ve
 
-const tex = readFileSync("/root/defiformal/paper/atlas.tex", "utf8");
+const tex = readFileSync(`${REPO_ROOT}/paper/atlas.tex`, "utf8");
 
 const CORPUS = [];
-for (const f of readdirSync("/root/DefiElements/corpus50/lanes")) {
-  const d = JSON.parse(readFileSync(`/root/DefiElements/corpus50/lanes/${f}`, "utf8"));
+for (const f of readdirSync(`${REPO_ROOT}/corpus50/lanes`)) {
+  const d = JSON.parse(readFileSync(`${REPO_ROOT}/corpus50/lanes/${f}`, "utf8"));
   for (const c of d.categories)
     for (const p of c.protocols)
       CORPUS.push({ cat: c.category, syms: p.elements ?? [] });   // field read off the schema

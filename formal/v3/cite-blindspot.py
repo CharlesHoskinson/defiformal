@@ -8,9 +8,17 @@ behind them?
 import glob, io, json, re, subprocess
 from collections import Counter, OrderedDict
 from urllib.parse import urlparse
+import os as _os, pathlib as _pl, sys as _sys
+# Resolved from this file's own location; DEFIFORMAL_ROOT overrides and says so.
+_SELF = _pl.Path(__file__).resolve().parents[2]
+_REPO = _pl.Path(_os.environ.get("DEFIFORMAL_ROOT", _SELF))
+if str(_REPO) != str(_SELF):
+    print("%s: NOTE - reading %s (DEFIFORMAL_ROOT), not %s"
+          % (_pl.Path(__file__).name, _REPO, _SELF), file=_sys.stderr)
+
 
 urls = OrderedDict()
-for f in sorted(glob.glob("/root/defiformal/expansion/*/specs/*.json")):
+for f in sorted(glob.glob(str(_REPO / "expansion/*/specs/*.json"))):
     d = json.load(io.open(f, encoding="utf-8"))
     for o in d.get("functionalObligations") or []:
         for u in re.findall(r"https?://[^\s\"'<>\\]+", str(o.get("evidence") or "")):
@@ -19,7 +27,7 @@ for f in sorted(glob.glob("/root/defiformal/expansion/*/specs/*.json")):
 keys = list(urls)
 step = max(1, len(keys) // 60)
 done = [int(x) for x in
-        io.open("/root/defiformal/formal/v3/.cite-audit-offsets").read().split()]
+        io.open(str(_REPO / "formal/v3/.cite-audit-offsets")).read().split()]
 
 # hosts overall
 hosts = Counter(urlparse(u).netloc for u in keys)

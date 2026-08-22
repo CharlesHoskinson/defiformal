@@ -1,7 +1,7 @@
 // cor:ourconvex -- "D has 15 arcs and 58 strongly connected components, none non-trivial,
 // so it is acyclic; and Cn coincides with reachability in D (checked on 21,712 seeds)."
 import * as L from "./lib.mjs";
-import * as T from "/root/DefiElements/formal/v2/tables.mjs";
+import * as T from "../v2/tables.mjs";
 
 console.log("=== cor:ourconvex / thm:convex (definite fragment) ===\n");
 

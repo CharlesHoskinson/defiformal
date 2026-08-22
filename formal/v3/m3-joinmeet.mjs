@@ -1,7 +1,7 @@
 // prop:joinmeet -- "In R n W the join of A and B is A u B and the meet is Delta^omega(A n B).
 // Meet is not intersection: {Cp,Fl} and {Cl,Fl} both lie in R n W while {Fl} does not."
 import * as L from "./lib.mjs";
-import * as T from "/root/DefiElements/formal/v2/tables.mjs";
+import * as T from "../v2/tables.mjs";
 
 console.log("=== prop:joinmeet ===\n");
 

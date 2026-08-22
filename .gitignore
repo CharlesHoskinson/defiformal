@@ -12,7 +12,6 @@ paper/*.aux
 paper/*.log
 paper/*.out
 paper/*.toc
-paper/*.bbl
 paper/*.blg
 paper/*.fls
 paper/*.fdb_latexmk
@@ -32,7 +31,8 @@ graphify-out/cache/
 *.swp
 
 # Model-checker server output and run logs
-formal/_apalache-out/
+_apalache-out/
+**/_apalache-out/
 formal/*.log
 formal/**/*.log
 
@@ -40,10 +40,25 @@ formal/**/*.log
 # Rebuild with research/positive-program/tooling/clone_repos.sh
 protocol-repos/
 
-# Derived graph artefacts and the corpus split they are built from.
-# Rebuild with research/positive-program/tooling/split_tex.py + the graphify skill.
+# The corpus split is derived and rebuildable.
+# Rebuild with research/positive-program/tooling/split_tex.py.
 paper/kg-corpus/
-**/graphify-out/
+
+# graphify-out is NOT wholly derived, whatever its name suggests. The gate path
+# reads expansion/*/graphify-out/graph.json (verify-graphs.py, lane-coverage.py,
+# merged-fresh.sh) and GRAPH_REPORT.md (lane-coverage.py), so those are committed
+# inputs and ignoring them while depending on them is the contradiction this
+# resolves. Regenerating is not a substitute: merged-fresh.sh shows the generator
+# is not byte-reproducible across graphify versions. Only the content-addressed
+# cache below is genuinely disposable.
+**/graphify-out/cache/
 
 # Scratch
 tmp/
+
+# A Windows absolute path handed to a WSL-side tool is not a destination, it is
+# a filename: backslashes are ordinary characters there, so the tool creates a
+# file in the current directory whose NAME is the path. One 16,701-line scratch
+# chunk reached a commit that way. Refuse the shape.
+*C:\\Users\\*
+*\\scratchpad\\*

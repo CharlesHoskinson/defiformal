@@ -2,7 +2,7 @@
 // admissibility only once prohibitions are imposed."
 // PLUS: attribute the composition failures to the exact condition that fires.
 import * as L from "./lib.mjs";
-import * as T from "/root/DefiElements/formal/v2/tables.mjs";
+import * as T from "../v2/tables.mjs";
 
 console.log("=== cor:oplusclosed + failure attribution ===\n");
 

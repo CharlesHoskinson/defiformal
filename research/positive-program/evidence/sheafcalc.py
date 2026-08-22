@@ -1,7 +1,18 @@
 import json, glob, itertools, os
 from collections import defaultdict
+import os as _os
+from pathlib import Path as _Path
+# Resolved from this file's own location, the pattern gate33_cert_check.py uses.
+# DEFIFORMAL_ROOT overrides and says so.
+_SELF = _Path(__file__).resolve().parents[3]
+_REPO = _Path(_os.environ.get("DEFIFORMAL_ROOT", _SELF))
+if str(_REPO) != str(_SELF):
+    import sys as _sys
+    print("%s: NOTE - reading %s (DEFIFORMAL_ROOT), not %s"
+          % (_Path(__file__).name, _REPO, _SELF), file=_sys.stderr)
 
-specs = sorted(glob.glob('/root/DefiElements/expansion/*/specs/*.json'))
+
+specs = sorted(glob.glob(str(_REPO / "expansion/*/specs/*.json")))
 P = {}
 cat = {}
 for f in specs:
@@ -108,4 +119,4 @@ for e in Trig:
     h0+=comps; h1+=b1
     print("   element %-3s: |V_e|=%2d |E_e|=%3d  b0=%d  b1=%d" % (e,len(Ve),len(Ee),comps,b1))
 print("constant-sheaf H0 dim = %d, H1 dim = %d" % (h0,h1))
-json.dump({n:sorted(P[n]) for n in names}, open('/root/DefiElements/tmp/sheaf_corpus.json','w'), indent=0)
+json.dump({n:sorted(P[n]) for n in names}, open(str(_REPO / "tmp/sheaf_corpus.json"),'w'), indent=0)

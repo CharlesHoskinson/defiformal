@@ -8,10 +8,16 @@
  *   and are those elements load-bearing for admissibility, or just baggage?
  */
 import fs from "node:fs";
+import { asSet, admissibility } from "./construct.mjs";
 import path from "node:path";
-import { asSet, admissibility } from "/root/defiformal/formal/v3/construct.mjs";
+import { fileURLToPath } from "node:url";
+// Resolved from this file's own location; DEFIFORMAL_ROOT overrides and says so.
+const SELF_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
+const REPO_ROOT = process.env.DEFIFORMAL_ROOT || SELF_ROOT;
+if (REPO_ROOT !== SELF_ROOT) console.error(`${path.basename(fileURLToPath(import.meta.url))}: NOTE - reading ${REPO_ROOT} (DEFIFORMAL_ROOT), not ${SELF_ROOT}`);
 
-const root = "/root/defiformal/expansion";
+
+const root = `${REPO_ROOT}/expansion`;
 let apps = 0, withUnjust = 0, totalUnjust = 0;
 const byElement = {}, rows = [];
 

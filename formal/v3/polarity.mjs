@@ -5,9 +5,15 @@
  * A forbidden configuration F is the clause ¬F, so a purely conjunctive F of
  * positive atoms gives a purely negative clause, which is Horn.
  */
-import { asSet, admissibility } from "/root/defiformal/formal/v3/construct.mjs";
+import { asSet, admissibility } from "./construct.mjs";
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
+// Resolved from this file's own location; DEFIFORMAL_ROOT overrides and says so.
+const SELF_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
+const REPO_ROOT = process.env.DEFIFORMAL_ROOT || SELF_ROOT;
+if (REPO_ROOT !== SELF_ROOT) console.error(`${path.basename(fileURLToPath(import.meta.url))}: NOTE - reading ${REPO_ROOT} (DEFIFORMAL_ROOT), not ${SELF_ROOT}`);
+
 
 /* Each row as its forbidden configuration: positive atoms that must be present,
  * and negative atoms that must be ABSENT for the row to fire. */
@@ -34,7 +40,7 @@ for (const [id, r] of Object.entries(ROWS)) {
 
 /* attribute the observed failures */
 const P = [];
-const L = "/root/DefiElements/corpus50/lanes";
+const L = `${REPO_ROOT}/corpus50/lanes`;
 for (const f of fs.readdirSync(L).sort()) {
   const d = JSON.parse(fs.readFileSync(path.join(L, f), "utf8"));
   for (const c of d.categories) for (const p of c.protocols)

@@ -16,8 +16,19 @@ Criterion (reading (c), strengthened):
   free plumbing would make every spec trivially generated.
 """
 import json, os, collections, sys
+import os as _os
+from pathlib import Path as _Path
+# Resolved from this file's own location, the pattern gate33_cert_check.py uses.
+# DEFIFORMAL_ROOT overrides and says so.
+_SELF = _Path(__file__).resolve().parents[3]
+_REPO = _Path(_os.environ.get("DEFIFORMAL_ROOT", _SELF))
+if str(_REPO) != str(_SELF):
+    import sys as _sys
+    print("%s: NOTE - reading %s (DEFIFORMAL_ROOT), not %s"
+          % (_Path(__file__).name, _REPO, _SELF), file=_sys.stderr)
 
-IR = os.environ.get("GEN_IR", "/root/gen-ir")
+
+IR = os.environ.get("GEN_IR", str(_REPO / "research/positive-program/basis/gen-ir"))
 HARD = {"imul", "idiv", "imod", "ipow"}
 
 # ---------------------------------------------------------------- IR walking
@@ -299,4 +310,4 @@ for v in sorted(all_violations, key=lambda x: (x["cls"], x["lane"], x["spec"], x
 
 json.dump(dict(results={f"{k[0]}/{k[1]}": {"gen": r[0]} for k, r in results.items()},
                violations=all_violations),
-          open(os.environ.get("GEN_RESULT", "/root/RESULT.json"), "w"), indent=1)
+          open(os.environ.get("GEN_RESULT", str(_REPO / "research/positive-program/basis/RESULT.json")), "w"), indent=1)

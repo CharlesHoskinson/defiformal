@@ -6,9 +6,17 @@ category has five profiles somewhere in the submission, and that no label is
 duplicated within or across the two documents.
 """
 import io, re, sys
+import os as _os, pathlib as _pl, sys as _sys
+# Resolved from this file's own location; DEFIFORMAL_ROOT overrides and says so.
+_SELF = _pl.Path(__file__).resolve().parents[2]
+_REPO = _pl.Path(_os.environ.get("DEFIFORMAL_ROOT", _SELF))
+if str(_REPO) != str(_SELF):
+    print("%s: NOTE - reading %s (DEFIFORMAL_ROOT), not %s"
+          % (_pl.Path(__file__).name, _REPO, _SELF), file=_sys.stderr)
 
-art = io.open("/root/defiformal/paper/atlas.tex", encoding="utf-8").read()
-sup = io.open("/root/defiformal/paper/supplement.tex", encoding="utf-8").read()
+
+art = io.open(str(_REPO / "paper/atlas.tex"), encoding="utf-8").read()
+sup = io.open(str(_REPO / "paper/supplement.tex"), encoding="utf-8").read()
 
 secs = re.findall(r"\\section\{([^}]*)\}\\label\{sec:cat:([a-z]+)\}", art)
 labels_art = re.findall(r"\\label\{(sub:cat:[a-z]+:[a-z0-9]+)\}", art)

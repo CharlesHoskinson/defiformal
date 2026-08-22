@@ -118,7 +118,6 @@ module lista {
     USERS.forall(u => collat.get(u) >= 0 and debt.get(u) >= 0)
   val inv_all: bool = inv_safe_positions and inv_nonneg
 
-  pure val t0_min_cr_150: bool = true
   pure val t0_price_2: bool = (100 * 2 * 100) / 80 == 250
 
   action step: bool = any {

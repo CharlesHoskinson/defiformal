@@ -1,8 +1,8 @@
 // After pointing lib.mjs at PARSED_NEW, the structural harness and the
 // construction checker must decide requirement membership identically.
-import { inR } from "/root/defiformal/formal/v3/lib.mjs";
-import { openRequirements } from "/root/defiformal/formal/v3/construct.mjs";
-import * as T from "/root/DefiElements/formal/v2/tables.mjs";
+import { inR } from "./lib.mjs";
+import { openRequirements } from "./construct.mjs";
+import * as T from "../v2/tables.mjs";
 
 const E = T.MECH;
 let n = 0, bad = 0;

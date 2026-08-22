@@ -1,6 +1,6 @@
 // "The two differ on 675 of the 65,536 subsets" -- differ in WHAT? Test both
 // readings before calling the paper wrong.
-import * as T from "/root/DefiElements/formal/v2/tables.mjs";
+import * as T from "../v2/tables.mjs";
 
 const UNIV = ["Sh", "Ix", "Rb", "Pl", "Ct", "Ex", "Tp", "At",
               "Li", "Ad", "Sl", "Bs", "Wq", "Rd", "Im", "Ps"];

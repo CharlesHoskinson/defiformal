@@ -98,24 +98,28 @@ module usd1 {
     lastAction' = "unpause",
   }
 
-  action transfer(caller: str, recipient: str, amt: int): bool = all {
-    PRINCIPALS.contains(caller),
-    PRINCIPALS.contains(recipient),
-    AMOUNTS.contains(amt),
-    not(paused),
-    not(frozen.get(caller)),
-    not(frozen.get(recipient)),
-    balances.get(caller) >= amt,
-    balances' = balances
-      .put(caller, balances.get(caller) - amt)
-      .put(recipient, balances.get(recipient) + amt),
-    frozen' = frozen,
-    paused' = paused,
-    owner' = owner,
-    totalSupply' = totalSupply,
-    lastActor' = caller,
-    lastAction' = "transfer",
-  }
+  // Debit first, then credit the DEBITED map. Reading `balances` for both sides
+  // let a self-transfer mint: with caller == recipient the second put discarded
+  // the first, taking owner from 10 to 20 while totalSupply stayed 10. Sequenced
+  // this way a self-transfer is a no-op, which is what it should be.
+  action transfer(caller: str, recipient: str, amt: int): bool =
+    val debited = balances.put(caller, balances.get(caller) - amt)
+    all {
+      PRINCIPALS.contains(caller),
+      PRINCIPALS.contains(recipient),
+      AMOUNTS.contains(amt),
+      not(paused),
+      not(frozen.get(caller)),
+      not(frozen.get(recipient)),
+      balances.get(caller) >= amt,
+      balances' = debited.put(recipient, debited.get(recipient) + amt),
+      frozen' = frozen,
+      paused' = paused,
+      owner' = owner,
+      totalSupply' = totalSupply,
+      lastActor' = caller,
+      lastAction' = "transfer",
+    }
 
   pure def sumBalances(b: str -> int): int =
     PRINCIPALS.fold(0, (acc, p) => acc + b.get(p))
@@ -124,8 +128,6 @@ module usd1 {
   val inv_owner_only_mint_ghost: bool =
     lastAction != "mint" or lastActor == owner
   val inv_all: bool = inv_supply and inv_owner_only_mint_ghost
-
-  pure val t0_mint_owner: bool = true
 
   action step: bool = any {
     nondet c = PRINCIPALS.oneOf(); nondet a = AMOUNTS.oneOf(); mint(c, a),

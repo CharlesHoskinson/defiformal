@@ -1,5 +1,5 @@
 // v3 shared harness. Model classes (not operators), per paper section "Model classes, not operators".
-import * as T from "/root/DefiElements/formal/v2/tables.mjs";
+import * as T from "../v2/tables.mjs";
 
 export const E = T.MECH;
 export const ELEMS = T.ELEMS;

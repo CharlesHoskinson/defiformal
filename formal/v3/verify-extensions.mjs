@@ -7,8 +7,15 @@
  * is the frozen artefact of that classification and is committed; this reads it.
  */
 import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+// Resolved from this file's own location; DEFIFORMAL_ROOT overrides and says so.
+const SELF_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
+const REPO_ROOT = process.env.DEFIFORMAL_ROOT || SELF_ROOT;
+if (REPO_ROOT !== SELF_ROOT) console.error(`${path.basename(fileURLToPath(import.meta.url))}: NOTE - reading ${REPO_ROOT} (DEFIFORMAL_ROOT), not ${SELF_ROOT}`);
 
-const T = JSON.parse(fs.readFileSync("/root/defiformal/algebra/stage4/tagged.json", "utf8"));
+
+const T = JSON.parse(fs.readFileSync(`${REPO_ROOT}/algebra/stage4/tagged.json`, "utf8"));
 
 /* group code -> kind of repair, as Definition "Kinds of repair" names them */
 const KIND = {

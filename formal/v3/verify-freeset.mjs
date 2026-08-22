@@ -4,9 +4,16 @@
 // different \{Ag,...\} list elsewhere in the paper and reported the paper broken
 // when the checker was.
 import { readFileSync } from "node:fs";
-import { adm } from "/root/defiformal/formal/v3/lib.mjs";
+import { adm } from "./lib.mjs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+// Resolved from this file's own location; DEFIFORMAL_ROOT overrides and says so.
+const SELF_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
+const REPO_ROOT = process.env.DEFIFORMAL_ROOT || SELF_ROOT;
+if (REPO_ROOT !== SELF_ROOT) console.error(`${path.basename(fileURLToPath(import.meta.url))}: NOTE - reading ${REPO_ROOT} (DEFIFORMAL_ROOT), not ${SELF_ROOT}`);
 
-const tex = readFileSync("/root/defiformal/paper/atlas.tex", "utf8");
+
+const tex = readFileSync(`${REPO_ROOT}/paper/atlas.tex`, "utf8");
 let fail = 0;
 const say = (ok, msg) => { console.log(`  ${ok ? "ok  " : "FAIL"} ${msg}`); if (!ok) fail++; };
 

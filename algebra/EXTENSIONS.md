@@ -13,8 +13,9 @@ printed by `node stage4/classify.mjs` and `node stage4/part2.mjs`; the tagged
 corpus is `stage4/tagged.json`. Nothing here is counted by impression. Two claims
 are machine-checked rather than argued: `lean/Defialgebra/Discharge.lean` (builds
 against mathlib, 735 jobs, no `sorry`, axioms `propext / Classical.choice /
-Quot.sound` only) and `formal/v3/mandate.qnt` (`quint typecheck` clean, 3 tests
-passing). The digraph facts cited in Part 2 were re-run: `node
+Quot.sound` only) and `formal/v3/mandate.qnt` (`quint test` green on
+`presenceUnionClosedTest`, `magnitudeNotUnionClosedTest` and
+`granularityIsTheChoiceTest`). The digraph facts cited in Part 2 were re-run: `node
 formal/v2/digraph.mjs` → 15 distinct arcs, 58 trivial SCCs, acyclic.
 
 ---
@@ -338,8 +339,10 @@ being true.
 
 ### Group 2 — the bounded mandate (27 items). Cost: none. And it *improves* the polarity split.
 
-Machine-checked in `formal/v3/mandate.qnt` (`quint typecheck` clean; 3 tests
-passing, 30.1 s):
+Machine-checked in `formal/v3/mandate.qnt` by `quint test` -- three named
+tests, 34.5 s. Typecheck is not the evidence and is not quoted as such: it is a
+type check, and it passed on `usd1.qnt` while a self-transfer minted tokens
+(`quint-models-v2/VERIFICATION.md`).
 
 ```
   mandate
