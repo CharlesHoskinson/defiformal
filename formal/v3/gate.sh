@@ -102,7 +102,13 @@ say "4. hand-asserted numbers and uncited protocol claims in the paper"
 echo "measurements in atlas.tex: $(grep -c 'begin{measurement}' paper/atlas.tex)"
 echo "theorem-class items:       $(grep -cE 'begin\{(theorem|proposition|corollary|lemma)\}' paper/atlas.tex)"
 echo "conjectures:               $(grep -c 'begin{conjecture}' paper/atlas.tex)"
-echo "changelog guard: enforced by paper/build.sh in step 1, which passed;"
+# This line asserted step 1 passed no matter what step 1 did.
+if [ "${brc:-1}" = "0" ]; then
+  echo "changelog guard: enforced by paper/build.sh in step 1, which passed;"
+else
+  echo "changelog guard: NOT established - build.sh exited ${brc}, so its"
+  echo "  changelog check did not run to completion;"
+fi
 echo "  the gate does not keep a second copy of the pattern."
 echo "protocol-design claims in atlas.tex requiring a URL: the paper cites the corpus, not"
 echo "  live protocols; per-application citations enter at stage 6 via emit-tex from specs"

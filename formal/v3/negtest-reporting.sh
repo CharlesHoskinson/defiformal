@@ -608,6 +608,43 @@ DEFIFORMAL_ROOT="$FX/v4" node formal/v3/totalgate.mjs >/dev/null 2>&1
 want_rc "verdicts: intact corpus still passes (control)" 0 "$?"
 
 echo
+echo "===== 3j. an empty or json-less specs/ is a blocked check ====="
+# A MISSING specs/ already blocked via ENOENT. A present-but-empty one gave zero
+# iterations: `approx` came up short while tot/cov stayed complete, and strict
+# was compared -- FAIL strict coverage 29.5% against the paper's 29.0%, exit 1,
+# BUILD FAILED: a headline total disagrees. The other walk of the same lie.
+mk_two "$FX/s1"; rm -f "$FX/s1/expansion/04-liquid-staking/specs/"*.json
+out=$(DEFIFORMAL_ROOT="$FX/s1" node formal/v3/totalgate.mjs 2>&1); rc=$?
+want_rc  "specs: an emptied specs/ blocks" 3 "$rc"
+want_has "specs: names the slug"           "$out" "04-liquid-staking has no *.json under specs/"
+want_not "specs: strict is not compared"   "$out" "FAIL strict coverage"
+want_not "specs: not blamed on the manuscript" "$out" "out of step"
+
+# the renamed-suffix variant, which took the same branch
+mk_two "$FX/s2"
+for f in "$FX/s2/expansion/06-yield-vaults/specs/"*.json; do mv "$f" "$f.bak"; done
+out=$(DEFIFORMAL_ROOT="$FX/s2" node formal/v3/totalgate.mjs 2>&1); rc=$?
+want_rc  "specs: renamed *.json blocks" 3 "$rc"
+
+# through build.sh, where the lie was published
+mk_two "$FX/s3"; rm -f "$FX/s3/expansion/07-bridges/specs/"*.json
+bout=$(cd "$R" && DEFIFORMAL_ROOT="$FX/s3" ./paper/build.sh 2>&1); brc=$?
+bout=$(printf '%s' "$bout" | sed 's/\x1b\[[0-9;]*m//g')
+want_rc  "specs: through build.sh, exit code" 3 "$brc"
+want_not "specs: build.sh does not blame the manuscript" "$bout" "a headline total disagrees"
+
+# a MISSING specs/ must still block by its own message, not this one
+mk_two "$FX/s4"; rm -rf "$FX/s4/expansion/08-intents/specs"
+out=$(DEFIFORMAL_ROOT="$FX/s4" node formal/v3/totalgate.mjs 2>&1); rc=$?
+want_rc  "specs: a missing specs/ still blocks" 3 "$rc"
+want_has "specs: missing dir keeps its own message" "$out" "cannot read specs for 08-intents"
+
+# control: intact corpus still passes, or the guard is always-on
+mk_two "$FX/s5"
+DEFIFORMAL_ROOT="$FX/s5" node formal/v3/totalgate.mjs >/dev/null 2>&1
+want_rc "specs: intact corpus still passes (control)" 0 "$?"
+
+echo
 echo "===== 3i. loop2gate says plainly that no citation checker exists ====="
 # Routing evidence.mjs / cites.mjs through one() replaced "no verdict" with a
 # WRONG verdict: evidence.mjs is the supplement emitter (no failure path, its
@@ -622,6 +659,15 @@ want_has "citations: states no checker exists" "$l2src" "no citation checker exi
 reg=$(cat formal/v3/GATE-REGISTER.md)
 want_has "citations: evidence.mjs registered CANNOT FAIL" "$reg" "formal/v3/evidence.mjs"
 want_has "citations: cites.mjs registered CANNOT FAIL"    "$reg" "formal/v3/cites.mjs"
+# L1: the assertions above are all greps of source text -- deleting `blkd=1`
+# leaves every one of them green while loop2gate silently regains a PASS path.
+# Behavioural: the citation section must actually set the blocked flag.
+want_has "citations: the section sets blkd" "$l2src" "no citation checker exists in this tree."
+if awk '/no citation checker exists in this tree/,/^$/' formal/v3/loop2gate.sh | grep -q '^blkd=1'; then
+  caught "citations: blkd=1 follows the notice (behavioural, not a source grep)"
+else
+  missed "citations: the notice does not set blkd, so PASS is reachable again"
+fi
 
 echo
 echo "===== 3c. blocked_out must not hide a content failure ====="

@@ -117,6 +117,16 @@ for (const slug of slugs) {
   } catch (e) {
     blocked(`cannot read specs for ${slug}: ${e.code || e.message}`);
   }
+  // A MISSING specs/ throws ENOENT above and blocks. A present-but-empty one,
+  // or one whose *.json were renamed, took the other branch: zero iterations,
+  // so `approx` came up short while tot/cov stayed complete, and the strict
+  // percentage was compared to atlas.tex. Measured: emptying 04-liquid-staking
+  // gave `FAIL strict coverage 29.5%` against the paper's 29.0%, exit 1, and
+  // BUILD FAILED: a headline total disagrees. Same lie, the other walk.
+  // 12 of 12 slugs carry spec JSON, the same standard used for verdicts.json.
+  if (!specs.length) {
+    blocked(`slug ${slug} has no *.json under specs/; its assignments cannot be counted`);
+  }
   for (const f of specs) {
     const spec = readJson(path.join(sd, f), "spec");
     const obs = spec.functionalObligations;
