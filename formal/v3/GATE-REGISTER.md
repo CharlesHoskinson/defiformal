@@ -32,15 +32,31 @@ false · `3` check could not be performed. Exit 3 follows the pre-existing
 | `research/positive-program/sigma/verify_final.py` | X21-armed pair counts over expansion specs | Yes | Empty corpus → exit 3. **Before this change the glob matched zero files on any tree but the author's and printed `X21-armed pairs (60-app basis): 0 of 0`, exit 0** — a live pass on an empty denominator. It now measures 60 specs | `DISCRIMINATES` |
 | `research/positive-program/sigma/gate12_deletion_ir.py` | "IR deletion": how much of the IR surface disappears if a family is deleted | **No** — no failure path exists. Empty and missing IR both exit 0 and still write `MEASURED` | — | `CANNOT FAIL`. The residual counts are a rewrite of tag base rates (Post/Cmp = 3279/39 = 84.08×); nothing is actually deleted |
 | `research/positive-program/sigma/gate11a_census_v1.py` | Independent-witness census; N3 printed `indep=0 shared=6` | **No** — no failure path; empty corpus still exits 0 and writes `MEASURED` | Classification does change on constructed input, but the script cannot report failure | `CANNOT FAIL`. N3 `indep=0` is `VACUOUS` — the local-def markers match zero definitions in the tree. The maple `SHARED` hit matches a **comment**, not a call |
-| `formal/v3/claims.mjs` | 109 category claims recomputed from the corpus | Not in-tree | Against a mutated 71-protocol corpus a repointed copy gives 18 failures, exit 1 | `BLOCKED` in-tree by `formal/v3/construct.mjs:59` `loadCorpus(root = "/root/DefiElements")` — no longer by `tables.mjs`. **CANNOT FAIL on `atlas.tex` errors — it never opens the paper** |
-| `formal/v3/selftest.mjs` | 22 self-tests of `construct.mjs`, incl. an inadmissible X2 fixture | Not in-tree | Repointed copy vs a 71-protocol corpus: `FAIL corpus size: got 71 want 72` | `BLOCKED` by `construct.mjs:59`; copy `DISCRIMINATES` its frozen goldens |
+| `formal/v3/claims.mjs` | 109 category claims recomputed from the corpus | **Yes, in-tree** | Control: `109 claims verified, 0 failed`. Drop one protocol from `corpus50/lanes`: `93 claims verified, 16 failed`, exit 1, naming `FAIL [intent] CoW 23, DFlow 1, rest 0` | `DISCRIMINATES` the corpus. **Still CANNOT FAIL on `atlas.tex` errors — it never opens the paper** |
+| `formal/v3/selftest.mjs` | 22 self-tests of `construct.mjs`, incl. an inadmissible X2 fixture | **Yes, in-tree** | Control: `22 passed, 0 failed`. Same mutation: `FAIL corpus size: got 71 want 72`, `17 passed, 5 failed`, exit 1 | `DISCRIMINATES` its frozen goldens |
 | `formal/v3/verify-measurements.mjs` | `meas:pairs` / `meas:whereitfails` numerals must appear | Not in-tree | Copy: `$147$`→`$148$` VIOLATED. **`Twenty of the`→`Nineteen of the` still VERIFIED** | `BLOCKED` in-tree; `CANNOT FAIL` on the duplicate word-form |
-| `formal/v3/verify-graphs.py` | GRAPHS.md figures vs the merged/domain/lane graphs | Not in-tree | Copy: 777→9999 gives `GRAPH CLAIMS VIOLATED`, exit 1 | `BLOCKED` in-tree; copy `DISCRIMINATES` |
+| `formal/v3/verify-graphs.py` | GRAPHS.md figures vs the merged/domain/lane graphs | **Yes, in-tree** | Control: `GRAPH CLAIMS VERIFIED`. 777→9999 in GRAPHS.md: `GRAPH CLAIMS VIOLATED`, exit 1 | `DISCRIMINATES` |
 | `formal/v3/validate.mjs` | Rejects malformed construction specs | Yes, both polarities | Real spec dir → exit 0; empty dir → exit 3. Unblocked by the `formal/v2` root fix; the guard the previous change could only *record* is now demonstrated | `DISCRIMINATES` |
 | `research/positive-program/basis/denominators.py` | Ten-protocol generation rate (`v2 119/716 = 16.6%`) | Yes | Missing IR → exit 1; `UNGEN_V1/V2` mismatch → exit 1 | `DISCRIMINATES` those two. **The 16.6% figure itself is not a threshold** — any rate prints and exits 0 |
 
 | `formal/v3/evidence.mjs` | cited by loop2gate §4 as a citation check | **No** — it is the supplement *emitter*, not a checker: no `process.exit`, no `throw`, and its stderr always contains the string a needle would match | — | `CANNOT FAIL` |
 | `formal/v3/cites.mjs` | cited by loop2gate §4 as a citation check | **No** — no failure path; prints `<-- invariant 5 violation` and still exits 0. Never emits the needle it was matched on | — | `CANNOT FAIL` |
+
+## The gate path runs
+
+`formal/v3/construct.mjs:59` and `formal/v3/verify-graphs.py:10` were the last
+two hardcoded roots on the integrity-gate path. With those resolved from their
+own file locations, `formal/v3/gate.sh` reports **PASS** — ten checks, none
+blocked, exit 0 — for the first time in this clone, and `smoke.sh` reports
+`SMOKE OK`.
+
+Three gates recorded above as `BLOCKED` are now recorded as `DISCRIMINATES`,
+each with a control proving it is not always-red. Note what that means and does
+not: they discriminate the **corpus**. `claims.mjs` still never opens
+`paper/atlas.tex`, so it cannot fail on a manuscript error.
+
+About 170 files elsewhere still carry a dead `/root/...` root. None is on the
+gate path.
 
 ## Rows that carry no evidence
 
