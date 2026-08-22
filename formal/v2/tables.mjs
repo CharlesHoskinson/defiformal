@@ -5,8 +5,11 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 // Resolved from this file's own location so the harnesses run in any clone.
 // Was "/root/DefiElements", which made every README reproduce command fail.
-export const ROOT = process.env.DEFIFORMAL_ROOT
-  || path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
+export const SELF_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
+export const ROOT = process.env.DEFIFORMAL_ROOT || SELF_ROOT;
+// This module feeds every published figure. A stale DEFIFORMAL_ROOT would
+// silently compute them from another tree, so the override announces itself.
+if (ROOT !== SELF_ROOT) console.error(`tables.mjs: NOTE - reading ${ROOT} (DEFIFORMAL_ROOT), not ${SELF_ROOT}`);
 const src = fs.readFileSync(`${ROOT}/viz/src/data.ts`, "utf8");
 
 // ---------- elements

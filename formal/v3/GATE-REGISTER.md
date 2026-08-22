@@ -104,3 +104,44 @@ diff and told to attack it. Confirmed findings, all now fixed:
 `negtest-reporting.sh` went from 25 assertions to **43**, all passing. The five
 new sections exist because a reviewer found the gap, not because the author
 predicted it.
+
+## Second adversarial review — what the first round of fixes still got wrong
+
+Commit `6f9786b` claimed to close every finding of the first review. A second
+pass by the same two reviewers found it had not, and found a false statement in
+its own commit message. Recorded here rather than quietly amended, because a
+register that hides its author's errors is worth nothing.
+
+- **`6f9786b`'s message says "Both now branch on the exit code."** That was false.
+  The entire change to `loop2gate.sh` was a `printf`; the verdict still came from
+  `case "$b" in *"OK"*)` and it still exited 1 on a blocked build. Only `gate.sh`
+  had been fixed. Both reviewers caught it independently and claude rated it the
+  most severe finding — not because the code was worst, but because the
+  accounting asserted something untrue.
+- **The contract stopped at the parse, not the type.** A verdict, spec or
+  obligation that is valid JSON `null` is not a parse failure, so `readJson`
+  returned it and the next property access threw a `TypeError` — exit 1, and
+  `build.sh` announced a totals disagreement without comparing a total.
+- **An unreadable slug directory was silently skipped**, because `existsSync`
+  returns false on `EACCES`. Its obligations vanished from the totals and the
+  short total was then reported as a real disagreement.
+- **The `blocked_out` ordering inversion reached `chk()` only.** The three inline
+  sites — `claims`, `smoke`, `graph claims` — still tested the classifier first,
+  and those are the only checks actually blocked today.
+- Two fixes shipped with **no assertion behind them**, and the identical
+  stale-root hazard sat note-free in `tables.mjs`, which feeds all seven figures.
+
+A third defect was introduced while fixing the first: the new `loop2gate.sh`
+result block was appended *after* the script's existing `exit`, so it was dead
+code, and the assertion written to cover it was a source grep that passed anyway.
+Replaced with a behavioural test.
+
+`loop2gate.sh`'s other twenty checks had the same defect its build step did —
+`brief-fresh.sh: cd: /root/defiformal: Permission denied` produced
+`FAIL section briefs are stale`. Ten of them also truncated with `tail -1`
+*before* judging, discarding the evidence of a blocked run, in a file whose own
+header says every check greps the whole output. All now route through one
+blocked-aware helper. `loop2gate.sh` reports **BLOCKED, fail=0** instead of ten
+content verdicts about a corpus nothing read.
+
+`negtest-reporting.sh`: 25 → 43 → **65** assertions.

@@ -8,18 +8,35 @@
 #     the crash as a citation finding.
 # Both are why every check below greps the WHOLE output and why the harness
 # names are asserted to exist before they are run.
-cd /root/defiformal || exit 9
+cd "$(dirname "$0")/../.." || exit 3
+if [ ! -s paper/atlas.tex ] || ! ls corpus50/lanes/*.json >/dev/null 2>&1; then
+  printf 'LOOP2 BLOCKED: %s is not a defiformal tree; nothing was measured\n' "$PWD" >&2
+  exit 3
+fi
 fail=0
+blkd=0
 
 need () { [ -f "$1" ] || { echo "  FAIL missing script: $1"; fail=1; return 1; }; }
 
+# Signatures of a harness that could not RUN, deliberately narrow -- a bare
+# "Traceback" also appears when a harness ran and failed on content, and
+# classifying that as blocked would hide a real defect behind a reassuring word.
+blocked_out() {
+  printf '%s' "$1" | grep -qE 'Error: (EACCES|ENOENT)|ERR_MODULE_NOT_FOUND|Cannot find module|(PermissionError|FileNotFoundError|ModuleNotFoundError): \[?Errno|Permission denied|^totalgate: BLOCKED|GATE BLOCKED|LOOP2 BLOCKED'
+}
+
 echo "===== 1. paper build"
 b=$(cd paper && ./build.sh 2>&1); brc=$?
-# exit 3 = a build check could not run; it is not a build failure.
-[ "${brc:-0}" = "3" ] && printf 'LOOP2: BUILD BLOCKED - nothing was measured\n' >&2
 echo "$b" | sed 's/\x1b\[[0-9;]*m//g' | tail -6
-case "$b" in *"OK"*) echo "  ok   build reports OK" ;;
-             *) echo "  FAIL build did not report OK"; fail=1 ;; esac
+# The VERDICT must come from the exit code, not from grepping stdout for "OK".
+# An earlier revision only printed a note here and still derived its verdict
+# from the grep, so a blocked build was still reported as a build failure.
+case "$brc" in
+  0) case "$b" in *"OK"*) echo "  ok   build reports OK" ;;
+                  *) echo "  FAIL build exited 0 without the OK line"; fail=1 ;; esac ;;
+  3) echo "  BLOCKED build - a build check could not run; nothing was measured"; blkd=1 ;;
+  *) echo "  FAIL build did not report OK (exit $brc)"; fail=1 ;;
+esac
 echo "  undefined-reference lines: $(echo "$b" | grep -ciE 'undefined (reference|citation)')"
 
 echo
@@ -31,7 +48,9 @@ for h in pairs canonical safe antiexchange; do
 $(node formal/v2/$h.mjs 2>&1)"
 done
 want () { # label regex
+  # expected string wins first; only then may the blocked classifier speak.
   if echo "$allout" | grep -qE "$2"; then echo "  ok   $1"
+  elif blocked_out "$allout"; then echo "  BLOCKED $1 (harness could not run; nothing measured)"; blkd=1
   else echo "  FAIL $1 (/$2/ not in harness output)"; fail=1; fi
 }
 want "61 of 72 protocols satisfy laws+warrants" 'laws\+warrants: 61/72'
@@ -44,8 +63,16 @@ want "0 anti-exchange violations"               'NON-unique: 0'
 echo
 echo "===== 3. every numeric claim recomputed from a committed script"
 one () { # label script-cmd needle
-  out=$(eval "$2" 2>&1 | tail -1); echo "  $out"
-  case "$out" in *"$3"*) echo "  ok   $1" ;; *) echo "  FAIL $1"; fail=1 ;; esac
+  # capture the WHOLE output before judging it -- truncating to the last line
+  # first discards the very evidence that marks a blocked run.
+  full=$(eval "$2" 2>&1); printf '  %s\n' "$(printf '%s' "$full" | tail -1)"
+  # grep the WHOLE output, per this file's own header: matching against tail -n
+  # once made a reproducing harness read as drift.
+  case "$full" in
+    *"$3"*) echo "  ok   $1" ;;
+    *) if blocked_out "$full"; then echo "  BLOCKED $1 (could not run; nothing measured)"; blkd=1
+       else echo "  FAIL $1"; fail=1; fi ;;
+  esac
 }
 one "109 category claims" "node formal/v3/claims.mjs"           ", 0 failed"
 one "22 checker self-tests" "node formal/v3/selftest.mjs"        ", 0 failed"
@@ -54,28 +81,18 @@ one "emission invariant"   "python3 formal/v3/verify-emission.py" "HOLDS"
 one "graph claims"         "python3 formal/v3/verify-graphs.py"   "VERIFIED"
 one "extensions"           "node formal/v3/verify-extensions.mjs" "0 mismatch"
 one "submission structure" "python3 formal/v3/verify-structure.py" "COMPLETE"
-mf=$(bash formal/v3/merged-fresh.sh 2>&1 | tail -1); echo "  $mf"
-case "$mf" in *"MERGED GRAPH FRESH"*) echo "  ok   merged graph regenerates identically" ;; *) echo "  FAIL merged graph is stale"; fail=1 ;; esac
-df=$(bash formal/v3/domain-fresh.sh 2>&1 | head -1); echo "  $df"
-case "$df" in *"DOMAIN GRAPH FRESH"*) echo "  ok   domain graph regenerates identically" ;; *) echo "  FAIL domain graph is stale"; fail=1 ;; esac
+one "merged graph regenerates identically" "bash formal/v3/merged-fresh.sh" "MERGED GRAPH FRESH"
+one "domain graph regenerates identically" "bash formal/v3/domain-fresh.sh" "DOMAIN GRAPH FRESH"
 
 echo
-lc=$(python3 formal/v3/lane-coverage.py 2>&1 | tail -1); echo "  $lc"
-case "$lc" in *"LANE COVERAGE COMPLETE"*) echo "  ok   every lane document is in its lane graph" ;; *) echo "  FAIL a lane document is missing from its graph"; fail=1 ;; esac
-cp=$(node formal/v3/verify-composition.mjs 2>&1 | tail -1); echo "  $cp"
-case "$cp" in *"COMPOSITION TABLE VERIFIED"*) echo "  ok   composition table matches the corpus" ;; *) echo "  FAIL composition table"; fail=1 ;; esac
-fp=$(node formal/v3/verify-footprints.mjs 2>&1 | tail -1); echo "  $fp"
-case "$fp" in *"FOOTPRINTS TABLE VERIFIED"*) echo "  ok   footprints table matches the corpus" ;; *) echo "  FAIL footprints table"; fail=1 ;; esac
-ct=$(node formal/v3/verify-cattable.mjs 2>&1 | tail -1); echo "  $ct"
-case "$ct" in *"CATEGORY TABLE VERIFIED"*) echo "  ok   category table matches the corpus cell by cell" ;; *) echo "  FAIL category table"; fail=1 ;; esac
-sc=$(node formal/v3/verify-setclaims.mjs 2>&1 | tail -1); echo "  $sc"
-case "$sc" in *"SET CLAIMS VERIFIED"*) echo "  ok   every set-membership claim holds in the algebra" ;; *) echo "  FAIL a set-membership claim is false"; fail=1 ;; esac
-cv=$(node formal/v3/verify-coverage.mjs 2>&1 | tail -1); echo "  $cv"
-case "$cv" in *"COVERAGE SENSITIVITY VERIFIED"*) echo "  ok   coverage sensitivity matches the ledger" ;; *) echo "  FAIL coverage sensitivity"; fail=1 ;; esac
-fs=$(node formal/v3/verify-freeset.mjs 2>&1 | tail -1); echo "  $fs"
-case "$fs" in *"FREE-SET CLAIM VERIFIED"*) echo "  ok   free-set conjecture matches the algebra" ;; *) echo "  FAIL free-set claim"; fail=1 ;; esac
-bf=$(bash formal/v3/brief-fresh.sh 2>&1 | tail -1); echo "  $bf"
-case "$bf" in *"SECTION BRIEFS FRESH"*) echo "  ok   section briefs regenerate identically" ;; *) echo "  FAIL section briefs are stale"; fail=1 ;; esac
+one "every lane document is in its lane graph" "python3 formal/v3/lane-coverage.py" "LANE COVERAGE COMPLETE"
+one "composition table matches the corpus" "node formal/v3/verify-composition.mjs" "COMPOSITION TABLE VERIFIED"
+one "footprints table matches the corpus" "node formal/v3/verify-footprints.mjs" "FOOTPRINTS TABLE VERIFIED"
+one "category table matches the corpus cell by cell" "node formal/v3/verify-cattable.mjs" "CATEGORY TABLE VERIFIED"
+one "every set-membership claim holds in the algebra" "node formal/v3/verify-setclaims.mjs" "SET CLAIMS VERIFIED"
+one "coverage sensitivity matches the ledger" "node formal/v3/verify-coverage.mjs" "COVERAGE SENSITIVITY VERIFIED"
+one "free-set conjecture matches the algebra" "node formal/v3/verify-freeset.mjs" "FREE-SET CLAIM VERIFIED"
+one "section briefs regenerate identically" "bash formal/v3/brief-fresh.sh" "SECTION BRIEFS FRESH"
 
 echo "===== 4. citations: every protocol design claim carries a URL and a date"
 need formal/v3/evidence.mjs && node formal/v3/evidence.mjs 2>&1 | tail -2
@@ -89,5 +106,10 @@ echo
 echo "===== 6. git"
 git status --short | head
 echo "  HEAD: $(git log --oneline -1)"
-printf '\n===== LOOP-2 RESULT: %s (fail=%s)\n' "$([ $fail -eq 0 ] && echo PASS || echo FAIL)" "$fail"
-exit $fail
+if [ "$fail" -ne 0 ]; then
+  printf '\n===== LOOP-2 RESULT: FAIL (fail=%s blocked=%s)\n' "$fail" "${blkd:-0}"; exit 1
+elif [ "${blkd:-0}" -ne 0 ]; then
+  printf '\n===== LOOP-2 RESULT: BLOCKED - one or more checks could not run (fail=%s blocked=%s)\n' "$fail" "${blkd:-0}"; exit 3
+else
+  printf '\n===== LOOP-2 RESULT: PASS\n'; exit 0
+fi

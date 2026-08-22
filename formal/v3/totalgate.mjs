@@ -47,20 +47,42 @@ const readJson = (fp, what) => {
   } catch (e) {
     blocked(`cannot read ${what} ${fp}: ${e.code || e.message}`);
   }
+  let v;
   try {
-    return JSON.parse(raw);
+    v = JSON.parse(raw);
   } catch (e) {
     blocked(`cannot parse ${what} ${fp}: ${e.message}`);
   }
+  // Valid JSON `null` is not a parse failure, so the guard above lets it past
+  // and the next property access throws a TypeError -- node exits 1, which is
+  // the "manuscript is wrong" code. The contract has to hold at the type, not
+  // just at the parse.
+  if (v === null || typeof v !== "object") {
+    blocked(`${what} ${fp} is ${v === null ? "null" : typeof v}, not an object or array`);
+  }
+  return v;
 };
 
 let tot = 0, cov = 0, inad = 0, assigned = 0, approx = 0;
 for (const slug of slugs) {
   const vp = path.join(ROOT, slug, "verdicts.json");
+  // existsSync returns false when the slug DIRECTORY is unreadable, so an
+  // EACCES here used to be silently skipped -- the slug's obligations vanished
+  // from the totals and the short total was then reported as a disagreement.
+  // Absent is a skip; unreadable is a blocked check.
+  try {
+    fs.accessSync(path.join(ROOT, slug), fs.constants.R_OK | fs.constants.X_OK);
+  } catch (e) {
+    blocked(`cannot enter slug ${slug}: ${e.code || e.message}`);
+  }
   if (!fs.existsSync(vp)) continue;
   const verdicts = readJson(vp, "verdicts");
   if (!Array.isArray(verdicts)) blocked(`${vp} is not an array of verdicts`);
   for (const v of verdicts) {
+    if (v === null || typeof v !== "object") blocked(`${vp} holds a ${v === null ? "null" : typeof v} verdict`);
+    if (!Number.isFinite(v.obligationsTotal) || !Number.isFinite(v.obligationsCovered)) {
+      blocked(`${vp} has a non-numeric obligation count`);
+    }
     tot += v.obligationsTotal; cov += v.obligationsCovered;
     if (v.verdict === "INADMISSIBLE") inad++;
   }
@@ -76,6 +98,7 @@ for (const slug of slugs) {
     const obs = spec.functionalObligations;
     if (!Array.isArray(obs)) blocked(`${path.join(sd, f)} has no functionalObligations array`);
     for (const o of obs) {
+      if (o === null || typeof o !== "object") blocked(`${path.join(sd, f)} holds a null obligation`);
       if (!(o.elements || []).length) continue;
       assigned++;
       if (/approx|forced|partial|stretch/i.test(o.note || "")) approx++;

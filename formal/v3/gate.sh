@@ -67,20 +67,26 @@ chk "0 anti-exchange violations"     "$a" "VIOLATIONS: 0"
 
 say "3. every category claim recomputed"
 cl=$(node formal/v3/claims.mjs 2>&1); echo "$cl" | tail -1
-if blocked_out "$cl"; then echo "  BLOCKED 109-claim checker (could not run)"; blkd=1
-elif printf '%s' "$cl" | grep -q ', 0 failed'; then echo "  ok   109-claim checker"
+# expected string wins first; see chk() -- these three are the only
+# checks actually blocked today, so the inversion matters most here.
+if printf '%s' "$cl" | grep -q ', 0 failed'; then echo "  ok   109-claim checker"
+elif blocked_out "$cl"; then echo "  BLOCKED 109-claim checker (could not run)"; blkd=1
 else echo "  FAIL claim checker"; fail=1; fi
 
 say "3b. v3 toolchain smoke"
 sm=$(bash formal/v3/smoke.sh 2>&1); echo "$sm" | tail -1
-if blocked_out "$sm"; then echo "  BLOCKED smoke (could not run)"; blkd=1
-elif printf '%s' "$sm" | grep -q 'SMOKE OK'; then echo "  ok   smoke"
+# expected string wins first; see chk() -- these three are the only
+# checks actually blocked today, so the inversion matters most here.
+if printf '%s' "$sm" | grep -q 'SMOKE OK'; then echo "  ok   smoke"
+elif blocked_out "$sm"; then echo "  BLOCKED smoke (could not run)"; blkd=1
 else echo "  FAIL smoke"; fail=1; fi
 
 say "3c. knowledge-graph claims"
 gr=$(python3 formal/v3/verify-graphs.py 2>&1); echo "$gr" | tail -1
-if blocked_out "$gr"; then echo "  BLOCKED graph claims (could not run)"; blkd=1
-elif printf '%s' "$gr" | grep -q 'GRAPH CLAIMS VERIFIED'; then echo "  ok   graph claims (12 lanes, merged, domain)"
+# expected string wins first; see chk() -- these three are the only
+# checks actually blocked today, so the inversion matters most here.
+if printf '%s' "$gr" | grep -q 'GRAPH CLAIMS VERIFIED'; then echo "  ok   graph claims (12 lanes, merged, domain)"
+elif blocked_out "$gr"; then echo "  BLOCKED graph claims (could not run)"; blkd=1
 else echo "  FAIL graph claims"; fail=1; fi
 
 say "4. hand-asserted numbers and uncited protocol claims in the paper"

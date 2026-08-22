@@ -195,6 +195,99 @@ out=$(cd "$R" && DEFIFORMAL_ROOT="$FX/inner1" ./paper/build.sh 2>&1); rc=$?
 want_rc  "inner control: readable one-slug fixture really disagrees" 1 "$rc"
 
 echo
+echo "===== 3d. the contract holds at the TYPE, not just the parse ====="
+# Round 2 guarded readFileSync and JSON.parse. Valid JSON `null` is neither a
+# read failure nor a parse failure, so it slipped through and the next property
+# access threw a TypeError -- node exits 1, the "manuscript is wrong" code.
+
+# 3d.1 a spec that is literally null
+mk_real "$FX/t1"
+sp=$(ls "$FX/t1/expansion/01-spot-exchange/specs/"*.json | head -1)
+printf 'null' > "$sp"
+out=$(DEFIFORMAL_ROOT="$FX/t1" node formal/v3/totalgate.mjs 2>&1); rc=$?
+want_rc  "type: spec is JSON null" 3 "$rc"
+want_not "type: null spec is not a disagreement" "$out" "out of step"
+
+# 3d.2 a null element inside the verdicts array
+mk_real "$FX/t2"
+printf '[null]' > "$FX/t2/expansion/01-spot-exchange/verdicts.json"
+out=$(DEFIFORMAL_ROOT="$FX/t2" node formal/v3/totalgate.mjs 2>&1); rc=$?
+want_rc  "type: null verdict element" 3 "$rc"
+
+# 3d.3 a non-numeric obligation count
+mk_real "$FX/t3"
+printf '[{"obligationsTotal":"many","obligationsCovered":1,"verdict":"OK"}]' \
+  > "$FX/t3/expansion/01-spot-exchange/verdicts.json"
+out=$(DEFIFORMAL_ROOT="$FX/t3" node formal/v3/totalgate.mjs 2>&1); rc=$?
+want_rc  "type: non-numeric obligation count" 3 "$rc"
+
+# 3d.4 an unreadable slug DIRECTORY. existsSync returns false here, so the slug
+# used to be silently skipped and its obligations vanished from the totals --
+# the short total was then compared and reported as a real disagreement.
+mk_real "$FX/t4"
+chmod 000 "$FX/t4/expansion/01-spot-exchange"
+out=$(DEFIFORMAL_ROOT="$FX/t4" node formal/v3/totalgate.mjs 2>&1); rc=$?
+chmod 755 "$FX/t4/expansion/01-spot-exchange"
+want_rc  "type: unreadable slug directory" 3 "$rc"
+want_not "type: unreadable slug is not silently skipped" "$out" "out of step"
+
+echo
+echo "===== 3e. loop2gate.sh derives its verdict from the exit code ====="
+# The previous round only added a printf here and left the verdict coming from
+# `case "$b" in *"OK"*)`. The note is not the fix.
+want_has "loop2gate: branches on the exit code" "$(cat formal/v3/loop2gate.sh)" 'case "$brc" in'
+want_not "loop2gate: no longer hardcodes /root"  "$(cat formal/v3/loop2gate.sh)" "cd /root/defiformal"
+# A source grep is not enough: the first attempt at this fix appended a result
+# block AFTER the script's existing `exit`, so the new branch was dead code and
+# a grep for it still passed. Assert there is no statement after the terminal
+# exit, and assert the BLOCKED path actually reaches stdout.
+tail_after=$(awk '/^===== LOOP-2 RESULT|^  printf .===== LOOP-2 RESULT/{seen=1} seen&&/^exit /{after=1;next} after&&NF{print}' formal/v3/loop2gate.sh)
+if [ -z "$(printf '%s' "$tail_after" | tr -d '[:space:]')" ]; then
+  caught "loop2gate: no dead code after the terminal exit"
+else
+  missed "loop2gate: statements follow the terminal exit"
+fi
+mkdir -p "$FX/orphan2"
+cp formal/v3/loop2gate.sh "$FX/orphan2/loop2gate.sh"
+out=$(cd "$FX/orphan2" && bash ./loop2gate.sh 2>&1); rc=$?
+want_rc  "loop2gate orphan: exit code" 3 "$rc"
+want_not "loop2gate orphan: emits no build verdict" "$out" "FAIL build did not report OK"
+
+# Behavioural, not a source grep: on this tree many v3 harnesses cannot run, so
+# loop2gate must report BLOCKED with fail=0, never content verdicts about a
+# corpus nothing read. Before this fix it printed ten of them and exited 1.
+l2=$(bash formal/v3/loop2gate.sh 2>&1); l2rc=$?
+want_rc  "loop2gate: blocked tree gives exit 3, not 1" 3 "$l2rc"
+want_has "loop2gate: says BLOCKED"                  "$l2" "LOOP-2 RESULT: BLOCKED"
+want_has "loop2gate: fail flag is zero"             "$l2" "fail=0"
+want_not "loop2gate: no stale-brief content verdict" "$l2" "FAIL section briefs are stale"
+want_not "loop2gate: no free-set content verdict"    "$l2" "FAIL free-set claim"
+
+echo
+echo "===== 3f. the inline blocked_out sites are inverted too ====="
+# chk() was inverted last round; the three inline sites were not, and they are
+# the only checks actually blocked today.
+gs=$(cat formal/v3/gate.sh)
+for needle in "109-claim checker" "smoke" "graph claims"; do
+  # the expected-string grep must appear BEFORE the blocked_out call in each block
+  blk=$(printf '%s' "$gs" | grep -n "BLOCKED $needle" | head -1 | cut -d: -f1)
+  okl=$(printf '%s' "$gs" | grep -n "ok   $needle" | head -1 | cut -d: -f1)
+  if [ -n "$blk" ] && [ -n "$okl" ] && [ "$okl" -lt "$blk" ]; then
+    caught "inline inversion: $needle tests the expected string first"
+  else
+    missed "inline inversion: $needle still tests blocked_out first"
+  fi
+done
+
+echo
+echo "===== 3g. validate.mjs prints no vacuous result line ====="
+rm -rf "$FX/vspecs"; mkdir -p "$FX/vspecs"
+vout=$(node formal/v3/validate.mjs "$FX/vspecs" 2>&1); vrc=$?
+want_rc  "validate: empty dir exit code" 3 "$vrc"
+want_not "validate: no '0 specs, 0 rejected' line" "$vout" "0 specs, 0 rejected"
+want_has "validate: says it was blocked"           "$vout" "BLOCKED"
+
+echo
 echo "===== 3c. blocked_out must not hide a content failure ====="
 # blocked_out is a new lie in the opposite direction if it is over-broad: a
 # harness that RAN and got the wrong answer, but whose output also carries a
