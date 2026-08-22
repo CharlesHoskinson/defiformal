@@ -221,10 +221,24 @@ try {
 // followed by a comment) starts a real comment while `\%` is a literal percent.
 // Consume the pairs inside the match so both cases resolve correctly.
 const visible = tex
-  // `\iffalse ... \fi` is not typeset, so it cannot carry a claim -- and the
-  // comment stripper does not touch it, which made it a hiding place for a decoy.
-  .replace(/\\iffalse[\s\S]*?\\fi/g, "")
   .replace(/(^|[^\\])((?:\\\\)*)%.*$/gm, "$1$2");
+
+// Which branch of a TeX conditional is typeset cannot be decided without running
+// TeX. Stripping `\iffalse ... \fi` closed one pole and left its dual open
+// (`\iftrue $690$ \else $689$ \fi` typesets 690 while a matcher sees 689), and
+// enumerating the rest -- \ifnum, \ifx, \ifcase, any \newif or package
+// conditional -- is the same mistake repeated. The gate refuses to guess
+// instead: a conditional anywhere in a claim region means the gate cannot know
+// what the reader sees, and that is a blocked check.
+const CONDITIONAL = /\\(if[a-zA-Z@]*|else|fi)\b/;
+const noConditional = (region, what) => {
+  const m = region.match(CONDITIONAL);
+  if (m) {
+    blocked(`a TeX conditional (${m[0]}) appears in ${what}; the gate cannot know ` +
+            `which branch is typeset and will not guess`);
+  }
+  return region;
+};
 const block = (label, env) => {
   const hits = visible.split(`\\label{${label}}`).length - 1;
   if (hits === 0) blocked(`atlas.tex has no \\label{${label}}; the claim site is gone`);
@@ -240,7 +254,7 @@ const block = (label, env) => {
   if (start < 0) blocked(`\\label{${label}} is not inside a \\begin{${env}}`);
   const end = visible.indexOf(`\\end{${env}}`, at);
   if (end < 0) blocked(`\\label{${label}} is not closed by \\end{${env}}`);
-  return visible.slice(start, end);
+  return noConditional(visible.slice(start, end), `\\label{${label}}'s environment`);
 };
 const COVSENS = block("meas:covsens", "measurement");
 const CATTAB  = block("tab:categories", "table");
@@ -334,7 +348,8 @@ const claimsPctAnywhereAt = (v, contextRe) => {
   // A 40-character lookbehind admits a decoy: a stale $29.0\%$ sitting just
   // before a changed claim satisfied the match. Take only the LAST percentage
   // before the phrase, which is the one the sentence is about.
-  const before = visible.slice(Math.max(0, at - 40), at);
+  const before = noConditional(visible.slice(Math.max(0, at - 40), at),
+                              `the text preceding ${contextRe}`);
   const pcts = before.match(/[0-9]+\.[0-9]+\\%/g);
   if (!pcts || !pcts.length) {
     blocked(`no percentage precedes the claim phrase: ${contextRe}`);
@@ -356,7 +371,7 @@ const claimsNumAt = (n, contextRe) => {
     blocked(`atlas.tex states this claim ${all.length} times; the gate cannot tell ` +
             `which one is typeset: ${contextRe}`);
   }
-  return numRe(n).test(all[0]);
+  return numRe(n).test(noConditional(all[0], `the claim matched by ${contextRe}`));
 };
 const gp = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, "{,}");
 

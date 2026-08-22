@@ -1197,6 +1197,45 @@ DEFIFORMAL_ROOT="$FX/u4" node formal/v3/totalgate.mjs >/dev/null 2>&1
 want_rc "ambiguity: the untouched manuscript still passes (control)" 0 "$?"
 
 echo
+echo "===== 3v. the gate refuses to guess which branch typesets ====="
+# Stripping \iffalse closed one pole and left its dual: \iftrue $690$ \else
+# $689$ \fi typesets 690 while a matcher sees 689. Enumerating the rest --
+# \ifnum, \ifx, \ifcase, any \newif -- repeats the mistake. The gate now
+# refuses: a conditional in a claim region is a blocked check.
+cond_case () {   # $1 = tag, $2 = TeX conditional wrapping the residue figure
+  mk_two "$FX/v_$1"
+  python3 - "$FX/v_$1/paper/atlas.tex" "$2" <<'PYV'
+import io, sys
+p, wrap = sys.argv[1], sys.argv[2]
+s = io.open(p, encoding="utf-8").read()
+real = "The sixty constructions leave $689$"
+if real not in s:
+    print("PERTURBATION DID NOT APPLY", file=sys.stderr); sys.exit(3)
+io.open(p, "w", encoding="utf-8").write(
+    s.replace(real, "The sixty constructions leave " + wrap, 1))
+PYV
+  out=$(DEFIFORMAL_ROOT="$FX/v_$1" node formal/v3/totalgate.mjs 2>&1); rc=$?
+  if [ "$rc" = "3" ]; then
+    caught "conditional: $1 is refused as unresolvable"
+  else
+    missed "conditional: $1 gave exit $rc instead of a blocked check"
+  fi
+  want_not "conditional: $1 is not vouched for" "$out" "all headline totals agree"
+}
+
+# the named pole, its dual, and two forms nobody enumerated
+cond_case "iffalse" '\\iffalse $690$ \\else $689$ \\fi'
+cond_case "iftrue"  '\\iftrue $690$ \\else $689$ \\fi'
+cond_case "ifnum"   '\\ifnum1=1 $690$ \\else $689$ \\fi'
+cond_case "ifx"     '\\ifx\\undefinedmacro $689$ \\else $690$ \\fi'
+
+# control: the real manuscript has no conditional in any claim region, so the
+# rule must not false-block it
+mk_two "$FX/v_ok"
+DEFIFORMAL_ROOT="$FX/v_ok" node formal/v3/totalgate.mjs >/dev/null 2>&1
+want_rc "conditional: the untouched manuscript still passes (control)" 0 "$?"
+
+echo
 echo "===== 3i. loop2gate says plainly that no citation checker exists ====="
 # Routing evidence.mjs / cites.mjs through one() replaced "no verdict" with a
 # WRONG verdict: evidence.mjs is the supplement emitter (no failure path, its
