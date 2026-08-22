@@ -1,7 +1,12 @@
 // v2 tables: independent re-extraction of the atlas from viz/src/data.ts,
 // with the CORRECTED parser (mixed terms are residue) and the OP-ORD warrant table.
 import fs from "node:fs";
-const ROOT = "/root/DefiElements";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+// Resolved from this file's own location so the harnesses run in any clone.
+// Was "/root/DefiElements", which made every README reproduce command fail.
+export const ROOT = process.env.DEFIFORMAL_ROOT
+  || path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const src = fs.readFileSync(`${ROOT}/viz/src/data.ts`, "utf8");
 
 // ---------- elements

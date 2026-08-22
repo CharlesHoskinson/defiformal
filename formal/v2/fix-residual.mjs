@@ -10,7 +10,7 @@
  * only 1 of 72 real protocols. The fix may buy structure at the cost of content.
  * Measure both.
  */
-import { PARSED_NEW, MECH, ELEMS, CONSUME, gammaOpen } from "./tables.mjs";
+import { ROOT, PARSED_NEW, MECH, ELEMS, CONSUME, gammaOpen } from "./tables.mjs";
 import fs from "node:fs";
 
 const E = MECH.slice();
@@ -83,12 +83,12 @@ const b = testInvariance(DeltaNew, "true residual");
 
 /* --- what does the fix cost in discrimination? --- */
 const CORPUS = [];
-for (const f of fs.readdirSync("/root/DefiElements/corpus50/lanes")) {
-  const d = JSON.parse(fs.readFileSync(`/root/DefiElements/corpus50/lanes/${f}`, "utf8"));
+for (const f of fs.readdirSync(`${ROOT}/corpus50/lanes`)) {
+  const d = JSON.parse(fs.readFileSync(`${ROOT}/corpus50/lanes/${f}`, "utf8"));
   for (const c of d.categories) for (const p of c.protocols)
     CORPUS.push({ name: p.name, S: S2(p.elements.filter(e => E.includes(e))) });
 }
-const neg = JSON.parse(fs.readFileSync("/root/DefiElements/algebra/negative-corpus.json", "utf8")).cases;
+const neg = JSON.parse(fs.readFileSync(`${ROOT}/algebra/negative-corpus.json`, "utf8")).cases;
 
 const score = (Delta, label) => {
   const realFixed = CORPUS.filter(p => Delta(p.S).size === p.S.size).length;
