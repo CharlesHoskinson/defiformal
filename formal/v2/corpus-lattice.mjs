@@ -5,12 +5,12 @@
  * do the 12 categories correspond to ANYTHING in that structure, or is category
  * a fact about the observer rather than the object?
  */
-import { closesNew, gammaOpen, unwarranted, DeltaInf, armedListed, admissible, MECH } from "./tables.mjs";
+import { ROOT, closesNew, gammaOpen, unwarranted, DeltaInf, armedListed, admissible, MECH } from "./tables.mjs";
 import fs from "node:fs";
 
 const CORPUS = [];
-for (const f of fs.readdirSync("/root/DefiElements/corpus50/lanes")) {
-  const d = JSON.parse(fs.readFileSync(`/root/DefiElements/corpus50/lanes/${f}`, "utf8"));
+for (const f of fs.readdirSync(`${ROOT}/corpus50/lanes`)) {
+  const d = JSON.parse(fs.readFileSync(`${ROOT}/corpus50/lanes/${f}`, "utf8"));
   for (const c of d.categories)
     for (const p of c.protocols)
       CORPUS.push({ name: p.name, cat: c.category, S: new Set(p.elements.filter(e => MECH.includes(e))) });

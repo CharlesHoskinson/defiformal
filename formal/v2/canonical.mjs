@@ -1,6 +1,6 @@
 /* USE the theorem. ex(A) = max_<=(A) is the canonical form of a protocol.
  * Compute it for all 72 and see what it says about named protocols. */
-import { PARSED_NEW, MECH } from "./tables.mjs";
+import { ROOT, PARSED_NEW, MECH } from "./tables.mjs";
 import fs from "node:fs";
 
 const E = MECH.slice();
@@ -15,8 +15,8 @@ const DOWN = new Map(E.map(e => [e, below(e)]));
 const ex = A => [...A].filter(a => ![...A].some(b => b !== a && DOWN.get(b).has(a))).sort();
 
 const CORPUS = [];
-for (const f of fs.readdirSync("/root/DefiElements/corpus50/lanes")) {
-  const d = JSON.parse(fs.readFileSync(`/root/DefiElements/corpus50/lanes/${f}`, "utf8"));
+for (const f of fs.readdirSync(`${ROOT}/corpus50/lanes`)) {
+  const d = JSON.parse(fs.readFileSync(`${ROOT}/corpus50/lanes/${f}`, "utf8"));
   for (const c of d.categories) for (const p of c.protocols)
     CORPUS.push({ name: p.name, cat: c.category, S: [...new Set(p.elements.filter(e => E.includes(e)))] });
 }

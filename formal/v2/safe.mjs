@@ -1,13 +1,13 @@
 /* Which named protocols compose with EVERYTHING, and which with nothing new? */
-import { PARSED_NEW, MECH, CONSUME, bansCond, ungrounded, armedListed } from "./tables.mjs";
+import { ROOT, PARSED_NEW, MECH, CONSUME, bansCond, ungrounded, armedListed } from "./tables.mjs";
 import fs from "node:fs";
 const E = MECH.slice(), S2 = a => new Set(a.filter(e => E.includes(e)));
 const sat = X => PARSED_NEW.every(l => !l.subjects.some(s => X.has(s)) || l.terms.every(t => t.external || t.alts.some(a => X.has(a))));
 const warr = X => [...X].every(e => !CONSUME[e] || CONSUME[e].some(c => X.has(c)));
 
 const P = [];
-for (const f of fs.readdirSync("/root/DefiElements/corpus50/lanes")) {
-  const d = JSON.parse(fs.readFileSync(`/root/DefiElements/corpus50/lanes/${f}`, "utf8"));
+for (const f of fs.readdirSync(`${ROOT}/corpus50/lanes`)) {
+  const d = JSON.parse(fs.readFileSync(`${ROOT}/corpus50/lanes/${f}`, "utf8"));
   for (const c of d.categories) for (const p of c.protocols) P.push({ name: p.name, cat: c.category, S: S2(p.elements) });
 }
 const ok = P.filter(p => sat(p.S) && warr(p.S));

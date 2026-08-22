@@ -1,6 +1,6 @@
 /* Which of the 72 real protocols actually compose? The composability question,
  * asked of named systems rather than of abstract sets. */
-import { PARSED_NEW, MECH, CONSUME, admissible, bansCond, ungrounded, armedListed } from "./tables.mjs";
+import { ROOT, PARSED_NEW, MECH, CONSUME, admissible, bansCond, ungrounded, armedListed } from "./tables.mjs";
 import fs from "node:fs";
 
 const E = MECH.slice();
@@ -10,8 +10,8 @@ const sat = X => PARSED_NEW.every(l =>
 const warranted = X => [...X].every(e => !CONSUME[e] || CONSUME[e].some(c => X.has(c)));
 
 const P = [];
-for (const f of fs.readdirSync("/root/DefiElements/corpus50/lanes")) {
-  const d = JSON.parse(fs.readFileSync(`/root/DefiElements/corpus50/lanes/${f}`, "utf8"));
+for (const f of fs.readdirSync(`${ROOT}/corpus50/lanes`)) {
+  const d = JSON.parse(fs.readFileSync(`${ROOT}/corpus50/lanes/${f}`, "utf8"));
   for (const c of d.categories) for (const p of c.protocols)
     P.push({ name: p.name, cat: c.category, S: S2(p.elements) });
 }

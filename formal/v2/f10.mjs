@@ -468,5 +468,5 @@ console.log(`total DPLL calls this run: ${DPLL_CALLS}, decisions ${DPLL_DECISION
 { const ms = rows.map(r => r.ms).sort((a, b) => a - b);
   console.log(`per-seed KK wall clock over the 72: min ${ms[0].toFixed(0)} ms, median ${ms[36].toFixed(0)} ms, max ${ms[71].toFixed(0)} ms`);
   console.log(`per-seed SAT calls over the 72: ${Math.min(...rows.map(r => r.calls))} .. ${Math.max(...rows.map(r => r.calls))} (= |E\\S| per KK iteration)`); }
-fs.writeFileSync("/root/DefiElements/formal/v2/f10-rows.json", JSON.stringify(rows, null, 1));
+fs.writeFileSync(`${T.ROOT}/formal/v2/f10-rows.json`, JSON.stringify(rows, null, 1));
 console.log("per-protocol rows written to f10-rows.json");
