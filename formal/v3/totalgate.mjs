@@ -249,6 +249,24 @@ const numRe = (n) => {
   return new RegExp(`(^|[^0-9.,{])(\\$?${esc(gp(n))}\\$?|\\$?${esc(String(n))}\\$?)([^0-9.,}]|$)`);
 };
 const claimsNumIn = (n, blocks) => blocks.every(b => numRe(n).test(b));
+
+// The total row is a ROW: cells carry meaning by position. Testing that each
+// number occurs somewhere in the table let the cells be permuted -- including
+// into an arithmetically impossible order -- while every check said ok.
+const TOTAL_ROW = (() => {
+  const m = CATTAB.match(/^\s*total\s*&[^\\]*\\\\/m);
+  if (!m) blocked("tab:categories has no `total & ...` row; the gate cannot read the totals row");
+  const cells = m[0].replace(/\\\\\s*$/, "").split("&").map(c => c.trim());
+  return cells;
+})();
+// total & --- & obligations & covered & residue & inadmissible
+const cellIs = (idx, n) => {
+  if (TOTAL_ROW.length < 6) {
+    blocked(`the total row has ${TOTAL_ROW.length} cells, expected 6: ${TOTAL_ROW.join(" & ")}`);
+  }
+  const want = String(n), got = TOTAL_ROW[idx];
+  return got === want || got === gp(n) || got === `$${want}$` || got === `$${gp(n)}$`;
+};
 // A percentage must appear in the SENTENCE that asserts it, not merely in the
 // same block. `meas:covsens` states both the pooled coverage and the strict
 // figure; matching either one anywhere in the block let a mutated strict value
@@ -296,7 +314,15 @@ const claimsPctAnywhereAt = (v, contextRe) => {
   }
   // the remark states the figure just before the phrase, so widen backwards
   const at = visible.indexOf(all[0]);
-  const window = visible.slice(Math.max(0, at - 40), at + all[0].length);
+  // A 40-character lookbehind admits a decoy: a stale $29.0\%$ sitting just
+  // before a changed claim satisfied the match. Take only the LAST percentage
+  // before the phrase, which is the one the sentence is about.
+  const before = visible.slice(Math.max(0, at - 40), at);
+  const pcts = before.match(/[0-9]+\.[0-9]+\\%/g);
+  if (!pcts || !pcts.length) {
+    blocked(`no percentage precedes the claim phrase: ${contextRe}`);
+  }
+  const window = pcts[pcts.length - 1];
   return new RegExp(`(^|[^0-9.])${esc}\\\\%`).test(window);
 };
 const claimsNumAt = (n, contextRe) => {
@@ -321,13 +347,19 @@ let bad = 0;
 const must = [
   // tot is stated twice: in meas:covsens and in the tab:categories total row.
   // res is stated in the table only.
-  [`obligations total ${tot}`,   claimsNumIn(tot, [COVSENS, CATTAB]) && claimsNumAt(tot, LEDGERS_CLAIM)],
-  [`residue total ${res}`,       claimsNumIn(res, [CATTAB]) && claimsNumAt(res, RESIDUE_CLAIM)],
+  [`obligations total ${tot}`,   cellIs(2, tot) && claimsNumIn(tot, [COVSENS]) && claimsNumAt(tot, LEDGERS_CLAIM)],
+  [`residue total ${res}`,       cellIs(4, res) && claimsNumAt(res, RESIDUE_CLAIM)],
   // The other two cells of the same total row. They were accumulated and never
   // compared, while the gate printed "all headline totals agree" -- vouching for
   // a row of which it had measured half.
-  [`covered total ${cov}`,       claimsNumIn(cov, [COVSENS, CATTAB])],
-  [`inadmissible total ${inad}`, claimsNumIn(inad, [CATTAB])],
+  [`covered total ${cov}`,       cellIs(3, cov) && claimsNumIn(cov, [COVSENS])],
+  [`inadmissible total ${inad}`, cellIs(5, inad)],
+  // Each of these occurs exactly ONCE in visible text, so the every-site rule
+  // applies cleanly. They were unregistered, not unregisterable -- the register
+  // overstated the limit by generalising from `inad`'s six collisions.
+  [`approximate-fit rows ${approx}`, claimsNumIn(approx, [COVSENS])],
+  [`approximate share ${(100 * approx / cov).toFixed(1)}%`,
+                                 claimsPctAt((100 * approx / cov).toFixed(1), /Of the[\s\S]{0,120}/)],
   [`coverage ${pct}%`,           claimsPctAt(pct, COVERAGE_CLAIM)],
   [`strict coverage ${strict}%`, claimsPctAt(strict, STRICT_CLAIM) && claimsPctAnywhereAt(strict, STRICT_REMARK)],
 ];

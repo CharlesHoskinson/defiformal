@@ -206,7 +206,16 @@ rather than by reading. That count is the argument:
 | strict 29.0% | 2 | 1306, 1314 |
 | **inadmissible 15** | **6** | 957, 1029, 1157, 1536, 1970, 2692 |
 
-The last row is the one that ends it. The digits `15` occur six times and most
+**Correction, one round later.** The paragraph below generalised from `inad`
+to "the method cannot be finished", and a reviewer showed that is false.
+`$205$`, `$36.0\%$` and `$16.3$` each occur exactly ONCE in visible text, so
+the every-site rule applies to them cleanly; they were unregistered, not
+unregisterable. Two of the three are now checked. This is the second time this
+register has overstated a limitation, and both times a reviewer caught it --
+recorded rather than amended, for the same reason as before.
+
+What remains true is narrower: `inad` alone cannot be located by this method.
+The last row is the one that shows why. The digits `15` occur six times and most
 are unrelated counts, so the rule that fixed every other figure — *every site
 stating this number must agree* — would fail on a correct paper. Pattern
 matching cannot separate a claim about a quantity from an unrelated number that

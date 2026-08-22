@@ -1073,6 +1073,70 @@ DEFIFORMAL_ROOT="$FX/r3" node formal/v3/totalgate.mjs >/dev/null 2>&1
 want_rc "sites: the untouched manuscript still passes (control)" 0 "$?"
 
 echo
+echo "===== 3s. the total row is read as a ROW ====="
+# claimsNumIn tested that each number occurred somewhere in the table, so the
+# cells could be permuted -- into an arithmetically impossible order -- while
+# every check said ok and build.sh shipped green.
+mk_two "$FX/s1r"
+python3 - "$FX/s1r/paper/atlas.tex" <<'PYS'
+import io, sys
+p = sys.argv[1]
+s = io.open(p, encoding="utf-8").read()
+old = "total & --- & 1259 & 570 & 689 & 15"
+if old not in s:
+    print("PERTURBATION DID NOT APPLY", file=sys.stderr); sys.exit(3)
+# arithmetically impossible: obligations 1259, covered 689, residue 570
+io.open(p, "w", encoding="utf-8").write(s.replace(old, "total & --- & 1259 & 689 & 570 & 15"))
+PYS
+out=$(DEFIFORMAL_ROOT="$FX/s1r" node formal/v3/totalgate.mjs 2>&1); rc=$?
+want_rc  "row: a permuted total row is caught" 1 "$rc"
+want_not "row: not vouched for as agreement" "$out" "all headline totals agree"
+
+# a missing total row is a blocked check, not a pass
+mk_two "$FX/s2r"
+python3 - "$FX/s2r/paper/atlas.tex" <<'PYS'
+import io, sys
+p = sys.argv[1]
+s = io.open(p, encoding="utf-8").read()
+old = "total & --- & 1259 & 570 & 689 & 15"
+io.open(p, "w", encoding="utf-8").write(s.replace(old, "totals removed"))
+PYS
+out=$(DEFIFORMAL_ROOT="$FX/s2r" node formal/v3/totalgate.mjs 2>&1); rc=$?
+want_rc  "row: a missing total row blocks" 3 "$rc"
+
+echo
+echo "===== 3t. the figures the register wrongly called uncheckable ====="
+# The register generalised from `inad`'s six collisions to "the method cannot be
+# finished". False: 205, 36.0 and 16.3 each occur ONCE in visible text, so the
+# every-site rule applies to them cleanly. They were unregistered, not
+# unregisterable -- the same overstatement class caught in round 13.
+for pair in "205:approximate-fit rows" "36.0:approximate share"; do
+  v=${pair%%:*}; lbl=${pair#*:}
+  mk_two "$FX/t_$v"
+  python3 - "$FX/t_$v/paper/atlas.tex" "$v" <<'PYT'
+import io, sys
+p, v = sys.argv[1], sys.argv[2]
+s = io.open(p, encoding="utf-8").read()
+tgt = "$" + v + "$" if "." not in v else v + "\\%"
+if tgt not in s:
+    print("PERTURBATION DID NOT APPLY: " + tgt, file=sys.stderr); sys.exit(3)
+new = ("$" + str(int(v) + 1) + "$") if "." not in v else (str(float(v) + 0.1) + "\\%")
+io.open(p, "w", encoding="utf-8").write(s.replace(tgt, new, 1))
+PYT
+  out=$(DEFIFORMAL_ROOT="$FX/t_$v" node formal/v3/totalgate.mjs 2>&1); rc=$?
+  if [ "$rc" = "1" ]; then
+    caught "register: $lbl ($v) is checked after all"
+  else
+    missed "register: $lbl ($v) still unchecked (exit $rc)"
+  fi
+done
+
+# control
+mk_two "$FX/t_ok"
+DEFIFORMAL_ROOT="$FX/t_ok" node formal/v3/totalgate.mjs >/dev/null 2>&1
+want_rc "register: the untouched manuscript still passes (control)" 0 "$?"
+
+echo
 echo "===== 3i. loop2gate says plainly that no citation checker exists ====="
 # Routing evidence.mjs / cites.mjs through one() replaced "no verdict" with a
 # WRONG verdict: evidence.mjs is the supplement emitter (no failure path, its
