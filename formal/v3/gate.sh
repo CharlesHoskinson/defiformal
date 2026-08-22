@@ -1,7 +1,15 @@
 #!/usr/bin/env bash
 # LOOP-2 integrity gate. Report exact observed numbers; never "as expected".
-cd /root/defiformal
+cd "$(dirname "$0")/../.." || exit 3   # an unguarded cd once turned EACCES into "FAIL 61 of 72"
+# A cd into a directory that merely EXISTS also succeeds, and the harnesses then
+# report content verdicts about a tree holding no corpus. Landing in the wrong
+# place is a blocked check, never a finding about the corpus.
+if [ ! -f paper/atlas.tex ] || [ ! -d expansion ] || [ ! -d corpus50 ]; then
+  printf 'GATE BLOCKED: %s is not a defiformal tree; nothing was measured\n' "$PWD" >&2
+  exit 3
+fi
 fail=0
+blkd=0
 say() { printf '\n===== %s\n' "$1"; }
 
 say "1. paper build"
@@ -19,11 +27,18 @@ echo "undefined references in atlas.log: $undef"
 say "2. harnesses"
 p=$(node formal/v2/pairs.mjs 2>&1)
 printf '%s\n' "$p" | head -4
-c=$(node formal/v2/canonical.mjs 2>&1 | head -2); printf '%s\n' "$c"
-s=$(node formal/v2/safe.mjs 2>&1 | head -2); printf '%s\n' "$s"
-a=$(node formal/v2/antiexchange.mjs 2>&1 | grep -E 'VIOLATIONS|closed sets'); printf '%s\n' "$a"
+c=$(node formal/v2/canonical.mjs 2>&1); printf '%s\n' "$c" | head -2
+s=$(node formal/v2/safe.mjs 2>&1); printf '%s\n' "$s" | head -2
+a=$(node formal/v2/antiexchange.mjs 2>&1); printf '%s\n' "$a" | grep -E 'VIOLATIONS|closed sets'
 
-chk() { if printf '%s' "$2" | grep -q -- "$3"; then echo "  ok   $1"; else echo "  FAIL $1 (wanted '$3')"; fail=1; fi; }
+# A harness that could not run has not refuted anything. Reporting its silence
+# as "FAIL 61 of 72" is a corpus verdict about a corpus nothing read.
+blocked_out() { printf '%s' "$1" | grep -qE 'EACCES|ENOENT|ERR_MODULE_NOT_FOUND|Cannot find module|BLOCKED|PermissionError|FileNotFoundError|Errno 13|Errno 2|Traceback \(most recent'; }
+chk() {
+  if blocked_out "$2"; then echo "  BLOCKED $1 (harness could not run; nothing measured)"; blkd=1
+  elif printf '%s' "$2" | grep -q -- "$3"; then echo "  ok   $1"
+  else echo "  FAIL $1 (wanted '$3')"; fail=1; fi
+}
 chk "61 of 72 satisfy laws+warrants" "$p" "61/72"
 chk "1830 pairs"                     "$p" "pairs: 1830"
 chk "185 failures"                   "$p" "fail: 185"
@@ -33,16 +48,22 @@ chk "15 definite arcs"               "$c" "arcs 15"
 chk "0 anti-exchange violations"     "$a" "VIOLATIONS: 0"
 
 say "3. every category claim recomputed"
-cl=$(node formal/v3/claims.mjs 2>&1 | tail -1); echo "$cl"
-printf '%s' "$cl" | grep -q ', 0 failed' && echo "  ok   109-claim checker" || { echo "  FAIL claim checker"; fail=1; }
+cl=$(node formal/v3/claims.mjs 2>&1); echo "$cl" | tail -1
+if blocked_out "$cl"; then echo "  BLOCKED 109-claim checker (could not run)"; blkd=1
+elif printf '%s' "$cl" | grep -q ', 0 failed'; then echo "  ok   109-claim checker"
+else echo "  FAIL claim checker"; fail=1; fi
 
 say "3b. v3 toolchain smoke"
-sm=$(bash formal/v3/smoke.sh 2>&1 | tail -1); echo "$sm"
-printf '%s' "$sm" | grep -q 'SMOKE OK' && echo "  ok   smoke" || { echo "  FAIL smoke"; fail=1; }
+sm=$(bash formal/v3/smoke.sh 2>&1); echo "$sm" | tail -1
+if blocked_out "$sm"; then echo "  BLOCKED smoke (could not run)"; blkd=1
+elif printf '%s' "$sm" | grep -q 'SMOKE OK'; then echo "  ok   smoke"
+else echo "  FAIL smoke"; fail=1; fi
 
 say "3c. knowledge-graph claims"
-gr=$(python3 formal/v3/verify-graphs.py 2>&1 | tail -1); echo "$gr"
-printf '%s' "$gr" | grep -q 'GRAPH CLAIMS VERIFIED' && echo "  ok   graph claims (12 lanes, merged, domain)" || { echo "  FAIL graph claims"; fail=1; }
+gr=$(python3 formal/v3/verify-graphs.py 2>&1); echo "$gr" | tail -1
+if blocked_out "$gr"; then echo "  BLOCKED graph claims (could not run)"; blkd=1
+elif printf '%s' "$gr" | grep -q 'GRAPH CLAIMS VERIFIED'; then echo "  ok   graph claims (12 lanes, merged, domain)"
+else echo "  FAIL graph claims"; fail=1; fi
 
 say "4. hand-asserted numbers and uncited protocol claims in the paper"
 # every \begin{measurement} block should be traceable; report the count and the
@@ -60,5 +81,14 @@ say "5. git"
 git status --short | head -10
 echo "HEAD: $(git log --oneline | head -1)"
 
-printf '\n===== GATE RESULT: %s (fail flag=%s)\n' "$([ $fail -eq 0 ] && echo PASS || echo FAIL)" "$fail"
-exit $fail
+if [ "$fail" -ne 0 ]; then
+  printf '\n===== GATE RESULT: FAIL (fail flag=%s, blocked flag=%s)\n' "$fail" "$blkd"
+  exit 1
+elif [ "$blkd" -ne 0 ]; then
+  printf '\n===== GATE RESULT: BLOCKED - one or more harnesses could not run;\n'
+  printf '      no corpus verdict was measured (fail flag=%s, blocked flag=%s)\n' "$fail" "$blkd"
+  exit 3
+else
+  printf '\n===== GATE RESULT: PASS (fail flag=%s, blocked flag=%s)\n' "$fail" "$blkd"
+  exit 0
+fi

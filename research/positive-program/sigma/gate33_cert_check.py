@@ -10,12 +10,14 @@ Exit 0 on success.
 from __future__ import annotations
 
 import json
+import os
 import sys
 from collections import Counter
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
-IR = ROOT / "research/positive-program/sigma/gen-ir-v2ten"
+IR = Path(os.environ["GEN_IR"]) if os.environ.get("GEN_IR") \
+     else ROOT / "research/positive-program/sigma/gen-ir-v2ten"
 OUT = ROOT / "research/positive-program/sigma/GATE-3.3-CERT-RESULT.json"
 
 RULES = {
@@ -83,6 +85,12 @@ def main() -> int:
         if sum(tags.values()) == 0:
             print("FAIL: empty file", fn, file=sys.stderr)
             return 1
+    # Zero certificates examined is not a passing certificate check.
+    # Guard sits BEFORE the write so an empty IR leaves no PASS artefact.
+    if not files:
+        print("BLOCKED - no *.json under", IR, "; nothing was certified",
+              file=sys.stderr)
+        return 3
     result = {
         "status": "PASS",
         "ir": str(IR),
