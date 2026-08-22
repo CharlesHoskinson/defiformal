@@ -397,7 +397,13 @@ echo
 echo "===== 4. vacuity guards on the other gates ====="
 
 rm -rf "$FX/emptyir"; mkdir -p "$FX/emptyir"
+# gate33 writes its result JSON back into the tree, so the control mutates a
+# tracked file. Snapshot and restore: this harness must leave the repo exactly
+# as it found it, and section 5 asserts that.
+G33=research/positive-program/sigma/GATE-3.3-CERT-RESULT.json
+cp "$R/$G33" "$FX/g33.bak" 2>/dev/null
 python3 research/positive-program/sigma/gate33_cert_check.py >/dev/null 2>&1; rc=$?
+[ -f "$FX/g33.bak" ] && cp "$FX/g33.bak" "$R/$G33"
 want_rc "gate33 control: real IR" 0 "$rc"
 GEN_IR="$FX/emptyir" python3 research/positive-program/sigma/gate33_cert_check.py >/dev/null 2>&1; rc=$?
 want_rc "gate33 VACUOUS: empty IR" 3 "$rc"
@@ -426,5 +432,15 @@ else
 fi
 
 echo
+echo "===== 5. the harness itself leaves the repository untouched ====="
+# Every prior run silently regenerated GATE-3.3-CERT-RESULT.json. A checker that
+# mutates the tree it is auditing cannot be trusted about that tree.
+dirty=$(cd "$R" && git status --porcelain -uall 2>/dev/null | grep -v '^?? formal/v3/evidence/' | head -20)
+if [ -z "$dirty" ]; then
+  caught "harness leaves the repository clean"
+else
+  missed "harness left the repository dirty: $(printf '%s' "$dirty" | tr '\n' ' ')"
+fi
+
 printf '\n===== negtest-reporting: %d caught, %d missed =====\n' "$pass" "$fail"
 [ "$fail" -eq 0 ] || exit 1
