@@ -30,10 +30,7 @@ const TEXPATH = path.join(REPO, "paper", "atlas.tex");
 
 let slugs;
 try {
-  slugs = fs.readdirSync(ROOT)
-    .filter(d => /^\d\d-/.test(d))
-    // editor and backup droppings are not categories and never were
-    .filter(d => !/\.(bak|tmp|orig|save|swp|rej)$/i.test(d) && !/~$/.test(d));
+  slugs = fs.readdirSync(ROOT).filter(d => /^\d\d-/.test(d));
 } catch (e) {
   blocked(`cannot read expansion root ${ROOT}: ${e.code || e.message}`);
 }
@@ -76,13 +73,20 @@ for (const slug of slugs) {
   const sdir = path.join(ROOT, slug);
   let st;
   try { st = fs.statSync(sdir); } catch (e) { blocked(`cannot stat slug ${slug}: ${e.code || e.message}`); }
-  // A non-directory sitting on a category name is ambiguous: it may be a stray
-  // file, or a category that was clobbered. The gate cannot tell, and a gate
-  // that cannot tell must block -- skipping it drops that category's
-  // obligations and the short total then reads as a real disagreement.
-  if (!st.isDirectory()) {
+  // Four quadrants, all explicit. Deciding by NAME before stat'ing conflated
+  // two of them: a renamed category DIRECTORY (02-lending.bak) was dropped as
+  // if it were an editor dropping, its obligations vanished, and the short
+  // total was blamed on the manuscript.
+  const dropping = /\.(bak|tmp|orig|save|swp|rej)$/i.test(slug) || /~$/.test(slug);
+  if (st.isDirectory() && dropping) {
+    // an archived copy of a category, or a category someone renamed. Counting it
+    // may double-count; ignoring it may drop a category. The gate cannot tell.
+    blocked(`slug ${slug} is a directory with a backup suffix; cannot tell an archive from a category`);
+  }
+  if (!st.isDirectory() && !dropping) {
     blocked(`slug ${slug} is not a directory; cannot tell a stray file from a clobbered category`);
   }
+  if (!st.isDirectory() && dropping) continue;   // an editor dropping; never a category
   try {
     fs.accessSync(sdir, fs.constants.R_OK | fs.constants.X_OK);
   } catch (e) {

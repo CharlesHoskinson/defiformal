@@ -243,13 +243,33 @@ want_rc  "type: unreadable slug among readable ones" 3 "$rc"
 want_has "type: names the slug it could not enter" "$out" "cannot enter slug 02-lending"
 want_not "type: unreadable slug is not silently skipped" "$out" "out of step"
 
-# a slug-shaped FILE is not a category and must be skipped, not blocked
+# Four quadrants of (is-a-directory) x (carries a backup suffix). Deciding by
+# NAME before stat'ing conflated two of them and dropped a renamed category.
+# (a) a plain FILE on a category-shaped name -> BLOCK (covered by t6 below)
+# (b) a DROPPING file (99-notes.bak) -> skipped silently
 rm -rf "$FX/t5"; mkdir -p "$FX/t5/paper" "$FX/t5/expansion"
 cp "$R/paper/atlas.tex" "$FX/t5/paper/atlas.tex"
-cp -r "$R/expansion/01-spot-exchange" "$FX/t5/expansion/"
-: > "$FX/t5/expansion/99-not-a-dir"
+cp -r "$R"/expansion/[0-9][0-9]-* "$FX/t5/expansion/" 2>/dev/null
+: > "$FX/t5/expansion/99-notes.bak"
 out=$(DEFIFORMAL_ROOT="$FX/t5" node formal/v3/totalgate.mjs 2>&1); rc=$?
-want_not "type: a slug-shaped file does not block the run" "$out" "cannot enter slug 99-not-a-dir"
+want_rc  "slug: a dropping FILE is skipped, run still passes" 0 "$rc"
+# (c) a plain FILE on a category-shaped name with no suffix -> BLOCK
+rm -rf "$FX/t5b"; mkdir -p "$FX/t5b/paper" "$FX/t5b/expansion"
+cp "$R/paper/atlas.tex" "$FX/t5b/paper/atlas.tex"
+cp -r "$R"/expansion/[0-9][0-9]-* "$FX/t5b/expansion/" 2>/dev/null
+: > "$FX/t5b/expansion/99-not-a-dir"
+out=$(DEFIFORMAL_ROOT="$FX/t5b" node formal/v3/totalgate.mjs 2>&1); rc=$?
+want_rc  "slug: a bare FILE on a category name blocks" 3 "$rc"
+# (d) a renamed category DIRECTORY -> BLOCK, not silently dropped. Before this
+# fix the name filter removed it, its obligations vanished, and the short total
+# was reported as a disagreement with the manuscript.
+rm -rf "$FX/t5c"; mkdir -p "$FX/t5c/paper" "$FX/t5c/expansion"
+cp "$R/paper/atlas.tex" "$FX/t5c/paper/atlas.tex"
+cp -r "$R"/expansion/[0-9][0-9]-* "$FX/t5c/expansion/" 2>/dev/null
+mv "$FX/t5c/expansion/02-lending" "$FX/t5c/expansion/02-lending.bak"
+out=$(DEFIFORMAL_ROOT="$FX/t5c" node formal/v3/totalgate.mjs 2>&1); rc=$?
+want_rc  "slug: a renamed category DIRECTORY blocks" 3 "$rc"
+want_not "slug: renamed category is not a disagreement" "$out" "out of step"
 
 # A: a non-directory occupying a real category name must BLOCK, not be skipped.
 # Skipping it drops that category's obligations and the short total then reads
@@ -281,6 +301,23 @@ else missed "blocked_out misses 'command not found'"; fi
 if blocked_out "python3: can't open file '/x/y.py': [Errno 2] No such file or directory"; then
   caught "blocked_out recognises a missing python script"
 else missed "blocked_out misses a missing python script"; fi
+
+# loop2gate has its OWN blocked_out; section D above lifted gate.sh's. Both must
+# recognise the same signatures or one gate lies while the other does not.
+eval "$(awk '/^blocked_out\(\) \{/,/^\}/' formal/v3/loop2gate.sh | sed 's/^blocked_out()/l2_blocked_out()/')"
+if declare -F l2_blocked_out >/dev/null; then
+  for probe in "bash: line 1: nosuchtool: command not found" \
+               "python3: can't open file '/x/y.py': [Errno 2] No such file or directory" \
+               "Error: EACCES: permission denied"; do
+    if l2_blocked_out "$probe"; then
+      caught "loop2gate blocked_out recognises: $(printf '%s' "$probe" | cut -c1-34)"
+    else
+      missed "loop2gate blocked_out misses: $(printf '%s' "$probe" | cut -c1-34)"
+    fi
+  done
+else
+  missed "could not lift loop2gate's blocked_out()"
+fi
 
 # E: gate.sh's chk() must not call a non-zero harness ok on a stray needle
 gchk=$(awk '/^chk\(\) \{/,/^\}/' formal/v3/gate.sh)
@@ -353,6 +390,20 @@ awk '/^if \[ "\$fail" -ne 0 \]; then/ && !d {print "echo DEAD-CODE-MARKER"; d=1}
   formal/v3/loop2gate.sh > "$FX/plive/formal/v3/loop2gate.sh"
 lout=$(bash "$FX/plive/formal/v3/loop2gate.sh" 2>&1)
 want_has "loop2gate: the dead-code probe can fail (control)" "$lout" "DEAD-CODE-MARKER"
+# F3: nothing locked probe_tree's stub build.sh. Reverting it to the old symlink
+# form silently restored two full paper builds inside the REAL tree each run
+# (atlas.pdf mtime moved, measured in round 5). Assert the probe does not typeset.
+want_not "probe_tree: paper/ is not a symlink into the repo" \
+  "$(readlink -f "$FX/pdead/paper" 2>/dev/null)" "$R/paper"
+want_has "probe_tree: uses a stub build.sh"  "$(cat "$FX/pdead/paper/build.sh" 2>/dev/null)" "stub:"
+pdf_before=$(stat -c %Y "$R/paper/atlas.pdf" 2>/dev/null || echo none)
+bash "$FX/pdead/formal/v3/loop2gate.sh" >/dev/null 2>&1
+pdf_after=$(stat -c %Y "$R/paper/atlas.pdf" 2>/dev/null || echo none)
+if [ "$pdf_before" = "$pdf_after" ]; then
+  caught "probe_tree: the probe does not typeset the real paper/"
+else
+  missed "probe_tree: the probe rebuilt the real paper/ (mtime $pdf_before -> $pdf_after)"
+fi
 mkdir -p "$FX/orphan2"
 cp formal/v3/loop2gate.sh "$FX/orphan2/loop2gate.sh"
 out=$(cd "$FX/orphan2" && bash ./loop2gate.sh 2>&1); rc=$?
@@ -375,10 +426,33 @@ rm -rf "$FX/attrib"; mkdir -p "$FX/attrib"
 # Drive the REAL blocked_out() and want() lifted verbatim out of loop2gate.sh.
 # The previous version re-implemented them in a heredoc, so reverting the
 # per-harness hunk left this probe testing a copy that still had the fix.
-awk '/^blocked_out\(\) \{/,/^\}/' formal/v3/loop2gate.sh  > "$FX/attrib/fns.sh"
-awk '/^want \(\) \{/,/^\}/'        formal/v3/loop2gate.sh >> "$FX/attrib/fns.sh"
+# Lifting a function by line range is a parser of the source, not a test of the
+# behaviour, and ordinary bash style defeats it: a one-line definition has no
+# `^}` terminator, so the range runs to the end of file and the eval swallows
+# the rest of the script -- including its `exit`. Guard on all three failure
+# shapes, and refuse to proceed on any of them rather than testing nothing.
+lift () { # $1 = file, $2 = function name, $3 = dest
+  awk -v fn="$2" 'index($0, fn "()")==1 || index($0, fn " ()")==1 {inside=1}
+                  inside {print}
+                  inside && /^\}/ {exit}' "$1" > "$3"
+  [ -s "$3" ] && [ "$(tail -1 "$3")" = "}" ] && grep -qc . "$3"
+}
+: > "$FX/attrib/fns.sh"
+for fn in blocked_out want; do
+  if lift formal/v3/loop2gate.sh "$fn" "$FX/attrib/one.sh"; then
+    cat "$FX/attrib/one.sh" >> "$FX/attrib/fns.sh"
+  else
+    missed "attribution probe: could not lift $fn() from loop2gate.sh (reformatted?)"
+  fi
+done
 if [ "$(grep -c '^}' "$FX/attrib/fns.sh")" != "2" ]; then
-  missed "attribution probe: could not lift want()/blocked_out() from loop2gate.sh"
+  missed "attribution probe: lifted text does not contain exactly two function bodies"
+fi
+# the lift must not have swallowed the rest of the file
+if grep -qE '^(echo|one |want "|===== )' "$FX/attrib/fns.sh"; then
+  missed "attribution probe: the lift swallowed script body beyond the function"
+else
+  caught "attribution probe: the lift is bounded to the function body"
 fi
 cat > "$FX/attrib/probe.sh" <<SNIP
 declare -A HOUT HRC

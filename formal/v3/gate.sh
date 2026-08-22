@@ -57,7 +57,8 @@ blocked_out() {
 # carry the needle.
 chk() {
   if [ "${4:-0}" = "0" ] && printf '%s' "$2" | grep -q -- "$3"; then echo "  ok   $1"
-  elif blocked_out "$2"; then echo "  BLOCKED $1 (harness could not run; nothing measured)"; blkd=1
+  elif [ "${4:-0}" != "0" ] && blocked_out "$2"; then
+    echo "  BLOCKED $1 (harness could not run; nothing measured)"; blkd=1
   elif [ "${4:-0}" != "0" ]; then echo "  FAIL $1 (harness exit ${4}; wanted '$3')"; fail=1
   else echo "  FAIL $1 (wanted '$3')"; fail=1; fi
 }
@@ -69,27 +70,30 @@ chk "20 universally composable"      "$s" "20/61" "$src"
 chk "15 definite arcs"               "$c" "arcs 15" "$crc"
 chk "0 anti-exchange violations"     "$a" "VIOLATIONS: 0" "$arc"
 say "3. every category claim recomputed"
-cl=$(node formal/v3/claims.mjs 2>&1); echo "$cl" | tail -1
+cl=$(node formal/v3/claims.mjs 2>&1); clrc=$?; echo "$cl" | tail -1
 # expected string wins first; see chk() -- these three are the only
 # checks actually blocked today, so the inversion matters most here.
-if printf '%s' "$cl" | grep -q ', 0 failed'; then echo "  ok   109-claim checker"
-elif blocked_out "$cl"; then echo "  BLOCKED 109-claim checker (could not run)"; blkd=1
+if [ "${clrc:-1}" = "0" ] && printf '%s' "$cl" | grep -q ', 0 failed'; then echo "  ok   109-claim checker"
+elif [ "${clrc:-1}" != "0" ] && blocked_out "$cl"; then echo "  BLOCKED 109-claim checker (could not run)"; blkd=1
+elif [ "${clrc:-1}" != "0" ]; then echo "  FAIL claim checker (exit ${clrc})"; fail=1
 else echo "  FAIL claim checker"; fail=1; fi
 
 say "3b. v3 toolchain smoke"
-sm=$(bash formal/v3/smoke.sh 2>&1); echo "$sm" | tail -1
+sm=$(bash formal/v3/smoke.sh 2>&1); smrc=$?; echo "$sm" | tail -1
 # expected string wins first; see chk() -- these three are the only
 # checks actually blocked today, so the inversion matters most here.
-if printf '%s' "$sm" | grep -q 'SMOKE OK'; then echo "  ok   smoke"
-elif blocked_out "$sm"; then echo "  BLOCKED smoke (could not run)"; blkd=1
+if [ "${smrc:-1}" = "0" ] && printf '%s' "$sm" | grep -q 'SMOKE OK'; then echo "  ok   smoke"
+elif [ "${smrc:-1}" != "0" ] && blocked_out "$sm"; then echo "  BLOCKED smoke (could not run)"; blkd=1
+elif [ "${smrc:-1}" != "0" ]; then echo "  FAIL smoke (exit ${smrc})"; fail=1
 else echo "  FAIL smoke"; fail=1; fi
 
 say "3c. knowledge-graph claims"
-gr=$(python3 formal/v3/verify-graphs.py 2>&1); echo "$gr" | tail -1
+gr=$(python3 formal/v3/verify-graphs.py 2>&1); grrc=$?; echo "$gr" | tail -1
 # expected string wins first; see chk() -- these three are the only
 # checks actually blocked today, so the inversion matters most here.
-if printf '%s' "$gr" | grep -q 'GRAPH CLAIMS VERIFIED'; then echo "  ok   graph claims (12 lanes, merged, domain)"
-elif blocked_out "$gr"; then echo "  BLOCKED graph claims (could not run)"; blkd=1
+if [ "${grrc:-1}" = "0" ] && printf '%s' "$gr" | grep -q 'GRAPH CLAIMS VERIFIED'; then echo "  ok   graph claims (12 lanes, merged, domain)"
+elif [ "${grrc:-1}" != "0" ] && blocked_out "$gr"; then echo "  BLOCKED graph claims (could not run)"; blkd=1
+elif [ "${grrc:-1}" != "0" ]; then echo "  FAIL graph claims (exit ${grrc})"; fail=1
 else echo "  FAIL graph claims"; fail=1; fi
 
 say "4. hand-asserted numbers and uncited protocol claims in the paper"
