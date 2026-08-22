@@ -815,6 +815,79 @@ DEFIFORMAL_ROOT="$FX/m3" node formal/v3/totalgate.mjs >/dev/null 2>&1
 want_rc "claim: intact corpus still passes (control)" 0 "$?"
 
 echo
+echo "===== 3n. every claim site of a figure must agree ====="
+# tot was required in both meas:covsens and tab:categories; res was required
+# only in the table. So the old gate caught a prose-side edit and missed the
+# table, and this one caught the table and missed the prose -- an internally
+# inconsistent paper shipping at exit 0, the mirror of the defect anchoring was
+# introduced to remove.
+
+# (a) edit the residue PROSE claim, leave the table alone
+mk_two "$FX/n1"
+python3 - "$FX/n1/paper/atlas.tex" <<'PY'
+import io, sys
+p = sys.argv[1]
+s = io.open(p, encoding="utf-8").read()
+old = "The sixty constructions leave $689$"
+if old not in s:
+    print("PERTURBATION DID NOT APPLY", file=sys.stderr); sys.exit(3)
+io.open(p, "w", encoding="utf-8").write(s.replace(old, "The sixty constructions leave $690$"))
+PY
+out=$(DEFIFORMAL_ROOT="$FX/n1" node formal/v3/totalgate.mjs 2>&1); rc=$?
+want_rc  "sites: a prose-only residue edit is caught" 1 "$rc"
+want_has "sites: residue is what fails" "$out" "FAIL residue total"
+
+# (b) edit the residue TABLE cell, leave the prose alone
+mk_two "$FX/n2"
+python3 - "$FX/n2/paper/atlas.tex" <<'PY'
+import io, sys
+p = sys.argv[1]
+s = io.open(p, encoding="utf-8").read()
+old = "total & --- & 1259 & 570 & 689 & 15"
+if old not in s:
+    print("PERTURBATION DID NOT APPLY", file=sys.stderr); sys.exit(3)
+io.open(p, "w", encoding="utf-8").write(s.replace(old, "total & --- & 1259 & 570 & 690 & 15"))
+PY
+out=$(DEFIFORMAL_ROOT="$FX/n2" node formal/v3/totalgate.mjs 2>&1); rc=$?
+want_rc  "sites: a table-only residue edit is caught" 1 "$rc"
+
+# (c) the same for tot, both directions, which HEAD already required
+mk_two "$FX/n3"
+python3 - "$FX/n3/paper/atlas.tex" <<'PY'
+import io, sys
+p = sys.argv[1]
+s = io.open(p, encoding="utf-8").read()
+io.open(p, "w", encoding="utf-8").write(
+    s.replace("total & --- & 1259 & 570 & 689 & 15", "total & --- & 1260 & 570 & 689 & 15"))
+PY
+out=$(DEFIFORMAL_ROOT="$FX/n3" node formal/v3/totalgate.mjs 2>&1); rc=$?
+want_rc  "sites: a table-only tot edit is caught" 1 "$rc"
+
+# control: an untouched manuscript still passes
+mk_two "$FX/n4"
+DEFIFORMAL_ROOT="$FX/n4" node formal/v3/totalgate.mjs >/dev/null 2>&1
+want_rc "sites: an untouched manuscript still passes (control)" 0 "$?"
+
+echo
+echo "===== 3o. the register does not overstate the hole ====="
+# The register claimed a pair-delete is "reported as agreement". It is caught by
+# the file-count guard, exit 3. A register that overstates a hole mis-sizes a
+# reader's trust as surely as one that hides it, so the claim is now measured.
+mk_two "$FX/o1"
+rm -rf "$FX/o1/expansion/09-rwa/specs/"*.json
+python3 - "$FX/o1/expansion/09-rwa/verdicts.json" <<'PY'
+import json, sys
+p = sys.argv[1]
+d = json.load(open(p))
+json.dump(d[:-1] if len(d) > 1 else d, open(p, "w"))
+PY
+out=$(DEFIFORMAL_ROOT="$FX/o1" node formal/v3/totalgate.mjs 2>&1); rc=$?
+want_not "register: a pair-delete is NOT reported as agreement" "$out" "all headline totals agree"
+reg=$(cat formal/v3/GATE-REGISTER.md)
+want_has "register: records the correction rather than amending it" "$reg" "Correction."
+want_has "register: names the cardinality-preserving variant"       "$reg" "cardinality-preserving"
+
+echo
 echo "===== 3i. loop2gate says plainly that no citation checker exists ====="
 # Routing evidence.mjs / cites.mjs through one() replaced "no verdict" with a
 # WRONG verdict: evidence.mjs is the supplement emitter (no failure path, its

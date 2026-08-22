@@ -257,6 +257,16 @@ const claimsPctAt = (v, contextRe) => {
 const COVERAGE_CLAIM = /Pooling all[\s\S]{0,60}rows gives[\s\S]{0,40}/;
 // "Counting those as residue gives\n$29.0\%$, a swing of ..."
 const STRICT_CLAIM   = /Counting those as residue gives[\s\S]{0,40}/;
+// The residue total is claimed twice: bare in the tab:categories total row, and
+// in the sentence opening sec:extend. Requiring only the table meant a prose
+// edit shipped an internally inconsistent paper at exit 0 -- the mirror of the
+// defect the whole-document search had.
+const RESIDUE_CLAIM  = /The sixty constructions leave[\s\S]{0,40}/;
+const claimsNumAt = (n, contextRe) => {
+  const m = tex.match(contextRe);
+  if (!m) blocked(`atlas.tex no longer states this figure where the gate expects it: ${contextRe}`);
+  return numRe(n).test(m[0]);
+};
 const gp = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, "{,}");
 
 let bad = 0;
@@ -264,7 +274,7 @@ const must = [
   // tot is stated twice: in meas:covsens and in the tab:categories total row.
   // res is stated in the table only.
   [`obligations total ${tot}`,   claimsNumIn(tot, [COVSENS, CATTAB])],
-  [`residue total ${res}`,       claimsNumIn(res, [CATTAB])],
+  [`residue total ${res}`,       claimsNumIn(res, [CATTAB]) && claimsNumAt(res, RESIDUE_CLAIM)],
   [`coverage ${pct}%`,           claimsPctAt(pct, COVERAGE_CLAIM)],
   [`strict coverage ${strict}%`, claimsPctAt(strict, STRICT_CLAIM)],
 ];

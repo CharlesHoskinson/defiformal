@@ -160,10 +160,17 @@ aggregates without identity: it never joins a verdict record to the spec file
 describing the same application, and never reads `app` or `category`. Two
 consequences:
 
-- A mutation that moves BOTH sources together — deleting an app's verdict record
-  and its spec file, or swapping two applications with identical statistics —
-  preserves every equality the gate checks and is reported as agreement, with
-  one application double-counted and another unmeasured.
+- **Correction.** An earlier version of this section said that deleting an app's
+  verdict record and its spec file "is reported as agreement". That is false, and
+  both reviewers caught it: the pair-delete is caught by `specFiles 59 != 60`,
+  exit 3, and would be exit 1 even without the hardcoded constants. Recorded
+  rather than silently amended, because a register that overstates a hole
+  mis-sizes a reader's trust exactly as surely as one that hides it.
+- What IS invisible is the **cardinality-preserving** variant: delete an app and
+  duplicate another to keep the counts whole, or swap two applications with
+  identical statistics. Those preserve every equality the gate checks and every
+  count, and are reported as agreement with one application double-counted and
+  another unmeasured.
 - A coordinated edit that preserves the sums but changes what they describe is
   reported as `a headline total disagrees` — a corpus defect routed through the
   manuscript-is-wrong exit code, which is precisely the failure this branch
