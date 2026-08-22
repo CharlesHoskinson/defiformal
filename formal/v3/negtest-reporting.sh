@@ -251,6 +251,54 @@ cp -r "$R/expansion/01-spot-exchange" "$FX/t5/expansion/"
 out=$(DEFIFORMAL_ROOT="$FX/t5" node formal/v3/totalgate.mjs 2>&1); rc=$?
 want_not "type: a slug-shaped file does not block the run" "$out" "cannot enter slug 99-not-a-dir"
 
+# A: a non-directory occupying a real category name must BLOCK, not be skipped.
+# Skipping it drops that category's obligations and the short total then reads
+# as a genuine disagreement -- the published lie, one shape further on.
+rm -rf "$FX/t6"; mkdir -p "$FX/t6/paper" "$FX/t6/expansion"
+cp "$R/paper/atlas.tex" "$FX/t6/paper/atlas.tex"
+cp -r "$R/expansion/01-spot-exchange" "$FX/t6/expansion/"
+cp -r "$R/expansion/02-lending"       "$FX/t6/expansion/"
+rm -rf "$FX/t6/expansion/02-lending"; : > "$FX/t6/expansion/02-lending"
+out=$(DEFIFORMAL_ROOT="$FX/t6" node formal/v3/totalgate.mjs 2>&1); rc=$?
+want_rc  "slug: a FILE on a category name blocks" 3 "$rc"
+want_not "slug: file-on-category is not a disagreement" "$out" "out of step"
+
+# ... but an editor dropping is not a category and must not block the gate
+rm -rf "$FX/t7"; mkdir -p "$FX/t7/paper" "$FX/t7/expansion"
+cp "$R/paper/atlas.tex" "$FX/t7/paper/atlas.tex"
+cp -r "$R"/expansion/[0-9][0-9]-* "$FX/t7/expansion/" 2>/dev/null
+: > "$FX/t7/expansion/01-spot-exchange.bak"
+out=$(DEFIFORMAL_ROOT="$FX/t7" node formal/v3/totalgate.mjs 2>&1); rc=$?
+want_rc  "slug: a .bak dropping does not block" 0 "$rc"
+
+# D: a missing interpreter or script is a blocked check, not a content failure.
+# Lift the real function here -- this section runs before 3c defines it.
+eval "$(awk '/^blocked_out\(\) \{/,/^\}/' formal/v3/gate.sh)"
+declare -F blocked_out >/dev/null || missed "could not lift blocked_out() from gate.sh"
+if blocked_out "bash: line 1: nosuchtool: command not found"; then
+  caught "blocked_out recognises 'command not found'"
+else missed "blocked_out misses 'command not found'"; fi
+if blocked_out "python3: can't open file '/x/y.py': [Errno 2] No such file or directory"; then
+  caught "blocked_out recognises a missing python script"
+else missed "blocked_out misses a missing python script"; fi
+
+# E: gate.sh's chk() must not call a non-zero harness ok on a stray needle
+gchk=$(awk '/^chk\(\) \{/,/^\}/' formal/v3/gate.sh)
+if printf '%s' "$gchk" | grep -q '\${4:-0}'; then
+  caught "gate.sh chk() consults the harness exit code"
+else
+  missed "gate.sh chk() ignores the harness exit code"
+fi
+cat > "$FX/gchk.sh" <<SNIP
+fail=0; blkd=0
+$(awk '/^blocked_out\(\) \{/,/^\}/' formal/v3/gate.sh)
+$gchk
+chk "stray needle, harness died" "boom
+pairs: 1830" "pairs: 1830" 3
+SNIP
+gout=$(bash "$FX/gchk.sh" 2>&1)
+want_not "gate.sh chk: a dead harness is not ok on a stray needle" "$gout" "  ok   stray needle"
+
 echo
 echo "===== 3e. loop2gate.sh derives its verdict from the exit code ====="
 # The previous round only added a printf here and left the verdict coming from
@@ -268,9 +316,22 @@ want_not "loop2gate: no longer hardcodes /root"  "$(cat formal/v3/loop2gate.sh)"
 # terminal block in a copy and confirm it never prints.
 # The probe needs a tree whose ../.. is a real defiformal root, or the sentinel
 # exits 3 first and BOTH the probe and its control pass/fail vacuously.
-probe_tree () {   # $1 = dest; symlinks only, nothing written inside the repo
-  rm -rf "$1"; mkdir -p "$1/formal/v3"
-  for d in paper expansion corpus50 research; do ln -s "$R/$d" "$1/$d"; done
+probe_tree () {   # $1 = dest
+  # paper/ is a REAL directory holding a copy of atlas.tex and a stub build.sh.
+  # It used to be a symlink to the repo's paper/, which meant every negtest run
+  # executed two extra full paper builds inside the real tree -- atlas.pdf and
+  # atlas.log mtimes moved, measured. Only git-ignored files were touched, so
+  # git status stayed clean and it went unnoticed for two rounds.
+  rm -rf "$1"; mkdir -p "$1/formal/v3" "$1/paper"
+  cp "$R/paper/atlas.tex" "$1/paper/atlas.tex"
+  cat > "$1/paper/build.sh" <<'STUB'
+#!/usr/bin/env bash
+# stub: the dead-code probe needs loop2gate's control flow, not a real build
+printf 'OK  atlas.pdf: 39 pages, 0 bytes\n'
+exit 0
+STUB
+  chmod +x "$1/paper/build.sh"
+  for d in expansion corpus50 research; do ln -s "$R/$d" "$1/$d"; done
   ln -s "$R/formal/v2" "$1/formal/v2"
   for f in "$R"/formal/v3/*; do
     b=$(basename "$f"); [ "$b" = "loop2gate.sh" ] && continue
@@ -311,25 +372,26 @@ want_not "loop2gate: no free-set content verdict"    "$l2" "FAIL free-set claim"
 # F1: a blocked sibling harness must not mask a measured content failure in a
 # healthy one. want() previously judged blocked against the union of all four.
 rm -rf "$FX/attrib"; mkdir -p "$FX/attrib"
-cat > "$FX/attrib/probe.sh" <<'SNIP'
+# Drive the REAL blocked_out() and want() lifted verbatim out of loop2gate.sh.
+# The previous version re-implemented them in a heredoc, so reverting the
+# per-harness hunk left this probe testing a copy that still had the fix.
+awk '/^blocked_out\(\) \{/,/^\}/' formal/v3/loop2gate.sh  > "$FX/attrib/fns.sh"
+awk '/^want \(\) \{/,/^\}/'        formal/v3/loop2gate.sh >> "$FX/attrib/fns.sh"
+if [ "$(grep -c '^}' "$FX/attrib/fns.sh")" != "2" ]; then
+  missed "attribution probe: could not lift want()/blocked_out() from loop2gate.sh"
+fi
+cat > "$FX/attrib/probe.sh" <<SNIP
 declare -A HOUT HRC
 HOUT[pairs]="pairs: 1830"; HRC[pairs]=0
 HOUT[safe]="Error [ERR_MODULE_NOT_FOUND]: Cannot find module"; HRC[safe]=1
 fail=0; blkd=0
-blocked_out() { printf '%s' "$1" | grep -qE 'ERR_MODULE_NOT_FOUND|Cannot find module'; }
-want () {
-  local h="$3" out rc
-  out="${HOUT[$h]}"; rc="${HRC[$h]:-1}"
-  if printf '%s' "$out" | grep -qE "$2"; then echo "ok $1"
-  elif [ "${rc:-1}" != "0" ] && blocked_out "$out"; then echo "BLOCKED $1"; blkd=1
-  else echo "FAIL $1"; fail=1; fi
-}
+. "$FX/attrib/fns.sh"
 want "healthy harness, wrong number" 'pairs: 9999' pairs
 want "genuinely blocked harness"     'EVERY other' safe
 SNIP
 aout=$(bash "$FX/attrib/probe.sh" 2>&1)
-want_has "attribution: a wrong number in a healthy harness is FAIL" "$aout" "FAIL healthy harness"
-want_has "attribution: the blocked harness is BLOCKED"              "$aout" "BLOCKED genuinely blocked"
+want_has "attribution: a wrong number in a healthy harness is FAIL" "$aout" "  FAIL healthy harness"
+want_has "attribution: the blocked harness is BLOCKED"              "$aout" "  BLOCKED genuinely blocked"
 
 # F5: loop2gate's sentinel must be as strong as gate.sh's
 rm -rf "$FX/fake2"
@@ -370,11 +432,13 @@ echo "===== 3c. blocked_out must not hide a content failure ====="
 # blocked_out is a new lie in the opposite direction if it is over-broad: a
 # harness that RAN and got the wrong answer, but whose output also carries a
 # traceback, must read FAIL -- not BLOCKED.
-. /dev/stdin <<'SNIP'
-blocked_out() {
-  printf '%s' "$1" | grep -qE 'Error: (EACCES|ENOENT)|ERR_MODULE_NOT_FOUND|Cannot find module|(PermissionError|FileNotFoundError|ModuleNotFoundError): \[?Errno|^totalgate: BLOCKED|GATE BLOCKED'
-}
-SNIP
+# Lift the REAL blocked_out out of gate.sh rather than restating it here: a
+# restated copy keeps passing after the original is changed or reverted, which
+# is how the attribution probe went two rounds testing nothing.
+eval "$(awk '/^blocked_out\(\) \{/,/^\}/' formal/v3/gate.sh)"
+if ! declare -F blocked_out >/dev/null; then
+  missed "could not lift blocked_out() from gate.sh"
+fi
 if blocked_out "Traceback (most recent call last):
   File x
 ValueError: computed 60 of 72"; then

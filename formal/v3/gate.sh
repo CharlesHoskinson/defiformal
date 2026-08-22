@@ -35,11 +35,11 @@ echo "undefined references in atlas.log: $undef"
 [ "$undef" = "0" ] || { echo "GATE: undefined references present"; fail=1; }
 
 say "2. harnesses"
-p=$(node formal/v2/pairs.mjs 2>&1)
+p=$(node formal/v2/pairs.mjs 2>&1); prc=$?
 printf '%s\n' "$p" | head -4
-c=$(node formal/v2/canonical.mjs 2>&1); printf '%s\n' "$c" | head -2
-s=$(node formal/v2/safe.mjs 2>&1); printf '%s\n' "$s" | head -2
-a=$(node formal/v2/antiexchange.mjs 2>&1); printf '%s\n' "$a" | grep -E 'VIOLATIONS|closed sets'
+c=$(node formal/v2/canonical.mjs 2>&1); crc=$?; printf '%s\n' "$c" | head -2
+s=$(node formal/v2/safe.mjs 2>&1); src=$?; printf '%s\n' "$s" | head -2
+a=$(node formal/v2/antiexchange.mjs 2>&1); arc=$?; printf '%s\n' "$a" | grep -E 'VIOLATIONS|closed sets'
 
 # A harness that could not run has not refuted anything. Reporting its silence
 # as "FAIL 61 of 72" is a corpus verdict about a corpus nothing read.
@@ -48,23 +48,26 @@ a=$(node formal/v2/antiexchange.mjs 2>&1); printf '%s\n' "$a" | grep -E 'VIOLATI
 # and failed on content, and classifying that as blocked would hide a real defect
 # behind a reassuring word -- the same lie in the opposite direction.
 blocked_out() {
-  printf '%s' "$1" | grep -qE 'Error: (EACCES|ENOENT)|ERR_MODULE_NOT_FOUND|Cannot find module|(PermissionError|FileNotFoundError|ModuleNotFoundError): \[?Errno|^totalgate: BLOCKED|GATE BLOCKED'
+  printf '%s' "$1" | grep -qE 'Error: (EACCES|ENOENT)|ERR_MODULE_NOT_FOUND|Cannot find module|(PermissionError|FileNotFoundError|ModuleNotFoundError): \[?Errno|command not found|No such file or directory|can\x27t open file|^totalgate: BLOCKED|GATE BLOCKED'
 }
 # ORDER MATTERS. A harness that produced the expected answer is never blocked,
 # however noisy its stderr. Only then does the blocked classifier get a say.
+# $4 is the harness's exit code. A harness that exited non-zero has not measured
+# anything, so it may not produce a content verdict even if its text happens to
+# carry the needle.
 chk() {
-  if printf '%s' "$2" | grep -q -- "$3"; then echo "  ok   $1"
+  if [ "${4:-0}" = "0" ] && printf '%s' "$2" | grep -q -- "$3"; then echo "  ok   $1"
   elif blocked_out "$2"; then echo "  BLOCKED $1 (harness could not run; nothing measured)"; blkd=1
+  elif [ "${4:-0}" != "0" ]; then echo "  FAIL $1 (harness exit ${4}; wanted '$3')"; fail=1
   else echo "  FAIL $1 (wanted '$3')"; fail=1; fi
 }
-chk "61 of 72 satisfy laws+warrants" "$p" "61/72"
-chk "1830 pairs"                     "$p" "pairs: 1830"
-chk "185 failures"                   "$p" "fail: 185"
-chk "29 of 72 compress"              "$c" "29/72"
-chk "20 universally composable"      "$s" "20/61"
-chk "15 definite arcs"               "$c" "arcs 15"
-chk "0 anti-exchange violations"     "$a" "VIOLATIONS: 0"
-
+chk "61 of 72 satisfy laws+warrants" "$p" "61/72" "$prc"
+chk "1830 pairs"                     "$p" "pairs: 1830" "$prc"
+chk "185 failures"                   "$p" "fail: 185" "$prc"
+chk "29 of 72 compress"              "$c" "29/72" "$crc"
+chk "20 universally composable"      "$s" "20/61" "$src"
+chk "15 definite arcs"               "$c" "arcs 15" "$crc"
+chk "0 anti-exchange violations"     "$a" "VIOLATIONS: 0" "$arc"
 say "3. every category claim recomputed"
 cl=$(node formal/v3/claims.mjs 2>&1); echo "$cl" | tail -1
 # expected string wins first; see chk() -- these three are the only

@@ -30,7 +30,10 @@ const TEXPATH = path.join(REPO, "paper", "atlas.tex");
 
 let slugs;
 try {
-  slugs = fs.readdirSync(ROOT).filter(d => /^\d\d-/.test(d));
+  slugs = fs.readdirSync(ROOT)
+    .filter(d => /^\d\d-/.test(d))
+    // editor and backup droppings are not categories and never were
+    .filter(d => !/\.(bak|tmp|orig|save|swp|rej)$/i.test(d) && !/~$/.test(d));
 } catch (e) {
   blocked(`cannot read expansion root ${ROOT}: ${e.code || e.message}`);
 }
@@ -73,7 +76,13 @@ for (const slug of slugs) {
   const sdir = path.join(ROOT, slug);
   let st;
   try { st = fs.statSync(sdir); } catch (e) { blocked(`cannot stat slug ${slug}: ${e.code || e.message}`); }
-  if (!st.isDirectory()) continue;   // a slug-shaped file is not a category
+  // A non-directory sitting on a category name is ambiguous: it may be a stray
+  // file, or a category that was clobbered. The gate cannot tell, and a gate
+  // that cannot tell must block -- skipping it drops that category's
+  // obligations and the short total then reads as a real disagreement.
+  if (!st.isDirectory()) {
+    blocked(`slug ${slug} is not a directory; cannot tell a stray file from a clobbered category`);
+  }
   try {
     fs.accessSync(sdir, fs.constants.R_OK | fs.constants.X_OK);
   } catch (e) {

@@ -26,7 +26,7 @@ need () { [ -f "$1" ] || { echo "  FAIL missing script: $1"; fail=1; return 1; }
 # "Traceback" also appears when a harness ran and failed on content, and
 # classifying that as blocked would hide a real defect behind a reassuring word.
 blocked_out() {
-  printf '%s' "$1" | grep -qE 'Error: (EACCES|ENOENT)|ERR_MODULE_NOT_FOUND|Cannot find module|(PermissionError|FileNotFoundError|ModuleNotFoundError): \[?Errno|: Permission denied|cd: .*: Permission denied|^totalgate: BLOCKED|GATE BLOCKED|LOOP2 BLOCKED'
+  printf '%s' "$1" | grep -qE 'Error: (EACCES|ENOENT)|ERR_MODULE_NOT_FOUND|Cannot find module|(PermissionError|FileNotFoundError|ModuleNotFoundError): \[?Errno|: Permission denied|cd: .*: Permission denied|command not found|No such file or directory|can\x27t open file|^totalgate: BLOCKED|GATE BLOCKED|LOOP2 BLOCKED'
 }
 
 echo "===== 1. paper build"
