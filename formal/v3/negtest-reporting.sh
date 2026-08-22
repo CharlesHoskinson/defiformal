@@ -768,6 +768,53 @@ DEFIFORMAL_ROOT="$FX/x3" node formal/v3/totalgate.mjs >/dev/null 2>&1
 want_rc "sources: intact corpus still passes (control)" 0 "$?"
 
 echo
+echo "===== 3m. a figure must appear where it is CLAIMED, not anywhere ====="
+# `has()` was tex.includes() over a 151 KB document, so a wrong measurement could
+# be satisfied by the same digits in an unrelated sentence. Stripping every
+# approximate-fit marker drives approx to 0, makes strict equal the pooled
+# coverage (45.3), and the coverage literal eleven lines above satisfied it:
+# exit 0, "all headline totals agree", while the paper claims 29.0%. A silent
+# PASS, and the last gate defect class of this branch.
+mk_two "$FX/m1"
+python3 - "$FX/m1" <<'PY'
+import json, pathlib, re, sys
+root = pathlib.Path(sys.argv[1]) / "expansion"
+for f in root.glob("*/specs/*.json"):
+    d = json.load(open(f))
+    for o in d.get("functionalObligations", []):
+        if re.search(r"approx|forced|partial|stretch", o.get("note") or "", re.I):
+            o["note"] = "discharged"
+    json.dump(d, open(f, "w"))
+PY
+out=$(DEFIFORMAL_ROOT="$FX/m1" node formal/v3/totalgate.mjs 2>&1); rc=$?
+want_rc  "claim: the needle-collision mutation is caught" 1 "$rc"
+want_not "claim: NOT a silent pass" "$out" "all headline totals agree"
+want_has "claim: strict is what fails" "$out" "FAIL strict coverage"
+want_has "claim: coverage still legitimately passes" "$out" "ok   coverage 45.3%"
+
+# the anchors must be bound to a real claim site: if the manuscript stops making
+# the claim where the gate looks, that is a blocked check, not a pass.
+mk_two "$FX/m2"
+python3 - "$FX/m2/paper/atlas.tex" <<'PY'
+import io, sys
+p = sys.argv[1]
+s = io.open(p, encoding="utf-8").read()
+s = s.replace("Counting those as residue gives", "Treating those as residue yields")
+io.open(p, "w", encoding="utf-8").write(s)
+PY
+out=$(DEFIFORMAL_ROOT="$FX/m2" node formal/v3/totalgate.mjs 2>&1); rc=$?
+want_rc  "claim: a moved claim site blocks" 3 "$rc"
+want_has "claim: says the figure is no longer stated there" "$out" "no longer states this figure"
+
+# control: intact corpus still passes, so the anchors are not simply always-red.
+# The first version of these anchors used a sentence window that closed before
+# the figure (the figures contain dots), and the intact corpus FAILED. This
+# control is the only reason that did not ship.
+mk_two "$FX/m3"
+DEFIFORMAL_ROOT="$FX/m3" node formal/v3/totalgate.mjs >/dev/null 2>&1
+want_rc "claim: intact corpus still passes (control)" 0 "$?"
+
+echo
 echo "===== 3i. loop2gate says plainly that no citation checker exists ====="
 # Routing evidence.mjs / cites.mjs through one() replaced "no verdict" with a
 # WRONG verdict: evidence.mjs is the supplement emitter (no failure path, its

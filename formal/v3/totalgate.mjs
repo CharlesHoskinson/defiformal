@@ -208,15 +208,65 @@ try {
 } catch (e) {
   blocked(`cannot read ${TEXPATH}: ${e.code || e.message}`);
 }
+// A needle matched anywhere in a 151 KB document is not a check of the claim.
+// Scope each one to the block that makes it: a coverage figure that only
+// matches because the same digits appear in an unrelated sentence is a silent
+// pass, and grok constructed exactly that (approx driven to 0, strict becomes
+// "45.3", satisfied by the coverage literal eleven lines above).
+const block = (label, env) => {
+  const at = tex.indexOf(`\\label{${label}}`);
+  if (at < 0) blocked(`atlas.tex has no \\label{${label}}; the claim site is gone`);
+  // The label can sit anywhere inside its environment -- near the top of a
+  // measurement, but inside the CAPTION of a table, below the tabular body.
+  // Bound the block by the environment, not by the label's position.
+  const start = tex.lastIndexOf(`\\begin{${env}}`, at);
+  if (start < 0) blocked(`\\label{${label}} is not inside a \\begin{${env}}`);
+  const end = tex.indexOf(`\\end{${env}}`, at);
+  if (end < 0) blocked(`\\label{${label}} is not closed by \\end{${env}}`);
+  return tex.slice(start, end);
+};
+const COVSENS = block("meas:covsens", "measurement");
+const CATTAB  = block("tab:categories", "table");
+// `has` keeps its whole-document meaning ONLY for the stale-value blacklist,
+// where "absent anywhere" is exactly the property wanted.
 const has = t => tex.includes(t);
+// The same figure appears two ways: `$1{,}259$` in prose, bare `1259` in a
+// table cell. Match the NUMBER within the claim blocks, in either form, with a
+// boundary so 689 does not match 6890 and 45.3 does not match 145.3.
+// EVERY block that states the figure must state the same one. Accepting it in
+// either block let a prose edit pass while the table still agreed -- the paper
+// would be internally inconsistent and the gate would call it fine.
+const numRe = (n) => {
+  const esc = (x) => x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`(^|[^0-9.,{])(\\$?${esc(gp(n))}\\$?|\\$?${esc(String(n))}\\$?)([^0-9.,}]|$)`);
+};
+const claimsNumIn = (n, blocks) => blocks.every(b => numRe(n).test(b));
+// A percentage must appear in the SENTENCE that asserts it, not merely in the
+// same block. `meas:covsens` states both the pooled coverage and the strict
+// figure; matching either one anywhere in the block let a mutated strict value
+// be satisfied by the coverage literal eleven lines above -- a silent PASS.
+const claimsPctAt = (v, contextRe) => {
+  const esc = String(v).replace(".", "\\.");
+  const m = COVSENS.match(contextRe);
+  if (!m) blocked(`atlas.tex no longer states this figure where the gate expects it: ${contextRe}`);
+  return new RegExp(`(^|[^0-9.])${esc}\\\\%`).test(m[0]);
+};
+// Bounded windows, not sentence-terminated: the figures contain dots
+// ($45.3\%$), so a [^.] window closes before the number it is meant to capture.
+// "Pooling all $1{,}259$ rows gives $45.3\%$; ..."
+const COVERAGE_CLAIM = /Pooling all[\s\S]{0,60}rows gives[\s\S]{0,40}/;
+// "Counting those as residue gives\n$29.0\%$, a swing of ..."
+const STRICT_CLAIM   = /Counting those as residue gives[\s\S]{0,40}/;
 const gp = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, "{,}");
 
 let bad = 0;
 const must = [
-  [`obligations total ${tot}`, has(`$${gp(tot)}$`)],
-  [`residue total ${res}`,     has(`$${res}$`) || has(`$${gp(res)}$`)],
-  [`coverage ${pct}%`,         has(`$${pct}\\%$`)],
-  [`strict coverage ${strict}%`, has(`$${strict}\\%$`)],
+  // tot is stated twice: in meas:covsens and in the tab:categories total row.
+  // res is stated in the table only.
+  [`obligations total ${tot}`,   claimsNumIn(tot, [COVSENS, CATTAB])],
+  [`residue total ${res}`,       claimsNumIn(res, [CATTAB])],
+  [`coverage ${pct}%`,           claimsPctAt(pct, COVERAGE_CLAIM)],
+  [`strict coverage ${strict}%`, claimsPctAt(strict, STRICT_CLAIM)],
 ];
 for (const [what, ok] of must) {
   console.log(`${ok ? "ok  " : "FAIL"} ${what}`);

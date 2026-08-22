@@ -148,3 +148,34 @@ blocked-aware helper. `loop2gate.sh` reports **BLOCKED, fail=0** instead of ten
 content verdicts about a corpus nothing read.
 
 `negtest-reporting.sh`: 25 → 43 → **65** assertions.
+
+## What this gate still cannot detect
+
+Twelve rounds of adversarial review closed the skipped-walk class and the
+needle-collision class. Both reviewers independently identified one that
+remains, and it is recorded here rather than left implicit.
+
+**Coordinated, sum-preserving corpus edits are invisible.** `totalgate.mjs`
+aggregates without identity: it never joins a verdict record to the spec file
+describing the same application, and never reads `app` or `category`. Two
+consequences:
+
+- A mutation that moves BOTH sources together — deleting an app's verdict record
+  and its spec file, or swapping two applications with identical statistics —
+  preserves every equality the gate checks and is reported as agreement, with
+  one application double-counted and another unmeasured.
+- A coordinated edit that preserves the sums but changes what they describe is
+  reported as `a headline total disagrees` — a corpus defect routed through the
+  manuscript-is-wrong exit code, which is precisely the failure this branch
+  exists to prevent, surviving in the one shape the cross-source check cannot
+  see.
+
+Closing it requires joining the two sources by application identity, which is a
+larger change than this branch's contract and is not attempted here. Anyone
+relying on this gate should know that its guarantee is *one-sided*: a short or
+inconsistent walk is caught; a self-consistent but wrong corpus is not.
+
+`EXPECT_CATEGORIES = 12` and `EXPECT_SPEC_FILES = 60` are hardcoded. A corpus
+that legitimately grows will produce a false BLOCKED whose message asserts the
+opposite ("the corpus is incomplete" on 13 categories). That is the safe
+failure direction, but it is a maintenance obligation, not a check.
