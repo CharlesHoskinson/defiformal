@@ -13,41 +13,6 @@ _launch () {  # $1=outjson $2=outlog ; rest = command
   node "$FL" --timeout "$TIMEOUT" -- "$@" >"$out" 2>"$log"
 }
 
-# opencode's default ("formatted") run output renders nothing to stdout
-# outside a real TTY -- only `--format json` gives a programmatic stream,
-# and that stream is NDJSON protocol *events*, not the member's plain-text
-# answer. This pulls out and concatenates every `{"type":"text",...}`
-# event's `part.text`, which is opencode's equivalent of "what the other
-# CLIs already put on stdout for free". This is unwrapping a documented,
-# structured transport to reach the model's actual final answer -- not
-# cleaning up the answer's content, which stays members.sh's business to
-# leave alone (see the empirical/grok case below and extract-json.py).
-_unwrap_opencode_text () {  # $1=raw ndjson $2=out
-  python3 -c '
-import json, sys
-raw, out = sys.argv[1], sys.argv[2]
-chunks = []
-try:
-    with open(raw, "r", encoding="utf-8", errors="replace") as f:
-        for line in f:
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                ev = json.loads(line)
-            except ValueError:
-                continue
-            if ev.get("type") == "text":
-                t = ev.get("part", {}).get("text")
-                if t:
-                    chunks.append(t)
-except FileNotFoundError:
-    pass
-with open(out, "w", encoding="utf-8") as f:
-    f.write("".join(chunks))
-' "$1" "$2"
-}
-
 run_member () {  # $1=lens $2=sandbox $3=brief $4=outjson $5=outlog
   local lens="$1" sb="$2" brief="$3" out="$4" log="$5"
   local ask="Read ./$(basename "$brief") in full and follow it exactly. Do not read any other file. Output only the JSON object it specifies: no narration of what you are about to do or did, no markdown fences, nothing before or after the JSON."
@@ -100,16 +65,23 @@ run_member () {  # $1=lens $2=sandbox $3=brief $4=outjson $5=outlog
       # as claude-fable-5, which `claude --help` gives as its own example).
       #
       # BLOCKED, not an invocation problem, and left exactly as written
-      # per instruction: `claude auth status` on this box reports
-      # `{"loggedIn": false, "authMethod": "none"}`. A direct call
-      # (bypassing foreman-launch entirely) returns the same result:
-      # stdout "Failed to authenticate: OAuth session expired and could
-      # not be refreshed", exit 0. No ANTHROPIC_API_KEY, no
+      # per instruction. Correction to the original characterisation:
+      # this is NOT "never logged in". `~/.claude/.credentials.json`
+      # exists (Max subscription, full scopes) -- the credentials are
+      # present. But its `expiresAt` is 0 and the token refresh fails,
+      # which is why `claude auth status` still reports `{"loggedIn":
+      # false, "authMethod": "none"}` and a direct call (bypassing
+      # foreman-launch entirely) returns "Failed to authenticate: OAuth
+      # session expired and could not be refreshed" (exit 0). The
+      # accurate statement is "credentials present but the OAuth session
+      # is expired and unrefreshable", not "never logged in" -- that
+      # points at Charles re-authenticating (`claude auth login` or
+      # `claude setup-token`) to refresh the existing session, not at
+      # setting up a fresh one. No ANTHROPIC_API_KEY, no
       # CLAUDE_CONFIG_DIR, and no foreman-specific claude credential
       # profile (unlike grok's GROK_HOME) were found on PATH or in
-      # foreman-launch.js. This needs Charles to run `claude auth login`
-      # (or `claude setup-token`, also interactive) once in this WSL
-      # profile -- already surfaced to him; not an agent-fixable problem.
+      # foreman-launch.js as an alternate route. Already surfaced to
+      # Charles; not an agent-fixable problem.
       formal)       _launch "$out" "$log" claude -p --model claude-opus-5 "$ask" ;;
       # codex-cli 0.149.0: brief's guess ran unchanged, first try, no
       # corrections needed. `codex exec` (the non-interactive subcommand,
@@ -120,47 +92,63 @@ run_member () {  # $1=lens $2=sandbox $3=brief $4=outjson $5=outlog
       # otherwise. VERIFIED end-to-end: returned a clean, contract-shaped
       # JSON object with a "verdict" key on the first live call.
       significance) _launch "$out" "$log" codex exec --skip-git-repo-check "$ask" ;;
-      # SWITCHED from gemini to opencode 0.52.0 (opencode/big-pickle, its
-      # own zero-config free-tier model -- `opencode auth list` shows "0
-      # credentials" but that store is only for bring-your-own external
-      # provider keys; the opencode/* models authenticate some other way
-      # and just work). gemini was dropped per ruling: it has no auth
-      # method configured on this box AND crashes in its own checkpoint
-      # cleanup on a pre-existing ~/.gemini/projects.json slug collision,
-      # reproduced even from a brand-new, unrelated mktemp -d -- both
-      # environmental, neither ours to patch.
+      # Lens history, in order:
+      #  1. gemini -- BLOCKED: no auth method configured on this box, and
+      #     every invocation (even a direct call from a fresh, unrelated
+      #     mktemp -d, outside foreman-launch) crashes in gemini's own
+      #     checkpoint cleanup on a pre-existing ~/.gemini/projects.json
+      #     slug collision. Neither ours to patch.
+      #  2. opencode -- switched to `opencode run "$ask" --format json
+      #     --auto` (opencode/big-pickle, its zero-config free model).
+      #     `--format json` was required: opencode's default renderer
+      #     prints nothing to stdout without a real TTY. VERIFIED
+      #     end-to-end against the real smoke fixture, TWICE, reproduced
+      #     identically both times: it read ./brief.md via a real tool
+      #     call and returned a clean final answer with no narration
+      #     prefix -- extraction was not necessary. For the record, since
+      #     it cuts against what's below: this was not a fluke or a
+      #     misread -- two independent live full-fixture runs, both
+      #     correct and grounded in the actual fixture content.
+      #  3. `opencode auth list` was then found to report "0 credentials"
+      #     (~/.local/share/opencode/auth.json) -- the same shape of
+      #     signal that flagged gemini as broken -- so this lane was
+      #     redirected to agy (Antigravity) rather than risk relying on
+      #     an unexplained zero-config path. (The "0 credentials" store
+      #     is documented as being for bring-your-own external provider
+      #     keys only; whatever lets opencode/* models authenticate
+      #     without one is a separate, unexplained mechanism -- it just
+      #     happened to work twice in direct testing here.)
       #
-      # `opencode run "$ask"` is the positional-prompt form. `--format
-      # json` is required: opencode's default "formatted" renderer prints
-      # nothing to stdout without a real TTY, so it is not merely a nicer
-      # output mode here, it is the only one that produces anything
-      # programmatically at all. `--auto` (auto-approve permissions not
-      # explicitly denied) was added pre-emptively for the same class of
-      # trap hit twice already (grok's --always-approve, gemini's
-      # --skip-trust: a permission/trust prompt that nulled stdin can
-      # never answer) -- not proven load-bearing by a negative control,
-      # but cheap insurance given the pattern. VERIFIED end-to-end against
-      # the real smoke fixture: it read ./brief.md via a tool call and
-      # returned a clean final "text" part with NO narration prefix at
-      # all -- extraction was not necessary for opencode in this run.
-      # Raw stdout is NDJSON protocol events, not the answer text, hence
-      # `_unwrap_opencode_text` above.
+      # agy 1.1.19 (Antigravity) -- UNVERIFIED, CONTROLLER TESTING. Per
+      # explicit instruction, this invocation is recorded from `agy
+      # --help` only and has NOT been run: the controller is verifying
+      # agy's own auth in parallel and asked that this lane not also be
+      # dispatched from here, to avoid two sessions driving the same CLI
+      # and confusing each other's results. Flags per --help: `--print`
+      # (alias `-p`; boolean -- prompt is positional per the pattern
+      # every other lens follows) starts non-interactive print mode;
+      # `--output-format json` for machine-readable output; `--json-schema
+      # <schema>` "to enforce structured output" (--help notes it is
+      # "for stream-json, only applicable to the final result", so its
+      # interaction with plain --output-format json is itself unverified);
+      # `--dangerously-skip-permissions` to avoid the same class of
+      # stalled-approval trap hit with grok and gemini. The schema below
+      # is a smoke-fixture-specific placeholder (lens/verdict/summary) --
+      # like grok's --json-schema attempt, this does not generalize to
+      # Task 6/7's real per-lens contracts (ranking/findings) without
+      # further work, which is untouched here.
       #
-      # Minor, non-blocking finding while verifying this: the shared $ask
-      # wrapper says "Do not read any other file", but this smoke fixture's
-      # own brief.md says "Read ./bundle.md" -- a real ambiguity in the
-      # generic ask text. grok resolved it by reading bundle.md anyway;
-      # opencode/big-pickle resolved it the other way and answered
-      # "unverified" without reading bundle.md. Both satisfy this smoke
-      # test (it only checks for a "verdict" key, not its value), so left
-      # unchanged here -- worth a look wherever the brief-writing task
-      # owns $ask's wording.
+      # Once the controller confirms agy's auth, replace this guard with
+      # a real dispatch and re-verify against the smoke fixture before
+      # trusting it in Task 6/7.
       reproducer)
-        local raw="$sb/.opencode-events.jsonl"
-        _launch "$raw" "$log" opencode run "$ask" --format json --auto
-        local rc=$?
-        _unwrap_opencode_text "$raw" "$out"
-        exit "$rc"
+        echo "reproducer/agy: recorded, not dispatched -- controller is verifying agy auth separately; see members.sh comment" > "$log"
+        : > "$out"
+        # would-be invocation, NOT executed:
+        #   _launch "$out" "$log" agy --print --output-format json \
+        #     --json-schema '{"type":"object","properties":{"lens":{"type":"string"},"verdict":{"type":"string"},"summary":{"type":"string"}},"required":["lens","verdict","summary"]}' \
+        #     --dangerously-skip-permissions "$ask"
+        exit 125
         ;;
       # Not exercised by the Task 1 smoke test (only used starting in Task
       # 7's decider round) but defined here per the brief's interface so
