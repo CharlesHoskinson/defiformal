@@ -26,7 +26,20 @@ honestly reports insufficient_evidence with an empty ranking is obeying its
 brief and must pass; a full ranking under that verdict is a contract
 violation and must fail.
 
-Exit: 0 all valid, 1 at least one invalid, 3 nothing to validate.
+Finding-level fields are enums, not free text: candidate is one of
+A/B/C/framing, severity is high/medium/low, status is verified/unverified.
+Task 7's triage sorts by severity and groups by candidate, so a hallucinated
+value (a fourth candidate, a "critical" severity) must be rejected here
+rather than landing in the wrong bucket silently downstream.
+
+A report that cannot be read at all (permissions, vanished file) is a
+could-not-run condition, exit 3, not a content verdict -- it says nothing
+about whether the report's content is valid, so it must not be counted as
+"invalid" (exit 1) or crash with a traceback (exit 1 by Python default,
+indistinguishable from a real content failure).
+
+Exit: 0 all valid, 1 at least one invalid, 3 nothing to validate (including
+a report that could not be read).
 """
 import importlib.util
 import pathlib
@@ -44,9 +57,22 @@ TOP = ["lens", "ranking", "ranking_reason", "verdict", "summary",
 FIND = ["id", "candidate", "severity", "claim", "problem", "falsifier",
         "fix", "status"]
 VERDICTS = {"approved", "changes_requested", "insufficient_evidence"}
+CANDIDATES = {"A", "B", "C", "framing"}
+SEVERITIES = {"high", "medium", "low"}
+STATUSES = {"verified", "unverified"}
+
+
+class Unreadable(Exception):
+    """The report file itself could not be read -- distinct from a report
+    that reads fine but fails a content check. Callers must map this to
+    exit 3 (could not run), never to an "invalid" content verdict."""
+
 
 def check(path):
-    raw = path.read_text(encoding="utf-8", errors="replace")
+    try:
+        raw = path.read_text(encoding="utf-8", errors="replace")
+    except OSError as e:
+        raise Unreadable("%s: %s" % (path, e))
     problems = []
 
     doc, needed = extract_balanced_json(raw)
@@ -91,6 +117,15 @@ def check(path):
         for k in FIND:
             if k not in f or not str(f.get(k, "")).strip():
                 problems.append("finding %s missing %r" % (f.get("id", i), k))
+        if f.get("candidate") not in CANDIDATES:
+            problems.append("finding %s candidate %r not in %s" %
+                             (f.get("id", i), f.get("candidate"), sorted(CANDIDATES)))
+        if f.get("severity") not in SEVERITIES:
+            problems.append("finding %s severity %r not in %s" %
+                             (f.get("id", i), f.get("severity"), sorted(SEVERITIES)))
+        if f.get("status") not in STATUSES:
+            problems.append("finding %s status %r not in %s" %
+                             (f.get("id", i), f.get("status"), sorted(STATUSES)))
 
     if verdict == "changes_requested":
         sev = {str(f.get("severity")) for f in findings if isinstance(f, dict)}
@@ -114,7 +149,12 @@ def main(argv):
         return 3
     bad = 0
     for f in files:
-        problems = check(f)
+        try:
+            problems = check(f)
+        except Unreadable as e:
+            print("validate-reports: BLOCKED - could not read report: %s" % e,
+                  file=sys.stderr)
+            return 3
         if problems:
             bad += 1
             print("  INVALID %s" % f.name)
