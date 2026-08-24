@@ -31,16 +31,16 @@ of a composite is computable from those of its parts by a bounded number of word
 operations. We instantiate the model on seventy-two decomposed protocols and, in
 detail, on sixty of them, stating for each the obligations it discharges and
 those the vocabulary cannot name. A partial classification of the unnameable
-residue suggests three extensions --- a sort for parties, a constraint form for
-obligations that cannot arise, and a bounded delegation schema --- and each is
+residue suggests three extensions — a sort for parties, a constraint form for
+obligations that cannot arise, and a bounded delegation schema — and each is
 priced against the results above.
 
----
+***
 
 ## CANDIDATE A — the microstructure separation
 
-The perpetuals category contains seven protocols. For six of them --- Hyperliquid,
-ApeX, Aster, Lighter, edgeX and GMX v2 --- the canonical form omits exactly
+The perpetuals category contains seven protocols. For six of them — Hyperliquid,
+ApeX, Aster, Lighter, edgeX and GMX v2 — the canonical form omits exactly
 {Ct, Ex, Li}: the collateral test, the price oracle and the incentivised
 liquidator. Hyperliquid reduces from 14 mechanisms to 11 and GMX v2 from 13
 to 10. The two order-book options venues, Derive and Aevo, exhibit the same
@@ -48,10 +48,6 @@ signature.
 
 Supporting figures: of 72 corpus protocols, 61 satisfy the laws and
 warrants; 29 have a canonical form strictly smaller than themselves.
-
-A prior reviewer judged this close to definitional — nobody builds a
-perpetuals venue without a liquidation engine — and its remaining value
-was relocated to a claim about the method rather than about the domain.
 
 ## CANDIDATE B — the residue
 
@@ -79,18 +75,11 @@ other protocol in the corpus, and five categories contain no such member:
 lending, collateralised-debt stablecoins, bridges, options and prediction
 markets. Ranked by incompatible partners out of 60, the extremes are Uniswap
 and PancakeSwap at 31 each and twenty protocols at none.
-Table [ref] gives the distribution by category.
 
-Of 1830 protocol pairs, 1645 compose cleanly (90%) and 185 fail.
-Failure attribution: 15 arcs, 10 elements with a strict below-set.
-Twenty of the 61 admissible protocols compose with every other.
+Supporting figures: attribution of the failures resolves to 15 arcs and
+10 elements with a strict below-set.
 
-The paper notes, but does not lead with, that this 90% is over pairs
-drawn uniformly, while deployed compositions are not uniform: the pairs
-that occur in production concentrate among the spot exchanges and
-lending markets that the measurement above ranks most hostile.
-
----
+***
 
 ## The question
 

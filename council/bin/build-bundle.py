@@ -2,13 +2,18 @@
 """Assemble the blinded contribution bundle for Sprint 1.
 
 Extracts the abstract and the three contribution candidates from the
-manuscript, wraps them in a neutral frame, and writes a hash. The frame is
-written here rather than quoted from the paper because the paper's framing is
-exactly what is under review: quoting it would ask the panel to endorse the
-current emphasis instead of choosing one.
+manuscript. Each candidate is rendered as its claim and the figures that
+support it, with no editorial commentary on the claim's significance --
+an earlier draft carried asides ("a prior reviewer judged this close to
+definitional", "the paper notes, but does not lead with...") that told the
+panel what to think of a candidate rather than letting them judge it, and
+those asides landed unevenly across the three. The frame text around the
+candidates is written here rather than quoted from the paper because the
+paper's own framing is exactly what is under review: quoting it would ask
+the panel to endorse the current emphasis instead of choosing one.
 
-Deterministic: the same manuscript produces the same bytes, so the hash in the
-council log identifies exactly what was reviewed.
+Deterministic: the same manuscript produces the same bytes, so the hash in
+the council log identifies exactly what was reviewed.
 """
 import hashlib
 import os
@@ -40,6 +45,8 @@ def env(text, label):
     if i < 0:
         return None
     start = text.rfind("\\begin{", 0, i)
+    if start < 0:
+        return None
     endm = re.search(r"\\end\{[a-z]+\}", text[i:])
     if not endm:
         return None
@@ -59,6 +66,10 @@ def strip_tex(s):
     s = re.sub(r"\\(begin|end)\{[a-z]+\}", "", s)
     s = re.sub(r"\\[a-zA-Z]+\*?", "", s)
     s = s.replace("$", "").replace("~", " ").replace("\\%", "%")
+    # LaTeX's --- em-dash convention is a mechanical-extraction tell if left
+    # as three literal hyphens; every hand-written line in this bundle uses
+    # a real em dash, so normalise the extracted prose to match.
+    s = s.replace("---", "\u2014")
     s = re.sub(r"[{}]", "", s)
     s = s.replace("\x00LBRACE\x00", "{").replace("\x00RBRACE\x00", "}")
     return re.sub(r"\n{3,}", "\n\n", s).strip()
@@ -78,6 +89,19 @@ def main():
               % (bool(abstract), bool(perps), bool(pairs)), file=sys.stderr)
         return 3
 
+    abstract_prose = strip_tex(abstract)
+    perps_prose = strip_tex(perps)
+    pairs_prose = strip_tex(pairs)
+    # meas:pairs closes with "Table~\ref{tab:composition} gives the
+    # distribution by category". strip_tex turns the \ref into the
+    # placeholder "[ref]", but the table itself isn't part of this bundle,
+    # so the sentence points a blinded reader at nothing they can see, and
+    # the surviving bracket reads like a redaction on a document whose cover
+    # page says identity is sealed. Drop the sentence; the category
+    # breakdown it points to isn't a figure this comparison depends on.
+    pairs_prose = re.sub(
+        r"\s*Table \[ref\] gives the distribution by category\.$", "", pairs_prose)
+
     L = []
     L.append("# Three candidate results — which one is the contribution?")
     L.append("")
@@ -91,20 +115,16 @@ def main():
     L.append("")
     L.append("## Abstract as it currently stands")
     L.append("")
-    L.append(strip_tex(abstract))
+    L.append(abstract_prose)
     L.append("")
-    L.append("---")
+    L.append("***")
     L.append("")
     L.append("## CANDIDATE A — the microstructure separation")
     L.append("")
-    L.append(strip_tex(perps))
+    L.append(perps_prose)
     L.append("")
     L.append("Supporting figures: of 72 corpus protocols, 61 satisfy the laws and")
     L.append("warrants; 29 have a canonical form strictly smaller than themselves.")
-    L.append("")
-    L.append("A prior reviewer judged this close to definitional — nobody builds a")
-    L.append("perpetuals venue without a liquidation engine — and its remaining value")
-    L.append("was relocated to a claim about the method rather than about the domain.")
     L.append("")
     L.append("## CANDIDATE B — the residue")
     L.append("")
@@ -121,18 +141,12 @@ def main():
     L.append("")
     L.append("## CANDIDATE C — where composition actually fails")
     L.append("")
-    L.append(strip_tex(pairs))
+    L.append(pairs_prose)
     L.append("")
-    L.append("Of 1830 protocol pairs, 1645 compose cleanly (90%) and 185 fail.")
-    L.append("Failure attribution: 15 arcs, 10 elements with a strict below-set.")
-    L.append("Twenty of the 61 admissible protocols compose with every other.")
+    L.append("Supporting figures: attribution of the failures resolves to 15 arcs and")
+    L.append("10 elements with a strict below-set.")
     L.append("")
-    L.append("The paper notes, but does not lead with, that this 90% is over pairs")
-    L.append("drawn uniformly, while deployed compositions are not uniform: the pairs")
-    L.append("that occur in production concentrate among the spot exchanges and")
-    L.append("lending markets that the measurement above ranks most hostile.")
-    L.append("")
-    L.append("---")
+    L.append("***")
     L.append("")
     L.append("## The question")
     L.append("")
