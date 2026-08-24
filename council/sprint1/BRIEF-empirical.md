@@ -68,4 +68,8 @@ Output ONLY a single JSON object. No prose before or after. No markdown fences.
 }
 ```
 
+**`ranking`** is an array of `"A"`, `"B"` and `"C"` in some order, each appearing exactly once, best first — except when `verdict` is `"insufficient_evidence"`, where `ranking` must be an empty array.
+
+**`candidate: "framing"`** applies to findings about how the bundle presents the candidates rather than about any one candidate's substance.
+
 `changes_requested` requires at least one `high` or `medium` finding.

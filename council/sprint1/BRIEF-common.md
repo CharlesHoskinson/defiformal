@@ -1,14 +1,3 @@
-# Lens: reproducer
-
-You are not reviewing quality. You are checking whether the claims in the
-bundle are stated precisely enough to be checked at all.
-
-For each figure — 1259, 689, 570, 1830, 1645, 185, 61, 45.3%, 29.0% — ask: is
-it defined well enough that an independent party could recompute it and get the
-same number, or would they have to guess a convention? Name every figure whose
-definition is ambiguous, and say what the ambiguity is. You cannot run code;
-judge from the text alone.
-
 ## Threat model
 
 You are reviewing for accidental drift and honest error — a figure that moved,

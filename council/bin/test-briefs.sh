@@ -16,6 +16,8 @@ for b in council/sprint1/BRIEF-empirical.md council/sprint1/BRIEF-formal.md \
   has "$b" "insufficient_evidence"   "allows insufficient_evidence"
   has "$b" "single JSON object"      "states the output contract"
   has "$b" "do not read any other"   "sandbox instruction"
+  # Verify the new Standards sentence content
+  has "$b" "recorded differently in the source material" "carries the Standards sentence"
   # self-contained: no cross-references to sibling briefs
   if grep -qi "BRIEF-" "$b"; then echo "  FAIL $(basename "$b"): references a sibling brief"; fail=$((fail+1));
   else echo "  ok   $(basename "$b"): self-contained"; pass=$((pass+1)); fi
