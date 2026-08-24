@@ -23,6 +23,16 @@ want "pairs figure 1830"      "$(grep -c '1830' "$B")" "1"
 # whatever construct produced it. This guards the whole class, not just the
 # \{...\} case first observed in CANDIDATE A.
 want "no stray backslashes"   "$(grep -c '\\' "$B")" "0"
+# \begin{measurement}[Title] carries an internal title the bundle doesn't
+# need (each candidate already has its own ## heading), and on a document
+# whose cover page says author identity is sealed, a bracketed phrase
+# standing alone on its own line reads as a redaction marker, not a title.
+# It lands on both CANDIDATE A and CANDIDATE C -- the two candidates
+# extracted from LaTeX (meas:perps and meas:pairs each carry one) -- so
+# this is not a one-off, it's a structural asymmetry against the two
+# LaTeX-sourced arms versus the hand-written B. Guard the class: no line
+# may be nothing but a [...] label.
+want "no bare bracketed lines" "$(grep -c '^\[.*\]$' "$B")" "0"
 python3 council/bin/leak-check.py "$B" >/dev/null 2>&1
 want "bundle passes leak check" "$?" "0"
 want "sha recorded"           "$([ -s council/sprint1/BUNDLE.sha256 ] && echo y || echo n)" "y"

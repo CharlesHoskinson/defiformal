@@ -29,13 +29,22 @@ def between(text, start_pat, end_pat):
     return text[a.end(): a.end() + b.start()].strip() if b else None
 
 def env(text, label):
-    """The environment body carrying \\label{label}."""
+    """The environment body carrying \\label{label}, with the environment's
+    optional \\begin{env}[title] argument dropped. The bundle supplies its
+    own heading (CANDIDATE A/B/C); the manuscript's internal title is
+    redundant, and on a document whose cover page says author identity is
+    sealed, a bracketed phrase standing alone reads as a redaction marker
+    rather than a title.
+    """
     i = text.find("\\label{%s}" % label)
     if i < 0:
         return None
     start = text.rfind("\\begin{", 0, i)
     endm = re.search(r"\\end\{[a-z]+\}", text[i:])
-    return text[start: i + endm.end()].strip() if endm else None
+    if not endm:
+        return None
+    body = text[start: i + endm.end()]
+    return re.sub(r"^(\\begin\{[a-z]+\})\[[^\]]*\]", r"\1", body).strip()
 
 def strip_tex(s):
     # Escaped braces (\{ \}) are literal characters, not grouping syntax --

@@ -39,7 +39,6 @@ priced against the results above.
 
 ## CANDIDATE A — the microstructure separation
 
-[Derived solvency machinery in order-book venues]
 The perpetuals category contains seven protocols. For six of them --- Hyperliquid,
 ApeX, Aster, Lighter, edgeX and GMX v2 --- the canonical form omits exactly
 {Ct, Ex, Li}: the collateral test, the price oracle and the incentivised
@@ -69,7 +68,6 @@ over-constrained. It will fail by having no name.
 
 ## CANDIDATE C — where composition actually fails
 
-[Which protocols compose]
 Sixty-one of the 72 protocols satisfy the requirements and warrants. Of the
 1,830 unordered pairs among them, 1,645 compose to an admissible set and
 185 do not. Every failure arms a prohibition; requirements, warrants and
