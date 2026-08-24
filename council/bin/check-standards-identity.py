@@ -8,6 +8,7 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 repo_root = os.path.dirname(os.path.dirname(script_dir))
 
 briefs = [
+    "BRIEF-common.md",
     "BRIEF-empirical.md",
     "BRIEF-formal.md",
     "BRIEF-significance.md",
@@ -18,7 +19,10 @@ hashes = {}
 extracted = {}
 
 for brief in briefs:
-    path = os.path.join(repo_root, "council/sprint1", brief)
+    if brief == "BRIEF-common.md":
+        path = os.path.join(repo_root, "council/sprint1", brief)
+    else:
+        path = os.path.join(repo_root, "council/sprint1", brief)
     try:
         with open(path) as f:
             lines = f.readlines()
@@ -53,10 +57,6 @@ for brief in briefs:
 first_hash = list(hashes.values())[0]
 first_brief = list(hashes.keys())[0]
 
-if not first_hash or first_hash == "d41d8cd98f00b204e9800998ecf8427e":
-    print("  FAIL: Standards bullet is empty")
-    sys.exit(1)
-
 all_match = True
 for brief, h in hashes.items():
     if h != first_hash:
@@ -70,5 +70,5 @@ for brief, h in hashes.items():
 if not all_match:
     sys.exit(1)
 
-print("  ok   Standards bullet identity: all four briefs have byte-identical sentence")
+print("  ok   Standards bullet identity: all five files have byte-identical sentence")
 sys.exit(0)

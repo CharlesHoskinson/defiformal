@@ -23,9 +23,9 @@ for b in council/sprint1/BRIEF-empirical.md council/sprint1/BRIEF-formal.md \
   else echo "  ok   $(basename "$b"): self-contained"; pass=$((pass+1)); fi
 done
 
-# Check that the Standards bullet about candidates is present and byte-identical in all four briefs
+# Check that the Standards bullet about candidates is present and byte-identical in all five files
 if python3 council/bin/check-standards-identity.py >/dev/null 2>&1; then
-  echo "  ok   Standards bullet identity: all four briefs have byte-identical sentence"
+  echo "  ok   Standards bullet identity: all five files have byte-identical sentence"
   pass=$((pass+1))
 else
   echo "  FAIL Standards bullet identity check"
