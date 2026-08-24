@@ -38,12 +38,20 @@ def env(text, label):
     return text[start: i + endm.end()].strip() if endm else None
 
 def strip_tex(s):
+    # Escaped braces (\{ \}) are literal characters, not grouping syntax --
+    # e.g. "$\{Ct, Ex, Li\}$" denotes the set {Ct, Ex, Li}. Shield them before
+    # the macro/brace stripping below, then restore as plain "{" "}"
+    # afterwards. Left unshielded, the macro regex ignores them (no letter
+    # follows the backslash) and the brace-stripping regex then removes only
+    # the brace, orphaning the backslash in the output.
+    s = s.replace("\\{", "\x00LBRACE\x00").replace("\\}", "\x00RBRACE\x00")
     s = re.sub(r"\\label\{[^}]*\}", "", s)
     s = re.sub(r"\\ref\{[^}]*\}", "[ref]", s)
     s = re.sub(r"\\(begin|end)\{[a-z]+\}", "", s)
     s = re.sub(r"\\[a-zA-Z]+\*?", "", s)
     s = s.replace("$", "").replace("~", " ").replace("\\%", "%")
     s = re.sub(r"[{}]", "", s)
+    s = s.replace("\x00LBRACE\x00", "{").replace("\x00RBRACE\x00", "}")
     return re.sub(r"\n{3,}", "\n\n", s).strip()
 
 def main():

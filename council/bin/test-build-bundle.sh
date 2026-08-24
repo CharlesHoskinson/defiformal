@@ -18,6 +18,11 @@ want "candidate C present"    "$(grep -c 'CANDIDATE C' "$B")" "1"
 # start failing for a reason that is invisible without this comment.
 want "residue figure 689"     "$(grep -c '689' "$B")" "1"
 want "pairs figure 1830"      "$(grep -c '1830' "$B")" "1"
+# The bundle is plain prose for a language model: any surviving backslash is
+# a LaTeX-stripping defect by definition (escaped braces, \%, \$, \&, \_, ...),
+# whatever construct produced it. This guards the whole class, not just the
+# \{...\} case first observed in CANDIDATE A.
+want "no stray backslashes"   "$(grep -c '\\' "$B")" "0"
 python3 council/bin/leak-check.py "$B" >/dev/null 2>&1
 want "bundle passes leak check" "$?" "0"
 want "sha recorded"           "$([ -s council/sprint1/BUNDLE.sha256 ] && echo y || echo n)" "y"

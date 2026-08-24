@@ -42,7 +42,7 @@ priced against the results above.
 [Derived solvency machinery in order-book venues]
 The perpetuals category contains seven protocols. For six of them --- Hyperliquid,
 ApeX, Aster, Lighter, edgeX and GMX v2 --- the canonical form omits exactly
-\Ct, Ex, Li\: the collateral test, the price oracle and the incentivised
+{Ct, Ex, Li}: the collateral test, the price oracle and the incentivised
 liquidator. Hyperliquid reduces from 14 mechanisms to 11 and GMX v2 from 13
 to 10. The two order-book options venues, Derive and Aevo, exhibit the same
 signature.
