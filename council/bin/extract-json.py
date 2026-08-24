@@ -9,11 +9,32 @@ though a single well-formed JSON object is present in it, e.g.:
     `./bundle.md` next, so I'll read that and then return only the
     specified JSON.{"lens":"smoke","verdict":"rejected","summary":"..."}
 
-This module finds the first '{' in the text and brace-counts -- respecting
-JSON string literals and backslash escapes, not a regex, and not "the last
-'}' in the file" -- to find its matching close, then parses that span as
-JSON. If the first '{' doesn't lead to a balanced, parseable object, that
-is a genuine failure: no fallback search for a later '{'.
+This module tries each '{' in the text in turn -- brace-counting from it,
+respecting JSON string literals and backslash escapes, not a regex, and
+not "the last '}' in the file" -- and returns the first one whose count
+balances and whose span parses as JSON. A '{' that fails (unbalanced, or
+balanced but not valid JSON) is skipped in favour of the next one; only
+running out of '{' candidates entirely is a genuine failure.
+
+Observed 2026-08-23, council/sprint1/reports/R1-empirical-grok.json,
+round-1 attempt 1 (4,915 bytes, since overwritten by the retry that
+produced the file now on disk): stdout carried a truncated, self-
+interrupted JSON fragment immediately ahead of the real, complete
+object --
+
+    {"lens":"emp{"lens":"empirical","ranking":["C","B","A"],...}
+
+-- so brace-counting from the first '{' consumed the real object's own
+braces without the count ever returning to zero: no balanced match, full
+stop. This case was previously noted in this docstring as a theoretical
+gap ("no fallback search for a later '{'"); it is now handled by moving
+on to the next '{' rather than failing outright at the first one. (It
+does not, by itself, make such a report pass validate-reports.py: the
+recovered span is still preceded by discarded bytes, so `needed` is still
+True and the "no prose outside the object" contract still correctly
+rejects it -- this fix only turns "extraction is fundamentally impossible"
+into "extraction found the object, and the report has a separate,
+genuine prose problem".)
 
 Used by council/bin/smoke-members.sh's smoke check, and intended for reuse
 by Task 5's validate-reports.py, so the extraction rule lives in exactly
@@ -41,20 +62,27 @@ def extract_balanced_json(text):
     matched {...} span was discarded -- i.e. text was not already exactly
     one JSON object give or take surrounding whitespace.
     """
-    start = text.find("{")
-    if start == -1:
-        return None, None
-    end = _find_matching_brace(text, start)
-    if end is None:
-        return None, None
-    candidate = text[start:end + 1]
-    try:
-        obj = json.loads(candidate)
-    except ValueError:
-        return None, None
-    before, after = text[:start], text[end + 1:]
-    needed = bool(before.strip()) or bool(after.strip())
-    return obj, needed
+    pos = 0
+    while True:
+        start = text.find("{", pos)
+        if start == -1:
+            return None, None
+        end = _find_matching_brace(text, start)
+        if end is not None:
+            candidate = text[start:end + 1]
+            try:
+                obj = json.loads(candidate)
+            except ValueError:
+                pass
+            else:
+                before, after = text[:start], text[end + 1:]
+                needed = bool(before.strip()) or bool(after.strip())
+                return obj, needed
+        # This '{' didn't lead anywhere -- either brace-counting never
+        # returned to zero, or it did but the span isn't valid JSON (e.g.
+        # a brace inside a string that _find_matching_brace's own string-
+        # tracking mis-set for some earlier reason). Try the next '{'.
+        pos = start + 1
 
 
 def _find_matching_brace(text, open_idx):

@@ -132,6 +132,42 @@ adjusting shared validation tooling in direct response to a specific failing
 report is the same substitution-of-judgement the task explicitly forbids, one
 level removed.
 
+### Follow-up: extract-json.py's single-`{` limitation is now fixed, honestly evaluated
+
+A later pass revisited the "considered and declined" note above and shipped
+the fix anyway, on its own merits as a general tooling gap rather than as a
+targeted rescue of any one report: `extract_balanced_json` now tries each
+`{` in the text in turn (brace-counting from it, same string/escape-aware
+logic as before) instead of giving up when only the first one fails to
+balance. A regression test built from the real attempt-1 shape —
+`{"lens":"emp{"lens":"empirical","ranking":[...],...}`, a truncated
+fragment immediately ahead of a complete object — is in
+`council/bin/test-validate-reports.sh`; it fails against the pre-fix
+extractor (confirmed by reverting the fix and re-running) and passes
+against the fixed one. Full suite: 15/15.
+
+**This does not change Round 1's outcome, and was not expected to once
+traced through.** The report saved to disk today is `empirical`'s
+*second* attempt (6,409 bytes, the narration-prefix one) — the first
+attempt's corrupted-fragment capture (4,915 bytes) was already overwritten
+by the retry before either was ever committed, so there is no on-disk file
+left for the new fallback search to rescue. And structurally, it could not
+rescue attempt 1 either even if that file still existed: recovering an
+object by skipping past discarded leading bytes makes `extract_balanced_json`
+return `needed=True` by construction, and `validate-reports.py` treats
+`needed=True` as a contract violation regardless of whether the object was
+found — the fix turns "no single balanced, parseable JSON object found"
+into "output is not exactly one JSON object -- prose or markdown fences
+present outside it", both exit 1. Verified directly: running the current
+`R1-empirical-grok.json` through the fixed validator still reports it
+invalid, same reason as before (`output is not exactly one JSON object --
+prose or markdown fences present outside it`). `validate-reports.py
+council/sprint1/reports` is unchanged: 4 report(s), 2 invalid. Round 1
+remains a two-lens result (significance, reproducer); recovering a third
+requires either a further grok re-dispatch (out of budget here, and this
+pass made none — zero additional vendor calls) or accepting two lenses as
+final.
+
 ### formal (claude) failed exactly as predicted, and was not retried
 
 `R1-formal-claude.json` contains exactly the direct-call failure text quoted
