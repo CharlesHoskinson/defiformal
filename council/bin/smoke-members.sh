@@ -9,7 +9,16 @@
 # acceptable either: extract-json.py fails closed when no balanced object
 # exists, so that case still fails this check.
 set -uo pipefail
-cd "$(dirname "$0")/../.." || exit 3
+# Resolved from this file's own location; DEFIFORMAL_ROOT overrides and
+# says so -- mirrors the formal/v3/*.py pattern (e.g. verify-structure.py)
+# rather than the brief's original bare `cd .../..`, per the plan's own
+# Global Constraints, which every sibling script in the repo honours.
+_SELF="$(cd "$(dirname "$0")/../.." && pwd)" || exit 3
+_REPO="${DEFIFORMAL_ROOT:-$_SELF}"
+if [ "$_REPO" != "$_SELF" ]; then
+  echo "smoke-members.sh: NOTE - reading $_REPO (DEFIFORMAL_ROOT), not $_SELF" >&2
+fi
+cd "$_REPO" || exit 3
 [ -f council/bin/members.sh ] || { echo "members.sh absent"; exit 3; }
 . council/bin/members.sh
 

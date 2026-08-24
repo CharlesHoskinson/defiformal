@@ -18,6 +18,15 @@ is a genuine failure: no fallback search for a later '{'.
 Used by council/bin/smoke-members.sh's smoke check, and intended for reuse
 by Task 5's validate-reports.py, so the extraction rule lives in exactly
 one place rather than being reimplemented (and possibly redefined) twice.
+
+Exit codes (repo-wide convention: 0 true, 1 false, 3 could not run):
+  0  extraction succeeded and all --require-key keys were present; the
+     compact JSON object is on stdout.
+  1  no balanced, parseable JSON object exists in the input, or one does
+     but is missing a required key -- a genuine "property false", not an
+     error running the check.
+  3  the input file could not be read at all (missing, unreadable, not
+     a decodable text file) -- "could not run", never conflated with 1.
 """
 import argparse
 import json
@@ -88,8 +97,12 @@ def main(argv):
                          "extracted object; repeatable")
     args = p.parse_args(argv)
 
-    with open(args.path, "r", encoding="utf-8", errors="replace") as f:
-        text = f.read()
+    try:
+        with open(args.path, "r", encoding="utf-8", errors="replace") as f:
+            text = f.read()
+    except OSError as e:
+        print(f"extract-json: could not read {args.path}: {e}", file=sys.stderr)
+        return 3
 
     obj, needed = extract_balanced_json(text)
     if obj is None:

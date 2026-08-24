@@ -52,7 +52,12 @@ with open(out, "w", encoding="utf-8") as f:
 
 run_member () {  # $1=lens $2=sandbox $3=brief $4=outjson $5=outlog
   local lens="$1" sb="$2" brief="$3" out="$4" log="$5"
-  local ask="Read ./$(basename "$brief") in full and follow it exactly. Do not read any other file. Output only the JSON object it specifies: no narration of what you are about to do or did, no markdown fences, nothing before or after the JSON."
+  # "Do not read any file outside this directory", not the earlier "do
+  # not read any other file": Task 6 dispatches real briefs that must
+  # read a second file (the bundle under review), and a prompt forbidding
+  # a second read is a refusal waiting to happen. The constraint that
+  # actually matters is sandbox containment, not single-file reading.
+  local ask="Read ./$(basename "$brief") in full and follow it exactly. Do not read any file outside this directory. Output only the JSON object it specifies: no narration of what you are about to do or did, no markdown fences, nothing before or after the JSON."
   ( cd "$sb" || exit 125
     case "$lens" in
       # grok 1.0.5: `--prompt-file` (single-turn prompt read from a file)
