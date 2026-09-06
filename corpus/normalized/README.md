@@ -17,11 +17,29 @@ classifications or source claims have been verified.
 From the repository root, using Python and the dependency version in
 `corpus/normalized/requirements.txt`:
 
+Check the committed corpus (actual independent annotations):
+
+```sh
+python3 scripts/corpus_normalize.py check --repo .
+```
+
+Reproduce it in a new directory and check that output:
+
 ```sh
 python3 scripts/corpus_normalize.py build --repo . --out /tmp/corpus-build-NEW
-python3 scripts/corpus_normalize.py check --repo .
+python3 scripts/corpus_normalize.py check --repo . --data /tmp/corpus-build-NEW
+```
+
+Run the separate CLI regression suite:
+
+```sh
 python3 scripts/test_corpus_normalize.py
 ```
+
+The regression suite constructs synthetic annotations in temporary repositories.
+Its agreement counts are fixture values; they are not the actual corpus results.
+The actual integration evidence records the first command and a byte comparison
+of all three regenerated files separately.
 
 `build` requires a new output directory. It emits `corpus.json`, `crosswalk.csv`
 and `coverage.json`. `check` defaults to `corpus/normalized/generated` and accepts
@@ -57,9 +75,16 @@ Identical label sets are provisional agreement. Different sets retain their
 intersection provisionally; the symmetric difference is explicitly unresolved
 under a reusable rule. Intersection does not settle the disagreement.
 
-Coverage reports count these decisions and missing identities. They do not
+Coverage reports count these decisions and missing identities. Agreement counts
+separate matching nonempty label sets from matching empty sets; the latter
+record mutual non-evidence. They do not
 measure semantic accuracy, generalization, protocol fidelity or kernel adequacy.
 No unit in this corpus is an untouched holdout.
+
+Native review also challenged the agreed Liquity V1 `liquidation` label as
+insufficiently grounded in child-specific text. It remains an observed model
+agreement, with an open source-evidence challenge recorded in the sprint review;
+it must not be treated as a verified mechanism classification.
 
 ## Provenance boundaries
 
@@ -74,7 +99,8 @@ blind coding and do not supply deployment addresses or code revisions. Full HTTP
 responses were retained in a temporary local capture; the durable artifact is
 the excerpt and response fingerprint, not a complete archived page.
 
-The official [Liquity V1 documentation](https://docs.liquity.org/liquity-v1) and
+The captured V1 page URL and the V2 excerpt provide the version naming; the
+retained V1 excerpt itself is unversioned. The official [Liquity V1 documentation](https://docs.liquity.org/liquity-v1) and
 [Liquity V2 documentation](https://docs.liquity.org/) distinguish those versions.
 [Ondo's documentation](https://docs.ondo.finance/) distinguishes USDY and OUSG.
 Its current navigation uses Ondo Stocks; this reconstruction retains the legacy

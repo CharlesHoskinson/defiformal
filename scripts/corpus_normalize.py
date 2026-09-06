@@ -99,9 +99,9 @@ def validate(value, schema, validator, context, definition=None):
 def source_rows(repo, manifest):
     for entry in manifest['files']:
         within(repo, entry['path'])  # Refuse escapes before comparing inventories.
-    expected_paths = {str(Path('corpus50/lanes') / name) for name in LANES}
+    expected_paths = {(Path('corpus50/lanes') / name).as_posix() for name in LANES}
     paths = unique(manifest['files'], 'path', 'source manifest')
-    actual_paths = {str(p.relative_to(repo)) for p in (repo / 'corpus50/lanes').glob('*.json')}
+    actual_paths = {p.relative_to(repo).as_posix() for p in (repo / 'corpus50/lanes').glob('*.json')}
     require(paths == expected_paths and actual_paths <= expected_paths,
             'source inventory: expected exactly all three pinned lanes', 3)
     require(manifest['expected_legacy_rows'] == 72 and manifest['expected_candidate_units'] == 75,
@@ -109,7 +109,7 @@ def source_rows(repo, manifest):
     rows = []
     entries = {e['path']: e for e in manifest['files']}
     for lane, name in enumerate(LANES, 1):
-        relative = str(Path('corpus50/lanes') / name)
+        relative = (Path('corpus50/lanes') / name).as_posix()
         entry = entries[relative]
         raw = read_bytes(within(repo, relative))
         require(digest(raw) == entry['sha256'], f'source SHA256 mismatch: {relative}', 3)
@@ -142,7 +142,7 @@ def expected_outputs(repo):
     except ImportError as exc:
         raise ContractError('missing jsonschema==4.19.2; install corpus/normalized/requirements.txt', 3) from exc
     schema_path = BASE / 'corpus.schema.json'
-    schema_raw = read_bytes(within(repo, str(schema_path)))
+    schema_raw = read_bytes(within(repo, schema_path.as_posix()))
     schema = parse(schema_raw, schema_path)
     require(schema.get('$schema') == 'https://json-schema.org/draft/2020-12/schema',
             'invalid JSON Schema: Draft 2020-12 required')
@@ -170,14 +170,14 @@ def expected_outputs(repo):
         validator.check_schema(schema)
     except jsonschema.SchemaError as exc:
         raise ContractError(f'invalid JSON Schema: {exc.message}') from exc
-    bindings = [{'path': str(schema_path), 'sha256': digest(schema_raw)}]
+    bindings = [{'path': schema_path.as_posix(), 'sha256': digest(schema_raw)}]
     inputs = {}
     for name in INPUTS:
         relative = BASE / 'inputs' / name
-        raw = read_bytes(within(repo, str(relative)))
+        raw = read_bytes(within(repo, relative.as_posix()))
         inputs[name] = parse(raw, relative)
         require(inputs[name]['schema_version'] == '0.1.0', f'unsupported input schema_version: {relative}')
-        bindings.append({'path': str(relative), 'sha256': digest(raw)})
+        bindings.append({'path': relative.as_posix(), 'sha256': digest(raw)})
     manifest, identities, taxonomy, neutral = (inputs[n] for n in INPUTS)
     rows = source_rows(repo, manifest)
     ids = identities['units']
@@ -210,11 +210,12 @@ def expected_outputs(repo):
     expected_neutral = {'schema_version': '0.1.0', 'source_commit': manifest['source_commit'],
                         'taxonomy': taxonomy,
                         'units': [{'identity': u, 'source_record': by_source[u['legacy_id']]} for u in ids]}
-    require(neutral == expected_neutral, 'neutral annotation input does not match identity map, taxonomy or source rows')
+    require(json_bytes(neutral) == json_bytes(expected_neutral),
+            'neutral annotation input does not match identity map, taxonomy or source rows')
     neutral_hash = next(b['sha256'] for b in bindings if b['path'].endswith('/annotation-input.json'))
     annotations, references = {}, {}
     for annotator in ('a', 'b'):
-        relative = str(BASE / 'annotations' / (annotator + '.json'))
+        relative = (BASE / 'annotations' / (annotator + '.json')).as_posix()
         raw = read_bytes(within(repo, relative))
         envelope = parse(raw, relative)
         require(envelope['annotator_id'] == annotator, f'annotator_id mismatch in {relative}')
@@ -255,15 +256,20 @@ def expected_outputs(repo):
                 'source_files': 3, 'source_rows': len(rows), 'mapped_source_rows': len(source_ids),
                 'candidate_units': len(units), 'facet_decisions': len(decisions),
                 'provisional_agreements': agreements, 'unresolved_differences': len(decisions)-agreements,
+                'agreed_empty': sum(d['rule'] == 'AGREE' and not d['retained'] for d in decisions),
+                'agreed_nonempty': sum(d['rule'] == 'AGREE' and bool(d['retained']) for d in decisions),
                 'development_units': len(units), 'untouched_holdouts': 0, 'verified_deployments': 0,
-                'per_source': [{'path': str(Path('corpus50/lanes') / name),
+                'per_source': [{'path': (Path('corpus50/lanes') / name).as_posix(),
                                 'source_rows': sum(r['source_path'].endswith(name) for r in rows)} for name in LANES],
                 'per_facet': {f: {'decisions': len(units),
                                  'provisional_agreements': sum(d['facet'] == f and d['rule'] == 'AGREE' for d in decisions),
+                                 'agreed_empty': sum(d['facet'] == f and d['rule'] == 'AGREE' and not d['retained'] for d in decisions),
+                                 'agreed_nonempty': sum(d['facet'] == f and d['rule'] == 'AGREE' and bool(d['retained']) for d in decisions),
                                  'unresolved_differences': sum(d['facet'] == f and d['rule'] != 'AGREE' for d in decisions)} for f in FACETS},
                 'limits': ['Historical source claims are not reverified financial facts.',
                            'Model agreement is not semantic accuracy; intersections leave differences unresolved.',
                            'Empty label sets mean not evidenced, not proof of absence.',
+                           'Mutual empty agreement is not positive facet evidence.',
                            'All candidates are development cases; deployment identities remain unresolved.']}
     stream = io.StringIO(newline='')
     fields = ['legacy_id', 'unit_id', 'label', 'source_path', 'source_sha256', 'pointer', 'category',

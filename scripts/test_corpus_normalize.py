@@ -38,8 +38,10 @@ class CorpusCLI(unittest.TestCase):
                      'rationale': 'Synthetic CLI fixture; no empirical coding claim.',
                      'uncertainty': ['Synthetic evidence only.']} for u in data['units']]
             rows[0]['facets']['economic_functions'] = ['exchange']
-            if annotator == 'b':
-                rows[0]['facets']['mechanisms'] = ['amm']
+            rows[0]['facets']['mechanisms'] = (['amm', 'auction'] if annotator == 'a'
+                                                else ['auction', 'routing'])
+            rows[1]['facets']['mechanisms'] = (['amm', 'routing'] if annotator == 'a'
+                                                else ['routing', 'amm'])
             write(self.repo / BASE / f'annotations/{annotator}.json', {
                 'schema_version': '0.1.0', 'annotator_id': annotator,
                 'model_requested': 'gpt-6-astra',
@@ -57,6 +59,8 @@ class CorpusCLI(unittest.TestCase):
         output = result.stdout + result.stderr
         self.assertEqual(result.returncode, status, output)
         self.assertIn(diagnostic, output)
+        if command == 'build' and status == 3:
+            self.assertFalse((out or self.out).exists(), 'blocked build created output directory')
         print(f'{self._testMethodName}: exit={status}: {output.strip()}', flush=True)
         return output
 
@@ -77,6 +81,7 @@ class CorpusCLI(unittest.TestCase):
         self.assertEqual(before, self.snapshot())
         second = self.repo / 'second'
         self.cli('build', out=second)
+        self.cli('check', out=second)
         self.assertEqual({p.name: p.read_bytes() for p in self.out.iterdir()},
                          {p.name: p.read_bytes() for p in second.iterdir()})
         self.cli('build', 1, 'output directory already exists')
@@ -85,27 +90,64 @@ class CorpusCLI(unittest.TestCase):
         self.assertEqual(len(corpus['units']), 75)
         self.assertEqual(len(corpus['adjudications']), 375)
         self.assertEqual(len(corpus['input_bindings']), 7)
+        self.assertEqual({b['path'] for b in corpus['input_bindings']}, {
+            'corpus/normalized/corpus.schema.json',
+            'corpus/normalized/inputs/source-manifest.json',
+            'corpus/normalized/inputs/identity-map.json',
+            'corpus/normalized/inputs/taxonomy.json',
+            'corpus/normalized/inputs/annotation-input.json',
+            'corpus/normalized/annotations/a.json',
+            'corpus/normalized/annotations/b.json'})
         self.assertEqual(corpus['units'][0]['facets']['economic_functions'], ['exchange'])
-        self.assertEqual(corpus['units'][0]['facets']['mechanisms'], [])
+        self.assertEqual(corpus['units'][0]['facets']['mechanisms'], ['auction'])
+        decisions = {(d['unit_id'], d['facet']): d for d in corpus['adjudications']}
+        self.assertEqual(decisions[('unit:lane1:c0:p0', 'mechanisms')], {
+            'unit_id': 'unit:lane1:c0:p0', 'facet': 'mechanisms',
+            'a': ['amm', 'auction'], 'b': ['auction', 'routing'],
+            'retained': ['auction'], 'unresolved_labels': ['amm', 'routing'],
+            'rule': 'INTERSECTION_UNRESOLVED', 'status': 'unresolved_difference'})
+        self.assertEqual(decisions[('unit:lane1:c0:p1', 'mechanisms')], {
+            'unit_id': 'unit:lane1:c0:p1', 'facet': 'mechanisms',
+            'a': ['amm', 'routing'], 'b': ['amm', 'routing'],
+            'retained': ['amm', 'routing'], 'unresolved_labels': [],
+            'rule': 'AGREE', 'status': 'provisional_agreement'})
+
+    def test_coverage_distinguishes_empty_agreements(self):
+        self.cli('build')
+        coverage = json.loads((self.out / 'coverage.json').read_text())
+        self.assertEqual(coverage['provisional_agreements'], 374)
+        self.assertEqual(coverage['unresolved_differences'], 1)
+        self.assertIn('agreed_empty', coverage)
+        self.assertEqual(coverage['agreed_empty'], 372)
+        self.assertEqual(coverage['agreed_nonempty'], 2)
+        self.assertEqual(coverage['per_facet'], {
+            'economic_functions': {'decisions': 75, 'provisional_agreements': 75,
+                                   'agreed_empty': 74, 'agreed_nonempty': 1, 'unresolved_differences': 0},
+            'mechanisms': {'decisions': 75, 'provisional_agreements': 74,
+                           'agreed_empty': 73, 'agreed_nonempty': 1, 'unresolved_differences': 1},
+            **{f: {'decisions': 75, 'provisional_agreements': 75,
+                   'agreed_empty': 75, 'agreed_nonempty': 0, 'unresolved_differences': 0}
+               for f in ('instruments', 'execution', 'trust')}})
+        self.assertIn('Mutual empty agreement is not positive facet evidence.', coverage['limits'])
 
     def test_derived_corruptions(self):
         self.cli('build')
         good = (self.out / 'corpus.json').read_bytes()
         cases = [
-            ('dropped source', lambda d: d['source_records'].pop(), 'schema'),
-            ('omitted unit', lambda d: d['units'].pop(), 'schema'),
+            ('dropped source', lambda d: d['source_records'].pop(), 'schema corpus.json/source_records: minItems=72; observed length=71'),
+            ('omitted unit', lambda d: d['units'].pop(), 'schema corpus.json/units: minItems=75; observed length=74'),
             ('duplicate unit', lambda d: d['units'].__setitem__(1, d['units'][0]), 'duplicate unit_id'),
             ('duplicate source', lambda d: d['source_records'].__setitem__(1, d['source_records'][0]), 'duplicate legacy_id'),
-            ('wrong source mapping', lambda d: d['units'][0].__setitem__('legacy_id', d['units'][1]['legacy_id']), 'units'),
-            ('wrong provenance hash', lambda d: d['source_records'][0].__setitem__('source_sha256', '0'*64), 'source_records'),
-            ('modified residue', lambda d: d['source_records'][0]['original']['residue'].append('changed'), 'source_records'),
-            ('holdout promotion', lambda d: d['units'][0].__setitem__('evaluation_role', 'holdout'), 'schema'),
-            ('unknown facet', lambda d: d['units'][0]['facets']['trust'].append('imaginary'), 'schema'),
-            ('false agreement', lambda d: next(a for a in d['adjudications'] if a['rule'] == 'INTERSECTION_UNRESOLVED').__setitem__('rule', 'AGREE'), 'adjudications'),
-            ('binding drift', lambda d: d['input_bindings'][0].__setitem__('sha256', '0'*64), 'input_bindings'),
-            ('annotation reference drift', lambda d: d['units'][0]['annotation_refs'][0].__setitem__('pointer', '/annotations/1'), 'annotation_refs'),
+            ('wrong source mapping', lambda d: d['units'][0].__setitem__('legacy_id', d['units'][1]['legacy_id']), 'deterministic mismatch at /units/0/legacy_id'),
+            ('wrong provenance hash', lambda d: d['source_records'][0].__setitem__('source_sha256', '0'*64), 'deterministic mismatch at /source_records/0/source_sha256'),
+            ('modified residue', lambda d: d['source_records'][0]['original']['residue'].append('changed'), 'deterministic mismatch at /source_records/0/original/residue/length'),
+            ('holdout promotion', lambda d: d['units'][0].__setitem__('evaluation_role', 'holdout'), "schema corpus.json/units/0/evaluation_role: 'development' was expected"),
+            ('unknown facet', lambda d: d['units'][0]['facets']['trust'].append('imaginary'), "schema corpus.json/units/0/facets/trust/0: 'imaginary' is not one of"),
+            ('false agreement', lambda d: next(a for a in d['adjudications'] if a['rule'] == 'INTERSECTION_UNRESOLVED').__setitem__('rule', 'AGREE'), 'deterministic mismatch at /adjudications/2/rule'),
+            ('binding drift', lambda d: d['input_bindings'][0].__setitem__('sha256', '0'*64), 'deterministic mismatch at /input_bindings/0/sha256'),
+            ('annotation reference drift', lambda d: d['units'][0]['annotation_refs'][0].__setitem__('pointer', '/annotations/1'), 'deterministic mismatch at /units/0/annotation_refs/0/pointer'),
             ('duplicate decision', lambda d: d['adjudications'].__setitem__(1, d['adjudications'][0]), 'duplicate unit/facet'),
-            ('unknown derived field', lambda d: d['units'][0].__setitem__('verified', True), 'schema'),
+            ('unknown derived field', lambda d: d['units'][0].__setitem__('verified', True), "schema corpus.json/units/0: Additional properties are not allowed ('verified' was unexpected)"),
         ]
         for label, change, diagnostic in cases:
             with self.subTest(label=label):
@@ -135,8 +177,8 @@ class CorpusCLI(unittest.TestCase):
             (lambda d: d['annotations'][0]['facets']['trust'].append('imaginary'), 'unknown facet label'),
             (lambda d: d.__setitem__('input_sha256', '0'*64), 'annotation input hash'),
             (lambda d: d.__setitem__('annotator_id', 'a'), 'annotator_id'),
-            (lambda d: d['annotations'][0].pop('rationale'), 'schema'),
-            (lambda d: d['annotations'][0]['facets']['economic_functions'].append('exchange'), 'schema'),
+            (lambda d: d['annotations'][0].pop('rationale'), "annotations/0: 'rationale' is a required property"),
+            (lambda d: d['annotations'][0]['facets']['economic_functions'].append('exchange'), "annotations/0/facets/economic_functions: ['exchange', 'exchange'] has non-unique elements"),
         ]
         for change, diagnostic in cases:
             with self.subTest(diagnostic=diagnostic):
@@ -170,8 +212,39 @@ class CorpusCLI(unittest.TestCase):
         relative = Path('corpus50/lanes/lane1-dex-lending-cdp-lsd.json')
         self.mutate(relative, lambda d: d['categories'][0]['protocols'].pop())
         sha = hashlib.sha256((self.repo / relative).read_bytes()).hexdigest()
-        self.mutate(BASE / 'inputs/source-manifest.json', lambda d: d['files'][0].__setitem__('sha256', sha))
+        self.mutate(BASE / 'inputs/source-manifest.json',
+                    lambda d: next(e for e in d['files'] if e['path'] == relative.as_posix()).__setitem__('sha256', sha))
         self.cli('build', 3, 'source row count mismatch')
+
+    def test_same_count_source_edit_with_updated_manifest_hash(self):
+        relative = Path('corpus50/lanes/lane1-dex-lending-cdp-lsd.json')
+        self.mutate(relative, lambda d: d['categories'][0]['protocols'][0]['residue'].append('Changed source context.'))
+        sha = hashlib.sha256((self.repo / relative).read_bytes()).hexdigest()
+        self.mutate(BASE / 'inputs/source-manifest.json',
+                    lambda d: next(e for e in d['files'] if e['path'] == relative.as_posix()).__setitem__('sha256', sha))
+        self.cli('build', 1, 'neutral annotation input does not match identity map, taxonomy or source rows')
+        self.assertFalse(self.out.exists())
+
+    def test_neutral_binding_preserves_original_json_types(self):
+        relative = Path('corpus50/lanes/lane1-dex-lending-cdp-lsd.json')
+        self.mutate(relative, lambda d: d['categories'][0]['protocols'][0].__setitem__('arbitrary_field', True))
+        sha = hashlib.sha256((self.repo / relative).read_bytes()).hexdigest()
+        self.mutate(BASE / 'inputs/source-manifest.json',
+                    lambda d: next(e for e in d['files'] if e['path'] == relative.as_posix()).__setitem__('sha256', sha))
+        neutral = BASE / 'inputs/annotation-input.json'
+        self.mutate(neutral, lambda d: d['units'][0]['source_record']['original'].__setitem__('arbitrary_field', 1))
+        sha = hashlib.sha256((self.repo / neutral).read_bytes()).hexdigest()
+        for annotator in ('a', 'b'):
+            self.mutate(BASE / f'annotations/{annotator}.json', lambda d: d.__setitem__('input_sha256', sha))
+        self.cli('build', 1, 'neutral annotation input does not match identity map, taxonomy or source rows')
+        self.assertFalse(self.out.exists())
+        self.mutate(neutral, lambda d: d['units'][0]['source_record']['original'].__setitem__('arbitrary_field', True))
+        sha = hashlib.sha256((self.repo / neutral).read_bytes()).hexdigest()
+        for annotator in ('a', 'b'):
+            self.mutate(BASE / f'annotations/{annotator}.json', lambda d: d.__setitem__('input_sha256', sha))
+        self.cli('build')
+        corpus = json.loads((self.out / 'corpus.json').read_text())
+        self.assertIs(corpus['source_records'][0]['original']['arbitrary_field'], True)
 
     def test_identity_corruptions(self):
         relative = BASE / 'inputs/identity-map.json'
@@ -180,7 +253,7 @@ class CorpusCLI(unittest.TestCase):
             (lambda d: d['units'].pop(), 'identity unit coverage'),
             (lambda d: d['units'].__setitem__(1, d['units'][0]), 'duplicate unit_id'),
             (lambda d: d['units'][0].__setitem__('legacy_id', d['units'][1]['legacy_id']), 'parent-child coverage'),
-            (lambda d: d['units'][0].__setitem__('evaluation_role', 'holdout'), 'schema')):
+            (lambda d: d['units'][0].__setitem__('evaluation_role', 'holdout'), "schema identity map/evaluation_role: 'development' was expected")):
             (self.repo / relative).write_bytes(good)
             self.mutate(relative, change)
             self.cli('build', 1, diagnostic)
