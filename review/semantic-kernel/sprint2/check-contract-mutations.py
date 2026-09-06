@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Replay source-bound contract mutations; accepted proof modules are never changed.
 
-Usage: python3 replay_contract_mutations.py --repo REPO --out NEW_OUTPUT_DIR
+Usage: python3 check-contract-mutations.py --repo REPO --out NEW_OUTPUT_DIR
        [--expected PREVIOUS_OUTPUT_DIR/source-manifest.json]
 Exit 0 = nonempty control passes and both mutants explicitly fail comparisons;
 exit 1 = sensitivity assertion fails; exit 3 = setup/source binding/execution blocked.
@@ -27,6 +27,8 @@ def main():
     args = parser.parse_args()
     repo = args.repo.resolve()
     out = args.out.resolve()
+    if out == repo or repo in out.parents:
+        raise RuntimeError('Evidence directory must be outside the repository')
     out.mkdir(parents=True, exist_ok=False)
     rels = [f'lean/DefiKernel/{name}.lean' for name in
             ['Core', 'Examples', 'Contracts', 'ContractExamples',

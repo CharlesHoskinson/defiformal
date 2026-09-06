@@ -20,6 +20,12 @@ primitives would hard-code libraries into the kernel. A generic contract check
 with library instances supplies the missing boundary without either change.
 General identities and dimensioned expressions remain separate increments.
 
+Review amendment: Fable's first review identified that theorem-only dependency
+inspection can miss unused custom axioms and sorry-dependent definitions. The
+automatic audit also inspects imported axiom, definition and opaque constants
+in the same module scope. This enforces the existing accepted-source restriction
+more directly; it does not expand the financial claims of this sprint.
+
 ## Behavior and trust boundary
 
 `Contracts.lean` adds a decidable, state/environment/transition-dependent

@@ -69,6 +69,9 @@ check their stated examples; they do not establish corpus-wide adequacy.
 imported modules under the `DefiKernel` module prefix. It reports theorem names,
 origin modules and transitive axiom dependencies, and rejects an empty theorem
 scope or dependencies outside `propext`, `Classical.choice`, and `Quot.sound`.
+It also inspects imported definitions, opaque declarations and unused axiom
+declarations in that scope, so an unused custom axiom or a definition containing
+`sorry` cannot hide behind the theorem-only dependency check.
 Discovery does not depend on source-text formatting or a manual theorem list.
 It covers the import closure, including generated theorem constants; unimported
 files and declarations in the audit command's current module are outside scope.

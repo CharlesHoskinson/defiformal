@@ -121,6 +121,9 @@ def main():
               theorem_lines(control) == [expected_control])
         check("control exact success", has_message(control, "information",
               "AXIOM AUDIT PASSED: 1/1 theorems; forbidden=0"))
+        check("empty supplemental category is disclosed without vacuous success", has_message(
+              control, "information", "AXIOM AUDIT DECLARATIONS: supplemental declarations=0; "
+              "theorem audit remains required"))
 
         with probe.open("a") as file:
             file.write("theorem AnotherNamespace.freshlyAdded : True := True.intro\n")
@@ -167,6 +170,42 @@ def main():
                 check(f"{variant}: no unrelated compiler error", all(
                     m["severity"] != "error" or m["data"].startswith("AXIOM AUDIT ")
                     for m in messages(result)))
+
+        declaration_cases = [
+            ("definition-control", "def unusedSeed : Nat := 0", "unusedSeed", "definition", None),
+            ("opaque-control", "opaque unfinished : Nat := 0", "unfinished", "opaque", None),
+            ("unused-custom-axiom", "axiom unusedSeed : Nat", "unusedSeed", "axiom", "unusedSeed"),
+            ("sorry-definition", "def unfinished : Nat := by sorry", "unfinished", "definition", "sorryAx"),
+            ("sorry-opaque", "opaque unfinished : Nat := by sorry", "unfinished", "opaque", "sorryAx"),
+        ]
+        for label, declaration, name, kind, forbidden in declaration_cases:
+            probe.write_text("theorem OutsidePilotNamespace.control : True := True.intro\n"
+                             + declaration + "\n")
+            shutil.copyfile(probe, output / f"{label}-source.lean")
+            compile_module(f"build-{label}", "DefiKernel.AuditProbe")
+            result = audit(label)
+            check(f"{label}: theorem report preserved", theorem_lines(result) == [expected_control])
+            axiom_set = f"[{forbidden}]" if forbidden else "[]"
+            check(f"{label}: exact supplemental declaration report", has_message(result, "information",
+                  f"AXIOM AUDIT declaration: {name}; module=DefiKernel.AuditProbe; "
+                  f"kind={kind}; axioms={axiom_set}"))
+            if forbidden:
+                check(f"{label}: exits 1", result.returncode == 1)
+                check(f"{label}: specific declaration rejection", has_message(result, "error",
+                      f"AXIOM AUDIT DECLARATION FORBIDDEN: {name}; kind={kind}; axioms={axiom_set}"))
+                check(f"{label}: exact supplemental rejection count", has_message(result, "error",
+                      "AXIOM AUDIT DECLARATIONS FAILED: 1/1 supplemental declarations use forbidden axioms"))
+                check(f"{label}: no theorem success diagnostic", not any(
+                    m["data"].startswith("AXIOM AUDIT PASSED:") for m in messages(result)))
+                check(f"{label}: no unrelated compiler error", all(
+                    m["severity"] != "error" or m["data"].startswith("AXIOM AUDIT ")
+                    for m in messages(result)))
+            else:
+                check(f"{label}: exits 0", result.returncode == 0)
+                check(f"{label}: exact supplemental success", has_message(result, "information",
+                      "AXIOM AUDIT DECLARATIONS PASSED: 1/1 supplemental declarations; forbidden=0"))
+                check(f"{label}: original theorem success preserved", has_message(result, "information",
+                      "AXIOM AUDIT PASSED: 1/1 theorems; forbidden=0"))
 
         probe.write_text("def noTheoremsHere : Nat := 0\n")
         shutil.copyfile(probe, output / "empty-source.lean")
