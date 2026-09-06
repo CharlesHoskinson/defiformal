@@ -1,0 +1,345 @@
+diff --git a/lean/DefiKernel/Acceptance.lean b/lean/DefiKernel/Acceptance.lean
+index df1ae57..978ef09 100644
+--- a/lean/DefiKernel/Acceptance.lean
++++ b/lean/DefiKernel/Acceptance.lean
+@@ -56,11 +56,28 @@ theorem insufficient_shares_refused :
+     check policy () (withdraw (Quantity.ofNat 5)) initial =
+       some .insufficientFunds := by decide +kernel
+ 
+-/-- Twenty USD of vault liquidity cannot redeem all twenty fixture shares. -/
++/-- Twenty USD cannot redeem the requested eleven shares, despite twenty shares being held. -/
+ theorem insufficient_vault_liquidity_refused :
+     check policy () (withdraw (Quantity.ofNat 11)) richShares =
+       some .insufficientFunds := by decide +kernel
+ 
++/-- Zero debt and zero borrowing make the collateral inequality true even at price zero. -/
++theorem isolated_zero_price_refused :
++    check policy zeroPrice (borrow (Quantity.ofNat 0)) zeroDebt = some .guard := by decide +kernel
++
++theorem zero_borrow_positive_price_accept :
++    check policy fresh (borrow (Quantity.ofNat 0)) zeroDebt = none := by decide +kernel
++
++/-- Accepted counterexamples expose grants that are not bound to transition shape. -/
++theorem policy_overgrant_vault_drain_accepted :
++    check policy () policyVaultDrain initial = none := by decide +kernel
++
++theorem policy_overgrant_unbacked_issue_accepted :
++    check policy () policyUnbackedIssue initial = none := by decide +kernel
++
++theorem policy_overgrant_debt_burn_accepted :
++    check policy () policyDebtBurn initial = none := by decide +kernel
++
+ theorem transfer_post :
+     observe (execute policy () (transfer .alice .alice .bob (Quantity.ofNat 3)) initial)
+       [(.alice, .usd), (.bob, .usd)] = .ok [7, 3] := by decide +kernel
+@@ -102,6 +119,21 @@ theorem self_transfer_noop :
+     observe (execute policy () (transfer .bob .alice .alice (Quantity.ofNat 100)) initial)
+       allCells = .ok (allCells.map initial.balance) := by decide +kernel
+ 
++/-- The vault loses its twenty USD while Alice's share balance is unchanged. -/
++theorem policy_overgrant_vault_drain_post :
++    observe (execute policy () policyVaultDrain initial)
++      [(.alice, .usd), (.vault, .usd), (.alice, .share)] = .ok [30, 0, 4] := by decide +kernel
++
++/-- One hundred shares appear without any USD deposit. -/
++theorem policy_overgrant_unbacked_issue_post :
++    observe (execute policy () policyUnbackedIssue initial)
++      [(.alice, .usd), (.vault, .usd), (.alice, .share)] = .ok [10, 20, 104] := by decide +kernel
++
++/-- Debt disappears without any USD repayment to the pool. -/
++theorem policy_overgrant_debt_burn_post :
++    observe (execute policy () policyDebtBurn initial)
++      [(.alice, .usd), (.pool, .usd), (.alice, .debt)] = .ok [10, 100, 0] := by decide +kernel
++
+ /-- This defective effect defeats scalar accounting while violating asset accounting. -/
+ theorem wrong_asset_scalar_cancels :
+     (∑ a, ∑ owner, wrongAsset.effect (owner, a)) = 0 := by decide +kernel
+diff --git a/lean/DefiKernel/Audit.lean b/lean/DefiKernel/Audit.lean
+index f16bebf..bff3318 100644
+--- a/lean/DefiKernel/Audit.lean
++++ b/lean/DefiKernel/Audit.lean
+@@ -25,6 +25,22 @@ def runtimeChecks : List (String × Bool) := [
+   ("borrow accepted", oracleCase fresh 3 none),
+   ("stale oracle", oracleCase stale 3 (some .guard)),
+   ("zero price", oracleCase zeroPrice 3 (some .guard)),
++  ("isolated zero price", decide (check policy zeroPrice (borrow (Quantity.ofNat 0))
++    zeroDebt = some .guard)),
++  ("zero borrow positive price", decide (check policy fresh (borrow (Quantity.ofNat 0))
++    zeroDebt = none)),
++  ("policy overgrant vault drain accepted", unitCase policyVaultDrain none),
++  ("policy overgrant unbacked issue accepted", unitCase policyUnbackedIssue none),
++  ("policy overgrant debt burn accepted", unitCase policyDebtBurn none),
++  ("policy overgrant vault drain post-state", decide (observe
++    (execute policy () policyVaultDrain initial)
++    [(.alice, .usd), (.vault, .usd), (.alice, .share)] = .ok [30, 0, 4])),
++  ("policy overgrant unbacked issue post-state", decide (observe
++    (execute policy () policyUnbackedIssue initial)
++    [(.alice, .usd), (.vault, .usd), (.alice, .share)] = .ok [10, 20, 104])),
++  ("policy overgrant debt burn post-state", decide (observe
++    (execute policy () policyDebtBurn initial)
++    [(.alice, .usd), (.pool, .usd), (.alice, .debt)] = .ok [10, 100, 0])),
+   ("future oracle", oracleCase future 3 (some .guard)),
+   ("wrong feed", oracleCase { fresh with feed := 8 } 3 (some .guard)),
+   ("excess credit", oracleCase fresh 9 (some .guard)),
+@@ -96,6 +112,11 @@ end DefiKernel.Audit
+ #print axioms DefiKernel.wrong_feed_refused
+ #print axioms DefiKernel.insufficient_shares_refused
+ #print axioms DefiKernel.insufficient_vault_liquidity_refused
++#print axioms DefiKernel.isolated_zero_price_refused
++#print axioms DefiKernel.zero_borrow_positive_price_accept
++#print axioms DefiKernel.policy_overgrant_vault_drain_accepted
++#print axioms DefiKernel.policy_overgrant_unbacked_issue_accepted
++#print axioms DefiKernel.policy_overgrant_debt_burn_accepted
+ #print axioms DefiKernel.transfer_post
+ #print axioms DefiKernel.deposit_post
+ #print axioms DefiKernel.withdraw_post
+@@ -104,6 +125,9 @@ end DefiKernel.Audit
+ #print axioms DefiKernel.repeated_borrow_refused
+ #print axioms DefiKernel.unauthorized_execute_refused
+ #print axioms DefiKernel.self_transfer_noop
++#print axioms DefiKernel.policy_overgrant_vault_drain_post
++#print axioms DefiKernel.policy_overgrant_unbacked_issue_post
++#print axioms DefiKernel.policy_overgrant_debt_burn_post
+ #print axioms DefiKernel.wrong_asset_scalar_cancels
+ #print axioms DefiKernel.wrong_asset_not_accounted
+ #print axioms DefiKernel.unbalanced_not_accounted
+diff --git a/lean/DefiKernel/Examples.lean b/lean/DefiKernel/Examples.lean
+index c249898..6e9aa73 100644
+--- a/lean/DefiKernel/Examples.lean
++++ b/lean/DefiKernel/Examples.lean
+@@ -19,7 +19,9 @@ def move (asset : Asset) (src dst : Account) (amount : ℚ) (c : Cell) : ℚ :=
+   pulse (dst, asset) amount c - pulse (src, asset) amount c
+ 
+ /-- Alice has explicit vault/pool USD debit and share/debt supply capabilities in this fixture.
+-This policy is an input assumption; the kernel does not authenticate or derive the grant. -/
++This policy is an input assumption; the kernel does not authenticate or derive the grant.
++Grants are not bound to transition shape: accepted counterexamples below drain the vault,
++issue unbacked shares, and burn debt without repayment. This is not a protocol access policy. -/
+ def policy : Policy where
+   debit actor c := decide (actor = c.1 ∨
+     (actor = .alice ∧ (c = (.vault, .usd) ∨ c = (.pool, .usd))))
+@@ -111,6 +113,41 @@ def unauthorizedIssue : Transition Unit where
+   writes := {(.bob, .share)}
+   guard := fun _ _ ↦ true
+ 
++/-- Counterexample fixture isolates vault liquidity from share ownership. -/
++def richShares : State where
++  balance c := if c = (.alice, .share) then 20 else initial.balance c
++  nonneg c := by
++    split
++    · norm_num
++    · exact initial.nonneg c
++
++/-- Accepted policy counterexample: no share burn accompanies this vault debit. -/
++def policyVaultDrain : Transition Unit := transfer .alice .vault .alice (Quantity.ofNat 20)
++
++/-- Accepted policy counterexample: supply permission alone does not require a deposit. -/
++def policyUnbackedIssue : Transition Unit where
++  actor := .alice
++  effect := pulse (.alice, .share) 100
++  supplyChange := fun a ↦ if a = .share then 100 else 0
++  writes := {(.alice, .share)}
++  guard := fun _ _ ↦ true
++
++/-- Accepted policy counterexample: the owner may burn debt without repayment. -/
++def policyDebtBurn : Transition Unit where
++  actor := .alice
++  effect := pulse (.alice, .debt) (-2)
++  supplyChange := fun a ↦ if a = .debt then -2 else 0
++  writes := {(.alice, .debt)}
++  guard := fun _ _ ↦ true
++
++/-- Zero debt isolates the positive-price conjunct when the requested borrow is also zero. -/
++def zeroDebt : State where
++  balance c := if c = (.alice, .debt) then 0 else initial.balance c
++  nonneg c := by
++    split
++    · norm_num
++    · exact initial.nonneg c
++
+ /-- Constructor accounting holds for every amount, independently of execution guards. -/
+ theorem transfer_accounted (actor src dst : Account) (q : Quantity .usd) :
+     Accounted (transfer actor src dst q) := by
+@@ -143,14 +180,6 @@ theorem allCells_complete (c : Cell) : c ∈ allCells := by
+   rcases c with ⟨owner, asset⟩
+   cases owner <;> cases asset <;> decide
+ 
+-/-- Counterexample fixture isolates vault liquidity from share ownership. -/
+-def richShares : State where
+-  balance c := if c = (.alice, .share) then 20 else initial.balance c
+-  nonneg c := by
+-    split
+-    · norm_num
+-    · exact initial.nonneg c
+-
+ /-- Accepted borrowing preserves the example's declared-price collateral bound in its post-state.
+ This is conditional on the guard and on the external meaning of price and locked collateral. -/
+ theorem borrow_declared_collateral_bound (p : Policy) (oracle : Oracle) (q : Quantity .usd)
+diff --git a/lean/README.md b/lean/README.md
+index adcd7c5..e69cd54 100644
+--- a/lean/README.md
++++ b/lean/README.md
+@@ -5,7 +5,7 @@ Run from this directory:
+ ```sh
+ lake build                  # historical algebra and new kernel pilot
+ lake build DefiKernel       # pilot, including its acceptance declarations
+-lake env lean DefiKernel/Acceptance.lean
++lake env lean DefiKernel/Audit.lean  # fresh runtime output and axiom disclosure
+ ```
+ 
+ Use the versions pinned in `lean-toolchain` and `lake-manifest.json`.
+@@ -29,7 +29,14 @@ observed verification and independent review status.
+ - Concrete accepted/refused examples and deliberately broken transitions.
+ 
+ The supplied policy is a trust assumption. It does not authenticate callers or
+-implement capability issuance/revocation. Oracle feed and timestamp fields are
++implement capability issuance/revocation. In particular, the fixture grants
++permissions without binding them to transition shape: it accepts a vault drain
++without share burn, share issuance without a deposit, and debt erasure without
++repayment. Accepted counterexamples make this boundary explicit. The generic
++accounting and policy-relative authority theorems still hold for those effects;
++the fixture is not a safe policy for a financial application.
++
++Oracle feed and timestamp fields are
+ declared inputs; checking them does not establish provenance or market truth.
+ Debt is represented as a distinct nonnegative obligation token in the reference
+ example. This is not a general party/claim lifecycle model.
+@@ -42,3 +49,7 @@ economic solvency, or asynchronous liveness. These remain migration obligations.
+ 
+ Lean proof terms are the current evidence format. Concrete acceptance theorems
+ check their stated examples; they do not establish corpus-wide adequacy.
++`Audit.lean` maintains an explicit axiom-disclosure list. When adding or removing
++a theorem, update that list and compare it against all named pilot theorem
++declarations before reporting complete disclosure. The recorded count applies
++only to the exact audited source snapshot.
+diff --git a/review/semantic-kernel/2026-09-06/check-mutations.py b/review/semantic-kernel/2026-09-06/check-mutations.py
+new file mode 100644
+index 0000000..450dfd4
+--- /dev/null
++++ b/review/semantic-kernel/2026-09-06/check-mutations.py
+@@ -0,0 +1,125 @@
++#!/usr/bin/env python3
++"""Exercise source-lift mutations of the bounded check API.
++
++All check-based Acceptance contracts are included; execute and sequence tests are
++excluded explicitly. No repository writes. A clean or dirty source snapshot is
++identified by input hashes, HEAD, and captured git status, never by HEAD alone.
++"""
++import argparse
++import hashlib
++import json
++from pathlib import Path
++import re
++import subprocess
++
++parser = argparse.ArgumentParser(description=__doc__)
++parser.add_argument('--repo', type=Path, required=True, help='Repository containing lean/')
++parser.add_argument('--output', type=Path, required=True, help='Directory for generated sources/logs')
++args = parser.parse_args()
++repo = args.repo.resolve()
++root = repo / 'lean'
++out = args.output.resolve()
++out.mkdir(parents=True, exist_ok=True)
++
++def git(*args):
++    return subprocess.check_output(['git', *args], cwd=repo, text=True).rstrip('\n')
++
++def digest(data):
++    return hashlib.sha256(data).hexdigest()
++
++input_paths = ['lean/DefiKernel/Core.lean', 'lean/DefiKernel/Examples.lean',
++               'lean/DefiKernel/Acceptance.lean']
++input_bytes = {name: (repo / name).read_bytes() for name in input_paths}
++core, examples, acceptance = [input_bytes[name].decode() for name in input_paths]
++status = git('status', '--porcelain=v1', '--untracked-files=all')
++source_status = git('status', '--porcelain=v1', '--untracked-files=all', '--', *input_paths)
++metadata = {
++    'schema': 'defikernel-source-lift-mutations/v2',
++    'repo': str(repo),
++    'git_head_at_capture': git('rev-parse', 'HEAD'),
++    'working_tree_status_at_capture': status,
++    'working_tree_dirty_at_capture': bool(status),
++    'input_source_status_at_capture': source_status,
++    'input_sources_dirty_at_capture': bool(source_status),
++    'inputs': {name: digest(data) for name, data in input_bytes.items()},
++    'recipe_sha256': digest(Path(__file__).read_bytes()),
++    'toolchain': (root / 'lean-toolchain').read_text().strip(),
++    'lakefile_sha256': digest((root / 'lakefile.toml').read_bytes()),
++    'lake_manifest_sha256': digest((root / 'lake-manifest.json').read_bytes()),
++    'scope': 'All check-based Acceptance theorems; no execute or sequence source mutation',
++}
++markers = [('/-- The explicit conjunction checked by `check`', core),
++           ('/-- Constructor accounting holds', examples),
++           ('theorem transfer_post :', acceptance)]
++for marker, source in markers:
++    assert source.count(marker) == 1, marker
++parts = [core.split(markers[0][0])[0] + '\nend DefiKernel\n',
++         examples.split(markers[1][0])[0] + '\nend DefiKernel.Examples\n',
++         acceptance.split(markers[2][0])[0] + '\nend DefiKernel\n']
++pattern = r'^theorem (\w+)\s*:(.*?)\s*:=\s*by decide \+kernel'
++contracts = re.findall(pattern, parts[2], re.S | re.M)
++all_contracts = re.findall(pattern, acceptance, re.S | re.M)
++all_check_contracts = [(name, prop) for name, prop in all_contracts
++                       if prop.strip().startswith('check ')]
++assert contracts == all_check_contracts, 'Some check contracts fall outside the captured prefix'
++assert len(contracts) == len(re.findall(r'^theorem ', parts[2], re.M))
++assert len(contracts) >= 22, 'Incomplete expected check contract suite'
++metadata['contract_names'] = [name for name, _ in contracts]
++metadata['contract_count'] = len(contracts)
++imports = sorted(set(line for s in parts for line in s.splitlines()
++                     if line.startswith('import ') and 'DefiKernel' not in line))
++body = '\n'.join('\n'.join(line for line in s.splitlines()
++                           if not line.startswith('import ')) for s in parts)
++assert body.count('def check ') == 1
++runtime = '\nnamespace DefiKernel\nopen Examples\n'
++for name, proposition in contracts:
++    runtime += '#eval IO.println ("MUTATION_RUNTIME ' + name + ' " ++ toString (decide ('
++    runtime += proposition + ')))\n'
++runtime += 'end DefiKernel\n'
++lift = '\n'.join(imports) + '\n' + body + runtime
++mutations = {
++    'control': None,
++    'guard': ('if t.guard s env = false then', 'if False then'),
++    'debit': ('else if ¬ DebitAuthorized p t then', 'else if False then'),
++    'supply': ('else if ¬ SupplyAuthorized p t then', 'else if False then'),
++    'nonnegative': ('else if ¬ NonnegativeUpdate s t then', 'else if False then'),
++    'accounting': ('else if ¬ Accounted t then', 'else if False then'),
++    'footprint': ('else if ¬ Local t then', 'else if False then'),
++    'positive_price_only': ('oracle.feed = 7 ∧ 0 < oracle.price ∧', 'oracle.feed = 7 ∧'),
++}
++metadata['mutations'] = mutations
++results = []
++for name, mutation in mutations.items():
++    content = lift
++    if mutation:
++        old, new = mutation
++        assert content.count(old) == 1
++        content = content.replace(old, new)
++    path = out / (name + '.lean')
++    path.write_text(content)
++    command = ['lake', 'env', 'lean', str(path)]
++    run = subprocess.run(command, cwd=root, text=True, capture_output=True)
++    output = run.stdout + run.stderr
++    (out / (name + '.log')).write_text(output)
++    observed = re.findall(r'^MUTATION_RUNTIME (\w+) (true|false)$', output, re.M)
++    assert [key for key, _ in observed] == metadata['contract_names'], output
++    false_names = [key for key, value in observed if value == 'false']
++    row = {'name': name, 'source_sha256': digest(content.encode()), 'command': command,
++           'exit': run.returncode, 'expected_exit': 0 if name == 'control' else 1,
++           'runtime_count': len(observed), 'runtime_false': false_names,
++           'errors': re.findall(r'^.*error:.*$', output, re.M)}
++    results.append(row)
++    print(json.dumps(row), flush=True)
++    assert run.returncode == row['expected_exit'], row
++    if name == 'control':
++        assert not false_names, row
++    else:
++        assert false_names, 'A compiler error alone is not a mutant discrimination'
++    if name == 'positive_price_only':
++        assert false_names == ['isolated_zero_price_refused'], row
++for name, data in input_bytes.items():
++    assert (repo / name).read_bytes() == data, 'Input changed during mutation run: ' + name
++metadata['input_hashes_unchanged_after_run'] = True
++metadata['results'] = results
++(out / 'results.json').write_text(json.dumps(metadata, indent=2) + '\n')
++print(f'Control: {len(contracts)}/{len(contracts)} true; source mutants discriminated: 7/7')
