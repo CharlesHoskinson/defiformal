@@ -46,7 +46,10 @@ and `coverage.json`. `check` defaults to `corpus/normalized/generated` and accep
 `--data DIR` for another output directory. It checks without regenerating files.
 Exit 0 means a complete, nonempty and internally consistent provisional corpus;
 exit 1 means invalid derived data or annotations; exit 3 means required evidence
-could not be checked. A missing generated output is not a successful empty check.
+could not be checked. A missing generated output is not a successful empty check. JSON Schema alone
+is not an acceptance gate: `check` must also enforce identity, provenance,
+set operations and exact derived bytes. Argument syntax errors retain argparse
+status 2; the 0/1/3 contract applies to valid build/check invocations.
 
 ## What is preserved
 

@@ -143,7 +143,7 @@ class CorpusCLI(unittest.TestCase):
             ('modified residue', lambda d: d['source_records'][0]['original']['residue'].append('changed'), 'deterministic mismatch at /source_records/0/original/residue/length'),
             ('holdout promotion', lambda d: d['units'][0].__setitem__('evaluation_role', 'holdout'), "schema corpus.json/units/0/evaluation_role: 'development' was expected"),
             ('unknown facet', lambda d: d['units'][0]['facets']['trust'].append('imaginary'), "schema corpus.json/units/0/facets/trust/0: 'imaginary' is not one of"),
-            ('false agreement', lambda d: next(a for a in d['adjudications'] if a['rule'] == 'INTERSECTION_UNRESOLVED').__setitem__('rule', 'AGREE'), 'deterministic mismatch at /adjudications/2/rule'),
+            ('false agreement', lambda d: next(a for a in d['adjudications'] if a['rule'] == 'INTERSECTION_UNRESOLVED').__setitem__('rule', 'AGREE'), "schema corpus.json/adjudications/2/status: 'provisional_agreement' was expected"),
             ('binding drift', lambda d: d['input_bindings'][0].__setitem__('sha256', '0'*64), 'deterministic mismatch at /input_bindings/0/sha256'),
             ('annotation reference drift', lambda d: d['units'][0]['annotation_refs'][0].__setitem__('pointer', '/annotations/1'), 'deterministic mismatch at /units/0/annotation_refs/0/pointer'),
             ('duplicate decision', lambda d: d['adjudications'].__setitem__(1, d['adjudications'][0]), 'duplicate unit/facet'),
@@ -257,6 +257,63 @@ class CorpusCLI(unittest.TestCase):
             (self.repo / relative).write_bytes(good)
             self.mutate(relative, change)
             self.cli('build', 1, diagnostic)
+
+    def test_coherent_split_payload_corruptions(self):
+        identity_path = self.repo / BASE / 'inputs/identity-map.json'
+        neutral_path = self.repo / BASE / 'inputs/annotation-input.json'
+        good_identity, good_neutral = identity_path.read_bytes(), neutral_path.read_bytes()
+        v1, v2 = 'unit:lane1:c2:p4:v1', 'unit:lane1:c2:p4:v2'
+        usdy, ousg = 'unit:lane3:c0:p0:usdy', 'unit:lane3:c0:p0:ousg'
+
+        def swap(units, a, b, key):
+            units[a][key], units[b][key] = units[b][key], units[a][key]
+
+        cases = [
+            ('duplicate-version', lambda u: u[v2].__setitem__('version', u[v1]['version']), 'identity split version mismatch'),
+            ('swapped-version', lambda u: swap(u, v1, v2, 'version'), 'identity split version mismatch'),
+            ('wrong-shared-product', lambda u: [u[x]['product'].__setitem__('id', 'product:changed') for x in (v1, v2)], 'identity split product mismatch'),
+            ('duplicate-product', lambda u: u[ousg].__setitem__('product', u[usdy]['product']), 'identity split product mismatch'),
+            ('swapped-product', lambda u: swap(u, usdy, ousg, 'product'), 'identity split product mismatch'),
+        ]
+        for label, change, diagnostic in cases:
+            with self.subTest(label=label):
+                identity, neutral = json.loads(good_identity), json.loads(good_neutral)
+                units = {u['unit_id']: u for u in identity['units']}
+                change(units)
+                for context in neutral['units']:
+                    context['identity'] = units[context['identity']['unit_id']]
+                write(identity_path, identity)
+                write(neutral_path, neutral)
+                sha = hashlib.sha256(neutral_path.read_bytes()).hexdigest()
+                for annotator in ('a', 'b'):
+                    self.mutate(BASE / f'annotations/{annotator}.json', lambda d: d.__setitem__('input_sha256', sha))
+                out = self.repo / label
+                self.cli('build', 1, diagnostic, out=out)
+                self.assertFalse(out.exists())
+
+    def test_adjudication_schema_and_distinct_annotation_refs(self):
+        self.cli('build')
+        path = self.out / 'corpus.json'
+        good = path.read_bytes()
+        cases = [
+            (lambda d: d['units'][0]['annotation_refs'].__setitem__(1, d['units'][0]['annotation_refs'][0]),
+             "schema corpus.json/units/0/annotation_refs/1/annotator_id: 'b' was expected"),
+            (lambda d: d['adjudications'][0].__setitem__('status', 'unresolved_difference'),
+             "schema corpus.json/adjudications/0/status: 'provisional_agreement' was expected"),
+            (lambda d: d['adjudications'][0]['unresolved_labels'].append('exchange'),
+             'schema corpus.json/adjudications/0/unresolved_labels: maxItems=0; observed length=1'),
+            (lambda d: d['adjudications'][2].__setitem__('status', 'provisional_agreement'),
+             "schema corpus.json/adjudications/2/status: 'unresolved_difference' was expected"),
+            (lambda d: d['adjudications'][2].__setitem__('unresolved_labels', []),
+             'schema corpus.json/adjudications/2/unresolved_labels: minItems=1; observed length=0'),
+        ]
+        for change, diagnostic in cases:
+            with self.subTest(diagnostic=diagnostic):
+                path.write_bytes(good)
+                self.mutate(BASE / 'generated/corpus.json', change)
+                self.cli('check', 1, diagnostic)
+        path.write_bytes(good)
+        self.cli('check')
 
     def test_unreadable_and_empty_generated(self):
         self.cli('build')

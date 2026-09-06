@@ -196,6 +196,17 @@ def expected_outputs(repo):
         require(unit['split_rule'] == rule and unit['normalization_status'] ==
                 ('split_candidate' if split else 'needs_identity_review'),
                 f'identity split status mismatch: {unit["unit_id"]}')
+        if split:
+            suffix = unit['unit_id'].rsplit(':', 1)[1]
+            if rule == 'explicit-version-split':
+                require(unit['version'] == {'value': suffix.upper(), 'status': 'source_label'},
+                        f'identity split version mismatch: {unit["unit_id"]}')
+                product_id, product_label = 'product:liquity', 'Liquity'
+            else:
+                product_id = 'product:lane3:c0:p0:' + suffix
+                product_label = 'Ondo ' + {'usdy': 'USDY', 'ousg': 'OUSG', 'global-markets': 'Global Markets'}[suffix]
+            require(unit['product'] == {'id': product_id, 'label': product_label, 'status': 'provisional'},
+                    f'identity split product mismatch: {unit["unit_id"]}')
     for kind in ('organization', 'product'):
         entities = {}
         for unit in ids:

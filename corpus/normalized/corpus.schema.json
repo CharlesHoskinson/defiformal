@@ -588,11 +588,39 @@
         },
         "annotation_refs": {
           "type": "array",
-          "items": {
-            "$ref": "#/$defs/annotation_ref"
-          },
+          "items": false,
           "minItems": 2,
-          "maxItems": 2
+          "maxItems": 2,
+          "prefixItems": [
+            {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/annotation_ref"
+                },
+                {
+                  "properties": {
+                    "annotator_id": {
+                      "const": "a"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/annotation_ref"
+                },
+                {
+                  "properties": {
+                    "annotator_id": {
+                      "const": "b"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
         }
       },
       "required": [
@@ -684,7 +712,34 @@
         "rule",
         "status"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "if": {
+        "properties": {
+          "rule": {
+            "const": "AGREE"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "status": {
+            "const": "provisional_agreement"
+          },
+          "unresolved_labels": {
+            "maxItems": 0
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "status": {
+            "const": "unresolved_difference"
+          },
+          "unresolved_labels": {
+            "minItems": 1
+          }
+        }
+      }
     },
     "annotation_envelope": {
       "type": "object",
