@@ -1,0 +1,726 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://defiformal.invalid/corpus/normalized/0.1.0",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": "0.1.0"
+    },
+    "status": {
+      "const": "provisional_source_bound"
+    },
+    "input_bindings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/binding"
+      },
+      "minItems": 7,
+      "maxItems": 7
+    },
+    "source_records": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/source_record"
+      },
+      "minItems": 72,
+      "maxItems": 72
+    },
+    "units": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/unit"
+      },
+      "minItems": 75,
+      "maxItems": 75
+    },
+    "adjudications": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/adjudication"
+      },
+      "minItems": 375,
+      "maxItems": 375
+    }
+  },
+  "required": [
+    "schema_version",
+    "status",
+    "input_bindings",
+    "source_records",
+    "units",
+    "adjudications"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "binding": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "additionalProperties": false
+    },
+    "identity": {
+      "type": "object",
+      "properties": {
+        "unit_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "legacy_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "organization": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "label": {
+              "type": "string",
+              "minLength": 1
+            },
+            "status": {
+              "const": "label_only"
+            }
+          },
+          "required": [
+            "id",
+            "label",
+            "status"
+          ],
+          "additionalProperties": false
+        },
+        "product": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "label": {
+              "type": "string",
+              "minLength": 1
+            },
+            "status": {
+              "const": "provisional"
+            }
+          },
+          "required": [
+            "id",
+            "label",
+            "status"
+          ],
+          "additionalProperties": false
+        },
+        "version": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "const": null
+                },
+                "status": {
+                  "const": "unresolved"
+                }
+              },
+              "required": [
+                "value",
+                "status"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "status": {
+                  "const": "source_label"
+                }
+              },
+              "required": [
+                "value",
+                "status"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "deployment": {
+          "type": "object",
+          "properties": {
+            "chain": {
+              "const": null
+            },
+            "address": {
+              "const": null
+            },
+            "source_revision": {
+              "const": null
+            },
+            "status": {
+              "const": "unresolved"
+            }
+          },
+          "required": [
+            "chain",
+            "address",
+            "source_revision",
+            "status"
+          ],
+          "additionalProperties": false
+        },
+        "normalization_status": {
+          "enum": [
+            "needs_identity_review",
+            "split_candidate"
+          ]
+        },
+        "split_rule": {
+          "enum": [
+            "identity-candidate",
+            "explicit-version-split",
+            "explicit-product-split"
+          ]
+        },
+        "evidence_role": {
+          "const": "legacy_context"
+        },
+        "evaluation_role": {
+          "const": "development"
+        },
+        "uncertainty": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "unit_id",
+        "legacy_id",
+        "label",
+        "organization",
+        "product",
+        "version",
+        "deployment",
+        "normalization_status",
+        "split_rule",
+        "evidence_role",
+        "evaluation_role",
+        "uncertainty"
+      ],
+      "additionalProperties": false
+    },
+    "source_record": {
+      "type": "object",
+      "properties": {
+        "legacy_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "pointer": {
+          "type": "string",
+          "minLength": 1
+        },
+        "category": {
+          "type": "string",
+          "minLength": 1
+        },
+        "original": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "legacy_id",
+        "source_path",
+        "source_sha256",
+        "pointer",
+        "category",
+        "original"
+      ],
+      "additionalProperties": false
+    },
+    "facets": {
+      "type": "object",
+      "properties": {
+        "economic_functions": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "exchange",
+              "credit",
+              "money",
+              "payments_settlement",
+              "staking_security",
+              "asset_management",
+              "derivatives",
+              "insurance",
+              "prediction",
+              "offchain_claims"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "instruments": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "spot_asset",
+              "debt_claim",
+              "vault_share",
+              "stablecoin",
+              "perpetual",
+              "option",
+              "coverage_claim",
+              "stake_claim",
+              "fund_share",
+              "event_claim"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "mechanisms": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "amm",
+              "order_book",
+              "auction",
+              "collateralization",
+              "liquidation",
+              "redemption",
+              "allocation",
+              "oracle_dispute",
+              "routing",
+              "mint_burn",
+              "custody",
+              "staking",
+              "margin_funding"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "execution": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "evm_atomic",
+              "solana_transaction",
+              "move_shared_object",
+              "utxo",
+              "appchain",
+              "async_cross_domain",
+              "offchain_matched_onchain_settled",
+              "offchain_legal_settlement"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "trust": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "oracle",
+              "custodian",
+              "sequencer",
+              "curator",
+              "issuer",
+              "legal_obligor",
+              "multisig",
+              "validator_set",
+              "attester",
+              "keeper"
+            ]
+          },
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "economic_functions",
+        "instruments",
+        "mechanisms",
+        "execution",
+        "trust"
+      ],
+      "additionalProperties": false
+    },
+    "annotation": {
+      "type": "object",
+      "properties": {
+        "unit_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "facets": {
+          "$ref": "#/$defs/facets"
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1
+        },
+        "uncertainty": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "unit_id",
+        "facets",
+        "rationale",
+        "uncertainty"
+      ],
+      "additionalProperties": false
+    },
+    "annotation_ref": {
+      "type": "object",
+      "properties": {
+        "annotator_id": {
+          "enum": [
+            "a",
+            "b"
+          ]
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "pointer": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "required": [
+        "annotator_id",
+        "path",
+        "pointer",
+        "sha256"
+      ],
+      "additionalProperties": false
+    },
+    "unit": {
+      "type": "object",
+      "properties": {
+        "unit_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "legacy_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "organization": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "label": {
+              "type": "string",
+              "minLength": 1
+            },
+            "status": {
+              "const": "label_only"
+            }
+          },
+          "required": [
+            "id",
+            "label",
+            "status"
+          ],
+          "additionalProperties": false
+        },
+        "product": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "label": {
+              "type": "string",
+              "minLength": 1
+            },
+            "status": {
+              "const": "provisional"
+            }
+          },
+          "required": [
+            "id",
+            "label",
+            "status"
+          ],
+          "additionalProperties": false
+        },
+        "version": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "const": null
+                },
+                "status": {
+                  "const": "unresolved"
+                }
+              },
+              "required": [
+                "value",
+                "status"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "status": {
+                  "const": "source_label"
+                }
+              },
+              "required": [
+                "value",
+                "status"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "deployment": {
+          "type": "object",
+          "properties": {
+            "chain": {
+              "const": null
+            },
+            "address": {
+              "const": null
+            },
+            "source_revision": {
+              "const": null
+            },
+            "status": {
+              "const": "unresolved"
+            }
+          },
+          "required": [
+            "chain",
+            "address",
+            "source_revision",
+            "status"
+          ],
+          "additionalProperties": false
+        },
+        "normalization_status": {
+          "enum": [
+            "needs_identity_review",
+            "split_candidate"
+          ]
+        },
+        "split_rule": {
+          "enum": [
+            "identity-candidate",
+            "explicit-version-split",
+            "explicit-product-split"
+          ]
+        },
+        "evidence_role": {
+          "const": "legacy_context"
+        },
+        "evaluation_role": {
+          "const": "development"
+        },
+        "uncertainty": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "facets": {
+          "$ref": "#/$defs/facets"
+        },
+        "annotation_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/annotation_ref"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        }
+      },
+      "required": [
+        "unit_id",
+        "legacy_id",
+        "label",
+        "organization",
+        "product",
+        "version",
+        "deployment",
+        "normalization_status",
+        "split_rule",
+        "evidence_role",
+        "evaluation_role",
+        "uncertainty",
+        "facets",
+        "annotation_refs"
+      ],
+      "additionalProperties": false
+    },
+    "adjudication": {
+      "type": "object",
+      "properties": {
+        "unit_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "facet": {
+          "enum": [
+            "economic_functions",
+            "instruments",
+            "mechanisms",
+            "execution",
+            "trust"
+          ]
+        },
+        "a": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "b": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "retained": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "unresolved_labels": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "rule": {
+          "enum": [
+            "AGREE",
+            "INTERSECTION_UNRESOLVED"
+          ]
+        },
+        "status": {
+          "enum": [
+            "provisional_agreement",
+            "unresolved_difference"
+          ]
+        }
+      },
+      "required": [
+        "unit_id",
+        "facet",
+        "a",
+        "b",
+        "retained",
+        "unresolved_labels",
+        "rule",
+        "status"
+      ],
+      "additionalProperties": false
+    },
+    "annotation_envelope": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "0.1.0"
+        },
+        "annotator_id": {
+          "enum": [
+            "a",
+            "b"
+          ]
+        },
+        "model_requested": {
+          "const": "gpt-6-astra"
+        },
+        "input_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "annotations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/annotation"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "schema_version",
+        "annotator_id",
+        "model_requested",
+        "input_sha256",
+        "annotations"
+      ],
+      "additionalProperties": false
+    }
+  }
+}
