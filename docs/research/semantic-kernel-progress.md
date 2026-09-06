@@ -72,6 +72,32 @@ for actual model identities, findings, fixes and deferred advisory items.
 Financial source bytes are unchanged between the two sprint review candidates;
 the revision strengthens audit coverage and the mutation output-directory guard.
 
+## Sprint 3: corpus normalization and provenance
+
+User authorized this sprint with “begin”. Base:
+`1d26fd863f9bf9ecb8361982f43e212a4c94eec7`; branch `semantic-kernel-pivot`.
+The [sprint design](../superpowers/specs/2026-09-06-corpus-provenance-design.md)
+and [execution plan](../superpowers/plans/2026-09-06-corpus-provenance.md)
+are saved with neutral source/identity inputs in `81f48aa`.
+
+| Deliverable | State | Evidence |
+| --- | --- | --- |
+| Frozen historical source inventory | Saved | Three lane files, 72 complete source rows, byte hashes and JSON pointers |
+| Provisional candidate identity map | Saved | 75 units; Liquity V1/V2 and Ondo USDY/OUSG/Global Markets splits; deployment identities unresolved |
+| Independent model annotations | Complete, provisional | 75 units each; 279 nonempty agreements, 67 empty agreements and 29 unresolved differences; separate raw annotations |
+| Schema, builder and read-only validation | Verified | 20 tests / 76 real CLI runs; actual corpus rebuild byte-identical; check preserves bytes and timestamps |
+| Limited primary-source provenance | Captured | Current official-document excerpts and response fingerprints; distinct from historical source claims |
+| Native Grok/Fable review | Accepted with recorded limitations | Both focused reviews on `7df773478df6408ac75abeca64ef04d76320c6fe`; [adjudication](../../review/semantic-kernel/sprint3/ADJUDICATION.md) |
+
+This is a reconstruction of the missing crosswalk/schema, not a recovered copy.
+Agreement is provisional; differing labels remain explicitly unresolved under
+the conservative adjudication rule. All candidates are development cases.
+The separate Liquity V1 liquidation source challenge remains open. Three real
+adjudication mutants are discriminated by the strengthened tests; five coherent
+split-payload corruptions that previously passed are now rejected.
+Exact final commands, file hashes and actual corpus reproduction results are in
+[final verification](../../review/semantic-kernel/sprint3/final-verification.json).
+
 ## Full migration backlog
 
 1. Finish claim-site reconciliation across the old paper and working ledgers;
@@ -84,9 +110,10 @@ the revision strengthens audit coverage and the mutation output-directory guard.
    those proposals under the selected reference contracts. Complete the typed IR
    and operational semantics, including distinct composition operators,
    observations/refusals, assumptions, and certificates.
-3. Normalize the corpus with source/deployment identity, recover or reconstruct
-   the missing crosswalk/schema, and perform independent annotation and rule
-   adjudication. Restore retrievable references from the source plan.
+3. Complete deployment/source identity beyond the saved 72-row/75-candidate
+   provisional reconstruction. Resolve 29 facet differences and the separate
+   Liquity V1 liquidation source challenge; recover remaining bundled products
+   and retrievable references. All75 units remain development cases.
 4. Build a real serialized certificate path and source-bound fidelity checks.
    Extend automatic imported-module axiom coverage to explicit future package
    manifests and replace format-sensitive extraction as the language grows.

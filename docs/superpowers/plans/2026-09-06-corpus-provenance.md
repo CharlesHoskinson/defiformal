@@ -28,26 +28,26 @@ parent-owned input formats and annotation interface defined there. Parent may
 add `corpus/normalized/sources/` excerpt provenance; it is separate from the
 frozen historical classification input and must not silently change coding.
 
-- [ ] Write failing real-CLI tests using temporary synthetic annotations in the
+- [x] Write failing real-CLI tests using temporary synthetic annotations in the
   specified format, then implement. Source fixtures copy the real pinned inputs
   and the three lanes into temporary repositories outside the worktree.
-- [ ] Implement `python3 scripts/corpus_normalize.py build --repo ROOT --out NEW_DIR`
+- [x] Implement `python3 scripts/corpus_normalize.py build --repo ROOT --out NEW_DIR`
   to produce corpus.json, crosswalk.csv and coverage.json deterministically.
   Fail rather than overwrite an existing output directory. The default data
   directory for check is ROOT/corpus/normalized/generated.
-- [ ] Implement `python3 scripts/corpus_normalize.py check --repo ROOT [--data DIR]`;
+- [x] Implement `python3 scripts/corpus_normalize.py check --repo ROOT [--data DIR]`;
   schema and relational checks plus exact deterministic output comparisons,
   without writes. Use 0/1/3 status contract and specific actionable diagnostics.
-- [ ] Implement a real Draft202012 schema with closed derived structures and
+- [x] Implement a real Draft202012 schema with closed derived structures and
   statuses; preserve arbitrary original source record fields losslessly.
-- [ ] Derive all 375 unit/facet decisions; identical sets remain provisional,
+- [x] Derive all 375 unit/facet decisions; identical sets remain provisional,
   differing sets explicitly remain unresolved. Bind all four input files plus
   both annotation files and schema by SHA256. Check neutral annotation input
   matches the actual identity map, taxonomy and source rows.
-- [ ] Exercise corruption cases from the design, including partial source walk,
+- [x] Exercise corruption cases from the design, including partial source walk,
   duplicate JSON keys, unknown labels, missing inputs, no-op check and source
   drift. Record counts and exact diagnostics, not just aggregate exit codes.
-- [ ] Write `/tmp/defiformal-sprint3-code-report.md` with files, commands, observed
+- [x] Write `/tmp/defiformal-sprint3-code-report.md` with files, commands, observed
   failures/controls, output locations, assumptions and limits. Parent owns
   integration, fresh verification, source freeze and native reviews.
 
@@ -59,12 +59,12 @@ Owners: two independent GPT-6 tasks, each owning only its respective
 the other annotator's output or the generated corpus. Use no external facts
 from memory; no need to browse for this historical-source coding task.
 
-- [ ] Read all 75 candidate contexts and classify all five facets with controlled
+- [x] Read all 75 candidate contexts and classify all five facets with controlled
   labels, concise rationale and uncertainty. Source-only and bundle-context
   rules apply, especially Liquity V1/V2 and the three Ondo products.
-- [ ] Emit exactly the design's annotation envelope and unit fields, with the
+- [x] Emit exactly the design's annotation envelope and unit fields, with the
   actual input byte hash, correct annotator_id and model_requested.
-- [ ] Check every ID appears once, no unknown labels, all source uncertainty
+- [x] Check every ID appears once, no unknown labels, all source uncertainty
   retained. Report row count and method to `/tmp/defiformal-sprint3-annotator-X.md`.
   Do not claim human independence or semantic ground truth; do not commit.
 
@@ -73,17 +73,27 @@ from memory; no need to browse for this historical-source coding task.
 Owner: parent. Own inputs, generated outputs, corpus README/provenance notes,
 review/semantic-kernel/sprint3/, and sprint/progress records.
 
-- [ ] Save design, neutral input/source manifest and independent-task contract.
-- [ ] Record limited primary-source excerpt provenance for version/product
+- [x] Save design, neutral input/source manifest and independent-task contract.
+- [x] Record limited primary-source excerpt provenance for version/product
   distinctions. Preserve current retrieval date separately from legacy snapshot
   date; leave deployments unresolved. Do not claim missing attachments recovered.
-- [ ] Build the corpus from actual independent annotation files, inspect split
+- [x] Build the corpus from actual independent annotation files, inspect split
   children and repeated organization labels, and run the real check command.
-- [ ] Run the actual CLI corruption suite; reproduce generated output in a new
+- [x] Run the actual CLI corruption suite; reproduce generated output in a new
   temporary directory and compare bytes; verify source hashes/read-only status.
-- [ ] Freeze a local candidate. Invoke native Grok and Fable on exact code and
+- [x] Freeze a local candidate. Invoke native Grok and Fable on exact code and
   scoped data/evidence bundles; inspect actual model identities and verdicts.
-- [ ] Resolve concrete findings with GPT-6 and covering tests, then perform one
+- [x] Resolve concrete findings with GPT-6 and covering tests, then perform one
   focused re-review if needed. Preserve disagreements and deferred limitations.
-- [ ] Commit final records, update the milestone ledger, push the reviewed sprint
+- [x] Commit final records, update the milestone ledger, push the reviewed sprint
   to semantic-kernel-pivot and verify the remote head.
+
+## Delivered acceptance evidence
+
+Final source candidate: `7df773478df6408ac75abeca64ef04d76320c6fe`.
+Both native reviewers accept with recorded limitations. See
+[review adjudication](../../../review/semantic-kernel/sprint3/ADJUDICATION.md)
+and [final verification](../../../review/semantic-kernel/sprint3/final-verification.json).
+20 tests / 76 CLI calls; actual72/75/375 corpus and3-file reproduction pass.
+279 agreements with labels,67 empty agreements,29 differences. The separate
+Liquity V1 liquidation source-evidence challenge remains explicitly open.

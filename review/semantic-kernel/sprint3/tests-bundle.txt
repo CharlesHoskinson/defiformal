@@ -1,0 +1,498 @@
+Independently review DeFiFormal Sprint3 candidate 045126ef8493ff34da5f485c80d71414b29b2df3. Advisory source review, no independent execution claim. GPT6 implemented via stock Codex; no Foreman. Identify concrete correctness/provenance bugs within scope, severity and fix; separate blockers from future work. Return concise verdict and findings; do not invent execution. All75 units development, deployments unresolved; model agreement not truth. Fixed72-to75 reconstruction, not recovered missing attachments or proposal statistics. Hashes bind files, not publisher authentication. Two isolated GPT6 annotators saw same neutral source context. AGREE remains provisional; INTERSECTION_UNRESOLVED retains intersection and leaves symmetric difference unresolved. Shared label IDs not legal entity assertions. Scope is only attachments below.
+Scope: full CLI regression suite, actual parent log, report of actual integration and coverage. Implementation reviewed separately. Evaluate whether tests discriminate advertised failures; do not equate fixture counts with real annotations.
+
+FILE scripts/test_corpus_normalize.py SHA256 f208acb00b5b03a72d5610cac557857afbc59d5b2abc7087f133c49237f2d697 exact text
+#!/usr/bin/env python3
+"""Real CLI controls and corruptions, isolated from live annotations and outputs."""
+import hashlib
+import json
+from pathlib import Path
+import shutil
+import subprocess
+import sys
+import tempfile
+import unittest
+
+REPO = Path(__file__).resolve().parents[1]
+SCRIPT = REPO / 'scripts/corpus_normalize.py'
+BASE = Path('corpus/normalized')
+
+
+def write(path, value):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(value, indent=2) + '\n')
+
+
+class CorpusCLI(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory(prefix='corpus-cli-')
+        self.addCleanup(self.tmp.cleanup)
+        self.repo = Path(self.tmp.name)
+        for relative in ('corpus50/lanes', str(BASE / 'inputs')):
+            shutil.copytree(REPO / relative, self.repo / relative)
+        for relative in (BASE / 'corpus.schema.json', Path('docs/research/2026-09-06-defi-source-plan.md')):
+            if (REPO / relative).exists():
+                (self.repo / relative).parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(REPO / relative, self.repo / relative)
+        neutral = self.repo / BASE / 'inputs/annotation-input.json'
+        data = json.loads(neutral.read_text())
+        for annotator in ('a', 'b'):
+            rows = [{'unit_id': u['identity']['unit_id'],
+                     'facets': {f: [] for f in data['taxonomy']['facets']},
+                     'rationale': 'Synthetic CLI fixture; no empirical coding claim.',
+                     'uncertainty': ['Synthetic evidence only.']} for u in data['units']]
+            rows[0]['facets']['economic_functions'] = ['exchange']
+            if annotator == 'b':
+                rows[0]['facets']['mechanisms'] = ['amm']
+            write(self.repo / BASE / f'annotations/{annotator}.json', {
+                'schema_version': '0.1.0', 'annotator_id': annotator,
+                'model_requested': 'gpt-6-astra',
+                'input_sha256': hashlib.sha256(neutral.read_bytes()).hexdigest(),
+                'annotations': rows})
+        self.out = self.repo / BASE / 'generated'
+
+    def cli(self, command, status=0, diagnostic='', out=None):
+        args = [sys.executable, str(SCRIPT), command, '--repo', str(self.repo)]
+        if command == 'build':
+            args += ['--out', str(out or self.out)]
+        elif out is not None:
+            args += ['--data', str(out)]
+        result = subprocess.run(args, capture_output=True, text=True)
+        output = result.stdout + result.stderr
+        self.assertEqual(result.returncode, status, output)
+        self.assertIn(diagnostic, output)
+        print(f'{self._testMethodName}: exit={status}: {output.strip()}', flush=True)
+        return output
+
+    def mutate(self, relative, change):
+        path = self.repo / relative
+        data = json.loads(path.read_text())
+        change(data)
+        write(path, data)
+
+    def snapshot(self):
+        return {str(p.relative_to(self.repo)): (p.read_bytes(), p.stat().st_mtime_ns)
+                for p in self.repo.rglob('*') if p.is_file()}
+
+    def test_positive_reproducible_read_only(self):
+        self.cli('build', diagnostic='72 source rows; 75 candidate units; 375 facet decisions')
+        before = self.snapshot()
+        self.cli('check', diagnostic='374 provisional agreements; 1 unresolved differences')
+        self.assertEqual(before, self.snapshot())
+        second = self.repo / 'second'
+        self.cli('build', out=second)
+        self.assertEqual({p.name: p.read_bytes() for p in self.out.iterdir()},
+                         {p.name: p.read_bytes() for p in second.iterdir()})
+        self.cli('build', 1, 'output directory already exists')
+        corpus = json.loads((self.out / 'corpus.json').read_text())
+        self.assertEqual(len(corpus['source_records']), 72)
+        self.assertEqual(len(corpus['units']), 75)
+        self.assertEqual(len(corpus['adjudications']), 375)
+        self.assertEqual(len(corpus['input_bindings']), 7)
+        self.assertEqual(corpus['units'][0]['facets']['economic_functions'], ['exchange'])
+        self.assertEqual(corpus['units'][0]['facets']['mechanisms'], [])
+
+    def test_derived_corruptions(self):
+        self.cli('build')
+        good = (self.out / 'corpus.json').read_bytes()
+        cases = [
+            ('dropped source', lambda d: d['source_records'].pop(), 'schema'),
+            ('omitted unit', lambda d: d['units'].pop(), 'schema'),
+            ('duplicate unit', lambda d: d['units'].__setitem__(1, d['units'][0]), 'duplicate unit_id'),
+            ('duplicate source', lambda d: d['source_records'].__setitem__(1, d['source_records'][0]), 'duplicate legacy_id'),
+            ('wrong source mapping', lambda d: d['units'][0].__setitem__('legacy_id', d['units'][1]['legacy_id']), 'units'),
+            ('wrong provenance hash', lambda d: d['source_records'][0].__setitem__('source_sha256', '0'*64), 'source_records'),
+            ('modified residue', lambda d: d['source_records'][0]['original']['residue'].append('changed'), 'source_records'),
+            ('holdout promotion', lambda d: d['units'][0].__setitem__('evaluation_role', 'holdout'), 'schema'),
+            ('unknown facet', lambda d: d['units'][0]['facets']['trust'].append('imaginary'), 'schema'),
+            ('false agreement', lambda d: next(a for a in d['adjudications'] if a['rule'] == 'INTERSECTION_UNRESOLVED').__setitem__('rule', 'AGREE'), 'adjudications'),
+            ('binding drift', lambda d: d['input_bindings'][0].__setitem__('sha256', '0'*64), 'input_bindings'),
+            ('annotation reference drift', lambda d: d['units'][0]['annotation_refs'][0].__setitem__('pointer', '/annotations/1'), 'annotation_refs'),
+            ('duplicate decision', lambda d: d['adjudications'].__setitem__(1, d['adjudications'][0]), 'duplicate unit/facet'),
+            ('unknown derived field', lambda d: d['units'][0].__setitem__('verified', True), 'schema'),
+        ]
+        for label, change, diagnostic in cases:
+            with self.subTest(label=label):
+                (self.out / 'corpus.json').write_bytes(good)
+                self.mutate(BASE / 'generated/corpus.json', change)
+                before = self.snapshot()
+                print(label, flush=True)
+                self.cli('check', 1, diagnostic)
+                self.assertEqual(before, self.snapshot())
+        (self.out / 'corpus.json').write_bytes(good)
+        self.cli('check')
+        for filename in ('crosswalk.csv', 'coverage.json'):
+            path = self.out / filename
+            original = path.read_bytes()
+            path.write_bytes(original + b'\n')
+            self.cli('check', 1, filename)
+            path.write_bytes(original)
+        self.mutate(BASE / 'generated/coverage.json', lambda d: d.__setitem__('unresolved_differences', 0))
+        self.cli('check', 1, 'coverage.json')
+
+    def test_annotation_corruptions(self):
+        path = BASE / 'annotations/b.json'
+        good = (self.repo / path).read_bytes()
+        cases = [
+            (lambda d: d['annotations'].pop(), 'annotation unit coverage'),
+            (lambda d: d['annotations'].__setitem__(1, d['annotations'][0]), 'duplicate unit_id'),
+            (lambda d: d['annotations'][0]['facets']['trust'].append('imaginary'), 'unknown facet label'),
+            (lambda d: d.__setitem__('input_sha256', '0'*64), 'annotation input hash'),
+            (lambda d: d.__setitem__('annotator_id', 'a'), 'annotator_id'),
+            (lambda d: d['annotations'][0].pop('rationale'), 'schema'),
+            (lambda d: d['annotations'][0]['facets']['economic_functions'].append('exchange'), 'schema'),
+        ]
+        for change, diagnostic in cases:
+            with self.subTest(diagnostic=diagnostic):
+                (self.repo / path).write_bytes(good)
+                self.mutate(path, change)
+                self.cli('build', 1, diagnostic)
+                self.assertFalse(self.out.exists())
+
+    def test_missing_and_empty_inputs(self):
+        self.cli('check', 3, 'missing/unreadable')
+        for relative in (BASE / 'inputs/taxonomy.json', BASE / 'annotations/a.json',
+                         Path('corpus50/lanes/lane1-dex-lending-cdp-lsd.json')):
+            path = self.repo / relative
+            original = path.read_bytes()
+            path.unlink()
+            self.cli('build', 3, 'missing/unreadable')
+            path.write_bytes(b'')
+            self.cli('build', 3, 'empty required input')
+            path.write_bytes(original)
+        self.cli('build')
+
+    def test_source_drift_and_partial_walk(self):
+        source = self.repo / 'corpus50/lanes/lane1-dex-lending-cdp-lsd.json'
+        source.write_bytes(source.read_bytes() + b'\n')
+        self.cli('build', 3, 'source SHA256 mismatch')
+        shutil.copyfile(REPO / source.relative_to(self.repo), source)
+        self.mutate(BASE / 'inputs/source-manifest.json', lambda d: d['files'].pop())
+        self.cli('build', 3, 'source inventory')
+
+    def test_partial_source_content_even_with_updated_manifest_hash(self):
+        relative = Path('corpus50/lanes/lane1-dex-lending-cdp-lsd.json')
+        self.mutate(relative, lambda d: d['categories'][0]['protocols'].pop())
+        sha = hashlib.sha256((self.repo / relative).read_bytes()).hexdigest()
+        self.mutate(BASE / 'inputs/source-manifest.json', lambda d: d['files'][0].__setitem__('sha256', sha))
+        self.cli('build', 3, 'source row count mismatch')
+
+    def test_identity_corruptions(self):
+        relative = BASE / 'inputs/identity-map.json'
+        good = (self.repo / relative).read_bytes()
+        for change, diagnostic in (
+            (lambda d: d['units'].pop(), 'identity unit coverage'),
+            (lambda d: d['units'].__setitem__(1, d['units'][0]), 'duplicate unit_id'),
+            (lambda d: d['units'][0].__setitem__('legacy_id', d['units'][1]['legacy_id']), 'parent-child coverage'),
+            (lambda d: d['units'][0].__setitem__('evaluation_role', 'holdout'), 'schema')):
+            (self.repo / relative).write_bytes(good)
+            self.mutate(relative, change)
+            self.cli('build', 1, diagnostic)
+
+    def test_unreadable_and_empty_generated(self):
+        self.cli('build')
+        path = self.out / 'crosswalk.csv'
+        path.write_bytes(b'')
+        self.cli('check', 3, 'empty required input')
+        path.unlink()
+        path.mkdir()
+        self.cli('check', 3, 'missing/unreadable')
+
+    def test_symlink_escape(self):
+        path = self.repo / BASE / 'inputs/taxonomy.json'
+        path.unlink()
+        path.symlink_to(REPO / BASE / 'inputs/taxonomy.json')
+        self.cli('build', 3, 'path escape')
+
+    def test_duplicate_json_keys_and_malformed_json(self):
+        path = self.repo / BASE / 'annotations/a.json'
+        path.write_text('{"x":1,"x":2}')
+        self.cli('build', 1, 'duplicate JSON key')
+        path.write_text('{broken')
+        self.cli('build', 1, 'malformed JSON')
+
+    def test_duplicate_key_in_generated_corpus(self):
+        self.cli('build')
+        path = self.out / 'corpus.json'
+        path.write_text(path.read_text().replace('{', '{"status":"provisional_source_bound",', 1))
+        self.cli('check', 1, 'duplicate JSON key')
+
+    def test_neutral_source_and_identity_binding(self):
+        path = BASE / 'inputs/annotation-input.json'
+        good = (self.repo / path).read_bytes()
+        for change in (
+            lambda d: d['units'][0]['identity'].__setitem__('label', 'changed'),
+            lambda d: d['units'][0]['source_record']['original'].__setitem__('residue', []),
+            lambda d: d['taxonomy']['facets']['trust'].append('invented')):
+            (self.repo / path).write_bytes(good)
+            self.mutate(path, change)
+            self.cli('build', 1, 'neutral annotation input')
+
+    def test_path_escape(self):
+        self.mutate(BASE / 'inputs/source-manifest.json',
+                    lambda d: d['files'][0].__setitem__('path', '../outside.json'))
+        self.cli('build', 3, 'path escape')
+
+    def test_schema_is_checked(self):
+        self.mutate(BASE / 'corpus.schema.json', lambda d: d.__setitem__('type', 'nonsense'))
+        self.cli('build', 1, 'invalid JSON Schema')
+
+    def test_schema_broken_local_reference(self):
+        self.mutate(BASE / 'corpus.schema.json',
+                    lambda d: d['$defs']['identity'].__setitem__('$ref', '#/$defs/missing'))
+        self.cli('build', 1, 'invalid JSON Schema: unresolved local reference')
+
+
+if __name__ == '__main__':
+    unittest.main(verbosity=2)
+
+
+FILE review/semantic-kernel/sprint3/cli-tests.log SHA256 5fa243a86a19b64d8ac12ca3d7bd4cdc2c9c3da27daf4c2c98481c2f7c0fa6e1 exact text
+test_annotation_corruptions (__main__.CorpusCLI.test_annotation_corruptions) ... test_annotation_corruptions: exit=1: FAIL: annotation unit coverage mismatch: corpus/normalized/annotations/b.json
+test_annotation_corruptions: exit=1: FAIL: duplicate unit_id 'unit:lane1:c0:p0' in corpus/normalized/annotations/b.json
+test_annotation_corruptions: exit=1: FAIL: unknown facet label: corpus/normalized/annotations/b.json/unit:lane1:c0:p0/trust
+test_annotation_corruptions: exit=1: FAIL: annotation input hash mismatch: corpus/normalized/annotations/b.json
+test_annotation_corruptions: exit=1: FAIL: annotator_id mismatch in corpus/normalized/annotations/b.json
+test_annotation_corruptions: exit=1: FAIL: schema corpus/normalized/annotations/b.json/annotations/0: 'rationale' is a required property
+test_annotation_corruptions: exit=1: FAIL: schema corpus/normalized/annotations/b.json/annotations/0/facets/economic_functions: ['exchange', 'exchange'] has non-unique elements
+ok
+test_derived_corruptions (__main__.CorpusCLI.test_derived_corruptions) ... test_derived_corruptions: exit=0: OK build: 72 source rows; 75 candidate units; 375 facet decisions; 374 provisional agreements; 1 unresolved differences. No semantic accuracy claim.
+dropped source
+test_derived_corruptions: exit=1: FAIL: schema corpus.json/source_records: minItems=72; observed length=71
+omitted unit
+test_derived_corruptions: exit=1: FAIL: schema corpus.json/units: minItems=75; observed length=74
+duplicate unit
+test_derived_corruptions: exit=1: FAIL: duplicate unit_id 'unit:lane1:c0:p0' in units
+duplicate source
+test_derived_corruptions: exit=1: FAIL: duplicate legacy_id 'legacy:lane1:c0:p0' in source_records
+wrong source mapping
+test_derived_corruptions: exit=1: FAIL: corpus.json deterministic mismatch at /units/0/legacy_id
+wrong provenance hash
+test_derived_corruptions: exit=1: FAIL: corpus.json deterministic mismatch at /source_records/0/source_sha256
+modified residue
+test_derived_corruptions: exit=1: FAIL: corpus.json deterministic mismatch at /source_records/0/original/residue/length
+holdout promotion
+test_derived_corruptions: exit=1: FAIL: schema corpus.json/units/0/evaluation_role: 'development' was expected
+unknown facet
+test_derived_corruptions: exit=1: FAIL: schema corpus.json/units/0/facets/trust/0: 'imaginary' is not one of ['oracle', 'custodian', 'sequencer', 'curator', 'issuer', 'legal_obligor', 'multisig', 'validator_set', 'attester', 'keeper']
+false agreement
+test_derived_corruptions: exit=1: FAIL: corpus.json deterministic mismatch at /adjudications/2/rule
+binding drift
+test_derived_corruptions: exit=1: FAIL: corpus.json deterministic mismatch at /input_bindings/0/sha256
+annotation reference drift
+test_derived_corruptions: exit=1: FAIL: corpus.json deterministic mismatch at /units/0/annotation_refs/0/pointer
+duplicate decision
+test_derived_corruptions: exit=1: FAIL: duplicate unit/facet adjudication
+unknown derived field
+test_derived_corruptions: exit=1: FAIL: schema corpus.json/units/0: Additional properties are not allowed ('verified' was unexpected)
+test_derived_corruptions: exit=0: OK check: 72 source rows; 75 candidate units; 375 facet decisions; 374 provisional agreements; 1 unresolved differences. No semantic accuracy claim.
+test_derived_corruptions: exit=1: FAIL: crosswalk.csv: bytes differ from deterministic projection; build into a new directory to inspect
+test_derived_corruptions: exit=1: FAIL: coverage.json: bytes differ from deterministic projection; build into a new directory to inspect
+test_derived_corruptions: exit=1: FAIL: coverage.json: bytes differ from deterministic projection; build into a new directory to inspect
+ok
+test_duplicate_json_keys_and_malformed_json (__main__.CorpusCLI.test_duplicate_json_keys_and_malformed_json) ... test_duplicate_json_keys_and_malformed_json: exit=1: FAIL: duplicate JSON key 'x' in corpus/normalized/annotations/a.json
+test_duplicate_json_keys_and_malformed_json: exit=1: FAIL: malformed JSON in corpus/normalized/annotations/a.json: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)
+ok
+test_duplicate_key_in_generated_corpus (__main__.CorpusCLI.test_duplicate_key_in_generated_corpus) ... test_duplicate_key_in_generated_corpus: exit=0: OK build: 72 source rows; 75 candidate units; 375 facet decisions; 374 provisional agreements; 1 unresolved differences. No semantic accuracy claim.
+test_duplicate_key_in_generated_corpus: exit=1: FAIL: duplicate JSON key 'status' in /tmp/corpus-cli-uuh3h3zh/corpus/normalized/generated/corpus.json
+ok
+test_identity_corruptions (__main__.CorpusCLI.test_identity_corruptions) ... test_identity_corruptions: exit=1: FAIL: identity unit coverage: expected 75 units
+test_identity_corruptions: exit=1: FAIL: duplicate unit_id 'unit:lane1:c0:p0' in identity map
+test_identity_corruptions: exit=1: FAIL: identity parent-child coverage mismatch: require all 72 sources and exact 75 candidate IDs
+test_identity_corruptions: exit=1: FAIL: schema identity map/evaluation_role: 'development' was expected
+ok
+test_missing_and_empty_inputs (__main__.CorpusCLI.test_missing_and_empty_inputs) ... test_missing_and_empty_inputs: exit=3: BLOCKED: missing/unreadable required input /tmp/corpus-cli-ud6zopg3/corpus/normalized/generated/corpus.json: [Errno 2] No such file or directory: '/tmp/corpus-cli-ud6zopg3/corpus/normalized/generated/corpus.json'
+test_missing_and_empty_inputs: exit=3: BLOCKED: missing/unreadable required input /tmp/corpus-cli-ud6zopg3/corpus/normalized/inputs/taxonomy.json: [Errno 2] No such file or directory: '/tmp/corpus-cli-ud6zopg3/corpus/normalized/inputs/taxonomy.json'
+test_missing_and_empty_inputs: exit=3: BLOCKED: empty required input: /tmp/corpus-cli-ud6zopg3/corpus/normalized/inputs/taxonomy.json
+test_missing_and_empty_inputs: exit=3: BLOCKED: missing/unreadable required input /tmp/corpus-cli-ud6zopg3/corpus/normalized/annotations/a.json: [Errno 2] No such file or directory: '/tmp/corpus-cli-ud6zopg3/corpus/normalized/annotations/a.json'
+test_missing_and_empty_inputs: exit=3: BLOCKED: empty required input: /tmp/corpus-cli-ud6zopg3/corpus/normalized/annotations/a.json
+test_missing_and_empty_inputs: exit=3: BLOCKED: missing/unreadable required input /tmp/corpus-cli-ud6zopg3/corpus50/lanes/lane1-dex-lending-cdp-lsd.json: [Errno 2] No such file or directory: '/tmp/corpus-cli-ud6zopg3/corpus50/lanes/lane1-dex-lending-cdp-lsd.json'
+test_missing_and_empty_inputs: exit=3: BLOCKED: empty required input: /tmp/corpus-cli-ud6zopg3/corpus50/lanes/lane1-dex-lending-cdp-lsd.json
+test_missing_and_empty_inputs: exit=0: OK build: 72 source rows; 75 candidate units; 375 facet decisions; 374 provisional agreements; 1 unresolved differences. No semantic accuracy claim.
+ok
+test_neutral_source_and_identity_binding (__main__.CorpusCLI.test_neutral_source_and_identity_binding) ... test_neutral_source_and_identity_binding: exit=1: FAIL: neutral annotation input does not match identity map, taxonomy or source rows
+test_neutral_source_and_identity_binding: exit=1: FAIL: neutral annotation input does not match identity map, taxonomy or source rows
+test_neutral_source_and_identity_binding: exit=1: FAIL: neutral annotation input does not match identity map, taxonomy or source rows
+ok
+test_partial_source_content_even_with_updated_manifest_hash (__main__.CorpusCLI.test_partial_source_content_even_with_updated_manifest_hash) ... test_partial_source_content_even_with_updated_manifest_hash: exit=3: BLOCKED: source row count mismatch: corpus50/lanes/lane1-dex-lending-cdp-lsd.json
+ok
+test_path_escape (__main__.CorpusCLI.test_path_escape) ... test_path_escape: exit=3: BLOCKED: path escape: ../outside.json
+ok
+test_positive_reproducible_read_only (__main__.CorpusCLI.test_positive_reproducible_read_only) ... test_positive_reproducible_read_only: exit=0: OK build: 72 source rows; 75 candidate units; 375 facet decisions; 374 provisional agreements; 1 unresolved differences. No semantic accuracy claim.
+test_positive_reproducible_read_only: exit=0: OK check: 72 source rows; 75 candidate units; 375 facet decisions; 374 provisional agreements; 1 unresolved differences. No semantic accuracy claim.
+test_positive_reproducible_read_only: exit=0: OK build: 72 source rows; 75 candidate units; 375 facet decisions; 374 provisional agreements; 1 unresolved differences. No semantic accuracy claim.
+test_positive_reproducible_read_only: exit=1: FAIL: output directory already exists: /tmp/corpus-cli-86qr1ynn/corpus/normalized/generated
+ok
+test_schema_broken_local_reference (__main__.CorpusCLI.test_schema_broken_local_reference) ... test_schema_broken_local_reference: exit=1: FAIL: invalid JSON Schema: unresolved local reference #/$defs/missing
+ok
+test_schema_is_checked (__main__.CorpusCLI.test_schema_is_checked) ... test_schema_is_checked: exit=1: FAIL: invalid JSON Schema: 'nonsense' is not valid under any of the given schemas
+ok
+test_source_drift_and_partial_walk (__main__.CorpusCLI.test_source_drift_and_partial_walk) ... test_source_drift_and_partial_walk: exit=3: BLOCKED: source SHA256 mismatch: corpus50/lanes/lane1-dex-lending-cdp-lsd.json
+test_source_drift_and_partial_walk: exit=3: BLOCKED: source inventory: expected exactly all three pinned lanes
+ok
+test_symlink_escape (__main__.CorpusCLI.test_symlink_escape) ... test_symlink_escape: exit=3: BLOCKED: path escape: corpus/normalized/inputs/taxonomy.json
+ok
+test_unreadable_and_empty_generated (__main__.CorpusCLI.test_unreadable_and_empty_generated) ... test_unreadable_and_empty_generated: exit=0: OK build: 72 source rows; 75 candidate units; 375 facet decisions; 374 provisional agreements; 1 unresolved differences. No semantic accuracy claim.
+test_unreadable_and_empty_generated: exit=3: BLOCKED: empty required input: /tmp/corpus-cli-chyhto_7/corpus/normalized/generated/crosswalk.csv
+test_unreadable_and_empty_generated: exit=3: BLOCKED: missing/unreadable required input /tmp/corpus-cli-chyhto_7/corpus/normalized/generated/crosswalk.csv: [Errno 21] Is a directory: '/tmp/corpus-cli-chyhto_7/corpus/normalized/generated/crosswalk.csv'
+ok
+
+----------------------------------------------------------------------
+Ran 15 tests in 8.296s
+
+OK
+
+
+FILE corpus/normalized/generated/coverage.json SHA256 21674bd72ee44650bdafbbbb30c8f8969c1e549f5c1af1545f233903e344dc49 exact text
+{
+  "candidate_units": 75,
+  "development_units": 75,
+  "facet_decisions": 375,
+  "limits": [
+    "Historical source claims are not reverified financial facts.",
+    "Model agreement is not semantic accuracy; intersections leave differences unresolved.",
+    "Empty label sets mean not evidenced, not proof of absence.",
+    "All candidates are development cases; deployment identities remain unresolved."
+  ],
+  "mapped_source_rows": 72,
+  "per_facet": {
+    "economic_functions": {
+      "decisions": 75,
+      "provisional_agreements": 70,
+      "unresolved_differences": 5
+    },
+    "execution": {
+      "decisions": 75,
+      "provisional_agreements": 69,
+      "unresolved_differences": 6
+    },
+    "instruments": {
+      "decisions": 75,
+      "provisional_agreements": 72,
+      "unresolved_differences": 3
+    },
+    "mechanisms": {
+      "decisions": 75,
+      "provisional_agreements": 67,
+      "unresolved_differences": 8
+    },
+    "trust": {
+      "decisions": 75,
+      "provisional_agreements": 68,
+      "unresolved_differences": 7
+    }
+  },
+  "per_source": [
+    {
+      "path": "corpus50/lanes/lane1-dex-lending-cdp-lsd.json",
+      "source_rows": 22
+    },
+    {
+      "path": "corpus50/lanes/lane2-perps-yield-bridges-intents.json",
+      "source_rows": 30
+    },
+    {
+      "path": "corpus50/lanes/lane3-rwa-options-stables-prediction.json",
+      "source_rows": 20
+    }
+  ],
+  "provisional_agreements": 346,
+  "schema_version": "0.1.0",
+  "source_files": 3,
+  "source_rows": 72,
+  "status": "provisional_source_bound",
+  "unresolved_differences": 29,
+  "untouched_holdouts": 0,
+  "verified_deployments": 0
+}
+
+
+FILE corpus/normalized/README.md SHA256 c3cf73f67d08dd7572c9da9a2260fb360eca13a491ae65a08c180c2762c437f0 exact text
+# Provisional normalized corpus
+
+This is the source-bound corpus increment of the semantic-kernel migration.
+It preserves the 72 historical records in `corpus50/lanes` and maps them to 75
+candidate units. Liquity's bundled row is split into V1/V2; Ondo's bundled row
+is split into USDY, OUSG and Global Markets. Other product/version bundles and
+all deployment identities remain unresolved. This is a development corpus.
+
+The proposal's linked CSV and JSON Schema were not recovered. These files are
+new reconstructions; they do not reproduce its absent annotations or the stated
+31/72 multi-function count. A valid generated dataset means the reconstruction
+is complete and consistent with its declared inputs, not that its financial
+classifications or source claims have been verified.
+
+## Reproduce and check
+
+From the repository root, using Python and the dependency version in
+`corpus/normalized/requirements.txt`:
+
+```sh
+python3 scripts/corpus_normalize.py build --repo . --out /tmp/corpus-build-NEW
+python3 scripts/corpus_normalize.py check --repo .
+python3 scripts/test_corpus_normalize.py
+```
+
+`build` requires a new output directory. It emits `corpus.json`, `crosswalk.csv`
+and `coverage.json`. `check` defaults to `corpus/normalized/generated` and accepts
+`--data DIR` for another output directory. It checks without regenerating files.
+Exit 0 means a complete, nonempty and internally consistent provisional corpus;
+exit 1 means invalid derived data or annotations; exit 3 means required evidence
+could not be checked. A missing generated output is not a successful empty check.
+
+## What is preserved
+
+- Source file byte hashes, source commit and JSON pointers bind every original
+  record, including rank statements, ordering, residue and forced-fit notes.
+- Organization IDs are corpus-label containers. Shared Jupiter, Maple and
+  Steakhouse labels do not merge their product-context records or prove common
+  deployment/legal identity.
+- Version labels are distinct from deployed bytecode/source-code revisions.
+  Every chain/address/revision remains unresolved here. IDs are stable within
+  this frozen inventory, not a universal external entity-resolution service.
+- Split children reference the original row as bundled context. Its complete
+  mechanism, residue and forced-fit arrays are not asserted for every child.
+
+## Annotation and disagreement
+
+Two separate GPT-6 contexts receive the same neutral annotation input and
+controlled taxonomy. Neither reads the other's output. Their files record the
+actual input hash and remain separate. This is independent elicitation from the
+same model family, not independent human expert verification.
+
+Each candidate has economic-function, instrument, mechanism, execution and trust
+facets. The rationale and uncertainty remain available in the raw annotation
+files. Empty labels mean not evidenced or unresolved, not proved absence.
+Identical label sets are provisional agreement. Different sets retain their
+intersection provisionally; the symmetric difference is explicitly unresolved
+under a reusable rule. Intersection does not settle the disagreement.
+
+Coverage reports count these decisions and missing identities. They do not
+measure semantic accuracy, generalization, protocol fidelity or kernel adequacy.
+No unit in this corpus is an untouched holdout.
+
+## Provenance boundaries
+
+`inputs/source-manifest.json` binds the three historical files and preserves
+their own source statements. Their August 2026 rankings and narrative claims
+are not newly fetched, re-ranked or certified by this sprint.
+
+`sources/primary-excerpts.json` records a separate September retrieval of limited
+primary documentation excerpts and response fingerprints. These corroborate
+named version/product distinctions only. They are not inputs to the historical
+blind coding and do not supply deployment addresses or code revisions. Full HTTP
+responses were retained in a temporary local capture; the durable artifact is
+the excerpt and response fingerprint, not a complete archived page.
+
+The official [Liquity V1 documentation](https://docs.liquity.org/liquity-v1) and
+[Liquity V2 documentation](https://docs.liquity.org/) distinguish those versions.
+[Ondo's documentation](https://docs.ondo.finance/) distinguishes USDY and OUSG.
+Its current navigation uses Ondo Stocks; this reconstruction retains the legacy
+Global Markets label without asserting a rename or deployment equivalence.
+
+Further source acquisition must resolve deployments, remaining bundled products,
+classification disagreements and protocol-dependency edges before this can serve
+as a deployment benchmark. See the [sprint design](../../docs/superpowers/specs/2026-09-06-corpus-provenance-design.md)
+for acceptance scope and the [migration ledger](../../docs/research/semantic-kernel-progress.md)
+for verification and review results.
+

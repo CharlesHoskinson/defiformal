@@ -1,0 +1,606 @@
+Focused remediation review of candidate 7df773478df6408ac75abeca64ef04d76320c6fe, changes from initial 045126ef8493ff34da5f485c80d71414b29b2df3. Native advisory source review only; do not run tools, inspect local skills or locate repository copies. The supplied patch and execution evidence are the full review input. Limit final response to 700 words, concrete unresolved blockers within the scoped contract or accept-with-recorded-limitations. Do not re-open future deployment/holdout work as sprint requirements.
+
+Initial reviews found: fixture did not distinguish correct intersection/symmetric difference; --data untested; synthetic regression evidence mistaken for actual integration (actual evidence was omitted from initial bundle); mutual-empty agreement needed separate counts; true==1 neutral binding; missing split payload constraints; schema status/reference constraints; limited excerpt precision. Fixes are in exact git patch below. True raw annotations unchanged, actual corpus semantics unchanged except schema hash. All75 development cases. Schema alone never sufficient: CLI mandatory. Empty/missing outputs status3 explicitly required by saved design; annotations/derived mismatches1; argparse2 documented. Product IDs are provisional label hierarchy.
+
+Grok's V1 liquidation semantic challenge is explicitly left OPEN, linked in corpus README and semantic-challenges artifact; Fable had found no split leakage. Both annotators actually agreed, so preserve AGREE as elicitation data; never imply verified mechanism or invent A/B disagreement. Does this provisional bookkeeping gate address implementation/test blockers without hiding the unresolved source challenge?
+
+EXACT GIT PATCH
+diff --git a/corpus/normalized/README.md b/corpus/normalized/README.md
+index 07e202f..0b6fe08 100644
+--- a/corpus/normalized/README.md
++++ b/corpus/normalized/README.md
+@@ -17,18 +17,39 @@ classifications or source claims have been verified.
+ From the repository root, using Python and the dependency version in
+ `corpus/normalized/requirements.txt`:
+ 
++Check the committed corpus (actual independent annotations):
++
+ ```sh
+-python3 scripts/corpus_normalize.py build --repo . --out /tmp/corpus-build-NEW
+ python3 scripts/corpus_normalize.py check --repo .
++```
++
++Reproduce it in a new directory and check that output:
++
++```sh
++python3 scripts/corpus_normalize.py build --repo . --out /tmp/corpus-build-NEW
++python3 scripts/corpus_normalize.py check --repo . --data /tmp/corpus-build-NEW
++```
++
++Run the separate CLI regression suite:
++
++```sh
+ python3 scripts/test_corpus_normalize.py
+ ```
+ 
++The regression suite constructs synthetic annotations in temporary repositories.
++Its agreement counts are fixture values; they are not the actual corpus results.
++The actual integration evidence records the first command and a byte comparison
++of all three regenerated files separately.
++
+ `build` requires a new output directory. It emits `corpus.json`, `crosswalk.csv`
+ and `coverage.json`. `check` defaults to `corpus/normalized/generated` and accepts
+ `--data DIR` for another output directory. It checks without regenerating files.
+ Exit 0 means a complete, nonempty and internally consistent provisional corpus;
+ exit 1 means invalid derived data or annotations; exit 3 means required evidence
+-could not be checked. A missing generated output is not a successful empty check.
++could not be checked. A missing generated output is not a successful empty check. JSON Schema alone
++is not an acceptance gate: `check` must also enforce identity, provenance,
++set operations and exact derived bytes. Argument syntax errors retain argparse
++status 2; the 0/1/3 contract applies to valid build/check invocations.
+ 
+ ## What is preserved
+ 
+@@ -57,10 +78,17 @@ Identical label sets are provisional agreement. Different sets retain their
+ intersection provisionally; the symmetric difference is explicitly unresolved
+ under a reusable rule. Intersection does not settle the disagreement.
+ 
+-Coverage reports count these decisions and missing identities. They do not
++Coverage reports count these decisions and missing identities. Agreement counts
++separate matching nonempty label sets from matching empty sets; the latter
++record mutual non-evidence. They do not
+ measure semantic accuracy, generalization, protocol fidelity or kernel adequacy.
+ No unit in this corpus is an untouched holdout.
+ 
++Native review also challenged the agreed Liquity V1 `liquidation` label as
++insufficiently grounded in child-specific text. It remains an observed model
++agreement, with an open source-evidence challenge recorded in the sprint review;
++it must not be treated as a verified mechanism classification.
++
+ ## Provenance boundaries
+ 
+ `inputs/source-manifest.json` binds the three historical files and preserves
+@@ -74,7 +102,8 @@ blind coding and do not supply deployment addresses or code revisions. Full HTTP
+ responses were retained in a temporary local capture; the durable artifact is
+ the excerpt and response fingerprint, not a complete archived page.
+ 
+-The official [Liquity V1 documentation](https://docs.liquity.org/liquity-v1) and
++The captured V1 page URL and the V2 excerpt provide the version naming; the
++retained V1 excerpt itself is unversioned. The official [Liquity V1 documentation](https://docs.liquity.org/liquity-v1) and
+ [Liquity V2 documentation](https://docs.liquity.org/) distinguish those versions.
+ [Ondo's documentation](https://docs.ondo.finance/) distinguishes USDY and OUSG.
+ Its current navigation uses Ondo Stocks; this reconstruction retains the legacy
+diff --git a/corpus/normalized/corpus.schema.json b/corpus/normalized/corpus.schema.json
+index eda07dc..5e9eff6 100644
+--- a/corpus/normalized/corpus.schema.json
++++ b/corpus/normalized/corpus.schema.json
+@@ -588,11 +588,39 @@
+         },
+         "annotation_refs": {
+           "type": "array",
+-          "items": {
+-            "$ref": "#/$defs/annotation_ref"
+-          },
++          "items": false,
+           "minItems": 2,
+-          "maxItems": 2
++          "maxItems": 2,
++          "prefixItems": [
++            {
++              "allOf": [
++                {
++                  "$ref": "#/$defs/annotation_ref"
++                },
++                {
++                  "properties": {
++                    "annotator_id": {
++                      "const": "a"
++                    }
++                  }
++                }
++              ]
++            },
++            {
++              "allOf": [
++                {
++                  "$ref": "#/$defs/annotation_ref"
++                },
++                {
++                  "properties": {
++                    "annotator_id": {
++                      "const": "b"
++                    }
++                  }
++                }
++              ]
++            }
++          ]
+         }
+       },
+       "required": [
+@@ -684,7 +712,34 @@
+         "rule",
+         "status"
+       ],
+-      "additionalProperties": false
++      "additionalProperties": false,
++      "if": {
++        "properties": {
++          "rule": {
++            "const": "AGREE"
++          }
++        }
++      },
++      "then": {
++        "properties": {
++          "status": {
++            "const": "provisional_agreement"
++          },
++          "unresolved_labels": {
++            "maxItems": 0
++          }
++        }
++      },
++      "else": {
++        "properties": {
++          "status": {
++            "const": "unresolved_difference"
++          },
++          "unresolved_labels": {
++            "minItems": 1
++          }
++        }
++      }
+     },
+     "annotation_envelope": {
+       "type": "object",
+diff --git a/corpus/normalized/sources/README.md b/corpus/normalized/sources/README.md
+index 3ff84c2..1b41740 100644
+--- a/corpus/normalized/sources/README.md
++++ b/corpus/normalized/sources/README.md
+@@ -4,8 +4,9 @@ The parent harness retrieved the official pages listed in primary-excerpts.json
+ on the recorded UTC dates. Each record includes the requested/final URL, HTTP
+ status, content type, response SHA-256, selected excerpts and excerpt SHA-256.
+ Excerpt normalization removes script/style text, collapses whitespace and removes
+-spaces immediately before punctuation. Excerpt hashes use the listed strings
+-joined with LF and a final LF. Each source contributes at most 25 excerpt words.
++spaces immediately before punctuation. Response hashes cover the exact body bytes returned by urllib response.read(),
++excluding headers. Excerpt hashes use the UTF-8 encoding of the listed strings
++joined with LF and a final LF, without JSON serialization. Each source contributes at most 25 excerpt words.
+ 
+ Full response bytes are not committed; their hashes fingerprint the retrieval
+ but do not themselves authenticate the publisher or let a future reader recover
+diff --git a/corpus/normalized/sources/primary-excerpts.json b/corpus/normalized/sources/primary-excerpts.json
+index 69388a6..06f3ab9 100644
+--- a/corpus/normalized/sources/primary-excerpts.json
++++ b/corpus/normalized/sources/primary-excerpts.json
+@@ -15,7 +15,9 @@
+       ],
+       "text_normalization": "HTML text after removing scripts/styles; collapsed whitespace and removed whitespace immediately before punctuation.",
+       "scope": "Current documentation corroborates named product/version distinctions only. Not a deployment identity, source-code revision, or verification of the 2026-08-04 historical state.",
+-      "capture_kind": "Selected excerpts; full HTTP response fingerprint recorded, full response retained only in temporary local capture."
++      "capture_kind": "Selected excerpts; full HTTP response fingerprint recorded, full response retained only in temporary local capture.",
++      "response_hash_input": "Exact HTTP response body bytes returned by urllib response.read(); headers excluded.",
++      "excerpt_hash_input": "UTF-8 encoding of excerpts joined by LF, plus one final LF; no JSON serialization."
+     },
+     {
+       "source_id": "liquity-v2",
+@@ -31,7 +33,9 @@
+       ],
+       "text_normalization": "HTML text after removing scripts/styles; collapsed whitespace and removed whitespace immediately before punctuation.",
+       "scope": "Current documentation corroborates named product/version distinctions only. Not a deployment identity, source-code revision, or verification of the 2026-08-04 historical state.",
+-      "capture_kind": "Selected excerpts; full HTTP response fingerprint recorded, full response retained only in temporary local capture."
++      "capture_kind": "Selected excerpts; full HTTP response fingerprint recorded, full response retained only in temporary local capture.",
++      "response_hash_input": "Exact HTTP response body bytes returned by urllib response.read(); headers excluded.",
++      "excerpt_hash_input": "UTF-8 encoding of excerpts joined by LF, plus one final LF; no JSON serialization."
+     },
+     {
+       "source_id": "ondo-products",
+@@ -41,16 +45,19 @@
+       "http_status": 200,
+       "content_type": "text/html; charset=utf-8",
+       "response_sha256": "bf29a81969dea57b4995b79b6a0804453c8896c23e4de102a51c27f72d9f0ce9",
+-      "excerpt_sha256": "940bcf0826ff99c6b2561c43df9a2648847943f9f2d4283d50cd5e33df6a4e39",
++      "excerpt_sha256": "02001715e2f3630d24f6d28002c7e3bc6fbdb2e1b9bc9bd421acd1d35edb6ec5",
+       "excerpts": [
+         "USDY",
+         "US Dollar Yield Token",
+         "OUSG",
+-        "Qualified-access US Treasuries token"
++        "Qualified-access US Treasuries token",
++        "Ondo Stocks"
+       ],
+       "text_normalization": "HTML text after removing scripts/styles; collapsed whitespace and removed whitespace immediately before punctuation.",
+       "scope": "Current documentation corroborates named product/version distinctions only. Not a deployment identity, source-code revision, or verification of the 2026-08-04 historical state.",
+-      "capture_kind": "Selected excerpts; full HTTP response fingerprint recorded, full response retained only in temporary local capture."
++      "capture_kind": "Selected excerpts; full HTTP response fingerprint recorded, full response retained only in temporary local capture.",
++      "response_hash_input": "Exact HTTP response body bytes returned by urllib response.read(); headers excluded.",
++      "excerpt_hash_input": "UTF-8 encoding of excerpts joined by LF, plus one final LF; no JSON serialization."
+     }
+   ],
+   "historical_name_caution": "The current Ondo documentation names Ondo Stocks. The legacy Global Markets label is retained; no rename or deployment equivalence is asserted."
+diff --git a/scripts/corpus_normalize.py b/scripts/corpus_normalize.py
+index fec2674..176fa2e 100644
+--- a/scripts/corpus_normalize.py
++++ b/scripts/corpus_normalize.py
+@@ -99,9 +99,9 @@ def validate(value, schema, validator, context, definition=None):
+ def source_rows(repo, manifest):
+     for entry in manifest['files']:
+         within(repo, entry['path'])  # Refuse escapes before comparing inventories.
+-    expected_paths = {str(Path('corpus50/lanes') / name) for name in LANES}
++    expected_paths = {(Path('corpus50/lanes') / name).as_posix() for name in LANES}
+     paths = unique(manifest['files'], 'path', 'source manifest')
+-    actual_paths = {str(p.relative_to(repo)) for p in (repo / 'corpus50/lanes').glob('*.json')}
++    actual_paths = {p.relative_to(repo).as_posix() for p in (repo / 'corpus50/lanes').glob('*.json')}
+     require(paths == expected_paths and actual_paths <= expected_paths,
+             'source inventory: expected exactly all three pinned lanes', 3)
+     require(manifest['expected_legacy_rows'] == 72 and manifest['expected_candidate_units'] == 75,
+@@ -109,7 +109,7 @@ def source_rows(repo, manifest):
+     rows = []
+     entries = {e['path']: e for e in manifest['files']}
+     for lane, name in enumerate(LANES, 1):
+-        relative = str(Path('corpus50/lanes') / name)
++        relative = (Path('corpus50/lanes') / name).as_posix()
+         entry = entries[relative]
+         raw = read_bytes(within(repo, relative))
+         require(digest(raw) == entry['sha256'], f'source SHA256 mismatch: {relative}', 3)
+@@ -142,7 +142,7 @@ def expected_outputs(repo):
+     except ImportError as exc:
+         raise ContractError('missing jsonschema==4.19.2; install corpus/normalized/requirements.txt', 3) from exc
+     schema_path = BASE / 'corpus.schema.json'
+-    schema_raw = read_bytes(within(repo, str(schema_path)))
++    schema_raw = read_bytes(within(repo, schema_path.as_posix()))
+     schema = parse(schema_raw, schema_path)
+     require(schema.get('$schema') == 'https://json-schema.org/draft/2020-12/schema',
+             'invalid JSON Schema: Draft 2020-12 required')
+@@ -170,14 +170,14 @@ def expected_outputs(repo):
+         validator.check_schema(schema)
+     except jsonschema.SchemaError as exc:
+         raise ContractError(f'invalid JSON Schema: {exc.message}') from exc
+-    bindings = [{'path': str(schema_path), 'sha256': digest(schema_raw)}]
++    bindings = [{'path': schema_path.as_posix(), 'sha256': digest(schema_raw)}]
+     inputs = {}
+     for name in INPUTS:
+         relative = BASE / 'inputs' / name
+-        raw = read_bytes(within(repo, str(relative)))
++        raw = read_bytes(within(repo, relative.as_posix()))
+         inputs[name] = parse(raw, relative)
+         require(inputs[name]['schema_version'] == '0.1.0', f'unsupported input schema_version: {relative}')
+-        bindings.append({'path': str(relative), 'sha256': digest(raw)})
++        bindings.append({'path': relative.as_posix(), 'sha256': digest(raw)})
+     manifest, identities, taxonomy, neutral = (inputs[n] for n in INPUTS)
+     rows = source_rows(repo, manifest)
+     ids = identities['units']
+@@ -196,6 +196,17 @@ def expected_outputs(repo):
+         require(unit['split_rule'] == rule and unit['normalization_status'] ==
+                 ('split_candidate' if split else 'needs_identity_review'),
+                 f'identity split status mismatch: {unit["unit_id"]}')
++        if split:
++            suffix = unit['unit_id'].rsplit(':', 1)[1]
++            if rule == 'explicit-version-split':
++                require(unit['version'] == {'value': suffix.upper(), 'status': 'source_label'},
++                        f'identity split version mismatch: {unit["unit_id"]}')
++                product_id, product_label = 'product:liquity', 'Liquity'
++            else:
++                product_id = 'product:lane3:c0:p0:' + suffix
++                product_label = 'Ondo ' + {'usdy': 'USDY', 'ousg': 'OUSG', 'global-markets': 'Global Markets'}[suffix]
++            require(unit['product'] == {'id': product_id, 'label': product_label, 'status': 'provisional'},
++                    f'identity split product mismatch: {unit["unit_id"]}')
+     for kind in ('organization', 'product'):
+         entities = {}
+         for unit in ids:
+@@ -210,11 +221,12 @@ def expected_outputs(repo):
+     expected_neutral = {'schema_version': '0.1.0', 'source_commit': manifest['source_commit'],
+                         'taxonomy': taxonomy,
+                         'units': [{'identity': u, 'source_record': by_source[u['legacy_id']]} for u in ids]}
+-    require(neutral == expected_neutral, 'neutral annotation input does not match identity map, taxonomy or source rows')
++    require(json_bytes(neutral) == json_bytes(expected_neutral),
++            'neutral annotation input does not match identity map, taxonomy or source rows')
+     neutral_hash = next(b['sha256'] for b in bindings if b['path'].endswith('/annotation-input.json'))
+     annotations, references = {}, {}
+     for annotator in ('a', 'b'):
+-        relative = str(BASE / 'annotations' / (annotator + '.json'))
++        relative = (BASE / 'annotations' / (annotator + '.json')).as_posix()
+         raw = read_bytes(within(repo, relative))
+         envelope = parse(raw, relative)
+         require(envelope['annotator_id'] == annotator, f'annotator_id mismatch in {relative}')
+@@ -255,15 +267,20 @@ def expected_outputs(repo):
+                 'source_files': 3, 'source_rows': len(rows), 'mapped_source_rows': len(source_ids),
+                 'candidate_units': len(units), 'facet_decisions': len(decisions),
+                 'provisional_agreements': agreements, 'unresolved_differences': len(decisions)-agreements,
++                'agreed_empty': sum(d['rule'] == 'AGREE' and not d['retained'] for d in decisions),
++                'agreed_nonempty': sum(d['rule'] == 'AGREE' and bool(d['retained']) for d in decisions),
+                 'development_units': len(units), 'untouched_holdouts': 0, 'verified_deployments': 0,
+-                'per_source': [{'path': str(Path('corpus50/lanes') / name),
++                'per_source': [{'path': (Path('corpus50/lanes') / name).as_posix(),
+                                 'source_rows': sum(r['source_path'].endswith(name) for r in rows)} for name in LANES],
+                 'per_facet': {f: {'decisions': len(units),
+                                  'provisional_agreements': sum(d['facet'] == f and d['rule'] == 'AGREE' for d in decisions),
++                                 'agreed_empty': sum(d['facet'] == f and d['rule'] == 'AGREE' and not d['retained'] for d in decisions),
++                                 'agreed_nonempty': sum(d['facet'] == f and d['rule'] == 'AGREE' and bool(d['retained']) for d in decisions),
+                                  'unresolved_differences': sum(d['facet'] == f and d['rule'] != 'AGREE' for d in decisions)} for f in FACETS},
+                 'limits': ['Historical source claims are not reverified financial facts.',
+                            'Model agreement is not semantic accuracy; intersections leave differences unresolved.',
+                            'Empty label sets mean not evidenced, not proof of absence.',
++                           'Mutual empty agreement is not positive facet evidence.',
+                            'All candidates are development cases; deployment identities remain unresolved.']}
+     stream = io.StringIO(newline='')
+     fields = ['legacy_id', 'unit_id', 'label', 'source_path', 'source_sha256', 'pointer', 'category',
+diff --git a/scripts/test_corpus_normalize.py b/scripts/test_corpus_normalize.py
+index b29f6ab..611d4d8 100644
+--- a/scripts/test_corpus_normalize.py
++++ b/scripts/test_corpus_normalize.py
+@@ -38,8 +38,10 @@ class CorpusCLI(unittest.TestCase):
+                      'rationale': 'Synthetic CLI fixture; no empirical coding claim.',
+                      'uncertainty': ['Synthetic evidence only.']} for u in data['units']]
+             rows[0]['facets']['economic_functions'] = ['exchange']
+-            if annotator == 'b':
+-                rows[0]['facets']['mechanisms'] = ['amm']
++            rows[0]['facets']['mechanisms'] = (['amm', 'auction'] if annotator == 'a'
++                                                else ['auction', 'routing'])
++            rows[1]['facets']['mechanisms'] = (['amm', 'routing'] if annotator == 'a'
++                                                else ['routing', 'amm'])
+             write(self.repo / BASE / f'annotations/{annotator}.json', {
+                 'schema_version': '0.1.0', 'annotator_id': annotator,
+                 'model_requested': 'gpt-6-astra',
+@@ -57,6 +59,8 @@ class CorpusCLI(unittest.TestCase):
+         output = result.stdout + result.stderr
+         self.assertEqual(result.returncode, status, output)
+         self.assertIn(diagnostic, output)
++        if command == 'build' and status == 3:
++            self.assertFalse((out or self.out).exists(), 'blocked build created output directory')
+         print(f'{self._testMethodName}: exit={status}: {output.strip()}', flush=True)
+         return output
+ 
+@@ -77,6 +81,7 @@ class CorpusCLI(unittest.TestCase):
+         self.assertEqual(before, self.snapshot())
+         second = self.repo / 'second'
+         self.cli('build', out=second)
++        self.cli('check', out=second)
+         self.assertEqual({p.name: p.read_bytes() for p in self.out.iterdir()},
+                          {p.name: p.read_bytes() for p in second.iterdir()})
+         self.cli('build', 1, 'output directory already exists')
+@@ -85,27 +90,64 @@ class CorpusCLI(unittest.TestCase):
+         self.assertEqual(len(corpus['units']), 75)
+         self.assertEqual(len(corpus['adjudications']), 375)
+         self.assertEqual(len(corpus['input_bindings']), 7)
++        self.assertEqual({b['path'] for b in corpus['input_bindings']}, {
++            'corpus/normalized/corpus.schema.json',
++            'corpus/normalized/inputs/source-manifest.json',
++            'corpus/normalized/inputs/identity-map.json',
++            'corpus/normalized/inputs/taxonomy.json',
++            'corpus/normalized/inputs/annotation-input.json',
++            'corpus/normalized/annotations/a.json',
++            'corpus/normalized/annotations/b.json'})
+         self.assertEqual(corpus['units'][0]['facets']['economic_functions'], ['exchange'])
+-        self.assertEqual(corpus['units'][0]['facets']['mechanisms'], [])
++        self.assertEqual(corpus['units'][0]['facets']['mechanisms'], ['auction'])
++        decisions = {(d['unit_id'], d['facet']): d for d in corpus['adjudications']}
++        self.assertEqual(decisions[('unit:lane1:c0:p0', 'mechanisms')], {
++            'unit_id': 'unit:lane1:c0:p0', 'facet': 'mechanisms',
++            'a': ['amm', 'auction'], 'b': ['auction', 'routing'],
++            'retained': ['auction'], 'unresolved_labels': ['amm', 'routing'],
++            'rule': 'INTERSECTION_UNRESOLVED', 'status': 'unresolved_difference'})
++        self.assertEqual(decisions[('unit:lane1:c0:p1', 'mechanisms')], {
++            'unit_id': 'unit:lane1:c0:p1', 'facet': 'mechanisms',
++            'a': ['amm', 'routing'], 'b': ['amm', 'routing'],
++            'retained': ['amm', 'routing'], 'unresolved_labels': [],
++            'rule': 'AGREE', 'status': 'provisional_agreement'})
++
++    def test_coverage_distinguishes_empty_agreements(self):
++        self.cli('build')
++        coverage = json.loads((self.out / 'coverage.json').read_text())
++        self.assertEqual(coverage['provisional_agreements'], 374)
++        self.assertEqual(coverage['unresolved_differences'], 1)
++        self.assertIn('agreed_empty', coverage)
++        self.assertEqual(coverage['agreed_empty'], 372)
++        self.assertEqual(coverage['agreed_nonempty'], 2)
++        self.assertEqual(coverage['per_facet'], {
++            'economic_functions': {'decisions': 75, 'provisional_agreements': 75,
++                                   'agreed_empty': 74, 'agreed_nonempty': 1, 'unresolved_differences': 0},
++            'mechanisms': {'decisions': 75, 'provisional_agreements': 74,
++                           'agreed_empty': 73, 'agreed_nonempty': 1, 'unresolved_differences': 1},
++            **{f: {'decisions': 75, 'provisional_agreements': 75,
++                   'agreed_empty': 75, 'agreed_nonempty': 0, 'unresolved_differences': 0}
++               for f in ('instruments', 'execution', 'trust')}})
++        self.assertIn('Mutual empty agreement is not positive facet evidence.', coverage['limits'])
+ 
+     def test_derived_corruptions(self):
+         self.cli('build')
+         good = (self.out / 'corpus.json').read_bytes()
+         cases = [
+-            ('dropped source', lambda d: d['source_records'].pop(), 'schema'),
+-            ('omitted unit', lambda d: d['units'].pop(), 'schema'),
++            ('dropped source', lambda d: d['source_records'].pop(), 'schema corpus.json/source_records: minItems=72; observed length=71'),
++            ('omitted unit', lambda d: d['units'].pop(), 'schema corpus.json/units: minItems=75; observed length=74'),
+             ('duplicate unit', lambda d: d['units'].__setitem__(1, d['units'][0]), 'duplicate unit_id'),
+             ('duplicate source', lambda d: d['source_records'].__setitem__(1, d['source_records'][0]), 'duplicate legacy_id'),
+-            ('wrong source mapping', lambda d: d['units'][0].__setitem__('legacy_id', d['units'][1]['legacy_id']), 'units'),
+-            ('wrong provenance hash', lambda d: d['source_records'][0].__setitem__('source_sha256', '0'*64), 'source_records'),
+-            ('modified residue', lambda d: d['source_records'][0]['original']['residue'].append('changed'), 'source_records'),
+-            ('holdout promotion', lambda d: d['units'][0].__setitem__('evaluation_role', 'holdout'), 'schema'),
+-            ('unknown facet', lambda d: d['units'][0]['facets']['trust'].append('imaginary'), 'schema'),
+-            ('false agreement', lambda d: next(a for a in d['adjudications'] if a['rule'] == 'INTERSECTION_UNRESOLVED').__setitem__('rule', 'AGREE'), 'adjudications'),
+-            ('binding drift', lambda d: d['input_bindings'][0].__setitem__('sha256', '0'*64), 'input_bindings'),
+-            ('annotation reference drift', lambda d: d['units'][0]['annotation_refs'][0].__setitem__('pointer', '/annotations/1'), 'annotation_refs'),
++            ('wrong source mapping', lambda d: d['units'][0].__setitem__('legacy_id', d['units'][1]['legacy_id']), 'deterministic mismatch at /units/0/legacy_id'),
++            ('wrong provenance hash', lambda d: d['source_records'][0].__setitem__('source_sha256', '0'*64), 'deterministic mismatch at /source_records/0/source_sha256'),
++            ('modified residue', lambda d: d['source_records'][0]['original']['residue'].append('changed'), 'deterministic mismatch at /source_records/0/original/residue/length'),
++            ('holdout promotion', lambda d: d['units'][0].__setitem__('evaluation_role', 'holdout'), "schema corpus.json/units/0/evaluation_role: 'development' was expected"),
++            ('unknown facet', lambda d: d['units'][0]['facets']['trust'].append('imaginary'), "schema corpus.json/units/0/facets/trust/0: 'imaginary' is not one of"),
++            ('false agreement', lambda d: next(a for a in d['adjudications'] if a['rule'] == 'INTERSECTION_UNRESOLVED').__setitem__('rule', 'AGREE'), "schema corpus.json/adjudications/2/status: 'provisional_agreement' was expected"),
++            ('binding drift', lambda d: d['input_bindings'][0].__setitem__('sha256', '0'*64), 'deterministic mismatch at /input_bindings/0/sha256'),
++            ('annotation reference drift', lambda d: d['units'][0]['annotation_refs'][0].__setitem__('pointer', '/annotations/1'), 'deterministic mismatch at /units/0/annotation_refs/0/pointer'),
+             ('duplicate decision', lambda d: d['adjudications'].__setitem__(1, d['adjudications'][0]), 'duplicate unit/facet'),
+-            ('unknown derived field', lambda d: d['units'][0].__setitem__('verified', True), 'schema'),
++            ('unknown derived field', lambda d: d['units'][0].__setitem__('verified', True), "schema corpus.json/units/0: Additional properties are not allowed ('verified' was unexpected)"),
+         ]
+         for label, change, diagnostic in cases:
+             with self.subTest(label=label):
+@@ -135,8 +177,8 @@ class CorpusCLI(unittest.TestCase):
+             (lambda d: d['annotations'][0]['facets']['trust'].append('imaginary'), 'unknown facet label'),
+             (lambda d: d.__setitem__('input_sha256', '0'*64), 'annotation input hash'),
+             (lambda d: d.__setitem__('annotator_id', 'a'), 'annotator_id'),
+-            (lambda d: d['annotations'][0].pop('rationale'), 'schema'),
+-            (lambda d: d['annotations'][0]['facets']['economic_functions'].append('exchange'), 'schema'),
++            (lambda d: d['annotations'][0].pop('rationale'), "annotations/0: 'rationale' is a required property"),
++            (lambda d: d['annotations'][0]['facets']['economic_functions'].append('exchange'), "annotations/0/facets/economic_functions: ['exchange', 'exchange'] has non-unique elements"),
+         ]
+         for change, diagnostic in cases:
+             with self.subTest(diagnostic=diagnostic):
+@@ -170,9 +212,40 @@ class CorpusCLI(unittest.TestCase):
+         relative = Path('corpus50/lanes/lane1-dex-lending-cdp-lsd.json')
+         self.mutate(relative, lambda d: d['categories'][0]['protocols'].pop())
+         sha = hashlib.sha256((self.repo / relative).read_bytes()).hexdigest()
+-        self.mutate(BASE / 'inputs/source-manifest.json', lambda d: d['files'][0].__setitem__('sha256', sha))
++        self.mutate(BASE / 'inputs/source-manifest.json',
++                    lambda d: next(e for e in d['files'] if e['path'] == relative.as_posix()).__setitem__('sha256', sha))
+         self.cli('build', 3, 'source row count mismatch')
+ 
++    def test_same_count_source_edit_with_updated_manifest_hash(self):
++        relative = Path('corpus50/lanes/lane1-dex-lending-cdp-lsd.json')
++        self.mutate(relative, lambda d: d['categories'][0]['protocols'][0]['residue'].append('Changed source context.'))
++        sha = hashlib.sha256((self.repo / relative).read_bytes()).hexdigest()
++        self.mutate(BASE / 'inputs/source-manifest.json',
++                    lambda d: next(e for e in d['files'] if e['path'] == relative.as_posix()).__setitem__('sha256', sha))
++        self.cli('build', 1, 'neutral annotation input does not match identity map, taxonomy or source rows')
++        self.assertFalse(self.out.exists())
++
++    def test_neutral_binding_preserves_original_json_types(self):
++        relative = Path('corpus50/lanes/lane1-dex-lending-cdp-lsd.json')
++        self.mutate(relative, lambda d: d['categories'][0]['protocols'][0].__setitem__('arbitrary_field', True))
++        sha = hashlib.sha256((self.repo / relative).read_bytes()).hexdigest()
++        self.mutate(BASE / 'inputs/source-manifest.json',
++                    lambda d: next(e for e in d['files'] if e['path'] == relative.as_posix()).__setitem__('sha256', sha))
++        neutral = BASE / 'inputs/annotation-input.json'
++        self.mutate(neutral, lambda d: d['units'][0]['source_record']['original'].__setitem__('arbitrary_field', 1))
++        sha = hashlib.sha256((self.repo / neutral).read_bytes()).hexdigest()
++        for annotator in ('a', 'b'):
++            self.mutate(BASE / f'annotations/{annotator}.json', lambda d: d.__setitem__('input_sha256', sha))
++        self.cli('build', 1, 'neutral annotation input does not match identity map, taxonomy or source rows')
++        self.assertFalse(self.out.exists())
++        self.mutate(neutral, lambda d: d['units'][0]['source_record']['original'].__setitem__('arbitrary_field', True))
++        sha = hashlib.sha256((self.repo / neutral).read_bytes()).hexdigest()
++        for annotator in ('a', 'b'):
++            self.mutate(BASE / f'annotations/{annotator}.json', lambda d: d.__setitem__('input_sha256', sha))
++        self.cli('build')
++        corpus = json.loads((self.out / 'corpus.json').read_text())
++        self.assertIs(corpus['source_records'][0]['original']['arbitrary_field'], True)
++
+     def test_identity_corruptions(self):
+         relative = BASE / 'inputs/identity-map.json'
+         good = (self.repo / relative).read_bytes()
+@@ -180,11 +253,68 @@ class CorpusCLI(unittest.TestCase):
+             (lambda d: d['units'].pop(), 'identity unit coverage'),
+             (lambda d: d['units'].__setitem__(1, d['units'][0]), 'duplicate unit_id'),
+             (lambda d: d['units'][0].__setitem__('legacy_id', d['units'][1]['legacy_id']), 'parent-child coverage'),
+-            (lambda d: d['units'][0].__setitem__('evaluation_role', 'holdout'), 'schema')):
++            (lambda d: d['units'][0].__setitem__('evaluation_role', 'holdout'), "schema identity map/evaluation_role: 'development' was expected")):
+             (self.repo / relative).write_bytes(good)
+             self.mutate(relative, change)
+             self.cli('build', 1, diagnostic)
+ 
++    def test_coherent_split_payload_corruptions(self):
++        identity_path = self.repo / BASE / 'inputs/identity-map.json'
++        neutral_path = self.repo / BASE / 'inputs/annotation-input.json'
++        good_identity, good_neutral = identity_path.read_bytes(), neutral_path.read_bytes()
++        v1, v2 = 'unit:lane1:c2:p4:v1', 'unit:lane1:c2:p4:v2'
++        usdy, ousg = 'unit:lane3:c0:p0:usdy', 'unit:lane3:c0:p0:ousg'
++
++        def swap(units, a, b, key):
++            units[a][key], units[b][key] = units[b][key], units[a][key]
++
++        cases = [
++            ('duplicate-version', lambda u: u[v2].__setitem__('version', u[v1]['version']), 'identity split version mismatch'),
++            ('swapped-version', lambda u: swap(u, v1, v2, 'version'), 'identity split version mismatch'),
++            ('wrong-shared-product', lambda u: [u[x]['product'].__setitem__('id', 'product:changed') for x in (v1, v2)], 'identity split product mismatch'),
++            ('duplicate-product', lambda u: u[ousg].__setitem__('product', u[usdy]['product']), 'identity split product mismatch'),
++            ('swapped-product', lambda u: swap(u, usdy, ousg, 'product'), 'identity split product mismatch'),
++        ]
++        for label, change, diagnostic in cases:
++            with self.subTest(label=label):
++                identity, neutral = json.loads(good_identity), json.loads(good_neutral)
++                units = {u['unit_id']: u for u in identity['units']}
++                change(units)
++                for context in neutral['units']:
++                    context['identity'] = units[context['identity']['unit_id']]
++                write(identity_path, identity)
++                write(neutral_path, neutral)
++                sha = hashlib.sha256(neutral_path.read_bytes()).hexdigest()
++                for annotator in ('a', 'b'):
++                    self.mutate(BASE / f'annotations/{annotator}.json', lambda d: d.__setitem__('input_sha256', sha))
++                out = self.repo / label
++                self.cli('build', 1, diagnostic, out=out)
++                self.assertFalse(out.exists())
++
++    def test_adjudication_schema_and_distinct_annotation_refs(self):
++        self.cli('build')
++        path = self.out / 'corpus.json'
++        good = path.read_bytes()
++        cases = [
++            (lambda d: d['units'][0]['annotation_refs'].__setitem__(1, d['units'][0]['annotation_refs'][0]),
++             "schema corpus.json/units/0/annotation_refs/1/annotator_id: 'b' was expected"),
++            (lambda d: d['adjudications'][0].__setitem__('status', 'unresolved_difference'),
++             "schema corpus.json/adjudications/0/status: 'provisional_agreement' was expected"),
++            (lambda d: d['adjudications'][0]['unresolved_labels'].append('exchange'),
++             'schema corpus.json/adjudications/0/unresolved_labels: maxItems=0; observed length=1'),
++            (lambda d: d['adjudications'][2].__setitem__('status', 'provisional_agreement'),
++             "schema corpus.json/adjudications/2/status: 'unresolved_difference' was expected"),
++            (lambda d: d['adjudications'][2].__setitem__('unresolved_labels', []),
++             'schema corpus.json/adjudications/2/unresolved_labels: minItems=1; observed length=0'),
++        ]
++        for change, diagnostic in cases:
++            with self.subTest(diagnostic=diagnostic):
++                path.write_bytes(good)
++                self.mutate(BASE / 'generated/corpus.json', change)
++                self.cli('check', 1, diagnostic)
++        path.write_bytes(good)
++        self.cli('check')
++
+     def test_unreadable_and_empty_generated(self):
+         self.cli('build')
+         path = self.out / 'crosswalk.csv'
+
+ACTUAL FINAL EXECUTION EVIDENCE (not synthetic coverage)
+{"candidate":"7df773478df6408ac75abeca64ef04d76320c6fe","utc":"2026-09-06T22:03:23.451028+00:00","python":"3.14.4 (main, Jun 18 2026, 14:25:02) [GCC 15.2.0]","jsonschema":"4.19.2","file_sha256":{"corpus/normalized/requirements.txt":"49026b67905a6c42bd426e6f8b3d2d08dc24ec6fe51cb2f706aea0a3fb5f8e08","corpus/normalized/README.md":"087276ef81f2ff901ab7e1c32920ba4898ca482f00f8a6e16940cac52c295073","corpus/normalized/corpus.schema.json":"2b7e2fb94db8247293bb974465204ba9ed7d8359560238c26ce3ca0dbd860fab","corpus/normalized/inputs/annotation-input.json":"dc36166d26447203ba5af7f12db14f53d4ab1865dcace85955b58e026f3ef8e2","corpus/normalized/inputs/source-manifest.json":"2d9b70729adf7743f0376893220afdc78277f08611f08fa2c2e3170a0b7d3c48","corpus/normalized/inputs/identity-map.json":"6cda8464f7b2effbec57cd6c1a88bb25b9d32a236a38d86707b5518f1e2eecb0","corpus/normalized/inputs/taxonomy.json":"8f854470619216917fef489bb93c62afa8e56da6d1cfc8dd68afc7a46beed681","corpus/normalized/annotations/b.json":"b2d30c390da953c464169f805aef1e4bcfaeeec076bc6c235cc6872536a47022","corpus/normalized/annotations/a.json":"bef2613e0d4a1b88fcd179a5b051e8eb942610a6299d15e553187705890bc007","corpus/normalized/generated/coverage.json":"e199548b467ef919b1e5600d7be3675c2ff3672800f5619912204434534895fe","corpus/normalized/generated/corpus.json":"43455c0a4bd490eea9f723a93ca18df10f79741f96ab16f73ef301cf919c0c90","corpus/normalized/generated/crosswalk.csv":"d842ad3111b3449b6b90c1824c0b4e988ba56b3eceee1b4aafd554adb52f48c3","corpus/normalized/sources/README.md":"0f6d62798fb351a5c8ac3cb524394f5abdef1adebf281867c34139438d2e714c","corpus/normalized/sources/primary-excerpts.json":"f408fa630e27e207d60c6b93fca6c36037dc1b4fb3a3391a82664b86361cd794","corpus50/lanes/lane3-rwa-options-stables-prediction.json":"94195e7144eb707a7cbe34e4adcbaeeb234a572d7ac485e89ed2636059452820","corpus50/lanes/lane1-dex-lending-cdp-lsd.json":"afaf18d717dbd0ccc4e2909c146943e37ed3dff3c982bcfbc9b4f71f26c23369","corpus50/lanes/lane2-perps-yield-bridges-intents.json":"cca6b4cccd9e75cf70a1e4dcb291562810a7ab22b52071295ce2479af03364f6","scripts/corpus_normalize.py":"f7f00d7c80ba11ef80d268910066a47896538c223511f5588009487ecf3f9ecc","scripts/test_corpus_normalize.py":"0c3ef8580a44b81b9d55cd2e9cd03d74580d2ee722d5acd57609f0a94faf278f"},"regression":{"command":["/usr/bin/python3","scripts/test_corpus_normalize.py"],"exit":0,"test_methods":20,"cli_successes":13,"cli_invalid":49,"cli_blocked":14},"actual_check":{"command":["/usr/bin/python3","scripts/corpus_normalize.py","check","--repo","."],"exit":0,"stdout":"OK check: 72 source rows; 75 candidate units; 375 facet decisions; 346 provisional agreements; 29 unresolved differences. No semantic accuracy claim.\n","bytes_and_mtime_unchanged":true},"actual_rebuild":{"build_command":["/usr/bin/python3","scripts/corpus_normalize.py","build","--repo",".","--out","/tmp/corpus-final-reproduce-_de9mufg/new"],"build_exit":0,"check_command":["/usr/bin/python3","scripts/corpus_normalize.py","check","--repo",".","--data","/tmp/corpus-final-reproduce-_de9mufg/new"],"check_exit":0,"stdout":"OK build: 72 source rows; 75 candidate units; 375 facet decisions; 346 provisional agreements; 29 unresolved differences. No semantic accuracy claim.\nOK check: 72 source rows; 75 candidate units; 375 facet decisions; 346 provisional agreements; 29 unresolved differences. No semantic accuracy claim.\n","byte_identical_files":3},"unchanged_from_base":["corpus50","formal"],"coverage":{"agreed_empty":67,"agreed_nonempty":279,"candidate_units":75,"development_units":75,"facet_decisions":375,"limits":["Historical source claims are not reverified financial facts.","Model agreement is not semantic accuracy; intersections leave differences unresolved.","Empty label sets mean not evidenced, not proof of absence.","Mutual empty agreement is not positive facet evidence.","All candidates are development cases; deployment identities remain unresolved."],"mapped_source_rows":72,"per_facet":{"economic_functions":{"agreed_empty":0,"agreed_nonempty":70,"decisions":75,"provisional_agreements":70,"unresolved_differences":5},"execution":{"agreed_empty":39,"agreed_nonempty":30,"decisions":75,"provisional_agreements":69,"unresolved_differences":6},"instruments":{"agreed_empty":3,"agreed_nonempty":69,"decisions":75,"provisional_agreements":72,"unresolved_differences":3},"mechanisms":{"agreed_empty":4,"agreed_nonempty":63,"decisions":75,"provisional_agreements":67,"unresolved_differences":8},"trust":{"agreed_empty":21,"agreed_nonempty":47,"decisions":75,"provisional_agreements":68,"unresolved_differences":7}},"per_source":[{"path":"corpus50/lanes/lane1-dex-lending-cdp-lsd.json","source_rows":22},{"path":"corpus50/lanes/lane2-perps-yield-bridges-intents.json","source_rows":30},{"path":"corpus50/lanes/lane3-rwa-options-stables-prediction.json","source_rows":20}],"provisional_agreements":346,"schema_version":"0.1.0","source_files":3,"source_rows":72,"status":"provisional_source_bound","unresolved_differences":29,"untouched_holdouts":0,"verified_deployments":0}}
+ADJUDICATION MUTANTS
+import importlib.util
+import io
+from pathlib import Path
+import sys
+import tempfile
+import unittest
+sys.dont_write_bytecode = True
+path = Path('/home/charl/defiformal/scripts/test_corpus_normalize.py')
+spec = importlib.util.spec_from_file_location('corpus_tests', path)
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+original = module.SCRIPT.read_text()
+needle = 'retained, unresolved = sorted(a & b), sorted(a ^ b)'
+assert original.count(needle) == 1
+mutations = {
+    'always-A retained set': 'retained, unresolved = sorted(a), sorted(a ^ b)',
+    'drop every differing retained set': 'retained, unresolved = ([] if a != b else sorted(a & b)), sorted(a ^ b)',
+    'one-sided difference': 'retained, unresolved = sorted(a & b), sorted(a - b)',
+}
+with tempfile.TemporaryDirectory(prefix='corpus-adjudication-mutants-') as directory:
+    for label, replacement in mutations.items():
+        mutant = Path(directory) / 'normalizer.py'
+        mutant.write_text(original.replace(needle, replacement))
+        module.SCRIPT = mutant
+        result = unittest.TextTestRunner(verbosity=2).run(unittest.TestSuite([
+            module.CorpusCLI('test_positive_reproducible_read_only')]))
+        assert len(result.failures) == 1 and not result.errors, label
+        print('DISCRIMINATES:', label, flush=True)
+
+The3 mutations each built and self-checked, then failed exact expected-data assertions; r2-mutants.log preserves failures. Final regression fresh at candidate:20 tests,76 CLI calls=13 success+49 invalid+14 blocked.
