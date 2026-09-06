@@ -110,3 +110,9 @@ Historical `corpus50` and `formal` files remain unchanged from the Sprint 2 base
 This sprint establishes provisional source-bound bookkeeping, not a deployment
 benchmark, holdout performance, financial truth or reproduction of the missing
 proposal artifacts.
+
+The staged whitespace check flags blank diff-context lines in focused-bundle.txt
+and the final blank line in tests-bundle.txt. These exact native-review inputs
+are retained byte-for-byte to preserve their recorded hashes. Source changes
+passed the whitespace check; the raw review-bundle findings are intentional
+evidence-format exceptions.
