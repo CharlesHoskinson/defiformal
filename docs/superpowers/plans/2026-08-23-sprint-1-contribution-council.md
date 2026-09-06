@@ -1,3 +1,8 @@
+> **Superseded as an execution mandate on 2026-09-06.** The user approved
+> the [semantic-kernel migration](../specs/2026-09-06-semantic-kernel-design.md).
+> Preserve the record below as historical evidence. Its primitive-basis and
+> publication-first instructions do not govern new work.
+
 # Sprint 1: Contribution Council — Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.

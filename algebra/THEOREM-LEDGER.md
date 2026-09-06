@@ -1,3 +1,13 @@
+# Current scope correction (2026-09-06)
+
+Retain this chronological ledger as evidence of the original program. The
+[claim disposition](../docs/research/semantic-kernel-claim-disposition.md)
+governs new citations: distinguish set-operation closure from induced lattice
+structure, syntactic independence from semantic minimality, and bounded checks
+from structural proofs and their concrete-instance correspondence.
+
+---
+
 # Theorem ledger
 
 **The authoritative record.** Everything proved, refuted, contested or open across

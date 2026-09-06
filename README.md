@@ -1,23 +1,42 @@
 # defiformal
 
-An algebra of mechanism composition for decentralised finance.
+A semantic and verification foundation for decentralised finance.
+
+**Active direction (2026-09-06):** typed open financial state transitions, with
+explicit assets, authority, claims, interfaces, effects, and environment
+assumptions. The research objective is conditional preservation under
+composition. Financial mechanisms become libraries; the atlas remains an
+empirical ontology. The four-primitive basis is withdrawn.
+
+Start with the [approved migration design](docs/superpowers/specs/2026-09-06-semantic-kernel-design.md),
+[execution plan](docs/superpowers/plans/2026-09-06-semantic-kernel-pivot.md), and
+[progress ledger](docs/research/semantic-kernel-progress.md).
+The [supplied proposal](docs/research/2026-09-06-defi-source-plan.md) is preserved
+as source material; its citation placeholders and attachments remain unresolved.
+
+## Retained research
 
 A vocabulary of 58 recurring on-chain financial mechanisms, extracted from 72
 deployed protocols across 12 categories, together with the constraints saying
 which mechanisms require which others and which combinations are forbidden — and
 an investigation of what, if anything, composition preserves.
 
-**The paper is `paper/atlas.tex`.** Build it with `./paper/build.sh`.
+**The existing paper is `paper/atlas.tex`.** It records the earlier research
+program and has not yet been rewritten for the semantic kernel. Build it with
+`./paper/build.sh`.
 
-## What is established
+## Earlier results and their scope
 
 - **Polarity.** Requirements and warrants are dual-Horn, prohibitions Horn. So the
   protocols satisfying requirements and warrants form a complete lattice under
-  union, which admissibility does not inherit. This is an instance of the
-  Pol–Inv characterisation, not a new result.
+  union. Adding admissibility constraints need not preserve set union or set
+  intersection; that alone does not decide whether the induced poset is a
+  lattice. The clause classification is an instance of the Pol–Inv
+  characterisation, not a new result.
 - **The deterministic fragment is a convex geometry.** A union-stable closure is
   anti-exchange iff its specialization digraph is acyclic; ours is. Verified
-  exhaustively over all 1.44 × 10¹⁶ closed sets, and formalised in Lean 4.
+  through a structural reduction formalised in Lean 4. The separate bounded
+  executions and instance measurements must retain their own stated scope.
 - **Composition on canonical forms is linear.** Every protocol has a unique
   minimal generator, and the generator of a composite is computable from the
   generators of its parts without consulting the rest of the vocabulary.

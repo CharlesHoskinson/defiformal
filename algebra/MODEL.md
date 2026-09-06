@@ -1,3 +1,14 @@
+# Current scope correction (2026-09-06)
+
+This is a historical research record. The
+[claim disposition](../docs/research/semantic-kernel-claim-disposition.md)
+overrides conflicting claims below: Delta's idempotent-interior description is
+withdrawn, and mixed clause polarity alone does not prove absence of a lattice
+under inclusion. The active objective is the
+[semantic-kernel migration](../docs/superpowers/specs/2026-09-06-semantic-kernel-design.md).
+
+---
+
 # The model
 
 > **The running score lives in [`THEOREM-LEDGER.md`](THEOREM-LEDGER.md)** — proved, refuted, contested and open. Plain-English companion: [`PLAIN-ENGLISH.md`](PLAIN-ENGLISH.md).

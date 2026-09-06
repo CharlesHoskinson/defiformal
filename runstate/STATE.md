@@ -1,3 +1,8 @@
+> **Superseded as an execution mandate on 2026-09-06.** The user approved
+> the [semantic-kernel migration](../docs/superpowers/specs/2026-09-06-semantic-kernel-design.md).
+> Preserve the record below as historical evidence. Its primitive-basis and
+> publication-first instructions do not govern new work.
+
 # defiformal — end-to-end DeFi model: run state
 
 **Owner:** charles hoskinson (AFK). **Started:** 2026-08-04.
