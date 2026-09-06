@@ -6,6 +6,8 @@ Run from this directory:
 lake build                  # historical algebra and new kernel pilot
 lake build DefiKernel       # pilot, including its acceptance declarations
 lake env lean DefiKernel/Audit.lean  # fresh runtime output and axiom disclosure
+lake env lean DefiKernel/ContractAudit.lean  # trusted operation-contract runtime checks
+lake env lean DefiKernel/VerifyAxioms.lean   # automatic imported-module axiom audit
 ```
 
 Use the versions pinned in `lean-toolchain` and `lake-manifest.json`.
@@ -36,6 +38,19 @@ repayment. Accepted counterexamples make this boundary explicit. The generic
 accounting and policy-relative authority theorems still hold for those effects;
 the fixture is not a safe policy for a financial application.
 
+The operation-contract layer adds a separate execution boundary. Trusted
+application code selects an operation contract and its parameters; an untrusted
+proposal supplies the transition to check. Library contracts compare the actor,
+complete asset/account effects and supply changes against those parameters.
+Borrow contracts independently check the declared oracle and collateral rules,
+so replacing a proposal's own guard with `true` cannot remove those rules.
+Contract refusal and original kernel refusal remain distinguishable.
+
+This boundary is conditional on trusted contract selection. The original broad
+policy and its accepted counterexamples remain unchanged. The new layer does
+not authenticate a caller, issue or revoke capabilities, or guarantee safety
+when untrusted code can choose its own contract or trusted parameters.
+
 Oracle feed and timestamp fields are
 declared inputs; checking them does not establish provenance or market truth.
 Debt is represented as a distinct nonnegative obligation token in the reference
@@ -49,7 +64,11 @@ economic solvency, or asynchronous liveness. These remain migration obligations.
 
 Lean proof terms are the current evidence format. Concrete acceptance theorems
 check their stated examples; they do not establish corpus-wide adequacy.
-`Audit.lean` maintains an explicit axiom-disclosure list. When adding or removing
-a theorem, update that list and compare it against all named pilot theorem
-declarations before reporting complete disclosure. The recorded count applies
-only to the exact audited source snapshot.
+`Audit.lean` retains the first increment's manual disclosure list.
+`VerifyAxioms.lean` runs an automatic audit of elaborated theorem constants in
+imported modules under the `DefiKernel` module prefix. It reports theorem names,
+origin modules and transitive axiom dependencies, and rejects an empty theorem
+scope or dependencies outside `propext`, `Classical.choice`, and `Quot.sound`.
+Discovery does not depend on source-text formatting or a manual theorem list.
+It covers the import closure, including generated theorem constants; unimported
+files and declarations in the audit command's current module are outside scope.

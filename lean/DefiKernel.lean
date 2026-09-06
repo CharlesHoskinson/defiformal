@@ -1,3 +1,3 @@
-import DefiKernel.Audit
+import DefiKernel.VerifyAxioms
 
-/-! Entry point for the bounded semantic kernel, reference models, and checked regressions. -/
+/-! Entry point for the bounded kernel, operation contracts, regressions and automatic axiom audit. -/
