@@ -25,6 +25,22 @@ def runtimeChecks : List (String × Bool) := [
   ("borrow accepted", oracleCase fresh 3 none),
   ("stale oracle", oracleCase stale 3 (some .guard)),
   ("zero price", oracleCase zeroPrice 3 (some .guard)),
+  ("isolated zero price", decide (check policy zeroPrice (borrow (Quantity.ofNat 0))
+    zeroDebt = some .guard)),
+  ("zero borrow positive price", decide (check policy fresh (borrow (Quantity.ofNat 0))
+    zeroDebt = none)),
+  ("policy overgrant vault drain accepted", unitCase policyVaultDrain none),
+  ("policy overgrant unbacked issue accepted", unitCase policyUnbackedIssue none),
+  ("policy overgrant debt burn accepted", unitCase policyDebtBurn none),
+  ("policy overgrant vault drain post-state", decide (observe
+    (execute policy () policyVaultDrain initial)
+    [(.alice, .usd), (.vault, .usd), (.alice, .share)] = .ok [30, 0, 4])),
+  ("policy overgrant unbacked issue post-state", decide (observe
+    (execute policy () policyUnbackedIssue initial)
+    [(.alice, .usd), (.vault, .usd), (.alice, .share)] = .ok [10, 20, 104])),
+  ("policy overgrant debt burn post-state", decide (observe
+    (execute policy () policyDebtBurn initial)
+    [(.alice, .usd), (.pool, .usd), (.alice, .debt)] = .ok [10, 100, 0])),
   ("future oracle", oracleCase future 3 (some .guard)),
   ("wrong feed", oracleCase { fresh with feed := 8 } 3 (some .guard)),
   ("excess credit", oracleCase fresh 9 (some .guard)),
@@ -96,6 +112,11 @@ end DefiKernel.Audit
 #print axioms DefiKernel.wrong_feed_refused
 #print axioms DefiKernel.insufficient_shares_refused
 #print axioms DefiKernel.insufficient_vault_liquidity_refused
+#print axioms DefiKernel.isolated_zero_price_refused
+#print axioms DefiKernel.zero_borrow_positive_price_accept
+#print axioms DefiKernel.policy_overgrant_vault_drain_accepted
+#print axioms DefiKernel.policy_overgrant_unbacked_issue_accepted
+#print axioms DefiKernel.policy_overgrant_debt_burn_accepted
 #print axioms DefiKernel.transfer_post
 #print axioms DefiKernel.deposit_post
 #print axioms DefiKernel.withdraw_post
@@ -104,6 +125,9 @@ end DefiKernel.Audit
 #print axioms DefiKernel.repeated_borrow_refused
 #print axioms DefiKernel.unauthorized_execute_refused
 #print axioms DefiKernel.self_transfer_noop
+#print axioms DefiKernel.policy_overgrant_vault_drain_post
+#print axioms DefiKernel.policy_overgrant_unbacked_issue_post
+#print axioms DefiKernel.policy_overgrant_debt_burn_post
 #print axioms DefiKernel.wrong_asset_scalar_cancels
 #print axioms DefiKernel.wrong_asset_not_accounted
 #print axioms DefiKernel.unbalanced_not_accounted

@@ -56,10 +56,27 @@ theorem insufficient_shares_refused :
     check policy () (withdraw (Quantity.ofNat 5)) initial =
       some .insufficientFunds := by decide +kernel
 
-/-- Twenty USD of vault liquidity cannot redeem all twenty fixture shares. -/
+/-- Twenty USD cannot redeem the requested eleven shares, despite twenty shares being held. -/
 theorem insufficient_vault_liquidity_refused :
     check policy () (withdraw (Quantity.ofNat 11)) richShares =
       some .insufficientFunds := by decide +kernel
+
+/-- Zero debt and zero borrowing make the collateral inequality true even at price zero. -/
+theorem isolated_zero_price_refused :
+    check policy zeroPrice (borrow (Quantity.ofNat 0)) zeroDebt = some .guard := by decide +kernel
+
+theorem zero_borrow_positive_price_accept :
+    check policy fresh (borrow (Quantity.ofNat 0)) zeroDebt = none := by decide +kernel
+
+/-- Accepted counterexamples expose grants that are not bound to transition shape. -/
+theorem policy_overgrant_vault_drain_accepted :
+    check policy () policyVaultDrain initial = none := by decide +kernel
+
+theorem policy_overgrant_unbacked_issue_accepted :
+    check policy () policyUnbackedIssue initial = none := by decide +kernel
+
+theorem policy_overgrant_debt_burn_accepted :
+    check policy () policyDebtBurn initial = none := by decide +kernel
 
 theorem transfer_post :
     observe (execute policy () (transfer .alice .alice .bob (Quantity.ofNat 3)) initial)
@@ -101,6 +118,21 @@ theorem unauthorized_execute_refused :
 theorem self_transfer_noop :
     observe (execute policy () (transfer .bob .alice .alice (Quantity.ofNat 100)) initial)
       allCells = .ok (allCells.map initial.balance) := by decide +kernel
+
+/-- The vault loses its twenty USD while Alice's share balance is unchanged. -/
+theorem policy_overgrant_vault_drain_post :
+    observe (execute policy () policyVaultDrain initial)
+      [(.alice, .usd), (.vault, .usd), (.alice, .share)] = .ok [30, 0, 4] := by decide +kernel
+
+/-- One hundred shares appear without any USD deposit. -/
+theorem policy_overgrant_unbacked_issue_post :
+    observe (execute policy () policyUnbackedIssue initial)
+      [(.alice, .usd), (.vault, .usd), (.alice, .share)] = .ok [10, 20, 104] := by decide +kernel
+
+/-- Debt disappears without any USD repayment to the pool. -/
+theorem policy_overgrant_debt_burn_post :
+    observe (execute policy () policyDebtBurn initial)
+      [(.alice, .usd), (.pool, .usd), (.alice, .debt)] = .ok [10, 100, 0] := by decide +kernel
 
 /-- This defective effect defeats scalar accounting while violating asset accounting. -/
 theorem wrong_asset_scalar_cancels :

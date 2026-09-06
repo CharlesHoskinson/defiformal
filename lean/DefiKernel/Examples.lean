@@ -19,7 +19,9 @@ def move (asset : Asset) (src dst : Account) (amount : ℚ) (c : Cell) : ℚ :=
   pulse (dst, asset) amount c - pulse (src, asset) amount c
 
 /-- Alice has explicit vault/pool USD debit and share/debt supply capabilities in this fixture.
-This policy is an input assumption; the kernel does not authenticate or derive the grant. -/
+This policy is an input assumption; the kernel does not authenticate or derive the grant.
+Grants are not bound to transition shape: accepted counterexamples below drain the vault,
+issue unbacked shares, and burn debt without repayment. This is not a protocol access policy. -/
 def policy : Policy where
   debit actor c := decide (actor = c.1 ∨
     (actor = .alice ∧ (c = (.vault, .usd) ∨ c = (.pool, .usd))))
@@ -111,6 +113,41 @@ def unauthorizedIssue : Transition Unit where
   writes := {(.bob, .share)}
   guard := fun _ _ ↦ true
 
+/-- Counterexample fixture isolates vault liquidity from share ownership. -/
+def richShares : State where
+  balance c := if c = (.alice, .share) then 20 else initial.balance c
+  nonneg c := by
+    split
+    · norm_num
+    · exact initial.nonneg c
+
+/-- Accepted policy counterexample: no share burn accompanies this vault debit. -/
+def policyVaultDrain : Transition Unit := transfer .alice .vault .alice (Quantity.ofNat 20)
+
+/-- Accepted policy counterexample: supply permission alone does not require a deposit. -/
+def policyUnbackedIssue : Transition Unit where
+  actor := .alice
+  effect := pulse (.alice, .share) 100
+  supplyChange := fun a ↦ if a = .share then 100 else 0
+  writes := {(.alice, .share)}
+  guard := fun _ _ ↦ true
+
+/-- Accepted policy counterexample: the owner may burn debt without repayment. -/
+def policyDebtBurn : Transition Unit where
+  actor := .alice
+  effect := pulse (.alice, .debt) (-2)
+  supplyChange := fun a ↦ if a = .debt then -2 else 0
+  writes := {(.alice, .debt)}
+  guard := fun _ _ ↦ true
+
+/-- Zero debt isolates the positive-price conjunct when the requested borrow is also zero. -/
+def zeroDebt : State where
+  balance c := if c = (.alice, .debt) then 0 else initial.balance c
+  nonneg c := by
+    split
+    · norm_num
+    · exact initial.nonneg c
+
 /-- Constructor accounting holds for every amount, independently of execution guards. -/
 theorem transfer_accounted (actor src dst : Account) (q : Quantity .usd) :
     Accounted (transfer actor src dst q) := by
@@ -142,14 +179,6 @@ def allCells : List Cell :=
 theorem allCells_complete (c : Cell) : c ∈ allCells := by
   rcases c with ⟨owner, asset⟩
   cases owner <;> cases asset <;> decide
-
-/-- Counterexample fixture isolates vault liquidity from share ownership. -/
-def richShares : State where
-  balance c := if c = (.alice, .share) then 20 else initial.balance c
-  nonneg c := by
-    split
-    · norm_num
-    · exact initial.nonneg c
 
 /-- Accepted borrowing preserves the example's declared-price collateral bound in its post-state.
 This is conditional on the guard and on the external meaning of price and locked collateral. -/

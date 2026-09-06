@@ -5,7 +5,7 @@ Run from this directory:
 ```sh
 lake build                  # historical algebra and new kernel pilot
 lake build DefiKernel       # pilot, including its acceptance declarations
-lake env lean DefiKernel/Acceptance.lean
+lake env lean DefiKernel/Audit.lean  # fresh runtime output and axiom disclosure
 ```
 
 Use the versions pinned in `lean-toolchain` and `lake-manifest.json`.
@@ -29,7 +29,14 @@ observed verification and independent review status.
 - Concrete accepted/refused examples and deliberately broken transitions.
 
 The supplied policy is a trust assumption. It does not authenticate callers or
-implement capability issuance/revocation. Oracle feed and timestamp fields are
+implement capability issuance/revocation. In particular, the fixture grants
+permissions without binding them to transition shape: it accepts a vault drain
+without share burn, share issuance without a deposit, and debt erasure without
+repayment. Accepted counterexamples make this boundary explicit. The generic
+accounting and policy-relative authority theorems still hold for those effects;
+the fixture is not a safe policy for a financial application.
+
+Oracle feed and timestamp fields are
 declared inputs; checking them does not establish provenance or market truth.
 Debt is represented as a distinct nonnegative obligation token in the reference
 example. This is not a general party/claim lifecycle model.
@@ -42,3 +49,7 @@ economic solvency, or asynchronous liveness. These remain migration obligations.
 
 Lean proof terms are the current evidence format. Concrete acceptance theorems
 check their stated examples; they do not establish corpus-wide adequacy.
+`Audit.lean` maintains an explicit axiom-disclosure list. When adding or removing
+a theorem, update that list and compare it against all named pilot theorem
+declarations before reporting complete disclosure. The recorded count applies
+only to the exact audited source snapshot.
