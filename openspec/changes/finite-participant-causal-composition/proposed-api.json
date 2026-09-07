@@ -1,0 +1,43 @@
+{
+  "status": "proposed M3 declarations, not implemented or elaborated",
+  "namespace": "DefiKernel.Nary",
+  "types": {
+    "Roster B": "order : List B; nodup : order.Nodup; complete : ∀ b, b ∈ order",
+    "Branches B P A D": "B → Parallel.Branch P A D",
+    "Boundaries B P A D": "B → Nat → Composition.Boundary P A D",
+    "Schedule B": "List B",
+    "ScheduleMismatch B": "participant : B; expected : Nat; observed : Nat",
+    "AdmissionFailure B P A D": "configuration | structural (participant : B) (failure : Parallel.LocalFailure) | schedule (mismatch : ScheduleMismatch B)",
+    "Attempt B P A D": "participant : B; index : Nat; invocation : Invocation P A D; before : World P A D; outcome : Except Composition.Failure (StepResult P A D)",
+    "Machine B P A D": "world : World P A D; locals : B → Interleaving.LocalState P A D; attempts : List (Attempt B P A D)",
+    "Result B P A D": "refused (reason : AdmissionFailure B P A D) (world : World P A D) (schedule : Schedule B) | executed (schedule : Schedule B) (machine : Machine B P A D)",
+    "MonitorInput B P A D": "participant : B; boundary : Boundary P A D; before : Machine B P A D; after : Machine B P A D; attempt : Option (Attempt B P A D)"
+  },
+  "runtime_signatures": {
+    "checkSchedule": "(roster : Roster B) (branches : Branches B P A D) (schedule : Schedule B) : Except (ScheduleMismatch B) PUnit",
+    "analyzeAll": "(cfg : Config P A D) (boundaries : Boundaries B P A D) (branches : Branches B P A D) (order : List B) : Except (AdmissionFailure B P A D) (List (B × Parallel.Footprint P A D))",
+    "admit": "(cfg : Config P A D) (roster : Roster B) (boundaries : Boundaries B P A D) (branches : Branches B P A D) (schedule : Schedule B) : Except (AdmissionFailure B P A D) (List (B × Parallel.Footprint P A D))",
+    "start": "(initial : World P A D) : Machine B P A D",
+    "advance": "(cfg : Config P A D) (boundaries : Boundaries B P A D) (branches : Branches B P A D) (m : Machine B P A D) (b : B) : Machine B P A D",
+    "continueRun": "(cfg : Config P A D) (boundaries : Boundaries B P A D) (branches : Branches B P A D) (m : Machine B P A D) (schedule : Schedule B) : Machine B P A D",
+    "runPrefix": "(cfg : Config P A D) (boundaries : Boundaries B P A D) (initial : World P A D) (branches : Branches B P A D) (schedule : Schedule B) : Machine B P A D",
+    "runNary": "(cfg : Config P A D) (roster : Roster B) (boundaries : Boundaries B P A D) (initial : World P A D) (branches : Branches B P A D) (schedule : Schedule B) : Result B P A D",
+    "machineEq": "(roster : Roster B) (left right : Machine B P A D) : Bool",
+    "advanceMonitored": "(cfg : Config P A D) (boundaries : Boundaries B P A D) (branches : Branches B P A D) (update : Q → MonitorInput B P A D → Q) (entry : Q × Machine B P A D) (b : B) : Q × Machine B P A D",
+    "continueMonitored": "(cfg : Config P A D) (boundaries : Boundaries B P A D) (branches : Branches B P A D) (update : Q → MonitorInput B P A D → Q) (entry : Q × Machine B P A D) (schedule : Schedule B) : Q × Machine B P A D"
+  },
+  "shared_binders": "DecidableEq B/P/A/D; Fintype P/A/D for actual executeStep/finite world observation. Roster supplies B enumeration; no Fintype B or noncomputable choice is required. Q arbitrary Type. Comparisons share the same type/instance universes.",
+  "helper_contracts": {
+    "checkCountsFrom": "explicit List B recursion; first count mismatch; empty returns ok; used only by checkSchedule",
+    "Machine.setLocal": "update selected local only by Boolean/equality decision on B",
+    "Machine.skip": "selected consumed increments; all other fields unchanged",
+    "Machine.refuse": "selected first failure/index/inv retained; appended actual error Attempt; unchanged world/history/index",
+    "Machine.accept": "selected consumed/index increment; actual event/world/receipt/output/Attempt appended",
+    "failedAttempt": "match attempt.outcome with | .error _ => true | .ok _ => false",
+    "recordReceipt": "identity result.receipt in local event, with a unique explicit runtime binding for M10",
+    "monitor_lookup": "newly appended option at pre.attempts.length; no synthetic receipt or last-attempt replay",
+    "monitor_fold": "carry entire accumulated pair, not initial q, at each token"
+  },
+  "full_observation": "machineEq compares Parallel.worldEq, every roster local consumed/nextIndex/failure/outputs plus event index/step/before/world/receipt/outputs, and all attempt participant/index/invocation/before/full-outcome fields in order. Prove true iff exact machine equality; result comparator additionally checks exact schedule and admission reason, unlike canonical historical comparators.",
+  "source_layout": "Schedule, Execution, Observation, CausalRuntime, Examples, Tests, Audit are runtime roots; all executable/shared Prop defs precede marker. Proof helpers and Interface preservation imports stay outside runtime roots."
+}

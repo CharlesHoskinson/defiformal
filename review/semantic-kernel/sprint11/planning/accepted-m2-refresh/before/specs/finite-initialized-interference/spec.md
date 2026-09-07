@@ -22,7 +22,7 @@ A generic theorem SHALL establish all participant invariants at every actual pre
 
 ### Requirement: Actual local obligations and supported financial instances
 
-Financial instances SHALL use actual successful invocation equations and the accepted M2 TypedTotalContract/Agrees predicates and actual local support, neutrality or paired-effect premises quoted in accepted-api.json; they SHALL retain the entire fixed global binding set and SHALL not infer preservation from authorization alone.
+Financial instances SHALL use actual successful invocation equations and the accepted M2 local support, neutrality or paired-effect premises; they SHALL retain the entire fixed global binding set and SHALL not infer preservation from authorization alone.
 
 #### Scenario: Finite global equality and total instance
 - **WHEN** three streams preserve an initialized shared declared total and every fixed global edge under accepted M2 premises

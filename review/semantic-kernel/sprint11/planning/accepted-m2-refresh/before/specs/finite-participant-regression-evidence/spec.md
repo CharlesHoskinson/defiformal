@@ -34,7 +34,7 @@ The runner SHALL preserve all final accepted predecessor defensive controls thro
 
 #### Scenario: Predecessor control adaptation
 - **WHEN** accepted M2 driver and controls are available
-- **THEN** every established control has an exact old/new mapping and actual execution; the actual accepted S10 65-case run retains its source identity and is not relabeled as an M3 run
+- **THEN** every established control has an exact old/new mapping and actual execution; the provisional inherited65 catalog is not relabeled as an M3 run
 
 #### Scenario: Proof-tail and private declarations
 - **WHEN** runtime proof stripping and full Lean verification execute

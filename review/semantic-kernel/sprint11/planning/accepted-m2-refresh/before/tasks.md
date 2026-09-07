@@ -30,7 +30,7 @@
 ## 5. Initialized finite interference and M2 instances
 
 - [ ] 5.1 Define local actual-success, cross-inclusion and stability obligations; prove simultaneous initialized prefix induction and verify arbitrary finite roster binders and refusal/skip identity cases.
-- [ ] 5.2 Instantiate actual accepted M2 total/global-binding hypotheses for three streams; verify F18 retains all global edges and full initialized values at every prefix, with actual accepted op102/receipt102 and all six complete three-token schedules.
+- [ ] 5.2 Instantiate actual accepted M2 total/global-binding hypotheses for three streams; verify F18 retains all global edges and full initialized values at every prefix.
 - [ ] 5.3 Prove and execute material counterexamples F11/F13/F14/F15/F19 for authorization-only, unstable peers, missing initialization, circular promises and omitted global edges; verify each classification and remaining premises explicitly.
 
 ## 6. Causal execution and funded witness
@@ -44,9 +44,9 @@
 
 ## 7. Independent runtime fixtures and mutation runner
 
-- [ ] 7.1 Complete all nineteen fixture IDs from fixtures.json and their explicitly classified variants, exact expected observations and unique nonempty runtime check IDs; obtain nonauthor fixture source review and map every scenario to its actual proof/check evidence.
+- [ ] 7.1 Complete all nineteen fixture IDs and their explicitly classified variants, exact expected observations and unique nonempty runtime check IDs; obtain nonauthor fixture source review and map every scenario to its actual proof/check evidence.
 - [ ] 7.2 Implement Nary Audit and defensive CLI adaptation with runtime-only imports and precise proof-tail stripping; verify all final inherited controls plus any separately justified additions, including actual production-form evaluation/error controls.
-- [ ] 7.3 Freeze the sixteen literal runtime anchors from planned-mutations.json as unique actual source sites and run each compiled production mutation; verify its intended false semantic check, protected positives, source isolation and actual per-command timeout/duration.
+- [ ] 7.3 Freeze sixteen concrete source mutation sites and run each compiled production mutation; verify its intended false semantic check, protected positives, source isolation and actual per-command timeout/duration.
 - [ ] 7.4 Preserve every compiler failure, timeout, cancellation, malformed/empty output and retry; verify none receives semantic detection credit and every accepted mutant has full stdout/stderr/source/artifact hashes.
 
 ## 8. Integrated proof and acceptance evidence
