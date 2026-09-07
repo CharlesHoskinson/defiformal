@@ -20,7 +20,7 @@ Implementation SHALL begin only after accepted Sprint8 delivery, refreshed froze
 
 ### Requirement: Independent operational evidence
 
-Nonempty financial and administrative cases SHALL compare actual execution with independently constructed full expected data. Generic simulation comparisons, reference instances, counterexamples and compiler controls SHALL remain separate evidence classes.
+Nonempty financial and administrative cases SHALL compare actual execution with independently constructed full expected data. Generic simulation comparisons, reference instances, counterexamples, synthetic arbitrary/unreachable observation-pair checks and compiler controls SHALL remain separate evidence classes.
 
 #### Scenario: Independent financial expectations
 
@@ -49,26 +49,26 @@ Exactly fourteen planned mutations SHALL alter actual new group-execution or obs
 #### Scenario: Six observation omission mutations
 
 - **WHEN** current world, store, history, failure, receipt or next position comparison is omitted
-- **THEN** each actual production comparison mutation is detected by an independently constructed changed pair while equal pairs stay true
+- **THEN** each actual production comparison mutation is detected by an independently constructed synthetic arbitrary/unreachable changed pair while equal pairs stay true, separately classified from financial execution-routing detection
 
 #### Scenario: Compiler failure receives no detection credit
 
-- **WHEN** a mutation fails compilation or loses expected observations
+- **WHEN** a mutation fails compilation, times out or loses expected observations
 - **THEN** the attempt is blocked and retained as evidence, never counted among the fourteen semantic detections
 
 ### Requirement: Defensive runner controls
 
-The dedicated runner SHALL adapt all sixty-five established actual CLI controls to Metatheory roots and names, preserve valid/violated/blocked classifications, and reject empty, malformed, partial, dirty or drifting evidence. Executable declarations SHALL precede proof boundaries.
+The dedicated runner SHALL adapt all sixty-five established actual CLI controls to Metatheory roots and names, preserve valid/violated/blocked classifications, and reject empty, malformed, partial, dirty or drifting evidence. Executable declarations SHALL precede proof boundaries. The complete adaptation SHALL bind driver/spec paths, scoped namespace/root/proof regexes, exact failed/empty/duplicate error strings and all fixture/production-assertion names as well as case names. Runtime audit closures SHALL avoid imported Tests and proof-only fixtures; each runner Lean/Git command SHALL have an explicit 600-second timeout, each harness runner subprocess 1500 seconds, and each command/case SHALL record measured wall time. Timeouts SHALL be blocked exit3, not detection.
 
 #### Scenario: Complete actual CLI controls
 
 - **WHEN** the dedicated defensive suite runs against fresh external repositories
-- **THEN** all sixty-five named controls execute real subprocesses with expected classifications and complete command/source/artifact records
+- **THEN** all sixty-five named controls execute real subprocesses with expected classifications and complete command/source/artifact/time records:52 inherited (including one base proof-boundary control),11 new proof-tail controls and2 production forms
 
 #### Scenario: Runtime boundary parser controls
 
 - **WHEN** attributed or comment-prefixed runtime code, macros or initialization appears after the proof boundary
-- **THEN** the runner blocks it while preserving the established comment/string/character negative siblings and both production audit-output forms
+- **THEN** the runner blocks it while preserving the established comment/string/character negative siblings, all 12 proof-tail-related cases and both production audit-output forms with exact `Metatheory runtime comparisons failed: N` false-count text
 
 ### Requirement: Imported audits and accepted delivery
 

@@ -6,7 +6,7 @@ Specify exact observable continuation data and substitution laws for a restricte
 
 ### Requirement: Exact cursor observations
 
-Cursor observation SHALL retain the full current typed ledger, complete capability store, ordered event index/action/receipt/output fields, frozen qualified history, absolute next position and complete optional located failure. Only past raw event worlds and proof terms SHALL be omitted.
+Cursor observation SHALL retain the full current typed ledger, complete capability store, ordered event index/action/receipt/output fields, frozen qualified history, absolute next position and complete optional located failure. Only past raw event worlds and proof terms SHALL be omitted. Production comparison SHALL expose local separable ledger, store, events, history, next-position and failure conjuncts, with a local per-event index/action/receipt/output comparison. Existing world/branch equality SHALL be reused only in correctness proofs, not as delegated runtime comparison.
 
 #### Scenario: Current world sensitivity
 
@@ -44,13 +44,13 @@ The production comparison SHALL decide the declared observation equivalence, and
 
 #### Scenario: Equivalence laws
 
-- **WHEN** arbitrary well-typed cursors are compared
+- **WHEN** arbitrary well-typed cursors, including explicitly synthetic/unreachable observer pairs, are compared
 - **THEN** the Boolean comparison corresponds exactly to the stated relation and all three equivalence laws hold
 
 #### Scenario: Omitted past diagnostic worlds
 
 - **WHEN** cursors agree on all observed fields but differ in a past raw event world
-- **THEN** the selected observer equates them while retaining the explicit restriction on raw diagnostic inspection
+- **THEN** the selected observer equates the explicitly synthetic pair while retaining the restriction on raw diagnostic inspection and making no claim of two reachable traces differing only there
 
 ### Requirement: Restricted contextual substitution
 

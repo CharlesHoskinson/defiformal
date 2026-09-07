@@ -5,9 +5,9 @@ The operational kernel now has explicit sequential, parallel, interleaved and at
 ## What Changes
 
 - Add a recursive sequential group executor that propagates the entire existing cursor, including capability administration and first refusal; prove its stepwise correspondence with the existing sequential executor and exact behavioral associativity.
-- Define exact cursor observations and a restricted sequential context grammar, then prove observational equivalence laws and substitution for contexts with matching full continuation data.
+- Define exact cursor observations with locally exposed runtime field comparisons and a restricted sequential context grammar, then prove observational equivalence laws and substitution for contexts with matching full continuation data.
 - Define explicit configuration agreement on all referenced invocations and administrative grant scopes, prove actual single-step success/refusal equality, and lift it through supported sequential groups and invocation-only existing composition operators.
-- Add independent financial and administrative examples, concrete counterexamples for omitted configuration/catalog/continuation premises, imported proof inventory, production group/observation mutations and defensive runner controls.
+- Add independent financial and administrative examples, materiality counterexamples for omitted configuration/catalog/continuation premises, separately labeled synthetic observer pairs, imported proof inventory, production group/observation mutations and fully mapped defensive runner controls with bounded command times.
 - Preserve the separate future obligations for operational Interface/Nary generalization, finite-participant grouping, causal composition, projected extension with unrelated state changes, dynamic provenance, and atomic-boundary regrouping.
 
 ## Capabilities
@@ -31,4 +31,6 @@ Accepted dependency: Sprint8 source `99e2e2c61a1a3c5249026921efdc6cd41ac8f21d`,
 source/evidence delivery `2c038094c031723f3ade35d8b3f506ccff5b1d3b`, and verified
 archive delivery `9501f0a4f0480b2a42ff197907d548cf0c610773`. Fresh baseline14 Lean
 commands and13 Python suites passed at that source. Dependency/baseline completion
-is separate from the pending independent Sprint9 planning reviews.
+is separate from independent Sprint9 planning acceptance. Frozen r1 reviews remain
+unchanged; this targeted revision addresses the six required native Opus changes
+and must receive review of its new exact bytes before implementation.

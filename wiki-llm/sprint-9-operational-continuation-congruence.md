@@ -4,9 +4,11 @@ Status: author planning draft. No Metatheory implementation, proof or production
 mutation result is claimed here. All35 implementation tasks are unchecked. The
 plan currently contains four capabilities, 17 requirements and 55 scenarios; these
 counts come from the actual OpenSpec files and are checked by the planning map.
-Independent GPT-6/native Opus planning reviews have not been performed. Because
-the GPT-6 worker wrote this plan, another agent must perform the independent GPT-6
-planning review. Native result/evidence reviews and delivery remain later gates.
+Frozen r1 independent GPT-6/native Opus planning reviews are preserved; native
+Opus returned ACCEPT WITH LIMITATIONS with six required changes. This author
+revision addresses those changes and needs review of its new candidate bytes.
+The author is not its independent GPT-6 reviewer. Implementation remains gated;
+native result/evidence reviews and delivery remain later gates.
 
 The Sprint8 dependency is accepted source
 `99e2e2c61a1a3c5249026921efdc6cd41ac8f21d`. Source/evidence commit
@@ -17,12 +19,13 @@ The Sprint8 dependency is accepted source
 Fresh baseline14 Lean commands and13 Python suites passed at that accepted source.
 The Python metadata correction is retained and its final hashes are used.
 
-The inherited control inventory is65:52 earlier controls,11 proof-tail controls
-and2 production-form controls, including the accepted CLI-log pointer correction.
+The inherited control inventory is65:52 earlier controls (including the base
+`runtime-definition-after-proof-boundary` case),11 NEW proof-tail controls and2
+production-form controls;12 controls concern proof-tail behavior in total, including the accepted CLI-log pointer correction.
 All65 executed in the fresh baseline. Their accepted harness source hash is bound,
 not inferred from a case count. All35 plan task boxes remain unchecked until the
 actual planning gate; baseline/dependency completion is recorded separately.
-Independent nonauthor GPT-6/native Opus reviews and implementation remain pending.
+Revised-candidate independent GPT-6/native Opus acceptance and implementation remain pending.
 
 The change is [operational-continuation-congruence](../openspec/changes/operational-continuation-congruence/proposal.md),
 with [design](../openspec/changes/operational-continuation-congruence/design.md),
@@ -45,7 +48,11 @@ or move a transaction boundary.
 
 The observer records all current typed balances and complete store plus exact
 ordered event actions/indices/receipts/outputs, frozen qualified history, nextIndex
-and located failure. Past raw event worlds and proof terms are omitted explicitly.
+and located failure. The production comparator exposes separate local conjuncts
+for ledger/store/events/history/index/failure and event index/step/receipt/outputs;
+existing equality reuse is proof-only. Past raw event worlds and proof terms are
+omitted explicitly. Observer-only pairs are labeled synthetic arbitrary/unreachable
+cursors and are not financial execution traces.
 The context grammar is one hole with fixed sequential groups before or after it,
 using the same configuration/boundaries. Group equivalence quantifies over every
 pair of equivalent input cursors. This is sufficient for actual continuation
@@ -60,7 +67,9 @@ fields. Every issue Grant.operation is also supported even when never invoked.
 Trusted administrators agree on all domains because an arbitrary starting cursor
 can revoke a capability whose domain is read dynamically from its current store.
 Identity types, boundaries, histories, indices and complete starting world/store
-are fixed. These sufficient hypotheses deliberately remain visible.
+are fixed. Identity types and instances are shared theorem binders, not an
+agreement field. These sufficient hypotheses deliberately remain visible; the
+negative examples establish materiality, not minimality of stronger assumptions.
 
 Prove exact actual single-step equality including invocation refusal and receipt
 extraction, issuance and revocation. Lift through supported sequential lists and
@@ -82,7 +91,11 @@ Counterexamples separately cover changed old registry/access/output, invalid
 added catalog, changed grant-only operation domain, changed trusted admin and
 same-ledger/different-store fresh issuance. Continuation negatives omit history,
 index, store or universal-input equivalence. Shared-order competition and
-one-transaction versus separate-boundary rollback limit stronger claims.
+one-transaction versus separate-boundary rollback limit stronger claims. Registry
+changes preserve signature/output-domain validity; grant-only domain-changing
+operations have no declaring catalog component; changed access/output declarations
+preserve ownership/import/export validity so unrelated failures do not mask the
+intended counterexample.
 
 The 14 planned real mutations comprise 8 recursive execution defects (world/store/
 history/index reset, failure clearing, skipped/reversed child, constant boundary)
@@ -91,7 +104,14 @@ design binds each to a real production source site, named independent negative
 oracle and protected nonempty sibling. Configuration premises receive actual
 counterexamples, not invented certificate-checker mutations. Every mutant must
 compile; compiler failures are blocked and receive no semantic detection credit.
-All 65 inherited actual CLI controls must execute with exact classifications.
+All65 inherited actual CLI controls must execute with exact classifications.
+M08 replaces only the new leaf call boundary argument by `(fun _ ↦ boundaries 0)`.
+The complete driver namespace/root/proof-regex/error-text/fixture mapping is fixed
+in design.md, including `Metatheory runtime comparisons failed: N`. Audit imports
+reuse Atomic.Examples/Parallel.Examples and avoid imported Tests/proof-only fixture
+modules; Verify imports proof-lifting modules separately. Runner commands have
+explicit 600-second limits and harness runner subprocesses1500-second limits, with
+measured command/case/variant wall time. Timeouts are blocked exit3, never detections.
 
 ## Files and acceptance
 

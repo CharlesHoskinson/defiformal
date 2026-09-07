@@ -6,7 +6,7 @@ Specify explicit configuration support premises that preserve actual old-program
 
 ### Requirement: Explicit configuration agreement
 
-Configuration agreement SHALL be a proof premise over a fixed identity universe, with both complete catalogs valid, equal registry templates for every supported operation, equal full component/interface lookup results for every supported invocation pair, and equal trusted domain administrators. Support SHALL include grant-only operation references and every static suffix.
+Configuration agreement SHALL be a proof premise over a fixed identity universe, with both complete catalogs valid, equal registry templates for every supported operation, equal full component/interface lookup results for every supported invocation pair, and equal trusted domain administrators. Support SHALL include grant-only operation references and every static suffix. Theorems SHALL bind shared identity types and corresponding instances once for both configurations; this SHALL NOT be a heterogeneous type/instance equality field of the agreement proposition.
 
 #### Scenario: Unrelated valid declarations
 
@@ -68,16 +68,16 @@ The agreement theorem SHALL lift through sequential continuation and recursive g
 
 ### Requirement: Configuration counterexamples
 
-The evidence SHALL include actual execution differences when each material agreement or identical-world premise is removed. Global catalog validity SHALL remain a premise even for newly added declarations outside old support.
+The evidence SHALL include actual execution differences establishing materiality of the listed agreement or identical-world premises when omitted. It SHALL NOT claim minimality or necessity of full registry-template equality or all-domain administrator equality, which are stronger sufficient conditions. Global catalog validity SHALL remain a premise even for newly added declarations outside old support.
 
 #### Scenario: Changed old registry
 
-- **WHEN** an old supported template changes while the remaining applicable premises hold
+- **WHEN** an old supported template changes guard or compatible delta/write behavior while signature/output-domain contracts and remaining applicable premises hold
 - **THEN** a concrete old invocation yields a different actual result
 
 #### Scenario: Changed component declaration
 
-- **WHEN** an old component access or output declaration changes without preserving its complete lookup result
+- **WHEN** an old component access or output declaration changes without preserving its complete lookup result while export/import/private-cell validity remains intact
 - **THEN** a concrete old invocation yields a different access result or frozen output
 
 #### Scenario: Invalid added catalog
@@ -87,7 +87,7 @@ The evidence SHALL include actual execution differences when each material agree
 
 #### Scenario: Changed grant operation domain
 
-- **WHEN** only the grant-only operation domain changes while invoked lookups agree
+- **WHEN** the domain of a registry operation with no declaring catalog component changes, while invoked lookups and both catalog-validity checks still agree
 - **THEN** actual issue success versus operation-domain refusal differs
 
 #### Scenario: Changed trusted administrator

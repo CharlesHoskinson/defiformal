@@ -1,24 +1,52 @@
-Author planning validation completed for operational-continuation-congruence. This report is not an independent planning verdict. GPT-6 and native Opus planning audits have not been performed; the independent GPT-6 reviewer must be another agent because this agent authored the design/specs/tasks/wiki.
+# Targeted author remediation after r1 planning reviews
 
-Strict OpenSpec validation and artifact status commands passed. The actual files contain four capabilities, 17 requirements, 55 scenarios and 35 unchecked tasks. Every requirement has normative text and scenarios, every scenario has WHEN/THEN and planned task/module assignments, every task has a verification action, and all tasks appear in the coverage map. There is no Metatheory source directory. Neither proof execution nor financial/mutation/runner results are claimed.
+This is author remediation, not independent approval. Frozen r1 nonauthor GPT-6
+and native Opus reviews both returned ACCEPT WITH LIMITATIONS. Native Opus
+(requested `opus`, reported `claude-opus-5`) required six plan clarifications.
+This revised candidate still needs independent review before implementation.
 
-The author review checked the following implementation risks and fixed the plan accordingly:
+All six are incorporated without changing scope or counts:
 
-- Configuration support follows the real Grant.operation field. Issue consults its registry-derived operation domain, even if that operation is never invoked. Revoke uses a dynamically looked-up capability domain, so the sufficient agreement premise preserves administrators on all domains. Both catalogs validate and complete component/interface lookups agree. Agreement contains no assumed execution/result equality and no new checker.
-- The interpreter recursively executes children using the complete returned cursor. Flatten is separate, and full-cursor simulation covers arbitrary preexisting history, events, store, index and failure. Associativity preserves order and the sequential boundary.
-- The observer retains every computational continuation input and exact visible event/failure field. Past raw event worlds are explicitly omitted. The context grammar permits only fixed sequential prefixes/suffixes and equivalence quantifies over every equivalent input cursor. An actual funding-prefix counterexample bounds one-entry equality.
-- Financial expectations are independently specified, including Alice10→3→0→1, Bob0→7→7→6 and Carol0→0→3→3 in the three-group producer/consumer/return fixture. Administrative IDs, tombstones, refusals and boundaries have separate full expectations. Equality with the old executor is additional simulation evidence, not the sole oracle.
-- All 14 mutants identify actual new runtime sites, named independent sensitivity checks and nonempty protected siblings. Eight mutate execution routing and six mutate observation comparisons. Omitted configuration premises receive real execution counterexamples; no fake certificate-checker mutation or compiler-only detection is counted.
-- The inherited actual runner case catalog was re-inspected after Sprint8 added production-eval-discriminating-mutant and production-eval-required-stays-true. It now contains 65 cases. The exact old/new planned name map and source hash are saved; the inherited source is now accepted and all65 Atomic controls ran in the fresh baseline; no Metatheory control execution is claimed.
+1. Observation runtime comparison has explicit local ledger/store/events/history/
+   index/failure conjuncts and a local event index/step/receipt/output comparator.
+   Existing equality reuse is limited to proofs; M13's receipt site is explicit.
+2. Runtime Audit closure excludes imported Tests/proof-only fixtures and avoids the
+   costly Composition.Examples route. Use Atomic.Examples/Parallel.Examples data;
+   Verify imports proof-lifting modules separately. Runner Lean/Git commands have
+   explicit600-second limits, harness runner subprocesses1500-second limits, and
+   measured per-command/case/variant wall time. Timeout is blocked exit3, not detection.
+3. The design and runner-adaptation-map.json bind all driver/spec paths, scoped
+   namespace/root/proof regexes, exact failed/empty/duplicate error text, fixture
+   modules/paths and production assertions, plus the existing65-name case map.
+4. M08 changes only the new leaf call boundary argument to
+   `(fun _ ↦ boundaries 0)`; imported Composition.advance remains byte-identical.
+5. P/A/D and typeclass instances are shared binders, not heterogeneous equality
+   fields of ConfigAgreement.
+6. Configuration counterexamples establish materiality, not minimality of stronger
+   sufficient assumptions. Constructible variants preserve catalog validity except
+   its designated negative; the grant-only domain-changing operation is uncataloged.
 
-The semantic context is accepted Sprint8 source99e2e2c61a1a3c5249026921efdc6cd41ac8f21d. Its source/evidence commit2c038094c031723f3ade35d8b3f506ccff5b1d3b and archive metadata9501f0a4f0480b2a42ff197907d548cf0c610773 were pushed and remotely verified. Native Grok/Opus Sprint8 acceptance is recorded separately; it is not Sprint9 planning acceptance. The twelve inspected semantic inputs and inherited65-control harness bind the accepted source exactly.
+Additional r1 limitations are explicit: observer-only pairs can be synthetic,
+arbitrary and unreachable; they are separate from financial execution. There are
+12 proof-tail-related controls: one already in52 inherited plus11 new; adding the
+2 production forms gives65. JSON bundle rendering belongs to the root's revised
+bundle builder, not a source/proof change by this author.
 
-Fresh Sprint9 baseline14 Lean commands and13 Python suites passed at99e2e2c. The final corrected Python metadata,3382 saved-evidence assertions,2703 file hashes and9 symlink targets were checked, as were104 Lean and148 Python source bindings. All65 recorded CLI paths resolve to the saved copied output and match hash/text; no case-name fallback was used. The metadata correction and original execution identities remain intact. This author refresh did not rerun suites. Exact IDs and hashes are in dependency-baseline-binding.json.
+Strict OpenSpec validation and status pass. Exact coverage remains4 capabilities,
+17 requirements,55 scenarios,35 unchecked tasks,14 planned mutations and65
+inspected controls. The author builder checks scenario/task/module coverage,
+explicit requested clauses, accepted source/control bindings and unchanged inputs
+through validation. No Metatheory directory exists. No Lean build, implementation,
+mutation/control run or provider invocation was performed by this revision.
 
-The shared Sprint9 plan still requires an actual freeze and independent nonauthor GPT-6/native Opus reviews. All35 task boxes remain unchecked; dependency and baseline completion are separate gate evidence. No Metatheory implementation, Sprint9 mutation or CLI-control execution, native planning verdict or Sprint9 delivery is claimed.
+Twenty prior author/plan files are preserved byte-for-byte under
+`author-r1-snapshot/`, with its manifest verified. The r1 bundle's SHA256 remains
+b119c8491a621c1bd2aad37c99977ec0997a7126bfc6e76351ffec99656c8b94.
+The r1 native/non-author reports and candidate remain unchanged. Accepted Sprint8
+source99e2e2c, delivered source/evidence2c038094 and archive9501f0a4, and the
+fresh14 Lean/13 Python baseline remain separately bound prerequisite evidence.
+No baseline was rerun or relabeled by this author correction.
 
-Remaining implementation risks are ordinary proof and evidence obligations stated in the plan: preserving exact failures through every actual execution path, proving observation congruence despite omitted past raw worlds, establishing full-static support in operator admission, and making all designated mutations compile with genuinely independent expectations. No later finite-participant, interface/binding, causal-monitor, active-peer extension or transaction-regrouping theorem is claimed.
-
-The work used the requested GPT-6 stock harness and the writing-plans skill with OpenSpec's required artifact format. Independent model/build telemetry was unavailable. No provider or Foreman calls, kernel/source edits, implementation, production mutations or commits were performed by this planning task. Raw validation commands, UTC/tool/source hashes and planning-only status are in author-validation.json; the complete planned scenario/task/mutant/control map is scenario-planning-map.json.
-
-Revision note: all prior author files and affected plan inputs are preserved in draft-r2-before-accepted-dependency/. Earlier drafts retain their then-provisional source and review status. The current context is accepted99 source with exact verified source/evidence/archive IDs; the fresh baseline is complete. The requested future native model alias remains `opus`, with actual returned identity required at invocation. No planning reviews or implementation were started.
+M1 implementation and its final proof/runtime/native evidence remain open. M2–M6
+and all other roadmap packages remain separate. Root owns revised candidate freeze,
+exact-byte bundle generation, r2-resolution.md and independent re-review execution.

@@ -9,9 +9,11 @@ verified on `semantic-kernel-pivot`. Native Grok/Opus final acceptance and exact
 source/evidence identities are retained in Sprint8's final-review and delivery
 records. Fresh Sprint9 baseline evidence at the accepted source passed14 Lean
 commands and13 Python suites; corrected final Python metadata is bound in the
-planning dependency manifest. These completed prerequisites do not approve this
-plan. Its shared frozen bundle still needs independent nonauthor GPT-6/native
-Opus acceptance before implementation; this author draft is neither review.
+planning dependency manifest. These completed prerequisites do not approve this revised plan. The frozen r1
+reviews are retained separately; native Opus returned ACCEPT WITH LIMITATIONS
+with six required changes. This revision addresses them and still needs independent
+review of its new candidate bytes before implementation. Author remediation is
+not independent acceptance.
 
 `Composition.Cursor` stores the whole world, raw events, frozen outputs, absolute
 nextIndex and first located failure. `Composition.advance` executes invocation,
@@ -98,10 +100,16 @@ whole world and an exact `Parallel.BranchObservation`. `observeCursor` records
 these fields. Its production Boolean comparison explicitly compares pointwise
 all typed ledger cells, the complete capability store, ordered event indices and
 steps, invoked/admin receipts, event outputs, the full frozen output history,
-absolute nextIndex and the complete optional located failure. Reuse existing
-world/branch equality lemmas where useful; keep observation field comparisons in
-this module so all six planned omission mutations alter actual production
-comparison code. Do not replace them with test-only selector flags.
+absolute nextIndex and the complete optional located failure. Write every production comparison locally in Observation.lean: separable Boolean
+conjuncts for pointwise ledger, complete store, ordered events, frozen history,
+nextIndex and failure. A locally written per-event comparison has separate
+index, step, receipt and outputs conjuncts; M13 replaces only its receipt conjunct.
+Compare lists with length/order-sensitive pointwise traversal using that local
+event comparator. Do not delegate runtime equality to Parallel.worldEq or derived
+DecidableEq of BranchObservation/EventObservation, and do not bury those conjuncts
+in an imported comparator. Existing world/branch equality lemmas may be reused
+only to prove the local comparator correct. Exact leaf-field decidable equality
+(e.g. Receipt or LocatedFailure) remains allowed. No test-only selector flags.
 
 Define `CursorEquivalent c d` as pointwise full current ledger equality, complete
 store equality and equality of the exact branch observation. Prove comparison
@@ -143,9 +151,12 @@ reference. SupportedGroup/List/Branch quantify over all submitted leaves, includ
 unreachable suffixes. Define unions and prove their support laws; none is a new
 checker or runtime certificate.
 
-`ConfigAgreement old new refs : Prop` requires:
+All agreement definitions and congruence theorems bind one shared set of types
+P/A/D and one shared set of corresponding DecidableEq/Fintype instances for both
+configurations. This is a binder-shape constraint, not a ConfigAgreement field
+and not a heterogeneous identity or instance-equality proposition.
 
-- identical fixed types P, A and D and the same corresponding instances;
+`ConfigAgreement old new refs : Prop` has only the following premise fields:
 - validateCatalog old.registry old.catalog = true and the same for new;
 - old.registry op = new.registry op for every op in refs.operations;
 - lookupOperation old.catalog component op = lookupOperation new.catalog component op
@@ -230,19 +241,34 @@ actual execution. Invocation-only Parallel, Interleaving and Atomic siblings use
 fixed identical boundaries/schedule/policy and include success and actual refusal
 or abort. Empty programs alone do not satisfy this evidence obligation.
 
-Named negative companions establish omitted premises independently: changed old
+Named negative companions establish materiality of the listed omitted premises,
+not minimality or necessity of every stronger sufficient hypothesis. Full registry
+template equality and all-domain admin equality deliberately exceed the minimal
+conditions. The identical-initial-world condition is a theorem-input premise, not
+an agreement field. Concrete witnesses cover: changed old
 registry behavior; changed old component access/output declaration; newly invalid
 or duplicate catalog entry causing exact configuration refusal; grant-only
 operation domain changed while invoked-operation lookups agree; changed trusted
 admin changing issue/revoke authorization; an extra initial capability changing
 issued ID despite equal ledger. These are actual old/new execution differences,
 not an expected compilation failure or a fake agreement-checker status. Witness
-both validity results where the omitted premise is not catalog validity.
+both validity results where the omitted premise is not catalog validity. For a
+changed registry keep signature/output-domain contracts fixed and change a guard,
+compatible delta or write behavior. Put the grant-only operation in the registry
+without a declaring catalog component so changing its domain does not separately
+invalidate a catalog interface. Preserve export/import/private-cell validity when
+changing component access/output declarations. These constructive constraints
+isolate the stated missing premise rather than introducing an accidental second
+validation failure.
 
 Observation counterexamples use equal-ledger cursors with different frozen outputs,
 indices or stores and a continuation that produces an actual different result.
 Also compare a pair differing only in a past raw event world: the selected observer
 intentionally equates them, and the restricted continuation remains equivalent.
+Observer-only single-field and omitted-raw-world pairs are explicitly synthetic
+arbitrary cursors and may be unreachable. Label their sensitivity results
+separately from actual financial execution; the universal-input theorem covers
+them, but they are not assertions of reachable trace differences.
 A swap of shared withdrawals7 and 6 from USD10 and an explicit one-transaction vs
 two-boundary rollback example delimit associativity's scope; no general atomic or
 parallel reassociation claim is inferred.
@@ -267,7 +293,7 @@ nonempty positive comparisons. A compiler error earns no financial detection.
 | M05 | At seq, clear first failure | `metatheory.group.refusal-absorption`: funded suffix stays inert after exact middle refusal | successful nonempty sequence |
 | M06 | Skip the second child | `metatheory.group.child-executed`: second funded movement appears with exact receipt/world | single nonempty leaf |
 | M07 | Reverse child order | `metatheory.group.ordered`: asymmetric movements/producer-consumer result | single nonempty leaf |
-| M08 | Leaf always uses boundary position0 | `metatheory.group.boundary-index`: distinct absolute actor/time yields exact authorization | nonempty index-insensitive boundary sibling |
+| M08 | Replace new leaf call `Composition.advance cfg boundaries cursor action` with `Composition.advance cfg (fun _ ↦ boundaries 0) cursor action` | `metatheory.group.boundary-index`: distinct absolute actor/time yields exact authorization | nonempty index-insensitive boundary sibling |
 | M09 | Omit current ledger from cursor comparison | `metatheory.observe.world-diff`: same other fields, changed protected cell must differ | equal nonempty cursor |
 | M10 | Omit complete store from comparison | `metatheory.observe.store-diff`: ledger same, tombstone/entry differs | equal nonempty cursor |
 | M11 | Omit frozen history comparison | `metatheory.observe.output-diff`: same events, differing qualified history | equal nonempty cursor |
@@ -275,8 +301,10 @@ nonempty positive comparisons. A compiler error earns no financial detection.
 | M13 | Omit event receipt comparison | `metatheory.observe.receipt-diff`: same remaining fields, evaluated receipt differs | equal nonempty cursor |
 | M14 | Omit nextIndex comparison | `metatheory.observe.next-index-diff`: same other fields, absolute position differs | equal nonempty cursor |
 
-M09–M14 are production observation sensitivity checks; classify them separately
-from the eight executor-routing mutations. Include changed/equal pairs for every
+M09–M14 are production observation sensitivity checks on explicitly synthetic
+arbitrary/unreachable cursor pairs; classify them separately from the eight
+executor-routing mutations. The exact M08 replacement is in SequentialGroups.lean;
+Composition.advance itself and every imported kernel byte remain unchanged. Include changed/equal pairs for every
 subfield beyond the single required mutant site, including event outputs, step,
 receipt request/evaluated values and failure step=None versus Some.
 
@@ -285,13 +313,68 @@ The required 65 controls are the actual `cases()` inventory in the updated
 production audit-output controls and corrected CLI-log pointers. The fresh
 Sprint9 baseline also executed all65 controls at that exact source. Adapt module roots, fixtures and labels to
 Metatheory, including renaming the discovered Atomic dependency control. Retain
-all 11 proof-tail parser controls and both production `#eval`/`IO.userError` forms.
+all 11 NEW proof-tail parser controls and both production `#eval`/`IO.userError`
+forms. The 52 inherited controls already include
+`runtime-definition-after-proof-boundary`, making 12 proof-tail-related controls
+in total; 52+11+2=65 counts provenance increments, not disjoint semantic categories.
 Capture the exact name map/count and accepted source hash at implementation
 freeze; do not silently drop a control. Expected classifications remain valid/violated/blocked,
 with exit0/1/3 at the underlying runner. Malformed/partial/empty inventories,
 compiler-only failures, dirty/staged/drifting inputs, symlinks and runtime code
 hidden after the proof marker remain blocked. Mutant compiler failures and these
 runner-defense tests are separate from financial detections.
+
+#### Required runner adaptation and bounded runtime closure
+
+The accepted script and fixture mapping is exhaustive across runtime identifiers,
+not only the 65 case names. Save exact old/new strings, source hash and replacement
+site in the implementation map; preserve all other behavior and expected exits:
+
+| Surface | Accepted Atomic value | Required Metatheory value |
+|---|---|---|
+| Driver/default harness path | `scripts/check_atomic_mutations.py` | `scripts/check_metatheory_mutations.py` |
+| Harness path | `scripts/test_atomic_mutation_runner.py` | `scripts/test_metatheory_mutation_runner.py` |
+| Spec path | `mutations/atomic.json` | `mutations/metatheory.json` |
+| Scoped-module regex | `DefiKernel\.Atomic(?:\.[A-Za-z][A-Za-z0-9]*)+` | `DefiKernel\.Metatheory(?:\.[A-Za-z][A-Za-z0-9]*)+` |
+| Proof-trimming prefix | `DefiKernel.Atomic.` | `DefiKernel.Metatheory.` |
+| Required audit root | `DefiKernel.Atomic.Audit` | `DefiKernel.Metatheory.Audit` |
+| Missing-root error | `missing Atomic audit root` | `missing Metatheory audit root` |
+| Proof-suffix closure regex | `\n(end DefiKernel\.Atomic(?:\.[A-Za-z][A-Za-z0-9]*)*)\s*$` | `\n(end DefiKernel\.Metatheory(?:\.[A-Za-z][A-Za-z0-9]*)*)\s*$` |
+| Exact failed-comparison message | `Atomic runtime comparisons failed: N` | `Metatheory runtime comparisons failed: N` |
+| Parsed Lean error line | `error: Atomic runtime comparisons failed: N` | `error: Metatheory runtime comparisons failed: N` |
+| Empty/duplicate messages | `Atomic runtime comparisons empty`; `Atomic runtime comparison names are duplicated` | `Metatheory runtime comparisons empty`; `Metatheory runtime comparison names are duplicated` |
+| Input/split/absent fixture modules | `DefiKernel.Atomic.{RunnerInput,SplitComputation,Absent}` | `DefiKernel.Metatheory.{RunnerInput,SplitComputation,Absent}` |
+| Fixture namespace and paths | `DefiKernel.Atomic`, `lean/DefiKernel/Atomic/` | `DefiKernel.Metatheory`, `lean/DefiKernel/Metatheory/` |
+| Production fixture namespace | `DefiKernel.Atomic.Audit` | `DefiKernel.Metatheory.Audit` |
+| Imported dependency fixture | `DefiKernel.Interleaving.RunnerDependency` | unchanged: remains outside the trimmed prefix |
+| Nonkernel dependency fixture | `SharedFixture` | unchanged |
+| Invalid-scope fixture | `DefiKernel.Composition.RunnerInput` | unchanged: still invalid scoped root |
+| Dependency discovery case | `discovered-atomic-dependency` | `discovered-metatheory-dependency` |
+
+N is the number of false comparisons, never a printed list. Update both production
+Audit `IO.userError` and synthetic harness `throwError` assertions consistently,
+including captured projection-order and source-path expectations. Retain all
+remaining case names through the existing exact65-name map.
+
+Runtime Audit/Tests/Examples imports must avoid imported Tests, ObservationTests,
+Verify and proof-only fixture modules. In particular reuse Atomic.Examples and
+Parallel.Examples, not Atomic.Tests or Parallel.ObservationTests, which brings in
+the expensive Composition.Examples workflow proof. New proof-lifting modules are
+imported by Verify, not the runtime Audit closure; runtime support data must live
+in new runtime modules before their proof marker. Inspect the full recursive local
+closure, including transitive imports, and record it before mutation execution.
+Imported proofs needed by old computational modules remain intact; do not solve
+cost by stripping proofs outside the declared Metatheory prefix or changing old
+source. Scope all mutation roots to the new computation and Audit dependencies.
+
+Explicitly pass `--timeout-seconds 600` to the mutation runner (each Lean/Git
+command); the CLI-control harness gives each runner subprocess 1500 seconds.
+Record UTC start/finish and measured monotonic wall time for every command and
+case, with the 15 production variants (control plus14 mutants) reported separately.
+Import pruning is the first response to excessive cost; any timeout or incomplete
+output is blocked evidence (exit3), never semantic detection. Preserve partial
+logs and the timed-out command/limit; fix and rerun affected jobs. These are
+per-command bounds, not a 1500-second cap on the whole 65-control suite.
 
 ### 7. Evidence and integration
 

@@ -40,7 +40,7 @@ The first located refusal SHALL retain the successful cursor prefix and make eve
 #### Scenario: Nonzero boundary position
 
 - **WHEN** an existing cursor starts at a nonzero position and trusted actor or time differs by absolute slot
-- **THEN** every action uses its actual continuation position and preserves the resulting exact success or refusal
+- **THEN** every action uses its actual continuation position and preserves the resulting exact success or refusal; the M08 sensitivity variant changes only the new leaf boundary argument to a constant position0 function, leaving imported single-step semantics unchanged
 
 ### Requirement: Actual flattening correspondence
 
