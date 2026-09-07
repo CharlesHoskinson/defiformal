@@ -1,3 +1,9 @@
+# Sprint9 implementation authorized
+
+Independent nonauthor GPT-6 and native Fable5.1 at medium effort accepted candidate0948c177 and the identical e25784a7 full-source bundle with limitations. All planning blockers are closed. Fable's three record corrections are resolved in planning/ADJUDICATION.md: inherited timing fields only, literal-map source continuity bound to the reviewed candidate, and accurate r1/r2/r3 lineage. No fourth planning round was required by the reviewer. Implementation is beginning; no new proof or runtime pass is claimed yet.
+
+## Historical planning notes
+
 # Sprint 9: operational continuation congruence
 
 Status: author planning draft. No Metatheory implementation, proof or production

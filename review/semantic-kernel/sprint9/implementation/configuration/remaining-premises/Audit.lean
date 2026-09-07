@@ -1,0 +1,8 @@
+import DefiKernel.Metatheory.ConfigurationFixtures
+#print axioms DefiKernel.Metatheory.ConfigurationFixtures.changedOutput_registry_remaining
+#print axioms DefiKernel.Metatheory.ConfigurationFixtures.changedAdmin_registry_remaining
+#print axioms DefiKernel.Metatheory.ConfigurationFixtures.grantOnly_catalog_remaining
+#print axioms DefiKernel.Metatheory.ConfigurationFixtures.grantOnly_invoked_registry_remaining
+#print axioms DefiKernel.Metatheory.ConfigurationFixtures.changedRegistry_admins_remaining
+#print axioms DefiKernel.Metatheory.ConfigurationFixtures.changedOutput_admins_remaining
+#print axioms DefiKernel.Metatheory.ConfigurationFixtures.grantOnly_admins_remaining

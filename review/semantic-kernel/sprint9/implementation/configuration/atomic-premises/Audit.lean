@@ -1,0 +1,10 @@
+import DefiKernel.Metatheory.ConfigurationFixtures
+#print axioms DefiKernel.Metatheory.ConfigurationFixtures.atomic_extension_agreement
+#print axioms DefiKernel.Metatheory.ConfigurationFixtures.atomic_draw_supported
+#print axioms DefiKernel.Metatheory.ConfigurationFixtures.atomic_repay_supported
+#print axioms DefiKernel.Metatheory.ConfigurationFixtures.atomic_mint_supported
+#print axioms DefiKernel.Metatheory.ConfigurationFixtures.atomic_settlement_branch_supported
+#print axioms DefiKernel.Metatheory.ConfigurationFixtures.atomic_supply_branch_supported
+#print axioms DefiKernel.Metatheory.ConfigurationFixtures.atomic_settlement_extension
+#print axioms DefiKernel.Metatheory.ConfigurationFixtures.atomic_supply_extension
+#print axioms DefiKernel.Metatheory.ConfigurationFixtures.atomic_extension

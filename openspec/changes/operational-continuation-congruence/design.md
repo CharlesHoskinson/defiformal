@@ -372,20 +372,23 @@ Imported proofs needed by old computational modules remain intact; do not solve
 cost by stripping proofs outside the declared Metatheory prefix or changing old
 source. Scope all mutation roots to the new computation and Audit dependencies.
 
-Explicitly pass `--timeout-seconds 600` to the mutation runner (each Lean/Git
-command); the CLI-control harness gives each runner subprocess 1500 seconds.
-Record UTC start/finish and measured monotonic wall time for every command and
-case, with the 15 production variants (control plus14 mutants) reported separately.
-Import pruning is the first response to excessive cost; any timeout or incomplete
-output is blocked evidence (exit3), never semantic detection. Preserve
-already completed command logs, the retained fresh output directory and prior
-results.json records, plus the outer captured stderr identifying the timed-out
-command and limit. Preserve the accepted runner behavior: it does not emit a
-per-command log or results.json entry for the timed-out command, and partial
-stdout from that command is unavailable. Do not claim a complete inventory or
-measured completed-command record for it. No timeout-capture implementation or
-additional control is introduced by this sprint; fix and rerun affected jobs. These are
-per-command bounds, not a 1500-second cap on the whole 65-control suite.
+Pass `--timeout-seconds 600` explicitly on the production driver invocation.
+The unchanged harness omits that option and relies on the driver's600-second
+default; its own runner subprocess limit remains1500 seconds. Preserve the
+37-literal pure-rename script behavior. Required time records are run-level UTC,
+the inherited elapsed_seconds for labeled runner commands and variant compiles,
+and per-case harness elapsed_seconds. Unlabeled Git binding calls have no timing
+or log, and no command has per-command UTC. Do not add or claim those fields.
+Report15 production variants (control plus14 mutants) separately.
+
+Import pruning is the first response to excessive cost. A timeout or incomplete
+output is blocked evidence (exit3), never detection. Retain completed-command
+logs, the fresh output directory, prior results.json records and outer stderr
+naming the command and limit. The timed-out command has no per-command log or
+results entry, and its partial stdout is unavailable. Harness timeouts likewise
+retain prior cases and outer stderr but produce no final summary. No new timeout
+capture path or control is introduced. Fix and rerun affected jobs; these are
+per-command bounds, not a1500-second limit on the entire65-control suite.
 
 ### 7. Evidence and integration
 

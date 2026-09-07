@@ -32,7 +32,7 @@ source/evidence delivery `2c038094c031723f3ade35d8b3f506ccff5b1d3b`, and verifie
 archive delivery `9501f0a4f0480b2a42ff197907d548cf0c610773`. Fresh baseline14 Lean
 commands and13 Python suites passed at that source. Dependency/baseline completion
 is separate from independent Sprint9 planning acceptance. Frozen r1 reviews remain
-unchanged; this targeted revision addresses the six required native Opus changes
+unchanged; r2 addressed the six required native Opus changes, and r3 resolved three further runner clarifications
 and must receive review of its new exact bytes before implementation.
 
 The latest user reviewer instruction selects native Fable 5.1 with medium effort for upcoming reviews. Completed Opus and Fable reports retain their actual historical identities.
