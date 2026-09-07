@@ -5,7 +5,7 @@ archive pending. Native Grok (`grok-4.6-build`) and Opus (`claude-opus-5`) pass.
 [Adjudication](../review/semantic-kernel/sprint8/final-review/ADJUDICATION.md),
 [evidence](../review/semantic-kernel/sprint8/EVIDENCE.md),
 [scenario overlay](../review/semantic-kernel/sprint8/scenario-map-final.json), and
-[tasks](../openspec/changes/atomic-synchronization/tasks.md) preserve exact scope.
+[tasks](../openspec/changes/archive/2026-09-07-atomic-synchronization/tasks.md) preserve exact scope.
 
 The executor calls actual Interleaving.advance once per running token and stops
 the whole event on the first kernel or policy failure. Public refusal/abort

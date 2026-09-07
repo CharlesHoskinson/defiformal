@@ -100,9 +100,9 @@ Delivery and archive are verified through checkpoint `80c56c48`.
 
 ## Sprint 8: atomic synchronization
 
-The next [OpenSpec proposal](openspec/changes/atomic-synchronization/proposal.md),
-[design](openspec/changes/atomic-synchronization/design.md) and
-[40 tasks](openspec/changes/atomic-synchronization/tasks.md) cover four capabilities,
+The next [OpenSpec proposal](openspec/changes/archive/2026-09-07-atomic-synchronization/proposal.md),
+[design](openspec/changes/archive/2026-09-07-atomic-synchronization/design.md) and
+[40 tasks](openspec/changes/archive/2026-09-07-atomic-synchronization/tasks.md) cover four capabilities,
 16 requirements and49 scenarios. The [wiki decision record](wiki-llm/sprint-8-atomic-synchronization.md)
 explains exact rollback, separate committed observations and receipt-derived typed
 transient clearing. Strict plan validation and author consistency checks pass;

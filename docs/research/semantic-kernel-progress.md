@@ -288,3 +288,22 @@ the user is AFK, with the same OpenSpec planning and native acceptance gates.
 
 Completing the pilot does not close these work packages. It does not establish
 deployed protocol fidelity, general solvency, or a complete DeFi calculus.
+
+## Sprint8 atomic synchronization acceptance (2026-09-07)
+
+Source `99e2e2c` and evidence are accepted with limitations by native Grok and
+Opus and pushed at `2c038094`. Four atomic OpenSpec capabilities (16 requirements,
+49 scenarios) are archived. Final archive-metadata delivery is in progress.
+Actual kernel/proof/18-production-mutant runs retain a52 identity; final65 runner
+controls execute at a52 with harness bytes committed unchanged at99. All135
+runtime comparisons and14 Lean commands pass;357 imported theorems comprise106
+explicit and251 generated, with496 supplemental axiom-audited declarations and
+zero forbidden dependencies. Eleven legacy suites retain88aa identity with
+explicit relevant-input equivalence.
+
+The model adds first-failure atomic rollback and signed receipt-derived typed
+settlement, not deployed Balancer fidelity or a generic order-independence law.
+Initial store/boundary trust, rational arithmetic, fixed stores, supported frames
+and initialized invariant premises remain explicit. See the
+[Sprint8 adjudication](../../review/semantic-kernel/sprint8/final-review/ADJUDICATION.md).
+Future native reviews use Grok and Opus under the user's reviewer update.
