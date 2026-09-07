@@ -353,5 +353,32 @@ and [adjudication](../../review/semantic-kernel/sprint10/ADJUDICATION.md) state 
 remaining initialization, confinement, neutrality, support and authority trust
 premises. Finite participants and other M3–M6 obligations remain open.
 
-Checked integer arithmetic and corpus provenance tooling have separate accepted
-planning gates and ongoing implementation. Neither is an accepted result yet.
+Corpus provenance tooling has an accepted planning gate and ongoing implementation.
+Historical claim reconciliation passed its corrected r3 planning gate at9074cc46;
+its implementation remains separate from mathematical acceptance.
+
+
+## Checked integer arithmetic accepted
+
+Source `ddf1ac0e50f2e032385664a0965bab59eef91ea3` passed native Grok4.6-build and
+Fable5.1 medium review on the same1,119-input bundle. Both accepted with limits
+and no required changes. The package provides arbitrary-width checked words,
+directed full-product division, gross/on-top fees, asset-indexed scale conversion
+and registered actual Typed fee-transfer correspondence.
+
+All21 integration commands passed with45 new runtime comparisons and1,032 total.
+The dynamic audit checks307 theorem constants (125 explicit,182 generated) and233
+supplemental declarations with zero forbidden axioms. All12 compiling mutations,
+65 CLI controls, T01/T02 asset compiler pair, four saved-artifact controls and27,968
+finite Python/Lean comparisons passed in their separately recorded scopes.
+Earlier executions retain their real source revisions through relevant byte
+comparison. All11 Arithmetic source files were also freshly elaborated after the
+reviewers' cache concern; Mathlib/Typed imports still use the pinned cache.
+
+All22 tasks and36 scenarios are complete. Four main specs preserve16 requirements;
+archive delivery `6d73e6dcf7b99c2b6cd1114985562a9f4081f4c4` is verified. See
+[adjudication](../../review/semantic-kernel/integer-arithmetic/ADJUDICATION.md) and
+[delivery](../../review/semantic-kernel/integer-arithmetic/delivery.json).
+Net-effect accounting, explicit authority/funding/positive-scale premises and
+absence of deployed-code refinement remain limits. Concentrated liquidity and
+other protocol-specific arithmetic remain open.

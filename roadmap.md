@@ -190,7 +190,7 @@ open; the broad Interface/Nary roadmap item below is not yet complete.
 
 ## 6. Financial libraries still to port
 
-- [ ] Machine arithmetic: widths, overflow, rounding direction, and fees.
+- [x] Machine arithmetic: widths, overflow, rounding direction, and fees. Accepted source `ddf1ac0e`; archive delivery `6d73e6dc`.
 - [ ] Uniswap-style concentrated-liquidity arithmetic and tick traversal.
 - [ ] Curve-style iterative invariant calculations and failure behavior.
 - [ ] Liquity-style ordered redemption.
