@@ -30,7 +30,7 @@ The reconciliation SHALL attach mathematical properties to their actual definiti
 #### Scenario: H04 The paper names one-pass removal and finite stabilization together
 
 - **WHEN** the paper names one-pass removal and finite stabilization together
-- **THEN** a linked erratum outside the frozen Warrant definition distinguishes the two and neither the one-pass counterexample nor an unproved stabilization is promoted to a theorem about the other.
+- **THEN** the two are distinguished and neither the one-pass counterexample nor an unproved stabilization is promoted to a theorem about the other.
 
 #### Scenario: H05 Positive requirements and warrants are called full admissibility
 
@@ -40,7 +40,7 @@ The reconciliation SHALL attach mathematical properties to their actual definiti
 #### Scenario: H06 Loss of union closure is used to deny an induced lattice
 
 - **WHEN** loss of union closure is used to deny an induced lattice
-- **THEN** the implication is withdrawn unless a separate full-instance argument is supplied; the existing Uniswap/Aave candidate must pass the actual full adm and constituent checks before the pure-negative-ban route is selected; its no-common-upper-bound conclusion and corrected open-problem erratum explicitly concern inclusion.
+- **THEN** the implication is withdrawn unless a separate full-instance argument is supplied; a fully admissible pair whose union contains a pure-negative forbidden set remains a valid no-common-upper-bound route.
 
 ### Requirement: HC03 Retain exact logical scope
 
@@ -54,12 +54,12 @@ The reconciliation SHALL distinguish existential counterexamples, table-specific
 #### Scenario: H08 Eight rules or 3140 states are described as the full definite lattice
 
 - **WHEN** eight rules or 3140 states are described as the full definite lattice
-- **THEN** the historical correction, extraction, denominator and sample status remain explicit; PARSED_NEW16 occurrences/15 distinct arcs and LSTAR13/12 are distinguished from source-law rows, and no replacement state count is invented.
+- **THEN** the historical correction, extraction, denominator and sample status remain explicit; no replacement count is invented.
 
 #### Scenario: H09 The rectangle or diagonal construction obstruction is attributed to all AFT or bilattices
 
 - **WHEN** the rectangle or diagonal construction obstruction is attributed to all AFT or bilattices
-- **THEN** the actual construction grammar and hypotheses are stated; a linked erratum addresses the frozen proof paragraph’s approximator mismatch and the framework-wide inference is withdrawn.
+- **THEN** the actual construction grammar and hypotheses are stated and the framework-wide inference is withdrawn.
 
 ### Requirement: HC04 Preserve financial and composition premises
 
@@ -101,19 +101,19 @@ The reconciliation SHALL retain exact generation/measurement denominators and SH
 
 ### Requirement: HC06 Preserve correct results and bound downstream edits
 
-The reconciliation SHALL keep all closed-policy theorem/lemma/proposition/corollary/proof/definition/measurement/conjecture/remark/example environments (including starred variants) and preamble unchanged, preserve incompatible historical measurements, and record every selected downstream site with exact evidence and edit status.
+The reconciliation SHALL keep historical theorem/proof text unchanged, preserve incompatible historical measurements, and record every selected downstream site with exact evidence and edit status.
 
 #### Scenario: H16 Historical and current enumeration totals differ
 
 - **WHEN** historical and current enumeration totals differ
-- **THEN** linked errata outside frozen measurement environments retain both execution identities and their actual bounds/seeds/predicates without relabelling or merging.
+- **THEN** both execution identities and their actual bounds/seeds/predicates are retained without relabelling or merging.
 
 #### Scenario: H17 Clause width is used to infer failure of majority closure
 
 - **WHEN** clause width is used to infer failure of majority closure
-- **THEN** a linked erratum outside the frozen clause-width measurement concludes only syntax unless full-instance satisfying assignments and failing majority or an exact full-instance analytic proof are supplied.
+- **THEN** only syntax is concluded unless full-instance satisfying assignments and failing majority or an exact full-instance analytic proof are supplied.
 
 #### Scenario: H18 An old audit is applied to the current corrected paper
 
 - **WHEN** an old audit is applied to the current corrected paper
-- **THEN** the internal meet and acyclicity hypothesis remain intact; the complexity cross-reference is corrected without claiming an algebraic proof proves cost or altering any protected environment; unknown environment classifications block, and abstract edits require explicit allowlisted prose sites.
+- **THEN** the internal meet and acyclicity hypothesis remain intact; the complexity cross-reference is corrected without claiming an algebraic proof proves cost or altering historical theorem text.

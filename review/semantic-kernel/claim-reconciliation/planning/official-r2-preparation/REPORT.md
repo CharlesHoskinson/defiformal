@@ -1,0 +1,34 @@
+# Historical claim reconciliation: official-r2 author preparation
+
+Ready for a new frozen nonauthor GPT-6 plus native Fable 5.1 medium planning gate. This is an author revision, not an acceptance verdict. All four required and six minor findings in the preserved official-r1 Fable report have proposed resolutions.
+
+The scope remains four capabilities, 18 requirements, 45 scenarios, 18 original claims, 63 original source sites, 22 original source files, and 27 unchecked implementation tasks. The control inventory increases from 22 to 26 unexecuted controls. The new controls cover missing library declaration, frozen measurement edits, a complete Lean-export mismatch, and an unencoded CSM alternative.
+
+The future bridge has six modules: Data, DataExport, Saturation, Instances, Counterexamples, and Verify. The actual imported Data JSON dump is bounded execution; the independent saturation correspondence is a universal Lean proof obligation. Neither exists yet.
+
+| Finding | Resolution | Scenario/control links |
+| --- | --- | --- |
+| R1 (blocking) | Explicit third DefiHistorical library with six imported modules; no default/pin changes. Preserve frozen S10 configuration and record exact intended delta, per-consumer source equivalence, and fresh Interface Verify/root/Audit integration commands. | A01, A02, HC-C23 |
+| R2 (blocking) | Ten frozen formal environment families, starred variants, nested spans and preamble; seven wrapper names confer no blanket edit permission. Unknown/dynamic syntax blocks. CL04/CL16/CL17 and CL06 remark/CL09 proof corrections use external linked reader-visible errata. | H04, H06, H09, H16, H17, H18, HC-C24 |
+| R3 (major) | DataExport imports the same Data values used by proofs and emits actual complete JSON. Full independent extraction comparison retains all ordered records; no Lean regex/count/digest substitution. Dump is bounded execution. | B01, B02, HC-C25 |
+| R4 (major) | Exact excluded source symbol is CSM, status limit. Check all subjects and retained alternatives in both full raw instances, including external/non-unary terms before edge selection. Any outside name fails explicitly; no silent filter. | B01, B02, HC-C26 |
+| M1 (minor) | Name literal thm:noncong Uniswap/Aave candidate and require actual full adm plus all four constituent predicates before accepting it. Preserve pure-negative X2 no-upper-bound proof route. Frozen any-order remark receives inclusion-order erratum; candidate failure does not prove lattice existence. | H06, HC-C06 |
+| M2 (minor) | State PARSED_NEW16 occurrences/15 distinct arcs and LSTAR13/12 separately from29 parsed law records; do not call all these counts distinct rules. | H08, B01 |
+| M3 (minor) | Retain theorem/proof byte identity and attach external linked construction-scope erratum; no framework-wide AFT impossibility claim. | H09 |
+| M4 (minor) | Prove finite saturation membership/stabilization first, then derive a reachability decider and extensional Finset equality independent of the correct decider. The target equality is never assumed to create its own decider. | B03, B04, HC-C17 |
+| M5 (minor) | HC-C19 remains offline declared-class rejection. HC-C22 runs a new private Python deletion algorithm mutant on an isolated singleton, with unchanged singleton/edge siblings and literal expected sets. Report bounded execution, not Lean proof or historical generator mutation. | B08, A03, HC-C19, HC-C22 |
+| M6 (minor) | Pin actual recorded absolute binary path, SHA and version and require fresh byte/version recheck; mismatch/unavailability blocks. Tool-directory spelling does not invoke an orchestrator. | E01, E02, E03 |
+
+The closed TeX policy freezes ten formal environment families and all starred variants, including definitions and measurements, plus the preamble and declarations. Seven observed wrapper names are eligible only at specifically allowlisted prose sites outside every frozen ancestor. Unknown or dynamic syntax blocks. The actual literal source uses `CSM` for constant sum, not `Cs`; 59 matched symbol records include this status=limit entry while 58 records remain mechanisms. This lexical inventory is not execution of the historical parser and does not claim that future complete raw-table outside-name validation has run.
+
+Validation: the reproducible `check-r2-plan.py` passed **802 static assertions**. `openspec validate historical-claim-reconciliation --strict` returned exit 0 on the final plan bytes. The checker reconciles exact normative WHEN/THEN text, all scenario/control/task IDs, original ledger fields and pointers, the environment-name classification, library/data contracts, and actual standalone Node binary SHA. It does not prove the mathematical claims, execute future controls, or inspect rendered PDF behavior.
+
+Preservation: the 11 original plan files are copied byte-for-byte under `before/`; all 36 captured held files (official-r1 artifacts and current Interface sources) compare unchanged against `before.json`. Original official-r1 review artifacts were not rewritten. The current `lean/lakefile.toml` still has only the two original libraries; the new library is a declared future edit, requiring exact S10 configuration-delta evidence and fresh relevant integration. No claim is made that all 88 historical S10 inputs will stay identical across that future addition.
+
+Git provenance: this revision began at `b165bc586080d668f689fbc18dfa09eb8739d688` and sealed its checks at `b4705b074d7b2d205eb8ad1e2a9ded34ef4ca32f`. Root advanced HEAD concurrently; `concurrent-head-advance.json` records the intervening commits. These are distinct from the original author base 5dc7abb and actual historical measurement source 4d42600. This author made no commit and changed no implementation source.
+
+Only the live OpenSpec change and this new preparation directory were edited. There were no Lean builds, old generator/m5 executions, private TeX builds, external native reviews, corpus edits, or acceptance/delivery actions. The two development inspection/checker setup errors are recorded separately and are not semantic negatives.
+
+Authorship: stock Codex harness with requested GPT-6 identity; provider-reported model telemetry is unavailable. This agent authored the historical plan and these revisions, and is ineligible as its nonauthor reviewer. Its earlier historical-instance/source research also is not independently reproduced by this preparation. No Foreman was invoked.
+
+`resolution-matrix.json` records all ten findings; `scenario-control-task-map.json` maps all 45 scenarios, 26 controls, and 27 tasks; `checks.json` binds exact current source inputs. `artifact-manifest.json` binds all preparation outputs and the revised plan. Future independent reviewers must freeze and read these actual revised bytes; an author assertion that a finding is addressed is not a substitute for their verdict.

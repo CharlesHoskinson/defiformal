@@ -2,7 +2,7 @@
 
 The adopted claim-disposition register has not yet been propagated to all selected historical claim sites. The concrete convex-geometry conclusion also needs a checked instance bridge: the existing generic Lean theorem and the bounded JavaScript measurements establish different things.
 
-This is an **revised planning candidate, not an accepted planning gate**. It proposes a bounded reconciliation of the 18 CL findings and their discovered downstream occurrences, together with two explicitly bound unary-rule instances. It does not authorize implementation or certify the whole paper.
+This is an **author draft, not an accepted planning gate**. It proposes a bounded reconciliation of the 18 CL findings and their discovered downstream occurrences, together with two explicitly bound unary-rule instances. It does not authorize implementation or certify the whole paper.
 
 ## What Changes
 
@@ -26,6 +26,6 @@ None. Accepted semantic-kernel composition capabilities and the current corpus/e
 
 ## Impact
 
-Future new modules: `lean/DefiHistorical/Convex/{Data,DataExport,Saturation,Instances,Counterexamples,Verify}.lean`; future new drivers: `scripts/historical_claims.py`, `scripts/historical_convex_evidence.py`, `scripts/test_historical_reconciliation.py`; output records under `review/semantic-kernel/claim-reconciliation/implementation/` and `review/semantic-kernel/historical-instance-bridge/`.
+Future new modules: `lean/DefiHistorical/Convex/{Data,Saturation,Instances,Counterexamples,Verify}.lean`; future new drivers: `scripts/historical_claims.py`, `scripts/historical_convex_evidence.py`, `scripts/test_historical_reconciliation.py`; output records under `review/semantic-kernel/claim-reconciliation/implementation/` and `review/semantic-kernel/historical-instance-bridge/`.
 
-The planned prose allowlist is defined in `design.md`; no `lean/Defialgebra` statements, historical generators, source corpus, normalized annotations, accepted kernel modules or frozen review packages are edited. The only planned existing build-configuration edit adds a third `[[lean_lib]] name = "DefiHistorical"` to `lean/lakefile.toml`; existing libraries, defaults, pinned options and requirements remain unchanged. This file is a frozen S10 input: preserve its original review snapshot and require an explicit source/config dependency-delta record and relevant S10 integration revalidation before implementation acceptance. No old frozen bundle is rewritten. A dedicated Lean target is built explicitly and is not added to `DefiKernel.Verify` or its runtime closure. Dependencies are the pinned Lean toolchain/mathlib and existing `Defialgebra.ConvexGeometry`; JavaScript remains measurement evidence. Full manuscript rewriting, verified JavaScript-language semantics, complexity proofs and execution-environment generalization need separate plans.
+The planned prose allowlist is defined in `design.md`; no `lean/Defialgebra` statements, historical generators, source corpus, normalized annotations, accepted kernel modules or frozen review packages are edited. A dedicated Lean target is built explicitly and is not added to `DefiKernel.Verify` or its runtime closure. Dependencies are the pinned Lean toolchain/mathlib and existing `Defialgebra.ConvexGeometry`; JavaScript remains measurement evidence. Full manuscript rewriting, verified JavaScript-language semantics, complexity proofs and execution-environment generalization need separate plans.

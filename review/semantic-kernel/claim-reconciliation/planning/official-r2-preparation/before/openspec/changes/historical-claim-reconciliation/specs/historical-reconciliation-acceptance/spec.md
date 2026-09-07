@@ -6,12 +6,12 @@ Keeps claim reconciliation and instance acceptance bound to actual proof, execut
 
 ### Requirement: HA01 Inventory proofs and claims completely
 
-Acceptance SHALL declare the third DefiHistorical Lean library explicitly, bind the exact lakefile.toml addition against its preserved S10 snapshot, freshly revalidate configuration-dependent S10 integration, and enumerate actual imported theorem and supplemental declarations, premises and axioms and SHALL map every scenario and claim to exact evidence or an explicit pending/deferred status.
+Acceptance SHALL enumerate actual imported theorem and supplemental declarations, premises and axioms and SHALL map every scenario and claim to exact evidence or an explicit pending/deferred status.
 
 #### Scenario: A01 Proof verification completes
 
 - **WHEN** proof verification completes
-- **THEN** the dedicated imported-module build and actual Data export run succeed after the explicit library addition; exact prior-source equivalence and fresh configuration-dependent S10 checks are distinguished, and generic, instance, counterexample and generated declarations are separately listed; no sorry, custom axiom or native_decide is present in the accepted new closure.
+- **THEN** generic, instance, counterexample and generated declarations are separately listed; no sorry, custom axiom or native_decide is present in the accepted new closure.
 
 #### Scenario: A02 One claim, scenario, source binding or proof prerequisite is missing
 

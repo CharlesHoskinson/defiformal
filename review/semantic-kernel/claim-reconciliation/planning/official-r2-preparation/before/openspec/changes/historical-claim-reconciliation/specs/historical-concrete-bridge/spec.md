@@ -11,12 +11,12 @@ The bridge SHALL encode every vocabulary item and extraction decision for both s
 #### Scenario: B01 The fixed LSTAR and PARSED_NEW data are extracted
 
 - **WHEN** the fixed LSTAR and PARSED_NEW data are extracted
-- **THEN** all59 parsed symbol/status records and the ordered58-name mechanism bijection, complete source rows, zero outside subjects/alternatives and13/12 versus16/15 occurrence/distinct-edge inventories are reconciled with canonical JSON actually exported by the same Lean Data module imported by the proofs.
+- **THEN** the ordered 58-name bijection, complete source rows and 13/12 versus 16/15 occurrence/distinct-edge inventories are separately reconciled.
 
 #### Scenario: B02 One edge, vocabulary item, external flag or instance label changes
 
 - **WHEN** one edge, vocabulary item, external flag or instance label changes
-- **THEN** the binding fails despite an unchanged headline cardinality, including a CSM/non-vertex subject or alternative or altered Lean-export item; missing/malformed actual exports block and the unchanged sibling passes.
+- **THEN** the binding fails despite an unchanged headline cardinality, and the unchanged sibling passes.
 
 ### Requirement: HB02 Prove universal saturation correspondence
 
@@ -25,7 +25,7 @@ The bridge SHALL prove finite executable unary saturation equals reflexive-trans
 #### Scenario: B03 Arbitrary finite input S is supplied
 
 - **WHEN** arbitrary finite input S is supplied
-- **THEN** the universal theorem proves the same encoded closure as reachability using finite stabilization and least-closed-superset reasoning, with extensional independence from the chosen correct reachability decider and no circular construction of that decider.
+- **THEN** the universal theorem proves the same encoded closure as reachability using finite stabilization and least-closed-superset reasoning.
 
 #### Scenario: B04 A purported proof covers only nonempty size-at-most-three seeds or defines closure directly as reachability
 
