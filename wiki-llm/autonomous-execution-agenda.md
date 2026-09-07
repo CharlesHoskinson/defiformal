@@ -66,13 +66,34 @@ proposal and metatheory design investigation are saved as proposed future work;
 they do not claim accepted implementation or untouched evaluation results.
 
 The stock Codex goal loop was armed at 2026-09-07T07:18:35Z for this entire agenda,
-with no token budget requested. It remains active until actual completion or a
-recorded external impasse. No custom orchestration harness was introduced.
+with no token budget requested. Its tool status now reports `usageLimited`; resumed work runs through the stock
+Codex session. No quota reset or automatic loop reactivation is claimed. No custom
+orchestration harness was introduced.
 
 ## Reviewer update, 2026-09-07
 
 The user's latest instruction replaces Fable with native Opus for future reviews.
 New planning gates require nonauthor GPT-6 and Opus; final source/evidence reviews
 require Grok and Opus. Preserve all historical Fable reports without relabelling.
-The entire remaining roadmap goal remains active. A GPT worker reported an account
-usage limit; no account quota reset has been performed or claimed.
+The entire remaining roadmap objective remains unfinished. A GPT worker reported
+an account usage limit; no account quota reset has been performed or claimed.
+
+## Current execution and reviewer binding
+
+The user subsequently restored native Fable 5.1 at medium effort and again
+instructed completion of the entire project. Upcoming planning gates require
+nonauthor GPT-6 and native Fable; substantive source/evidence reviews require
+native Grok and Fable. Request `claude-fable-5-1[1m]` with `--effort medium` and
+record the returned model identity. Historical Opus reviews retain their identity.
+
+Sprint 8 is accepted, archived, and delivered. Sprint 9 source is frozen at
+`eec499d613688137a341f3556cd80ca461dd2ee9`; revised integration, proof inventory,
+14 production mutations and65 runner controls passed. The13 legacy suites retain
+c880 execution identity through verified relevant-source equivalence. Both native
+final source/evidence reviews are in progress. Their actual results and
+input hashes, rather than this process description, determine completion.
+Sprint 10 API and specification preparation continues without claiming accepted
+Sprint 9 delivery or opening its implementation gate prematurely.
+
+Use `current-work.json` for the current evidence paths and polling handles.
+A stored process handle is not proof that its process is still running.

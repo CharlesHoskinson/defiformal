@@ -1,0 +1,1 @@
+Prompt is too long · the request is ~1166409 tokens (limit 1000000) but this conversation is only ~647126 tokens — the rest is system prompt, tool definitions, and attachment content. A single-exchange conversation cannot be compacted; reduce attached files/tools or start with less context.

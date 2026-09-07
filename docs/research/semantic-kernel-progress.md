@@ -307,3 +307,22 @@ Initial store/boundary trust, rational arithmetic, fixed stores, supported frame
 and initialized invariant premises remain explicit. See the
 [Sprint8 adjudication](../../review/semantic-kernel/sprint8/final-review/ADJUDICATION.md).
 Future native reviews use Grok and Opus under the user's reviewer update.
+
+## Sprint 9: sequential congruence and configuration preservation
+
+Native Grok and Fable5.1 medium accepted source `eec499d613688137a341f3556cd80ca461dd2ee9`
+and final execution evidence with recorded limitations. Recursive sequential
+groups, full-cursor simulation/associativity, selected observation equivalence,
+fixed-prefix/suffix substitution and sufficient configuration preservation for
+all existing operators are implemented.
+
+Fresh16 Lean commands and148 new runtime comparisons pass. The imported inventory
+contains109 explicit theorems (74 generic,35 instances),128 generated theorem
+constants and342 supplemental declarations, with zero forbidden dependencies.
+All14 actual mutations and65 CLI controls pass their required classifications.
+Thirteen legacy suites retain c880 execution identity through exact relevant
+source/tool equivalence. Source-r1 aliases were corrected with distinct complete
+financial expectations; original evidence and the context-limited Fable attempt
+remain preserved. [Adjudication](../../review/semantic-kernel/sprint9/ADJUDICATION.md)
+and [evidence](../../review/semantic-kernel/sprint9/EVIDENCE.md) give precise scope.
+Branch delivery and OpenSpec archive are the remaining administrative actions.

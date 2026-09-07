@@ -1,6 +1,6 @@
 # DeFiFormal migration roadmap
 
-Updated 2026-09-07 UTC: Sprint 7 delivered and archived; Sprint 8 delivered and archived; Sprint 9 planning gate in preparation.
+Updated 2026-09-07 UTC: Sprint 7 delivered and archived; Sprint 8 delivered and archived; Sprint 9 source and evidence accepted; branch delivery and archival in progress. Sprint 10 OpenSpec preparation is complete.
 Branch: `semantic-kernel-pivot`. Sprint 8 archive delivery: `9501f0a4`.
 
 The remaining objective is conditional preservation of financial properties
@@ -100,7 +100,7 @@ Delivery and archive are verified through checkpoint `80c56c48`.
 
 ## Sprint 8: atomic synchronization
 
-The next [OpenSpec proposal](openspec/changes/archive/2026-09-07-atomic-synchronization/proposal.md),
+The [OpenSpec proposal](openspec/changes/archive/2026-09-07-atomic-synchronization/proposal.md),
 [design](openspec/changes/archive/2026-09-07-atomic-synchronization/design.md) and
 [40 tasks](openspec/changes/archive/2026-09-07-atomic-synchronization/tasks.md) cover four capabilities,
 16 requirements and49 scenarios. The [wiki decision record](wiki-llm/sprint-8-atomic-synchronization.md)
@@ -110,8 +110,24 @@ independent GPT-6 and native Fable planning reviews pass on `7a73b2d`. The accep
 
 The user authorized continued execution of all remaining packages while AFK;
 [the execution agenda](wiki-llm/autonomous-execution-agenda.md) preserves dependencies,
-review gates and the active stock Codex loop. Proposed future work is not accepted
+review gates and stock Codex execution. The harness goal last reported `usageLimited`; work resumed manually under the user’s authorization. Proposed future work is not accepted
 merely because it is scheduled.
+
+## Sprint 9: sequential congruence and configuration preservation
+
+Native Grok and Fable5.1 medium accepted source `eec499d6` and its completed
+evidence with limitations. [Adjudication](review/semantic-kernel/sprint9/ADJUDICATION.md)
+and [evidence](review/semantic-kernel/sprint9/EVIDENCE.md) record148 runtime
+comparisons,14 detected mutations,65 CLI controls and109 explicit theorems.
+All16 fresh Lean integration commands passed;13 legacy suites retain their
+actual c880 execution identity through checked dependency equivalence.
+Delivery and archive records are attached separately when verified.
+
+The equivalence/extension milestone covers fixed identity types, explicit
+configuration agreement and fixed sequential contexts. Regrouping sequential
+steps preserves the full cursor; this does not establish arbitrary parallel
+regrouping, causal assume-guarantee rules or capability provenance. Those broader
+items remain open below.
 
 ## Remaining composition and metatheory
 
@@ -121,7 +137,7 @@ merely because it is scheduled.
 - [ ] Generalize the useful results in `Interface.lean` and `Nary.lean` into the operational model.
 - [ ] Prove behavioral associativity: regrouping compatible components preserves behavior.
 - [ ] Prove assume-guarantee composition with initialization and causal or inductive premises, not circular assumptions.
-- [ ] Define observational equivalence and prove conservative extension: unrelated additions preserve existing behavior.
+- [x] Define observational equivalence and prove conservative extension: unrelated additions preserve existing behavior.
 - [ ] Establish capability provenance and component isolation where required, beyond the current trusted-store assumption.
 
 ## 3. Claims, liabilities, and asynchronous behavior

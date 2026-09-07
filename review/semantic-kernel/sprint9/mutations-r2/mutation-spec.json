@@ -1,0 +1,142 @@
+{
+  "schema_version": 1,
+  "modules": [
+    "DefiKernel.Metatheory.SequentialGroups",
+    "DefiKernel.Metatheory.Observation",
+    "DefiKernel.Metatheory.Examples",
+    "DefiKernel.Metatheory.Tests",
+    "DefiKernel.Metatheory.Audit"
+  ],
+  "mutations": [
+    {
+      "name": "entry-world-at-seq",
+      "module": "DefiKernel.Metatheory.SequentialGroups",
+      "needle": "    let middle := runGroup cfg boundaries cursor first\n    runGroup cfg boundaries middle second",
+      "replacement": "    let middle := runGroup cfg boundaries cursor first\n    runGroup cfg boundaries\n      { middle with world := cursor.world } second",
+      "required_false": [
+        "metatheory.group.world-chain"
+      ]
+    },
+    {
+      "name": "entry-store-at-seq",
+      "module": "DefiKernel.Metatheory.SequentialGroups",
+      "needle": "    let middle := runGroup cfg boundaries cursor first\n    runGroup cfg boundaries middle second",
+      "replacement": "    let middle := runGroup cfg boundaries cursor first\n    runGroup cfg boundaries\n      { middle with world := { middle.world with capabilities := cursor.world.capabilities } } second",
+      "required_false": [
+        "metatheory.group.store-chain"
+      ]
+    },
+    {
+      "name": "reset-history-at-seq",
+      "module": "DefiKernel.Metatheory.SequentialGroups",
+      "needle": "    let middle := runGroup cfg boundaries cursor first\n    runGroup cfg boundaries middle second",
+      "replacement": "    let middle := runGroup cfg boundaries cursor first\n    runGroup cfg boundaries\n      { middle with outputs := cursor.outputs } second",
+      "required_false": [
+        "metatheory.group.history-chain"
+      ]
+    },
+    {
+      "name": "reset-index-at-seq",
+      "module": "DefiKernel.Metatheory.SequentialGroups",
+      "needle": "    let middle := runGroup cfg boundaries cursor first\n    runGroup cfg boundaries middle second",
+      "replacement": "    let middle := runGroup cfg boundaries cursor first\n    runGroup cfg boundaries\n      { middle with nextIndex := cursor.nextIndex } second",
+      "required_false": [
+        "metatheory.group.index-chain"
+      ]
+    },
+    {
+      "name": "clear-failure-at-seq",
+      "module": "DefiKernel.Metatheory.SequentialGroups",
+      "needle": "    let middle := runGroup cfg boundaries cursor first\n    runGroup cfg boundaries middle second",
+      "replacement": "    let middle := runGroup cfg boundaries cursor first\n    runGroup cfg boundaries\n      { middle with failure := none } second",
+      "required_false": [
+        "metatheory.group.refusal-absorption"
+      ]
+    },
+    {
+      "name": "skip-second-child",
+      "module": "DefiKernel.Metatheory.SequentialGroups",
+      "needle": "    let middle := runGroup cfg boundaries cursor first\n    runGroup cfg boundaries middle second",
+      "replacement": "    let middle := runGroup cfg boundaries cursor first\n    middle",
+      "required_false": [
+        "metatheory.group.child-executed"
+      ]
+    },
+    {
+      "name": "reverse-child-order",
+      "module": "DefiKernel.Metatheory.SequentialGroups",
+      "needle": "    let middle := runGroup cfg boundaries cursor first\n    runGroup cfg boundaries middle second",
+      "replacement": "    let middle := runGroup cfg boundaries cursor second\n    runGroup cfg boundaries middle first",
+      "required_false": [
+        "metatheory.group.ordered"
+      ]
+    },
+    {
+      "name": "zero-boundary-index",
+      "module": "DefiKernel.Metatheory.SequentialGroups",
+      "needle": "  | .step action => Composition.advance cfg boundaries cursor action",
+      "replacement": "  | .step action => Composition.advance cfg (fun _ ↦ boundaries 0) cursor action",
+      "required_false": [
+        "metatheory.group.boundary-index"
+      ]
+    },
+    {
+      "name": "omit-observed-ledger",
+      "module": "DefiKernel.Metatheory.Observation",
+      "needle": "decide (∀ cell, left.world.state.balance cell = right.world.state.balance cell)",
+      "replacement": "true",
+      "required_false": [
+        "metatheory.observe.world-diff"
+      ]
+    },
+    {
+      "name": "omit-observed-store",
+      "module": "DefiKernel.Metatheory.Observation",
+      "needle": "decide (left.world.capabilities = right.world.capabilities)",
+      "replacement": "true",
+      "required_false": [
+        "metatheory.observe.store-diff"
+      ]
+    },
+    {
+      "name": "omit-observed-history",
+      "module": "DefiKernel.Metatheory.Observation",
+      "needle": "decide (left.branch.outputs = right.branch.outputs)",
+      "replacement": "true",
+      "required_false": [
+        "metatheory.observe.output-diff"
+      ]
+    },
+    {
+      "name": "omit-observed-failure",
+      "module": "DefiKernel.Metatheory.Observation",
+      "needle": "decide (left.branch.failure = right.branch.failure)",
+      "replacement": "true",
+      "required_false": [
+        "metatheory.observe.failure-diff"
+      ]
+    },
+    {
+      "name": "omit-observed-receipt",
+      "module": "DefiKernel.Metatheory.Observation",
+      "needle": "decide (left.receipt = right.receipt)",
+      "replacement": "true",
+      "required_false": [
+        "metatheory.observe.receipt-diff"
+      ]
+    },
+    {
+      "name": "omit-observed-index",
+      "module": "DefiKernel.Metatheory.Observation",
+      "needle": "decide (left.branch.nextIndex = right.branch.nextIndex)",
+      "replacement": "true",
+      "required_false": [
+        "metatheory.observe.next-index-diff"
+      ]
+    }
+  ],
+  "positive_checks": [
+    "metatheory.positive.single-leaf",
+    "metatheory.positive.equal-observation"
+  ]
+}
