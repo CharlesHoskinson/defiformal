@@ -476,9 +476,62 @@ def followupChecks : List (String × Bool) := [
     (expectedCommit [.left, .left] (atomWorld 5 7 6 8 10 8 10)
       (inners .left [initialNoOpEvent, expectedTransfer 1 (draw 4) usdVault usdAlice 4 6]))) ]
 
+def dualSupplyTemplate : Op where
+  signature := []
+  domain := .main
+  partyArity := 0
+  guard := .lit true
+  deltas := [⟨.usd, refAt .main .usd .caller, .lit (3 : ℚ)⟩,
+    ⟨.share, refAt .main .share .caller, .lit (4 : ℚ)⟩]
+  supplyDeltas := [⟨.main, .usd, .lit (3 : ℚ)⟩, ⟨.main, .share, .lit (4 : ℚ)⟩]
+  stateReads := []
+  envReads := []
+  writes := [packedAt .main .usd .caller, packedAt .main .share .caller]
+def dualSupplyCfg : Config P A D := { atomCfg with
+  registry := fun id ↦ if id = ⟨112⟩ then some dualSupplyTemplate else atomCfg.registry id
+  catalog := atomCfg.catalog ++ [fixtureComponent ⟨112, dualSupplyTemplate, usdAlice⟩] }
+def dualSupplyStore : Store := ⟨atomStore.entries ++
+  [⟨⟨.alice, .main, ⟨112⟩, .invoke⟩, true⟩,
+   ⟨⟨.alice, .main, ⟨112⟩, .changeSupply .main .usd⟩, true⟩,
+   ⟨⟨.alice, .main, ⟨112⟩, .changeSupply .main .share⟩, true⟩]⟩
+def dualSupplyInitial : W := atomWorld 1 7 10 8 10 8 10 dualSupplyStore
+def dualSupplyInvocation : I := ⟨⟨112⟩, ⟨112⟩, [], [], [⟨120⟩, ⟨121⟩, ⟨122⟩], none⟩
+def dualSupplyRun (lanes : List (Lane P A D)) : R :=
+  runAtomic dualSupplyCfg atomBoundary 42 ⟨lanes, [.alice]⟩ dualSupplyInitial
+    [draw 7, dualSupplyInvocation, draw 1] [] [.left, .left, .left]
+def dualSupplyEvent : Evt := event 1 dualSupplyInvocation []
+  ⟨true, [(usdAlice, 3), (shareAlice, 4)], [((.main, .usd), 3), ((.main, .share), 4)],
+    [], [], [], [], [usdAlice, shareAlice]⟩ [output 1 112 .usd 11]
+def dualSupplyDiagnostic (actual : R) : Bool := match actual with
+  | .refused _ _ _ _ => false
+  | .aborted _ _ _ m | .committed _ _ m =>
+    worldEq m.entryWorld dualSupplyInitial &&
+    worldEq m.speculative.world (atomWorld 11 7 3 12 10 8 10 dualSupplyStore) &&
+    decide (m.speculative.attempts.length = 2 ∧ m.position = 2) &&
+    tableMatches m.outstanding drawResiduals &&
+    decide ((diagnosticEvent 42 [] m).inner = inners .left [drawEvent, dualSupplyEvent])
+
+def precedenceChecks : List (String × Bool) := [
+  ("atomic.admission.precedence.lane.participant.uncovered.count", checkExpected
+    (run [draw 11, draw 0] [] [] ⟨[usdLane, usdLane], [.alice, .alice]⟩ laterBoundary)
+    (expectedRefused [] (.policy (.duplicateLane 0 1 usdLane usdLane)))),
+  ("atomic.admission.precedence.participant.uncovered.count", checkExpected
+    (run [draw 11, draw 0] [] [] ⟨[usdLane], [.alice, .alice]⟩ laterBoundary)
+    (expectedRefused [] (.policy (.duplicateParticipant 0 1 .alice)))),
+  ("atomic.fixture.supply.first.lane.usd", checkExpected (dualSupplyRun [usdLane, shareLane])
+    (expectedAbort [.left, .left, .left]
+      (.laneSupply .left 1 1 dualSupplyInvocation usdLane 3) dualSupplyInitial)),
+  ("atomic.fixture.supply.first.lane.share", checkExpected (dualSupplyRun [shareLane, usdLane])
+    (expectedAbort [.left, .left, .left]
+      (.laneSupply .left 1 1 dualSupplyInvocation shareLane 4) dualSupplyInitial)),
+  ("atomic.fixture.supply.first.lane.diagnostic.usd",
+    dualSupplyDiagnostic (dualSupplyRun [usdLane, shareLane])),
+  ("atomic.fixture.supply.first.lane.diagnostic.share",
+    dualSupplyDiagnostic (dualSupplyRun [shareLane, usdLane])) ]
+
 def runtimeChecks : List (String × Bool) :=
   settlementChecks ++ historyChecks ++ admissionChecks ++ observationChecks ++
-    receiptChecks ++ extendedChecks ++ followupChecks
+    receiptChecks ++ extendedChecks ++ followupChecks ++ precedenceChecks
 
 -- BEGIN PROOFS
 

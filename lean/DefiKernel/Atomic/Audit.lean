@@ -10,7 +10,7 @@ def main : IO Unit := do
   for (name, passed) in checks do IO.println s!"{name}: {passed}"
   let failures := checks.filter (!·.2) |>.map Prod.fst
   if !failures.isEmpty then
-    throw (IO.userError s!"Atomic runtime comparisons failed: {failures}")
+    throw (IO.userError s!"Atomic runtime comparisons failed: {failures.length}")
 
 #eval main
 

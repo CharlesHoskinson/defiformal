@@ -2,7 +2,7 @@ import DefiKernel.Atomic.Execution
 import DefiKernel.Interleaving.Soundness
 
 /-! Actual atomic steps either preserve a halted machine or take one existing
-interleaving step. Every diagnostic machine is an actual interleaving preTokens. -/
+interleaving step. Every diagnostic machine is an actual interleaving prefix. -/
 namespace DefiKernel.Atomic
 open Typed Composition Parallel Interleaving
 
@@ -178,7 +178,7 @@ theorem runPrefix_reachable (cfg : Config P A D) (boundaries : ParallelBoundary 
       (runPrefix cfg boundaries policy initial left right schedule) :=
   continueRun_reachable _ _ _ _ _ _ _ .start _
 
-/-- A witness is a literal preTokens of the supplied schedule, not a reordered trace. -/
+/-- A witness is a literal prefix of the supplied schedule, not a reordered trace. -/
 theorem continueRun_prefix (cfg : Config P A D) (boundaries : ParallelBoundary P A D)
     (policy : Policy P A D) (left right : Branch P A D) (m : Machine P A D)
     (schedule : Schedule) :

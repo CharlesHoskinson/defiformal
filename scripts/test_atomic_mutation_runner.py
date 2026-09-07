@@ -58,6 +58,24 @@ run_cmd do
 
 end DefiKernel.Atomic
 '''
+PRODUCTION_AUDIT = '''import DefiKernel.Atomic.RunnerInput
+namespace DefiKernel.Atomic.Audit
+def main : IO Unit := do
+  let checks : List (String × Bool) := CHECKS
+  if checks.isEmpty then throw (IO.userError "Atomic runtime comparisons empty")
+  if !(checks.map Prod.fst).Nodup then
+    throw (IO.userError "Atomic runtime comparison names are duplicated")
+  for (name, passed) in checks do IO.println s!"{name}: {passed}"
+  let failures := checks.filter (!·.2) |>.map Prod.fst
+  if !failures.isEmpty then
+    throw (IO.userError s!"Atomic runtime comparisons failed: {failures.length}")
+#eval main
+
+-- BEGIN PROOFS
+
+end DefiKernel.Atomic.Audit
+'''
+
 CHECKS = '''if runnerIncludeSensitivity then
     [("runner_positive", runnerAllows 0), ("runner_sensitivity", !runnerAllows 5)]
     else [("runner_positive", runnerAllows 0)]'''
@@ -87,6 +105,11 @@ def specification(change=None):
 def cases():
     """Expected classifications are fixed independently of the runner implementation."""
     return [
+        {'name': 'production-eval-discriminating-mutant', 'exit': 0, 'production_audit': True,
+         'message': 'DISCRIMINATES: 1 mutants and one nonempty unchanged control'},
+        {'name': 'production-eval-required-stays-true', 'exit': 1, 'production_audit': True,
+         'spec': specification(mutation(required=['runner_positive'])),
+         'message': 'required mutation not detected'},
         {'name': 'live-discriminating-mutant', 'exit': 0,
          'message': 'DISCRIMINATES: 1 mutants and one nonempty unchanged control'},
         {'name': 'dotted-comparisons', 'exit': 0,
@@ -359,7 +382,8 @@ def main():
                                   'source_sha256': sha(dependency.read_bytes()),
                                   'olean_sha256': sha(olean.read_bytes())})
             dependency.write_text(DEPENDENCY.replace(':= 4', ':= 5').replace('= 4', '= 5'))
-        (typed / 'Audit.lean').write_text(AUDIT.replace('CHECKS', case.get('checks', CHECKS)).replace(
+        audit_template = PRODUCTION_AUDIT if case.get('production_audit') else AUDIT
+        (typed / 'Audit.lean').write_text(audit_template.replace('CHECKS', case.get('checks', CHECKS)).replace(
             '  let failures :=', case.get('extra_audit', '') + '  let failures :='))
         (lean / 'lake-manifest.json').write_bytes(manifest)
         if case.get('late_runtime'):
@@ -421,7 +445,7 @@ def main():
         if results_file.exists():
             runtime = json.loads(results_file.read_text())
         # Accepted discrimination additionally requires exact real Lean observations.
-        if case['name'] in ('live-discriminating-mutant', 'dotted-comparisons', 'hyphenated-dotted-comparisons', 'discovered-atomic-dependency', 'unused-variable-warning', 'nonkernel-local-dependency', 'proof-comment-keywords-sibling', 'proof-string-keywords-sibling', 'proof-raw-string-character-sibling'):
+        if case['name'] in ('production-eval-discriminating-mutant', 'live-discriminating-mutant', 'dotted-comparisons', 'hyphenated-dotted-comparisons', 'discovered-atomic-dependency', 'unused-variable-warning', 'nonkernel-local-dependency', 'proof-comment-keywords-sibling', 'proof-string-keywords-sibling', 'proof-raw-string-character-sibling'):
             measured = runtime.get('results', {})
             separator = '.' if case['name'] == 'dotted-comparisons' else '_'
             expected_positive = 'runner' + separator + 'positive'
@@ -432,6 +456,19 @@ def main():
                 expected_positive: 'true', expected_sensitivity: 'true'}
             matched = matched and measured.get('probe', {}).get('checks') == {
                 expected_positive: 'true', expected_sensitivity: 'false'}
+        if case.get('production_audit'):
+            # Assertion failures intentionally do not publish accepted result entries.
+            # Check actual Lean output for both production-form paths.
+            for label, expected in [('control', 'true'), ('probe', 'false')]:
+                log_path = result_path / (label + '.log')
+                actual_log = log_path.read_text() if log_path.exists() else ''
+                matched = matched and re.findall(
+                    r'^(runner_positive|runner_sensitivity): (true|false)$',
+                    actual_log, re.MULTILINE) == [
+                        ('runner_positive', 'true'), ('runner_sensitivity', expected)]
+                if label == 'probe':
+                    matched = matched and actual_log.count(
+                        'error: Atomic runtime comparisons failed: 1') == 1
         if case['name'] == 'unused-variable-warning':
             warning_log = result_path / 'probe.log'
             warning = warning_log.read_text() if warning_log.exists() else ''
