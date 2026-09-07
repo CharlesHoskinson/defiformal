@@ -1,0 +1,19 @@
+import DefiKernel.Atomic.Tests
+
+namespace DefiKernel.Atomic.Audit
+
+def main : IO Unit := do
+  let checks := Tests.runtimeChecks
+  if checks.isEmpty then throw (IO.userError "Atomic runtime comparisons empty")
+  if !(checks.map Prod.fst).Nodup then
+    throw (IO.userError "Atomic runtime comparison names are duplicated")
+  for (name, passed) in checks do IO.println s!"{name}: {passed}"
+  let failures := checks.filter (!·.2) |>.map Prod.fst
+  if !failures.isEmpty then
+    throw (IO.userError s!"Atomic runtime comparisons failed: {failures}")
+
+#eval main
+
+-- BEGIN PROOFS
+
+end DefiKernel.Atomic.Audit

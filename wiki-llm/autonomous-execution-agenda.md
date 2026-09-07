@@ -68,3 +68,11 @@ they do not claim accepted implementation or untouched evaluation results.
 The stock Codex goal loop was armed at 2026-09-07T07:18:35Z for this entire agenda,
 with no token budget requested. It remains active until actual completion or a
 recorded external impasse. No custom orchestration harness was introduced.
+
+## Reviewer update, 2026-09-07
+
+The user's latest instruction replaces Fable with native Opus for future reviews.
+New planning gates require nonauthor GPT-6 and Opus; final source/evidence reviews
+require Grok and Opus. Preserve all historical Fable reports without relabelling.
+The entire remaining roadmap goal remains active. A GPT worker reported an account
+usage limit; no account quota reset has been performed or claimed.

@@ -1,6 +1,6 @@
 # DeFiFormal migration roadmap
 
-Updated 2026-09-07 UTC: Sprint 7 implementation accepted; branch delivery underway.
+Updated 2026-09-07 UTC: Sprint 7 delivered and archived; Sprint 8 source/evidence accepted; delivery in progress.
 Branch: `semantic-kernel-pivot`. Sprint 6 delivery/archive head: `850d785`.
 
 The remaining objective is conditional preservation of financial properties
@@ -90,7 +90,7 @@ theorems and271 supplemental declarations with zero forbidden dependencies. The1
 explicit theorems comprise107 generic results,15 instances, three counterexample
 constructions and two counterexample corollaries;135 others are generated.
 [Final coverage](review/semantic-kernel/sprint7/coverage-final.md) maps all 43 scenarios.
-Delivery/archive is the remaining Sprint 7 action.
+Delivery and archive are verified through checkpoint `80c56c48`.
 
 - [x] Pass the frozen OpenSpec planning review gate and current baseline.
 - [x] Implement shared execution, schedules and exact observations.
@@ -98,7 +98,7 @@ Delivery/archive is the remaining Sprint 7 action.
 - [x] Complete financial examples, production mutations and full regressions.
 - [x] Obtain native Grok/Fable result audits, deliver the branch and archive OpenSpec.
 
-## Sprint 8 candidate: atomic synchronization
+## Sprint 8: atomic synchronization
 
 The next [OpenSpec proposal](openspec/changes/atomic-synchronization/proposal.md),
 [design](openspec/changes/atomic-synchronization/design.md) and
@@ -106,7 +106,7 @@ The next [OpenSpec proposal](openspec/changes/atomic-synchronization/proposal.md
 16 requirements and49 scenarios. The [wiki decision record](wiki-llm/sprint-8-atomic-synchronization.md)
 explains exact rollback, separate committed observations and receipt-derived typed
 transient clearing. Strict plan validation and author consistency checks pass;
-independent GPT-6 and native Fable planning reviews pass on `7a73b2d`. A fresh accepted baseline and final dependency delivery precede implementation.
+independent GPT-6 and native Fable planning reviews pass on `7a73b2d`. The accepted baseline and dependency delivery passed. Revised implementation candidate `a52fb748` passes135 financial comparisons,357 theorem/496 supplemental axiom checks with zero forbidden dependencies,18 compiling production mutants and65 actual CLI controls. The initial audit-report protocol defect is corrected with its failed attempt preserved. All11 legacy suites have verified relevant dependency equivalence to this revision. Both final native Grok and Opus source/evidence reviews accept with limitations at `99e2e2c`; final65 controls are r4 with the corrected log-path harness. Source/evidence acceptance is complete; branch delivery/archive remain open.
 
 The user authorized continued execution of all remaining packages while AFK;
 [the execution agenda](wiki-llm/autonomous-execution-agenda.md) preserves dependencies,
@@ -199,3 +199,8 @@ and Fable review, saved evidence bound to exact source/tool identities, and a
 verified branch push. Do not use Foreman. Preserve prior proofs, negative results,
 and corpus source identities. Keep proofs, bounded execution, measurements,
 refutations, and unchecked assumptions distinct.
+
+Reviewer policy update (2026-09-07): the user replaced Fable with native Opus for
+new reviews. Historical Fable verdicts retain their original identities. Future
+OpenSpec gates use nonauthor GPT-6 plus Opus; implementation/evidence gates use
+Grok plus Opus. See [working instructions](AGENTS.md).

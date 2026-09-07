@@ -8,9 +8,9 @@ The user approved the semantic-kernel pivot on 2026-09-06. Read
   positive-program primitive-basis mandate. Historical documents remain
   evidence, not instructions to pursue a withdrawn objective.
 - Use GPT-6 for implementation through the stock Codex harness. Have Grok and
-  Fable independently check substantive results. Invoke their native CLIs
+  Opus independently check substantive results. Invoke their native CLIs
   directly from Codex. Do not use Foreman. Never substitute a GPT reviewer and
-  label its response Grok or Fable.
+  label its response Grok or Opus.
 - Record the exact reviewed revision, requested/reported model identity,
   result, findings, and fixes. An unavailable reviewer is an open review, not
   an approval. Review is advisory evidence, not a mathematical proof.
@@ -28,3 +28,14 @@ The user approved the semantic-kernel pivot on 2026-09-06. Read
   relabel development examples as untouched holdouts.
 - User authorization to execute this migration is already present. Resolve
   routine implementation details without repeatedly requesting approval.
+
+## Reviewer change, 2026-09-07
+
+The user explicitly replaced Fable with Opus for future external reviews. Use
+native Grok plus native Claude Opus for substantive implementation/evidence
+reviews, and nonauthor GPT-6 plus native Opus for new OpenSpec planning gates.
+Request the native `opus` model alias and record the actual returned model.
+Existing Fable reports and accepted historical plan bytes retain their original
+identity. References to future Fable reviews in older plans are superseded by
+this instruction; freeze updated reviewer bindings before new review execution.
+GPT-6 implementation, stock Codex harness, and the no-Foreman rule remain in force.

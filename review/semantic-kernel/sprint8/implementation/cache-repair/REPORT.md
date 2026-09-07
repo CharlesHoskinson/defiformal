@@ -1,0 +1,5 @@
+# Toolchain cache repair
+
+During development an agent ran `lake -d lean build DefiKernel.Atomic.Policy` from the repository root, selecting default Lean4.33.1 instead of the repository pin4.33.0-rc2. It terminated that process. The next pinned build exposed incompatible imported cache headers. All compiler jobs were paused; scanning dependency `.olean` headers isolated four remaining incompatible modules (Mathlib.Tactic.Convert, Mathlib.Tactic.Translate.Core, Aesop.Forward.Substitution, Qq.Match). Their cache artifacts were quarantined outside the repository and those modules rebuilt with the pinned toolchain. No tracked source or historical proof changed.
+
+The exact quarantine manifest is retained beside this report. Cache binaries remain in `/tmp/defiformal-sprint8-cache-repair-20260907`; they are generated tool output, not accepted proof artifacts. Both subsequent fresh full integration and isolated runner/regression checks passed under the pinned Lean identity. The initially environment-blocked runner attempt is retained separately and never counted as a detection or passing suite.

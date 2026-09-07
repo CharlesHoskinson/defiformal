@@ -1,44 +1,41 @@
-# Sprint 8: atomic synchronization
+# Sprint8: atomic synchronization
 
-Status: independent planning and dependency/baseline gates passed; ready for implementation.
+Source and evidence accepted with limitations at `99e2e2c`; branch delivery and
+archive pending. Native Grok (`grok-4.6-build`) and Opus (`claude-opus-5`) pass.
+[Adjudication](../review/semantic-kernel/sprint8/final-review/ADJUDICATION.md),
+[evidence](../review/semantic-kernel/sprint8/EVIDENCE.md),
+[scenario overlay](../review/semantic-kernel/sprint8/scenario-map-final.json), and
+[tasks](../openspec/changes/atomic-synchronization/tasks.md) preserve exact scope.
 
-[Proposal](../openspec/changes/atomic-synchronization/proposal.md),
-[design](../openspec/changes/atomic-synchronization/design.md),
-[tasks](../openspec/changes/atomic-synchronization/tasks.md), and
-[planned coverage](../review/semantic-kernel/sprint8/planning/coverage.json)
-define four capabilities, 16 requirements and 49 scenarios. The separate
-[design investigation](sprint-8-atomic-synchronization-draft.md) records alternatives
-and historical Interface/Nary scope. The exact candidate `7a73b2d` passed both independent plan audits; no Atomic implementation is claimed yet.
+The executor calls actual Interleaving.advance once per running token and stops
+the whole event on the first kernel or policy failure. Public refusal/abort
+restores the complete entry world; committed receipts, outputs and supply are
+separate accessor-backed projections. Signed obligations derive from actual
+receipt effects at typed vault cells and authenticated local principals. Every
+lane/participant entry must clear; cross-principal/asset/domain netting cannot
+substitute for settlement. Cash plus obligations is preserved even at successful
+steps that then trigger a policy abort.
 
-## Decisions
+The106 explicit theorems comprise93 generic results,9 reference instances,3
+counterexamples and1 counterexample corollary;251 generated declarations and496
+supplemental constants remain distinct. All135 runtime comparisons,18 production
+mutants and65 final runner controls pass, with14 Lean commands and11 old Python
+suites. Exact source equivalence supports reuse without relabelling executions.
 
-1. Run the existing interleaving advance once per token in an isolated speculative
-   machine. Abort the whole event at the first kernel or settlement-policy error.
-   Public atomicity does not imply internal order independence.
-2. Keep public committed events and aborted diagnostics in distinct projections.
-   Rollback restores the exact entry ledger/store. Speculative minted supply and
-   snapshots do not become committed financial observations.
-3. Derive signed transient obligations from actual accepted receipt effects at
-   typed vault cells, attributed to authenticated local principals. This gives a
-   cash-plus-obligations equality that can be proved from execution.
-4. Require every typed lane/participant entry to clear. Equal numeric debt/credit
-   across principals, assets or domains cannot cancel. Intermediate credit is
-   permitted; unresolved over-return at completion aborts exactly.
-5. Reject lane-asset supply anywhere in that asset while permitting authorized
-   nonlane supply. This is a bounded loan/return policy, with full Balancer, hooks,
-   machine arithmetic and deployed fidelity left to later library/refinement work.
-6. Use 18 fixed production mutation obligations and all 52 defensive runner
-   controls. Source review, kernel proof, financial runtime and compiler controls
-   remain separate evidence categories.
+Fable's initial REVISE exposed the real Audit list/count protocol mismatch; Grok's
+initial source review missed it. The corrected a52 source passed all18 production
+mutants. An independent artifact check found a log-path variable overwrite; the
+99 revision changes only that bookkeeping and passes fresh65 controls. Both
+native final reviewers close these findings. Earlier failures/dissent are retained.
 
-The user's AFK instruction authorizes execution after the same-candidate GPT-6 and
-native Fable planning gate passes. Native Grok/Fable final audits, exact source
-bindings, verified branch delivery and OpenSpec archive remain required. No Foreman.
+Limits: trusted initial stores and boundaries, rational arithmetic, fixed stores
+inside invocation batches, restricted lane supply, projection-only erasure of
+diagnostics. Inherited empty-lane live/history/time fixtures are batch evidence.
+The final-lane and final-participant mutants share eight failing observations.
+The lexical projection guard does not expand arbitrary earlier-defined macros.
+No deployed Balancer fidelity, machine arithmetic, general associativity, dynamic
+provenance or order-independence claim is made.
 
-Both independent GPT-6 and native Fable reviews accepted with limitations on the
-same 60-input bundle. The fresh baseline passes12 commands with130 source inputs
-unchanged; accepted Sprint 7 source/evidence and archive metadata pushes are
-verified. [Gate](../review/semantic-kernel/sprint8/planning/gate.json) and
-[adjudication](../review/semantic-kernel/sprint8/planning/ADJUDICATION.md) record the
-adopted publication accessors, attempt-derived fold, diagnostic and exact-residual
-oracles, and explicit representation limits. Implementation is now authorized.
+Sprint9's operational grouping/continuation/configuration-congruence OpenSpec
+draft and fresh baseline are in preparation. Its independent GPT-6/Opus planning
+gate and accepted Sprint8 delivery remain prerequisites to implementation.
