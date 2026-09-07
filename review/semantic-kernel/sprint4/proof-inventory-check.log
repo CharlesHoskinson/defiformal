@@ -1,0 +1,399 @@
+DefiKernel.Typed.numericRat_numericValue {Asset : Type} (u : DefiKernel.Typed.NumericUnit Asset) (q : ℚ) :
+  DefiKernel.Typed.numericRat u (DefiKernel.Typed.numericValue u q) = q
+DefiKernel.Typed.numericValue_numericRat {Asset : Type} (u : DefiKernel.Typed.NumericUnit Asset)
+  (v : DefiKernel.Typed.Value u.toUnit) : DefiKernel.Typed.numericValue u (DefiKernel.Typed.numericRat u v) = v
+DefiKernel.Typed.Expr.eval_congr {Party Asset Domain : Type} [DecidableEq Asset]
+  {signature : List (DefiKernel.Typed.Unit Asset)} {u : DefiKernel.Typed.Unit Asset}
+  (expression : DefiKernel.Typed.Expr Party Asset Domain signature u)
+  (left right : DefiKernel.Typed.EvalContext Party Asset Domain signature) (ha : left.args = right.args)
+  (hs : ∀ ref ∈ expression.stateReads, DefiKernel.Typed.readBalance left ref = DefiKernel.Typed.readBalance right ref)
+  (he : ∀ key ∈ expression.envReads, DefiKernel.Typed.EnvRead.Agree left right key) :
+  DefiKernel.Typed.Expr.eval left expression = DefiKernel.Typed.Expr.eval right expression
+DefiKernel.Typed.readBalance_congr {Party Asset Domain : Type} {signature : List (DefiKernel.Typed.Unit Asset)}
+  (left right : DefiKernel.Typed.EvalContext Party Asset Domain signature)
+  (ref : DefiKernel.Typed.PackedCellRef Party Asset Domain) (hc : left.caller = right.caller)
+  (hp : left.parties = right.parties)
+  (hs :
+    ∀ (c : DefiKernel.Typed.Cell Party Asset Domain),
+      DefiKernel.Typed.CellRef.resolve left.caller left.parties ref.snd = Except.ok c →
+        left.state.balance c = right.state.balance c) :
+  DefiKernel.Typed.readBalance left ref = DefiKernel.Typed.readBalance right ref
+DefiKernel.Typed.Expr.eval_congr_of_resolved {Party Asset Domain : Type} [DecidableEq Asset]
+  {signature : List (DefiKernel.Typed.Unit Asset)} {u : DefiKernel.Typed.Unit Asset}
+  (expression : DefiKernel.Typed.Expr Party Asset Domain signature u)
+  (left right : DefiKernel.Typed.EvalContext Party Asset Domain signature) (ha : left.args = right.args)
+  (hc : left.caller = right.caller) (hp : left.parties = right.parties)
+  (hs :
+    ∀ ref ∈ expression.stateReads,
+      ∀ (c : DefiKernel.Typed.Cell Party Asset Domain),
+        DefiKernel.Typed.CellRef.resolve left.caller left.parties ref.snd = Except.ok c →
+          left.state.balance c = right.state.balance c)
+  (he : ∀ key ∈ expression.envReads, DefiKernel.Typed.EnvRead.Agree left right key) :
+  DefiKernel.Typed.Expr.eval left expression = DefiKernel.Typed.Expr.eval right expression
+DefiKernel.Typed.issueCapability_ok_iff {Party Asset Domain : Type} [DecidableEq Party] [DecidableEq Domain]
+  (config : DefiKernel.Typed.AuthorityConfig Party Domain) (ctx : DefiKernel.Typed.InvocationContext Party Domain)
+  (store : DefiKernel.Typed.CapabilityStore Party Asset Domain) (grant : DefiKernel.Typed.Grant Party Asset Domain)
+  (id : DefiKernel.Typed.CapabilityId) (post : DefiKernel.Typed.CapabilityStore Party Asset Domain) :
+  DefiKernel.Typed.issueCapability config ctx store grant = Except.ok (id, post) ↔
+    DefiKernel.Typed.isDomainAdmin config ctx grant.domain = true ∧
+      config.operationDomain grant.operation = some grant.domain ∧
+        grant.right.inDomain grant.domain = true ∧
+          id = store.nextId ∧ post = { entries := store.entries ++ [{ toGrant := grant, live := true }] }
+DefiKernel.Typed.issueCapability_admin {Party Asset Domain : Type} [DecidableEq Party] [DecidableEq Domain]
+  (config : DefiKernel.Typed.AuthorityConfig Party Domain) (ctx : DefiKernel.Typed.InvocationContext Party Domain)
+  (store : DefiKernel.Typed.CapabilityStore Party Asset Domain) (grant : DefiKernel.Typed.Grant Party Asset Domain)
+  (id : DefiKernel.Typed.CapabilityId) (post : DefiKernel.Typed.CapabilityStore Party Asset Domain)
+  (h : DefiKernel.Typed.issueCapability config ctx store grant = Except.ok (id, post)) :
+  ctx.domain = grant.domain ∧ ctx.principal = config.domainAdmin grant.domain
+DefiKernel.Typed.lookup_nextId {Party Asset Domain : Type}
+  (store : DefiKernel.Typed.CapabilityStore Party Asset Domain) : store.lookup store.nextId = none
+DefiKernel.Typed.issueCapability_fresh {Party Asset Domain : Type} [DecidableEq Party] [DecidableEq Domain]
+  (config : DefiKernel.Typed.AuthorityConfig Party Domain) (ctx : DefiKernel.Typed.InvocationContext Party Domain)
+  (store : DefiKernel.Typed.CapabilityStore Party Asset Domain) (grant : DefiKernel.Typed.Grant Party Asset Domain)
+  (id : DefiKernel.Typed.CapabilityId) (post : DefiKernel.Typed.CapabilityStore Party Asset Domain)
+  (h : DefiKernel.Typed.issueCapability config ctx store grant = Except.ok (id, post)) :
+  store.lookup id = none ∧
+    post.lookup id = some { toGrant := grant, live := true } ∧ post.nextId.value = store.nextId.value + 1
+DefiKernel.Typed.issueCapability_preserves_other {Party Asset Domain : Type} [DecidableEq Party] [DecidableEq Domain]
+  (config : DefiKernel.Typed.AuthorityConfig Party Domain) (ctx : DefiKernel.Typed.InvocationContext Party Domain)
+  (store : DefiKernel.Typed.CapabilityStore Party Asset Domain) (grant : DefiKernel.Typed.Grant Party Asset Domain)
+  (id other : DefiKernel.Typed.CapabilityId) (post : DefiKernel.Typed.CapabilityStore Party Asset Domain)
+  (h : DefiKernel.Typed.issueCapability config ctx store grant = Except.ok (id, post)) (hne : other ≠ id) :
+  post.lookup other = store.lookup other
+DefiKernel.Typed.issueCapability_ne_existing {Party Asset Domain : Type} [DecidableEq Party] [DecidableEq Domain]
+  (config : DefiKernel.Typed.AuthorityConfig Party Domain) (ctx : DefiKernel.Typed.InvocationContext Party Domain)
+  (store : DefiKernel.Typed.CapabilityStore Party Asset Domain) (grant : DefiKernel.Typed.Grant Party Asset Domain)
+  (id old : DefiKernel.Typed.CapabilityId) (post : DefiKernel.Typed.CapabilityStore Party Asset Domain)
+  (cap : DefiKernel.Typed.Capability Party Asset Domain)
+  (h : DefiKernel.Typed.issueCapability config ctx store grant = Except.ok (id, post))
+  (hold : store.lookup old = some cap) : id ≠ old
+DefiKernel.Typed.revokeCapability_ok_iff {Party Asset Domain : Type} [DecidableEq Party] [DecidableEq Domain]
+  (config : DefiKernel.Typed.AuthorityConfig Party Domain) (ctx : DefiKernel.Typed.InvocationContext Party Domain)
+  (store : DefiKernel.Typed.CapabilityStore Party Asset Domain) (id : DefiKernel.Typed.CapabilityId)
+  (post : DefiKernel.Typed.CapabilityStore Party Asset Domain) :
+  DefiKernel.Typed.revokeCapability config ctx store id = Except.ok post ↔
+    ∃ cap,
+      store.lookup id = some cap ∧
+        DefiKernel.Typed.isDomainAdmin config ctx cap.domain = true ∧
+          post = { entries := store.entries.set id.value { toGrant := cap.toGrant, live := false } }
+DefiKernel.Typed.revokeCapability_admin {Party Asset Domain : Type} [DecidableEq Party] [DecidableEq Domain]
+  (config : DefiKernel.Typed.AuthorityConfig Party Domain) (ctx : DefiKernel.Typed.InvocationContext Party Domain)
+  (store : DefiKernel.Typed.CapabilityStore Party Asset Domain) (id : DefiKernel.Typed.CapabilityId)
+  (post : DefiKernel.Typed.CapabilityStore Party Asset Domain)
+  (h : DefiKernel.Typed.revokeCapability config ctx store id = Except.ok post) :
+  ∃ cap, store.lookup id = some cap ∧ ctx.domain = cap.domain ∧ ctx.principal = config.domainAdmin cap.domain
+DefiKernel.Typed.revokeCapability_tombstone {Party Asset Domain : Type} [DecidableEq Party] [DecidableEq Domain]
+  (config : DefiKernel.Typed.AuthorityConfig Party Domain) (ctx : DefiKernel.Typed.InvocationContext Party Domain)
+  (store : DefiKernel.Typed.CapabilityStore Party Asset Domain) (id : DefiKernel.Typed.CapabilityId)
+  (post : DefiKernel.Typed.CapabilityStore Party Asset Domain)
+  (h : DefiKernel.Typed.revokeCapability config ctx store id = Except.ok post) :
+  ∃ cap,
+    store.lookup id = some cap ∧
+      post.lookup id = some { toGrant := cap.toGrant, live := false } ∧ post.nextId = store.nextId
+DefiKernel.Typed.revokeCapability_preserves_other {Party Asset Domain : Type} [DecidableEq Party] [DecidableEq Domain]
+  (config : DefiKernel.Typed.AuthorityConfig Party Domain) (ctx : DefiKernel.Typed.InvocationContext Party Domain)
+  (store : DefiKernel.Typed.CapabilityStore Party Asset Domain) (id other : DefiKernel.Typed.CapabilityId)
+  (post : DefiKernel.Typed.CapabilityStore Party Asset Domain)
+  (h : DefiKernel.Typed.revokeCapability config ctx store id = Except.ok post) (hne : other ≠ id) :
+  post.lookup other = store.lookup other
+DefiKernel.Typed.authorizesId_iff {Party Asset Domain : Type} [DecidableEq Party] [DecidableEq Asset]
+  [DecidableEq Domain] (store : DefiKernel.Typed.CapabilityStore Party Asset Domain)
+  (ctx : DefiKernel.Typed.InvocationContext Party Domain) (operation : DefiKernel.Typed.OperationId)
+  (right : DefiKernel.Typed.Right Party Asset Domain) (id : DefiKernel.Typed.CapabilityId) :
+  DefiKernel.Typed.authorizesId store ctx operation right id = true ↔
+    ∃ cap,
+      store.lookup id = some cap ∧
+        cap.live = true ∧
+          cap.holder = ctx.principal ∧
+            cap.domain = ctx.domain ∧ cap.operation = operation ∧ cap.right = right ∧ right.inDomain ctx.domain = true
+DefiKernel.Typed.hasAuthority_iff {Party Asset Domain : Type} [DecidableEq Party] [DecidableEq Asset]
+  [DecidableEq Domain] (store : DefiKernel.Typed.CapabilityStore Party Asset Domain)
+  (ids : List DefiKernel.Typed.CapabilityId) (ctx : DefiKernel.Typed.InvocationContext Party Domain)
+  (operation : DefiKernel.Typed.OperationId) (right : DefiKernel.Typed.Right Party Asset Domain) :
+  DefiKernel.Typed.hasAuthority store ids ctx operation right = true ↔
+    ∃ id ∈ ids, DefiKernel.Typed.authorizesId store ctx operation right id = true
+DefiKernel.Typed.hasAuthority_duplicate {Party Asset Domain : Type} [DecidableEq Party] [DecidableEq Asset]
+  [DecidableEq Domain] (store : DefiKernel.Typed.CapabilityStore Party Asset Domain)
+  (ids : List DefiKernel.Typed.CapabilityId) (id : DefiKernel.Typed.CapabilityId)
+  (ctx : DefiKernel.Typed.InvocationContext Party Domain) (operation : DefiKernel.Typed.OperationId)
+  (right : DefiKernel.Typed.Right Party Asset Domain) :
+  DefiKernel.Typed.hasAuthority store (id :: id :: ids) ctx operation right =
+    DefiKernel.Typed.hasAuthority store (id :: ids) ctx operation right
+DefiKernel.Typed.revokeCapability_cannot_use {Party Asset Domain : Type} [DecidableEq Party] [DecidableEq Asset]
+  [DecidableEq Domain] (config : DefiKernel.Typed.AuthorityConfig Party Domain)
+  (adminCtx ctx : DefiKernel.Typed.InvocationContext Party Domain)
+  (store : DefiKernel.Typed.CapabilityStore Party Asset Domain) (id : DefiKernel.Typed.CapabilityId)
+  (post : DefiKernel.Typed.CapabilityStore Party Asset Domain) (operation : DefiKernel.Typed.OperationId)
+  (right : DefiKernel.Typed.Right Party Asset Domain)
+  (h : DefiKernel.Typed.revokeCapability config adminCtx store id = Except.ok post) :
+  DefiKernel.Typed.authorizesId post ctx operation right id = false
+DefiKernel.Typed.issueCapability_keeps_revoked {Party Asset Domain : Type} [DecidableEq Party] [DecidableEq Asset]
+  [DecidableEq Domain] (config : DefiKernel.Typed.AuthorityConfig Party Domain)
+  (adminCtx ctx : DefiKernel.Typed.InvocationContext Party Domain)
+  (store : DefiKernel.Typed.CapabilityStore Party Asset Domain) (grant : DefiKernel.Typed.Grant Party Asset Domain)
+  (id old : DefiKernel.Typed.CapabilityId) (post : DefiKernel.Typed.CapabilityStore Party Asset Domain)
+  (cap : DefiKernel.Typed.Capability Party Asset Domain) (operation : DefiKernel.Typed.OperationId)
+  (right : DefiKernel.Typed.Right Party Asset Domain)
+  (h : DefiKernel.Typed.issueCapability config adminCtx store grant = Except.ok (id, post))
+  (hold : store.lookup old = some cap) (hdead : cap.live = false) :
+  DefiKernel.Typed.authorizesId post ctx operation right old = false
+DefiKernel.Typed.applyEvaluated_ok_iff {Party Asset Domain : Type} [DecidableEq Party] [DecidableEq Asset]
+  [DecidableEq Domain] [Fintype Party] [Fintype Asset] [Fintype Domain]
+  (store : DefiKernel.Typed.CapabilityStore Party Asset Domain) (ctx : DefiKernel.Typed.InvocationContext Party Domain)
+  (request : DefiKernel.Typed.Request Party Asset Domain) (state : DefiKernel.Typed.State Party Asset Domain)
+  (e : DefiKernel.Typed.Evaluated Party Asset Domain) (post : DefiKernel.Typed.ExecutionResult Party Asset Domain) :
+  DefiKernel.Typed.applyEvaluated store ctx request state e = Except.ok post ↔
+    DefiKernel.Typed.Evaluated.Valid store ctx request state e ∧
+      post.capabilities = store ∧
+        ∀ (c : DefiKernel.Typed.Cell Party Asset Domain), post.state.balance c = state.balance c + e.effect c
+DefiKernel.Typed.execute_ok_iff {Party Asset Domain : Type} [DecidableEq Party] [DecidableEq Asset] [DecidableEq Domain]
+  [Fintype Party] [Fintype Asset] [Fintype Domain] (registry : DefiKernel.Typed.Registry Party Asset Domain)
+  (store : DefiKernel.Typed.CapabilityStore Party Asset Domain) (ctx : DefiKernel.Typed.InvocationContext Party Domain)
+  (env : DefiKernel.Typed.Environment Asset Domain) (now : ℕ) (request : DefiKernel.Typed.Request Party Asset Domain)
+  (state : DefiKernel.Typed.State Party Asset Domain) (post : DefiKernel.Typed.ExecutionResult Party Asset Domain) :
+  DefiKernel.Typed.execute registry store ctx env now request state = Except.ok post ↔
+    ∃ template,
+      registry request.operation = some template ∧
+        (request.claimedActor = none ∨ request.claimedActor = some ctx.principal) ∧
+          ctx.domain = template.domain ∧
+            request.parties.length = template.partyArity ∧
+              ∃ args,
+                DefiKernel.Typed.Args.check template.signature request.arguments = Except.ok args ∧
+                  DefiKernel.Typed.hasAuthority store request.capabilityIds ctx request.operation
+                        DefiKernel.Typed.Right.invoke =
+                      true ∧
+                    ∃ e,
+                      template.evaluate
+                            { state := state, env := env, caller := ctx.principal, parties := request.parties,
+                              args := args, now := now } =
+                          Except.ok e ∧
+                        DefiKernel.Typed.Evaluated.Valid store ctx request state e ∧
+                          post.capabilities = store ∧
+                            ∀ (c : DefiKernel.Typed.Cell Party Asset Domain),
+                              post.state.balance c = state.balance c + e.effect c
+DefiKernel.Typed.applyEvaluated_accounting {Party Asset Domain : Type} [DecidableEq Party] [DecidableEq Asset]
+  [DecidableEq Domain] [Fintype Party] [Fintype Asset] [Fintype Domain]
+  (store : DefiKernel.Typed.CapabilityStore Party Asset Domain) (ctx : DefiKernel.Typed.InvocationContext Party Domain)
+  (request : DefiKernel.Typed.Request Party Asset Domain) (state : DefiKernel.Typed.State Party Asset Domain)
+  (e : DefiKernel.Typed.Evaluated Party Asset Domain) (post : DefiKernel.Typed.ExecutionResult Party Asset Domain)
+  (h : DefiKernel.Typed.applyEvaluated store ctx request state e = Except.ok post) (d : Domain) (a : Asset) :
+  DefiKernel.Typed.total post.state d a = DefiKernel.Typed.total state d a + e.supply d a
+DefiKernel.Typed.applyEvaluated_locality {Party Asset Domain : Type} [DecidableEq Party] [DecidableEq Asset]
+  [DecidableEq Domain] [Fintype Party] [Fintype Asset] [Fintype Domain]
+  (store : DefiKernel.Typed.CapabilityStore Party Asset Domain) (ctx : DefiKernel.Typed.InvocationContext Party Domain)
+  (request : DefiKernel.Typed.Request Party Asset Domain) (state : DefiKernel.Typed.State Party Asset Domain)
+  (e : DefiKernel.Typed.Evaluated Party Asset Domain) (post : DefiKernel.Typed.ExecutionResult Party Asset Domain)
+  (h : DefiKernel.Typed.applyEvaluated store ctx request state e = Except.ok post)
+  (c : DefiKernel.Typed.Cell Party Asset Domain) (hc : c ∉ e.writes) : post.state.balance c = state.balance c
+DefiKernel.Typed.applyEvaluated_debit_authority {Party Asset Domain : Type} [DecidableEq Party] [DecidableEq Asset]
+  [DecidableEq Domain] [Fintype Party] [Fintype Asset] [Fintype Domain]
+  (store : DefiKernel.Typed.CapabilityStore Party Asset Domain) (ctx : DefiKernel.Typed.InvocationContext Party Domain)
+  (request : DefiKernel.Typed.Request Party Asset Domain) (state : DefiKernel.Typed.State Party Asset Domain)
+  (e : DefiKernel.Typed.Evaluated Party Asset Domain) (post : DefiKernel.Typed.ExecutionResult Party Asset Domain)
+  (h : DefiKernel.Typed.applyEvaluated store ctx request state e = Except.ok post)
+  (c : DefiKernel.Typed.Cell Party Asset Domain) (hc : post.state.balance c < state.balance c) :
+  DefiKernel.Typed.hasAuthority store request.capabilityIds ctx request.operation (DefiKernel.Typed.Right.debit c) =
+    true
+DefiKernel.Typed.applyEvaluated_supply_authority {Party Asset Domain : Type} [DecidableEq Party] [DecidableEq Asset]
+  [DecidableEq Domain] [Fintype Party] [Fintype Asset] [Fintype Domain]
+  (store : DefiKernel.Typed.CapabilityStore Party Asset Domain) (ctx : DefiKernel.Typed.InvocationContext Party Domain)
+  (request : DefiKernel.Typed.Request Party Asset Domain) (state : DefiKernel.Typed.State Party Asset Domain)
+  (e : DefiKernel.Typed.Evaluated Party Asset Domain) (post : DefiKernel.Typed.ExecutionResult Party Asset Domain)
+  (h : DefiKernel.Typed.applyEvaluated store ctx request state e = Except.ok post) (d : Domain) (a : Asset)
+  (hc : DefiKernel.Typed.total post.state d a ≠ DefiKernel.Typed.total state d a) :
+  DefiKernel.Typed.hasAuthority store request.capabilityIds ctx request.operation
+      (DefiKernel.Typed.Right.changeSupply d a) =
+    true
+DefiKernel.Typed.execute_evaluated {Party Asset Domain : Type} [DecidableEq Party] [DecidableEq Asset]
+  [DecidableEq Domain] [Fintype Party] [Fintype Asset] [Fintype Domain]
+  (registry : DefiKernel.Typed.Registry Party Asset Domain)
+  (store : DefiKernel.Typed.CapabilityStore Party Asset Domain) (ctx : DefiKernel.Typed.InvocationContext Party Domain)
+  (env : DefiKernel.Typed.Environment Asset Domain) (now : ℕ) (request : DefiKernel.Typed.Request Party Asset Domain)
+  (state : DefiKernel.Typed.State Party Asset Domain) (post : DefiKernel.Typed.ExecutionResult Party Asset Domain)
+  (h : DefiKernel.Typed.execute registry store ctx env now request state = Except.ok post) :
+  ∃ template,
+    registry request.operation = some template ∧
+      ∃ args,
+        DefiKernel.Typed.Args.check template.signature request.arguments = Except.ok args ∧
+          ∃ e,
+            template.evaluate
+                  { state := state, env := env, caller := ctx.principal, parties := request.parties, args := args,
+                    now := now } =
+                Except.ok e ∧
+              DefiKernel.Typed.applyEvaluated store ctx request state e = Except.ok post
+DefiKernel.Typed.execute_preserves_capabilities {Party Asset Domain : Type} [DecidableEq Party] [DecidableEq Asset]
+  [DecidableEq Domain] [Fintype Party] [Fintype Asset] [Fintype Domain]
+  (registry : DefiKernel.Typed.Registry Party Asset Domain)
+  (store : DefiKernel.Typed.CapabilityStore Party Asset Domain) (ctx : DefiKernel.Typed.InvocationContext Party Domain)
+  (env : DefiKernel.Typed.Environment Asset Domain) (now : ℕ) (request : DefiKernel.Typed.Request Party Asset Domain)
+  (state : DefiKernel.Typed.State Party Asset Domain) (post : DefiKernel.Typed.ExecutionResult Party Asset Domain)
+  (h : DefiKernel.Typed.execute registry store ctx env now request state = Except.ok post) : post.capabilities = store
+DefiKernel.Typed.execute_nonnegative {Party Asset Domain : Type} [DecidableEq Party] [DecidableEq Asset]
+  [DecidableEq Domain] [Fintype Party] [Fintype Asset] [Fintype Domain]
+  (registry : DefiKernel.Typed.Registry Party Asset Domain)
+  (store : DefiKernel.Typed.CapabilityStore Party Asset Domain) (ctx : DefiKernel.Typed.InvocationContext Party Domain)
+  (env : DefiKernel.Typed.Environment Asset Domain) (now : ℕ) (request : DefiKernel.Typed.Request Party Asset Domain)
+  (state : DefiKernel.Typed.State Party Asset Domain) (post : DefiKernel.Typed.ExecutionResult Party Asset Domain)
+  (h : DefiKernel.Typed.execute registry store ctx env now request state = Except.ok post)
+  (c : DefiKernel.Typed.Cell Party Asset Domain) : 0 ≤ post.state.balance c
+DefiKernel.Typed.execute_invocation_authority {Party Asset Domain : Type} [DecidableEq Party] [DecidableEq Asset]
+  [DecidableEq Domain] [Fintype Party] [Fintype Asset] [Fintype Domain]
+  (registry : DefiKernel.Typed.Registry Party Asset Domain)
+  (store : DefiKernel.Typed.CapabilityStore Party Asset Domain) (ctx : DefiKernel.Typed.InvocationContext Party Domain)
+  (env : DefiKernel.Typed.Environment Asset Domain) (now : ℕ) (request : DefiKernel.Typed.Request Party Asset Domain)
+  (state : DefiKernel.Typed.State Party Asset Domain) (post : DefiKernel.Typed.ExecutionResult Party Asset Domain)
+  (h : DefiKernel.Typed.execute registry store ctx env now request state = Except.ok post) :
+  ∃ id ∈ request.capabilityIds,
+    ∃ cap,
+      store.lookup id = some cap ∧
+        cap.live = true ∧
+          cap.holder = ctx.principal ∧
+            cap.domain = ctx.domain ∧ cap.operation = request.operation ∧ cap.right = DefiKernel.Typed.Right.invoke
+DefiKernel.Typed.execute_debit_authority {Party Asset Domain : Type} [DecidableEq Party] [DecidableEq Asset]
+  [DecidableEq Domain] [Fintype Party] [Fintype Asset] [Fintype Domain]
+  (registry : DefiKernel.Typed.Registry Party Asset Domain)
+  (store : DefiKernel.Typed.CapabilityStore Party Asset Domain) (ctx : DefiKernel.Typed.InvocationContext Party Domain)
+  (env : DefiKernel.Typed.Environment Asset Domain) (now : ℕ) (request : DefiKernel.Typed.Request Party Asset Domain)
+  (state : DefiKernel.Typed.State Party Asset Domain) (post : DefiKernel.Typed.ExecutionResult Party Asset Domain)
+  (h : DefiKernel.Typed.execute registry store ctx env now request state = Except.ok post)
+  (c : DefiKernel.Typed.Cell Party Asset Domain) (hc : post.state.balance c < state.balance c) :
+  ∃ id ∈ request.capabilityIds,
+    ∃ cap,
+      store.lookup id = some cap ∧
+        cap.live = true ∧
+          cap.holder = ctx.principal ∧
+            cap.domain = ctx.domain ∧ cap.operation = request.operation ∧ cap.right = DefiKernel.Typed.Right.debit c
+DefiKernel.Typed.execute_supply_authority {Party Asset Domain : Type} [DecidableEq Party] [DecidableEq Asset]
+  [DecidableEq Domain] [Fintype Party] [Fintype Asset] [Fintype Domain]
+  (registry : DefiKernel.Typed.Registry Party Asset Domain)
+  (store : DefiKernel.Typed.CapabilityStore Party Asset Domain) (ctx : DefiKernel.Typed.InvocationContext Party Domain)
+  (env : DefiKernel.Typed.Environment Asset Domain) (now : ℕ) (request : DefiKernel.Typed.Request Party Asset Domain)
+  (state : DefiKernel.Typed.State Party Asset Domain) (post : DefiKernel.Typed.ExecutionResult Party Asset Domain)
+  (h : DefiKernel.Typed.execute registry store ctx env now request state = Except.ok post) (d : Domain) (a : Asset)
+  (hc : DefiKernel.Typed.total post.state d a ≠ DefiKernel.Typed.total state d a) :
+  ∃ id ∈ request.capabilityIds,
+    ∃ cap,
+      store.lookup id = some cap ∧
+        cap.live = true ∧
+          cap.holder = ctx.principal ∧
+            cap.domain = ctx.domain ∧
+              cap.operation = request.operation ∧ cap.right = DefiKernel.Typed.Right.changeSupply d a
+DefiKernel.Typed.execute_accounting_and_locality {Party Asset Domain : Type} [DecidableEq Party] [DecidableEq Asset]
+  [DecidableEq Domain] [Fintype Party] [Fintype Asset] [Fintype Domain]
+  (registry : DefiKernel.Typed.Registry Party Asset Domain)
+  (store : DefiKernel.Typed.CapabilityStore Party Asset Domain) (ctx : DefiKernel.Typed.InvocationContext Party Domain)
+  (env : DefiKernel.Typed.Environment Asset Domain) (now : ℕ) (request : DefiKernel.Typed.Request Party Asset Domain)
+  (state : DefiKernel.Typed.State Party Asset Domain) (post : DefiKernel.Typed.ExecutionResult Party Asset Domain)
+  (h : DefiKernel.Typed.execute registry store ctx env now request state = Except.ok post) :
+  ∃ template,
+    registry request.operation = some template ∧
+      ∃ args,
+        DefiKernel.Typed.Args.check template.signature request.arguments = Except.ok args ∧
+          ∃ e,
+            template.evaluate
+                  { state := state, env := env, caller := ctx.principal, parties := request.parties, args := args,
+                    now := now } =
+                Except.ok e ∧
+              (∀ (d : Domain) (a : Asset),
+                  DefiKernel.Typed.total post.state d a = DefiKernel.Typed.total state d a + e.supply d a) ∧
+                ∀ c ∉ e.writes, post.state.balance c = state.balance c
+DefiKernel.Typed.execute_reads_and_domain {Party Asset Domain : Type} [DecidableEq Party] [DecidableEq Asset]
+  [DecidableEq Domain] [Fintype Party] [Fintype Asset] [Fintype Domain]
+  (registry : DefiKernel.Typed.Registry Party Asset Domain)
+  (store : DefiKernel.Typed.CapabilityStore Party Asset Domain) (ctx : DefiKernel.Typed.InvocationContext Party Domain)
+  (env : DefiKernel.Typed.Environment Asset Domain) (now : ℕ) (request : DefiKernel.Typed.Request Party Asset Domain)
+  (state : DefiKernel.Typed.State Party Asset Domain) (post : DefiKernel.Typed.ExecutionResult Party Asset Domain)
+  (h : DefiKernel.Typed.execute registry store ctx env now request state = Except.ok post) :
+  ∃ template,
+    registry request.operation = some template ∧
+      ctx.domain = template.domain ∧
+        ∃ args,
+          DefiKernel.Typed.Args.check template.signature request.arguments = Except.ok args ∧
+            ∃ e,
+              template.evaluate
+                    { state := state, env := env, caller := ctx.principal, parties := request.parties, args := args,
+                      now := now } =
+                  Except.ok e ∧
+                (∀ c ∈ e.requiredStateReads, c ∈ e.declaredStateReads ∧ c.1 = ctx.domain) ∧
+                  (∀ k ∈ e.requiredEnvReads, k ∈ e.declaredEnvReads) ∧
+                    ∀ (c : DefiKernel.Typed.Cell Party Asset Domain),
+                      post.state.balance c ≠ state.balance c → c.1 = ctx.domain
+DefiKernel.Typed.Evaluated.effect_cons {Party Asset Domain : Type} [DecidableEq Party] [DecidableEq Asset]
+  [DecidableEq Domain] (e : DefiKernel.Typed.Evaluated Party Asset Domain)
+  (entry : DefiKernel.Typed.Cell Party Asset Domain × ℚ) (c : DefiKernel.Typed.Cell Party Asset Domain) :
+  { guard := e.guard, deltas := entry :: e.deltas, supplies := e.supplies, requiredStateReads := e.requiredStateReads,
+          requiredEnvReads := e.requiredEnvReads, declaredStateReads := e.declaredStateReads,
+          declaredEnvReads := e.declaredEnvReads, writes := e.writes }.effect
+      c =
+    (if entry.1 = c then entry.2 else 0) + e.effect c
+DefiKernel.Typed.Evaluated.supply_cons {Party Asset Domain : Type} [DecidableEq Asset] [DecidableEq Domain]
+  (e : DefiKernel.Typed.Evaluated Party Asset Domain) (entry : (Domain × Asset) × ℚ) (d : Domain) (a : Asset) :
+  { guard := e.guard, deltas := e.deltas, supplies := entry :: e.supplies, requiredStateReads := e.requiredStateReads,
+          requiredEnvReads := e.requiredEnvReads, declaredStateReads := e.declaredStateReads,
+          declaredEnvReads := e.declaredEnvReads, writes := e.writes }.supply
+      d a =
+    (if entry.1 = (d, a) then entry.2 else 0) + e.supply d a
+DefiKernel.Typed.Examples.allCells_complete
+  (cell :
+    DefiKernel.Typed.Cell DefiKernel.Typed.Examples.Party DefiKernel.Typed.Examples.Asset
+      DefiKernel.Typed.Examples.Domain) :
+  cell ∈ DefiKernel.Typed.Examples.allCells
+DefiKernel.Typed.Examples.allCells_nodup : DefiKernel.Typed.Examples.allCells.Nodup
+DefiKernel.Typed.Acceptance.transfer_executed :
+  DefiKernel.Typed.Examples.observe (DefiKernel.Typed.Examples.run (DefiKernel.Typed.Examples.transferRequest 3)) =
+    Except.ok DefiKernel.Typed.Acceptance.expectedTransfer
+DefiKernel.Typed.Acceptance.deposit_executed :
+  DefiKernel.Typed.Examples.observe (DefiKernel.Typed.Examples.run (DefiKernel.Typed.Examples.depositRequest 4)) =
+    Except.ok DefiKernel.Typed.Acceptance.expectedDeposit
+DefiKernel.Typed.Acceptance.withdraw_executed :
+  DefiKernel.Typed.Examples.observe (DefiKernel.Typed.Examples.run (DefiKernel.Typed.Examples.withdrawRequest 2)) =
+    Except.ok DefiKernel.Typed.Acceptance.expectedWithdraw
+DefiKernel.Typed.Acceptance.borrow_executed :
+  DefiKernel.Typed.Examples.observe (DefiKernel.Typed.Examples.run (DefiKernel.Typed.Examples.borrowRequest 3)) =
+    Except.ok DefiKernel.Typed.Acceptance.expectedBorrow
+DefiKernel.Typed.Acceptance.revoked_request_refused :
+  DefiKernel.Typed.Examples.observe
+      (DefiKernel.Typed.Examples.runRevoked { value := 0 } (DefiKernel.Typed.Examples.transferRequest 3)) =
+    Except.error (DefiKernel.Typed.Examples.ReferenceFailure.execution DefiKernel.Typed.Refusal.unauthorizedInvoke)
+DefiKernel.Typed.Acceptance.stale_oracle_refused :
+  DefiKernel.Typed.Examples.observe
+      (DefiKernel.Typed.Examples.runOracle (DefiKernel.Typed.Examples.oracle 7 2 94) 100
+        (DefiKernel.Typed.Examples.borrowRequest 3)) =
+    Except.error (DefiKernel.Typed.Examples.ReferenceFailure.execution DefiKernel.Typed.Refusal.guard)
+DefiKernel.Typed.Acceptance.issued_used_revoked_refused :
+  DefiKernel.Typed.Acceptance.transferLifecycle =
+    Except.ok (DefiKernel.Typed.Acceptance.expectedTransfer, Except.error DefiKernel.Typed.Refusal.unauthorizedInvoke)
+DefiKernel.Typed.Acceptance.reference_invocation_authority (store : DefiKernel.Typed.Examples.Store)
+  (ctx : DefiKernel.Typed.InvocationContext DefiKernel.Typed.Examples.Party DefiKernel.Typed.Examples.Domain)
+  (env : DefiKernel.Typed.Environment DefiKernel.Typed.Examples.Asset DefiKernel.Typed.Examples.Domain) (now : ℕ)
+  (request : DefiKernel.Typed.Examples.Call) (state : DefiKernel.Typed.Examples.Ledger)
+  (post : DefiKernel.Typed.Examples.Result)
+  (h : DefiKernel.Typed.execute DefiKernel.Typed.Examples.registry store ctx env now request state = Except.ok post) :
+  ∃ id ∈ request.capabilityIds,
+    ∃ cap,
+      DefiKernel.Typed.CapabilityStore.lookup store id = some cap ∧
+        cap.live = true ∧
+          cap.holder = ctx.principal ∧
+            cap.domain = ctx.domain ∧ cap.operation = request.operation ∧ cap.right = DefiKernel.Typed.Right.invoke
+DefiKernel.Typed.Acceptance.reference_capabilities_preserved (store : DefiKernel.Typed.Examples.Store)
+  (ctx : DefiKernel.Typed.InvocationContext DefiKernel.Typed.Examples.Party DefiKernel.Typed.Examples.Domain)
+  (env : DefiKernel.Typed.Environment DefiKernel.Typed.Examples.Asset DefiKernel.Typed.Examples.Domain) (now : ℕ)
+  (request : DefiKernel.Typed.Examples.Call) (state : DefiKernel.Typed.Examples.Ledger)
+  (post : DefiKernel.Typed.Examples.Result)
+  (h : DefiKernel.Typed.execute DefiKernel.Typed.Examples.registry store ctx env now request state = Except.ok post) :
+  post.capabilities = store
+DefiKernel.Typed.ExprTests.price_conversion_exact :
+  DefiKernel.Typed.Expr.eval DefiKernel.Typed.ExprTests.context DefiKernel.Typed.ExprTests.priced = Except.ok 6
+DefiKernel.Typed.ExprTests.inverse_price_exact :
+  DefiKernel.Typed.Expr.eval DefiKernel.Typed.ExprTests.context DefiKernel.Typed.ExprTests.shares = Except.ok 5
+DefiKernel.Typed.ExprTests.zero_division_refused :
+  DefiKernel.Typed.Expr.eval DefiKernel.Typed.ExprTests.context
+      (DefiKernel.Typed.Expr.binary
+        (DefiKernel.Typed.BinaryOp.divide
+          (DefiKernel.Typed.NumericUnit.amount DefiKernel.Typed.ExprTests.TestAsset.usd))
+        (DefiKernel.Typed.Expr.lit 3) (DefiKernel.Typed.Expr.lit 0)) =
+    Except.error DefiKernel.Typed.EvalFailure.divisionByZero
+DefiKernel.Typed.ExprTests.unrelated_balance_preserved :
+  DefiKernel.Typed.Expr.eval DefiKernel.Typed.ExprTests.context DefiKernel.Typed.ExprTests.ledgerRead =
+    DefiKernel.Typed.Expr.eval DefiKernel.Typed.ExprTests.changedContext DefiKernel.Typed.ExprTests.ledgerRead
+DefiKernel.Typed.authority_checks_pass : DefiKernel.Typed.AuthorityTests.checks.all Prod.snd = true

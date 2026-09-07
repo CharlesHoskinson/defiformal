@@ -100,29 +100,51 @@ Exact final commands, file hashes and actual corpus reproduction results are in
 
 ## Sprint 4: typed transition IR and capability authority
 
-User authorized an autonomous loop to complete this sprint after reviewing the
-full agenda. Base `77462b61f5f537eb29b2cf162ead6567e7151ace`; continue on the clean
-`semantic-kernel-pivot` branch using GPT-6 and native Grok/Fable review, no Foreman.
-The stock harness goal is active with no user-specified token budget. Completion
-requires implementation, Lean proofs/build/audit, discriminating regressions,
-independent review, saved evidence, pushed commits and verified remote head.
+Source candidate `76c99e44689fcdd3422d998f4b82cf2f8e794c57`, based on
+`77462b61f5f537eb29b2cf162ead6567e7151ace`. GPT-6 implementation used the stock
+Codex harness; no Foreman. The user authorized the autonomous completion loop.
 
-Fresh baseline passed: `cd lean && lake build`, exit 0, 994 jobs, with existing
-linter warnings. Evidence: `review/semantic-kernel/sprint4/baseline.json`.
-Design and implementation plan are being recorded before new Lean code.
+| Deliverable | Current result |
+| --- | --- |
+| Reusable typed identities and closed dimensioned expression AST | Implemented; exact rational arithmetic, checked arguments/observations, explicit division refusals |
+| Registered execution and capability lifecycle | Implemented; authenticated context, exact scoped rights, fresh IDs/tombstones, issue/use/revoke/retry |
+| Reference financial libraries | Transfer, fixed-rate deposit/withdrawal and oracle borrow; complete32-cell posts and independent price/freshness/collateral checks |
+| Named proof inventory | 52 named theorems across8 modules; scoped generic and concrete claims recorded separately |
+| Full build and runtime | 1005-job full build;189/189 typed comparisons; legacy33+43 comparisons pass |
+| Imported axiom audit | Typed524 theorem+978 supplemental declarations; legacy278+234; forbidden0 |
+| Discriminating evidence | 24/24 real source mutants detected,189 comparisons each;3 positive controls preserved;17 real runner CLI controls;99 existing axiom-audit assertions |
+| Compiler typing refusals | One executed positive and3 separately compiled negative fixtures; expected Type mismatch, not financial counterexamples |
+| Native review | All five scoped reviews accepted with limitations by native Grok/Fable; no blocking findings |
+| Delivery | Source and all acceptance evidence complete; push and remote verification follow the evidence commit |
+
+The exact [design](../superpowers/specs/2026-09-06-typed-kernel-design.md),
+[implementation checklist](../superpowers/plans/2026-09-06-typed-kernel.md),
+[proof inventory](../../review/semantic-kernel/sprint4/proof-inventory.json),
+[build evidence](../../review/semantic-kernel/sprint4/build-verification.json), and
+[mutation outcomes](../../review/semantic-kernel/sprint4/mutations/summary.json)
+and [native review adjudication](../../review/semantic-kernel/sprint4/ADJUDICATION.md)
+are saved. All original tracked proof/corpus files remain unchanged. The only
+modified preexisting files are the kernel import root and this progress ledger.
+
+Trust boundaries remain explicit: registry/admin/store/context authenticity and
+observation truth are assumed. Debit authority is an administrator's exact-cell
+grant to the invoker, with no separate owner-consent condition. Effects are net
+rational changes, not ordered debits or consumable allowances. Footprints and
+domain conditions characterize successful execution; refused evaluation can have
+already read inputs. General success theorems do not prove a full refusal taxonomy.
+Composition, claims lifecycle, replay protection, machine arithmetic and deployed
+protocol fidelity remain future work. All references are development examples.
 
 ## Full migration backlog
 
 1. Finish claim-site reconciliation across the old paper and working ledgers;
    preserve original statements and attach scoped corrections. Audit the
    instance bridge behind structural/exhaustive claims.
-2. Generalize the pilot's finite identity fixtures and complete dimensioned
-   expression typing. Extend trusted operation contracts to capability issuance,
-   revocation and authenticated selection. The original supplied policy accepts
-   vault drain, unbacked issuance and debt erasure; the new wrapper rejects
-   those proposals under the selected reference contracts. Complete the typed IR
-   and operational semantics, including distinct composition operators,
-   observations/refusals, assumptions, and certificates.
+2. Extend the typed IR with distinct operational composition operators, claims
+   lifecycle, assumptions and certificates. Sprint4 implements reusable finite
+   identities, dimensioned expression typing, trusted registry selection and
+   capability issuance/use/revocation. Preserve the original negative results
+   and current wrapper/typed reference semantics as these operators grow.
 3. Complete deployment/source identity beyond the saved 72-row/75-candidate
    provisional reconstruction. Resolve 29 facet differences and the separate
    Liquity V1 liquidation source challenge; recover remaining bundled products
@@ -130,14 +152,15 @@ Design and implementation plan are being recorded before new Lean code.
 4. Build a real serialized certificate path and source-bound fidelity checks.
    Extend automatic imported-module axiom coverage to explicit future package
    manifests and replace format-sensitive extraction as the language grows.
-   Current mutations cover original checker branches and the new wrapper's
-   contract/borrow checks; general effect application and sequence mutations
-   remain open. Audit coverage is bound to the actual import closure.
+   Current mutations cover original checker branches, wrapper contract/borrow
+   checks and24 typed authority/registry/footprint/accounting/oracle mutations.
+   Broader effect application and composition/sequence mutations remain open. Audit coverage is bound to the actual import closure.
    Review follow-ups include explicit inductive audit roots, a current-module
    exclusion fixture, script-output hygiene across multiple checkouts, and
    mutations that weaken individual actor/effect/supply comparisons.
-5. Extend the initial proofs to operational composition, authority,
-   noninterference, assume-guarantee discharge, claims and conservative extension.
+5. Extend the current authority/accounting/locality proofs to operational
+   composition, operation-wide noninterference, assume-guarantee discharge,
+   claims and conservative extension.
 6. Port adversarial financial libraries with pinned contract implementations,
    differential execution, mutation tests and selected refinement proofs.
    Extend the reference operations with repayment and trusted-effect locality
