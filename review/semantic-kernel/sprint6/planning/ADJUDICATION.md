@@ -43,8 +43,25 @@ strict OpenSpec validation. B1 is closed, with no new blocking finding. This is
 planning/source review, not a Lean build or execution of the future semantics.
 
 Fable must still audit this same final candidate after provider access is restored.
-Its unavailable R1 call is not a verdict on R2, and no retry is claimed. No substitute
-provider or prior Sprint 5 approval can discharge this gate. `gate.json` records
+Its unavailable R1 call is not a verdict on R2. The subsequent retries below also
+produced no verdict. No substitute provider or prior Sprint 5 approval can discharge this gate. `gate.json` records
 implementation as unauthorized by the unsatisfied conditional gate and not started.
 `RESUME.md` gives the exact native review invocation. Both required passing verdicts
 are necessary before any new Parallel implementation.
+
+
+## Fable 5.1 retry after user reported readiness
+
+Both native retries examined the unchanged R2 bundle. The requested model was
+first `claude-fable-5-1`, then the exact locally configured selector
+`claude-fable-5-1[1m]`. Both returned exit 1 with “out of usage credits”, empty
+reported model usage and no audit verdict. See `r2-fable.*`, `r2-fable-1m.*` and
+`fable51-diagnostic.json`. Claude Code 2.1.261 reports logged in through the
+first-party claude.ai route with a Max subscription; no identifying account data
+or credentials are stored in the diagnostic. That login status does not establish
+available credits.
+
+The user supplied changed-availability information, which justified retrying;
+the local model selector justified the second attempt. Further identical retries
+are deferred until provider availability changes. GPT-6's R2 acceptance remains
+valid. Implementation is still gated and no Lean/kernel script bytes changed.

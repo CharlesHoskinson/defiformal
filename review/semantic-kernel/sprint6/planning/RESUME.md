@@ -4,7 +4,8 @@ Planning candidate: `c0f6f0bcc19ab30e0146a2e1e8ff209f8ce8c1a7`.
 Authoritative candidate files/hash manifest: `r2-candidate.json`.
 Review input: `r2-bundle.md`, SHA-256
 `73f4ff8c70b85e8468e33f4c63d784b37c8543c1ed068341ed120607d19942fa`.
-GPT-6: ACCEPT in `r2-gpt6.md`. Fable: no verdict; provider credits exhausted on R1.
+GPT-6: ACCEPT in `r2-gpt6.md`. Fable: no verdict; provider credits exhausted on R1
+and on both R2 retries (`claude-fable-5-1` and configured `claude-fable-5-1[1m]`).
 No new implementation has begun. All 48 execution tasks are saved; only planning
 freeze/validation task 1.1 is checked. Source and existing proof/corpus bytes are
 unchanged. The source-context manifest is checked against actual Git objects.
@@ -13,7 +14,7 @@ After Fable credits/access are restored, use its native CLI through the existing
 stock-harness review driver from `/home/charl/defiformal`:
 
 ```sh
-python3 review/semantic-kernel/sprint4/native-review.py fable review/semantic-kernel/sprint6/planning/r2-bundle.md review/semantic-kernel/sprint6/planning/r2-fable.json
+python3 review/semantic-kernel/sprint4/native-review.py fable review/semantic-kernel/sprint6/planning/r2-bundle.md review/semantic-kernel/sprint6/planning/r2-fable-retry2.json
 ```
 
 Use a new attempt basename if an output already exists; preserve failures. Record
