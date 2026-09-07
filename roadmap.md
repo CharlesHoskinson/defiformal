@@ -217,7 +217,7 @@ verified branch push. Do not use Foreman. Preserve prior proofs, negative result
 and corpus source identities. Keep proofs, bounded execution, measurements,
 refutations, and unchecked assumptions distinct.
 
-Reviewer policy update (2026-09-07): the user replaced Fable with native Opus for
-new reviews. Historical Fable verdicts retain their original identities. Future
-OpenSpec gates use nonauthor GPT-6 plus Opus; implementation/evidence gates use
-Grok plus Opus. See [working instructions](AGENTS.md).
+Current reviewer policy (2026-09-07): the user restored native Fable5.1 at medium
+effort. OpenSpec gates use nonauthor GPT-6 plus Fable; implementation/evidence
+gates use Grok plus Fable. Completed Opus and historical Fable reports retain
+their original model identities. See [working instructions](AGENTS.md).

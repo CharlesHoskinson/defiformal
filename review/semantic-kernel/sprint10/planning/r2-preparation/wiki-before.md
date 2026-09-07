@@ -17,7 +17,7 @@ Sprint9 is accepted and delivered. Its authoritative identities are:
 [Archive delivery](../review/semantic-kernel/sprint9/archive-delivery.json) and
 [final acceptance](../review/semantic-kernel/sprint9/acceptance/final-acceptance.json)
 retain exact review and delivery identities. The
-[M2 dependency/baseline binding](../review/semantic-kernel/sprint10/planning/r2-preparation/dependency-baseline.json)
+[M2 dependency/baseline binding](../review/semantic-kernel/sprint10/planning/official-preparation/dependency-baseline.json)
 checks relevant source equality through delivery and preserves original execution
 identities:16 Lean commands,14 Metatheory detections and65 controls at eec499d;
 13 historical suites at c880acf with scoped dependency equivalence. These are
@@ -95,13 +95,6 @@ left refusal, then peer success; F20 also skips a failed left suffix before that
 peer. Expected4/4/2 refusal retention and later3/3/4 peer state, exact stores,
 histories, local indices and actual successful receipt counts are mandatory.
 
-Production balanceSum and receiptDelta use direct executable Finset.sum.
-Noncomputable Finset.toList cannot be used as runtime enumeration. M01 instead
-changes the aggregation to a commutative max fold, giving6 instead of10 for F01
-and preserving empty0; the pinned library probe records10/6/0/0 without claiming
-new Interface mutation execution. F07 uses explicit `.step (.invoke op102)`
-leaves.
-
 All14 planned mutants must compile, flip their designated independent comparison
 and preserve their specified sibling. Two schema-level global positives and the
 per-mutant sibling matrix remain distinct; neither may silently stand in for the
@@ -113,7 +106,7 @@ private/generated names and generic/instance/counterexample distinctions.
 
 ## Remaining gate and roadmap
 
-The [author preparation](../review/semantic-kernel/sprint10/planning/r2-preparation/READINESS.md)
+The [author preparation](../review/semantic-kernel/sprint10/planning/official-preparation/READINESS.md)
 will support an exact committed planning bundle. It does not replace independent
 planning review, implementation evidence, native source/evidence acceptance or
 verified delivery. New runtime definitions precede `-- BEGIN PROOFS`; Lean checks
