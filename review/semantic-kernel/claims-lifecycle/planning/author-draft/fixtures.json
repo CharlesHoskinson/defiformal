@@ -1,0 +1,305 @@
+{
+  "status": "planned_not_executed",
+  "count": 24,
+  "universe": {
+    "parties": [
+      "alice",
+      "bob",
+      "carol",
+      "admin"
+    ],
+    "assets": [
+      "usd",
+      "eur"
+    ],
+    "domains": [
+      "home",
+      "away"
+    ]
+  },
+  "full_state_convention": "Every oracle enumerates all16 cells. Base homeUSD alice0 bob20 carol10 admin0; homeEUR alice8 bob9 carol0 admin0; awayEUR carol11; every other cell0. Fields not explicitly changed remain byte/value exact. Each fixture records the full capability list, claim list, lifecycle clock, actual command/event/index/pre/post/receipt/output sequence and exact failure including tentative diagnostics. Required malformed-source siblings are separate independent runs, not continuations after sticky failure. Fixtures must construct valid registry/catalog/footprints and actual capability permission for wrong-shape inner successes. Broad permission is a test precondition, never lifecycle ownership. F20 compares an independently expected value4 against the actual OutputPort balance snapshot; outputs are not arbitrary literal-return functions.",
+  "fixtures": [
+    {
+      "id": "F01",
+      "name": "funded creation",
+      "initial": "empty claims; home USD alice0,bob20,carol10",
+      "commands": "alice creates loan10 from bob at time1 due10",
+      "expected": "alice10,bob10,carol10; id0 active face10/rem10/paid0/waived0 rev0 created1 due10",
+      "scenarios": [
+        "S01",
+        "P01"
+      ],
+      "status": "planned_not_executed"
+    },
+    {
+      "id": "F02",
+      "name": "partial repayment",
+      "initial": "F01 success",
+      "commands": "alice repays4 at time2 revision0",
+      "expected": "alice6,bob14; id0 rem6/paid4/waived0 active rev1",
+      "scenarios": [
+        "P03"
+      ],
+      "status": "planned_not_executed"
+    },
+    {
+      "id": "F03",
+      "name": "full repayment",
+      "initial": "F02 success",
+      "commands": "alice repays6 at time3 revision1",
+      "expected": "alice0,bob20; id0 rem0/paid10/waived0 discharged paid rev2",
+      "scenarios": [
+        "P03"
+      ],
+      "status": "planned_not_executed"
+    },
+    {
+      "id": "F04",
+      "name": "transfer and current creditor",
+      "initial": "F01 success",
+      "commands": "bob transfers id0 to carol at2; alice repays4 at3 with rev1",
+      "expected": "after transfer all balances unchanged rev1 creditor carol; then alice6,bob10,carol14 rem6 paid4 rev2",
+      "scenarios": [
+        "L03",
+        "P04"
+      ],
+      "status": "planned_not_executed"
+    },
+    {
+      "id": "F05",
+      "name": "due-only amendment",
+      "initial": "F01 success",
+      "commands": "bob extends due10 to20 at time2 revision0",
+      "expected": "all balances/amounts unchanged; due20 rev1 active; extension10 refuses invalidDue",
+      "scenarios": [
+        "L04"
+      ],
+      "status": "planned_not_executed"
+    },
+    {
+      "id": "F06",
+      "name": "explicit waiver",
+      "initial": "F02 success",
+      "commands": "bob discharges at time3 revision1",
+      "expected": "alice6,bob14; rem0 paid4 waived6 terminal forgiven rev2",
+      "scenarios": [
+        "L06",
+        "L07"
+      ],
+      "status": "planned_not_executed"
+    },
+    {
+      "id": "F07",
+      "name": "default due boundary",
+      "initial": "F01 success in two independent cursors",
+      "commands": "bob defaults at10 versus11",
+      "expected": "time10 refuses notDue; time11 defaulted rem10 paid0 waived0 rev1 defaultAt11; identical cash",
+      "scenarios": [
+        "L08"
+      ],
+      "status": "planned_not_executed"
+    },
+    {
+      "id": "F08",
+      "name": "late default repayment",
+      "initial": "F07 defaulted success",
+      "commands": "alice repays4 at12 rev1 then6 at13 rev2",
+      "expected": "first alice6,bob14 rem6 paid4 defaulted rev2; then alice0,bob20 paid10 terminal paid rev3; defaultAt11 both",
+      "scenarios": [
+        "L09"
+      ],
+      "status": "planned_not_executed"
+    },
+    {
+      "id": "F09",
+      "name": "wrong debtor actor",
+      "initial": "F01 success; carol has valid inner invoke and debit(home,alice,usd) grants; inner template pays alice\u2192bob independent of caller",
+      "commands": "carol attempts id0 repayment4 revision0 at2",
+      "expected": "unauthorizedActor before inner call; all public fields retained",
+      "scenarios": [
+        "L02",
+        "E02"
+      ],
+      "status": "planned_not_executed"
+    },
+    {
+      "id": "F10",
+      "name": "unauthorized creditor actions",
+      "initial": "F01 success; admin broad cash grants",
+      "commands": "admin independently transfer/extend/default/discharge at11 revision0",
+      "expected": "unauthorizedActor for each command; no cash/row change",
+      "scenarios": [
+        "L02"
+      ],
+      "status": "planned_not_executed"
+    },
+    {
+      "id": "F11",
+      "name": "amount boundaries and fractions",
+      "initial": "F01 success in independent cursors; the overpayment11 cursor has a validated imported world with aliceUSD12 so the kernel can pay11",
+      "commands": "repay0, -1, 11; companion repay1/2",
+      "expected": "nonPositive,nonPositive,overpayment refusals; fraction success alice19/2,bob21/2 rem19/2 paid1/2 rev1",
+      "scenarios": [
+        "P05"
+      ],
+      "status": "planned_not_executed"
+    },
+    {
+      "id": "F12",
+      "name": "missing payment",
+      "initial": "F01 success; actual authorized zero-effect invocation",
+      "commands": "repay4 using that invocation",
+      "expected": "inner success then paymentMismatch; rem10 paid0 and alice10,bob10 public; actual zero receipt only diagnostic",
+      "scenarios": [
+        "P02",
+        "P09"
+      ],
+      "status": "planned_not_executed"
+    },
+    {
+      "id": "F13",
+      "name": "wrong cash source",
+      "initial": "F01 success; alice is actually authorized to debit carol USD",
+      "commands": "repay4 using carol\u2192bob transfer4",
+      "expected": "inner cash candidate alice10,bob14,carol6; paymentMismatch public F01 unchanged",
+      "scenarios": [
+        "P06"
+      ],
+      "status": "planned_not_executed"
+    },
+    {
+      "id": "F14",
+      "name": "wrong destination",
+      "initial": "F01 success; valid alice\u2192carol USD invocation",
+      "commands": "repay4 to carol while creditor bob",
+      "expected": "candidate alice6,bob10,carol14; paymentMismatch retains F01 public",
+      "scenarios": [
+        "P06"
+      ],
+      "status": "planned_not_executed"
+    },
+    {
+      "id": "F15",
+      "name": "wrong asset",
+      "initial": "F01 success; home EUR alice8,bob9 with valid debit grant",
+      "commands": "repay4 via EUR alice\u2192bob",
+      "expected": "candidate EUR4/13; paymentMismatch; USD debt and public EUR8/9 unchanged",
+      "scenarios": [
+        "P06"
+      ],
+      "status": "planned_not_executed"
+    },
+    {
+      "id": "F16",
+      "name": "supply and extra effects",
+      "initial": "F01 success; inner authority includes exact changeSupply and donor debit",
+      "commands": "repay4 with extra mint1 to carol; independent sibling adds balanced EUR alice\u2192bob1",
+      "expected": "both inner success, then paymentMismatch; distinguish nonzero supply from zero-supply extra-cell movement",
+      "scenarios": [
+        "P07"
+      ],
+      "status": "planned_not_executed"
+    },
+    {
+      "id": "F17",
+      "name": "underlying failures",
+      "initial": "F01 success with alice cash independently set2 in valid imported world",
+      "commands": "repay4 with correct transfer; companion omit debit grant on funded world",
+      "expected": "payment(kernel insufficientFunds) versus payment(kernel unauthorizedDebit); no liability reduction",
+      "scenarios": [
+        "P08"
+      ],
+      "status": "planned_not_executed"
+    },
+    {
+      "id": "F18",
+      "name": "tombstone permanence",
+      "initial": "F03 paid success; independent F06 forgiven success",
+      "commands": "repay/default/transfer/discharge terminal id0; then fresh loan5 in a fresh nonfailed cursor from each state",
+      "expected": "terminal refusals; new loan appends id1, keeps id0 exact; never reuses0",
+      "scenarios": [
+        "S03",
+        "S04"
+      ],
+      "status": "planned_not_executed"
+    },
+    {
+      "id": "F19",
+      "name": "legacy conservative embedding",
+      "initial": "arbitrary nonempty Composition prefix; empty claims; lifecycle clock0",
+      "commands": "issue/revoke/invoke legacy commands, including decreasing boundary times and an already-failed cursor",
+      "expected": "exact old Composition cursor projection; empty claims and clock0; no new time refusal",
+      "scenarios": [
+        "T07",
+        "L11"
+      ],
+      "status": "planned_not_executed"
+    },
+    {
+      "id": "F20",
+      "name": "absolute history and failure suffix",
+      "initial": "F01 variant with home adminUSD4, a declared output port snapshotting that unchanged cell at loan index0; configure payment input using its actual output",
+      "commands": "metadata transfer at index1 then repay at index2 from output index0; wrong-shape repayment followed by another valid debtor repayment4",
+      "expected": "actual index2/history resolves; failed variant retains successful prefix/index and skips the valid repayment; no outputs published from diagnostic",
+      "scenarios": [
+        "T01",
+        "T02",
+        "T03"
+      ],
+      "status": "planned_not_executed"
+    },
+    {
+      "id": "F21",
+      "name": "stale version and clock precedence",
+      "initial": "F04 transferred state rev1, time2",
+      "commands": "repay expectedRevision0 with wrong actor at3; authorized alice stale-revision sibling; independent unknownid command at1",
+      "expected": "revision mismatch first; time regression before lookup; public state unchanged",
+      "scenarios": [
+        "L10",
+        "L11"
+      ],
+      "status": "planned_not_executed"
+    },
+    {
+      "id": "F22",
+      "name": "default retention through transfer and forgiveness",
+      "initial": "F07 defaulted success",
+      "commands": "bob transfer to carol at12; carol discharge at13; independent extendDue at12",
+      "expected": "defaultAt11 retained terminal forgiven with waived10 paid0 and cash unchanged; extension refuses wrongStatus",
+      "scenarios": [
+        "L03",
+        "L05",
+        "L06"
+      ],
+      "status": "planned_not_executed"
+    },
+    {
+      "id": "F23",
+      "name": "two IDs and imported invalidity",
+      "initial": "F01 id0 plus funded id1 of5 from carol to alice; initial two valid rows",
+      "commands": "repay id0 amount4; independent malformed imported row1 with both negative remaining and bad decomposition",
+      "expected": "id1 exact; initial first-invalid row1/nonnegative reason; failed start runs no command",
+      "scenarios": [
+        "S02",
+        "S05",
+        "T04",
+        "T05",
+        "T06"
+      ],
+      "status": "planned_not_executed"
+    },
+    {
+      "id": "F24",
+      "name": "atomic publication and actor binding",
+      "initial": "empty claims and F01 success as separate initial states",
+      "commands": "createLoan10 using zero-effect funding; repay4 actual transfer with forged claimedActor",
+      "expected": "fundingMismatch leaves no cash/claim; payment(kernel actorMismatch) leaves F01 exact; success sibling publishes both pieces",
+      "scenarios": [
+        "P02",
+        "P09",
+        "P10"
+      ],
+      "status": "planned_not_executed"
+    }
+  ]
+}

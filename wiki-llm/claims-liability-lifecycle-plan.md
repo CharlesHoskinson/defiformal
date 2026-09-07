@@ -1,0 +1,13 @@
+# Fixed claims and ledger-backed repayment — author draft
+
+The proposed [claims lifecycle change](../openspec/changes/claims-liability-lifecycle/proposal.md) adds a separate augmented state while retaining the existing World, Right and kernel theorem statements. A ClaimId currently identifies no executable claim store; a debt-asset balance is not yet a debtor/creditor obligation lifecycle.
+
+The first instrument is an unconditional, fixed positive rational principal in one asset/domain. It records current creditor, immutable debtor and face, remaining/paid/waived amounts, due time, status, default history and revision. Creation must actually fund the debtor. Repayment must actually pay the current creditor. Both use the actual Composition executor and compare its entire receipt effect/supply before publishing cash and claim changes together. A failed payment or shape check publishes neither component.
+
+Creditor transfer changes no amounts. Modification is restricted to active due-date extension. Default is explicit, authorized and strictly after due; it retains the liability and permits late payment. Creditor forgiveness records waived value rather than claiming repayment. Paid and forgiven entries remain permanent tombstones; default history never disappears. A trusted imported valid store is not proof of funded origin.
+
+The proof plan uses actual execution equations to establish authorized no-disappearance, exact payment effects, preserved decomposition and permanent IDs. Legacy-only programs with empty claims project exactly to existing Composition continuation, including old failures/history/index. Mixed lifecycle traces consume their own metadata indices and have additional payment-shape refusals, so no unsupported erasure theorem is proposed.
+
+There are5 capabilities,18 requirements,41 scenarios,30 unchecked tasks,24 planned full-state fixtures and20 planned source mutations. No fixture, mutant or theorem has been implemented by this author task. Exact accepted API/source and inherited runner identities must be refreshed before a nonauthor GPT-6/native Fable5.1 medium planning gate. Final source/evidence reviews require native Grok and Fable; this author cannot supply the independent planning vote.
+
+Authentication, initial cash capabilities, boundary time and modeled assignment/forgiveness permissions remain explicit assumptions. Conditional/indexed payoffs, interest, collateral, debtor novation, claim splitting, async/finality/challenge/compensation, cryptographic replay protection, integer refinement, solvency and deployed/legal fidelity remain separate. Pending S10/M3/M4 and provenance packages contribute no assumed runtime APIs.
