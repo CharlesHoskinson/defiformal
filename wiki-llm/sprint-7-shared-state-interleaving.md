@@ -1,6 +1,6 @@
 # Sprint 7: shared-state interleaving
 
-Status on 2026-09-07: **OpenSpec candidate in preparation; implementation gated**.
+Status on 2026-09-07: **Planning gate passed; implementation starting**.
 Base: `850d785d41dc311785dc33cdb3f65c368756434c`.
 
 Authoritative links: [proposal](../openspec/changes/shared-state-interleaving/proposal.md),
@@ -51,8 +51,27 @@ The design resolves the behavior; reviewers can require a corrected candidate.
 
 ## Evidence status
 
-No Sprint 7 implementation, new proof, runtime result or reviewer approval is
-claimed here yet. Planning requires separate GPT-6 and native Fable 5.1 passing
-verdicts on the same frozen candidate. Substantive implementation will require
+The frozen planning candidate `bf3fb509b211d7cd92eb68410fb49dc5f4e20e7d` received
+independent GPT-6 and native Fable 5.1 ACCEPT WITH LIMITATIONS verdicts. The fresh
+baseline passed ten commands with protected bytes unchanged. No new Sprint 7
+proof or runtime result is claimed yet. See the [planning adjudication](../review/semantic-kernel/sprint7/planning/ADJUDICATION.md)
+and [exact gate record](../review/semantic-kernel/sprint7/planning/gate.json). Substantive implementation will require
 native Grok/Fable review, full regressions and exact source binding. The stock
 GPT harness implements with GPT-6; Foreman is excluded.
+
+## Adopted review guidance
+
+- Make supply aggregation an executable production function over actual attempts,
+  with an independent nonzero supply oracle for both branches.
+- Keep the canonical projection in the new namespace so failure omission can be
+  tested on the function recovery actually uses.
+- Recompute snapshot values only in the mutation, by resolving catalog output
+  cells against the current world; correct execution retains stored snapshots.
+- Exercise halted suffix behavior with a real later static slot after peer
+  replenishment. Swapping coinciding own counters would be a surviving mutation;
+  wrong-index mutations must instead use global or peer position.
+- Label the total-preservation instance accurately: its local proof does not need
+  the conditional invariant premise, though the generic theorem supports it.
+
+Both reviewers treat these as implementation watchpoints, not blockers or changes
+to the accepted semantics. Full result acceptance remains outstanding.

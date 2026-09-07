@@ -76,16 +76,17 @@ all 47 scenarios and their precise evidence classes.
 
 ## Sprint 7: shared-state interleaving
 
-Planning in progress: [OpenSpec proposal](openspec/changes/shared-state-interleaving/proposal.md),
+Planning gate passed; implementation starting: [OpenSpec proposal](openspec/changes/shared-state-interleaving/proposal.md),
 [design](openspec/changes/shared-state-interleaving/design.md),
 [37 tasks](openspec/changes/shared-state-interleaving/tasks.md), and
 [wiki decision record](wiki-llm/sprint-7-shared-state-interleaving.md).
 The candidate covers explicit finite schedules, one evolving shared world,
 branch-local histories/refusals, initialized interference obligations and generic
-recovery of disjoint behavior. Implementation is gated on independent GPT-6/Fable
-planning passes and a fresh baseline; no Sprint 7 implementation is claimed here.
+recovery of disjoint behavior. Independent GPT-6/Fable planning reviews passed with limitations on `bf3fb50`,
+and the fresh ten-command baseline passed. [Planning adjudication](review/semantic-kernel/sprint7/planning/ADJUDICATION.md)
+records the adopted guidance. Implementation and result acceptance remain open.
 
-- [ ] Pass the frozen OpenSpec planning review gate and current baseline.
+- [x] Pass the frozen OpenSpec planning review gate and current baseline.
 - [ ] Implement shared execution, schedules and exact observations.
 - [ ] Prove prefix preservation, explicit interference composition and disjoint recovery.
 - [ ] Complete financial examples, production mutations and full regressions.

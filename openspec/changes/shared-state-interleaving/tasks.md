@@ -1,8 +1,8 @@
 ## 1. Planning and baseline gates
 
 - [x] 1.1 Save proposal/design/four specs/tasks and the wiki decision index; run strict OpenSpec validation and verify every scenario maps to an implementation task and planned evidence type.
-- [ ] 1.2 Freeze the candidate and context bundle, obtain separate GPT-6 and native Fable planning verdicts, resolve blocking findings and save exact candidate/model/hash metadata; verify both passing reviews bind the same final candidate before any implementation.
-- [ ] 1.3 Record a current full Lean/runtime/axiom baseline and protected-source inventory at the base revision; verify every required baseline command below exits zero and no preserved source bytes drift.
+- [x] 1.2 Freeze the candidate and context bundle, obtain separate GPT-6 and native Fable planning verdicts, resolve blocking findings and save exact candidate/model/hash metadata; verify both passing reviews bind the same final candidate before any implementation.
+- [x] 1.3 Record a current full Lean/runtime/axiom baseline and protected-source inventory at the base revision; verify every required baseline command below exits zero and no preserved source bytes drift.
 
 ## 2. Schedule representation and admission
 
