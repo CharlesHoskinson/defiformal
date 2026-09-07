@@ -1,0 +1,128 @@
+{
+  "schema_version": 1,
+  "modules": [
+    "DefiKernel.Arithmetic.Word",
+    "DefiKernel.Arithmetic.Operations",
+    "DefiKernel.Arithmetic.Rounding",
+    "DefiKernel.Arithmetic.Fees",
+    "DefiKernel.Arithmetic.Quantity",
+    "DefiKernel.Arithmetic.Reference",
+    "DefiKernel.Arithmetic.Examples",
+    "DefiKernel.Arithmetic.Tests",
+    "DefiKernel.Arithmetic.RuntimeAudit"
+  ],
+  "mutations": [
+    {
+      "name": "wrap-add",
+      "module": "DefiKernel.Arithmetic.Operations",
+      "needle": "Word.checked .addOverflow (a.value + b.value)",
+      "replacement": "Word.checked .addOverflow ((a.value + b.value) % (2^w))",
+      "required_false": [
+        "arithmetic.fixture.f04"
+      ]
+    },
+    {
+      "name": "unchecked-sub",
+      "module": "DefiKernel.Arithmetic.Operations",
+      "needle": "if b.value \u2264 a.value then Word.checked .subUnderflow (a.value - b.value)\n  else .error .subUnderflow",
+      "replacement": "Word.checked .subUnderflow (a.value - b.value)",
+      "required_false": [
+        "arithmetic.fixture.f05"
+      ]
+    },
+    {
+      "name": "truncate-product",
+      "module": "DefiKernel.Arithmetic.Rounding",
+      "needle": "let q \u2190 divideNat mode (a.value * b.value) denominator",
+      "replacement": "let q \u2190 divideNat mode ((a.value * b.value) % (2^w)) denominator",
+      "required_false": [
+        "arithmetic.fixture.f07"
+      ]
+    },
+    {
+      "name": "zero-denominator-zero",
+      "module": "DefiKernel.Arithmetic.Rounding",
+      "needle": "if denominator = 0 then .error .divisionByZero",
+      "replacement": "if denominator = 0 then .ok 0",
+      "required_false": [
+        "arithmetic.fixture.f08"
+      ]
+    },
+    {
+      "name": "floor-rounds-up",
+      "module": "DefiKernel.Arithmetic.Rounding",
+      "needle": "| .down => numerator / denominator",
+      "replacement": "| .down => numerator / denominator + (if numerator % denominator = 0 then 0 else 1)",
+      "required_false": [
+        "arithmetic.fixture.f09"
+      ]
+    },
+    {
+      "name": "ceil-rounds-down",
+      "module": "DefiKernel.Arithmetic.Rounding",
+      "needle": "| .up => numerator / denominator + (if numerator % denominator = 0 then 0 else 1)",
+      "replacement": "| .up => numerator / denominator",
+      "required_false": [
+        "arithmetic.fixture.f10"
+      ]
+    },
+    {
+      "name": "ceil-exact-plus-one",
+      "module": "DefiKernel.Arithmetic.Rounding",
+      "needle": "| .up => numerator / denominator + (if numerator % denominator = 0 then 0 else 1)",
+      "replacement": "| .up => numerator / denominator + 1",
+      "required_false": [
+        "arithmetic.fixture.f11"
+      ]
+    },
+    {
+      "name": "wrap-quotient",
+      "module": "DefiKernel.Arithmetic.Rounding",
+      "needle": "Word.checked .quotientOverflow q",
+      "replacement": "Word.checked .quotientOverflow (q % (2^w))",
+      "required_false": [
+        "arithmetic.fixture.f13"
+      ]
+    },
+    {
+      "name": "clamp-rate",
+      "module": "DefiKernel.Arithmetic.Fees",
+      "needle": "if den = 0 \u2228 num > den then .error .invalidRate else .ok num",
+      "replacement": "if den = 0 then .error .invalidRate else .ok (min num den)",
+      "required_false": [
+        "arithmetic.fixture.f19"
+      ]
+    },
+    {
+      "name": "gross-as-received",
+      "module": "DefiKernel.Arithmetic.Fees",
+      "needle": "let received \u2190 Word.checked .subUnderflow (gross.value - fee.value)",
+      "replacement": "let received \u2190 Word.checked .subUnderflow gross.value",
+      "required_false": [
+        "arithmetic.fixture.f14"
+      ]
+    },
+    {
+      "name": "ignore-scale",
+      "module": "DefiKernel.Arithmetic.Quantity",
+      "needle": "amount := (q.value : \u211a) * scale",
+      "replacement": "amount := (q.value : \u211a)",
+      "required_false": [
+        "arithmetic.fixture.f21"
+      ]
+    },
+    {
+      "name": "omit-collector",
+      "module": "DefiKernel.Arithmetic.Reference",
+      "needle": "deltas := [payerDelta quote scale payer, recipientDelta quote scale recipient,\n    collectorDelta quote scale collector]",
+      "replacement": "deltas := [payerDelta quote scale payer, recipientDelta quote scale recipient]",
+      "required_false": [
+        "arithmetic.fixture.f25"
+      ]
+    }
+  ],
+  "positive_checks": [
+    "arithmetic.fixture.f01",
+    "arithmetic.fixture.f03"
+  ]
+}
