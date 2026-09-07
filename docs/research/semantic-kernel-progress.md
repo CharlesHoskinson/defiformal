@@ -115,7 +115,7 @@ Codex harness; no Foreman. The user authorized the autonomous completion loop.
 | Discriminating evidence | 24/24 real source mutants detected,189 comparisons each;3 positive controls preserved;17 real runner CLI controls;99 existing axiom-audit assertions |
 | Compiler typing refusals | One executed positive and3 separately compiled negative fixtures; expected Type mismatch, not financial counterexamples |
 | Native review | All five scoped reviews accepted with limitations by native Grok/Fable; no blocking findings |
-| Delivery | Source and all acceptance evidence complete; push and remote verification follow the evidence commit |
+| Delivery | Complete source/evidence pushed at `6ca2f65`; remote head matched local and worktree was clean |
 
 The exact [design](../superpowers/specs/2026-09-06-typed-kernel-design.md),
 [implementation checklist](../superpowers/plans/2026-09-06-typed-kernel.md),
@@ -134,6 +134,10 @@ domain conditions characterize successful execution; refused evaluation can have
 already read inputs. General success theorems do not prove a full refusal taxonomy.
 Composition, claims lifecycle, replay protection, machine arithmetic and deployed
 protocol fidelity remain future work. All references are development examples.
+
+Sprint4 is complete. [Delivery verification](../../review/semantic-kernel/sprint4/delivery.json)
+records the source/evidence push; a subsequent documentation commit saves that
+verification. The stock harness also checks the final documentation commit head.
 
 ## Full migration backlog
 

@@ -127,5 +127,10 @@ Owner: parent. Own scripts, docs, progress and `review/semantic-kernel/sprint4/`
   on identical scoped bundles of exact source and evidence. Record requested and
   reported models, failures, findings and fixes. Fix substantive issues and run
   one focused re-review when necessary.
-- [ ] Save final evidence and progress, commit, push semantic-kernel-pivot and
+- [x] Save final evidence and progress, commit, push semantic-kernel-pivot and
   verify remote head equals local clean HEAD. Only then complete the active goal.
+
+
+Completed: source and acceptance evidence pushed and remote-verified; see
+`review/semantic-kernel/sprint4/delivery.json`. The delivery-record commit is
+metadata only and receives its own final remote-head check in the harness.
