@@ -60,7 +60,7 @@
 - [x] 9.1 Update roadmap/progress/wiki and task states from actual accepted evidence; verify atomic settlement, changing capabilities, general associativity and fidelity remain open and wiki notes link to source/evidence.
 - [x] 9.2 Validate this OpenSpec strictly and check current editorial whitespace/local links; verify raw hash-bound artifacts remain byte-identical when their display contains whitespace warnings.
 - [x] 9.3 Commit/push to `semantic-kernel-pivot`, verify the actual remote head and record delivery metadata; verify no merge to main or unrelated change is included.
-- [ ] 9.4 Archive only `shared-state-interleaving`, validate four synchronized main specs and repaired archive links, then push metadata; verify final remote identity, completed task states and clean worktree.
+- [x] 9.4 Archive only `shared-state-interleaving`, validate four synchronized main specs and repaired archive links, then push metadata; verify final remote identity, completed task states and clean worktree.
 
 The 37 checkboxes are acceptance obligations, not completed results. Dependencies:
 1 gates all implementation; 2→3→4; 4→5; fixtures grow with 2–5; 6 completes their

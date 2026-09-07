@@ -1,6 +1,6 @@
 # Sprint 8: atomic synchronization
 
-Status: OpenSpec candidate prepared; independent planning gate remains pending.
+Status: independent planning and dependency/baseline gates passed; ready for implementation.
 
 [Proposal](../openspec/changes/atomic-synchronization/proposal.md),
 [design](../openspec/changes/atomic-synchronization/design.md),
@@ -8,8 +8,7 @@ Status: OpenSpec candidate prepared; independent planning gate remains pending.
 [planned coverage](../review/semantic-kernel/sprint8/planning/coverage.json)
 define four capabilities, 16 requirements and 49 scenarios. The separate
 [design investigation](sprint-8-atomic-synchronization-draft.md) records alternatives
-and historical Interface/Nary scope. This proposed design choice remains subject
-to the independent plan audits; no Atomic implementation is claimed.
+and historical Interface/Nary scope. The exact candidate `7a73b2d` passed both independent plan audits; no Atomic implementation is claimed yet.
 
 ## Decisions
 
@@ -35,3 +34,11 @@ to the independent plan audits; no Atomic implementation is claimed.
 The user's AFK instruction authorizes execution after the same-candidate GPT-6 and
 native Fable planning gate passes. Native Grok/Fable final audits, exact source
 bindings, verified branch delivery and OpenSpec archive remain required. No Foreman.
+
+Both independent GPT-6 and native Fable reviews accepted with limitations on the
+same 60-input bundle. The fresh baseline passes12 commands with130 source inputs
+unchanged; accepted Sprint 7 source/evidence and archive metadata pushes are
+verified. [Gate](../review/semantic-kernel/sprint8/planning/gate.json) and
+[adjudication](../review/semantic-kernel/sprint8/planning/ADJUDICATION.md) record the
+adopted publication accessors, attempt-derived fold, diagnostic and exact-residual
+oracles, and explicit representation limits. Implementation is now authorized.

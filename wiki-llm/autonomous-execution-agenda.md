@@ -53,18 +53,18 @@ reclassified as a holdout. Paper and graph updates follow the accepted schema.
 
 ## Current checkpoint
 
-Sprint 7 source is frozen at `6de24fef77f8d6c98f4e8ec80ffe772e509e0a2c`.
-Twelve integration commands passed, including 116 runtime comparisons and the
-259 theorem / 271 supplemental imported axiom inventory with zero forbidden
-dependencies. Fifty-two new runner controls passed. Production mutation and
-historical regression runs, plus native implementation audits, remain in progress.
-The next atomic synchronization design is being prepared independently. These
-measurements do not yet constitute Sprint 7 acceptance.
+Sprint 7 is accepted with limitations, delivered and archived: source/evidence
+`b0f9bbf`, archive metadata `55d1ce3`, source candidate `bea105ec`. Both branch
+pushes were remotely verified. All 37 tasks and43 scenarios are complete, with116
+runtime comparisons,14 source mutations,52 runner controls, nine historical suites
+and12 final Lean commands passing. Imported audit:262 theorems/271 supplemental,
+zero forbidden dependencies. Native Grok/Fable accepted every required scope.
 
-The stock Codex goal loop was armed at 2026-09-07T07:18:35Z for this entire
-agenda, with no token budget requested. It remains active until actual completion
-or a recorded external impasse. No custom orchestration harness was introduced.
+Sprint 8 atomic synchronization planning candidate `7a73b2d` passed independent
+GPT-6 and native Fable reviews on the same 60-input bundle. Its fresh 12-command/130-input baseline passes and implementation is now authorized. The separate corpus/provenance OpenSpec
+proposal and metatheory design investigation are saved as proposed future work;
+they do not claim accepted implementation or untouched evaluation results.
 
-Subsequent frozen runs passed all 14 production mutations and all nine historical
-Python regression suites. Native implementation/evidence acceptance is still
-pending.
+The stock Codex goal loop was armed at 2026-09-07T07:18:35Z for this entire agenda,
+with no token budget requested. It remains active until actual completion or a
+recorded external impasse. No custom orchestration harness was introduced.

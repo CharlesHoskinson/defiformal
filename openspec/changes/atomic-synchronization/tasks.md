@@ -1,8 +1,8 @@
 ## 1. Planning and accepted baseline
 
-- [ ] 1.1 Save proposal/design/four specs/tasks/wiki rationale and a scenario-to-task/evidence map; verify strict OpenSpec validation, all49 scenarios mapped and no unresolved behavior choices or placeholders.
-- [ ] 1.2 Freeze complete plan and exact source context at the final Sprint7 source candidate; require its accepted delivery before Atomic implementation, obtain separate GPT-6/native Fable passing planning verdicts on that same candidate and verify exact model/hash bindings before implementation.
-- [ ] 1.3 Capture a current full Lean/runtime/axiom baseline, relevant Python driver identities and historical proof/corpus source inventory; verify every required baseline command succeeds and preserved bytes are unchanged.
+- [x] 1.1 Save proposal/design/four specs/tasks/wiki rationale and a scenario-to-task/evidence map; verify strict OpenSpec validation, all49 scenarios mapped and no unresolved behavior choices or placeholders.
+- [x] 1.2 Freeze complete plan and exact source context at the final Sprint7 source candidate; require its accepted delivery before Atomic implementation, obtain separate GPT-6/native Fable passing planning verdicts on that same candidate and verify exact model/hash bindings before implementation.
+- [x] 1.3 Capture a current full Lean/runtime/axiom baseline, relevant Python driver identities and historical proof/corpus source inventory; verify every required baseline command succeeds and preserved bytes are unchanged.
 
 ## 2. Typed policy and ordered admission
 
