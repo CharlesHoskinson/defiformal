@@ -1,24 +1,24 @@
 ## 1. Baseline and acceptance inventory
 
-- [ ] 1.1 Record the starting commit, clean/dirty worktree, tool versions, and preserved proof/corpus hashes in `review/semantic-kernel/sprint5/baseline.json`; verify the manifest resolves to actual files and the Sprint 4 delivery history.
-- [ ] 1.2 Run the existing full Lean build, typed runtime/audit, and legacy runtime/audit drivers listed below; save commands, exits, and logs, and resolve failures before adding composition code.
-- [ ] 1.3 Create a scenario-to-check/proof map for all four delta specs in `review/semantic-kernel/sprint5/coverage.md`; verify every requirement and scenario has an assigned implementation task and an intended executable check or theorem.
+- [x] 1.1 Record the starting commit, clean/dirty worktree, tool versions, and preserved proof/corpus hashes in `review/semantic-kernel/sprint5/baseline.json`; verify the manifest resolves to actual files and the Sprint 4 delivery history.
+- [x] 1.2 Run the existing full Lean build, typed runtime/audit, and legacy runtime/audit drivers listed below; save commands, exits, and logs, and resolve failures before adding composition code.
+- [x] 1.3 Create a scenario-to-check/proof map for all four delta specs in `review/semantic-kernel/sprint5/coverage.md`; verify every requirement and scenario has an assigned implementation task and an intended executable check or theorem.
 
 ## 2. Component interfaces and contracts
 
-- [ ] 2.1 Add stable component/port identities, typed input and selected-cell output declarations, operation membership, and signature validation in `lean/DefiKernel/Composition/Interfaces.lean`; verify valid declarations and each duplicate, unknown-operation, ownership-ambiguity, and wrong-signature refusal.
-- [ ] 2.2 Add private ownership and exact shared import/export access validation; verify overlap, private-as-shared, cell/domain/asset mismatch, and read-only-write negatives beside valid shared read/write siblings.
-- [ ] 2.3 Resolve actual operation references and check required/declared reads, writes, both expression branches, and output selections against interface access; verify a funded foreign-private target refuses despite a live debit grant, while a matching shared target succeeds.
-- [ ] 2.4 Add closed literal/prior-output input bindings and unit checks; verify correct USD routing and wrong-unit, unknown-port, forward-reference, and unavailable-output refusals without financial changes.
+- [x] 2.1 Add stable component/port identities, typed input and selected-cell output declarations, operation membership, and signature validation in `lean/DefiKernel/Composition/Interfaces.lean`; verify valid declarations and each duplicate, unknown-operation, ownership-ambiguity, and wrong-signature refusal.
+- [x] 2.2 Add private ownership and exact shared import/export access validation; verify overlap, private-as-shared, cell/domain/asset mismatch, and read-only-write negatives beside valid shared read/write siblings.
+- [x] 2.3 Resolve actual operation references and check required/declared reads, writes, both expression branches, and output selections against interface access; verify a funded foreign-private target refuses despite a live debit grant, while a matching shared target succeeds.
+- [x] 2.4 Add closed literal/prior-output input bindings and unit checks; verify correct USD routing and wrong-unit, unknown-port, forward-reference, and unavailable-output refusals without financial changes.
 - [ ] 2.5 Add initialization, assumptions, invariant/guarantee obligations, and ledger predicate support in `Contracts.lean`; verify definitions elaborate and a small initialized fixture proves its invariant only with explicit required premises.
 
 ## 3. Single-step adapter and receipts
 
-- [ ] 3.1 Add world, immutable configuration, trusted position-indexed boundary inputs, and invocation/issue/revoke step types in `Execution.lean`; verify caller data cannot select the trusted principal, registry, or operation body and an actor mismatch preserves the kernel refusal.
-- [ ] 3.2 Implement structural configuration rejection and ordered membership/binding/interface prechecks; verify each failure preserves the input world and delegated well-formed calls retain existing kernel refusal precedence.
-- [ ] 3.3 Wrap `Typed.execute` and extract actual evaluated effect/supply/write receipts against the same pre-world; prove extraction total on accepted execution and receipt correspondence, with no default receipt or derived post-minus-pre supply.
-- [ ] 3.4 Route issue/revoke through the existing administrative APIs using configuration derived from the same registry; prove accepted administration preserves the ledger, accepted invocation preserves the store, and refused steps preserve both.
-- [ ] 3.5 Prove the step soundness relation for invocation and administration and verify selected-cell outputs equal successful post-state snapshots; confirm refused and internally inconsistent adapter outcomes commit nothing and emit no successful output.
+- [x] 3.1 Add world, immutable configuration, trusted position-indexed boundary inputs, and invocation/issue/revoke step types in `Execution.lean`; verify caller data cannot select the trusted principal, registry, or operation body and an actor mismatch preserves the kernel refusal.
+- [x] 3.2 Implement structural configuration rejection and ordered membership/binding/interface prechecks; verify each failure preserves the input world and delegated well-formed calls retain existing kernel refusal precedence.
+- [x] 3.3 Wrap `Typed.execute` and extract actual evaluated effect/supply/write receipts against the same pre-world; prove extraction total on accepted execution and receipt correspondence, with no default receipt or derived post-minus-pre supply.
+- [x] 3.4 Route issue/revoke through the existing administrative APIs using configuration derived from the same registry; prove accepted administration preserves the ledger, accepted invocation preserves the store, and refused steps preserve both.
+- [x] 3.5 Prove the step soundness relation for invocation and administration and verify selected-cell outputs equal successful post-state snapshots; confirm refused and internally inconsistent adapter outcomes commit nothing and emit no successful output.
 
 ## 4. Sequential execution and observations
 
