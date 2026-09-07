@@ -1,6 +1,6 @@
 # DeFiFormal migration roadmap
 
-Updated 2026-09-07 UTC: Sprint 7 delivered and archived; Sprint 8 delivered and archived; Sprint 9 source/evidence delivered and OpenSpec archived; final archive push in progress. Sprint 10 OpenSpec preparation is complete.
+Updated 2026-09-07 UTC: Sprint 7 delivered and archived; Sprint 8 delivered and archived; Sprint 9 complete, archived and delivered at `9908d9b`. Sprint 10 OpenSpec preparation is complete.
 Branch: `semantic-kernel-pivot`. Sprint 8 archive delivery: `9501f0a4`.
 
 The remaining objective is conditional preservation of financial properties

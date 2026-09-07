@@ -146,3 +146,22 @@ not close those roadmap obligations by analogy with sequential list algebra.
 The r2 semantic plan was accepted with limitations by GPT-6 and Opus. Three further Opus requests clarify inherited timeout evidence, exhaustive literal adaptation and exact-once mutation needles. The r3 review supplies the full revised plan and runner scripts with the counted adaptation inventory, while binding unchanged semantic source to its already-reviewed r2 Git objects. No implementation begins before both revised verdicts pass. The inaccurate old spec locator is corrected to the actual explicit `review/semantic-kernel/sprint8/mutation-spec.json` input.
 
 The user restored Fable 5.1 at medium effort for future external reviews. The r3 bundle therefore includes the complete unchanged semantic-source closure for Fable to inspect independently, alongside the runner clarifications. Completed Opus reports remain historical evidence under their actual model identity.
+
+## Accepted delivery
+
+Source `eec499d613688137a341f3556cd80ca461dd2ee9` is accepted with limitations by
+native Grok and Fable5.1 medium. Source/evidence `ec9ed804` and archive `9908d9b5`
+were pushed and independently read back from the remote branch. All35 tasks and
+55 scenarios are complete; [archive delivery](../review/semantic-kernel/sprint9/archive-delivery.json)
+and [final acceptance](../review/semantic-kernel/sprint9/acceptance/final-acceptance.json)
+retain exact source/review/evidence identities.
+
+The review correction separated four financial routing programs while retaining
+full expected cursors. A complete-cursor check can still detect several faults:
+history reset loses a snapshot even when a literal-input continuation succeeds.
+The measured matrix is T/T,F/T,F/F, not an exclusive fault classifier. Global
+runner positives and separately measured per-mutant siblings have different
+enforcement paths. These distinctions are part of the accepted evidence.
+
+M2 now proceeds to its own planning gate. Sequential congruence does not supply
+causal assume-guarantee rules, general parallel regrouping or capability provenance.

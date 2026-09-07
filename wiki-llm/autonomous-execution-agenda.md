@@ -51,7 +51,7 @@ Corpus source work can proceed independently of kernel proofs, but evaluation
 cases must remain untouched by design work. A development candidate must never be
 reclassified as a holdout. Paper and graph updates follow the accepted schema.
 
-## Current checkpoint
+## Checkpoint before Sprint 8 implementation
 
 Sprint 7 is accepted with limitations, delivered and archived: source/evidence
 `b0f9bbf`, archive metadata `55d1ce3`, source candidate `bea105ec`. Both branch
@@ -70,7 +70,7 @@ with no token budget requested. Its tool status now reports `usageLimited`; resu
 Codex session. No quota reset or automatic loop reactivation is claimed. No custom
 orchestration harness was introduced.
 
-## Reviewer update, 2026-09-07
+## Historical reviewer update, 2026-09-07
 
 The user's latest instruction replaces Fable with native Opus for future reviews.
 New planning gates require nonauthor GPT-6 and Opus; final source/evidence reviews
@@ -86,14 +86,21 @@ nonauthor GPT-6 and native Fable; substantive source/evidence reviews require
 native Grok and Fable. Request `claude-fable-5-1[1m]` with `--effort medium` and
 record the returned model identity. Historical Opus reviews retain their identity.
 
-Sprint 8 is accepted, archived, and delivered. Sprint 9 source is frozen at
-`eec499d613688137a341f3556cd80ca461dd2ee9`; revised integration, proof inventory,
-14 production mutations and65 runner controls passed. The13 legacy suites retain
-c880 execution identity through verified relevant-source equivalence. Both native
-final source/evidence reviews are in progress. Their actual results and
-input hashes, rather than this process description, determine completion.
-Sprint 10 API and specification preparation continues without claiming accepted
-Sprint 9 delivery or opening its implementation gate prematurely.
+Sprint 9 is accepted, archived and delivered. Source is
+`eec499d613688137a341f3556cd80ca461dd2ee9`, source/evidence push is
+`ec9ed80457d7a9c4064d26ab193591579027abae`, and the verified archive push is
+`9908d9b56be2d5ed2b58a16fa8d28b23f33733ff`. All35 tasks and55 scenarios are complete
+with recorded scientific limits. Native Grok and Fable accepted the final source
+and evidence. The context-limited Fable attempt and all original review records
+are preserved; successful review used a compact presentation of the same evidence.
+
+Sprint 10 interface binding/preservation is the active planning gate:57 scenarios,
+34 tasks,20 fixtures,14 mutations and65 inherited controls. Its initialized paired-
+debit group companion is separate from the arbitrary-entry unequal-balance total
+example. Execute only after nonauthor GPT6 and native Fable accept the frozen plan.
+Independent corpus preparation covers planning readiness and one source-grounded
+LiquityV1 liquidation challenge; these remain proposals, not accepted annotation
+changes or deployment-fidelity findings.
 
 Use `current-work.json` for the current evidence paths and polling handles.
 A stored process handle is not proof that its process is still running.

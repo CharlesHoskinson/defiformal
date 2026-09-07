@@ -1,9 +1,9 @@
 # Sequential congruence and configuration preservation
 
 Native Grok and Fable accepted source `eec499d613688137a341f3556cd80ca461dd2ee9`
-and its completed execution evidence with limitations. Branch delivery and
-OpenSpec archival are recorded separately. See [acceptance](acceptance/acceptance.json),
-[adjudication](ADJUDICATION.md), and the [current scenario map](acceptance/accepted-scenarios.json).
+and its completed execution evidence with limitations. Source/evidence and OpenSpec archive pushes are remotely verified;
+[archive delivery](archive-delivery.json) records the exact revisions. See [acceptance](acceptance/final-acceptance.json),
+[adjudication](ADJUDICATION.md), and the [current scenario map](acceptance/final-scenarios.json).
 
 Recursive sequential groups execute actual kernel steps and preserve the complete
 cursor when regrouped without changing leaf order. The observation relation keeps
