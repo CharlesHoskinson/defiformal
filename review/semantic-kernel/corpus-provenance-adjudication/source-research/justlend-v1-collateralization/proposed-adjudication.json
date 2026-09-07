@@ -1,0 +1,164 @@
+{
+  "schema_version": 1,
+  "kind": "single-disagreement-source-research",
+  "created_utc": "2026-09-07T19:39:51.950315+00:00",
+  "author_identity": "GPT-6 through stock Codex harness; no invented native provider telemetry",
+  "unit_id": "unit:lane1:c1:p3",
+  "dispute_id": "dispute-01",
+  "facet": "mechanisms",
+  "label": "collateralization",
+  "process_status": "draft_review_pending",
+  "proposed_disposition": "supported",
+  "accepted_disposition": null,
+  "scoped_proposition": "JustLend V1 pooled jToken lending includes collateralization as evidenced by official architecture documentation and the identified pinned source routines; this proposition does not bind deployed or historical code.",
+  "observations": {
+    "path": "review/semantic-kernel/corpus-provenance-adjudication/source-research/justlend-v1-collateralization/selection-and-observations.json",
+    "sha256": "1ec717f25c4e83464c14343f64859f4b7ce86d3f11a76291e136f8099f853d31",
+    "bytes": 8656
+  },
+  "actual_inventory_record": {
+    "id": "dispute-01",
+    "unit_id": "unit:lane1:c1:p3",
+    "label": "JustLend V1",
+    "facet": "mechanisms",
+    "a": [
+      "collateralization",
+      "liquidation"
+    ],
+    "b": [
+      "liquidation"
+    ],
+    "retained_intersection": [
+      "liquidation"
+    ],
+    "disputed_labels": [
+      "collateralization"
+    ],
+    "rule_ids": [
+      "R-collateralization"
+    ],
+    "current_status": "unresolved_difference",
+    "planned_tasks": [
+      "5.1",
+      "5.2",
+      "5.3",
+      "5.5"
+    ]
+  },
+  "rule": {
+    "id": "R-collateralization",
+    "version": "proposed evidence-adjudication/1",
+    "source": {
+      "path": "openspec/changes/corpus-provenance-adjudication/design.md",
+      "sha256": "7bdf3b88cc63355f956986be8cca8a042acd2a21677f96794978df272f318ba0",
+      "bytes": 23098,
+      "line": 174
+    },
+    "literal_table_row": "| `R-collateralization` / mechanisms | Identified assets are encumbered or checked to secure a scoped obligation | A product merely holds assets |",
+    "required_predicate": "Identified assets are encumbered or checked to secure a scoped obligation",
+    "insufficient_alone": "A product merely holds assets",
+    "status": "proposed reusable rule; not accepted by this packet"
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "type": "source_statement",
+      "claim": "Official documentation explicitly distinguishes V1 pooled jToken markets and their Comptroller cross-collateral model from V2 isolated markets.",
+      "evidence": [
+        "version-scope:v1-v2-distinction",
+        "version-scope:comparison-table"
+      ]
+    },
+    {
+      "id": "C2",
+      "type": "source_inspection",
+      "claim": "The pinned liquidity routine obtains balances, debt and exchange rate for account-entered markets, applies collateral factors and oracle prices, adds hypothetical borrow/redemption effects and reports shortfall.",
+      "evidence": [
+        "comptroller:getHypotheticalAccountLiquidityInternal",
+        "ctoken:getAccountSnapshot",
+        "comptroller:addToMarketInternal"
+      ]
+    },
+    {
+      "id": "C3",
+      "type": "source_inspection",
+      "claim": "The pinned token borrow path calls borrowAllowed before transfer/debt updates; borrowAllowed rejects positive hypothetical shortfall.",
+      "evidence": [
+        "ctoken:borrowFresh",
+        "comptroller:borrowAllowed"
+      ]
+    },
+    {
+      "id": "C4",
+      "type": "source_inspection",
+      "claim": "The pinned redemption and token-transfer paths invoke liquidity permission checks, while market exit rejects outstanding market debt and disallowed full redemption.",
+      "evidence": [
+        "comptroller:redeemAllowed",
+        "comptroller:redeemAllowedInternal",
+        "comptroller:transferAllowed",
+        "comptroller:exitMarket",
+        "ctoken:redeemFresh",
+        "ctoken:transferTokens"
+      ]
+    },
+    {
+      "id": "C5",
+      "type": "inference_under_proposed_rule",
+      "claim": "These asset/debt checks secure a borrowing obligation, satisfying the proposed collateralization predicate for this scoped V1 pooled lending architecture; mere custody is not the supporting premise.",
+      "evidence": [
+        "comptroller:getHypotheticalAccountLiquidityInternal",
+        "comptroller:borrowAllowed",
+        "ctoken:borrowFresh",
+        "version-scope:comparison-table"
+      ]
+    }
+  ],
+  "material_qualifications": [
+    "Official current documentation supplies the V1-versus-V2 architecture distinction. The captured repository is linked by that documentation, but no deployment address, proxy implementation at a block, or historical source-code binding is established.",
+    "The source is pinned at f28f3b462a4f281761e23423554563e15fc9f028, selected from actual Git ref metadata. This is not a claim that that revision is the sole or current live V1 implementation.",
+    "Only selected market membership contributes to the collateral calculation. Nonmember redemption can bypass that liquidity check, so holding jTokens alone is not always encumbered collateral.",
+    "Borrow permission also depends on listing, pause state, prices and successful snapshot/math checks. Token borrowing separately checks freshness and cash; satisfying collateral alone is not sufficient for success.",
+    "The snapshot uses stored debt/exchange-rate calculations, risk parameters and oracle prices. No oracle correctness, parameter adequacy, contract execution, formal safety proof or all-call-path completeness was established.",
+    "Current docs and source belong to the same JustLend publication family. They are not independent-provider corroboration. Documentation publication metadata is not proof of historical deployment state.",
+    "No inference is made from generic Compound source, V2 isolated markets, energy rental, the old symbol list or A/B agreement. Original missing citations remain unresolved."
+  ],
+  "source_provenance": {
+    "retrievals": {
+      "path": "review/semantic-kernel/corpus-provenance-adjudication/source-research/justlend-v1-collateralization/retrievals.json",
+      "sha256": "7a692a44e91db7477bb590e3853c6c77e6aced1f201327c1d99154337bf095b3",
+      "bytes": 7865
+    },
+    "revision_metadata": {
+      "path": "review/semantic-kernel/corpus-provenance-adjudication/source-research/justlend-v1-collateralization/revision-discovery.json",
+      "sha256": "a2d4bb595df3a4a6c3c4af2e946668d0a899c72ecc914873f4e28a5673cb3872",
+      "bytes": 570
+    },
+    "locators": {
+      "path": "review/semantic-kernel/corpus-provenance-adjudication/source-research/justlend-v1-collateralization/evidence-locators.json",
+      "sha256": "d4e94881b2824a4c9019041e088902aad3690365fd9a86d17aac55ec1b571d73",
+      "bytes": 10352
+    },
+    "primary_sources": 3,
+    "independence_groups": 1,
+    "source_status": "fresh actual bytes retained; reconstructed support, not recovered original citations"
+  },
+  "contrary_reading_considered": "Raw B omits collateralization; this is missing support, not an explicit assertion of uncollateralized lending. Generic fork lineage and asset custody would not establish the predicate; the actual checks provide a narrower source-grounded reason. Nonmember redemption remains an explicit qualification.",
+  "hypothetical_overlay_if_later_accepted": {
+    "old_retained_mechanisms": [
+      "liquidation"
+    ],
+    "newly_supported_label": "collateralization",
+    "possible_effective_mechanisms": [
+      "collateralization",
+      "liquidation"
+    ],
+    "liquidation_status": "Preserved historical retained label, not re-reviewed or promoted by this packet",
+    "applied": false
+  },
+  "limits": [
+    "No corpus annotation, normalization, schema, tooling or previous evidence package changed.",
+    "No accepted label, deployment identity, contract execution, Lean refinement, fidelity or holdout claim.",
+    "Three primary bodies exhausted this acquisition budget; imported contract dependencies were not fetched or compiled."
+  ],
+  "required_next_step": "Independent source/rule review may accept, revise or leave unresolved the proposed scoped label. A deployment or historical claim requires a separate bounded source/address/revision/time binding."
+}

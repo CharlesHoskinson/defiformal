@@ -1,0 +1,431 @@
+{
+  "lane": "RWA / tokenised treasuries & private credit; Options / structured products; Reserve-backed (fiat) stablecoin issuers; Prediction markets & other",
+  "source": "DefiLlama API pulled directly 2026-08-04 (api.llama.fi/protocols for TVL by category; stablecoins.llama.fi/stablecoins for circulating supply; api.llama.fi/overview/options for options notional; api.llama.fi/overview/dexs for prediction-market volume). Cross-checked RWA rankings against app.rwa.xyz/treasuries fetched 2026-08-04 ($16.17B total tokenized treasuries). Mechanism detail from protocol docs (docs.centrifuge.io, docs.maple.finance, usyc.docs.hashnote.com, docs.derive.xyz, docs.polymarket.com, gem.azuro.org) via web search 2026-08-04. Note: DefiLlama's own category taxonomy is itself evidence — 'Risk Curators' ($8.76B) and 'Onchain Capital Allocator' ($7.74B) are top-10 categories with zero vocabulary coverage.",
+  "categories": [
+    {
+      "category": "RWA / tokenised treasuries & private credit",
+      "why_a_category": "How do you make a claim on an off-chain legal obligation transferable on-chain, and what on-chain machinery does the wrapper actually need? Every member answers: who is the obligor, where is the register of record, who determines value, and who can force a transfer.",
+      "protocols": [
+        {
+          "name": "Ondo Finance (USDY + OUSG + Global Markets)",
+          "rank_basis": "DefiLlama parent#ondo-finance $3.47B TVL 2026-08-04 (Ondo Yield Assets $2.53B + Ondo Global Markets $0.95B); rwa.xyz lists USDY alone at $2.15B, #3 tokenized treasury",
+          "elements": ["Aw", "Sh", "Ix", "Rb", "Tr", "At", "Ex", "Rd", "Fz", "Xf", "Xm", "Up", "Gp", "Tg"],
+          "order_known": true,
+          "residue": [
+            "USDY is a secured note — a debt obligation of Ondo USDY LLC. No element names the OBLIGOR. `Tr` names the 3% first-loss equity waterfall but not who owes the senior claim.",
+            "No element for the security interest: bank deposits and T-bills are pledged to a collateral agent (Ankura Trust) under a security agreement. Claim perfection (UCC-1 filing, control agreements) is unnameable, and it is the entire reason a USDY holder is not just an unsecured creditor.",
+            "No element for bankruptcy-remoteness of the issuing LLC / SPV.",
+            "No element for the REGISTER OF RECORD. The chain is authoritative for USDY but a mirror for OUSG's underlying fund shares; the vocabulary cannot express the difference, and it is the difference between owning the asset and owning a pointer to it.",
+            "OUSG is a feeder that routes into BUIDL and other MMFs — fund-of-funds allocation with manager discretion is not expressible.",
+            "The 40–50 day transfer lockup on newly minted USDY (a Reg S seasoning period) has no symbol; `Wq` is a liquidity queue, not a legal seasoning restriction.",
+            "Off-chain subscription/redemption cut-off times and T+n banking settlement, versus the atomic on-chain appearance."
+          ],
+          "forced": [
+            { "symbol": "Ix", "why": "USDY's per-token price accrual is an off-chain NAV computed by the manager and pushed on-chain; `Ix` implies an index the protocol itself computes from its own state. Here the index IS the residue." },
+            { "symbol": "Rb", "why": "only applies to the rUSDY wrapper, not to USDY itself; the base instrument is price-accruing." },
+            { "symbol": "Tr", "why": "genuinely a seniority waterfall, but `Tr` presumes an on-chain loss event and an on-chain waterfall execution. Here the waterfall is contractual and would be executed by a liquidator in a court." }
+          ]
+        },
+        {
+          "name": "Circle USYC (Hashnote International Short Duration Yield Fund Ltd.)",
+          "rank_basis": "rwa.xyz $3.01B, #1 tokenized treasury 2026-08-04; DefiLlama RWA $3.005B; DefiLlama stablecoins $3.005B circulating",
+          "elements": ["Aw", "Sh", "At", "Ex", "Rd", "Fz", "Up", "Gp"],
+          "order_known": true,
+          "residue": [
+            "The Smart Contract Teller mints against funds that Hashnote then sends to a PRIME BROKER to buy T-bills and enter reverse repo. The reserve portfolio, the prime brokerage relationship, and the repo counterparty exposure are the entire risk of the instrument and have no symbol. `At` names the attestation report, not the reserve.",
+            "No element for the fund administrator's REGISTER: 'the client's redemption will be reflected in the fund registry by our fund administrator' — the on-chain token is explicitly downstream of an off-chain share register.",
+            "No element for the obligor (SDYF Ltd, a Cayman company) or for its creditors ranking ahead of tokenholders.",
+            "The instant-redemption CAPACITY is a discretionary liquidity facility with a stated cap, beyond which redemption is T+1 and manual. `Rd` asserts an unconditional redemption right; USYC's is capacity-limited and revocable.",
+            "No element for the offering memorandum / subscription agreement that actually creates the claim.",
+            "No element for qualified custody or for the segregation of fund assets from Circle's own balance sheet.",
+            "Sanctions/AML screening as an ongoing process, versus `Aw` as a static allowlist bit."
+          ],
+          "forced": [
+            { "symbol": "Sh", "why": "USYC is a share in a fund, so pro-rata is right, but the pool it is pro-rata OF is off-chain and unobservable to the contract. `Sh` elsewhere in this vocabulary means a claim on a pool the contract can enumerate." },
+            { "symbol": "Ex", "why": "the NAV price feed is a single-publisher assertion by the issuer's own administrator, not an oracle in the medianizer/adversarial sense `Ex` describes." },
+            { "symbol": "Fz", "why": "candidate register: used because Circle/Hashnote demonstrably hold force-transfer and burn authority, which is a live mechanism here rather than a speculative one." }
+          ]
+        },
+        {
+          "name": "BlackRock BUIDL (BlackRock USD Institutional Digital Liquidity Fund, via Securitize)",
+          "rank_basis": "rwa.xyz $2.67B, #2 tokenized treasury 2026-08-04; DefiLlama stablecoins $2.687B; DefiLlama's RWA row shows $3.49B (adapter counts wrapped/feeder positions — discrepancy noted, rwa.xyz used)",
+          "elements": ["Aw", "Sh", "At", "Rd", "Ps", "Fz", "Xf", "Xm", "Up", "Gp"],
+          "order_known": true,
+          "residue": [
+            "Securitize Markets LLC is the SEC-REGISTERED TRANSFER AGENT. The transfer agent's book is the legal register; the token is a mirror maintained by the transfer agent. There is no element for this, and it is the single most important structural fact about BUIDL.",
+            "No element for BlackRock's investment discretion over the portfolio — the manager can change duration, issuer mix, and repo exposure at will, and nothing on-chain constrains it.",
+            "No element for the obligor / the BVI fund entity, its board, or its ability to gate redemptions.",
+            "Daily dividend accrual is DECLARED off-chain and distributed as newly minted tokens monthly. Neither `Sh` nor `Ix` nor `Rb` names 'a discretionary dividend declaration settled in kind on a batch schedule'.",
+            "No element for the Reg D 506(c) / Reg S exemption that makes `Aw` legally necessary — `Aw` names the gate, never why the gate exists or what it is testing for.",
+            "BNY Mellon as custodian and administrator; the custodian's failure is the dominant tail risk and is unnameable.",
+            "The subscription minimum ($5M) and the redemption cut-off calendar.",
+            "The Circle-operated 1:1 BUIDL→USDC facility is a THIRD-PARTY balance sheet, not a protocol module; treating it as `Ps` attributes to BUIDL a liquidity property it does not itself have."
+          ],
+          "forced": [
+            { "symbol": "Ps", "why": "the 1:1 USDC redemption is run by Circle as a separate commercial facility with its own capacity limit and its own right to withdraw it, not a reserve-backed peg-swap module belonging to the instrument." },
+            { "symbol": "Rd", "why": "redemption is a subscription-document right against a BVI company exercisable on a business-day calendar, not an on-chain redemption right the contract can honor." },
+            { "symbol": "Fz", "why": "candidate register: used because Securitize's transfer-agent role makes forced transfer a routine administrative action (lost keys, court order), not an emergency power." }
+          ]
+        },
+        {
+          "name": "Maple Finance (syrupUSDC / syrupUSDT + institutional pools)",
+          "rank_basis": "DefiLlama $2.263B TVL 2026-08-04 (categorized 'Lending'; largest on-chain private-credit venue by a wide margin — DefiLlama's own 'RWA Lending' category tops out at Aave Horizon $257M)",
+          "elements": ["Aw", "Pl", "Sh", "Ct", "Ft", "Sv", "Wq", "Bs", "Em", "Fd", "Up", "Gp", "Tg"],
+          "order_known": true,
+          "residue": [
+            "The loan is a bilateral MASTER LOAN AGREEMENT under NY/English law with a named borrower entity. No element for the obligor, for recourse, or for the fact that default is resolved by lawyers rather than by code.",
+            "Collateral is held in off-chain qualified custody (BitGo/Anchorage) under a tri-party control agreement, not in the lending contract. `Ct` computes a threshold against collateral the protocol cannot itself seize.",
+            "The margin call is a phone call followed by a voluntary on-chain top-up. There is no `Li` here: no third party is paid to close anything. `Sv` covers the discretion but not the absence of an enforcement primitive.",
+            "No element for CREDIT UNDERWRITING as a process — the diligence, the borrower's financials, the covenant package. `Uc` names undercollateralized credit as a category but Maple is over-collateralized and still fundamentally an underwriting business.",
+            "No element for the dynamic instant-liquidity buffer sized against expected redemption flow (a treasury-management policy, not a queue).",
+            "No element for concentration limits per borrower, which is the actual risk control.",
+            "The KYC-gated institutional pools and the permissionless syrup wrapper are the SAME loan book viewed through two access regimes; `Aw` cannot express 'wrapper that launders a permissioned claim into a permissionless one'."
+          ],
+          "forced": [
+            { "symbol": "Sv", "why": "candidate register: used because pool-delegate discretion over origination, margin-call timing, and workout is Maple's defining feature. But `Sv` reads as loan servicing, and Maple's delegate also selects counterparties — an allocation mandate, which `Sv` does not reach." },
+            { "symbol": "Ft", "why": "loans are fixed-term but the LENDER's claim (syrupUSDC) is perpetual and open-ended; `Ft` describes only the asset side, and the maturity mismatch between the two is the actual mechanism and is unnamed." },
+            { "symbol": "Bs", "why": "staked SYRUP is a value-accrual/emissions sink, not reliably slashable first-loss capital in the sense `Bs` implies." },
+            { "symbol": "Fd", "why": "candidate register: used for the delegate/protocol fee split, which is a real on-chain flow." }
+          ]
+        },
+        {
+          "name": "Centrifuge (Centrifuge Protocol V3)",
+          "rank_basis": "DefiLlama parent#centrifuge $1.629B TVL 2026-08-04 (largest tokenization protocol not operated by a single asset manager)",
+          "elements": ["Aw", "Sh", "Tr", "At", "Ex", "Ep", "Wq", "Sv", "Xm", "Xf", "Up", "Gp", "Tg"],
+          "order_known": true,
+          "residue": [
+            "The underlying assets sit in an off-chain SPV. No element for the SPV, for its bankruptcy remoteness, or for the security trustee holding the assets for tokenholders' benefit.",
+            "NAV is recomputed by a NAV Manager and PUSHED as an oracle update to every spoke chain. It is an unchallenged single-party assertion — there is no dispute path, so `Oa` does not apply and `At` names only the periodic report, not the continuous price. NAV manipulation is the primary failure mode and has no representation.",
+            "No element for asset-level SERVICING: collections, delinquency roll rates, write-off policy. `Sv` gestures at discretion but names no state.",
+            "No element for origination — who chooses which invoices/loans enter the pool, and on what credit criteria.",
+            "`Tr` gives DROP/TIN seniority but not the trigger events (overcollateralization tests, interest-coverage tests) that redirect the waterfall — the covenants ARE the tranche structure in real securitization.",
+            "Hub/spoke NAV propagation means the price is authoritative on one chain and a message-derived copy elsewhere; `Xm` names verified messaging but not 'the canonical accounting lives on chain A and chain B trades a stale copy'."
+          ],
+          "forced": [
+            { "symbol": "Ex", "why": "the NAV feed is issuer-published and undisputable, structurally unlike the medianizer/push oracle `Ex` describes." },
+            { "symbol": "Sv", "why": "candidate register: used for NAV Manager and asset-manager discretion, which is load-bearing here." },
+            { "symbol": "Tr", "why": "the waterfall is real and on-chain at the share-class level, but the loss event it responds to is an off-chain default determined by the manager, so the trigger is outside the symbol." }
+          ]
+        }
+      ],
+      "category_residue": "The vocabulary can express the WRAPPER and none of the WRAPPED. Across all five, the recurring holes are: (1) no obligor — nothing names who owes the money or what recourse exists; (2) no register of record — nothing distinguishes 'the chain is the ownership ledger' from 'the chain mirrors a transfer agent's book', which is the difference between a bearer instrument and a receipt; (3) no bankruptcy remoteness or claim perfection — `Tr` names a waterfall but never what it attaches to or whether the attachment survives issuer insolvency; (4) no reserve/portfolio composition — `At` names the attestation document, not the assets; (5) no investment discretion — a manager who can change the entire risk profile without touching a contract is invisible; (6) no legal-eligibility semantics behind `Aw` — the gate is expressible, the reason for it is not. Notably, five of five protocols use `Aw`, `At`, `Fz`, `Up`, `Gp` and essentially nothing else that is category-specific: the vocabulary's RWA coverage is an access-control and upgrade-authority coverage.",
+      "identical_decompositions": [
+        ["Circle USYC", "BlackRock BUIDL"]
+      ]
+    },
+    {
+      "category": "Options / structured products",
+      "why_a_category": "How do you sell a non-linear, path-dependent payoff on-chain — who prices it, who underwrites it, what collateral secures it, and how is the terminal payoff determined?",
+      "protocols": [
+        {
+          "name": "Derive (formerly Lyra V2)",
+          "rank_basis": "DefiLlama options $31.19M notional/30d 2026-08-04 — 87% of the entire on-chain options category ($35.70M/30d total). Reported ~$294M weekly volume and >$1B OI in March 2026 on its own dashboards; the gap indicates DefiLlama undercounts, noted.",
+          "elements": ["Ob", "Rf", "Op", "Pf", "Ct", "Li", "Bs", "Sh", "Xf", "Xm", "Ex", "Em", "Up", "Gp"],
+          "order_known": false,
+          "residue": [
+            "PORTFOLIO / SCENARIO MARGIN. Derive stress-tests a whole account across 27+ joint spot-and-volatility shock scenarios and margins the worst case. `Ct` is a per-position threshold test. These are different objects — one is a scalar comparison, the other is a min over a scenario grid — and collapsing them loses the only thing that makes on-chain options market-making viable.",
+            "No element for an IMPLIED VOLATILITY SURFACE or any model-based pricing. Every options venue needs one; the vocabulary has five symbols for spot AMM invariants and zero for a pricing model.",
+            "No element for INSTRUMENT LISTING — which strikes and expiries exist, on what cycle, and who decides. This is a first-class governed process at every options venue.",
+            "No element for SETTLEMENT PRICE DETERMINATION at expiry (the expiry fixing window, the index construction). `Ex` names a price feed, not a terminal fixing that irrevocably determines payoff.",
+            "No element for off-chain matching with on-chain settlement — the operator/sequencer can censor or reorder, and `Ob` silently asserts the opposite.",
+            "No element for a fee/maker-rebate schedule as a market-making incentive."
+          ],
+          "forced": [
+            { "symbol": "Ob", "why": "`Ob` says ON-CHAIN order book. Derive's book is matched off-chain by a centralized exchange operator; only settlement and collateral are on-chain. Using `Ob` here erases the trust assumption that distinguishes Derive from a true on-chain book." },
+            { "symbol": "Op", "why": "`Op` is the only symbol available for an entire product surface — European cash-settled crypto options with cross-margin, plus spreads and combos. It names 'strike/expiry/collateralized settlement' and nothing about how the payoff is priced, underwritten, or margined." },
+            { "symbol": "Bs", "why": "the security-module backstop is thinly capitalized relative to OI; `Bs` implies first-loss capital adequate to the risk." }
+          ]
+        },
+        {
+          "name": "Rysk V12",
+          "rank_basis": "DefiLlama $29.86M TVL 2026-08-04 — largest options-vault TVL by 8.7x; $1.21M notional/30d (#3 by volume)",
+          "elements": ["Sh", "Op", "Dp", "Ep", "Wq", "Ct", "Ex", "Em", "Up", "Gp"],
+          "order_known": true,
+          "residue": [
+            "The vault's entire economic content is a STRIKE-AND-TENOR SELECTION POLICY run each epoch. No element names a systematic option-writing policy. `Sv` is the nearest available and is about servicing discretion, not instrument selection — I declined to use it rather than force it.",
+            "No element for delta-hedge REBALANCING BANDS or hedge slippage, which is where structured-vault PnL actually leaks. `Dp` names that a hedge is maintained but nothing about the policy.",
+            "No element for the vault's capacity constraint (the strategy degrades with size).",
+            "No element for the counterparty side — the vault sells to market makers via an auction or RFQ; who buys and at what discount to fair value is the whole yield.",
+            "No element expressing that vault depositors are SHORT VOLATILITY — the risk exposure the share represents is invisible in `Sh`."
+          ],
+          "forced": [
+            { "symbol": "Dp", "why": "candidate register: used because delta-hedge maintenance is genuinely a core loop. But `Dp` is unresolved — it names 'a hedge is maintained' with no policy, threshold, or instrument, which is exactly the under-resolution problem `Op` has." },
+            { "symbol": "Ep", "why": "the epoch is a strategy cycle (weekly roll), not a state-transition gate in the consensus/queue sense `Ep` reads as." }
+          ]
+        },
+        {
+          "name": "Hegic",
+          "rank_basis": "DefiLlama $9.00M TVL 2026-08-04 — largest TVL in the pure 'Options' category; $0.01M notional/30d (functionally dormant by volume, noted)",
+          "elements": ["Op", "Sh", "Ex", "Up", "Gp"],
+          "order_known": true,
+          "residue": [
+            "PEER-TO-POOL PAYOFF UNDERWRITING. A single pool is the counterparty to every option sold. This is the protocol's defining mechanism and NOTHING in the vocabulary names it. `Pl` is lending. `Cv` is 'adjudicated claims on pooled premium' — Hegic's claims are automatic and unadjudicated, so `Cv` is wrong on its distinguishing clause. I left this as residue rather than force either.",
+            "Premium pricing is a utilization-scaled IV formula — a model, and there is no symbol for a pricing model.",
+            "No element for pool UTILIZATION LIMITS as a solvency control (the only thing stopping the pool from selling itself insolvent).",
+            "No element for the pool's aggregate greeks / net exposure, which is what LPs actually own.",
+            "No element for on-chain strategy templates (straddles, spreads) as composed instruments."
+          ],
+          "forced": [
+            { "symbol": "Sh", "why": "LP shares are pro-rata on a pool whose value depends on unrealized short-option liabilities that are not marked; `Sh` implies a claim on an enumerable asset pool." },
+            { "symbol": "Op", "why": "same collapse as everywhere: `Op` names the instrument and says nothing about the fact that here the WRITER is a pool, which is the entire design." }
+          ]
+        },
+        {
+          "name": "Aevo (Ribbon Finance lineage)",
+          "rank_basis": "DefiLlama options $1.65M notional/30d 2026-08-04 (#2 by options volume)",
+          "elements": ["Ob", "Op", "Pf", "Ct", "Li", "Sh", "Xf", "Xm", "Ex", "Em", "Up", "Gp"],
+          "order_known": false,
+          "residue": [
+            "Identical residue to Derive: no portfolio margin object, no vol surface, no instrument listing, no expiry fixing, no off-chain-matching trust model.",
+            "The Ribbon DOV heritage (structured vaults selling into a weekly auction) adds: no element for a periodic sealed-bid AUCTION of a bespoke instrument. `Ba` is batch-auction clearing for a fungible order flow at a uniform price — a weekly options auction with a single seller and a reserve price is a different mechanism; `Da` (Dutch descent) is contested and I did not use it.",
+            "No element for the migration of user balances between a rollup and L1 as an operational primitive distinct from bridging."
+          ],
+          "forced": [
+            { "symbol": "Ob", "why": "off-chain book, on-chain settlement — same misfit as Derive." },
+            { "symbol": "Op", "why": "single symbol for the whole options surface." }
+          ]
+        },
+        {
+          "name": "Panoptic V2",
+          "rank_basis": "DefiLlama $2.05M TVL 2026-08-04 (#3 in the 'Options' category by TVL)",
+          "elements": ["Cl", "Op", "Sr", "Pl", "Ct", "Li", "Sh", "Up", "Gp"],
+          "order_known": true,
+          "residue": [
+            "PERPETUAL, EXPIRY-FREE OPTIONS. Panoptic's options never expire and are never exercised at a strike — the payoff is realized continuously as the borrowed Uniswap V3 position accrues or loses fees. `Op`'s definition ('strike/expiry/collateralized settlement') is false for two of its three clauses here.",
+            "PREMIUM AS A STREAMED RATE rather than an upfront payment. `Sr` names streaming accrual but not that the stream IS the option premium and is set by realized LP fee generation rather than by a pricing model.",
+            "No element for 'lending an LP position as the underwriting primitive' — the borrower of the LP token becomes the option holder. This is a composition of `Cl` and `Pl` that neither symbol anticipates.",
+            "No element for the fact that the option's payoff is synthesized from an AMM invariant (the LP payoff is a short-straddle-shaped function of `Cp`) rather than declared."
+          ],
+          "forced": [
+            { "symbol": "Op", "why": "no strike, no expiry, no terminal settlement — three-quarters of the symbol's definition does not apply. Used only because the instrument is unambiguously an option economically and the vocabulary offers no alternative." },
+            { "symbol": "Pl", "why": "the lending market lends LP POSITIONS, not fungible assets, and the borrower's motive is exposure rather than leverage; `Pl` presumes a fungible shared pool." }
+          ]
+        }
+      ],
+      "category_residue": "`Op` is one symbol for the entire options universe and it is under-resolved by roughly an order of magnitude relative to pool pricing. `Cp`/`Wg`/`St`/`Cl`/`Pm` spend five symbols distinguishing five algebraic variants of the same scalar function on a two-asset pool. `Op` collapses at least six orthogonal distinctions that materially change the risk: (a) European vs American vs perpetual exercise; (b) cash vs physical settlement; (c) peer-to-peer vs peer-to-pool underwriting; (d) upfront vs streamed premium; (e) isolated vs portfolio/scenario margin; (f) model-priced vs order-book-priced. Downstream of that, the category has three whole missing mechanisms: a pricing model / volatility surface; instrument listing and expiry-cycle governance; and terminal settlement-price fixing. The vocabulary's resolution tracks IMPLEMENTATION DIVERSITY IN ETHEREUM SPOT DEXES, not economic significance — it is finest exactly where the most independent codebases were written, and coarsest where the hardest finance is. Separately: the entire on-chain options category is $35.7M of 30-day notional, so all five rankings sit near the noise floor and Derive alone is 87% of it; that itself is a finding about whether `Op` deserves the coverage it has.",
+      "identical_decompositions": [
+        ["Derive", "Aevo"]
+      ]
+    },
+    {
+      "category": "Reserve-backed / fiat stablecoin issuers",
+      "why_a_category": "How do you keep a token at $1 when the thing making it worth $1 is a bank account and a legal promise? Every member answers with the same non-answer: an off-balance-sheet reserve, a redemption right for a whitelisted few, and a freeze key.",
+      "protocols": [
+        {
+          "name": "Tether USDT",
+          "rank_basis": "DefiLlama stablecoins $183.04B circulating 2026-08-04 (#1, 2.5x the #2)",
+          "elements": ["Ps", "Rd", "At", "Fz", "Up"],
+          "order_known": false,
+          "residue": [
+            "THE RESERVE PORTFOLIO. T-bills, reverse repo, gold, bitcoin, secured loans, and corporate equity holdings. This is the whole instrument and there is no symbol for it. `At` names the quarterly BDO report, i.e. a PDF about the reserve, not the reserve.",
+            "The ISSUER AS OBLIGOR. A USDT holder has, at most, a contractual claim on Tether Limited. No element for the obligor and none for creditor priority against it.",
+            "Redemption is contractual, off-chain, gated at a $100k minimum, subject to a 0.1% fee and to Tether's stated discretion to refuse or to settle in kind. `Rd`'s 'direct redemption right' is close to the opposite of this.",
+            "BANKING AND CORRESPONDENT RELATIONSHIPS — the actual historical failure mode (Wells Fargo/Noble/Deltec) and completely absent.",
+            "The equity buffer and profit distribution to Tether Holdings — the excess reserve is the shareholders', not the holders', and nothing expresses that.",
+            "The 'authorized but not issued' inventory and the chain-swap operation that moves supply between chains by burning on one and issuing on another under off-chain authorization. This looks like `Xf` and is not — there is no message verification, just an operator.",
+            "Attestation vs audit as a distinction; jurisdiction (El Salvador) and the MiCA/GENIUS Act regimes that determine whether the instrument may legally exist in a market.",
+            "Law-enforcement cooperation regime that governs when `Fz` fires."
+          ],
+          "forced": [
+            { "symbol": "Ps", "why": "there is no peg-swap MODULE. Mint and redeem are off-chain treasury operations executed by Tether staff for verified direct customers; the on-chain contract has an owner-only issue() and redeem(). Calling this `Ps` imputes an on-chain 1:1 reserve mechanism that does not exist." },
+            { "symbol": "Rd", "why": "not a right the contract can honor and not available to ~all holders; a $100k-minimum discretionary contractual facility." },
+            { "symbol": "Fz", "why": "candidate register: used because it is the one mechanism here that is unambiguously on-chain, actively exercised (2,000+ blacklisted addresses), and consequential." }
+          ]
+        },
+        {
+          "name": "Circle USDC",
+          "rank_basis": "DefiLlama stablecoins $72.20B circulating 2026-08-04 (#2)",
+          "elements": ["Ps", "Rd", "At", "Fz", "Aw", "Xm", "Xf", "Up", "Gp"],
+          "order_known": false,
+          "residue": [
+            "Same reserve/obligor/banking residue as Tether, with a different fact pattern: the Circle Reserve Fund is a government MMF at BlackRock plus deposits at named banks. Still unnameable — `At` names the monthly Deloitte report.",
+            "The March 2023 SVB depeg was a BANK FAILURE. There is no element in a 58-symbol DeFi vocabulary for 'the reserve is a deposit and the deposit-taker failed', despite that being the only time USDC has broken.",
+            "Circle Mint is an off-chain institutional account with KYC, wire rails, and settlement windows. `Aw` names a gate on-chain; this gate is a business relationship.",
+            "GENIUS Act / MiCA reserve composition mandates and the resulting inability to hold yield-bearing reserves beyond a schedule.",
+            "The economics: Circle keeps the reserve interest and pays distribution partners out of it. No element for who captures the float, which is the entire business model."
+          ],
+          "forced": [
+            { "symbol": "Ps", "why": "same as Tether — off-chain mint/redeem, not an on-chain module." },
+            { "symbol": "Aw", "why": "the gate is on Circle Mint access, not on token transfer; USDC transfers are permissionless." },
+            { "symbol": "Fz", "why": "candidate register: used because the blacklist is live on-chain authority." }
+          ]
+        },
+        {
+          "name": "World Liberty Financial USD1",
+          "rank_basis": "DefiLlama stablecoins $4.00B circulating 2026-08-04 (#3 among fiat-backed; #5 among all stablecoins)",
+          "elements": ["Ps", "Rd", "At", "Fz", "Up"],
+          "order_known": false,
+          "residue": [
+            "Identical structural residue to Tether: reserve portfolio (custodied at BitGo), the issuer as obligor, off-chain mint/redeem for whitelisted institutions, attestation.",
+            "Third-party CUSTODY as a distinct risk layer — reserves are held by a qualified custodian rather than by the issuer. No element distinguishes 'issuer holds reserves' from 'custodian holds reserves for issuer', which is a material creditor-priority difference.",
+            "Governance/ownership concentration and related-party dealing as a solvency-relevant fact.",
+            "The token is deployed natively on multiple chains by the issuer, again not `Xf`."
+          ],
+          "forced": [
+            { "symbol": "Ps", "why": "off-chain mint/redeem, no module." },
+            { "symbol": "Rd", "why": "institutional-only, contractual, discretionary." },
+            { "symbol": "Fz", "why": "candidate register: on-chain freeze/blacklist authority is present and used." }
+          ]
+        },
+        {
+          "name": "Global Dollar USDG (Paxos / Global Dollar Network)",
+          "rank_basis": "DefiLlama stablecoins $3.42B circulating 2026-08-04 (#4 among fiat-backed)",
+          "elements": ["Ps", "Rd", "At", "Fz", "Fd", "Up"],
+          "order_known": false,
+          "residue": [
+            "The distinguishing feature of USDG is a RESERVE-YIELD SHARING AGREEMENT with distribution partners (exchanges, wallets) based on held balances. This is a contractual off-chain revenue split computed from on-chain balances; `Fd` names on-chain surplus distribution and is a poor fit.",
+            "The NYDFS trust charter and the segregated-reserve requirements that make USDG legally different from USDT. Unnameable.",
+            "Same reserve/obligor/banking residue as every other member.",
+            "No element for a CONSORTIUM as an issuer governance form — the network's members jointly determine allocation policy."
+          ],
+          "forced": [
+            { "symbol": "Ps", "why": "off-chain mint/redeem." },
+            { "symbol": "Fd", "why": "candidate register, and forced: the surplus distribution is a legal agreement executed by wire, not an on-chain fee flow. Used only to record that a distribution exists at all." },
+            { "symbol": "Fz", "why": "candidate register: Paxos holds and uses freeze authority." }
+          ]
+        },
+        {
+          "name": "PayPal USD (PYUSD)",
+          "rank_basis": "DefiLlama stablecoins $2.68B circulating 2026-08-04 (#5 among fiat-backed)",
+          "elements": ["Ps", "Rd", "At", "Fz", "Xm", "Xf", "Up"],
+          "order_known": false,
+          "residue": [
+            "The dominant PYUSD use path is INSIDE PAYPAL'S CUSTODIAL LEDGER — a closed-loop database where PYUSD converts 1:1 to a PayPal balance. Most PYUSD activity is not on-chain at all, and there is no element for 'a custodial off-chain ledger that shadows the token'.",
+            "Same reserve/obligor/banking residue; issued by Paxos Trust under NYDFS.",
+            "No element for a CONSUMER PAYMENT NETWORK as the demand source (merchant settlement, chargeback semantics, dispute reversal) — chargebacks are a forced-reversal primitive that the on-chain token cannot support and the wrapper must.",
+            "Reserve yield accrues to PayPal, plus a promotional rewards rate paid to holders out of it — an issuer-funded yield with no `Em` character (not protocol emissions, marketing spend)."
+          ],
+          "forced": [
+            { "symbol": "Ps", "why": "off-chain mint/redeem by Paxos." },
+            { "symbol": "Xm", "why": "the LayerZero OFT deployment to Solana/Arbitrum is genuine cross-domain messaging, but the ETHEREUM supply is native issuance, so PYUSD is simultaneously natively multi-issued and bridge-extended and the two are indistinguishable in this vocabulary." },
+            { "symbol": "Fz", "why": "candidate register: Paxos freeze/wipe authority." }
+          ]
+        }
+      ],
+      "category_residue": "This category is almost entirely residue, and I want to say it plainly: Tether — the single largest asset in DeFi at $183B, larger than every protocol in every other category in this project combined — decomposes to five symbols, three of which are forced, and the honest core is TWO: `Fz` and `Up`. Everything determining whether USDT is worth $1 is outside the model: what the reserve holds, who custodies it, which banks hold the cash, who the obligor is, whether redemption is available to you, and which regulator can order the issuer to stop. Structurally, all five members produce the same five-to-nine symbols, and every one of those symbols is CONTROL-PLANE (`Fz`, `Up`, `Gp`, `At`, `Aw`) rather than mechanism. There is exactly one symbol in all 58 that touches off-chain backing — `At` — and it names the attestation REPORT rather than the reserve, i.e. it names the artifact and not the thing. The vocabulary is a vocabulary of on-chain state machines; a fiat stablecoin is a bank account with an ERC-20 receipt, and the model can see the receipt.",
+      "identical_decompositions": [
+        ["Tether USDT", "World Liberty Financial USD1"],
+        ["Circle USDC", "PayPal USD (PYUSD)"]
+      ]
+    },
+    {
+      "category": "Prediction markets & other (uncategorized large protocols)",
+      "why_a_category": "How do you price and settle a claim on a fact rather than on a price — and, for the 'other' members, how do you delegate capital-allocation discretion to a named human party on-chain? Both answer questions the rest of DeFi's vocabulary was not built for.",
+      "protocols": [
+        {
+          "name": "Kalshi",
+          "rank_basis": "DefiLlama $10.89B volume/30d 2026-08-04 — #1 prediction market by 3.5x, and larger by volume than any other protocol in my entire lane except the stablecoins",
+          "elements": ["Aw", "Rd", "Ct"],
+          "order_known": false,
+          "residue": [
+            "A CENTRAL COUNTERPARTY. Kalshi operates a CFTC-registered DCO that NOVATES every trade and stands between buyer and seller. There is no element for clearing, novation, or a CCP guarantee. The vocabulary has `Sl`, `Bs`, and `Ad` — which are precisely the DeFi re-inventions of a clearinghouse default waterfall — and nothing for the clearinghouse itself.",
+            "DESIGNATED CONTRACT MARKET status and contract SELF-CERTIFICATION: Kalshi files a contract's rules with the CFTC and may list it unless the CFTC objects. The listing authority for a market is a regulatory process. No element.",
+            "The CONTRACT RULEBOOK — a natural-language specification of the settlement condition and the named settlement source. This is the actual product being sold and there is no symbol for a rulebook.",
+            "Segregated customer funds under CFTC Part 1.25, and FCM/member structure.",
+            "The order book is a conventional off-exchange matching engine; even `Ob` (forced) is not honestly available because nothing is on-chain.",
+            "The on-chain surface is limited to USDC deposit rails and recent Solana integrations. Essentially the whole protocol is residue."
+          ],
+          "forced": [
+            { "symbol": "Rd", "why": "contracts settle to $1 or $0, which resembles redemption, but the settlement is a clearinghouse bookkeeping entry against a segregated account, not a redemption right against reserves." },
+            { "symbol": "Ct", "why": "margin exists for multi-leg and short positions, but it is exchange-rule margin computed off-chain by the DCO, not the on-chain health computation `Ct` describes." },
+            { "symbol": "Aw", "why": "KYC/geographic eligibility is an account-opening process at a regulated broker, not a transfer gate." }
+          ]
+        },
+        {
+          "name": "Polymarket",
+          "rank_basis": "DefiLlama $3.14B volume/30d and $330.8M TVL 2026-08-04 — #1 on-chain prediction market, ~85% of on-chain prediction-market TVL",
+          "elements": ["Ob", "Oa", "Rd", "Au", "Gs", "Aw", "Up", "Gp"],
+          "order_known": true,
+          "residue": [
+            "CONDITIONAL-TOKEN SPLIT AND MERGE. Deposit $1 of collateral, receive one YES and one NO; return both, get $1 back. This is the single most fundamental primitive in prediction markets — a state-partition of collateral into complementary contingent claims — and NO symbol names it. The nearest is `Py` (principal/yield separation), which splits a claim along TIME; this splits along STATE. I did not force `Py`.",
+            "THE MARKET RULEBOOK. The natural-language resolution criteria ('will X happen by date Y, per source Z') is the product. Every dispute is a dispute about text. `Oa` gives an assert-then-dispute wrapper around an oracle answer and nothing about what question is being answered.",
+            "THE NEGATIVE-RISK ADAPTER, which converts N independent binary markets into a mutually-exclusive set so that a full basket of NOs is redeemable for N-1 collateral. This is a genuine on-chain mechanism (a constraint-imposing wrapper over conditional tokens) with no symbol.",
+            "MARKET CREATION AND LISTING AUTHORITY — who may create a market and under what template.",
+            "The admin/UMIP-level resolution OVERRIDE path when the oracle produces a result the operator deems wrong.",
+            "The off-chain matching operator (orders are signed and matched by Polymarket, settled on the CTF Exchange) — a censorship and reordering surface `Ob` conceals."
+          ],
+          "forced": [
+            { "symbol": "Ob", "why": "off-chain signed-order matching with on-chain settlement, not an on-chain book." },
+            { "symbol": "Oa", "why": "structurally right (assert, bond, dispute, escalate) but wrong in three ways that matter: the escalation terminates in a UMA TOKEN-HOLDER VOTE with no objective referent and documented voter-stake conflicts (WSJ, May 2026: >50% of votes in most disputed markets from the ten largest wallets, ~1 in 5 disputes had a voter with a stake in the outcome); proposals are now restricted to a WHITELIST, making it a permissioned assertion; and the thing being asserted is an interpretation of prose, not an observation of data. `Oa` names the dispute wrapper and not the resolution." },
+            { "symbol": "Gs", "why": "candidate register: gasless relayed trading via proxy wallets is real and load-bearing for the UX." },
+            { "symbol": "Au", "why": "the proxy-wallet/relayer pattern is delegated execution scope, but it is operator-run rather than user-configured policy." }
+          ]
+        },
+        {
+          "name": "Azuro",
+          "rank_basis": "DefiLlama $1.59M TVL 2026-08-04 — largest peer-to-pool (non-order-book) prediction/betting protocol; architecturally distinct from the Polymarket clones above it by volume",
+          "elements": ["Sh", "Rl", "Ex", "Sv", "Rd", "Em", "Up", "Gp"],
+          "order_known": true,
+          "residue": [
+            "PEER-TO-POOL PAYOFF UNDERWRITING — the same gap found in Hegic. A single LP pool is the counterparty to every bet. Nothing names 'a pool that writes a non-linear payoff'. `Pl` is lending; `Cv` requires adjudicated claims.",
+            "ODDS ADJUSTMENT BY POOL EXPOSURE (the vAMM): odds move against incoming flow as a function of the pool's net exposure to that outcome. This is a pricing invariant, and none of `Cp`/`Wg`/`St`/`Cl`/`Pm` describes it — it prices a probability against inventory, not an asset against an asset.",
+            "PARLAY / ACCUMULATOR CORRELATION RISK — combining legs multiplies payout but the pool's exposure is not the product of the legs' exposures. A whole risk-management object with no representation.",
+            "The Data Provider is a named off-chain party who supplies both the initial odds AND the outcome resolution, with no dispute path. There is no `Oa` here, and `Ex` misrepresents a single trusted party as an oracle."
+          ],
+          "forced": [
+            { "symbol": "Rl", "why": "candidate register: the LiquidityTree genuinely reserves a slice of pool liquidity per condition so simultaneous events cannot oversubscribe the same capital — this is the closest good fit in the whole vocabulary. But note that Azuro's own marketing calls it 'concentrated liquidity', which would have made `Cl` an attractive and completely wrong choice: `Cl` is tick-ranged price liquidity, the LiquidityTree is a segment tree over event-level capital allocation. Naming collision, not mechanism match." },
+            { "symbol": "Sv", "why": "candidate register: the Data Provider's determination discretion over odds and outcomes is real, but `Sv` is written for loan servicing and does not reach 'sets the price and also decides who won'." },
+            { "symbol": "Ex", "why": "a single named data provider pushing odds and results, with no medianizer, no aggregation, and no dispute." }
+          ]
+        },
+        {
+          "name": "Steakhouse Financial (Risk Curators)",
+          "rank_basis": "DefiLlama $3.08B TVL 2026-08-04 — #1 in the 'Risk Curators' category ($8.76B total, DefiLlama's #9 category overall). Included as a large protocol that fits no conventional DeFi category.",
+          "elements": ["Sh", "Im", "Ct", "Wq", "Tg", "Gp", "Fd"],
+          "order_known": true,
+          "residue": [
+            "A DELEGATED DISCRETIONARY ALLOCATION MANDATE. A named firm decides which isolated markets a depositor's capital enters, at what supply cap, and rebalances at will, for a performance fee. This is the entire protocol. No element names it. `Sv` (candidate) is about servicing a loan, not selecting exposures — I declined to force it.",
+            "No element for a SUPPLY CAP per market as a risk-budgeting instrument distinct from a collateral threshold.",
+            "No element for the curator's LIABILITY or absence of it — depositors bear losses from the curator's choices with no on-chain recourse and no fiduciary encoding.",
+            "No element for the fact that the curator's fee is on AUM/performance, creating a documented incentive to reach for yield.",
+            "No element for the relationship between the curator layer and the base protocol (Morpho/Euler) — the vault is a client of a market, not a market."
+          ],
+          "forced": [
+            { "symbol": "Im", "why": "the curator ALLOCATES ACROSS isolated markets; it does not create the risk fence. `Im` describes the substrate, not the vault's mechanism." },
+            { "symbol": "Ct", "why": "inherited from the underlying markets, not computed by the vault." },
+            { "symbol": "Fd", "why": "candidate register: performance and management fees are taken on-chain." }
+          ]
+        },
+        {
+          "name": "Grove Finance (Onchain Capital Allocator)",
+          "rank_basis": "DefiLlama $2.43B TVL 2026-08-04 — #1 in the 'Onchain Capital Allocator' category ($7.74B total, DefiLlama's #12 category). Included as a large protocol that fits no conventional DeFi category.",
+          "elements": ["Sh", "Aw", "At", "Xf", "Tg", "Gp"],
+          "order_known": true,
+          "residue": [
+            "Grove takes on-chain capital (largely Sky/Spark) and allocates it into OFF-CHAIN credit — most visibly a Janus Henderson CLO fund. It combines the RWA residue set (obligor, register of record, bankruptcy remoteness, manager discretion) with the curator residue set (allocation mandate, no on-chain recourse). It is the worst case for this vocabulary: two independent gap families stacked.",
+            "No element for the mandate: an allocation policy document approved by one DAO governing capital sourced from another.",
+            "No element for the CLO tranche structure the capital ultimately buys — `Tr` would name the waterfall if the waterfall were visible, but from Grove's position it is a single opaque NAV.",
+            "No element for the redemption LAG between an on-chain instant-liquidity promise and an off-chain fund's monthly redemption window — a structural maturity transformation. `Wq` names a queue; this is a duration mismatch that a queue conceals."
+          ],
+          "forced": [
+            { "symbol": "At", "why": "the NAV of the off-chain allocation is a manager report, not a protocol-verifiable attestation." },
+            { "symbol": "Xf", "why": "cross-chain asset movement is present, but the economically important transfer is CHAIN-TO-BANK, which `Xf` does not describe and no symbol does." }
+          ]
+        }
+      ],
+      "category_residue": "Two structural gaps and one measurement finding. (1) There is no element for CONDITIONAL-TOKEN SPLIT/MERGE — the state-partition of collateral into complementary contingent claims — which is the defining primitive of the entire prediction-market sector. `Py` splits along time; nothing splits along state. (2) There is no element for a CENTRAL COUNTERPARTY / clearinghouse, which is what the #1 protocol by volume in this category actually is; the vocabulary contains three symbols (`Sl`, `Bs`, `Ad`) that are DeFi's reconstructions of a clearinghouse default waterfall and none for the institution they reconstruct. (3) On resolution specifically: `Oa` covers the DISPUTE WRAPPER around Polymarket's settlement but not the settlement — the rulebook (natural-language resolution criteria plus named settlement source) is the actual product, and it is invisible. For Azuro and Kalshi, `Oa` does not apply at all: one resolves by a single trusted data provider, the other by exchange rule. Two of the three prediction markets have no expressible resolution mechanism whatsoever. On the 'other' members: DefiLlama's #9 and #12 categories by TVL ($16.5B combined) are curators and allocators, and the vocabulary has zero coverage of a delegated discretionary allocation mandate — the fastest-growing organizational form in DeFi has no symbol.",
+      "identical_decompositions": [
+        ["Polymarket", "Predict Fun / OPINION / InsightX (the #3–#5 on-chain prediction markets by volume, all CTF+CLOB+UMA clones, decompose identically to Polymarket including its residue)"]
+      ]
+    }
+  ],
+  "completeness_verdict": "Counting rule: for each protocol I enumerated the distinct functional components a competent implementer or risk analyst would have to specify, then counted how many received an unforced symbol. Forced fits count as half. Totals: RWA/private credit ~62 components, ~24 expressible → 39%; Options ~48 components, ~30 expressible → 63%; Fiat stablecoins ~68 components, ~17 expressible → 25%; Prediction/other ~54 components, ~24 expressible → 44%. Lane-wide: ~232 components, ~95 expressible → roughly 41%. But the unweighted number flatters the vocabulary badly. Weighted by which components determine whether a holder gets paid, expressibility collapses: for the fiat stablecoins it is near zero (the model can see the freeze key and the upgrade proxy; it cannot see the reserve, the obligor, the custodian, or the bank), and for tokenised treasuries it is roughly 15% (the model sees the allowlist and the redemption function; it cannot see the transfer agent's register, which is the legal locus of ownership). It fails hardest, in order: (1) fiat stablecoin issuers, where $255B of the $260B in my lane resolves to five symbols of which three are forced; (2) RWA, where every protocol needs an obligor, a register of record, and a perfected claim and none of the three exists; (3) prediction markets, where the sector's founding primitive (conditional-token split/merge) and its largest venue's core institution (a CCP) are both unnamed. It succeeds best on options — but only because options venues are built out of margin, liquidation, and order-flow machinery the vocabulary already covers for perps, while the options-specific parts (pricing model, listing, expiry fixing, portfolio margin) are all missing and `Op` hides their absence. The honest summary: this vocabulary is a complete-ish vocabulary of ON-CHAIN STATE MACHINES, and it degrades monotonically with the fraction of a protocol that lives off-chain — which happens to be inversely correlated with how much money the protocol holds.",
+  "vocabulary_gaps": [
+    "OBLIGOR & RECOURSE — who owes the payment, what claim the holder has against them, and what happens on default. Missing from every RWA protocol, every fiat stablecoin, and all private credit. Largest gap by TVL in the entire project by an order of magnitude.",
+    "REGISTER OF RECORD — whether the chain is the authoritative ownership ledger or a mirror of an off-chain register maintained by a transfer agent or fund administrator. Determines whether any other on-chain mechanism is legally binding. Affects BUIDL, USYC, Ondo, Centrifuge, Grove.",
+    "RESERVE COMPOSITION & CUSTODY — what backs the claim and who holds it. `At` names the attestation report; nothing names the reserve, the custodian, or the bank. This is the whole of the $255B stablecoin category.",
+    "BANKRUPTCY REMOTENESS & CLAIM PERFECTION — the SPV, the security interest, the collateral agent, the UCC filing. `Tr` names a waterfall but never what it attaches to or whether the attachment survives insolvency.",
+    "CENTRAL COUNTERPARTY / CLEARING & NOVATION — Kalshi, and any regulated venue. The vocabulary has `Sl`, `Bs`, and `Ad`, which are DeFi's reinventions of a default waterfall, and nothing for the institution being reinvented.",
+    "CONDITIONAL-TOKEN SPLIT & MERGE (state-partition of collateral) — the founding primitive of prediction markets. `Py` partitions along time; nothing partitions along state.",
+    "PEER-TO-POOL PAYOFF UNDERWRITING — a pool as counterparty to a non-linear payoff. Hegic, Azuro, and by extension GMX-style venues. `Pl` is lending, `Cv` requires adjudication; neither fits.",
+    "DELEGATED DISCRETIONARY ALLOCATION MANDATE (curation) — a named party choosing exposures for depositors' capital for a fee, with no on-chain recourse. DefiLlama's #9 and #12 categories, $16.5B combined, zero coverage. `Sv` is a candidate that does not reach it.",
+    "PORTFOLIO / SCENARIO MARGIN — a min over a scenario grid across an account, not `Ct`'s per-position scalar test. Required by every serious derivatives venue.",
+    "PRICING MODEL / VOLATILITY SURFACE — five symbols for spot-AMM invariants and none for the model that prices a non-linear payoff.",
+    "INSTRUMENT LISTING & EXPIRY-CYCLE DEFINITION — who decides which strikes, expiries, or markets exist. A first-class governed process at every derivatives and prediction venue.",
+    "RULEBOOK / NATURAL-LANGUAGE CONTRACT SPECIFICATION — the settlement condition and its named source. The actual product being sold by Polymarket and Kalshi.",
+    "OFF-CHAIN MATCHING WITH ON-CHAIN SETTLEMENT — `Ob` silently absorbs a distinct trust model (operator censorship and reordering) used by Derive, Aevo, and Polymarket alike.",
+    "TERMINAL SETTLEMENT-PRICE FIXING — the expiry window and index construction that irrevocably determines a payoff, as distinct from `Ex`'s continuous price feed.",
+    "INVESTMENT / PORTFOLIO DISCRETION — a manager who can change an instrument's entire risk profile without touching a contract (BlackRock over BUIDL, Hashnote over SDYF)."
+  ],
+  "most_surprising": "The four largest things in my lane — USDT, USDC, BUIDL, USYC, some $261B between them — decompose to fewer distinct symbols than a mid-sized AMM, and every symbol they do use is control-plane (`Fz`, `Up`, `Gp`, `At`, `Aw`) rather than mechanism, which means the vocabulary's resolution is not merely uneven but inversely correlated with capital: it is finest where the most independent Ethereum codebases happened to be written, and coarsest where all the money actually is."
+}

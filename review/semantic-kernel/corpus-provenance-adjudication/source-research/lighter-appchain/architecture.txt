@@ -1,0 +1,47 @@
+For the complete documentation index, see
+llms.txt
+. This page is also available as
+Markdown
+.
+Copy
+On this page
+About Lighter
+Technical Architecture: Lighter Core
+Read the Whitepaper:
+https://assets.lighter.xyz/whitepaper.pdf
+Background
+Lighter Core is built on the following principles:
+Users always maintain custody of their assets.
+Operations must be verifiable and strictly adhere to a publicly predefined set of rules.
+The system must scale seamlessly in both latency and throughput.
+Users must always be able to exit securely and independently.
+Achieving this requires a
+publicly verifiable compute engine
+that prevents operator misbehavior and guarantees execution strictly according to publicly defined rules. A few existing solutions for verifiable computation exist, each with trade-offs:
+Blockchains with Decentralized Consensus
+: Achieve verifiability via redundant execution across network nodes. While secure, they face latency and throughput limitations due to consensus mechanisms and network coordination. Additionally, common approaches lack flexibility around data privacy since data must be public to provide redundancy. The Ethereum blockchain is an example of a blockchain with decentralized consensus.
+Trusted Execution Environments (TEEs)
+: Provide hardware-level verification but depend on vendor trust and are vulnerable to side-channel attacks. They require some level of trust since users cannot independently verify execution.
+Succinct Proofs (ZK-Proofs)
+: Historically costly and challenging to develop, succinct proofs offer strong security and scale both horizontally and vertically. They also provide modularity for data privacy, unlike consensus-based systems.
+Additionally, secure exits require asset storage in a robust non-custodial environment. However, the security of the environment users exit to is equally critical. Isolated blockchains connected via bridges offer no non-custodial fallback if compromised. Despite inherent scalability limitations, Ethereum is the most battle-tested verifiable execution platform, providing a neutral, secure settlement layer ideal for user exits.
+Lighter Core
+Lighter Core combines succinct execution proofs with Ethereum as the anchoring layer for both proofs and system state. Users can securely enter or exit directly through Ethereum, with all proofs verified publicly before any state updates occur.
+Scalability is achieved through Lighter Core’s novel proving engine, purpose-built from scratch for exchange-specific workloads. It leverages new algorithms and optimized data structures for efficient exchange-operation proof generation. All exchange operations are executed deterministically via user-signed transactions. A batch of these transactions produces a new post-execution state along with a succinct cryptographic proof.
+Simplified diagram of the described architecture
+Smart contracts on Ethereum hold deposited assets and the canonical Lighter state root, which encapsulates user assets and positions, public pools, order books, and other critical system components. While processing exchange operations, Lighter Core periodically publishes state update proposals to Ethereum. Each proposal transaction is accompanied by data blobs containing the details of the state transition (e.g., per-account changes), allowing users to independently reconstruct and verify their state. The posted data is highly compressed, enabling Lighter Core to publish state data directly to Ethereum at high scale without relying on third parties.
+A Sequencer coordinates first-in–first-out transaction ordering and provides soft finality, executing exchange operations and generating data consumed by other system components. This data is fed to API servers, which provide ultra-low-latency data to end users, and to horizontally and vertically scalable Witness Generator services, which transform it into circuit-friendly inputs for the Lighter Prover. The Prover generates proofs in parallel across Lighter transactions. Hundreds of thousands of these execution proofs are then fed into a multi-layer aggregation engine, where they are combined into a single batch proof. This enables efficient and cost-effective verification on Ethereum.
+Once the proof for a state-update proposal is verified on Ethereum, the contracts update the exchange state. These proofs also attest to the validity and sufficiency of the data posted in Ethereum’s data blobs—demonstrating that the posted data alone is enough to reconstruct all user states using only censorship-resistant and immutable on-chain data.
+Escape Hatch
+To guarantee liveness and censorship resistance, Lighter Core introduces a
+priority request queue
+directly on Ethereum. Users can submit critical exit operations—such as withdrawals, public pool exits, or reduce-only IOC orders—on-chain, ensuring that the Sequencer must process them within a predefined timeframe.
+If the Sequencer fails to process these priority requests in time, the system automatically triggers
+Escape Hatch mode
+. In this state, the Lighter Core smart contract freezes entirely. Users can then leverage Ethereum-posted data blobs to reconstruct their account state and generate succinct proofs of ownership (balances, positions, pool shares). These proofs allow users to withdraw the full value of their assets directly on Ethereum, with no reliance on off-chain coordination—ensuring complete asset security and independence.
+Previous
+Introduction
+Next
+LIT Utility
+Last updated
+7 months ago

@@ -1,0 +1,32 @@
+# Corpus provenance adjudication: provisional readiness
+
+Status: **ready to prepare an official planning candidate; no planning acceptance or implementation**. This author readiness refresh uses source HEAD `eec499d613688137a341f3556cd80ca461dd2ee9`. Its four edited planning documents are working-tree bytes, separately hashed in `inputs.json`; they are not claimed to exist in that commit. The preserved earlier author reports remain historical evidence.
+
+The scope remains five capabilities, 20 requirements, 48 unique scenarios and 28 unchecked tasks. The exact retained scenario-to-requirement/task map reconciles. Fresh strict OpenSpec validation and the actual read-only normalized-corpus check pass. The readiness helper records 3,793 passing checks, including all 3,683 frozen Sprint 9 native-review input hashes and unchanged HEAD. No corpus implementation, source acquisition, annotation change, review invocation or delivery action occurred.
+
+Future planning reviews require a nonauthor stock GPT-6 reviewer and native Fable 5.1 on the same frozen candidate and bundle. Request `claude-fable-5-1[1m]` with `--effort medium`; record the actual returned model. Substantive implementation/evidence reviews require native Grok and Fable 5.1. These bindings now appear in proposal/design/tasks and the final-review scenario. Earlier review identities are not relabelled.
+
+## Actual source inputs and reusable baseline
+
+`inputs.json` inventories the five specifications, proposal/design/tasks, preserved historical author maps, current working instructions and roadmap/design context, original proposal, three lane files, normalized schema/inputs/A-B annotations/generated outputs, primary excerpts, existing normalizer/test driver, and retained regression records. Every entry records exact current bytes, SHA-256, Git object at the captured HEAD when present, and whether the bytes match that object. The current normalizer and tests are the reusable executable source; the proposed adjudication files do not yet exist.
+
+The original command `[/usr/bin/python3, scripts/test_corpus_normalize.py]` ran at **c880acf62944746ff9a376afc0c0050702f037f7**, from 18:39:15.485687 to 18:39:32.028723 UTC on 2026-09-07 (16.54 seconds, exit 0). Its retained raw logs independently contain **20 executed passing tests and 76 actual CLI observations**. `baseline-reuse.json` checks all three log hashes and independently compares the actual 11-file source closure at both commits and in the current worktree: driver, normalizer, three lanes, four normalized inputs, schema and original proposal. All bytes and Git objects agree. The Python executable also matches the recorded original hash.
+
+This is scoped reuse of that actual run, **not a rerun at eec499d**. The test driver generates synthetic annotations; its 374-agreement/one-difference fixture population is not the production 346-agreement/29-difference population. It tests normalization contracts, diagnostic distinctions, reproducibility and read-only behavior, not primary-source truth or financial detection. Historical installed transitive Python dependency bytes were not captured by that run. `tools.json` records current Python/package files for the fresh readiness check without assigning them retroactively to the earlier execution.
+
+The separate fresh command `[/usr/bin/python3, scripts/corpus_normalize.py, check, --repo, .]` validates the real current normalized outputs: **72 rows, 75 units, 375 facet decisions, 346 provisional agreements and 29 unresolved differences across 24 units**. Corpus input/output bytes and mtimes are unchanged. All 75 units remain development; none has verified deployment. Its exact command, UTC interval, exit and full logs are retained in `commands.json` and the associated logs.
+
+## Remaining official bindings
+
+1. Commit/freeze the exact future corpus planning candidate and byte-preserving shared review bundle after root authorizes that step. Include this readiness evidence, all five normative specifications and exact historical/context inputs. Reconcile any later live roadmap/AGENTS/wiki changes rather than treating their older hashes as current.
+2. Obtain both independent planning verdicts on that same candidate/bundle, with requested and actual model identities, raw output, timing, dispositions and any revision bindings. This readiness report is authored preparation, not either verdict.
+3. Bind the future baseline to the chosen implementation revision. Reuse the recorded 20/76 run only while its exact executable/data closure remains equal; retain its original execution revision and dependency limits. Run the production normalization check against the eventual frozen data. New adjudication CLI/control evidence cannot be inherited from normalization.
+4. Before acquisition, freeze the exact development work queue, 18 rule predicates, 29 facet disputes and separate Liquity V1 agreed-label challenge, source request scopes/budgets, schema/tool identities and immutable raw-input inventory. Future actual acquisition logs, retained response bytes and source/code/deployment correspondence do not exist yet.
+
+## Scope limits retained
+
+A complete record ledger can contain unresolved facts. It does not recover either unavailable original attachment, resolve the 45 opaque citation-token mappings, verify a deployment, establish implementation-to-model fidelity or conduct untouched evaluation. Newly located support remains reconstructed support unless actual original provenance is recovered. The independent Liquity liquidation challenge stays separate from its redemption disagreement. The rule predicates are operational adjudication criteria requiring scoped source review; passing JSON/CLI checks does not prove those source claims true.
+
+The original 75 candidates and design-used descendants remain development. A valid empty `not_selected` evaluation manifest is not a passed evaluation. Deployment/build/source identity and fidelity remain independently evidenced statuses. Sprint 8 acceptance is independent; Sprint 9 review/delivery remained pending during this refresh and is not a corpus runtime dependency.
+
+The retained failed helper attempt resolved the repository one directory too high and stopped at `git rev-parse` before writing check results. Its script and diagnostic are saved. After correcting the root, all checks above ran successfully. An earlier read-only inspection also used an unavailable `python` alias; `python3` was used for actual checks.

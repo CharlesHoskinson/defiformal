@@ -1,0 +1,96 @@
+import json,hashlib,subprocess,re
+from pathlib import Path
+from datetime import datetime,timezone
+R=Path('/home/charl/defiformal');base=R/'review/semantic-kernel/corpus-provenance-adjudication/source-research';batch=base/'batch-02-maple-lista-lido'
+h=lambda b:hashlib.sha256(b).hexdigest();now=lambda:datetime.now(timezone.utc).isoformat()
+def js(p):return json.loads(p.read_text())
+def bind(p,pointer=None):
+ b=p.read_bytes();r={'path':str(p.relative_to(R)),'bytes':len(b),'sha256':h(b)}
+ if pointer is not None:r['pointer']=pointer
+ return r
+def write(p,d):
+ if p.exists():
+  old=js(p); new=dict(d)
+  if 'created_utc' in old and 'created_utc' in new:new['created_utc']=old['created_utc']
+  assert old==new,('existing record differs',p)
+  return
+ with p.open('x') as f:json.dump(d,f,indent=2,ensure_ascii=False);f.write('\n')
+triage=js(base/'disagreement-triage.json');before=js(batch/'input-protection-before.json');designpath=R/'openspec/changes/corpus-provenance-adjudication/design.md';design=designpath.read_text()
+rules={}
+for i,line in enumerate(design.splitlines(),1):
+ m=re.match(r'\| `(R-[^`]+)` / ([^|]+) \| ([^|]+) \| ([^|]+) \|',line)
+ if m:rules[m[1]]={'id':m[1],'facet':m[2].strip(),'required_predicate':m[3].strip(),'insufficient_alone':m[4].strip(),'status':'proposed reusable evidence-adjudication/1 rule; not accepted by this packet','source':{**bind(designpath),'line':i},'literal_table_row':line}
+selected=[x for x in triage['disagreements'] if x['research_status']=='not_yet_source_researched_in_declared_catalog' and x['unit_id'] not in ['unit:lane1:c1:p3','unit:lane1:c2:p4:v1']][:3]
+assert [x['id'] for x in selected]==['dispute-02','dispute-03','dispute-05']
+configs=[
+ {'folder':'maple-allocation','id':'dispute-02','label':'Maple','facet':'mechanisms','dispositions':{'allocation':'supported'},
+  'spans':[('actors','delegate-authority','The Pool Delegate address configures','p'),('actors','borrower-funding','After agreeing terms','p'),('pool-manager','cash-approval','PoolManager contract has approval','p'),('pool-manager','withdrawal-restriction','earmarked for withdrawals','p'),('open-loan-manager','fund','The PoolDelegate directly calls','li'),('open-loan-manager','uncollateralized-scope','since Open-Term Loans have no collateral','li')],
+  'claims':[('allocation','source_statement','The documented Pool Delegate administers strategies and can fund an agreed institutional loan using pool funds.',['actors:delegate-authority','actors:borrower-funding']),('allocation','source_statement','The funding flow requests capital via PoolManager for a specified loan; pool cash approval is constrained by withdrawal reserves.',['open-loan-manager:fund','pool-manager:cash-approval','pool-manager:withdrawal-restriction']),('allocation','inference_under_proposed_rule','A named authorized actor distributes pool capital to identified loan destinations, satisfying the proposed allocation predicate within this documented architecture.',['actors:borrower-funding','open-loan-manager:fund'])],
+  'limits':['The corpus says Maple without a resolved version or pool. These are current official architecture documents, not proof of which pool or revision existed on the corpus historical date.','The Open Term Loan Manager page explicitly describes loans without collateral. Its funding flow supports allocation only; do not import that loan subtype into the corpus’s collateral/custodian narrative or adjudicate those retained labels.','Search snippets for PoolManager contained an older configuration list. The captured body instead describes current admin-gated configuration; all conclusions use captured bytes.','No selected loan address, current Pool Delegate address, underlying legal counterparty, contract source pin or execution was independently verified.'],
+  'counter':'Underwriting or custody alone would not show capital distribution. The documented loan funding destination and authority supply that additional link; this is not inferred from holding an underlying allocation product.',
+  'next':'Independent review of the scoped allocation finding. Any historical pool or secured-loan claim needs its own exact pool/version/source and legal-scope packet.'},
+ {'folder':'lista-cdp-roles','id':'dispute-03','label':'Lista CDP','facet':'trust','dispositions':{'issuer':'not_evidenced','keeper':'supported'},
+  'spans':[('cdp-scope','cdp-product','Lista DAO functions as a open-source CDP protocol','p'),('faq','lisusd-scope','## What is lisUSD?','markdown-section'),('faq','custody-qualification','## Are users at risk of losing their funds?','markdown-section'),('liquidation','actor-role','The liquidator receives gas compensation','markdown-paragraph'),('liquidation','wording-ambiguity','Liquidation of borrowed lisUSD','markdown-paragraph'),('liquidation','collateral-sale','The debt is absorbed','markdown-paragraph')],
+  'claims':[('keeper','source_statement','The pinned documentation explicitly describes liquidators starting liquidation and actors restarting Dutch auctions, with gas compensation; any user including the borrower may perform those roles.',['liquidation:actor-role']),('keeper','inference_under_proposed_rule','Starting or restarting the protocol’s liquidation auction is a stated external transition-maintenance role, which supports the proposed keeper label at documentation scope.',['liquidation:actor-role']),('issuer','source_statement','The sources identify lisUSD as the CDP borrowing product and describe custody through contracts, but this packet does not establish the authority controlling issuance.',['cdp-scope:cdp-product','faq:lisusd-scope','faq:custody-qualification']),('issuer','bounded_evidence_gap','Protocol branding, borrower access and MakerDAO lineage do not identify a named issuance authority; propose not_evidenced, not refuted or not_applicable.',['cdp-scope:cdp-product','faq:lisusd-scope'])],
+  'limits':['The keeper finding is a documentation-level role claim, not proof of an implemented automation service, required keeper quorum, availability or liveness.','The pinned liquidation page contains malformed rename text and says borrowed lisUSD is auctioned, then describes sold collateral. Preserve that wording ambiguity; this packet does not resolve the auction’s asset-flow semantics. The explicit actor/restart description is narrower.','The FAQ mixes CDP, staking and governance-token material. Only CDP/lisUSD paragraphs are used; no trust role is inherited from LISTA distribution, slisBNB staking or MakerDAO code.','The issuer predicate remains missing evidence within the three-body budget. Contract mint authorization, ward/admin roles, and exact authorization bindings were not acquired.','The pinned Gitbook revision binds document bytes, not contract code or deployed configuration. Its relationship to historical published documentation has not been established.'],
+  'counter':'Any callable function alone would not establish a keeper. The liquidation source additionally states the actor’s initiation/restart role and reward. Conversely, describing a decentralized token does not prove or disprove a named issuer authority.',
+  'next':'Independent keeper review may still leave the facet unresolved. A separate authorized packet should retrieve the official mint/adapter authorization path and identify which named role or contract controls lisUSD issuance; do not accept issuer by product naming.'},
+ {'folder':'lido-curator','id':'dispute-05','label':'Lido','facet':'trust','dispositions':{'curator':'supported'},
+  'spans':[('staking-router','module-registration','Modules are registered with StakingRouter through the Lido DAO voting process','p'),('staking-router','dao-growth-targets','growth targets set by the DAO','p'),('node-operators','dao-operator-selection','selected by the Lido DAO','p'),('node-operators','operator-admission-role','Executed on behalf of holder of','p'),('protocol-levers','module-management-role','STAKING_MODULE_MANAGE_ROLE','tr'),('protocol-levers','v3-scope','Lido V3 governance controls','p')],
+  'claims':[('curator','source_statement','The documented DAO votes on staking module registration and sets growth targets used for stake allocation.',['staking-router:module-registration','staking-router:dao-growth-targets']),('curator','source_statement','The documented Curated NodeOperatorsRegistry contains DAO-selected operators; the governance-levers page names the module-management role and its holder.',['node-operators:dao-operator-selection','protocol-levers:module-management-role']),('curator','inference_under_proposed_rule','DAO selection of eligible operators/modules and allocation targets is a named choice over staking destinations relied on by users, satisfying the proposed curator predicate for this scoped governance/module path.',['staking-router:module-registration','staking-router:dao-growth-targets','node-operators:dao-operator-selection'])],
+  'limits':['The captured governance-levers page explicitly describes Lido V3 and contains address assertions. Those statements are not verified chain state or proof of the corpus’s historical configuration.','NodeOperatorsRegistry documentation describes the Curated module since the V2 upgrade; the router documentation also contains newer mechanisms. No claim is made that all three pages form one deployed version.','The finding is scoped to DAO selection/module allocation and the documented Curated module. Community Staking, Simple DVT, stVaults and other product paths do not automatically inherit identical curator roles.','Programmatic allocation is not itself proof of discretionary curation. The documented DAO choice of eligible modules/operators and growth targets is the additional premise used.','No claim that every node operator is a curator, that governance cannot change, or that listed role-holder addresses were independently verified.'],
+  'counter':'Validator participation or a passive operator label would not establish curator. The DAO’s documented selection and allocation-setting powers do; permissionless modules elsewhere do not negate that narrower path or acquire its permissions.',
+  'next':'Independent review of the governance/module-scoped curator finding. To make a historical or module-wide statement, separately bind exact versions, roles and active module configuration.'}
+]
+allchecks=[];outcomes=[]
+def check(name,v):allchecks.append({'name':name,'pass':bool(v)});assert v,name
+for cfg in configs:
+ p=base/cfg['folder'];row=next(x for x in selected if x['id']==cfg['id']);rr=js(p/'retrievals.json');records={r['source_id']:r for r in rr['records']};bodies={sid:(R/r['attempts'][-1]['capture_path']).read_bytes() for sid,r in records.items()};locs=[]
+ for sid,name,needle,kind in cfg['spans']:
+  body=bodies[sid]; visible_start=body.find(b'<main') if not kind.startswith('markdown') else -1; i=body.index(needle.encode(),max(0,visible_start))
+  if kind=='markdown-section':a=i;b=body.find(b'\n## ',i+1);b=len(body) if b<0 else b
+  elif kind=='markdown-paragraph':a=i;b=body.find(b'\n\n',i);b=len(body) if b<0 else b
+  else:
+   # Raw visible HTML: locate the enclosing element, retaining original bytes.
+   pattern=rb'<'+kind.encode()+rb'(?:\s[^>]*|)>';matches=list(re.finditer(pattern,body[:i+1]));assert matches,(sid,name)
+   a=matches[-1].start();b=body.index(b'</'+kind.encode()+b'>',i)+len(kind)+3
+  assert a<=i<b
+  locs.append({'id':sid+':'+name,'source_id':sid,'capture':bind(R/records[sid]['attempts'][-1]['capture_path']),'byte_start':a,'byte_end_exclusive':b,'line_start':body[:a].count(b'\n')+1,'line_end':body[:b].count(b'\n')+1,'span_sha256':h(body[a:b]),'needle':needle,'extraction':'Exact retained-byte enclosing '+kind+' span; no normalization; manually inspected content'})
+ write(p/'evidence-locators.json',{'schema_version':1,'locators':locs})
+ def get_pointer(ref):
+  val=js(R/ref['path'])
+  for c in ref['pointer'].strip('/').split('/'):val=val[int(c)] if isinstance(val,list) else val[c]
+  return val
+ raw_a=get_pointer(row['raw_a']['record']);raw_b=get_pointer(row['raw_b']['record']);generated=get_pointer(row['generated']['pointer'])
+ write(p/'selection-and-observations.json',{'selection':'Next three distinct unresearched units in deterministic triage, excluding completed Liquity V1 and JustLend V1 packets','batch_selected_ids':[x['id'] for x in selected],'triage':bind(base/'disagreement-triage.json'),'raw_triage_record':row,'raw_a':raw_a,'raw_b':raw_b,'actual_generated_facet':generated,'note':'Actual facet decision remains INTERSECTION_UNRESOLVED; a retained common label is membership agreement only, not an AGREE facet decision.'})
+ check(cfg['id']+'-actual-unresolved',generated['rule']=='INTERSECTION_UNRESOLVED')
+ check(cfg['id']+'-raw-differences',set(raw_a['facets'][cfg['facet']])^set(raw_b['facets'][cfg['facet']])==set(cfg['dispositions']))
+ check(cfg['id']+'-cap',len(records)==3 and all(r['status']=='retained' for r in records.values()))
+ for sid,r in records.items():
+  a=r['attempts'][-1];check(cfg['id']+'-body-'+sid,h(bodies[sid])==a['body_sha256'] and len(bodies[sid])==a['body_bytes'])
+ for l in locs:check(cfg['id']+'-locator-'+l['id'],h(bodies[l['source_id']][l['byte_start']:l['byte_end_exclusive']])==l['span_sha256'])
+ claims=[{'id':'C'+str(i+1),'label':label,'kind':kind,'claim':claim,'evidence':evidence} for i,(label,kind,claim,evidence) in enumerate(cfg['claims'])]
+ ids={x['id'] for x in locs}
+ for c in claims:check(cfg['id']+'-claim-'+c['id'],set(c['evidence'])<=ids)
+ proposal={'schema_version':1,'kind':'bounded-single-unit-source-research','created_utc':now(),'author':'GPT-6 through stock Codex harness; no external review performed','unit_id':row['unit_id'],'dispute_id':row['id'],'facet':cfg['facet'],'process_status':'draft_review_pending','dispositions':[{'label':label,'proposed_disposition':disposition,'accepted_disposition':None,'rule':rules['R-'+label]} for label,disposition in cfg['dispositions'].items()],'raw_observations':bind(p/'selection-and-observations.json'),'claims':claims,'contrary_reading_considered':cfg['counter'],'material_qualifications':cfg['limits'],'required_next_step':cfg['next'],'provenance':{'retrievals':bind(p/'retrievals.json'),'locators':bind(p/'evidence-locators.json'),'independence_groups':1,'primary_bodies':3,'primary_bytes':sum(map(len,bodies.values())),'original_citations':'Reconstructed support only; original missing citations not recovered','scope':'Actual current documentation/pinned documentation bytes; no contract execution, audited implementation or deployment proof'},'overlay_applied':False,'semantic_closure':False,'common_limits':['No annotation, normalization, schema, tooling, previous source package or frozen Sprint10 input edits.','No accepted labels, synthetic recovery, historical deployment verification, financial-library fidelity or untouched-holdout claims.','Same publisher documents are not independent corroboration. Search result summaries are discovery only; exact captured bodies control.','Other labels in each unit, including previously retained labels, are not promoted by this packet.','Not_evidenced denotes a bounded evidence gap, not refutation or justified exclusion.']}
+ if cfg['folder']=='lista-cdp-roles':proposal['provenance']['revision_metadata']=bind(batch/'lista-revision-discovery.json')
+ write(p/'proposed-adjudication.json',proposal)
+ summary='; '.join(f"`{label}`: proposed **{disp}**" for label,disp in cfg['dispositions'].items())
+ lines=[f"# {cfg['label']} — {cfg['facet']} source research",'',summary+'. All dispositions remain draft and unaccepted.', '',f"Selected `{row['id']}`, `{row['unit_id']}` in deterministic order. Raw A-only labels: {row['a_only']}; B-only labels: {row['b_only']}. Exact records and original pointers are preserved in [selection-and-observations.json](selection-and-observations.json). The actual generated facet rule is `INTERSECTION_UNRESOLVED`.",'']
+ for c in claims:
+  sources=sorted({x.split(':')[0] for x in c['evidence']});links=', '.join(f"[{sid}]({records[sid]['url']})" for sid in sources)
+  lines.append(f"{c['kind'].replace('_',' ')}: {c['claim']} {links}")
+ lines+=['','These findings apply the proposed reusable rule predicates, with exact source lines in [proposed-adjudication.json](proposed-adjudication.json). Evidence spans and their hashes are in [evidence-locators.json](evidence-locators.json).','']+['- '+x for x in cfg['limits']]+['',cfg['counter'],'',f"Captured exactly three primary bodies, {sum(map(len,bodies.values()))} bytes, with actual URLs, timestamps, headers and hashes in [retrievals.json](retrievals.json). The documents belong to one publisher family. No contract compilation/execution or independent deployment verification occurred. No corpus or existing research bytes were changed.",'',cfg['next'],'','This packet does not adjudicate other facets, recover missing original citations, establish deployed fidelity or provide holdout evidence. Author: GPT-6 stock Codex harness; independent review remains pending.']
+ report='\n'.join(lines)+'\n'
+ if (p/'REPORT.md').exists():assert (p/'REPORT.md').read_text()==report
+ else:
+  with (p/'REPORT.md').open('x') as f:f.write(report)
+ outcomes.append({'folder':cfg['folder'],'unit_id':row['unit_id'],'dispute_id':row['id'],'dispositions':cfg['dispositions'],'primary_bodies':3,'primary_bytes':sum(map(len,bodies.values())),'locators':len(locs)})
+for path,digest in before['files'].items():check('protected:'+path,h((R/path).read_bytes())==digest)
+verification={'created_utc':now(),'git_head_before':before['git_head'],'git_head_after':subprocess.check_output(['git','rev-parse','HEAD'],cwd=R,text=True).strip(),'s10_candidate':before['s10_frozen_candidate'],'s10_protected_input_count':88,'protected_file_count':len(before['files']),'all_protected_unchanged':True,'check_count':len(allchecks),'all_passed':all(x['pass'] for x in allchecks),'checks':allchecks,'units':outcomes,'scope':'Offline body/span/observation/hash verification only; not semantic acceptance','source_bodies':sum(x['primary_bodies'] for x in outcomes),'source_bytes':sum(x['primary_bytes'] for x in outcomes),'label_claims':4,'proposed_supported':3,'proposed_not_evidenced':1,'accepted':0}
+write(batch/'verification.json',verification)
+for cfg in configs:
+ p=base/cfg['folder'];write(p/'verification.json',{'batch_verification':bind(batch/'verification.json'),'protected_before':bind(batch/'input-protection-before.json'),'unit':next(x for x in outcomes if x['folder']==cfg['folder']),'all_checks_passed':True,'scope':'Shared batch check binds this unit and unchanged underlying/frozen inputs; no independent semantic verdict'})
+ write(p/'artifact-manifest.json',{'schema_version':1,'created_utc':now(),'status':'immutable draft source packet','files':[bind(x) for x in sorted(p.rglob('*')) if x.is_file()]})
+write(batch/'artifact-manifest.json',{'created_utc':now(),'files':[bind(x) for x in sorted(batch.iterdir()) if x.is_file()],'unit_manifests':[bind(base/x['folder']/'artifact-manifest.json') for x in outcomes]})
+print(json.dumps({'checks':len(allchecks),'protected':len(before['files']),'units':outcomes,'source_bytes':verification['source_bytes'],'batch_manifest':bind(batch/'artifact-manifest.json')},indent=2))

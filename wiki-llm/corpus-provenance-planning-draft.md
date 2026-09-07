@@ -1,5 +1,20 @@
 # Corpus provenance follow-up: planning draft
 
+> Current refresh-03 context (2026-09-07): Sprint 9 is accepted at source
+> `eec499d613688137a341f3556cd80ca461dd2ee9` and archived/delivered at
+> `9908d9b56be2d5ed2b58a16fa8d28b23f33733ff`. Sprint 10 awaits substantive
+> native Fable planning review, with implementation gated. The historical research
+> below retains its original measurement and retrieval identities. Later retained
+> source packets now cover draft decisions for all 29 facet disagreements / 32
+> disputed label instances plus the separate Liquity liquidation challenge; none
+> is accepted. Validated import preserves original bytes, extraction, tools,
+> times, failures and research limits without inventing a production collector
+> run or requiring duplicate retrieval. Earlier three-body research bounds are
+> not the future collector's three-distinct-URL budget. The twelve proposed
+> evaluation cases were all audited development-exposed; none is untouched and
+> no replacement is selected. See the [current decision](corpus-provenance-adjudication.md)
+> and [refresh-03 author evidence](../review/semantic-kernel/corpus-provenance-adjudication/planning/refresh-03/REPORT.md).
+
 Status: bounded design inputs, 2026-09-07 UTC. This document proposes a later OpenSpec change; it does not adjudicate annotations, certify deployments, acquire holdouts, or change corpus outputs. Prepared through the stock GPT-6 Codex harness. No Foreman or reviewer approval is implied.
 
 The recommended next step is an append-only, source-backed adjudication layer for the existing development corpus. Preserve raw annotations, mechanical agreement records, unresolved provenance, and historical source bytes. Start with the 29 observed differences and the separate Liquity V1 challenge. A reviewed unresolved outcome is valid when the evidence cannot determine a label.
@@ -77,7 +92,7 @@ The following is the complete current disagreement inventory. A-only and B-only 
 | `unit:lane3:c3:p1` / Polymarket | `economic_functions` | — | exchange |
 | `unit:lane3:c3:p4` / Grove Finance (Onchain Capital Allocator) | `instruments` | — | fund_share |
 
-`SPRINT3-LIQUITY-V1-LIQUIDATION` is a separate item for `unit:lane1:c2:p4:v1`, mechanism `liquidation`. Both annotations included liquidation. Grok challenged child-specific evidence for that label; Fable found no split-child inheritance bug. The actual A/B observation must remain `AGREE`. Do not manufacture an annotation disagreement or count this as a thirtieth disagreement. Its existing status remains `open_targeted_source_evidence` until a separately versioned evidence adjudication is accepted. The same unit's actual annotation difference concerns `redemption`.
+`SPRINT3-LIQUITY-V1-LIQUIDATION` is a separate item for `unit:lane1:c2:p4:v1`, mechanism `liquidation`. Both annotations included liquidation. Grok challenged child-specific evidence for that label; Fable found no split-child inheritance bug. Liquidation belongs to both raw label sets. The actual mechanisms facet at `corpus/normalized/generated/corpus.json#/adjudications/77` is `INTERSECTION_UNRESOLVED`, because B also includes redemption. Preserve that record and the historical challenge text; its `AGREE` wording refers only to shared label membership. Do not count the separate liquidation challenge as a thirtieth facet disagreement. Its existing status remains `open_targeted_source_evidence` until a separately versioned evidence adjudication is accepted. The same unit's actual annotation difference concerns `redemption`.
 
 ## Approaches and recommended boundary
 

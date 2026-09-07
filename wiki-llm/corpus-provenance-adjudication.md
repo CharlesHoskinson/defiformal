@@ -1,55 +1,56 @@
 # Corpus provenance and adjudication decision
 
-The proposed [OpenSpec package](../openspec/changes/corpus-provenance-adjudication/proposal.md)
-adds an evidence overlay to the preserved corpus. It is a later independent
-package, not accepted Sprint 8 work. Planning artifacts are complete; planning
-reviews and all implementation remain pending.
+The [OpenSpec package](../openspec/changes/corpus-provenance-adjudication/proposal.md)
+is a review-ready draft for a separate corpus overlay. Its planning gate and all
+28 implementation tasks remain pending. Sprint 9 is accepted at source
+`eec499d613688137a341f3556cd80ca461dd2ee9` and archived/delivered at
+`9908d9b56be2d5ed2b58a16fa8d28b23f33733ff`. Sprint 10 still awaits substantive
+native Fable planning review; its implementation gate remains closed.
 
-The existing 72 historical rows and 75 development candidates remain immutable.
-Their 29 annotation differences across 24 units and the separate Liquity V1
-liquidation challenge receive distinct versioned records. All 17 disputed labels
-and liquidation have explicit proposed inclusion predicates. Raw A/B answers and
-the actual Liquity AGREE observation remain intact. Reviewed unknown or conflicting
-facts stay unresolved; a bookkeeping pass cannot force factual closure.
+The 72 historical rows and 75 development candidates remain immutable. There are
+29 facet disagreements across 24 units, containing 32 disputed label instances
+and 17 distinct disputed labels. The separate Liquity V1 liquidation challenge
+concerns a label present in both raw sets. Its mechanisms facet is actually
+`INTERSECTION_UNRESOLVED`, because redemption differs, at
+`corpus/normalized/generated/corpus.json#/adjudications/77`. Historical `AGREE`
+wording remains only shared-label shorthand, never a replacement facet rule.
 
-The package also covers remaining product splits, source pins, deployment
-identity, dependency relationships, residues and the original proposal's missing
-references. Source code, deployed-code correspondence and implementation-to-model
-fidelity use separate statuses. An original CSV or citation mapping is recovered
-only with actual original bytes/origin or the original browsing transcript. A
-new public source can replace support for a claim without recovering the old
-pointer. All current deployments begin unresolved; the verified count is zero.
+[Retained source-research packets](../review/semantic-kernel/corpus-provenance-adjudication/source-research/)
+now provide unaccepted drafts for all 29 disagreements and the separate Liquity
+challenge. These include actual response bytes, scoped code pins where available,
+raw or derived locators, extraction records and failed attempts. They can become
+validated source inputs without needless fresh retrieval. Import validation must
+preserve original capture times, tools, failures and limits and record its own
+identity separately; it is neither a production `collect` run nor an adjudication
+approval. Some research passes tried extra failed/fallback URLs while limiting
+substantive bodies to three per unit. Those passes must not be described as
+meeting the future collector's three-distinct-URL budget. Empty transport bodies
+and failed requests supply no factual support.
 
-The [design](../openspec/changes/corpus-provenance-adjudication/design.md) chooses
-an append-only overlay over replacing historical annotations or blocking all
-work until every deployment is known. Bounded development-source acquisition
-produces an honest attempt ledger. Offline deterministic checking never refreshes
-sources or repairs outputs to obtain a pass.
+The package keeps source identity, deployment verification and model fidelity
+separate. Newly captured supporting material does not recover an original opaque
+citation or missing attachment. All normalized deployment records still begin
+unresolved, with zero verified deployments. Complete records with reviewed
+unknown facts do not imply complete factual recovery or semantic closure.
 
-The separate evaluation manifest starts not selected with zero cases. All current
-candidates and exposed descendants stay development. Kernel/library/rule/evaluator
-freezes, curator/access records and later evaluation are explicit prerequisites;
-this package does not inspect new holdout semantics. Empty or adapted cases
-cannot be reported as successful untouched evidence.
+The [twelve-proposal exposure audit](../review/semantic-kernel/evaluation-preparation/proposed-twelve-exposure/REPORT.md)
+found all twelve development-exposed. They are exposure records, not additional
+normalized rows. No untouched case is selected or certified. This package does
+not select or read replacements. The evaluation manifest remains `not_selected`
+with zero cases until a later independent freeze/selection process; an empty
+manifest is not a passed evaluation.
 
-The [48-scenario map](../openspec/changes/corpus-provenance-adjudication/scenario-map.json),
-[complete disagreement inventory](../openspec/changes/corpus-provenance-adjudication/dispute-inventory.json)
-and [tasks](../openspec/changes/corpus-provenance-adjudication/tasks.md) make the
-proposed scope reviewable. The [planning research](corpus-provenance-planning-draft.md)
-retains source URLs/retrieval dates and limits; its Liquity retrieval fingerprints
-are leads for fresh captures, not accepted production evidence. No corpus/source
-bytes or raw annotations were edited while preparing this proposal.
+[Refresh-03](../review/semantic-kernel/corpus-provenance-adjudication/planning/refresh-03/REPORT.md)
+preserves prior author artifacts and current research bytes while updating the
+five-capability, 20-requirement, 48-scenario, 28-task plan and its source bindings.
+Earlier `context-files.json`, scenario maps and author checks retain their
+historical identities; current review must use refresh-03 bindings and the
+parent's eventual exact official candidate. Live roadmap/progress context must be
+frozen again for that candidate.
 
-User authorization to continue while AFK is preserved in the
-[execution agenda](autonomous-execution-agenda.md). The package still requires
-same-candidate GPT-6/native Fable planning review, stock GPT-6 implementation,
-actual CLI controls, and native Grok/Fable substantive/evidence acceptance. No
-Foreman is used. Roadmap fact-level items remain open whenever accepted records
-still report unresolved identity, source, deployment or semantic obligations.
-
-The [context manifest](../openspec/changes/corpus-provenance-adjudication/context-files.json)
-binds 34 inspected files at its recorded time. Roadmap/progress are informational
-live context during Sprint 7 delivery and must be frozen again with the future
-corpus review candidate. The author report preserves two detected concurrent
-metadata changes and the subsequent passing consistency check; it is not native
-review acceptance.
+The original author is stock GPT-6 and cannot serve as the nonauthor planning
+reviewer. The gate requires another stock GPT-6 reviewer and native Fable 5.1
+(`claude-fable-5-1[1m]`, medium effort) on identical frozen inputs. Implementation
+uses stock GPT-6, followed by native Grok/Fable substantive and evidence review.
+No Foreman is used. AFK authorization permits routine work, not acceptance or
+implementation while these gates remain open.
