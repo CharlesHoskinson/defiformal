@@ -1,9 +1,9 @@
 ## 1. Planning audit and preserved baseline
 
 - [x] 1.1 Freeze proposal, design, four specs and this checklist in a concrete commit; record source-context hashes and a scenario/task map in `review/semantic-kernel/sprint6/`; verify strict OpenSpec validation and every local link before review.
-- [ ] 1.2 Obtain independent Fable and GPT-6 planning audits of that same candidate; save prompts, raw results, requested/reported identities and verdicts; verify neither required review is unavailable or unresolved before any implementation.
-- [ ] 1.3 Resolve blocking planning findings in a revised candidate and refresh affected audits; save `planning/ADJUDICATION.md` and verify both passing verdicts cover final planning bytes without waiving a requirement.
-- [ ] 1.4 Capture the clean implementation starting revision, tools and baseline hashes; run the existing full Lean build and composition/typed/legacy runtime and axiom drivers below; verify all pass and preserved original proof/corpus manifests resolve to actual files before new modules are added.
+- [x] 1.2 Obtain independent Fable and GPT-6 planning audits of that same candidate; save prompts, raw results, requested/reported identities and verdicts; verify neither required review is unavailable or unresolved before any implementation.
+- [x] 1.3 Resolve blocking planning findings in a revised candidate and refresh affected audits; save `planning/ADJUDICATION.md` and verify both passing verdicts cover final planning bytes without waiving a requirement.
+- [x] 1.4 Capture the clean implementation starting revision, tools and baseline hashes; run the existing full Lean build and composition/typed/legacy runtime and axiom drivers below; verify all pass and preserved original proof/corpus manifests resolve to actual files before new modules are added.
 
 ## 2. Branch model and conservative admission
 

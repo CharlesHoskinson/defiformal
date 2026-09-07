@@ -1,8 +1,8 @@
 # Sprint 6 planning audit adjudication
 
-Status: **implementation gated**. The user requires independent Fable and GPT-6
-planning passes before implementation. No new Parallel module or mutation runner
-has been written. Existing Lean and Python implementation bytes remain unchanged.
+Status: **planning gate passed**. The user requires independent Fable and GPT-6
+planning passes before implementation. At the gate decision, no new Parallel module or mutation runner had been written.
+The verified baseline precedes implementation.
 
 ## Initial candidate
 
@@ -65,3 +65,36 @@ The user supplied changed-availability information, which justified retrying;
 the local model selector justified the second attempt. Further identical retries
 are deferred until provider availability changes. GPT-6's R2 acceptance remains
 valid. Implementation is still gated and no Lean/kernel script bytes changed.
+
+
+## Gate passed after refreshed Claude login
+
+The live Fable 5.1 probe passed. The first full R2 retry returned only attempted
+tool-call markup despite exit 0; it is saved as **incomplete, no verdict**, not a
+pass. A subsequent text-only review wrapped the unchanged full R2 source bundle
+with explicit report instructions. `r2-fable-text-binding.json` binds those exact
+source payloads to the same planning candidate accepted by GPT-6.
+
+Fable returned **ACCEPT WITH LIMITATIONS**, stating no blocking finding remains.
+Requested `claude-fable-5-1[1m]`; native usage reports `claude-fable-5-1` plus an
+auxiliary Haiku call. The complete response/invocation and all earlier unavailable
+or incomplete attempts are retained. This is advisory source/planning analysis,
+not independent Lean execution. GPT-6's separate R2 ACCEPT report already covers
+this exact candidate; Fable's note that it saw only the older GPT report in its
+bundle does not imply the saved R2 review is missing.
+
+Nonblocking guidance is adopted in implementation: mutant 4's zero-effect target
+oracle tests conservative admission; mutant 14 must corrupt intra-branch prefix
+re-evaluation; mutant 13 can re-mark capability entries live without importing
+fixtures into execution; composite conflict mutations must document redundancy.
+Mutant 10 uses actual peer-history leakage, with the feasible shared-key/qualified-
+port fixtures already specified. "Colliding" in its short label does not restore
+the removed different-valued full-key fixture. A mirror forward-conflict mutation
+may be added if it has a discriminating oracle. No normative proof or regression
+obligation is waived. Parent-held strict schema/link/Git-object validation and the
+fresh baseline resolve the review's unverifiable-execution notes.
+
+Both required planning reviews now pass. `gate.json` records authorization to
+execute the already approved 48-task sprint. The baseline's eight commands pass,
+with all historical source bytes preserved. Substantive implementation results
+still require their own native Grok/Fable review and full acceptance evidence.

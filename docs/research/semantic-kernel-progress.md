@@ -197,10 +197,11 @@ GPT-6 audits pass on the OpenSpec candidate. The
 The initial GPT-6 audit requested one output-fixture correction; the revision
 replaces that impossible case with feasible qualification and peer-history tests.
 GPT-6 accepted corrected candidate `c0f6f0bcc19ab30e0146a2e1e8ff209f8ce8c1a7`.
-Fable returned credit-limit errors on the initial call and both final-candidate
-5.1 selectors, with no verdict; its required review remains open. [Planning adjudication](../../review/semantic-kernel/sprint6/planning/ADJUDICATION.md)
+After refreshed login, Fable accepted the same candidate with nonblocking
+limitations. Earlier credit errors and one incomplete response remain recorded. [Planning adjudication](../../review/semantic-kernel/sprint6/planning/ADJUDICATION.md)
 and [gate state](../../review/semantic-kernel/sprint6/planning/gate.json) record the
-pause. No new implementation starts until Fable also passes. Capability
+passed planning gate. The refreshed baseline passes all eight commands;
+implementation begins under the existing authorization. Capability
 administration remains outside the binary parallel operator; exact refused
 behavior and real LR/RL re-execution are mandatory proof obligations.
 
