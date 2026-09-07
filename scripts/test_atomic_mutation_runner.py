@@ -460,8 +460,8 @@ def main():
             # Assertion failures intentionally do not publish accepted result entries.
             # Check actual Lean output for both production-form paths.
             for label, expected in [('control', 'true'), ('probe', 'false')]:
-                log_path = result_path / (label + '.log')
-                actual_log = log_path.read_text() if log_path.exists() else ''
+                lean_log_path = result_path / (label + '.log')
+                actual_log = lean_log_path.read_text() if lean_log_path.exists() else ''
                 matched = matched and re.findall(
                     r'^(runner_positive|runner_sensitivity): (true|false)$',
                     actual_log, re.MULTILINE) == [
