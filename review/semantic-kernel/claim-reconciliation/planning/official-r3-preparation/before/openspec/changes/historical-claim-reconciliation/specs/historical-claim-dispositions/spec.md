@@ -73,7 +73,7 @@ The reconciliation SHALL retain the assumptions and counterexamples of historica
 #### Scenario: H11 Static binding associativity is called operational execution associativity
 
 - **WHEN** static binding associativity is called operational execution associativity
-- **THEN** the static result is scoped accurately, accepted S9 and S10 are cited separately, and pending M3/M4 remain open.
+- **THEN** the static result is scoped accurately, accepted S9 is cited separately, and pending S10/M3/M4 remain open.
 
 #### Scenario: H12 Same-sort gluing is claimed sufficient for conservation
 

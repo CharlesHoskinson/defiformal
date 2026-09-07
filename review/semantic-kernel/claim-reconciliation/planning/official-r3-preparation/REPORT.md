@@ -1,0 +1,5 @@
+# Historical planning correction r3
+
+Author revision only; implementation remains gated. Preserved official-r2 GPT-6 ACCEPT WITH LIMITATIONS and Fable NEEDS REVISION independently. All three required and seven lesser Fable findings are adopted in the normative plan: accepted S9/S10 statuses; one separately bound64th open-problem occurrence with correct wrapper classification and deliberate erratum route; independent direct-source Data transcription and actual m5 edge-list third comparison; explicit witness CLI; L26 prose-subject decision; rule/occurrence distinction; historical/current script identity; actual TOML base; library root; raw IO JSON export.
+
+The original63-site preparation ledger and all historical paper/proof/source/review bytes remain unchanged. No new historical implementation, admissibility measurement, m5 run or proof is claimed. The two prior reviewers' different verdicts are preserved. This correction requires a new identical frozen candidate reviewed by nonauthor GPT-6 and native Fable5.1 medium.

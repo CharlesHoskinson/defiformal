@@ -6,12 +6,12 @@ Binds exact historical unary-rule data to universal finite-instance Lean theorem
 
 ### Requirement: HB01 Bind complete fixed-instance data
 
-The bridge SHALL use separately source-transcribed Lean literals frozen before comparison extraction, SHALL compare both exported distinct edge lists with the actual unchanged m5 printed lists, and SHALL encode every vocabulary item and extraction decision for both source-bound instances and SHALL reject missing, ambiguous, swapped or drifted data.
+The bridge SHALL encode every vocabulary item and extraction decision for both source-bound instances and SHALL reject missing, ambiguous, swapped or drifted data.
 
 #### Scenario: B01 The fixed LSTAR and PARSED_NEW data are extracted
 
 - **WHEN** the fixed LSTAR and PARSED_NEW data are extracted
-- **THEN** all59 parsed symbol/status records and the ordered58-name mechanism bijection, complete source rows, zero outside subjects/alternatives and13/12 versus16/15 occurrence/distinct-edge inventories are reconciled with canonical JSON actually exported by the same Lean Data module imported by the proofs; Data transcription provenance and actual m5 distinct-edge equality are checked independently of the comparison extractor.
+- **THEN** all59 parsed symbol/status records and the ordered58-name mechanism bijection, complete source rows, zero outside subjects/alternatives and13/12 versus16/15 occurrence/distinct-edge inventories are reconciled with canonical JSON actually exported by the same Lean Data module imported by the proofs.
 
 #### Scenario: B02 One edge, vocabulary item, external flag or instance label changes
 

@@ -34,12 +34,12 @@ Acceptance SHALL exercise actual CLI fixtures and meaningful proof/algorithm neg
 
 ### Requirement: HA03 Preserve roadmap corpus and evaluation boundaries
 
-Acceptance SHALL keep accepted S9 and S10 separate from pending M3/M4, preserve corpus adjudication ownership and all twelve development exposures, and SHALL not claim untouched evaluation from an empty or exposed set.
+Acceptance SHALL keep accepted S9 separate from pending S10/M3/M4, preserve corpus adjudication ownership and all twelve development exposures, and SHALL not claim untouched evaluation from an empty or exposed set.
 
 #### Scenario: A05 The historical bridge and prose corrections are accepted
 
 - **WHEN** the historical bridge and prose corrections are accepted
-- **THEN** accepted S9/S10 keep their existing source and delivery identities; no pending M3/M4, deployed fidelity, recovered attachment or full paper-completion checkbox is inferred.
+- **THEN** no operational interface, finite-participant regrouping, deployed fidelity, recovered attachment or full paper-completion checkbox is inferred.
 
 #### Scenario: A06 A proposed-twelve case or eagerly read blind-test file is claimed as untouched evaluation
 
