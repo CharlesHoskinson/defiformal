@@ -328,3 +328,30 @@ and [evidence](../../review/semantic-kernel/sprint9/EVIDENCE.md) give precise sc
 Source/evidence delivery is verified at `ec9ed804`; OpenSpec is archived with35
 checked tasks,17 requirements and55 scenarios preserved. The archive push is
 recorded separately.
+
+## Sprint 10: operational interfaces and binding preservation
+
+Source `b165bc586080d668f689fbc18dfa09eb8739d688` and completed evidence passed
+native Grok (`grok-4.6-build`) and Fable (`claude-fable-5-1`) medium review on
+one identical bundle. GPT-6 used the stock harness. Region queries and actual
+receipt accounting now support initialized total and global binding preservation
+through sequential execution, recursive groups and existing binary interleavings.
+
+All 18 integration commands, 99 runtime labels, 14 compiling query mutations and
+65 CLI controls pass. The dynamic proof inventory contains 310 theorem constants:
+144 explicit (110 generic,32 reference,2 counterexample-classified) and166
+generated, plus356 supplemental declarations; forbidden axioms0. The build is
+incremental, one catalog check is an intentional alias, and mutation overlap does
+not establish unique fault identification. Thirteen older suites and Sprint9's
+14/65 runs retain their original execution revisions through exact relevant
+input/tool equivalence. Final record corrections preserve original reviews.
+
+Source/evidence delivery `1db00deb` and archive delivery `ec8f163c` are verified.
+All34 tasks and57 scenarios are complete; four main specifications contain the
+same17 normative requirements. [Evidence](../../review/semantic-kernel/sprint10/EVIDENCE.md)
+and [adjudication](../../review/semantic-kernel/sprint10/ADJUDICATION.md) state the
+remaining initialization, confinement, neutrality, support and authority trust
+premises. Finite participants and other M3–M6 obligations remain open.
+
+Checked integer arithmetic and corpus provenance tooling have separate accepted
+planning gates and ongoing implementation. Neither is an accepted result yet.

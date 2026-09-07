@@ -1,6 +1,6 @@
 # DeFiFormal migration roadmap
 
-Updated 2026-09-07 UTC: Sprint 7 delivered and archived; Sprint 8 delivered and archived; Sprint 9 complete, archived and delivered at `9908d9b`. Sprint 10 OpenSpec preparation is complete.
+Updated 2026-09-07 UTC: Sprints 7–10 are accepted, delivered and archived. Sprint 10 archive delivery is verified at `ec8f163`. Checked arithmetic and corpus tooling are in implementation under accepted planning gates.
 Branch: `semantic-kernel-pivot`. Sprint 8 archive delivery: `9501f0a4`.
 
 The remaining objective is conditional preservation of financial properties
@@ -129,6 +129,26 @@ configuration agreement and fixed sequential contexts. Regrouping sequential
 steps preserves the full cursor; this does not establish arbitrary parallel
 regrouping, causal assume-guarantee rules or capability provenance. Those broader
 items remain open below.
+
+## Sprint 10: operational interfaces and binding preservation
+
+Native Grok and Fable 5.1 medium accepted source `b165bc58` and its completed
+evidence with limitations. The package adds typed region queries, actual receipt
+accounting, initialized total/binding preservation and global binding success
+laws over the existing sequential/group/binary shared executors.
+
+All 34 tasks, 17 requirements and 57 scenarios are complete. Evidence records
+99 runtime labels, 14 compiling query mutations, 65 CLI controls, 18 Lean commands
+and 144 explicit theorems; the imported audit has zero forbidden axioms.
+The build is incremental, and one catalog label is an intentional alias.
+[Sprint 10 evidence](review/semantic-kernel/sprint10/EVIDENCE.md),
+[adjudication](review/semantic-kernel/sprint10/ADJUDICATION.md) and
+[verified archive delivery](review/semantic-kernel/sprint10/archive-delivery.json)
+retain those limits and exact source/reviewer/run identities.
+
+This ports the region/binding portion of the operational metatheory. General
+finite participants, tree regrouping, active extension and atomic transfer remain
+open; the broad Interface/Nary roadmap item below is not yet complete.
 
 ## Remaining composition and metatheory
 

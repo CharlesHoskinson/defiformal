@@ -54,4 +54,4 @@
 ## 8. Archive and delivery
 
 - [x] 8.1 Adjudicate independent verdicts and finalize limitations for conditional totals, global constraints and still-open M3–M6 work; verify every implementation/evidence task is complete before marking any normative requirement delivered.
-- [ ] 8.2 Archive the accepted OpenSpec change and verify authorized branch source/evidence delivery and remote readback; verify no historical theorem changes or merge to main and update the Sprint10 wiki/progress with exact accepted identities only after completion.
+- [x] 8.2 Archive the accepted OpenSpec change and verify authorized branch source/evidence delivery and remote readback; verify no historical theorem changes or merge to main and update the Sprint10 wiki/progress with exact accepted identities only after completion.
