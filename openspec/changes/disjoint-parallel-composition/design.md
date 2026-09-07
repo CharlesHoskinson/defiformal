@@ -154,8 +154,10 @@ not satisfy the theorem requirement.
 New proof modules consume old APIs without changing their definitions/statements:
 
 1. `Expr.eval` is invariant under agreement on all resolved syntactic state reads,
-   with identical arguments, caller/parties, environment and time. Prove by syntax
-   induction, including both branches, division errors and observation behavior.
+   with identical arguments, caller/parties, environment and time. Reuse existing
+   `Expr.eval_congr_of_resolved` (already proved through syntax induction),
+   discharging its state/environment agreement premises from the concrete analysis.
+   Include both branches, division errors and observation behavior.
 2. Template evaluation inherits that property for complete `Except` results,
    including evaluation errors, and every resolved delta target lies in W.
 3. Registered execution preserves exact refusal under agreement on reads plus
@@ -225,10 +227,22 @@ with two successful steps and a second branch using its own historical output.
 Boundary principals/time must differ by branch/local position in a discriminating
 fixture; raw time is never used as a financial price.
 
+Routing fixtures use (a) the same local step and numeric port ID in distinct
+components selecting distinct cells/values, (b) the same fully qualified local key
+for a common read-only cell with equal values, retaining both branch labels, and
+(c) a consumer whose local history lacks a peer-only earlier output key. Case (c)
+refuses at local index 1 despite that step-0 key existing in the peer history with
+the right unit and a value enabling funded, authorized work. An equivalent literal
+or a matching own-history key must enable its successful sibling. Mutant 10 uses
+this peer-only-key refusal as its designated oracle; equal-valued duplicate keys
+alone cannot discriminate a swapped value source. A passing pair cannot emit
+different values for the same fully qualified selected-cell port: writing its
+selected cell conflicts with the peer snapshot read. Do not invent that fixture.
+
 Negative siblings: same debit cell; hidden guard, delta, and supply-expression read;
 inactive expression branch read; output snapshot of peer write; target-only balance
 dependency; missing/revoked capability; independent first/middle/both refusals;
-colliding local output keys across branches; unsupported or written frame region.
+branch output qualification and peer-only history keys; unsupported or written frame region.
 For each preflight-negative conflict, include a permissive control showing both
 operations have sufficient funds/authority and a matched independent sibling.
 
@@ -237,7 +251,8 @@ its designated oracle, and preserve named unrelated positives):
 
 1. Bypass write/write conflict (if redundant guards would mask it, remove the
    redundant corresponding cross-read guards in this explicitly composite mutant).
-2. Omit syntactic expression reads from admission.
+2. Omit syntactic expression reads from admission together with redundant declared
+   read entries that would otherwise mask the omission; record the composite edit.
 3. Omit selected outputs from reads.
 4. Omit delta targets from both balance dependencies and prospective writes.
 5. Omit the reverse-direction write/read conflict.
@@ -251,6 +266,13 @@ its designated oracle, and preserve named unrelated positives):
 13. Reset the capability store used by one branch to a stale/live fixture store.
 14. Re-evaluate cached/prestate effects after a state-dependent prefix incorrectly.
 
+For target omission, use a zero/cancelling delta target absent from declared writes
+so the unchanged kernel has a valid successful control; alternatively document
+an explicit composite removal of redundant target/write inclusions. For expression
+read omission, retain valid declared reads in the registered template and weaken
+the admission collector comprehensively, so the ordinary conflicting fixture still
+has a funded authorized successful underlying-kernel sibling. Deliberately malformed
+footprint fixtures remain separate refusal controls with their exact expected errors.
 A targeted mutant's guard redundancy must be analyzed before counting it. A
 compiler rejection, unapplied edit, omitted check, malformed evidence, or surviving
 mutant is never a semantic detection. Proof holes are used only in isolated audit

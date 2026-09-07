@@ -37,16 +37,16 @@ The system SHALL select each branch final balance only inside its admitted write
 ### Requirement: Qualified outputs and receipts
 The system SHALL retain exact successful invocation receipt data and immutable typed snapshots, keyed externally by branch identity, local position and qualified port. Each branch SHALL resolve only its own earlier successful outputs, preserving its local ordering and refusal semantics.
 
-#### Scenario: Colliding local output keys
-- **WHEN** both branches emit the same local step/port key with different values and later consume their own outputs
-- **THEN** routing preserves the two distinct branch-qualified values
+#### Scenario: Qualified output identities
+- **WHEN** branches emit the same local step and numeric port ID from distinct components selecting different cells, or emit the same fully qualified local key for a common read-only cell
+- **THEN** the first case preserves distinct component-qualified values and the second preserves equal snapshots as two branch-labeled observations; neither case conflates the branch histories
 
 #### Scenario: Snapshot after later writes
 - **WHEN** a branch writes a previously selected cell again
 - **THEN** the earlier snapshot value remains unchanged
 
 #### Scenario: Unavailable or foreign output
-- **WHEN** an invocation attempts to consume an output not available in its own earlier successful history
+- **WHEN** an invocation attempts to consume an earlier key present only in its peer history, or another output not available in its own earlier successful history
 - **THEN** that branch refuses without consuming its peer history or altering its prefix
 
 ### Requirement: Financially complete canonical observations

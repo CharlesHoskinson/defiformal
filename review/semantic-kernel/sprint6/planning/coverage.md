@@ -45,7 +45,7 @@ All mappings are planned obligations. No new Lean proof, runtime result, or plan
 | parallel-workflow-execution | Exact region merge | Two funded disjoint branches | 4.1–4.6, 5.1–5.4, 6.1–6.4 |
 | parallel-workflow-execution | Exact region merge | Common initial balance | 4.1–4.6, 5.1–5.4, 6.1–6.4 |
 | parallel-workflow-execution | Exact region merge | Refused branch prefix | 4.1–4.6, 5.1–5.4, 6.1–6.4 |
-| parallel-workflow-execution | Qualified outputs and receipts | Colliding local output keys | 4.1–4.6, 5.1–5.4, 6.1–6.4 |
+| parallel-workflow-execution | Qualified outputs and receipts | Qualified output identities | 4.1–4.6, 5.1–5.4, 6.1–6.4 |
 | parallel-workflow-execution | Qualified outputs and receipts | Snapshot after later writes | 4.1–4.6, 5.1–5.4, 6.1–6.4 |
 | parallel-workflow-execution | Qualified outputs and receipts | Unavailable or foreign output | 4.1–4.6, 5.1–5.4, 6.1–6.4 |
 | parallel-workflow-execution | Financially complete canonical observations | Swapped completion order | 4.1–4.6, 5.1–5.4, 6.1–6.4 |

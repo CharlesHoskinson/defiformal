@@ -193,8 +193,11 @@ GPT-6 audits pass on the OpenSpec candidate. The
 [proposal](../../openspec/changes/disjoint-parallel-composition/proposal.md),
 [design](../../openspec/changes/disjoint-parallel-composition/design.md), and
 [tasks](../../openspec/changes/disjoint-parallel-composition/tasks.md) specify
-17 requirements and 47 scenarios. Strict OpenSpec validation passes; both planning
-reviews are pending. No new implementation starts until both pass. Capability
+17 requirements and 47 scenarios across 48 tasks. Strict OpenSpec validation passes.
+The initial GPT-6 audit requested one output-fixture correction; the revision
+replaces that impossible case with feasible qualification and peer-history tests.
+Fable returned a credit-limit error with no verdict. Revised-candidate audits
+remain required; no new implementation starts until both pass. Capability
 administration remains outside the binary parallel operator; exact refused
 behavior and real LR/RL re-execution are mandatory proof obligations.
 
