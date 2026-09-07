@@ -108,11 +108,13 @@ def validateCatalog (registry : Registry Party Asset Domain)
   decide ((catalog.map Component.id).Nodup) &&
   decide ((catalog.flatMap (fun c ↦ c.operations.map OperationInterface.operation)).Nodup) &&
   decide ((catalog.flatMap Component.privateCells).Nodup) &&
+  decide ((catalog.flatMap (fun c ↦ c.exports.map ResourcePort.cell)).Nodup) &&
   catalog.all (fun c ↦
     decide (c.portIds.Nodup) && decide ((c.imports.map ResourceImport.source).Nodup) &&
     c.exports.all (fun p ↦
       !(catalog.any (fun owner ↦ decide (p.cell ∈ owner.privateCells)))) &&
     c.imports.all (fun p ↦
+      !(c.exports.any (fun e ↦ decide (e.cell = p.cell))) &&
       !(catalog.any (fun owner ↦ decide (p.cell ∈ owner.privateCells))) &&
       catalog.any (fun source ↦ decide (source.id = p.source.component) &&
         source.exports.any (fun e ↦ decide (e.id = p.source.port) &&
@@ -120,7 +122,8 @@ def validateCatalog (registry : Registry Party Asset Domain)
     c.operations.all (fun i ↦
       (match registry i.operation with
        | none => false
-       | some template => decide (i.inputs.map InputPort.unit = template.signature)) &&
+       | some template => decide (i.inputs.map InputPort.unit = template.signature) &&
+         i.outputs.all (fun o ↦ decide (o.cell.1 = template.domain))) &&
       i.outputs.all (fun o ↦ c.canRead o.cell)))
 
 /-- Resolve references without evaluating financial expressions. Both expression branches,
@@ -164,6 +167,72 @@ def snapshots (index : Nat) (component : ComponentId)
     ⟨index, ⟨component, o.id⟩, ⟨.amount o.cell.2.2, state.balance o.cell⟩⟩)
 
 -- BEGIN PROOFS
+
+/-- Successful prechecks resolve the complete conservative reference inventories and
+accept every concrete read and write; no financial expression evaluation is assumed. -/
+theorem checkAccess_ok_iff (component : Component Party Asset Domain)
+    (template : Template Party Asset Domain) (ctx : InvocationContext Party Domain)
+    (parties : List Party) :
+    checkAccess component template ctx parties = .ok PUnit.unit ↔
+      ∃ reads writes,
+        resolveRefs ctx.principal parties
+          (template.requiredStateReads ++ template.stateReads) = .ok reads ∧
+        resolveRefs ctx.principal parties
+          (template.writes ++ template.deltas.map (fun d ↦ ⟨d.asset, d.target⟩)) = .ok writes ∧
+        reads.all component.canRead = true ∧ writes.all component.canWrite = true := by
+  unfold checkAccess
+  cases hr : resolveRefs ctx.principal parties
+    (template.requiredStateReads ++ template.stateReads) with
+  | error e => simp [Except.mapError, bind, Except.bind]
+  | ok reads =>
+    cases hw : resolveRefs ctx.principal parties
+      (template.writes ++ template.deltas.map (fun d ↦ ⟨d.asset, d.target⟩)) with
+    | error e => simp [Except.mapError, bind, Except.bind]
+    | ok writes =>
+      simp only [Except.mapError, bind, Except.bind]
+      by_cases r : reads.all component.canRead = true <;>
+        by_cases w : writes.all component.canWrite = true <;>
+        simp [r, w, -List.all_eq_true, throw, throwThe, pure, Except.pure]
+
+
+/-- In particular every resolved declared write accepted by the precheck is writable. -/
+theorem checkAccess_declaredWrites (component : Component Party Asset Domain)
+    (template : Template Party Asset Domain) (ctx : InvocationContext Party Domain)
+    (parties : List Party) (writes : List (Cell Party Asset Domain))
+    (accepted : checkAccess component template ctx parties = .ok PUnit.unit)
+    (resolved : resolveRefs ctx.principal parties template.writes = .ok writes) :
+    writes.all component.canWrite = true := by
+  obtain ⟨reads, allWrites, _, hw, _, allowed⟩ :=
+    (checkAccess_ok_iff component template ctx parties).mp accepted
+  simp only [resolveRefs, List.mapM_append] at hw
+  change (template.writes.mapM (fun ref ↦ ref.2.resolve ctx.principal parties)) =
+    .ok writes at resolved
+  rw [resolved] at hw
+  cases ht : (template.deltas.map
+      (fun d ↦ (⟨d.asset, d.target⟩ : PackedCellRef Party Asset Domain))).mapM
+      (fun ref ↦ ref.2.resolve ctx.principal parties) with
+  | error e => simp [ht, bind, Except.bind] at hw
+  | ok targets =>
+    simp only [ht, bind, Except.bind, pure, Except.pure, Except.ok.injEq] at hw
+    subst allWrites
+    simp only [List.all_append, Bool.and_eq_true] at allowed
+    exact allowed.1
+
+/-- A validated catalog keeps every export away from every private owner. -/
+theorem validateCatalog_export_not_private (registry : Registry Party Asset Domain)
+    (catalog : Catalog Party Asset Domain) (valid : validateCatalog registry catalog = true)
+    (component owner : Component Party Asset Domain) (hc : component ∈ catalog)
+    (ho : owner ∈ catalog) (port : ResourcePort Party Asset Domain)
+    (hp : port ∈ component.exports) : port.cell ∉ owner.privateCells := by
+  simp only [validateCatalog, Bool.and_eq_true] at valid
+  have componentValid := List.all_eq_true.mp valid.2 component hc
+  simp only [Bool.and_eq_true] at componentValid
+  have exportValid := List.all_eq_true.mp componentValid.1.1.2 port hp
+  simpa using (show ¬port.cell ∈ owner.privateCells from by
+    intro h
+    have : catalog.any (fun c ↦ decide (port.cell ∈ c.privateCells)) = true :=
+      List.any_eq_true.mpr ⟨owner, ho, by simpa using h⟩
+    simp [this] at exportValid)
 
 omit [DecidableEq Party] [DecidableEq Asset] [DecidableEq Domain] in
 theorem snapshots_length (index : Nat) (component : ComponentId)

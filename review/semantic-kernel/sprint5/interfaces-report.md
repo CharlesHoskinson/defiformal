@@ -21,14 +21,16 @@ Verification:
 - LSP diagnostics on Interfaces: success, no errors or warnings.
 - Dependency-aware `lake lean DefiKernel/Composition/InterfaceTests.lean`: exit 0.
 - Fresh `lake env lean DefiKernel/Composition/InterfaceTests.lean`: exit 0;
-  44/44 named runtime comparisons true in `interfaces-runtime.log`.
+  52/52 named runtime comparisons true in `interfaces-runtime.log`.
 - `git diff --check`: no output. Source search: no forbidden proof constructs.
-- Four generic theorems: `snapshots_length`, `snapshot_of_selected`,
+- Seven generic theorems: `checkAccess_ok_iff`, `checkAccess_declaredWrites`,
+  `validateCatalog_export_not_private`, `snapshots_length`, `snapshot_of_selected`,
   `resolveSource_literal`, `resolveSource_not_prior`. These concern list snapshots
-  and routing; they do not establish general catalog soundness or confidentiality.
+  and routing plus exact access checks and private export exclusion; they do not
+  establish confidentiality.
 
 The funded interference control executes the real typed kernel with its actually
-provisioned live capability store and proves the bounded execution result by
+provisioned live capability store and checks the bounded execution result by
 comparing Alice's 7 USD and the vault's 23 USD. The sibling interface checker
 refuses that same target with `writeAccess`; adding an exact writable import
 permits it. Adapter tests must separately cover whole-world unchanged refusal,
@@ -38,9 +40,38 @@ external history lists. No financial authority is added by value routing.
 
 Source SHA-256:
 
-- Interfaces.lean: `0f85b76f3066423ead95a3973a4721b7fdf7a5a2552d34d59950a0d26a21c5de`
-- InterfaceTests.lean: `38d512c55cab3278b5eaaf06fa6b5545937166947386be555813a6b67cc1f17a`
+- Interfaces.lean: `4f2a32854b298ca5399eb0aa38bb16e892312517ae4f3a0e49e4bfead369f5fe`
+- InterfaceTests.lean: `710777f2112979bbb4cd70624939901a7f1f25756d5cc08027722ca942ae51b3`
 
 Full integrated axiom audit, source mutation evidence and independent native
 Grok/Fable review remain parent integration obligations; this report claims none
 of those completed.
+
+## Native review remediation
+
+Read the native Fable interface and execution responses reviewing `ba3661f`
+(`interfaces-fable.json`, `execution-fable.json`). Added globally unique exported
+cells to block competing providers with different rights, and required selected
+output domains to equal the registered operation domain. Catalog authorship is
+still trusted: validation checks internal consistency, not entitlement to create
+a resource provider. Export rights constrain the exporter itself, and a component may not import a cell it also exports. Environment observations
+remain under the typed kernel's declared environment checks.
+
+Added eight executed siblings for provider collision, unknown source, wrong port,
+self-import, read-only versus writable exporter access, and cross-domain outputs.
+The three new generic theorems establish the complete successful access-precheck
+characterization, writable declared cells, and private/export separation.
+The explicit private/import exclusion check remains redundant with exact matching
+plus export exclusion; its presence is not a separately discriminating claim.
+
+Dependency-aware file validation and the fresh runtime driver both exit 0 on the
+updated hashes above, with 52/52 comparisons. Interfaces LSP diagnostics are clean.
+Native targeted re-review of these fixes remains pending parent integration.
+
+Read native Grok execution review `execution-grok.json`, finding 1. The catalog
+now rejects overlap between a component's own exported and imported cells,
+including identical self-imports. This closes the remaining own writable export
+plus own read-only import case after provider uniqueness. The existing self-import
+comparison now expects rejection; an additional explicit read-only/writable sibling
+also refuses. Dependency-aware file compilation and fresh execution both exit 0:
+52/52 comparisons on the updated hashes above; Interfaces LSP remains clean.

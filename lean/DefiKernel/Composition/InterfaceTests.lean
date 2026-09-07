@@ -44,6 +44,24 @@ def fundedKernelControl : Bool := match provisioned with
     | .ok post => decide (post.state.balance aliceUSD = 7 ∧ post.state.balance vaultUSD = 23)
 
 def checks : List (String × Bool) := [
+  ("interface.unique-export-provider", !validateCatalog registry
+    [{ owner with exports := [⟨⟨10⟩, vaultUSD, true⟩] },
+     { exporter with exports := [⟨⟨10⟩, vaultUSD, false⟩] }]),
+  ("interface.missing-import-source", !validateCatalog registry
+    [{ shared with imports := [⟨⟨⟨99⟩, ⟨10⟩⟩, vaultUSD, true⟩] }, exporter]),
+  ("interface.wrong-import-port", !validateCatalog registry
+    [{ shared with imports := [⟨⟨⟨1⟩, ⟨99⟩⟩, vaultUSD, true⟩] }, exporter]),
+  ("interface.self-import", !validateCatalog registry
+    [owner, { exporter with imports := [⟨⟨⟨1⟩, ⟨10⟩⟩, vaultUSD, true⟩] }]),
+  ("interface.self-readonly-import-writable-export", !validateCatalog registry
+    [owner, { exporter with imports := [⟨⟨⟨1⟩, ⟨10⟩⟩, vaultUSD, false⟩] }]),
+  ("interface.readonly-export-selfwrite",
+    !({ exporter with exports := [⟨⟨10⟩, vaultUSD, false⟩] } : C).canWrite vaultUSD),
+  ("interface.writable-export-selfwrite", exporter.canWrite vaultUSD),
+  ("interface.crossdomain-output", !validateCatalog registry
+    [{ owner with
+      privateCells := owner.privateCells ++ [(.other, .alice, .usd)]
+      operations := [{ iface with outputs := [⟨⟨1⟩, (.other, .alice, .usd)⟩] }] }]),
   ("interface.valid", validateCatalog registry [owner, foreign]),
   ("interface.duplicate-component", !validateCatalog registry [owner, owner]),
   ("interface.duplicate-output", !validateCatalog registry

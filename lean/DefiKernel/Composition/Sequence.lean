@@ -50,6 +50,8 @@ def run (cfg : Config P A D) (boundaries : Nat → Boundary P A D)
     (world : World P A D) (steps : List (Step P A D)) : Cursor P A D :=
   continueRun cfg boundaries (startCursor cfg world) steps
 
+-- BEGIN PROOFS
+
 /-- The trace relates actual step evidence at each preceding world and output history. -/
 inductive TraceSound (cfg : Config P A D) (boundaries : Nat → Boundary P A D)
     (initial : World P A D) :
@@ -70,8 +72,6 @@ def RefusalSound (cfg : Config P A D) (boundaries : Nat → Boundary P A D)
     | none => failure.reason = .configuration ∧ validateCatalog cfg.registry cfg.catalog = false
     | some step => executeStep cfg (boundaries cursor.nextIndex) cursor.nextIndex
         cursor.outputs step cursor.world = .error failure.reason
-
--- BEGIN PROOFS
 
 theorem continueRun_nil (cfg : Config P A D) (boundaries : Nat → Boundary P A D)
     (cursor : Cursor P A D) : continueRun cfg boundaries cursor [] = cursor := rfl

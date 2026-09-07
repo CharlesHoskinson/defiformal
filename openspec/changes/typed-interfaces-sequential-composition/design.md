@@ -48,16 +48,20 @@ Keep value ports separate from resource ports:
 - Input value ports declare existing `Typed.Unit` types and map to the registered
   operation's ordered argument signature.
 - Output value ports select ledger cells visible to the component and return
-  typed post-state balance snapshots. They are total after successful execution.
+  typed post-state balance snapshots within the registered operation's domain.
+  They are total after successful execution.
 - Resource ports identify exact cells, including domain and asset, with read or
   read/write access. Shared imports must match declared exports and cannot
-  escalate access.
+  escalate access. Each shared cell has a unique exporter; a component's export
+  and import cells are disjoint. A read-only export also limits its own exporter.
 
 Each component owns a finite private cell set and an operation allowlist.
-Private ownership is disjoint and excludes every other component's resource
+Catalog authorship is trusted: export declarations identify shared providers,
+not on-chain ownership certificates. Private ownership is disjoint and excludes every other component's resource
 access. Operations have unambiguous component ownership. Resolve operation cell
-references using the actual context/parties/arguments; conservatively check all
-required and declared reads and writes against permitted component access before
+references using the actual principal and party list; packed numeric arguments
+cannot select cells in the current reference syntax. Conservatively check all
+  required and declared reads and writes against permitted component access before
 calling the executor. Include guards, both expression branches, supply-related
 reads, and output selections. Existing domain and capability checks still apply.
 A valid debit grant does not override interface isolation. Read access does not

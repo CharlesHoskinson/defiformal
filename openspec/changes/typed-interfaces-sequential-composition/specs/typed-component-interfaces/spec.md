@@ -9,6 +9,7 @@ values and share resources without silently expanding access or proof claims.
 The system SHALL identify ports by stable component and port identities, distinguish
 value inputs, value outputs, and resource access, and reject duplicate identities,
 unknown operations, ambiguous operation ownership, and incompatible signatures.
+Selected-cell outputs SHALL remain within the registered operation's domain.
 
 #### Scenario: Valid declared operation
 - **WHEN** a uniquely owned registered operation has inputs matching its signature and valid selected-cell outputs
@@ -18,15 +19,25 @@ unknown operations, ambiguous operation ownership, and incompatible signatures.
 - **WHEN** declarations contain duplicate port identities, an unknown operation, ambiguous ownership, or a signature mismatch
 - **THEN** configuration validation refuses before any workflow step executes
 
+#### Scenario: Cross-domain snapshot
+- **WHEN** an operation declares a selected-cell output in a different domain
+- **THEN** configuration validation refuses even if the component can read that cell
+
 ### Requirement: Private ownership and explicit shared access
 The system SHALL enforce disjoint private ownership and explicitly matched shared
 resource imports and exports, including exact cell identity, domain, asset, and
 access rights. Private cells SHALL NOT be accessible as another component's
 resources. A component SHALL access only its permitted reads and writes.
+Shared cells SHALL have unique exporters, and each component's exported and
+imported cells SHALL be disjoint. Export rights SHALL also constrain the exporter.
 
 #### Scenario: Overlapping ownership
 - **WHEN** two components claim the same private cell or another component imports that cell as shared
 - **THEN** configuration validation refuses without changing the world
+
+#### Scenario: Conflicting exports
+- **WHEN** two export declarations claim the same cell or a component imports a cell it also exports
+- **THEN** configuration validation refuses instead of combining conflicting permissions
 
 #### Scenario: Authorized shared use
 - **WHEN** a component accesses an explicitly exported and matching shared resource within its granted access and kernel authority

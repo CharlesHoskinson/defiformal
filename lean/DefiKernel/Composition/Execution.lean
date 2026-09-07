@@ -106,6 +106,59 @@ def executeStep (cfg : Config P A D) (boundary : Boundary P A D) (index : Nat)
 
 -- BEGIN PROOFS
 
+omit [DecidableEq P] [DecidableEq D] [Fintype P] [Fintype A] [Fintype D] in
+/-- The emitted write footprint is exactly the template's resolved declared footprint. -/
+theorem evaluated_writes (template : Template P A D)
+    (context : EvalContext P A D template.signature) (e : Evaluated P A D)
+    (h : template.evaluate context = .ok e) :
+    resolveRefs context.caller context.parties template.writes = .ok e.writes := by
+  unfold Template.evaluate at h
+  simp only [bind, Except.bind, pure, Except.pure] at h
+  split at h
+  · contradiction
+  split at h
+  · contradiction
+  split at h
+  · contradiction
+  split at h
+  · contradiction
+  split at h
+  · contradiction
+  split at h
+  · contradiction
+  have hp := Except.ok.inj h
+  rw [← hp]
+  assumption
+
+omit [Fintype P] [Fintype A] [Fintype D] in
+/-- The component and access check are selected from the trusted catalog and registry. -/
+theorem prepareInvocation_access (cfg : Config P A D) (boundary : Boundary P A D)
+    (index : Nat) (history : List (OutputObservation A)) (inv : Invocation P A D)
+    (iface : OperationInterface P A D) (request : Request P A D)
+    (h : prepareInvocation cfg boundary index history inv = .ok (iface, request)) :
+    ∃ component template, lookupOperation cfg.catalog inv.component inv.operation =
+      some (component, iface) ∧ cfg.registry request.operation = some template ∧
+      checkAccess component template boundary.ctx request.parties = .ok PUnit.unit := by
+  cases hl : lookupOperation cfg.catalog inv.component inv.operation with
+  | none => simp [prepareInvocation, hl, bind, Except.bind] at h
+  | some pair =>
+    rcases pair with ⟨component, selected⟩
+    cases ha : resolveInputs index history selected inv.inputs with
+    | error reason => simp [prepareInvocation, hl, ha, bind, Except.bind, Except.mapError] at h
+    | ok arguments =>
+      cases ht : cfg.registry inv.operation with
+      | none => simp [prepareInvocation, hl, ha, ht, bind, Except.bind, Except.mapError] at h
+      | some template =>
+        cases hc : checkAccess component template boundary.ctx inv.parties with
+        | error reason =>
+          simp [prepareInvocation, hl, ha, ht, hc, bind, Except.bind, Except.mapError] at h
+        | ok token =>
+          cases token
+          simp only [prepareInvocation, hl, ha, ht, hc, bind, Except.bind, Except.mapError,
+            pure, Except.pure, Except.ok.injEq, Prod.mk.injEq] at h
+          obtain ⟨rfl, rfl⟩ := h
+          exact ⟨component, template, rfl, ht, hc⟩
+
 theorem extractReceipt_total (cfg : Config P A D) (boundary : Boundary P A D)
     (request : Request P A D) (pre post : World P A D)
     (h : Typed.execute cfg.registry pre.capabilities boundary.ctx boundary.env boundary.now
@@ -215,6 +268,45 @@ theorem StepSound.locality {cfg : Config P A D} {boundary : Boundary P A D} {ind
     exact applyEvaluated_locality _ _ _ _ _ _ ha c hc
   | issue => rfl
   | revoke => rfl
+
+/-- Every declared receipt write is allowed by the selected component interface. -/
+theorem StepSound.component_writes {cfg : Config P A D} {boundary : Boundary P A D}
+    {index : Nat} {history : List (OutputObservation A)} {inv : Invocation P A D}
+    {pre : World P A D} {result : StepResult P A D}
+    (h : StepSound cfg boundary index history (.invoke inv) pre result) :
+    ∃ component iface, lookupOperation cfg.catalog inv.component inv.operation =
+      some (component, iface) ∧ ∀ cell ∈ result.receipt.writes, component.canWrite cell = true := by
+  cases h with
+  | invoke inv pre post iface request e hp hx he ha =>
+    obtain ⟨component, template, hl, ht, hc⟩ := prepareInvocation_access _ _ _ _ _ _ _ hp
+    obtain ⟨selected, hs, args, hargs, actual, evaluated, applied⟩ :=
+      execute_evaluated _ _ _ _ _ _ _ _ hx
+    rw [ht] at hs
+    cases hs
+    have extracted : extractReceipt cfg boundary request pre = .ok actual := by
+      simp [extractReceipt, ht, hargs, evaluated, bind, Except.bind, Except.mapError]
+    rw [he] at extracted
+    cases extracted
+    have writes := evaluated_writes _ _ _ evaluated
+    have allowed := checkAccess_declaredWrites component template boundary.ctx
+      request.parties e.writes hc writes
+    exact ⟨component, iface, hl, by simpa [Receipt.writes] using List.all_eq_true.mp allowed⟩
+
+theorem StepSound.component_locality {cfg : Config P A D} {boundary : Boundary P A D}
+    {index : Nat} {history : List (OutputObservation A)} {inv : Invocation P A D}
+    {pre : World P A D} {result : StepResult P A D}
+    (h : StepSound cfg boundary index history (.invoke inv) pre result) :
+    ∃ component iface, lookupOperation cfg.catalog inv.component inv.operation =
+      some (component, iface) ∧ ∀ cell, component.canWrite cell = false →
+        result.world.state.balance cell = pre.state.balance cell := by
+  obtain ⟨component, iface, selected, writes⟩ := h.component_writes
+  refine ⟨component, iface, selected, ?_⟩
+  intro cell denied
+  apply h.locality cell
+  intro member
+  have allowed := writes cell member
+  rw [denied] at allowed
+  contradiction
 
 theorem StepSound.invoke_preserves_capabilities {cfg : Config P A D}
     {boundary : Boundary P A D} {index : Nat} {history : List (OutputObservation A)}

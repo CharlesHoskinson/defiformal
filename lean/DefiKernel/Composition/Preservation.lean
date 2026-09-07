@@ -66,6 +66,42 @@ theorem TraceSound.authority {cfg : Config P A D} {boundaries : Nat → Boundary
   obtain ⟨prior, accepted⟩ := h.steps event member
   exact accepted.authorized
 
+theorem TraceSound.component_locality {cfg : Config P A D}
+    {boundaries : Nat → Boundary P A D} {initial final : World P A D}
+    {events : List (Event P A D)} {history : List (OutputObservation A)} {index : Nat}
+    (h : TraceSound cfg boundaries initial events final history index) :
+    ∀ event ∈ events, ∀ inv, event.step = .invoke inv →
+      ∃ component iface, lookupOperation cfg.catalog inv.component inv.operation =
+        some (component, iface) ∧ ∀ cell, component.canWrite cell = false →
+          event.result.world.state.balance cell = event.before.state.balance cell := by
+  intro event member inv he
+  obtain ⟨prior, accepted⟩ := h.steps event member
+  rw [he] at accepted
+  exact accepted.component_locality
+
+/-- Administrative authorization is separate from invocation receipt rights. -/
+theorem TraceSound.administration {cfg : Config P A D} {boundaries : Nat → Boundary P A D}
+    {initial final : World P A D} {events : List (Event P A D)}
+    {history : List (OutputObservation A)} {index : Nat}
+    (h : TraceSound cfg boundaries initial events final history index) :
+    ∀ event ∈ events, match event.step with
+    | .invoke _ => True
+    | .issue grant => (boundaries event.index).ctx.domain = grant.domain ∧
+        (boundaries event.index).ctx.principal = cfg.domainAdmin grant.domain
+    | .revoke id => ∃ cap, event.before.capabilities.lookup id = some cap ∧
+        (boundaries event.index).ctx.domain = cap.domain ∧
+        (boundaries event.index).ctx.principal = cfg.domainAdmin cap.domain := by
+  intro event member
+  obtain ⟨prior, accepted⟩ := h.steps event member
+  cases he : event.step with
+  | invoke inv => trivial
+  | issue grant =>
+    rw [he] at accepted
+    exact accepted.issue_admin
+  | revoke id =>
+    rw [he] at accepted
+    exact accepted.revoke_admin
+
 theorem TraceSound.invariant {cfg : Config P A D} {boundaries : Nat → Boundary P A D}
     {initial final : World P A D} {events : List (Event P A D)}
     {history : List (OutputObservation A)} {index : Nat}
