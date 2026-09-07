@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "modules": [
+    "DefiKernel.Interleaving.Schedule",
+    "DefiKernel.Interleaving.Execution",
+    "DefiKernel.Interleaving.Examples",
+    "DefiKernel.Interleaving.ScheduleTests",
+    "DefiKernel.Interleaving.Tests",
+    "DefiKernel.Interleaving.Audit"
+  ],
+  "mutations": [
+    {
+      "name": "schedule-count-bypass",
+      "module": "DefiKernel.Interleaving.Schedule",
+      "needle": "if schedule.count .left = leftLength ∧ schedule.count .right = rightLength then .ok ⟨⟩",
+      "replacement": "if True then .ok ⟨⟩",
+      "required_false": [
+        "interleaving.schedule.missing-right"
+      ]
+    },
+    {
+      "name": "reintroduce-overlap-rejection",
+      "module": "DefiKernel.Interleaving.Schedule",
+      "needle": "  let _ ← (checkSchedule left.length right.length schedule).mapError .schedule\n  return (lf, rf)",
+      "replacement": "  let _ ← (checkSchedule left.length right.length schedule).mapError .schedule\n  let _ ← (Parallel.checkCompatibility lf rf).mapError (fun _ ↦ .configuration)\n  return (lf, rf)",
+      "required_false": [
+        "interleaving.schedule.overlap-admitted"
+      ]
+    },
+    {
+      "name": "stale-initial-world",
+      "module": "DefiKernel.Interleaving.Execution",
+      "needle": "      let outcome := executeStep cfg (boundaries b own.nextIndex) own.nextIndex own.outputs\n        (.invoke inv) m.world",
+      "replacement": "      let outcome := executeStep cfg (boundaries b own.nextIndex) own.nextIndex own.outputs\n        (.invoke inv) ((m.attempts.head?.map (fun attempt ↦ attempt.before)).getD m.world)",
+      "required_false": [
+        "interleaving.fixture.live.complete"
+      ]
+    },
+    {
+      "name": "isolated-branch-world",
+      "module": "DefiKernel.Interleaving.Execution",
+      "needle": "      let outcome := executeStep cfg (boundaries b own.nextIndex) own.nextIndex own.outputs\n        (.invoke inv) m.world",
+      "replacement": "      let isolated := Parallel.runBranch cfg (boundaries b) ((m.attempts.head?.map (fun attempt ↦ attempt.before)).getD m.world)\n        ((selectBranch left right b).take own.consumed)\n      let outcome := executeStep cfg (boundaries b own.nextIndex) own.nextIndex own.outputs\n        (.invoke inv) isolated.world",
+      "required_false": [
+        "interleaving.fixture.replenish.funded"
+      ]
+    },
+    {
+      "name": "global-cancellation",
+      "module": "DefiKernel.Interleaving.Execution",
+      "needle": "  let own := m.local b\n  match own.failure with",
+      "replacement": "  let own := m.local b\n  if m.left.failure.isSome || m.right.failure.isSome then m.skip b else\n  match own.failure with",
+      "required_false": [
+        "interleaving.fixture.refusal.immediate"
+      ]
+    },
+    {
+      "name": "prefix-world-rollback",
+      "module": "DefiKernel.Interleaving.Execution",
+      "needle": "      | .error reason => m.refuse b inv reason",
+      "replacement": "      | .error reason => { m.refuse b inv reason with world := ((m.attempts.head?.map (fun attempt ↦ attempt.before)).getD m.world) }",
+      "required_false": [
+        "interleaving.fixture.refusal.middle"
+      ]
+    },
+    {
+      "name": "retry-halted-suffix",
+      "module": "DefiKernel.Interleaving.Execution",
+      "needle": "  match own.failure with",
+      "replacement": "  match (none : Option (LocatedFailure P A D)) with",
+      "required_false": [
+        "interleaving.fixture.replenish.halted"
+      ]
+    },
+    {
+      "name": "peer-history-leakage",
+      "module": "DefiKernel.Interleaving.Execution",
+      "needle": "      let outcome := executeStep cfg (boundaries b own.nextIndex) own.nextIndex own.outputs\n        (.invoke inv) m.world",
+      "replacement": "      let outcome := executeStep cfg (boundaries b own.nextIndex) own.nextIndex\n        (own.outputs ++ (m.local (match b with | .left => .right | .right => .left)).outputs)\n        (.invoke inv) m.world",
+      "required_false": [
+        "interleaving.fixture.history.peer.only"
+      ]
+    },
+    {
+      "name": "snapshot-recomputation",
+      "module": "DefiKernel.Interleaving.Execution",
+      "needle": "      let outcome := executeStep cfg (boundaries b own.nextIndex) own.nextIndex own.outputs\n        (.invoke inv) m.world",
+      "replacement": "      let refreshed := own.outputs.map fun observation ↦\n        match cfg.catalog.find? (fun component ↦ decide (component.id = observation.port.component)) with\n        | none => observation\n        | some component =>\n          match (component.operations.flatMap (fun operation ↦ operation.outputs)).find?\n              (fun port ↦ decide (port.id = observation.port.port)) with\n          | none => observation\n          | some port => { observation with value :=\n              ⟨.amount port.cell.2.2, m.world.state.balance port.cell⟩ }\n      let outcome := executeStep cfg (boundaries b own.nextIndex) own.nextIndex refreshed\n        (.invoke inv) m.world",
+      "required_false": [
+        "interleaving.fixture.snapshot.own"
+      ]
+    },
+    {
+      "name": "global-boundary-position",
+      "module": "DefiKernel.Interleaving.Execution",
+      "needle": "(boundaries b own.nextIndex)",
+      "replacement": "(boundaries b (m.left.consumed + m.right.consumed))",
+      "required_false": [
+        "interleaving.fixture.boundary.local"
+      ]
+    },
+    {
+      "name": "global-invocation-position",
+      "module": "DefiKernel.Interleaving.Execution",
+      "needle": "(selectBranch left right b)[own.consumed]?",
+      "replacement": "(selectBranch left right b)[m.left.consumed + m.right.consumed]?",
+      "required_false": [
+        "interleaving.fixture.disjoint.lrlr.complete"
+      ]
+    },
+    {
+      "name": "drop-peer-supply",
+      "module": "DefiKernel.Interleaving.Execution",
+      "needle": "  (m.attempts.map (fun attempt ↦ attempt.supply d a)).sum",
+      "replacement": "  ((m.attempts.filter (fun attempt ↦ decide (attempt.branch = .left))).map\n    (fun attempt ↦ attempt.supply d a)).sum",
+      "required_false": [
+        "interleaving.fixture.supply.aggregate"
+      ]
+    },
+    {
+      "name": "resurrect-revoked-capabilities",
+      "module": "DefiKernel.Interleaving.Execution",
+      "needle": "      let outcome := executeStep cfg (boundaries b own.nextIndex) own.nextIndex own.outputs\n        (.invoke inv) m.world",
+      "replacement": "      let outcome := executeStep cfg (boundaries b own.nextIndex) own.nextIndex own.outputs\n        (.invoke inv) { m.world with capabilities :=\n          ⟨m.world.capabilities.entries.map (fun cap ↦ { cap with live := true })⟩ }",
+      "required_false": [
+        "interleaving.fixture.capability.revoked"
+      ]
+    },
+    {
+      "name": "omit-canonical-failure",
+      "module": "DefiKernel.Interleaving.Execution",
+      "needle": "  ⟨localState.events.map observeEvent, localState.outputs,\n    localState.nextIndex, localState.failure⟩",
+      "replacement": "  ⟨localState.events.map observeEvent, localState.outputs,\n    localState.nextIndex, none⟩",
+      "required_false": [
+        "interleaving.observe.failure.reason"
+      ]
+    }
+  ],
+  "positive_checks": [
+    "interleaving.schedule.balanced",
+    "interleaving.schedule.disjoint-admitted",
+    "interleaving.schedule.overlap-left-funded",
+    "interleaving.schedule.overlap-right-funded",
+    "interleaving.fixture.empty.both",
+    "interleaving.fixture.empty.left",
+    "interleaving.fixture.empty.right",
+    "interleaving.observe.equal",
+    "interleaving.observe.failure.equal"
+  ]
+}

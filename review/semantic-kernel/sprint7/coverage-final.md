@@ -1,0 +1,3 @@
+Sprint 7 implementation and evidence accepted with limitations at `bea105ec`; delivery/archive remains pending. All 43 scenarios have nonempty mappings;42 have completed evidence and S43 awaits delivery.
+
+The [final map](scenario-map-final.json) overlays native acceptance on the unchanged [reviewed map](scenario-map.json). Runtime116/116, production mutants14/14, runner controls 52/52, nine legacy suites and twelve final Lean commands pass. Imported inventory262theorems/271 supplemental has zero forbidden dependencies. [Adjudication](implementation/ADJUDICATION.md) records exact native identities and limits.

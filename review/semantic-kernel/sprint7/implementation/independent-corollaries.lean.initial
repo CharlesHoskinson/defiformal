@@ -1,0 +1,46 @@
+import DefiKernel.Interleaving.Trace
+
+namespace Sprint7IndependentCheck
+open DefiKernel DefiKernel.Typed DefiKernel.Composition DefiKernel.Parallel
+open DefiKernel.Interleaving
+
+variable {P A D : Type} [DecidableEq P] [DecidableEq A] [DecidableEq D]
+variable [Fintype P] [Fintype A] [Fintype D]
+
+theorem admission_refusal_identity (cfg : Config P A D)
+    (boundaries : ParallelBoundary P A D) (initial : World P A D)
+    (left right : Branch P A D) (schedule : Schedule)
+    (reason : DefiKernel.Interleaving.AdmissionFailure P A D)
+    (h : DefiKernel.Interleaving.admit cfg boundaries left right schedule = .error reason) :
+    runInterleaving cfg boundaries initial left right schedule = .refused reason initial schedule := by
+  simp only [runInterleaving, h]
+
+theorem complete_active_exhaustion (cfg : Config P A D)
+    (boundaries : ParallelBoundary P A D) (initial : World P A D)
+    (left right : Branch P A D) (schedule : Schedule) (complete : Complete left right schedule)
+    (b : BranchId)
+    (active : ((runPrefix cfg boundaries initial left right schedule).local b).failure = none) :
+    ((runPrefix cfg boundaries initial left right schedule).local b).nextIndex =
+      (selectBranch left right b).length := by
+  have h := (runPrefix_reachable cfg boundaries initial left right schedule).active_index b active
+  rw [runPrefix_consumed] at h
+  cases b <;> simpa only [selectBranch, complete.1, complete.2, Nat.min_self] using h
+
+theorem complete_exhausted_or_refused (cfg : Config P A D)
+    (boundaries : ParallelBoundary P A D) (initial : World P A D)
+    (left right : Branch P A D) (schedule : Schedule) (complete : Complete left right schedule)
+    (b : BranchId) :
+    (((runPrefix cfg boundaries initial left right schedule).local b).failure = none ∧
+      ((runPrefix cfg boundaries initial left right schedule).local b).nextIndex =
+        (selectBranch left right b).length) ∨
+    ∃ failure, ((runPrefix cfg boundaries initial left right schedule).local b).failure = some failure ∧
+      failure.index = ((runPrefix cfg boundaries initial left right schedule).local b).nextIndex := by
+  cases h : ((runPrefix cfg boundaries initial left right schedule).local b).failure with
+  | none => exact .inl ⟨h, complete_active_exhaustion cfg boundaries initial left right schedule complete b h⟩
+  | some failure => exact .inr ⟨failure, h,
+      (runPrefix_reachable cfg boundaries initial left right schedule).failure_index b failure h⟩
+
+#print axioms admission_refusal_identity
+#print axioms complete_active_exhaustion
+#print axioms complete_exhausted_or_refused
+end Sprint7IndependentCheck

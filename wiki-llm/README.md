@@ -6,6 +6,10 @@ versioned review artifacts hold measurements and advisory audits. A wiki entry
 does not turn a proposed theorem into a proved result.
 
 - [Sprint 7: shared-state interleaving](sprint-7-shared-state-interleaving.md)
+- [Sprint 8: atomic synchronization](sprint-8-atomic-synchronization.md)
+- [Operational metatheory planning](operational-metatheory-planning-draft.md)
+- [Corpus provenance planning](corpus-provenance-planning-draft.md)
+- [Authorized autonomous execution agenda](autonomous-execution-agenda.md)
 - [Current roadmap](../roadmap.md)
 - [Migration progress and evidence](../docs/research/semantic-kernel-progress.md)
 

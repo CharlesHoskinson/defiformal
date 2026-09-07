@@ -1,6 +1,6 @@
 # DeFiFormal migration roadmap
 
-Updated 2026-09-07 UTC after Sprint 6; Sprint 7 planning underway.
+Updated 2026-09-07 UTC: Sprint 7 implementation accepted; branch delivery underway.
 Branch: `semantic-kernel-pivot`. Sprint 6 delivery/archive head: `850d785`.
 
 The remaining objective is conditional preservation of financial properties
@@ -76,26 +76,47 @@ all 47 scenarios and their precise evidence classes.
 
 ## Sprint 7: shared-state interleaving
 
-Planning gate passed; implementation starting: [OpenSpec proposal](openspec/changes/shared-state-interleaving/proposal.md),
+Accepted with limitations at source `bea105ec`: [OpenSpec proposal](openspec/changes/shared-state-interleaving/proposal.md),
 [design](openspec/changes/shared-state-interleaving/design.md),
 [37 tasks](openspec/changes/shared-state-interleaving/tasks.md), and
-[wiki decision record](wiki-llm/sprint-7-shared-state-interleaving.md).
-The candidate covers explicit finite schedules, one evolving shared world,
-branch-local histories/refusals, initialized interference obligations and generic
-recovery of disjoint behavior. Independent GPT-6/Fable planning reviews passed with limitations on `bf3fb50`,
-and the fresh ten-command baseline passed. [Planning adjudication](review/semantic-kernel/sprint7/planning/ADJUDICATION.md)
-records the adopted guidance. Implementation and result acceptance remain open.
+[wiki record](wiki-llm/sprint-7-shared-state-interleaving.md).
+Both native Grok and Fable accepted the Lean implementation and final proof/evidence
+supplement. [Adjudication](review/semantic-kernel/sprint7/implementation/ADJUDICATION.md)
+records exact identities, adopted corollaries and remaining limits.
+
+All 116 runtime comparisons,14 production mutations,52 runner controls, nine
+historical Python suites and12 final Lean commands pass. Imported audit checks262
+theorems and271 supplemental declarations with zero forbidden dependencies. The127
+explicit theorems comprise107 generic results,15 instances, three counterexample
+constructions and two counterexample corollaries;135 others are generated.
+[Final coverage](review/semantic-kernel/sprint7/coverage-final.md) maps all 43 scenarios.
+Delivery/archive is the remaining Sprint 7 action.
 
 - [x] Pass the frozen OpenSpec planning review gate and current baseline.
-- [ ] Implement shared execution, schedules and exact observations.
-- [ ] Prove prefix preservation, explicit interference composition and disjoint recovery.
-- [ ] Complete financial examples, production mutations and full regressions.
+- [x] Implement shared execution, schedules and exact observations.
+- [x] Prove prefix preservation, explicit interference composition and disjoint recovery.
+- [x] Complete financial examples, production mutations and full regressions.
 - [ ] Obtain native Grok/Fable result audits, deliver the branch and archive OpenSpec.
+
+## Sprint 8 candidate: atomic synchronization
+
+The next [OpenSpec proposal](openspec/changes/atomic-synchronization/proposal.md),
+[design](openspec/changes/atomic-synchronization/design.md) and
+[40 tasks](openspec/changes/atomic-synchronization/tasks.md) cover four capabilities,
+16 requirements and49 scenarios. The [wiki decision record](wiki-llm/sprint-8-atomic-synchronization.md)
+explains exact rollback, separate committed observations and receipt-derived typed
+transient clearing. Strict plan validation and author consistency checks pass;
+independent GPT-6/Fable planning reviews and all implementation remain pending.
+
+The user authorized continued execution of all remaining packages while AFK;
+[the execution agenda](wiki-llm/autonomous-execution-agenda.md) preserves dependencies,
+review gates and the active stock Codex loop. Proposed future work is not accepted
+merely because it is scheduled.
 
 ## Remaining composition and metatheory
 
 - [x] Implement disjoint parallel composition.
-- [ ] Implement shared-state interleaving with explicit interference conditions.
+- [x] Implement shared-state interleaving with explicit interference conditions.
 - [ ] Implement atomic synchronization, including failure and transient-settlement semantics.
 - [ ] Generalize the useful results in `Interface.lean` and `Nary.lean` into the operational model.
 - [ ] Prove behavioral associativity: regrouping compatible components preserves behavior.
@@ -167,6 +188,8 @@ records the adopted guidance. Implementation and result acceptance remain open.
 - [ ] Add explicit current-module-exclusion and broader audit-root fixtures.
 - [ ] Add a general duplicate-capability-list theorem and an isolated vault-liquidity regression.
 - [ ] Extend individual actor/effect/supply comparison mutations in the older contract wrapper.
+
+- [ ] Strengthen mutation projection guards for attributed declarations/macros/notation/deriving and add separated wrong-world oracles; current concrete Sprint 7 sources are accepted with these recorded limits.
 
 ## Acceptance process for each implementation sprint
 

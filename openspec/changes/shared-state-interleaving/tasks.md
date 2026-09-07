@@ -38,27 +38,27 @@
 
 - [x] 6.1 Complete `Interleaving/Examples.lean` and `Tests.lean` with all seven design fixture families; verify independent complete ledgers/stores, receipts, typed outputs, exact failure reasons/indices and protected successful controls.
 - [x] 6.2 Add `Interleaving/Audit.lean` with a nonempty unique named runtime inventory and `Verify.lean` with automatic imported theorem/supplemental axiom checks; add the new root import and verify zero forbidden dependencies and full runtime success.
-- [ ] 6.3 Save named theorem statements/premises and classify generic results, instances, counterexamples and generated declarations; finish a one-to-one scenario inventory and verify every planned scenario has actual evidence without calling finite executions generic proofs.
+- [x] 6.3 Save named theorem statements/premises and classify generic results, instances, counterexamples and generated declarations; finish a one-to-one scenario inventory and verify every planned scenario has actual evidence without calling finite executions generic proofs.
 
 ## 7. Production mutations and runner controls
 
-- [ ] 7.1 Add `scripts/check_interleaving_mutations.py` with explicit repo/spec/out, fresh source projection, byte manifests and complete inventory enforcement; verify an unchanged real execution control with all comparisons true and protected positive labels present.
-- [ ] 7.2 Add mutants for count bypass, overlap rejection, stale initial execution, isolated-world replacement, global cancellation, prefix rollback and halted retry; verify all seven compile and each designated independent runtime oracle detects the actual source change.
-- [ ] 7.3 Add mutants for peer history, snapshot recomputation, global boundary index, wrong local invocation, dropped peer supply, revoked-grant resurrection and failure-observation omission; verify all seven compile and each designated oracle fails while its protected sibling remains true.
+- [x] 7.1 Add `scripts/check_interleaving_mutations.py` with explicit repo/spec/out, fresh source projection, byte manifests and complete inventory enforcement; verify an unchanged real execution control with all comparisons true and protected positive labels present.
+- [x] 7.2 Add mutants for count bypass, overlap rejection, stale initial execution, isolated-world replacement, global cancellation, prefix rollback and halted retry; verify all seven compile and each designated independent runtime oracle detects the actual source change.
+- [x] 7.3 Add mutants for peer history, snapshot recomputation, global boundary index, wrong local invocation, dropped peer supply, revoked-grant resurrection and failure-observation omission; verify all seven compile and each designated oracle fails while its protected sibling remains true.
 - [x] 7.4 Add `scripts/test_interleaving_mutation_runner.py` with actual CLI valid/empty/partial/duplicate/unknown/malformed inventory, missing/nonunique/no-op edit, compile failure, survivor, failed-positive, source-drift and unsafe-output controls; verify intended diagnostics and distinguish violated from blocked results.
-- [ ] 7.5 Freeze mutation source/spec/driver inputs and execute all fourteen mutations and runner controls in fresh external directories; verify complete per-variant inventories, input Git-object bindings, artifact hashes and unchanged source, retaining failed attempts without counting them as detections.
+- [x] 7.5 Freeze mutation source/spec/driver inputs and execute all fourteen mutations and runner controls in fresh external directories; verify complete per-variant inventories, input Git-object bindings, artifact hashes and unchanged source, retaining failed attempts without counting them as detections.
 
 ## 8. Integration and independent implementation review
 
-- [ ] 8.1 Freeze source and run new/full legacy Lean drivers, typed/composition/parallel mutations, their runner controls, compiler typing controls, axiom controls and corpus regressions; verify actual exits/logs and protected bytes, with fresh source manifests and no reused old pass claims.
-- [ ] 8.2 Complete scenario/proof/tool/source manifests and perform an independent artifact cross-check; verify all scenario mappings are nonempty, every counted artifact exists and hashes/counts bind the reviewed source revision.
-- [ ] 8.3 Obtain native Grok/Fable implementation and evidence audits using exact frozen source bundles; save requested/reported identities and raw responses, and verify each required scope has a substantive passing verdict.
-- [ ] 8.4 Resolve blockers and refresh affected checks/review on the revised candidate; save adjudication with limitations and retained dissent, verifying no waived normative proof, mutation or review obligation.
+- [x] 8.1 Freeze source and run new/full legacy Lean drivers, typed/composition/parallel mutations, their runner controls, compiler typing controls, axiom controls and corpus regressions; verify actual exits/logs and protected bytes, with fresh source manifests and no reused old pass claims.
+- [x] 8.2 Complete scenario/proof/tool/source manifests and perform an independent artifact cross-check; verify all scenario mappings are nonempty, every counted artifact exists and hashes/counts bind the reviewed source revision.
+- [x] 8.3 Obtain native Grok/Fable implementation and evidence audits using exact frozen source bundles; save requested/reported identities and raw responses, and verify each required scope has a substantive passing verdict.
+- [x] 8.4 Resolve blockers and refresh affected checks/review on the revised candidate; save adjudication with limitations and retained dissent, verifying no waived normative proof, mutation or review obligation.
 
 ## 9. Wiki roadmap delivery and archive
 
-- [ ] 9.1 Update roadmap/progress/wiki and task states from actual accepted evidence; verify atomic settlement, changing capabilities, general associativity and fidelity remain open and wiki notes link to source/evidence.
-- [ ] 9.2 Validate this OpenSpec strictly and check current editorial whitespace/local links; verify raw hash-bound artifacts remain byte-identical when their display contains whitespace warnings.
+- [x] 9.1 Update roadmap/progress/wiki and task states from actual accepted evidence; verify atomic settlement, changing capabilities, general associativity and fidelity remain open and wiki notes link to source/evidence.
+- [x] 9.2 Validate this OpenSpec strictly and check current editorial whitespace/local links; verify raw hash-bound artifacts remain byte-identical when their display contains whitespace warnings.
 - [ ] 9.3 Commit/push to `semantic-kernel-pivot`, verify the actual remote head and record delivery metadata; verify no merge to main or unrelated change is included.
 - [ ] 9.4 Archive only `shared-state-interleaving`, validate four synchronized main specs and repaired archive links, then push metadata; verify final remote identity, completed task states and clean worktree.
 

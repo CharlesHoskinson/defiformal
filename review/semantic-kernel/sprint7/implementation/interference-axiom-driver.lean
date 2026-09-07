@@ -1,0 +1,25 @@
+import DefiKernel.Interleaving.InterferenceFixtures
+#print axioms DefiKernel.Interleaving.Reachable.two_invariants
+#print axioms DefiKernel.Interleaving.runPrefix_two_invariants
+#print axioms DefiKernel.Interleaving.every_prefix_two_invariants
+#print axioms DefiKernel.Interleaving.InterferenceFixtures.shared_supply_free
+#print axioms DefiKernel.Interleaving.InterferenceFixtures.shared_step_total
+#print axioms DefiKernel.Interleaving.InterferenceFixtures.shared_local_obligation
+#print axioms DefiKernel.Interleaving.InterferenceFixtures.shared_cross
+#print axioms DefiKernel.Interleaving.InterferenceFixtures.shared_stable
+#print axioms DefiKernel.Interleaving.InterferenceFixtures.shared_initialized
+#print axioms DefiKernel.Interleaving.InterferenceFixtures.shared_every_prefix
+#print axioms DefiKernel.Interleaving.InterferenceFixtures.shared_all_tokens
+#print axioms DefiKernel.Interleaving.InterferenceFixtures.shared_left_analyzed
+#print axioms DefiKernel.Interleaving.InterferenceFixtures.shared_right_analyzed
+#print axioms DefiKernel.Interleaving.InterferenceFixtures.shared_overlap
+#print axioms DefiKernel.Interleaving.InterferenceFixtures.collateral_supported
+#print axioms DefiKernel.Interleaving.InterferenceFixtures.protected_collateral_all_tokens
+#print axioms DefiKernel.Interleaving.InterferenceFixtures.missing_initialization_counterexample
+#print axioms DefiKernel.Interleaving.InterferenceFixtures.sound_target_frame
+#print axioms DefiKernel.Interleaving.InterferenceFixtures.fragile_local_obligation
+#print axioms DefiKernel.Interleaving.InterferenceFixtures.fragile_initialized
+#print axioms DefiKernel.Interleaving.InterferenceFixtures.missing_peer_stability_counterexample
+#print axioms DefiKernel.Interleaving.InterferenceFixtures.fragile_not_stable
+#print axioms DefiKernel.Interleaving.InterferenceFixtures.missing_frame_support_counterexample
+#print axioms DefiKernel.Interleaving.InterferenceFixtures.empty_support_is_false

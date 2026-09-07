@@ -135,7 +135,7 @@ already read inputs. General success theorems do not prove a full refusal taxono
 Composition, claims lifecycle, replay protection, machine arithmetic and deployed
 protocol fidelity remain future work. All references are development examples.
 
-Sprint4 is complete. [Delivery verification](../../review/semantic-kernel/sprint4/delivery.json)
+Sprint 4 is complete. [Delivery verification](../../review/semantic-kernel/sprint4/delivery.json)
 records the source/evidence push; a subsequent documentation commit saves that
 verification. The stock harness also checks the final documentation commit head.
 
@@ -226,31 +226,58 @@ provenance, environment truth and deployed fidelity remain open. The reference
 cases are development fixtures, not untouched holdouts or deployed protocol
 proofs.
 
+## Sprint 7: shared-state interleaving acceptance
+
+Final proof source `bea105ec` implements one evolving shared world, finite complete
+binary schedules, own histories and permanent local refusal with peer continuation.
+Actual trace/order/accounting/authority/frame proofs and initialized noncircular
+interference composition are generic. Universal disjoint recovery includes exact
+refusals and all complete schedules. Three final corollaries explicitly expose
+admission identity and complete exhausted-or-refused behavior.
+
+Both native Grok/Fable source and final evidence reviews accepted with limitations.
+[Adjudication](../../review/semantic-kernel/sprint7/implementation/ADJUDICATION.md)
+records identities and findings. Runtime116/116, production mutations 14/14,
+runner controls 52/52, nine historical Python suites and12 final Lean commands pass.
+Imported audit has262theorems/271 supplemental with zero forbidden dependencies.
+127 explicit theorems comprise107generic,15 instances,3 counterexample constructions
+and2counterexample corollaries;135 others are generated. Original execution revision
+`6de24fe` is retained, with25+3 exact runtime input bindings to the proof supplement.
+Historical1117paths remain unchanged and the root only adds the new verification
+import. [Coverage](../../review/semantic-kernel/sprint7/coverage-final.md) maps43
+scenarios. Delivery/archive is being recorded separately.
+
+Atomic synchronization is the next proposed increment. Trusted initial store and
+boundaries, finite schedules, exact arithmetic and explicit frame/interference
+premises remain limits; no deployed fidelity or general behavioral associativity
+is claimed. The stock Codex goal loop now covers the full remaining roadmap while
+the user is AFK, with the same OpenSpec planning and native acceptance gates.
+
 ## Full migration backlog
 
 1. Finish claim-site reconciliation across the old paper and working ledgers;
    preserve original statements and attach scoped corrections. Audit the
    instance bridge behind structural/exhaustive claims.
 2. Extend the typed IR with distinct operational composition operators, claims
-   lifecycle, assumptions and certificates. Sprint4 implements reusable finite
+   lifecycle, assumptions and certificates. Sprint 4 implements reusable finite
    identities, dimensioned expression typing, trusted registry selection and
    capability issuance/use/revocation. Preserve the original negative results
    and current wrapper/typed reference semantics as these operators grow.
 3. Complete deployment/source identity beyond the saved 72-row/75-candidate
    provisional reconstruction. Resolve 29 facet differences and the separate
    Liquity V1 liquidation source challenge; recover remaining bundled products
-   and retrievable references. All75 units remain development cases.
+   and retrievable references. All 75 units remain development cases.
 4. Build a real serialized certificate path and source-bound fidelity checks.
    Extend automatic imported-module axiom coverage to explicit future package
    manifests and replace format-sensitive extraction as the language grows.
    Current mutations cover original checker branches, wrapper contract/borrow
    checks and24 typed authority/registry/footprint/accounting/oracle mutations.
-   Sprint 5 adds 12 sequential mutants and Sprint 6 adds 14 disjoint-parallel mutants. Broader effect application, structural catalog checks, and later composition operators remain open. Audit coverage is bound to the actual import closure.
+   Sprint 5 adds12 sequential, Sprint 6 adds14 disjoint-parallel, and Sprint 7 adds14 shared-interleaving mutants. Broader effect application, structural catalog checks, and later composition operators remain open. Audit coverage is bound to the actual import closure.
    Review follow-ups include explicit inductive audit roots, a current-module
    exclusion fixture, script-output hygiene across multiple checkouts, and
    mutations that weaken individual actor/effect/supply comparisons.
-5. Extend the accepted sequential and binary disjoint-parallel results to shared-state
-   interleaving and synchronized composition, operation-wide noninterference, assume-guarantee discharge,
+5. Extend the accepted sequential and binary disjoint-parallel results through shared-state
+   interleaving to synchronized composition, operation-wide noninterference, assume-guarantee discharge,
    claims and conservative extension.
 6. Port adversarial financial libraries with pinned contract implementations,
    differential execution, mutation tests and selected refinement proofs.

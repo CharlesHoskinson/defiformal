@@ -1,6 +1,6 @@
 # Sprint 7: shared-state interleaving
 
-Status on 2026-09-07: **Planning gate passed; implementation starting**.
+Status on 2026-09-07: **Implementation/evidence accepted with limitations; delivery underway**.
 Base: `850d785d41dc311785dc33cdb3f65c368756434c`.
 
 Authoritative links: [proposal](../openspec/changes/shared-state-interleaving/proposal.md),
@@ -51,13 +51,24 @@ The design resolves the behavior; reviewers can require a corrected candidate.
 
 ## Evidence status
 
-The frozen planning candidate `bf3fb509b211d7cd92eb68410fb49dc5f4e20e7d` received
-independent GPT-6 and native Fable 5.1 ACCEPT WITH LIMITATIONS verdicts. The fresh
-baseline passed ten commands with protected bytes unchanged. No new Sprint 7
-proof or runtime result is claimed yet. See the [planning adjudication](../review/semantic-kernel/sprint7/planning/ADJUDICATION.md)
-and [exact gate record](../review/semantic-kernel/sprint7/planning/gate.json). Substantive implementation will require
-native Grok/Fable review, full regressions and exact source binding. The stock
-GPT harness implements with GPT-6; Foreman is excluded.
+The planning candidate `bf3fb509` passed independent GPT-6 and native Fable reviews.
+Final source `bea105ec` passed native Grok/Fable original Lean and final proof/evidence
+scopes. Actual runtime/mutation/legacy Python runs retain revision `6de24fe`; all 25
+runtime closure inputs and three runner/spec/harness files are byte-identical.
+The only source supplement adds three directly named admission/completion theorems
+and the Verify import. Fresh final integration checks that supplement.
+
+Acceptance evidence:116 runtime comparisons,14 actual source mutants,52 actual CLI
+controls, nine historical Python suites,12 final Lean commands, and262 theorem/271
+supplemental imported axiom checks with zero forbidden dependencies. Of127 explicit
+theorems,107 are generic,15 reference instances and five are counterexample
+constructions/corollaries. Generated theorem counts are separate.
+
+[Adjudication](../review/semantic-kernel/sprint7/implementation/ADJUDICATION.md)
+and [final coverage](../review/semantic-kernel/sprint7/coverage-final.md) retain exact
+inputs, findings and limitations. Cancelled or tool-markup-only native attempts
+received no acceptance credit; substantive native final verdicts closed those
+review obligations. Branch delivery and OpenSpec archive are in progress.
 
 ## Adopted review guidance
 
@@ -74,4 +85,4 @@ GPT harness implements with GPT-6; Foreman is excluded.
   the conditional invariant premise, though the generic theorem supports it.
 
 Both reviewers treat these as implementation watchpoints, not blockers or changes
-to the accepted semantics. Full result acceptance remains outstanding.
+to the accepted semantics. All required native result scopes now pass with limitations. Broader projection syntax guards and more discriminating wrong-world labels remain explicit infrastructure follow-ups.
