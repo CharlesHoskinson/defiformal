@@ -1,0 +1,15 @@
+# Protocol-builder reader review
+
+Persona: a DeFi protocol engineer who writes Solidity/Rust and is new to Lean and this repository. README SHA256: `d48f903db1d8062ccc265aed0141fac808b7bdfcd20918086cdfb168f9234d9e`. Read the README first; checked only its linked entry points afterward. This is reader feedback, not external proof acceptance. No build or repository edit was performed.
+
+Assessment: the README stands on its own. It explains purpose, execution modes and their failure behavior without hype or project chronology. The supplied transfer example matches `Typed.Examples.run`, `transferRequest`, `initial`, and the fixed fixture caller. The commands and imports match the Lake layout; actual execution validation is left to the parent task. No blocking reader defect found.
+
+1. **Make the contract integration deliverable explicit near the opening.** A Solidity/Rust reader can otherwise spend several paragraphs wondering whether this analyzes source code or generates deployable contracts. Suggested sentence: “Use it as a separate executable specification of a protocol; connecting a Solidity or Rust implementation to that specification requires an explicit correspondence argument.” The scope section already states the latter limit clearly; introducing the workflow earlier would help.
+
+2. **Give one concrete starting path for a new model.** “Define a Template” is accurate but assumes the reader knows which surrounding definitions are essential. Suggested wording: “For a first model, follow `Typed/Examples.lean`: define your account, asset and domain types, an initial balance table, one `Template`, its registry entry and grants, then a request.” Its finite identity instances and nonnegative initial-state witness are visible in that file; these are part of the work a newcomer must supply.
+
+3. **Name the bridge from the transfer demo to a workflow and a proof.** The linked composition file is short enough to use, but the current instructions leave readers searching for the relevant declarations. Suggested wording: “In `Composition/Examples.lean`, follow `catalog`, `cfg`, `boundary`, `initialWorld` and `workflow` to connect calls. `collateralContract` and `collateralContract_obligations` show how to state an invariant and discharge its local obligations.” For a generic execution/accounting theorem, point to `Composition.run_accounting` in `Composition/Preservation.lean`. This gives the first useful next step after `#eval`.
+
+4. **Explain the modeling granularity in familiar execution terms.** “Aggregate net changes” is correct but easy to skim past if the reader thinks a template follows Solidity statement order. Suggested sentence in the scope section: “A template describes a net balance transition; model calls that need separate intermediate states as separate steps.” Keep the existing exact-arithmetic and rollback explanations, which make the scope clear.
+
+All four are concise onboarding suggestions, not requests for more history, marketing, or proof claims. Sprint 9 implementation remains paused.
