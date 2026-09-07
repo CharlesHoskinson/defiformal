@@ -139,6 +139,25 @@ Sprint4 is complete. [Delivery verification](../../review/semantic-kernel/sprint
 records the source/evidence push; a subsequent documentation commit saves that
 verification. The stock harness also checks the final documentation commit head.
 
+## Sprint 5: OpenSpec planning
+
+The user requested the consolidated remaining agenda in the root
+[roadmap](../../roadmap.md) and Sprint 5 planning through OpenSpec.
+The [proposal](../../openspec/changes/typed-interfaces-sequential-composition/proposal.md),
+[design](../../openspec/changes/typed-interfaces-sequential-composition/design.md),
+four capability specifications, and
+[47 implementation tasks](../../openspec/changes/typed-interfaces-sequential-composition/tasks.md)
+are saved. Strict OpenSpec validation passes with no issues; the CLI reports all
+planning artifacts complete. All implementation tasks remain unchecked.
+
+The planned sequential operator uses the current ledger and capability store,
+retains successful steps, and stops at the first refusal. Typed interfaces enforce
+private/shared access; output snapshots route typed values. Preservation is lifted
+from actual evaluated effects, with explicit initialization/assumption premises
+and a ledger supported-predicate frame theorem. Atomic rollback and broader
+composition remain later roadmap work. No Sprint 5 implementation, new Lean
+proof, runtime result, or Grok/Fable acceptance is claimed by this planning entry.
+
 ## Full migration backlog
 
 1. Finish claim-site reconciliation across the old paper and working ledgers;
