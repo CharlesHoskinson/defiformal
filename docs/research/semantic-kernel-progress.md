@@ -98,6 +98,19 @@ split-payload corruptions that previously passed are now rejected.
 Exact final commands, file hashes and actual corpus reproduction results are in
 [final verification](../../review/semantic-kernel/sprint3/final-verification.json).
 
+## Sprint 4: typed transition IR and capability authority
+
+User authorized an autonomous loop to complete this sprint after reviewing the
+full agenda. Base `77462b61f5f537eb29b2cf162ead6567e7151ace`; continue on the clean
+`semantic-kernel-pivot` branch using GPT-6 and native Grok/Fable review, no Foreman.
+The stock harness goal is active with no user-specified token budget. Completion
+requires implementation, Lean proofs/build/audit, discriminating regressions,
+independent review, saved evidence, pushed commits and verified remote head.
+
+Fresh baseline passed: `cd lean && lake build`, exit 0, 994 jobs, with existing
+linter warnings. Evidence: `review/semantic-kernel/sprint4/baseline.json`.
+Design and implementation plan are being recorded before new Lean code.
+
 ## Full migration backlog
 
 1. Finish claim-site reconciliation across the old paper and working ledgers;
