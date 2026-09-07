@@ -140,6 +140,45 @@ def timedEvent2 := timedRaw 5 timedSecond bobCell aliceCell 1 105 (world 7 3 0) 
 def timedExpected : Cur := cursor (world 8 2 0) [timedEvent1, timedEvent2]
   [output 4 0 .usd 7, output 5 0 .usd 8] 6
 
+
+/-- Literal continuation distinguishes current-world threading from history threading. -/
+def worldChainCall : Inv := movement 1 carol
+def worldChainEvent := rawTransfer 1 worldChainCall aliceCell carolCell 1
+  (world 3 7 0) (world 2 7 1) 2
+def worldChainExpected : Cur := cursor (world 2 7 1) [firstEvent, worldChainEvent]
+  [output 0 0 .usd 3, output 1 0 .usd 2] 2
+
+/-- The zero-dollar producer preserves the entry ledger but publishes a nonzero snapshot. -/
+def historyChainProducer : Inv := movement 0 .bob
+def historyChainConsumer : Inv :=
+  { movement 10 carol with inputs := [.priorOutput 0 ⟨⟨0⟩, ⟨0⟩⟩] }
+def historyProducerEvent := rawTransfer 0 historyChainProducer aliceCell bobCell 0
+  (world 10 0 0) (world 10 0 0) 10
+def historyConsumerEvent := rawTransfer 1 historyChainConsumer aliceCell carolCell 10
+  (world 10 0 0) (world 0 0 10) 0
+def historyChainExpected : Cur := cursor (world 0 0 10)
+  [historyProducerEvent, historyConsumerEvent] [output 0 0 .usd 10, output 1 0 .usd 0] 2
+
+/-- Literal inputs and index-selected times exercise position without a prior-output read. -/
+def indexChainBoundary (index : Nat) : Boundary P A D :=
+  ⟨aliceContext, fresh, 200 + index⟩
+def indexChainInitial : Cur := cursor (world 10 0 0) [] [] 9
+def indexChainFirst : Inv := timedMove 2 209 .bob
+def indexChainSecond : Inv := timedMove 1 210 carol
+def indexChainEvent1 := timedRaw 9 indexChainFirst aliceCell bobCell 2 209
+  (world 10 0 0) (world 8 2 0) 8
+def indexChainEvent2 := timedRaw 10 indexChainSecond aliceCell carolCell 1 210
+  (world 8 2 0) (world 7 2 1) 7
+def indexChainExpected : Cur := cursor (world 7 2 1) [indexChainEvent1, indexChainEvent2]
+  [output 9 0 .usd 8, output 10 0 .usd 7] 11
+
+/-- A funded second leaf after an empty first child needs no changed intermediate cursor. -/
+def childExecutionCall : Inv := movement 2 .bob
+def childExecutionEvent := rawTransfer 0 childExecutionCall aliceCell bobCell 2
+  (world 10 0 0) (world 8 2 0) 8
+def childExecutionExpected : Cur := cursor (world 8 2 0) [childExecutionEvent]
+  [output 0 0 .usd 8] 1
+
 def extendedCfg : Config P A D := { cfg with
   registry := fun op ↦ if op = ⟨99⟩ then some Parallel.Examples.noOp else cfg.registry op
   catalog := cfg.catalog ++ [⟨⟨99⟩, [], [], [], [⟨⟨99⟩, [], []⟩]⟩] }

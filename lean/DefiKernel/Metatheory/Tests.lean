@@ -46,13 +46,20 @@ def groupChecks : List (String × Bool) := [
   ("metatheory.positive.single-leaf", fullCursorEq
     (runGroup cfg constantBoundary initial first) afterFirst),
   ("metatheory.positive.equal-observation", cursorEq afterFirst equalFirst),
-  ("metatheory.group.world-chain", fullCursorEq (run pair) afterSecond),
+  ("metatheory.group.world-chain", fullCursorEq
+    (runGroup cfg constantBoundary initial (.seq first (leaf worldChainCall))) worldChainExpected),
   ("metatheory.group.store-chain", fullCursorEq
     (runGroup cfg adminBoundary adminInitial (.seq issueGroup useGroup)) adminUsed),
-  ("metatheory.group.history-chain", fullCursorEq (run pair) afterSecond),
-  ("metatheory.group.index-chain", fullCursorEq (run leftGrouped) afterThird),
+  ("metatheory.group.history-chain", fullCursorEq
+    (runGroup cfg constantBoundary initial
+      (.seq (leaf historyChainProducer) (leaf historyChainConsumer))) historyChainExpected),
+  ("metatheory.group.index-chain", fullCursorEq
+    (runGroup timedCfg indexChainBoundary indexChainInitial
+      (.seq (leaf indexChainFirst) (leaf indexChainSecond))) indexChainExpected),
   ("metatheory.group.refusal-absorption", fullCursorEq (run refusing) middleRefusal),
-  ("metatheory.group.child-executed", fullCursorEq (run leftGrouped) afterThird),
+  ("metatheory.group.child-executed", fullCursorEq
+    (runGroup cfg constantBoundary initial (.seq .empty (leaf childExecutionCall)))
+    childExecutionExpected),
   ("metatheory.group.ordered", fullCursorEq (run rightGrouped) afterThird),
   ("metatheory.group.boundary-index", fullCursorEq
     (runGroup timedCfg timedBoundary timedInitial (.seq (leaf timedFirst) (leaf timedSecond)))
@@ -99,6 +106,9 @@ def receiptChanged : Receipt P A D := .invoked
 def evaluatedChanged : Receipt P A D := .invoked
   ⟨⟨10⟩, [.bob], [⟨.amount .usd, 7⟩], mainCaps, none⟩
   (evaluatedTransfer aliceCell bobCell 6)
+def evaluatedReadChanged : Receipt P A D := .invoked
+  ⟨⟨10⟩, [.bob], [⟨.amount .usd, 7⟩], mainCaps, none⟩
+  { evaluatedTransfer aliceCell bobCell 7 with declaredStateReads := [collateralCell] }
 def failureChanged (failure : LocatedFailure P A D) : Bool :=
   !cursorEq middleRefusal { middleRefusal with failure := some failure }
 def changedCollateral : W :=
@@ -135,7 +145,7 @@ def observationChecks : List (String × Bool) := [
     (alteredEvent { firstEvent with step := .invoke refuse6 })),
   ("metatheory.observe.event.output", different (alteredEvent
     { firstEvent with result := { firstEvent.result with outputs := [output 0 0 .usd 2] } })),
-  ("metatheory.observe.event.evaluated", different (alteredReceipt evaluatedChanged)),
+  ("metatheory.observe.event.evaluated", different (alteredReceipt evaluatedReadChanged)),
   ("metatheory.observe.event.length", different { afterFirst with events := [] }),
   ("metatheory.observe.event.order", !cursorEq afterSecond
     { afterSecond with events := [secondEvent, firstEvent] }),

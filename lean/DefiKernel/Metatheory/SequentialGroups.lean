@@ -1,7 +1,8 @@
 import DefiKernel.Composition.Sequence
 
-/-! Recursive ordered groups continue the complete actual cursor. Flattening is a separate
-specification view; the runtime interpreter never delegates to the list executor. -/
+/-! Recursive ordered groups continue the complete actual cursor. `SupportedGroup` deliberately
+uses `flatten` only as a Prop-valued specification of static support. The recursive `runGroup`
+interpreter never delegates execution to the list executor. -/
 namespace DefiKernel.Metatheory
 open Typed Composition
 
