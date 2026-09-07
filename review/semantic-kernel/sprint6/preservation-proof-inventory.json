@@ -1,0 +1,278 @@
+{
+  "theorems": [
+    {
+      "name": "DefiKernel.Parallel.mergeWorld_balance_sum",
+      "source": "lean/DefiKernel/Parallel/Preservation.lean",
+      "statement": "theorem mergeWorld_balance_sum (lf rf : Footprint P A D) (initial left right : World P A D)\n    (hd : \u2200 c \u2208 lf.writes, c \u2209 rf.writes)\n    (hl : \u2200 c, c \u2209 lf.writes \u2192 left.state.balance c = initial.state.balance c)\n    (hr : \u2200 c, c \u2209 rf.writes \u2192 right.state.balance c = initial.state.balance c)\n    (c : Cell P A D) :\n    (mergeWorld lf rf initial left right).state.balance c =\n      left.state.balance c + right.state.balance c - initial.state.balance c",
+      "class": "generic"
+    },
+    {
+      "name": "DefiKernel.Parallel.mergeWorld_accounting",
+      "source": "lean/DefiKernel/Parallel/Preservation.lean",
+      "statement": "theorem mergeWorld_accounting (lf rf : Footprint P A D) (initial left right : World P A D)\n    (hd : \u2200 c \u2208 lf.writes, c \u2209 rf.writes)\n    (hl : \u2200 c, c \u2209 lf.writes \u2192 left.state.balance c = initial.state.balance c)\n    (hr : \u2200 c, c \u2209 rf.writes \u2192 right.state.balance c = initial.state.balance c)\n    (d : D) (a : A) :\n    total (mergeWorld lf rf initial left right).state d a =\n      total left.state d a + total right.state d a - total initial.state d a",
+      "class": "generic"
+    },
+    {
+      "name": "DefiKernel.Parallel.runBranch_accounting",
+      "source": "lean/DefiKernel/Parallel/Preservation.lean",
+      "statement": "theorem runBranch_accounting (cfg : Config P A D) (boundary : Nat \u2192 Boundary P A D)\n    (initial : World P A D) (branch : Branch P A D) (d : D) (a : A) :\n    total (runBranch cfg boundary initial branch).world.state d a =\n      total initial.state d a + traceSupply (runBranch cfg boundary initial branch).events d a",
+      "class": "generic"
+    },
+    {
+      "name": "DefiKernel.Parallel.runParallel_accounting",
+      "source": "lean/DefiKernel/Parallel/Preservation.lean",
+      "statement": "theorem runParallel_accounting (cfg : Config P A D) (boundaries : ParallelBoundary P A D)\n    (initial : World P A D) (left right : Branch P A D) (lf rf : Footprint P A D)\n    (hadmit : admit cfg boundaries left right = .ok (lf, rf)) (d : D) (a : A) :\n    total (mergeWorld lf rf initial\n      (runBranch cfg (boundaries .left) initial left).world\n      (runBranch cfg (boundaries .right) initial right).world).state d a =\n      total initial.state d a +\n        traceSupply (runBranch cfg (boundaries .left) initial left).events d a +\n        traceSupply (runBranch cfg (boundaries .right) initial right).events d a",
+      "class": "generic"
+    },
+    {
+      "name": "DefiKernel.Parallel.runBranch_events_invoke",
+      "source": "lean/DefiKernel/Parallel/Preservation.lean",
+      "statement": "theorem runBranch_events_invoke (cfg : Config P A D) (boundary : Nat \u2192 Boundary P A D)\n    (initial : World P A D) (branch : Branch P A D) :\n    \u2200 event \u2208 (runBranch cfg boundary initial branch).events,\n      \u2203 inv \u2208 branch, event.step = .invoke inv",
+      "class": "generic"
+    },
+    {
+      "name": "DefiKernel.Parallel.trace_invoke_stores",
+      "source": "lean/DefiKernel/Parallel/Preservation.lean",
+      "statement": "theorem trace_invoke_stores {cfg : Config P A D} {boundary : Nat \u2192 Boundary P A D}\n    {initial final : World P A D} {events : List (Event P A D)}\n    {history : List (OutputObservation A)} {index : Nat}\n    (h : TraceSound cfg boundary initial events final history index)\n    (hi : \u2200 event \u2208 events, \u2203 inv, event.step = .invoke inv) :\n    final.capabilities = initial.capabilities \u2227\n      \u2200 event \u2208 events, event.before.capabilities = initial.capabilities \u2227\n        event.result.world.capabilities = initial.capabilities",
+      "class": "generic"
+    },
+    {
+      "name": "DefiKernel.Parallel.runBranch_authority",
+      "source": "lean/DefiKernel/Parallel/Preservation.lean",
+      "statement": "theorem runBranch_authority (cfg : Config P A D) (boundary : Nat \u2192 Boundary P A D)\n    (initial : World P A D) (branch : Branch P A D) :\n    \u2200 event \u2208 (runBranch cfg boundary initial branch).events,\n      ReceiptAuthorized initial (boundary event.index) event.result.receipt",
+      "class": "generic"
+    },
+    {
+      "name": "DefiKernel.Parallel.runBranch_prefix_nonnegative",
+      "source": "lean/DefiKernel/Parallel/Preservation.lean",
+      "statement": "theorem runBranch_prefix_nonnegative (cfg : Config P A D) (boundary : Nat \u2192 Boundary P A D)\n    (initial : World P A D) (branch : Branch P A D) :\n    \u2200 event \u2208 (runBranch cfg boundary initial branch).events, \u2200 c,\n      0 \u2264 event.before.state.balance c \u2227 0 \u2264 event.result.world.state.balance c",
+      "class": "generic"
+    },
+    {
+      "name": "DefiKernel.Parallel.mergeWorld_supported_frame",
+      "source": "lean/DefiKernel/Parallel/Preservation.lean",
+      "statement": "theorem mergeWorld_supported_frame (lf rf : Footprint P A D)\n    (initial left right : World P A D) (region : Set (Cell P A D))\n    (predicate : State P A D \u2192 Prop) (support : Supports region predicate)\n    (untouched : \u2200 c \u2208 region, c \u2209 lf.writes \u2227 c \u2209 rf.writes) :\n    predicate initial.state \u2194 predicate (mergeWorld lf rf initial left right).state",
+      "class": "generic"
+    },
+    {
+      "name": "DefiKernel.Parallel.mergeWorld_agrees_left",
+      "source": "lean/DefiKernel/Parallel/Preservation.lean",
+      "statement": "theorem mergeWorld_agrees_left (lf rf : Footprint P A D)\n    (initial left right : World P A D) (region : Set (Cell P A D))\n    (locality : \u2200 c, c \u2209 lf.writes \u2192 left.state.balance c = initial.state.balance c)\n    (peer : \u2200 c \u2208 region, c \u2209 rf.writes) :\n    AgreeOn region left.state (mergeWorld lf rf initial left right).state",
+      "class": "generic"
+    },
+    {
+      "name": "DefiKernel.Parallel.mergeWorld_agrees_right",
+      "source": "lean/DefiKernel/Parallel/Preservation.lean",
+      "statement": "theorem mergeWorld_agrees_right (lf rf : Footprint P A D)\n    (initial left right : World P A D) (region : Set (Cell P A D))\n    (locality : \u2200 c, c \u2209 rf.writes \u2192 right.state.balance c = initial.state.balance c)\n    (peer : \u2200 c \u2208 region, c \u2209 lf.writes) :\n    AgreeOn region right.state (mergeWorld lf rf initial left right).state",
+      "class": "generic"
+    },
+    {
+      "name": "DefiKernel.Parallel.mergeWorld_two_invariants",
+      "source": "lean/DefiKernel/Parallel/Preservation.lean",
+      "statement": "theorem mergeWorld_two_invariants (lf rf : Footprint P A D)\n    (initial left right : World P A D) (ls rs : Set (Cell P A D))\n    (lp rp : State P A D \u2192 Prop) (lSupport : Supports ls lp) (rSupport : Supports rs rp)\n    (hl : \u2200 c, c \u2209 lf.writes \u2192 left.state.balance c = initial.state.balance c)\n    (hr : \u2200 c, c \u2209 rf.writes \u2192 right.state.balance c = initial.state.balance c)\n    (lpeer : \u2200 c \u2208 ls, c \u2209 rf.writes) (rpeer : \u2200 c \u2208 rs, c \u2209 lf.writes)\n    (li : lp left.state) (ri : rp right.state) :\n    lp (mergeWorld lf rf initial left right).state \u2227\n      rp (mergeWorld lf rf initial left right).state",
+      "class": "generic"
+    },
+    {
+      "name": "DefiKernel.Parallel.runBranch_invariant",
+      "source": "lean/DefiKernel/Parallel/Preservation.lean",
+      "statement": "theorem runBranch_invariant (cfg : Config P A D) (boundary : Nat \u2192 Boundary P A D)\n    (initial : World P A D) (branch : Branch P A D) (predicate : State P A D \u2192 Prop)\n    (initialized : predicate initial.state) (preserves : LocalPreservation cfg boundary predicate) :\n    predicate (runBranch cfg boundary initial branch).world.state",
+      "class": "generic"
+    },
+    {
+      "name": "DefiKernel.Parallel.evaluated_supplies_empty",
+      "source": "lean/DefiKernel/Parallel/Preservation.lean",
+      "statement": "theorem evaluated_supplies_empty (template : Template P A D)\n    (ctx : EvalContext P A D template.signature) (e : Evaluated P A D)\n    (hn : template.supplyDeltas = []) (he : template.evaluate ctx = .ok e) :\n    e.supplies = []",
+      "class": "generic"
+    },
+    {
+      "name": "DefiKernel.Parallel.extractReceipt_supplies_empty",
+      "source": "lean/DefiKernel/Parallel/Preservation.lean",
+      "statement": "theorem extractReceipt_supplies_empty (cfg : Config P A D) (boundary : Boundary P A D)\n    (request : Request P A D) (pre : World P A D) (e : Evaluated P A D)\n    (hn : \u2200 op template, cfg.registry op = some template \u2192 template.supplyDeltas = [])\n    (he : extractReceipt cfg boundary request pre = .ok e) : e.supplies = []",
+      "class": "generic"
+    },
+    {
+      "name": "DefiKernel.Parallel.step_no_supply",
+      "source": "lean/DefiKernel/Parallel/Preservation.lean",
+      "statement": "theorem step_no_supply {cfg : Config P A D} {boundary : Boundary P A D}\n    {n : Nat} {outputs : List (OutputObservation A)} {step : Step P A D}\n    {pre : World P A D} {result : StepResult P A D}\n    (hn : \u2200 op template, cfg.registry op = some template \u2192 template.supplyDeltas = [])\n    (hs : StepSound cfg boundary n outputs step pre result) (d : D) (a : A) :\n    result.receipt.supply d a = 0",
+      "class": "generic"
+    },
+    {
+      "name": "DefiKernel.Parallel.local_total_preservation",
+      "source": "lean/DefiKernel/Parallel/Preservation.lean",
+      "statement": "theorem local_total_preservation (cfg : Config P A D) (boundary : Nat \u2192 Boundary P A D)\n    (hn : \u2200 op template, cfg.registry op = some template \u2192 template.supplyDeltas = [])\n    (d : D) (a : A) (amount : \u211a) :\n    LocalPreservation cfg boundary (fun s \u21a6 total s d a = amount)",
+      "class": "generic"
+    },
+    {
+      "name": "DefiKernel.Parallel.supports_total",
+      "source": "lean/DefiKernel/Parallel/Preservation.lean",
+      "statement": "theorem supports_total (d : D) (a : A) (predicate : \u211a \u2192 Prop) :\n    Supports {c : Cell P A D | c.1 = d \u2227 c.2.2 = a}\n      (fun s \u21a6 predicate (total s d a))",
+      "class": "generic"
+    },
+    {
+      "name": "DefiKernel.Parallel.runParallel_two_invariants",
+      "source": "lean/DefiKernel/Parallel/Preservation.lean",
+      "statement": "theorem runParallel_two_invariants (cfg : Config P A D) (boundaries : ParallelBoundary P A D)\n    (initial : World P A D) (left right : Branch P A D) (lf rf : Footprint P A D)\n    (hadmit : admit cfg boundaries left right = .ok (lf, rf))\n    (ls rs : Set (Cell P A D)) (lp rp : State P A D \u2192 Prop)\n    (lSupport : Supports ls lp) (rSupport : Supports rs rp)\n    (lpeer : \u2200 c \u2208 ls, c \u2209 rf.writes) (rpeer : \u2200 c \u2208 rs, c \u2209 lf.writes)\n    (li : lp initial.state) (ri : rp initial.state)\n    (lPreserves : LocalPreservation cfg (boundaries .left) lp)\n    (rPreserves : LocalPreservation cfg (boundaries .right) rp) :\n    lp (mergeWorld lf rf initial (runBranch cfg (boundaries .left) initial left).world\n      (runBranch cfg (boundaries .right) initial right).world).state \u2227\n    rp (mergeWorld lf rf initial (runBranch cfg (boundaries .left) initial left).world\n      (runBranch cfg (boundaries .right) initial right).world).state",
+      "class": "generic"
+    },
+    {
+      "name": "DefiKernel.Parallel.runParallel_executed_accounting",
+      "source": "lean/DefiKernel/Parallel/Preservation.lean",
+      "statement": "theorem runParallel_executed_accounting (cfg : Config P A D)\n    (boundaries : ParallelBoundary P A D) (initial : World P A D)\n    (left right : Branch P A D) (joined : Joined P A D)\n    (hx : runParallel cfg boundaries initial left right = .executed joined) (d : D) (a : A) :\n    total joined.world.state d a = total initial.state d a + joined.supply d a",
+      "class": "generic"
+    },
+    {
+      "name": "DefiKernel.Parallel.runParallel_executed_authority",
+      "source": "lean/DefiKernel/Parallel/Preservation.lean",
+      "statement": "theorem runParallel_executed_authority (cfg : Config P A D)\n    (boundaries : ParallelBoundary P A D) (initial : World P A D)\n    (left right : Branch P A D) (joined : Joined P A D)\n    (hx : runParallel cfg boundaries initial left right = .executed joined) :\n    (\u2200 event \u2208 joined.left.events,\n      ReceiptAuthorized initial (boundaries .left event.index) event.result.receipt) \u2227\n    (\u2200 event \u2208 joined.right.events,\n      ReceiptAuthorized initial (boundaries .right event.index) event.result.receipt)",
+      "class": "generic"
+    },
+    {
+      "name": "DefiKernel.Parallel.runParallel_executed_frame",
+      "source": "lean/DefiKernel/Parallel/Preservation.lean",
+      "statement": "theorem runParallel_executed_frame (cfg : Config P A D)\n    (boundaries : ParallelBoundary P A D) (initial : World P A D)\n    (left right : Branch P A D) (lf rf : Footprint P A D) (joined : Joined P A D)\n    (hadmit : admit cfg boundaries left right = .ok (lf, rf))\n    (hx : runParallel cfg boundaries initial left right = .executed joined) :\n    (\u2200 c, c \u2209 lf.writes \u2192 c \u2209 rf.writes \u2192\n      joined.world.state.balance c = initial.state.balance c) \u2227\n      joined.world.capabilities = initial.capabilities",
+      "class": "generic"
+    },
+    {
+      "name": "DefiKernel.Parallel.runParallel_executed_nonnegative",
+      "source": "lean/DefiKernel/Parallel/Preservation.lean",
+      "statement": "theorem runParallel_executed_nonnegative (cfg : Config P A D)\n    (boundaries : ParallelBoundary P A D) (initial : World P A D)\n    (left right : Branch P A D) (joined : Joined P A D)\n    (hx : runParallel cfg boundaries initial left right = .executed joined) :\n    (\u2200 c, 0 \u2264 joined.world.state.balance c) \u2227\n    (\u2200 event \u2208 joined.left.events ++ joined.right.events, \u2200 c,\n      0 \u2264 event.before.state.balance c \u2227 0 \u2264 event.result.world.state.balance c)",
+      "class": "generic"
+    },
+    {
+      "name": "DefiKernel.Parallel.runParallel_executed_supported_frame",
+      "source": "lean/DefiKernel/Parallel/Preservation.lean",
+      "statement": "theorem runParallel_executed_supported_frame (cfg : Config P A D)\n    (boundaries : ParallelBoundary P A D) (initial : World P A D)\n    (left right : Branch P A D) (lf rf : Footprint P A D) (joined : Joined P A D)\n    (hadmit : admit cfg boundaries left right = .ok (lf, rf))\n    (hx : runParallel cfg boundaries initial left right = .executed joined)\n    (region : Set (Cell P A D)) (predicate : State P A D \u2192 Prop)\n    (support : Supports region predicate)\n    (untouched : \u2200 c \u2208 region, c \u2209 lf.writes \u2227 c \u2209 rf.writes) :\n    predicate initial.state \u2194 predicate joined.world.state",
+      "class": "generic"
+    },
+    {
+      "name": "DefiKernel.Parallel.runParallel_executed_two_invariants",
+      "source": "lean/DefiKernel/Parallel/Preservation.lean",
+      "statement": "theorem runParallel_executed_two_invariants (cfg : Config P A D)\n    (boundaries : ParallelBoundary P A D) (initial : World P A D)\n    (left right : Branch P A D) (lf rf : Footprint P A D) (joined : Joined P A D)\n    (hadmit : admit cfg boundaries left right = .ok (lf, rf))\n    (hx : runParallel cfg boundaries initial left right = .executed joined)\n    (ls rs : Set (Cell P A D)) (lp rp : State P A D \u2192 Prop)\n    (lSupport : Supports ls lp) (rSupport : Supports rs rp)\n    (lpeer : \u2200 c \u2208 ls, c \u2209 rf.writes) (rpeer : \u2200 c \u2208 rs, c \u2209 lf.writes)\n    (li : lp initial.state) (ri : rp initial.state)\n    (lPreserves : LocalPreservation cfg (boundaries .left) lp)\n    (rPreserves : LocalPreservation cfg (boundaries .right) rp) :\n    lp joined.world.state \u2227 rp joined.world.state",
+      "class": "generic"
+    },
+    {
+      "name": "DefiKernel.Parallel.PreservationFixtures.admitted",
+      "source": "lean/DefiKernel/Parallel/PreservationFixtures.lean",
+      "statement": "theorem admitted : admit cfg boundary [left] [right] = .ok (leftFP, rightFP)",
+      "class": "fixture"
+    },
+    {
+      "name": "DefiKernel.Parallel.PreservationFixtures.executed",
+      "source": "lean/DefiKernel/Parallel/PreservationFixtures.lean",
+      "statement": "theorem executed : runParallel cfg boundary initial [left] [right] = .executed joined",
+      "class": "fixture"
+    },
+    {
+      "name": "DefiKernel.Parallel.PreservationFixtures.supply_free",
+      "source": "lean/DefiKernel/Parallel/PreservationFixtures.lean",
+      "statement": "theorem supply_free : \u2200 op template, cfg.registry op = some template \u2192\n    template.supplyDeltas = []",
+      "class": "fixture"
+    },
+    {
+      "name": "DefiKernel.Parallel.PreservationFixtures.initial_totals",
+      "source": "lean/DefiKernel/Parallel/PreservationFixtures.lean",
+      "statement": "theorem initial_totals : total initial.state .main .usd = 10 \u2227\n    total initial.state .main .share = 20",
+      "class": "fixture"
+    },
+    {
+      "name": "DefiKernel.Parallel.PreservationFixtures.initialized_two_invariants",
+      "source": "lean/DefiKernel/Parallel/PreservationFixtures.lean",
+      "statement": "theorem initialized_two_invariants :\n    total joined.world.state .main .usd = 10 \u2227 total joined.world.state .main .share = 20",
+      "class": "fixture"
+    },
+    {
+      "name": "DefiKernel.Parallel.PreservationFixtures.protected_collateral",
+      "source": "lean/DefiKernel/Parallel/PreservationFixtures.lean",
+      "statement": "theorem protected_collateral : collateralPredicate joined.world.state",
+      "class": "fixture"
+    },
+    {
+      "name": "DefiKernel.Parallel.PreservationFixtures.joined_authority",
+      "source": "lean/DefiKernel/Parallel/PreservationFixtures.lean",
+      "statement": "theorem joined_authority :\n    (\u2200 event \u2208 joined.left.events,\n      ReceiptAuthorized initial (boundary .left event.index) event.result.receipt) \u2227\n    (\u2200 event \u2208 joined.right.events,\n      ReceiptAuthorized initial (boundary .right event.index) event.result.receipt)",
+      "class": "fixture"
+    },
+    {
+      "name": "DefiKernel.Parallel.PreservationFixtures.joined_nonnegative",
+      "source": "lean/DefiKernel/Parallel/PreservationFixtures.lean",
+      "statement": "theorem joined_nonnegative : \u2200 c, 0 \u2264 joined.world.state.balance c",
+      "class": "fixture"
+    },
+    {
+      "name": "DefiKernel.Parallel.PreservationFixtures.unsupported_counterexample",
+      "source": "lean/DefiKernel/Parallel/PreservationFixtures.lean",
+      "statement": "theorem unsupported_counterexample :\n    AgreeOn (\u2205 : Set C) initial.state joined.world.state \u2227\n    initial.state.balance aliceUSD = 10 \u2227 joined.world.state.balance aliceUSD \u2260 10",
+      "class": "fixture"
+    },
+    {
+      "name": "DefiKernel.Parallel.PreservationFixtures.unsupported_is_not_supported",
+      "source": "lean/DefiKernel/Parallel/PreservationFixtures.lean",
+      "statement": "theorem unsupported_is_not_supported :\n    \u00ac Supports (\u2205 : Set C) (fun s : State Party Asset Domain \u21a6 s.balance aliceUSD = 10)",
+      "class": "fixture"
+    },
+    {
+      "name": "DefiKernel.Parallel.PreservationFixtures.written_support_counterexample",
+      "source": "lean/DefiKernel/Parallel/PreservationFixtures.lean",
+      "statement": "theorem written_support_counterexample :\n    Supports {aliceUSD} (fun s : State Party Asset Domain \u21a6 s.balance aliceUSD = 10) \u2227\n    aliceUSD \u2208 leftFP.writes \u2227 initial.state.balance aliceUSD = 10 \u2227\n    joined.world.state.balance aliceUSD \u2260 10",
+      "class": "fixture"
+    },
+    {
+      "name": "DefiKernel.Parallel.PreservationFixtures.supply_admitted",
+      "source": "lean/DefiKernel/Parallel/PreservationFixtures.lean",
+      "statement": "theorem supply_admitted : admit supplyCfg boundary [mintInv] [burnInv] =\n    .ok (mintFP, burnFP)",
+      "class": "fixture"
+    },
+    {
+      "name": "DefiKernel.Parallel.PreservationFixtures.supply_executed",
+      "source": "lean/DefiKernel/Parallel/PreservationFixtures.lean",
+      "statement": "theorem supply_executed : runParallel supplyCfg boundary supplyInitial [mintInv] [burnInv] =\n    .executed supplyJoined",
+      "class": "fixture"
+    },
+    {
+      "name": "DefiKernel.Parallel.PreservationFixtures.supply_receipts",
+      "source": "lean/DefiKernel/Parallel/PreservationFixtures.lean",
+      "statement": "theorem supply_receipts : supplyJoined.left.events.length = 1 \u2227\n    supplyJoined.right.events.length = 1 \u2227 supplyJoined.supply .main .usd = 2 \u2227\n    supplyJoined.supply .main .share = -4",
+      "class": "fixture"
+    },
+    {
+      "name": "DefiKernel.Parallel.PreservationFixtures.supply_totals",
+      "source": "lean/DefiKernel/Parallel/PreservationFixtures.lean",
+      "statement": "theorem supply_totals : total supplyJoined.world.state .main .usd = 12 \u2227\n    total supplyJoined.world.state .main .share = 16",
+      "class": "fixture"
+    },
+    {
+      "name": "DefiKernel.Parallel.PreservationFixtures.prefix_admitted",
+      "source": "lean/DefiKernel/Parallel/PreservationFixtures.lean",
+      "statement": "theorem prefix_admitted : admit supplyCfg boundary [mintInv, refusedMint] [burnInv] =\n    .ok (mintFP.append mintFP, burnFP)",
+      "class": "fixture"
+    },
+    {
+      "name": "DefiKernel.Parallel.PreservationFixtures.prefix_executed",
+      "source": "lean/DefiKernel/Parallel/PreservationFixtures.lean",
+      "statement": "theorem prefix_executed :\n    runParallel supplyCfg boundary supplyInitial [mintInv, refusedMint] [burnInv] =\n      .executed prefixJoined",
+      "class": "fixture"
+    },
+    {
+      "name": "DefiKernel.Parallel.PreservationFixtures.prefix_refusal_receipts",
+      "source": "lean/DefiKernel/Parallel/PreservationFixtures.lean",
+      "statement": "theorem prefix_refusal_receipts : prefixJoined.left.events.length = 1 \u2227\n    prefixJoined.left.failure =\n      some \u27e81, some (.invoke refusedMint), .kernel .unauthorizedInvoke\u27e9 \u2227\n    prefixJoined.right.events.length = 1 \u2227 prefixJoined.right.failure = none \u2227\n    prefixJoined.supply .main .usd = 2 \u2227 prefixJoined.supply .main .share = -4",
+      "class": "fixture"
+    },
+    {
+      "name": "DefiKernel.Parallel.PreservationFixtures.prefix_authority",
+      "source": "lean/DefiKernel/Parallel/PreservationFixtures.lean",
+      "statement": "theorem prefix_authority :\n    (\u2200 event \u2208 prefixJoined.left.events,\n      ReceiptAuthorized supplyInitial (boundary .left event.index) event.result.receipt) \u2227\n    (\u2200 event \u2208 prefixJoined.right.events,\n      ReceiptAuthorized supplyInitial (boundary .right event.index) event.result.receipt)",
+      "class": "fixture"
+    },
+    {
+      "name": "DefiKernel.Parallel.PreservationFixtures.prefix_accounting",
+      "source": "lean/DefiKernel/Parallel/PreservationFixtures.lean",
+      "statement": "theorem prefix_accounting (d : Domain) (a : Asset) :\n    total prefixJoined.world.state d a = total supplyInitial.state d a + prefixJoined.supply d a",
+      "class": "fixture"
+    }
+  ],
+  "source_sha256": {
+    "lean/DefiKernel/Parallel/Preservation.lean": "faa047bf614306b00cafc7c4b9278df070b9edb9b26f4d655e68af11a182fa10",
+    "lean/DefiKernel/Parallel/PreservationFixtures.lean": "0b04488e2d75cbbc4997217aae288692f35571cbcbdec40420254b59948ba9e7"
+  }
+}

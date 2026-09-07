@@ -201,7 +201,13 @@ After refreshed login, Fable accepted the same candidate with nonblocking
 limitations. Earlier credit errors and one incomplete response remain recorded. [Planning adjudication](../../review/semantic-kernel/sprint6/planning/ADJUDICATION.md)
 and [gate state](../../review/semantic-kernel/sprint6/planning/gate.json) record the
 passed planning gate. The refreshed baseline passes all eight commands;
-implementation begins under the existing authorization. Capability
+implementation proceeds under the existing authorization. Focused compatibility
+checks pass 42/42 and core observation/refusal checks pass 30/30. Generic proofs
+now establish exact refusal-aware correspondence to both real serial orders;
+30 named root axiom checks pass. The mutation runner passes 44 synthetic controls.
+[Core development evidence](../../review/semantic-kernel/sprint6/execution/root-core/verification.json)
+records its precise source stage; financial integration and native implementation
+audits remain pending. Capability
 administration remains outside the binary parallel operator; exact refused
 behavior and real LR/RL re-execution are mandatory proof obligations.
 

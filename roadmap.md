@@ -50,13 +50,16 @@ local/boundary premises, and nonnegativity follows from proof-carrying states.
 [implementation tasks](openspec/changes/disjoint-parallel-composition/tasks.md)
 are saved at candidate `c0f6f0b`. GPT-6 accepted the corrected candidate.
 After restored access, Fable accepted the same candidate with nonblocking
-limitations. Both planning gates pass; implementation is beginning. [Planning adjudication](review/semantic-kernel/sprint6/planning/ADJUDICATION.md)
+limitations. Both planning gates pass; implementation is in progress. [Planning adjudication](review/semantic-kernel/sprint6/planning/ADJUDICATION.md)
 and [gate state](review/semantic-kernel/sprint6/planning/gate.json) are saved.
-No Sprint 6 implementation or new proof is yet complete.
+Conservative admission, exact executor dependency and both actual serial-order
+correspondence proofs compile. Focused evidence passes 42 admission comparisons,
+30 core observation/refusal comparisons and 44 mutation-runner controls.
+Financial integration, production mutations and native implementation review remain open.
 
 - [x] Pass both planning audits on the same candidate.
 - [ ] Implement conservative concrete compatibility and independent branch execution.
-- [ ] Prove full executor dependency, exact refusal framing and serial-order correspondence.
+- [x] Prove full executor dependency, exact refusal framing and serial-order correspondence.
 - [ ] Prove joined accounting, authority, nonnegativity, supported frames and conditional initialized invariants.
 - [ ] Complete financial fixtures, real mutations, regression evidence and native Grok/Fable implementation review.
 - [ ] Deliver the accepted branch and archive the OpenSpec change.

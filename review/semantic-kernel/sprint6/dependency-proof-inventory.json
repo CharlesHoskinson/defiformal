@@ -1,0 +1,237 @@
+{
+  "theorems": [
+    {
+      "name": "DefiKernel.Parallel.expression_congr_of_region",
+      "source": "lean/DefiKernel/Parallel/Dependency.lean",
+      "statement": "theorem expression_congr_of_region {signature : List (Unit A)} {u : Unit A}\n    (expression : Expr P A D signature u) (left right : State P A D)\n    (env : Environment A D) (caller : P) (parties : List P) (args : Args signature) (now : Nat)\n    (region : Set (Cell P A D)) (ha : AgreeOn region left right)\n    (hr : \u2200 ref \u2208 expression.stateReads, \u2200 c,\n      ref.2.resolve caller parties = .ok c \u2192 c \u2208 region) :\n    expression.eval \u27e8left, env, caller, parties, args, now\u27e9 =\n      expression.eval \u27e8right, env, caller, parties, args, now\u27e9",
+      "class": "generic"
+    },
+    {
+      "name": "DefiKernel.Parallel.mapM_congr_on",
+      "source": "lean/DefiKernel/Parallel/Dependency.lean",
+      "statement": "theorem mapM_congr_on {\u03b1 \u03b2 \u03b5 : Type} (xs : List \u03b1) (f g : \u03b1 \u2192 Except \u03b5 \u03b2)\n    (h : \u2200 x \u2208 xs, f x = g x) : xs.mapM f = xs.mapM g",
+      "class": "generic"
+    },
+    {
+      "name": "DefiKernel.Parallel.mapM_ok_mem",
+      "source": "lean/DefiKernel/Parallel/Dependency.lean",
+      "statement": "theorem mapM_ok_mem {\u03b1 \u03b2 \u03b5 : Type} (xs : List \u03b1) (f : \u03b1 \u2192 Except \u03b5 \u03b2)\n    (ys : List \u03b2) (h : xs.mapM f = .ok ys) :\n    \u2200 y \u2208 ys, \u2203 x \u2208 xs, f x = .ok y",
+      "class": "generic"
+    },
+    {
+      "name": "DefiKernel.Parallel.evaluate_congr",
+      "source": "lean/DefiKernel/Parallel/Dependency.lean",
+      "statement": "theorem evaluate_congr (template : Template P A D) (left right : State P A D)\n    (env : Environment A D) (caller : P) (parties : List P)\n    (args : Args template.signature) (now : Nat)\n    (h : ResolvedReadsAgree template caller parties left right) :\n    template.evaluate \u27e8left, env, caller, parties, args, now\u27e9 =\n      template.evaluate \u27e8right, env, caller, parties, args, now\u27e9",
+      "class": "generic"
+    },
+    {
+      "name": "DefiKernel.Parallel.evaluated_targets",
+      "source": "lean/DefiKernel/Parallel/Dependency.lean",
+      "statement": "theorem evaluated_targets (template : Template P A D)\n    (ctx : EvalContext P A D template.signature) (e : Evaluated P A D)\n    (h : template.evaluate ctx = .ok e) :\n    \u2200 entry \u2208 e.deltas, \u2203 d \u2208 template.deltas,\n      d.target.resolve ctx.caller ctx.parties = .ok entry.1",
+      "class": "generic"
+    },
+    {
+      "name": "DefiKernel.Parallel.evaluated_effect_zero_outside",
+      "source": "lean/DefiKernel/Parallel/Dependency.lean",
+      "statement": "theorem evaluated_effect_zero_outside (template : Template P A D)\n    (ctx : EvalContext P A D template.signature) (e : Evaluated P A D)\n    (h : template.evaluate ctx = .ok e) (region : Set (Cell P A D))\n    (ht : TargetsWithin template ctx.caller ctx.parties region)\n    (c : Cell P A D) (hc : c \u2209 region) : e.effect c = 0",
+      "class": "generic"
+    },
+    {
+      "name": "DefiKernel.Parallel.funds_iff",
+      "source": "lean/DefiKernel/Parallel/Dependency.lean",
+      "statement": "theorem funds_iff (left right : State P A D) (e : Evaluated P A D)\n    (region : Set (Cell P A D)) (ha : AgreeOn region left right)\n    (hz : \u2200 c, c \u2209 region \u2192 e.effect c = 0) :\n    (\u2200 c, 0 \u2264 left.balance c + e.effect c) \u2194\n      (\u2200 c, 0 \u2264 right.balance c + e.effect c)",
+      "class": "generic"
+    },
+    {
+      "name": "DefiKernel.Parallel.applyEvaluated_congr",
+      "source": "lean/DefiKernel/Parallel/Dependency.lean",
+      "statement": "theorem applyEvaluated_congr (store : CapabilityStore P A D)\n    (ctx : InvocationContext P D) (request : Request P A D)\n    (left right : State P A D) (e : Evaluated P A D)\n    (region : Set (Cell P A D)) (ha : AgreeOn region left right)\n    (hz : \u2200 c, c \u2209 region \u2192 e.effect c = 0) :\n    ExecutionAgrees region (applyEvaluated store ctx request left e)\n      (applyEvaluated store ctx request right e)",
+      "class": "generic"
+    },
+    {
+      "name": "DefiKernel.Parallel.execute_congr",
+      "source": "lean/DefiKernel/Parallel/Dependency.lean",
+      "statement": "theorem execute_congr (registry : Registry P A D) (store : CapabilityStore P A D)\n    (ctx : InvocationContext P D) (env : Environment A D) (now : Nat)\n    (request : Request P A D) (left right : State P A D) (region : Set (Cell P A D))\n    (ha : AgreeOn region left right)\n    (hr : \u2200 template, registry request.operation = some template \u2192\n      ResolvedReadsAgree template ctx.principal request.parties left right)\n    (ht : \u2200 template, registry request.operation = some template \u2192\n      TargetsWithin template ctx.principal request.parties region) :\n    ExecutionAgrees region (Typed.execute registry store ctx env now request left)\n      (Typed.execute registry store ctx env now request right)",
+      "class": "generic"
+    },
+    {
+      "name": "DefiKernel.Parallel.execute_refusal_iff",
+      "source": "lean/DefiKernel/Parallel/Dependency.lean",
+      "statement": "theorem execute_refusal_iff (registry : Registry P A D) (store : CapabilityStore P A D)\n    (ctx : InvocationContext P D) (env : Environment A D) (now : Nat)\n    (request : Request P A D) (left right : State P A D) (region : Set (Cell P A D))\n    (ha : AgreeOn region left right)\n    (hr : \u2200 template, registry request.operation = some template \u2192\n      ResolvedReadsAgree template ctx.principal request.parties left right)\n    (ht : \u2200 template, registry request.operation = some template \u2192\n      TargetsWithin template ctx.principal request.parties region) (reason : Typed.Refusal) :\n    Typed.execute registry store ctx env now request left = .error reason \u2194\n      Typed.execute registry store ctx env now request right = .error reason",
+      "class": "generic"
+    },
+    {
+      "name": "DefiKernel.Parallel.execute_success_congr",
+      "source": "lean/DefiKernel/Parallel/Dependency.lean",
+      "statement": "theorem execute_success_congr (registry : Registry P A D) (store : CapabilityStore P A D)\n    (ctx : InvocationContext P D) (env : Environment A D) (now : Nat)\n    (request : Request P A D) (left right : State P A D) (region : Set (Cell P A D))\n    (ha : AgreeOn region left right)\n    (hr : \u2200 template, registry request.operation = some template \u2192\n      ResolvedReadsAgree template ctx.principal request.parties left right)\n    (ht : \u2200 template, registry request.operation = some template \u2192\n      TargetsWithin template ctx.principal request.parties region)\n    (post : ExecutionResult P A D)\n    (hx : Typed.execute registry store ctx env now request left = .ok post) :\n    \u2203 other, Typed.execute registry store ctx env now request right = .ok other \u2227\n      AgreeOn region post.state other.state \u2227 post.capabilities = store \u2227\n      other.capabilities = store",
+      "class": "generic"
+    },
+    {
+      "name": "DefiKernel.Parallel.execute_target_frame",
+      "source": "lean/DefiKernel/Parallel/Dependency.lean",
+      "statement": "theorem execute_target_frame (registry : Registry P A D) (store : CapabilityStore P A D)\n    (ctx : InvocationContext P D) (env : Environment A D) (now : Nat)\n    (request : Request P A D) (pre : State P A D) (post : ExecutionResult P A D)\n    (region : Set (Cell P A D))\n    (ht : \u2200 template, registry request.operation = some template \u2192\n      TargetsWithin template ctx.principal request.parties region)\n    (hx : Typed.execute registry store ctx env now request pre = .ok post) :\n    \u2200 c, c \u2209 region \u2192 post.state.balance c = pre.balance c",
+      "class": "generic"
+    },
+    {
+      "name": "DefiKernel.Parallel.prepareInvocation_shape",
+      "source": "lean/DefiKernel/Parallel/Dependency/Adapter.lean",
+      "statement": "theorem prepareInvocation_shape (cfg : Config P A D) (boundary : Boundary P A D)\n    (index : Nat) (history : List (OutputObservation A)) (inv : Invocation P A D)\n    (iface : OperationInterface P A D) (request : Request P A D)\n    (h : prepareInvocation cfg boundary index history inv = .ok (iface, request)) :\n    request.operation = inv.operation \u2227 request.parties = inv.parties \u2227\n      \u2203 component, lookupOperation cfg.catalog inv.component inv.operation =\n        some (component, iface)",
+      "class": "generic"
+    },
+    {
+      "name": "DefiKernel.Parallel.analyzed_dependencies",
+      "source": "lean/DefiKernel/Parallel/Dependency/Adapter.lean",
+      "statement": "theorem analyzed_dependencies (cfg : Config P A D) (boundary : Boundary P A D)\n    (inv : Invocation P A D) (fp : Footprint P A D)\n    (hf : analyzeInvocation cfg boundary inv = .ok fp)\n    (template : Template P A D) (hs : cfg.registry inv.operation = some template) :\n    (\u2200 ref \u2208 template.requiredStateReads, \u2200 c,\n      ref.2.resolve boundary.ctx.principal inv.parties = .ok c \u2192 c \u2208 fp.reads) \u2227\n    TargetsWithin template boundary.ctx.principal inv.parties {c | c \u2208 fp.writes} \u2227\n    (\u2200 c \u2208 fp.writes, c \u2208 fp.reads)",
+      "class": "generic"
+    },
+    {
+      "name": "DefiKernel.Parallel.analyzed_outputs",
+      "source": "lean/DefiKernel/Parallel/Dependency/Adapter.lean",
+      "statement": "theorem analyzed_outputs (cfg : Config P A D) (boundary : Boundary P A D)\n    (inv : Invocation P A D) (fp : Footprint P A D)\n    (hf : analyzeInvocation cfg boundary inv = .ok fp)\n    (component : Component P A D) (iface : OperationInterface P A D)\n    (hl : lookupOperation cfg.catalog inv.component inv.operation = some (component, iface)) :\n    \u2200 output \u2208 iface.outputs, output.cell \u2208 fp.reads",
+      "class": "generic"
+    },
+    {
+      "name": "DefiKernel.Parallel.snapshots_congr",
+      "source": "lean/DefiKernel/Parallel/Dependency/Adapter.lean",
+      "statement": "theorem snapshots_congr (index : Nat) (component : ComponentId)\n    (iface : OperationInterface P A D) (left right : State P A D)\n    (h : \u2200 output \u2208 iface.outputs, left.balance output.cell = right.balance output.cell) :\n    snapshots index component iface left = snapshots index component iface right",
+      "class": "generic"
+    },
+    {
+      "name": "DefiKernel.Parallel.extractReceipt_congr",
+      "source": "lean/DefiKernel/Parallel/Dependency/Adapter.lean",
+      "statement": "theorem extractReceipt_congr (cfg : Config P A D) (boundary : Boundary P A D)\n    (request : Request P A D) (left right : World P A D)\n    (hr : \u2200 template, cfg.registry request.operation = some template \u2192\n      ResolvedReadsAgree template boundary.ctx.principal request.parties left.state right.state) :\n    extractReceipt cfg boundary request left = extractReceipt cfg boundary request right",
+      "class": "generic"
+    },
+    {
+      "name": "DefiKernel.Parallel.executeStep_congr",
+      "source": "lean/DefiKernel/Parallel/Dependency/Adapter.lean",
+      "statement": "theorem executeStep_congr (cfg : Config P A D) (boundary : Boundary P A D)\n    (index : Nat) (history : List (OutputObservation A)) (inv : Invocation P A D)\n    (left right : World P A D) (fp : Footprint P A D) (region : Set (Cell P A D))\n    (hf : analyzeInvocation cfg boundary inv = .ok fp)\n    (hin : \u2200 c \u2208 fp.reads, c \u2208 region) (ha : AgreeOn region left.state right.state)\n    (hcap : left.capabilities = right.capabilities) :\n    StepAgrees region (executeStep cfg boundary index history (.invoke inv) left)\n      (executeStep cfg boundary index history (.invoke inv) right)",
+      "class": "generic"
+    },
+    {
+      "name": "DefiKernel.Parallel.executeStep_target_frame",
+      "source": "lean/DefiKernel/Parallel/Dependency/Adapter.lean",
+      "statement": "theorem executeStep_target_frame (cfg : Config P A D) (boundary : Boundary P A D)\n    (index : Nat) (history : List (OutputObservation A)) (inv : Invocation P A D)\n    (pre : World P A D) (result : StepResult P A D) (fp : Footprint P A D)\n    (hf : analyzeInvocation cfg boundary inv = .ok fp)\n    (hx : executeStep cfg boundary index history (.invoke inv) pre = .ok result) :\n    (\u2200 c, c \u2209 fp.writes \u2192 result.world.state.balance c = pre.state.balance c) \u2227\n      result.world.capabilities = pre.capabilities",
+      "class": "generic"
+    },
+    {
+      "name": "DefiKernel.Parallel.executeStep_refusal_iff",
+      "source": "lean/DefiKernel/Parallel/Dependency/Adapter.lean",
+      "statement": "theorem executeStep_refusal_iff (cfg : Config P A D) (boundary : Boundary P A D)\n    (index : Nat) (history : List (OutputObservation A)) (inv : Invocation P A D)\n    (left right : World P A D) (fp : Footprint P A D) (region : Set (Cell P A D))\n    (hf : analyzeInvocation cfg boundary inv = .ok fp)\n    (hin : \u2200 c \u2208 fp.reads, c \u2208 region) (ha : AgreeOn region left.state right.state)\n    (hcap : left.capabilities = right.capabilities) (reason : Failure) :\n    executeStep cfg boundary index history (.invoke inv) left = .error reason \u2194\n      executeStep cfg boundary index history (.invoke inv) right = .error reason",
+      "class": "generic"
+    },
+    {
+      "name": "DefiKernel.Parallel.DependencyFixtures.foreign_agrees",
+      "source": "lean/DefiKernel/Parallel/Dependency/Fixtures.lean",
+      "statement": "theorem foreign_agrees : AgreeOn targetRegion state foreignState",
+      "class": "fixture"
+    },
+    {
+      "name": "DefiKernel.Parallel.DependencyFixtures.foreign_differs",
+      "source": "lean/DefiKernel/Parallel/Dependency/Fixtures.lean",
+      "statement": "theorem foreign_differs : state.balance (true, true, true) \u2260\n    foreignState.balance (true, true, true)",
+      "class": "fixture"
+    },
+    {
+      "name": "DefiKernel.Parallel.DependencyFixtures.malformed_evaluates",
+      "source": "lean/DefiKernel/Parallel/Dependency/Fixtures.lean",
+      "statement": "theorem malformed_evaluates : malformed.evaluate\n    \u27e8state, environment, false, [], .nil, 10\u27e9 = .ok evaluated",
+      "class": "fixture"
+    },
+    {
+      "name": "DefiKernel.Parallel.DependencyFixtures.malformed_targets",
+      "source": "lean/DefiKernel/Parallel/Dependency/Fixtures.lean",
+      "statement": "theorem malformed_targets : TargetsWithin malformed false [] targetRegion",
+      "class": "fixture"
+    },
+    {
+      "name": "DefiKernel.Parallel.DependencyFixtures.malformed_effect_outside",
+      "source": "lean/DefiKernel/Parallel/Dependency/Fixtures.lean",
+      "statement": "theorem malformed_effect_outside (c : Cell Bool Bool Bool) (hc : c \u2209 targetRegion) :\n    evaluated.effect c = 0",
+      "class": "fixture"
+    },
+    {
+      "name": "DefiKernel.Parallel.DependencyFixtures.malformed_writes_fail",
+      "source": "lean/DefiKernel/Parallel/Dependency/Fixtures.lean",
+      "statement": "theorem malformed_writes_fail : evaluated.writesOK = false",
+      "class": "fixture"
+    },
+    {
+      "name": "DefiKernel.Parallel.DependencyFixtures.foreign_funds_iff",
+      "source": "lean/DefiKernel/Parallel/Dependency/Fixtures.lean",
+      "statement": "theorem foreign_funds_iff :\n    (\u2200 c, 0 \u2264 state.balance c + evaluated.effect c) \u2194\n      (\u2200 c, 0 \u2264 foreignState.balance c + evaluated.effect c)",
+      "class": "fixture"
+    },
+    {
+      "name": "DefiKernel.Parallel.DependencyFixtures.target_balance_is_needed",
+      "source": "lean/DefiKernel/Parallel/Dependency/Fixtures.lean",
+      "statement": "theorem target_balance_is_needed :\n    (\u2200 c, 0 \u2264 state.balance c + evaluated.effect c) \u2227\n      \u00ac (\u2200 c, 0 \u2264 poorState.balance c + evaluated.effect c)",
+      "class": "fixture"
+    },
+    {
+      "name": "DefiKernel.Parallel.DependencyFixtures.refused_iff",
+      "source": "lean/DefiKernel/Parallel/Dependency/Fixtures.lean",
+      "statement": "theorem refused_iff (reason : Typed.Refusal) (result : Result) :\n    refused reason result = true \u2194 result = .error reason",
+      "class": "fixture"
+    },
+    {
+      "name": "DefiKernel.Parallel.DependencyFixtures.funded_malformed_refusal",
+      "source": "lean/DefiKernel/Parallel/Dependency/Fixtures.lean",
+      "statement": "theorem funded_malformed_refusal : exec malformed state = .error .writeFootprint",
+      "class": "fixture"
+    },
+    {
+      "name": "DefiKernel.Parallel.DependencyFixtures.foreign_malformed_refusal",
+      "source": "lean/DefiKernel/Parallel/Dependency/Fixtures.lean",
+      "statement": "theorem foreign_malformed_refusal : exec malformed foreignState = .error .writeFootprint",
+      "class": "fixture"
+    },
+    {
+      "name": "DefiKernel.Parallel.DependencyFixtures.poor_malformed_refusal",
+      "source": "lean/DefiKernel/Parallel/Dependency/Fixtures.lean",
+      "statement": "theorem poor_malformed_refusal : exec malformed poorState = .error .insufficientFunds",
+      "class": "fixture"
+    },
+    {
+      "name": "DefiKernel.Parallel.DependencyFixtures.accounting_refusal",
+      "source": "lean/DefiKernel/Parallel/Dependency/Fixtures.lean",
+      "statement": "theorem accounting_refusal : exec unbalanced foreignState = .error .accounting",
+      "class": "fixture"
+    },
+    {
+      "name": "DefiKernel.Parallel.DependencyFixtures.division_evaluation",
+      "source": "lean/DefiKernel/Parallel/Dependency/Fixtures.lean",
+      "statement": "theorem division_evaluation : dividing.evaluate\n    \u27e8state, environment, false, [], .nil, 10\u27e9 = .error .divisionByZero",
+      "class": "fixture"
+    },
+    {
+      "name": "DefiKernel.Parallel.DependencyFixtures.division_execution",
+      "source": "lean/DefiKernel/Parallel/Dependency/Fixtures.lean",
+      "statement": "theorem division_execution : exec dividing foreignState = .error (.evaluation .divisionByZero)",
+      "class": "fixture"
+    },
+    {
+      "name": "DefiKernel.Parallel.DependencyFixtures.observation_error",
+      "source": "lean/DefiKernel/Parallel/Dependency/Fixtures.lean",
+      "statement": "theorem observation_error : missingObservation.evaluate\n    \u27e8foreignState, (fun _ \u21a6 none), false, [], .nil, 10\u27e9 = .error .missingObservation",
+      "class": "fixture"
+    },
+    {
+      "name": "DefiKernel.Parallel.DependencyFixtures.inactive_evaluation_congr",
+      "source": "lean/DefiKernel/Parallel/Dependency/Fixtures.lean",
+      "statement": "theorem inactive_evaluation_congr : inactiveReads.evaluate\n    \u27e8state, environment, false, [], .nil, 10\u27e9 = inactiveReads.evaluate\n      \u27e8foreignState, environment, false, [], .nil, 10\u27e9",
+      "class": "fixture"
+    },
+    {
+      "name": "DefiKernel.Parallel.DependencyFixtures.foreign_success",
+      "source": "lean/DefiKernel/Parallel/Dependency/Fixtures.lean",
+      "statement": "theorem foreign_success : accepted (exec transfer foreignState) = true",
+      "class": "fixture"
+    }
+  ],
+  "source_sha256": {
+    "lean/DefiKernel/Parallel/Dependency.lean": "72867fdcc9d076bc1beaa6b9cd38a4f75fff9087f703cde1bf3db01760ceb245",
+    "lean/DefiKernel/Parallel/Dependency/Adapter.lean": "10f9658f56d4fae4d3eed01dd2c2ec78460ed275120d6e6bd3ba9bd90ba00d4c",
+    "lean/DefiKernel/Parallel/Dependency/Fixtures.lean": "14bac7bfdc273c9de0d416e4489f6d16eb9d02e5e01f082ef0aeb194ef17de45"
+  }
+}
