@@ -1,0 +1,728 @@
+Morpho Overview | Morpho Docs (https://docs.morpho.org/learn/)
+citeturn51search0 [wordlim: 200] Crawled: today; Introduction Morpho Overview Key Concepts Blue and Midnight
+
+# Morpho Overview
+
+## Introduction
+
+Morpho is a decentralized lending protocol with different entities and individuals contributing to its development and adoption. As a result, the documentation refers to different areas of “Morpho” which are worth distinguishing.
+
+  * The Morpho Protocols: Decentralized, noncustodial lending protocols implemented for the Ethereum Virtual Machine.
+
+  * The Morpho Interfaces:
+Multiple web interfaces allowing easy interaction with the Morpho protocol. Those interfaces are ways to interact with the Morpho protocol.
+
+  * Morpho Governance:
+A governance system for governing the Morpho Protocol, enabled by the MORPHO token.
+
+  * Morpho Association:
+A France-registered association that regroups the main contributors to promote the development and the decentralization of the Morpho Protocol. The Morpho Association hosts one of the Morpho Interfaces.
+
+## Morpho
+
+Morpho is a simple lending primitive layer that allows the creation of immutable and efficient lending markets in a permissionless way.
+
+The protocol comes with EVM smart contracts which facilitate interactions and integrations.
+
+### Overview
+
+Morpho is a decentralized protocol enabling the overcollateralized lending and borrowing of crypto assets (ERC20 & ERC4626 Tokens) on the Ethereum Virtual Machine. The protocol is implemented as an immutable smart contract, engineered to serve as a trustless base layer for lenders, borrowers, and applications.
+
+Morpho is licensed under a dual license (BUSL-1.1 and GPLv2) which you can find here. Once deployed, Morpho will function in perpetuity, provided by the existence of the blockchain.
+
+### Key Concepts
+
+Overcollateralized lending in Morpho involves:
+
+  * Collateralization: Users provide collateral to borrow other assets
+  * Risk Protection: Liquidation mechanisms protect the protocol through loan-to-value ratios
+  * Interest Accrual: Dynamic interest rates based on market conditions
+  * Open Participation: Anyone can lend or borrow through the protocol
+  * Non-custodial Design: Users maintain ownership of their assets at all times
+
+## Blue and Midnight
+
+Morpho has two lending protocols: Variable Rate Markets (Blue) and Fixed Rate Markets (Midnight). They coexist and are complementary.
+
+What is Midnight?Next Page
+
+### On this page
+
+IntroductionMorphoOverviewKey ConceptsBlue and Midnight--------------------------------------------------------------------------------
+Variable Rate Market (Morpho Blue) | Morpho Docs (https://docs.morpho.org/learn/concepts/blue/)
+citeturn51search1 [wordlim: 200] Crawled: today; # Variable Rate Market (Morpho Blue)Image: Morpho Market Concept
+
+What is Blue?
+
+# Variable Rate Market (Morpho Blue)
+
+Image: Morpho Market Concept
+
+## What is a Variable Rate Market?
+
+A variable rate market is a primitive lending pool that pairs one collateral asset with one loan asset. Each market is isolated (meaning risks are contained within each individual market), immutable (cannot be changed after deployment), and will persist as long as the blockchain it deployed on is live. This design ensures predictable behavior and eliminates systematic for lenders and borrowers. Creating a Morpho Market is permissionless.
+
+## Key Features
+
+  * Simple Structure: One collateral asset, one loan asset per market
+  * Permanent Parameters: Once created, rules never change
+  * Isolated Risk: Each market operates independently
+  * Permissionless: New market doesn’t require governance vote to be created - more here
+  * Transparent Rules: Clear conditions for lending and borrowing
+
+## Market Identification
+
+Markets follow this naming format:
+
+`CollateralAsset/LoanAsset (LLTV%, OracleAddress, IRMAddress)`
+
+For example: `wstETH/WETH (94.5%, ChainlinkOracleV2-wstETHToWETH, AdaptiveCurveIRM)`
+
+## The Five Parameters
+
+  1. Collateral Asset that should be ERC20 compliant (except that it can omit return values on `transfer` and `transferFrom`.)
+  2. Loan Asset sharing same properties as collateral asset. However, the Loan asset should not be ERC4626 compliant.
+  3. LLTV (Liquidation Loan-To-Value): Maximum borrowing percentage before liquidation risk. E.g: LLTV of 80% means for a collateral value equivalent of $100, the maximum one can borrow in value is $80. If above like $80.0001, the position is liquidatable.
+  4. Oracle: Smart contract address pricing the collateral against the loan asset.
+  5. IRM (Interest Rate Model): Smart contract address containing the formula for determining interest rate paid by borrowers.
+
+## Governance-Approved LLTV & IRM
+
+### LLTVs
+
+LLTV (%)  | Solidity Values (scaled by 1e18)
+--- | ---
+0  | 0
+38.5  | 385000000000000000
+62.5  | 625000000000000000
+77.0  | 770000000000000000
+86.0  | 860000000000000000
+91.5  | 915000000000000000
+94.5  | 945000000000000000
+96.5  | 965000000000000000
+98.0  | 980000000000000000
+
+### IRM
+
+The only Interest Rate Model (IRM) that has been governance-approved is the AdaptiveCurveIRM.
+
+## Market ID Generator
+
+Use this tool to generate a unique market ID from your market parameters:
+
+Loan Token Address[Input: 0x...]
+
+Collateral Token Address[Input: 0x...]
+
+Oracle Address[Input: 0x...]
+
+IRM Address[Input: 0x...]
+
+LLTV (in wei, e.g. 915000000000000000 for 91.5%)[Input: 915000000000000000]
+
+[Button: Reset]
+
+## Permissionless market creation
+
+A distinctive feature of Morpho is permissionless market creation: the protocol allows users to create isolated markets consisting of the five aforementioned parameters.
+
+This a departure from the existing paradigm and traditional lending platforms which:
+
+  1. Require governance approval for asset listing and parameter changes.
+  2. Pool assets into a single lending pool, sharing risk across the entire protocol.
+
+In Morpho, each parameter is selected at market creation and persists in perpetuity. Or, in other words, are immutable. The LLTV and interest rate model must be chosen from a set of options approved by Morpho Governance.
+
+## Core Interactions
+
+  * Supply: Lenders deposit loan assets into a specific market to earn interest.
+  * Borrow: Borrowers supply collateral to the same market and borrow loan assets against it, up to the LLTV limit.
+  * Withdraw: Lenders can withdraw their supplied assets and accrued interest, provided there is enough liquidity in the market.
+  * Repay: Borrowers can repay their loan to reclaim their collateral.
+  * Liquidate: If a borrower's position exceeds the LLTV, anyone can liquidate it by repaying a portion of the debt in exchange for a discounted portion of the collateral.--------------------------------------------------------------------------------
+Morpho Blue | Morpho Docs (https://docs.morpho.org/developers/api/morpho/)
+citeturn51search2 [wordlim: 200] Crawled: yesterday;     `curl -sS "https://api.morpho.org/v0/blue/markets/1:0x608929d6de2a10bacf1046ff157ae38df5b9f466fb89413211efb8f63c63833a/state/history?
+
+Morpho Blue
+
+# Morpho Blue
+
+Enterprise API access
+
+For enterprise access, send requests to `https://private.api.morpho.org` with your API key in the `x-api-key` header. Request an API key.
+
+## How to query Morpho Blue data with the API?
+
+Each example below is available as REST (selected by default) or GraphQL — use the tabs to switch.
+
+  * REST calls use public `GET` requests against `https://api.morpho.org` with standard public rate limits. Markets are addressed by a `<chainId>:<marketId>` selector and tokens by `<chainId>:<address>`. REST provides single-entity reads, a cursor-paginated market list through `GET /v1/blue/markets`, and versioned lists of a user's vault positions. Aggregate cross-market overviews, oracle feed composition, USD values, and reward APRs still come from GraphQL.
+  * GraphQL queries run against the Playground at https://api.morpho.org/graphql. By default the API returns only the first 100 results and reads from the Ethereum network.
+
+## Discovery and Listing
+
+### Markets List
+
+[Button: REST API][Button: GraphQL]
+    
+    `curl -sS "https://api.morpho.org/v1/blue/markets?chain_id=8453&listed=true&limit=100" \
+      -H "accept: application/json"`
+
+REST lists markets with cursor pagination and supports `chain_id`, `loan_token`, `collateral_token`, and `listed` filters. It does not expose the GraphQL API's broader sorting and aggregate filters.
+
+[Button: All Markets][Button: Listed Markets]
+    
+    `query {
+      markets {
+        items {
+          marketId
+          lltv
+          oracle {
+            address
+          }
+          irmAddress
+          loanAsset {
+            address
+            symbol
+            decimals
+          }
+          collateralAsset {
+            address
+            symbol
+            decimals
+          }
+          state {
+            borrowAssets
+            supplyAssets
+            fee
+            utilization
+          }
+        }
+      }
+    }`
+    
+    `query {
+      markets(where: { listed: true }) {
+        items {
+          marketId
+          listed
+          lltv
+          oracle {
+            address
+          }
+          irmAddress
+          loanAsset {
+            address
+            symbol
+            decimals
+          }
+          collateralAsset {
+            address
+            symbol
+            decimals
+          }
+          state {
+            borrowAssets
+            supplyAssets
+            fee
+            utilization
+          }
+        }
+      }
+    }`
+
+### Market Parameters
+
+[Button: REST API][Button: GraphQL]
+    
+    `curl -sS "https://api.morpho.org/v0/blue/markets/8453:0x9103c3b4e834476c9a62ea009ba2c884ee42e94e6e314a26f04d312434191836" \
+      -H "accept: application/json"`
+
+REST reads one market at a time by `<chainId>:<marketId>`. The response gives the immutable config: `loan_token`, `collateral_token`, `oracle_address`, `irm_address`, and `lltv_wad`. Use `GET /v1/blue/markets` to enumerate and filter across markets by `chain_id`, `loan_token`, `collateral_token`, and `listed`.
+
+[Button: All Markets][Button: Specific Market]
+    
+    `query {
+      markets(
+        first: 100
+        orderBy: SupplyAssetsUsd
+        orderDirection: Desc
+        where: { chainId_in: [1, 8453] }
+      ) {
+        items {
+          marketId
+          loanAsset { address }
+          collateralAsset { address }
+          lltv
+          irmAddress
+          oracle {
+            address
+          }
+        }
+      }
+    }`
+    
+    `query {
+      marketById(
+        marketId: "0x9103c3b4e834476c9a62ea009ba2c884ee42e94e6e314a26f04d312434191836"
+        chainId: 8453
+      ) {
+        marketId
+        loanAsset { address }
+        collateralAsset { address }
+        lltv
+        irmAddress
+        oracle {
+          address
+        }
+      }
+    }`
+
+
+  * `startTimestamp`: beginning of the historical data in UNIX timestamp format,
+  * `endTimestamp`: end of the historical data in UNIX timestamp format,
+  * `interval`: interval of the historical data points (`YEAR`, `QUARTER`, `MONTH`, `WEEK`, `DAY`, `HOUR`). Inputting these variables is not mandatory but it is advised to specify them to control the specific data returned.
+
+If no variables are specified, the default values will be:
+
+  * `startTimestamp`: 0,
+  * `endTimestamp`: infinity,
+  * `interval`: will adjust according to `startTimestamp` and `endTimestamp` to return around 50 data points.
+
+Note that the `historicalState` field is not accessible through the (multiple) markets(...) and vaults(...) list queries. Historical data is only available through individual market or vault queries like `market(id: "")`, `marketById`, `vault(id: "")` or `vaultByAddress`.
+
+### Historical APYs
+
+[Button: REST API][Button: GraphQL]
+    
+    `curl -sS "https://api.morpho.org/v0/blue/markets/8453:0x9103c3b4e834476c9a62ea009ba2c884ee42e94e6e314a26f04d312434191836/apy/history?--------------------------------------------------------------------------------
+Morpho Research | Morpho Docs (https://docs.morpho.org/get-started/resources/whitepapers/)
+citeturn51search3 [wordlim: 200] Crawled: today; ### Morpho Blue Whitepaper
+
+# Morpho Research
+
+Morpho is a research-driven protocol designed to make lending more open, efficient, and resilient. Research acts as the bridge between ideas and execution, combining mathematics and software implementation.
+
+Every single mechanism design decision is made after long periods of research conducted by diverse teams around the world.
+
+* * *
+
+### Midnight Whitepaper
+
+Authors: Morpho Association
+
+Published: May 22, 2026
+
+Read paper
+
+
+### Morpho Token Whitepaper
+
+Authors: d&a partners
+
+Published: April 20, 2026
+
+Read paper
+
+
+### Agents' Behavior and Interest Rate Model Optimization in DeFi Lending
+
+Authors: Charles Bertucci, Louis Bertucci, Mathis Gontier Delaunay, Olivier Gueant, Matthieu Lesbre
+
+Published: April 23, 2024
+
+Read paper
+
+
+### Morpho Blue Whitepaper
+
+Authors: Morpho Association
+
+Published: October 1, 2023
+
+Read paper
+
+
+### The Paradox of Adversarial Liquidation in Decentralized Lending
+
+Authors: Samuel N. Cohen, Marc Sabate Vidales, Lukasz Szpruch and Mathis Gontier Delaunay
+
+Published: August 14, 2023
+
+Read paper--------------------------------------------------------------------------------
+Guides | Sky Protocol Docs (https://developers.sky.money/guides/)
+citeturn51search4 [wordlim: 200] Crawled: 1.2 years ago; Sky Protocol Docs ...     * USDS ...       * Development Practices
+
+Sky Protocol Docs
+
+
+  * 🚀 Quick Start
+
+    * Deployments Tracker
+    * Protocol Token Routes
+  * 🎓 Guides
+
+    * Peg Stability Modules
+
+      * LitePSM
+    * SkyLink
+
+      * Base ETH Native Bridge
+    * SKY
+
+      * Token and Governance Upgrade New
+
+        * Overview
+        * Key Information
+        * Upgrade Timeline
+  * 📚 Core Protocol Documentation
+
+    * USDS
+    * sUSDS (Savings USDS)
+    * SKY
+    * LitePSM
+    * SkyLink
+    * LockStake Engine (Seal Engine)
+    * Staking Rewards
+    * Smart Burn Engine
+  * 🛡️ Security & Risk
+
+    * Security Measures
+
+      * Overview
+      * Development Practices
+      * Security Mechanisms
+    * Bug Bounty Program
+
+# Guides
+
+  * Psm
+  * Sky
+  * Skylink
+  * User Tutorials
+--------------------------------------------------------------------------------
+Morpho Contracts | Morpho Docs (https://docs.morpho.org/developers/contracts/)
+citeturn51search5 [wordlim: 200] Crawled: today; Morpho Core  | Variable Rate Market  | morpho-blue  | spec ... Morpho Vaults V1  | Vaults V1.1  | metamorpho-v1.1  | spec
+
+Contracts
+
+AddressesMorphoMorpho Vaults V2Vault V2 Public AllocatorMorphoMarketV1AdapterV2OraclesInterest Rate ModelsBundler3Universal Rewards Distributors (Deprecated)Morpho V0 (Optimizers - Deprecated)
+
+# Morpho Contracts
+
+Category  | Contract  | Github Repositories  | Specs
+--- | --- | --- | ---
+Morpho Core  | Variable Rate Market  | morpho-blue  | spec
+ | Interest Rate Model  | morpho-blue-irm  | spec
+ | Oracle  | morpho-blue-oracles  | spec
+Morpho Vaults V1  | Vaults V1.1  | metamorpho-v1.1  | spec
+ | Vaults V1.0  | metamorpho  | spec
+Morpho Vaults V2  | Vaults V2  | vault-v2  | spec
+ | MorphoVaultV1Adapter  | vault-v2  | spec
+ | MorphoMarketV1AdapterV2  | vault-v2  | spec
+ | Blue Public Allocator  | blue-public-allocator  | Vault V2 guide
+Bundlers  | Bundler3  | bundler3  | spec
+Rewards  | Universal-Rewards-Distributor  | universal-rewards-distributor  | spec--------------------------------------------------------------------------------
+Addresses | Morpho Docs (https://docs.morpho.org/developers/contracts/addresses/)
+citeturn51search6 [wordlim: 200] Crawled: today; BlueBuyCallback Factory  | 0x172d1FdC5f79bFe1ED46448f18541E591E5c93a7  | morpho-org/midnight ... MetaMorpho Factory V1.1  | 0x878988f5f561081deEa117717052164ea1Ef0c82  | metamorpho-v1.1
+Mempool  | 0xde2d62449301a09A51EbF9326EA60d2e8BF4A8F7  | morpho-org/midnight
+BlueBuyCallback Factory  | 0x172d1FdC5f79bFe1ED46448f18541E591E5c93a7  | morpho-org/midnight
+BlueFallbackRolling  | 0x6910E21c20a09BB3a2026a24585aF1E63d769fe6  | morpho-org/midnight
+
+Contract  | Address  | Source Code
+--- | --- | ---
+Midnight  | 0xAdedD8ab6dE832766Fedf0FaC4992E5C4D3EA18A  | morpho-org/midnight
+SetterRatifier  | 0x800B5F12A61B8198a5a6EfD794Cac6699B294d63  | morpho-org/midnight
+EcrecoverRatifier  | 0xd6e70365C8E8DDa9a4ca662C07bbE663b017755E  | morpho-org/midnight
+EcrecoverAuthorizer  | 0x292bEa9f1443d54E0E509120c919106765c6a493  | morpho-org/midnight
+Mempool  | 0xdD6DCE32e21f7b020898a8258dA37355b4017993  | morpho-org/midnight
+BlueBuyCallback Factory  | 0x7337f119Eca028bD39E0e543cEf71631D2333425  | morpho-org/midnight
+BlueFallbackRolling  | 0x7bfA8207B818cc0e23a7aBdCBe56572fAbCa831F  | morpho-org/midnight
+
+## Morpho Blue
+
+Ethereum 49 chains
+
+Contract  | Address  | Source Code
+--- | --- | ---
+Morpho  | 0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb  | morpho-blue
+Adaptive Curve Irm  | 0x870aC11D48B15DB9a138Cf899d20F13F79Ba00BC  | morpho-blue-irm
+Morpho ChainlinkOracleV2 Factory  | 0x3A7bB36Ee3f3eE32A60e9f2b33c1e5f2E83ad766  | morpho-blue-oracles
+
+--------------------------------------------------------------------------------
+Morpho SDK | Morpho Docs (https://docs.morpho.org/developers/sdks/morpho-sdk/)
+citeturn51search7 [wordlim: 200] Crawled: yesterday; Variable-rate borrowing against collateral, with no fixed term  | Morpho Blue markets  | Variable Rate - Blue Market ... ## Actions overview ...  | `inKindRedeem`  | Direct VaultExitBundlesV1 call  | Burns MetaMorpho shares and transfers ordered Morpho Blue supply positions to the user when an asset withdrawal is illiquid.
+
+Morpho SDK
+
+# Morpho SDK
+
+## Introduction
+
+The Morpho SDK (`@morpho-org/morpho-sdk`) is the default and recommended SDK for building applications on top of Morpho.
+
+It is the abstraction layer that simplifies the Morpho protocol: it produces ready-to-send `viem` transactions for VaultV2 and Variable Rate - Blue Market (Morpho Blue) on every EVM-compatible chain Morpho is deployed on - plus Fixed Rate - Midnight Market through the same flow - while taking care of the Bundler3 / GeneralAdapter1 plumbing, slippage protection, ERC-20 approvals, Permit / Permit2 signatures, Morpho authorizations, native-token wrapping, Blue-to-Blue refinance, and shared-liquidity reallocations for you.
+
+The SDK also supports refinance: atomically moving a borrower's collateral and debt from one Morpho Blue market to another market that shares the same loan token and collateral token, optionally using shared liquidity through the Vault V2 Blue Public Allocator.
+
+For shared-liquidity implementation, use the Vault V2 Public Allocator guide.
+
+If you are integrating Morpho into a wallet, dApp, partner app, agent, or backend service, this is the SDK you want.
+
+Source: morpho-org/sdks · packages/morpho-sdk · Package: `@morpho-org/morpho-sdk` on npm
+
+## Choose your product
+
+Each Morpho product surface has its own subpage. Find the product you are shipping and go straight there - every subpage reuses the same client Setup and `getRequirements` / `buildTx` flow documented on this page, so adding a second product later is only a new entity factory call.
+
+You are building  | Morpho product  | Go to
+--- | --- | ---
+An earn product: users deposit an asset and accrue yield  | VaultV2 (curated vaults)  | Vault V2
+Variable-rate borrowing against collateral, with no fixed term  | Morpho Blue markets  | Variable Rate - Blue Market
+Fixed-rate, fixed-term lending or borrowing on an onchain orderbook  | Midnight  | Fixed Rate - Midnight Market
+ | `withdraw`  | Direct vault call  | Withdraws an exact asset amount without bundler overhead.
+ | `redeem`  | Direct vault call  | Redeems an exact share amount without bundler overhead.
+ | `inKindRedeem`  | Direct VaultExitBundlesV1 call  | Burns MetaMorpho shares and transfers ordered Morpho Blue supply positions to the user when an asset withdrawal is illiquid.
+ | `migrateToV2`  | Bundler3 via GeneralAdapter1  | Atomically redeems V1 shares and deposits the assets into V2 with share-price bounds on both legs.
+Blue Market  | `supplyCollateral`  | Bundler3 via GeneralAdapter1  | Pulls collateral into Morpho and supports native wrapping when collateral is wNative.
+ | `supply`  | Bundler3 via GeneralAdapter1  | Calls `morphoSupply` with a forward-accrued `maxSharePrice` guard and optional native wrapping.
+ | `withdraw`  | Bundler3 via GeneralAdapter1  | Calls `morphoWithdraw` with `minSharePrice`, Morpho authorization, and optional shared-liquidity reallocations.
+ | `borrow`  | Bundler3 via GeneralAdapter1  | Calls `morphoBorrow` with `minSharePrice`, LLTV-buffer validation, Morpho authorization, and optional reallocations.
+ | `supplyCollateralTakeBorrow`  | MidnightBundles bundle  | Supplies collateral and takes lend-side offers atomically with a deadline.
+ | `supplyCollateral`  | Direct Midnight call  | Supplies configured collateral directly to the selected Midnight market.
+ | `makeLend`  | Midnight mempool submission  | Validates and submits lend-side maker offers after reserve and ratifier requirements are satisfied.
+ | `makeBorrow`  | Midnight mempool submission  | Validates and submits borrow-side maker offers after ratifier requirements are satisfied.
+ | `supplyCollateralMakeBorrow`  | Midnight mempool submission  | Supplies collateral as a requirement, then submits validated borrow-side maker offers.
+ | `redeem`  | Direct Midnight call  | Redeems accrued fixed-rate credit directly to the selected receiver.
+ | `repayWithdrawCollateral`  | MidnightBundles bundle  | Repays debt, withdraws collateral, or does both through one deadline-bound bundle.
+ | `cancelOffer`  | Direct Midnight call  | Fully consumes a maker offer group directly on Midnight.
+
+This page documents the shared client setup and the `getRequirements` / `buildTx` flow; the VaultV2, Blue Market, and fixed-rate Midnight surfaces are each documented on their own subpage. VaultV1 (MetaMorpho) mirrors the VaultV2 vault surface and adds a V1→V2 migration.
+
+## Installation
+    
+    `pnpm add @morpho-org/morpho-sdk@5.8.0 viem@^2.0.0
+    # or
+    yarn add @morpho-org/morpho-sdk@5.8.0 viem@^2.0.0
+    # or
+    npm install @morpho-org/morpho-sdk@5.8.0 viem@^2.0.0`
+
+`viem` is a peer dependency (`^2.0.0`) and must be installed alongside the SDK.
+
+## Setup
+    
+    `import "dotenv/config";
+    import { type Address, createWalletClient, http } from "viem";
+    import { privateKeyToAccount } from "viem/accounts";
+    import { mainnet } from "viem/chains";
+    import { morphoViemExtension } from "@morpho-org/morpho-sdk";
+    
+    // Private-key account: this is the connected account the SDK enforces as the signer.
+    const account = privateKeyToAccount(process.env.PRIVATE_KEY as Address);
+    
+    // This is the account the builders must be told about (see the invariant below).
+    const USER_ADDRESS = account.address;
+    
+    // Extend a viem wallet client with the Morpho namespace. `client.morpho` exposes
+    // four stateless entity factories: `vaultV1`, `vaultV2`, `blue`, and `midnight`.
+--------------------------------------------------------------------------------
+Morpho Governance | Morpho Docs (https://docs.morpho.org/learn/governance/organization/)
+citeturn51search8 [wordlim: 200] Crawled: today; Once a proposal reaches the required majority, the outcome of the vote binds the collective body of MORPHO token-holders, regardless of how any individual token-holder voted or whether they participated in the vote. ...   * Holds the intellectual property of open-source codebases such as morpho-blue, metamorpho-v1.1 or vault-v2 and hosts it on the morpho-org GitHub under a GPL3 license.
+
+Organization
+
+# Morpho Governance
+
+Morpho Protocol governance is intentionally limited in scope. The core smart contract code is immutable. The powers of the governance include:
+
+  * Control over the MORPHO tokens in the governance treasury
+  * Ownership of the upgradeable MORPHO token contract
+  * Activating and adjusting the fee switch(Link:https://github.com/morpho-org/morpho-blue/blob/78a059bd7318418465b06b8da96dc133e31ed3d9/src/Morpho.sol#L122-L145) (capped at a maximum of 25% of interest paid by borrowers) and setting a fee recipient address
+  * Whitelisting new LLTVs and IRMs for use in the Morpho Protocol
+  * Granting licenses of the Morpho Protocol code by updating the ENS record at morpho-blue-core-license-grants.morpho.eth
+  * Ownership of the morpho.eth ENS domain and subdomains, which are used for clearly labelling relevant protocol addresses
+
+The governance discussions happen on the Morpho governance forum. This discussions can lead to proposals that will be voted on.
+
+In practice, the Morpho Association:
+
+  * Supports the development, growth, security and adoption of the Morpho protocol
+  * Hosts a front end to the Morpho protocol to facilitate the access of new users to Morpho: morpho.org
+  * Hosts technical documentation to facilitate the work of new Morpho developers
+  * Holds the intellectual property of open-source codebases such as morpho-blue, metamorpho-v1.1 or vault-v2 and hosts it on the morpho-org GitHub under a GPL3 license.
+
+## Multisig and Addresses
+
+Name  | Address/Details
+--- | ---
+Morpho Contracts  | See the Addresses section
+Morpho governance (Ethereum)  | morpho.eth (5/9 multisig): 0xcBa28b38103307Ec8dA98377ffF9816C164f9AFa
+Morpho governance (Base)  | morpho.eth (5/9 multisig): 0xcBa28b38103307Ec8dA98377ffF9816C164f9AFa
+MORPHO Rewards Multisig (Ethereum)  | 0xF057afeEc22E220f47AD4220871364e9E828b2e9 (3/5)
+MORPHO Rewards Multisig (Base)  | 0x5Eb982bb1E620cC3927E5CF8A5D207e667643297 (3/5)--------------------------------------------------------------------------------
+Formal Verification | Morpho Docs (https://docs.morpho.org/learn/resources/formal-verification/)
+citeturn51search9 [wordlim: 200] Crawled: today; Morpho Blue  | core logic  | Certora & Halmos
+
+Formal Verification
+
+# Formal Verification
+
+## Formal Verification
+
+Morpho follows a multi-faceted approach to security.
+
+Morpho security practices include formal verification, mutation tests, fuzzing, unit testing, and peer reviews that can be found within the respective GitHub repositories. External measures include professional security reviews, contests, and pre/post-deployment bounties.
+
+A whole article was dedicated to the Morpho Security Framework.
+
+The full list of formal verifications is available below.
+
+Formally Proven  | Scope  | Tool Used
+--- | --- | ---
+Morpho token  | ERC20 and delegation logic  | Certora
+Morpho Blue  | core logic  | Certora & Halmos
+Morpho Blue - Pre-liquidation  | core logic  | Certora
+Bundler3  | core logic  | Certora
+--------------------------------------------------------------------------------
+Developers | Morpho Docs (https://docs.morpho.org/developers/)
+citeturn51search10 [wordlim: 200] Crawled: today; The Morpho Subgraphs (`morpho-org/morpho-blue-subgraph`) are deprecated.
+Explore
+
+## Onchain tools
+
+Image: Public Allocator
+
+### Public Allocator
+
+Provide on-demand liquidity to Morpho Markets.
+
+  * +On-demand liquidity
+  * +Vault liquidity management
+Explore
+
+## Community contributions
+
+Image: Oracles
+
+### Oracles
+
+Explore community-contributed oracle implementations and adapters.
+
+  * +Oracle implementations
+  * +Adapters
+Explore
+
+### Liquidations
+
+Explore community-contributed liquidation bot implementations.
+
+  * +Bot implementations
+  * +Liquidation tooling
+Explore
+
+## Build with examples
+
+### Fallback App
+
+Use an emergency interface that keeps the protocol accessible during outages.
+
+  * +Code
+  * +Front end
+Open app
+
+### Lite App
+
+Start with a lightweight implementation designed for minimal resource usage.
+
+  * +Minimal-resource interface
+View code
+
+### Liquidation Bot
+
+Deploy a simple and fast liquidation bot for variable-rate markets.
+
+  * +Variable-rate markets
+View code
+
+### Indexer Template
+
+Index Morpho protocol data with a ready-to-use Ponder template.
+
+  * +Ponder template
+View code
+
+## Deprecated
+
+Subgraphs
+
+The Morpho Subgraphs (`morpho-org/morpho-blue-subgraph`) are deprecated. The repository has not been maintained since March 2025 and the Morpho Association no longer provides official support. The source remains open-source and can be forked or self-deployed, but should no longer be considered an official Morpho data source. For indexed onchain Morpho data, use the Morpho API.
+--------------------------------------------------------------------------------
+Morpho - blue-sdk | Morpho (https://legacy.docs.morpho.org/sdks/blue-sdk/)
+citeturn51search11 [wordlim: 200] Crawled: 6 months ago; This tutorial provides a basic overview of how to use the blue-sdk to interact with Morpho markets and positions.
+
+# Morpho - blue-sdk
+
+## Introduction​
+
+The blue-sdk is the core SDK in the Morpho Stack. It provides the foundational components necessary to interact with Morpho's offchain ecosystem. This SDK is framework-agnostic, making it versatile for various applications. Key features include:
+
+  * Market configuration management
+  * Market data manipulation
+  * User position management
+
+## Installation​
+
+First, install the necessary dependencies:
+    
+    `npm install @morpho-org/blue-sdk @morpho-org/morpho-ts
+    `
+
+## Setup​
+
+Import the necessary modules and set up your environment:
+    
+    `import {
+      MarketConfig,
+      Market,
+      AccrualPosition,
+      Position,
+    } from "@morpho-org/blue-sdk";
+    import { Time } from "@morpho-org/morpho-ts";
+    `
+
+## Basic Usage​
+
+Here's a script that demonstrates the basic usage of the blue-sdk:
+    
+    `
+    const config = new MarketConfig({
+      loanToken: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", 
+
+This tutorial provides a basic overview of how to use the blue-sdk to interact with Morpho markets and positions. For more detailed information, refer to the official Morpho documentation.
+
+## Full Code Example​
+    
+    `import {
+      MarketConfig,
+      Market,
+      AccrualPosition,
+      Position,
+    } from "@morpho-org/blue-sdk";
+    import { Time } from "@morpho-org/morpho-ts";
+    const config = new MarketConfig({
+      loanToken: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", 
+      collateralToken: "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0", 
+      oracle: "0x2a01EB9496094dA03c4E364Def50f5aD1280AD72",
+      irm: "0x870aC11D48B15DB9a138Cf899d20F13F79Ba00BC", 
+      lltv: 94_5000000000000000n, 
+    });
+    console.log("Market Config ID:", config.id);
+    const market = new Market({
+      config,
+      totalSupplyAssets: 1000_000000000000000000n,
+      totalBorrowAssets: 920_000000000000000000n,
+      totalSupplyShares: 1000_000000000000000000000000n,
+      totalBorrowShares: 920_000000000000000000000000n,
+--------------------------------------------------------------------------------
+1.1 Findings Overview (https://docs.spark.fi/assets/Chainsecurity-SparkLend-Deployment-Verification.pdf)
+citeturn51search12 [wordlim: 200] Published: 3.4 years ago; This section summarizes the differences found between the Aave V3 (Ethereum mainnet) and the Spark Lend deployments.
+

@@ -1,0 +1,158 @@
+Protocol Overview - LayerZero
+Documentation Index
+Fetch the complete documentation index at:
+/llms.txt
+Use this file to discover all available pages before exploring further.
+Skip to main content
+LayerZero
+home page
+Search...
+⌘
+K
+Ask Assistant
+⌘
+I
+LayerZero Scan
+LayerZero Scan
+Search...
+Navigation
+Protocol
+Protocol Overview
+Home
+Get Started
+Core Concepts
+Developers
+Contracts & Deployments
+Blog
+GitHub
+Concepts
+What is LayerZero?
+1. Interoperability Foundations
+2. Interface Coupling Problems
+3. LayerZero Protocol Architecture
+4. Verification & Execution Services
+5. Application Design Patterns
+6. Value Transfer Patterns
+Glossary
+General FAQ
+Crosschain Development
+Introduction
+Issue Assets
+Add Features
+Applications
+Omnichain Applications (OApp)
+Omnichain Queries (lzRead)
+Omnichain Tokens (OFT & ONFT)
+Omnichain Composers
+Omnichain Vaults (OVault)
+Stargate Finance
+lzAsset Managed Service
+Protocol
+Protocol Overview
+Omnichain Mesh Network
+LayerZero Endpoint
+LayerZero Endpoint Alt
+Message, Packet, and Payload
+Message Channel Security
+Message Properties
+Message Options
+Message Ordering
+Message Libraries
+Message Library Overview
+Message Send Library
+Message Receive Library
+Message Read Library
+Workers
+Workers Overview
+Decentralized Verifier Networks (DVNs)
+Production DVN Configuration
+Executors
+Transaction Pricing Model
+Technical Reference
+OApp Technical Reference
+OFT Technical Reference
+Troubleshooting
+Debugging Messages
+On this page
+How the Protocol Works
+Security and Flexibility
+Further Reading
+Protocol
+Protocol Overview
+Copy page
+Copy page
+Learn about Protocol Overview in LayerZero V2. Understand the architecture, core concepts, and how it enables omnichain interoperability. Architecture and im…
+Copy page
+Copy page
+To send a crosschain message, a user must write a transaction on both the source and destination blockchains.
+At its core, the LayerZero protocol defines a
+channel
+between a
+sender
+and a
+receiver
+smart contract by leveraging two key components:
+Source and Destination Endpoints:
+Each supported blockchain deploys an immutable, permissionless Endpoint contract. On the source chain, a smart contract calls the Endpoint’s entry function (
+endpoint.send()
+) to send a message. On the destination chain, a smart contract authorizes the Endpoint to act as an exit point to receive and process that same message (
+endpoint.lzReceive()
+).
+Channel Definition:
+A unique messaging channel in LayerZero is defined by four specific components:
+Sender Contract (Source OApp):
+The contract initiating the crosschain communication.
+Source Endpoint ID:
+The identifier for the Endpoint on the source chain.
+Destination Endpoint ID:
+The identifier for the Endpoint on the destination chain.
+Receiver Contract (Destination OApp):
+The contract designated to receive and process the message on the destination chain.
+Within each channel, message ordering is maintained through nonce tracking. This ensures that messages are delivered exactly once.
+For example, if a token bridge on one chain sends a message to its counterpart on another chain, the messages flow through a dedicated channel — distinct from all other application pathways between those chains — preserving the integrity and sequence of communication.
+​
+How the Protocol Works
+Message Dispatch on the Source Chain:
+A smart contract on the source blockchain initiates the process by calling the Endpoint’s entry function. This call includes an arbitrary message payload, details of the destination Endpoint, and the receiver’s contract address. The Endpoint then uses a configurable Message Library to generate a standardized Message Packet based on the sender contract’s configuration.
+Establishing a Secure Channel:
+The generated Message Packet is emitted as an event by the source Endpoint. This packet contains critical information—including source and destination Endpoint IDs, the sender’s and receiver’s addresses, and the message payload—which collectively define a unique messaging channel.
+Verification and Nonce Management:
+On the destination chain, the configured Security Stack (Decentralized Verifier Networks) deliver the corresponding payload hash to the receiver contract’s configured Message Library. Once the threshold of DVN verifications satisfies the
+X of Y of N
+configuration, the Message Packet can be marked as verified and committed to the destination channel, ensuring exactly-once delivery.
+Message Execution on the Destination Chain:
+Finally, a caller (typically an authorized smart contract like the Executor) calls the Endpoint’s exit function
+lzReceive
+to trigger the execution of the verified message. This call delivers the message payload to the receiver contract, which can then execute its defined logic based on the incoming data.
+​
+Security and Flexibility
+Immutable and Permissionless Design:
+The core Endpoint contracts are immutable and permissionless. This ensures that the protocol remains secure and resistant to unauthorized changes, regardless of which virtual machine (VM) or blockchain environment is used.
+VM-Agnostic Integration:
+The LayerZero protocol itself is designed to be VM agnostic. The same fundamental principles apply whether you’re working with Solidity on Ethereum, Rust on Solana, Move on Aptos, or any other supported environment.
+Independent Channel Management:
+Each channel between a given pair of endpoints maintains its own independent message sequence. This means that multiple applications can communicate across the same chain pairs without interference, providing scalability and flexibility in designing crosschain solutions.
+​
+Further Reading
+For more detailed technical insights into the protocol contracts for each specific virtual machine, please refer to the following overviews:
+EVM Technical Overview:
+Learn how LayerZero’s protocol contracts are implemented for EVM-based chains, covering the Endpoint architecture, Message Libraries, and Workers.
+Read the EVM Protocol Overview
+Solana Technical Overview:
+Discover the adaptations made for Solana’s runtime, including crosschain messaging through the LayerZero Endpoint and integrations with Solana’s unique architecture.
+Read the Solana Protocol Overview
+Aptos Technical Overview:
+Explore how LayerZero leverages the Aptos Move language and framework to implement secure and efficient crosschain messaging on Aptos-based networks.
+Read the Aptos Protocol Overview
+Was this page helpful?
+Yes
+No
+lzAsset Managed Service
+Omnichain Mesh Network
+github
+x
+discord
+youtube
+website
+Assistant
+Responses are generated using AI and may contain mistakes.

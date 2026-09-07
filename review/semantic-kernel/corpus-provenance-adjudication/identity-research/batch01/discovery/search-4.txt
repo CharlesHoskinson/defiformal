@@ -1,0 +1,360 @@
+Compound III Documentation (https://docs.compound.finance/)
+citeturn54search0 [wordlim: 200] Crawled: 6 months ago; # Compound III
+
+# Compound III
+
+## Introduction
+
+Compound III is an EVM compatible protocol that enables supplying of crypto assets as collateral in order to borrow the base asset. Accounts can also earn interest by supplying the base asset to the protocol.
+
+The initial deployment of Compound III is on Ethereum and the base asset is USDC.
+
+Please join the #development room in the Compound community Discord server as well as the forums at comp.xyz; Compound Labs and members of the community look forward to helping you build an application on top of Compound III. Your questions help us improve, so please don’t hesitate to ask if you can’t find what you are looking for here.
+
+For documentation of the Compound v2 Protocol, see docs.compound.finance/v2.
+
+### Networks
+
+The network deployment artifacts with contract addresses are available in the Comet repository `deployments/` folder.
+
+The v3 proxy is the only address to be used to interact with a Compound III instance. It is the first address listed in each of the tabs below. To generate the proper Comet Interface ABI (`CometInterface.sol`), compile the Comet project using `yarn compile`.
+
+> Note: The deployment data shown below is sourced from the compound-docs-aggregator repository. Data collected on: 2026-02-28 12:34:36.611 UTC.
+
+Mainnet USDC
+
+Mainnet USDS
+
+Mainnet USDT
+
+Mainnet WBTC
+
+Mainnet WETH
+
+Mainnet wstETH
+
+Optimism USDC
+
+Optimism USDT
+
+Optimism WETH
+
+Unichain USDC
+
+Unichain WETH
+
+Polygon USDC
+
+Polygon USDT
+
+Ronin WETH
+
+Ronin WRON
+
+Mantle USDe
+
+Base AERO
+
+Base USDbC
+
+Base USDC
+
+Base USDS
+
+Base WETH
+
+Arbitrum USDC.e
+
+Arbitrum USDC
+
+Arbitrum USDT
+
+Arbitrum WETH
+
+Linea USDC
+
+Linea WETH
+
+Scroll USDC
+
+Sepolia USDC
+
+Sepolia WETH
+
+Mumbai USDC
+
+Base Sepolia USDC
+
+Base Sepolia WETH
+
+#### Ethereum Mainnet - USDC Base
+
+##### Protocol Contracts
+
+cUSDCv3
+
+0xc3d6…cdc3
+
+cUSDCv3 Implementation
+
+0xA033…3451
+
+cUSDCv3 Ext
+
+0xA70a…AedC
+
+Configurator
+
+0x316f…36E3
+
+Configurator Implementation
+
+0xcFC1…DF4F
+--------------------------------------------------------------------------------
+Compound III Docs | Governance (https://docs.compound.finance/governance/)
+citeturn54search1 [wordlim: 200] Crawled: 6 months ago; Compound III is a decentralized protocol that is governed by holders and delegates of COMP.
+
+# Governance
+
+Compound III is a decentralized protocol that is governed by holders and delegates of COMP. Governance allows the community to propose, vote, and implement changes through the administrative smart contract functions of the Compound III protocol. For more information on the Governor and Timelock see the original governance section.
+
+All instances of Compound III are controlled by the Timelock contract which is the same administrator of the Compound v2 protocol. The governance system has control over each proxy, the Configurator implementation, the Comet factory, and the Comet implementation.
+
+Each time an immutable parameter is set via governance proposal, a new Comet implementation must be deployed by the Comet factory. If the proposal is approved by the community, the proxy will point to the new implementation upon execution.
+
+To set specific protocol parameters in a proposal, the Timelock must call all of the relevant set methods on the Configurator contract, followed by `deployAndUpgradeTo` on the CometProxyAdmin contract.
+
+## Multi-chain Governance
+
+The Compound III protocol can be deployed on any EVM chain. The deployment must have access to on-chain asset prices and governance messages passed from Ethereum Mainnet. The Timelock on Mainnet is the administrator of all community sanctioned instances of Compound III.
+
+Each deployment outside of Mainnet needs to have a Bridge Receiver and Local Timelock contract on its chain. Governance proposals executed on Mainnet must be read by the chain’s bridge and published to the Bridge Receiver. Local Timelocks have an additional delay before Comet admin functions can be called via proposal execution.
+
+Compound III instance initializations are logged on-chain using the ENS text record system. The text record can only be modified by a Governance proposal. It can be viewed at v3-additional-grants.compound-community-licenses.eth when the browser network is set to Ethereum Mainnet.
+
+### Set Comet Factory
+
+This function sets the official contract address of the Comet factory. The only acceptable caller is the Governor.
+
+#### Configurator
+    
+    `function setFactory(address cometProxy, address newFactory) external
+    `
+
+  * `cometProxy`: The address of the Comet proxy to set the configuration for.
+  * `newFactory`: The address of the new Comet contract factory.
+  * `RETURN`: No return, reverts on error.
+
+### Set Governor
+
+This function sets the official contract address of the Compound III protocol Governor for subsequent proposals.
+
+--------------------------------------------------------------------------------
+Compound III Docs | Protocol Rewards (https://docs.compound.finance/protocol-rewards/)
+citeturn54search2 [wordlim: 200] Crawled: 6 months ago; Compound III has a built-in system for tracking rewards for accounts that use the protocol.
+
+  * Protocol Rewards
+  * Reward Accrual Tracking
+  * Get Reward Accrued
+  * Claim Rewards
+
+# Protocol Rewards
+
+Compound III has a built-in system for tracking rewards for accounts that use the protocol. The full history of accrual of rewards are tracked for suppliers and borrowers of the base asset. The rewards can be any ERC-20 token. In order for rewards to accrue to Compound III accounts, the configuration’s `baseMinForRewards` threshold for total supply of the base asset must be met.
+
+### Reward Accrual Tracking
+
+The reward accrual is tracked in the Comet contract and rewards can be claimed by users from an external Comet Rewards contract. Rewards are accounted for with up to 6 decimals of precision.
+
+#### Comet
+    
+    `function baseTrackingAccrued(address account) external view returns (uint64);
+    `
+
+  * `RETURNS`: Returns the amount of reward token accrued based on usage of the base asset within the protocol for the specified account, scaled up by `10 ^ 6`.
+--------------------------------------------------------------------------------
+Compound III Docs | Collateral & Borrowing (https://docs.compound.finance/collateral-and-borrowing/)
+citeturn54search3 [wordlim: 200] Crawled: 6 months ago; There are three separate methods to supply an asset to Compound III.
+
+# Collateral & Borrowing
+
+Users can add collateral assets to their account using the supply function. Collateral can only be added if the market is below its supplyCap, which limits the protocol’s risk exposure to collateral assets.
+
+Each collateral asset increases the user’s borrowing capacity, based on the asset’s borrowCollateralFactor. The borrowing collateral factors are percentages that represent the portion of collateral value that can be borrowed.
+
+For instance, if the borrow collateral factor for WBTC is 85%, an account can borrow up to 85% of the USD value of its supplied WBTC in the base asset. Collateral factors can be fetched using the Get Asset Info By Address function.
+
+The base asset can be borrowed using the withdraw function; the resulting borrow balance must meet the borrowing collateral factor requirements. If a borrowing account subsequently fails to meet the borrow collateral factor requirements, it cannot borrow additional assets until it supplies more collateral, or reduces its borrow balance using the supply function.
+--------------------------------------------------------------------------------
+Compound v2 Documentation (https://docs.compound.finance/v2/)
+citeturn54search4 [wordlim: 200] Crawled: 6 months ago;   * Compound III
+
+Compound v2
+
+  * Compound III
+  * Compound v2
+  * Compound.js
+
+cTokens Comptroller Governance Price Feed Security
+
+  * Getting Started
+  * Guides
+  * Networks
+  * Protocol Math
+
+# Getting Started
+
+## Introduction to Compound v2
+
+The Compound protocol is based on the Compound Whitepaper (2019); the codebase is open-source, and maintained by the community.
+
+The app.compound.finance interface is open-source, and maintained by the community.
+
+Please join the #development room in the Compound community Discord server; Compound Labs and members of the community look forward to helping you build an application on top of Compound. Your questions help us improve, so please don’t hesitate to ask if you can’t find what you are looking for here.
+
+## Guides
+
+  1. Setting up an Ethereum Development Environment
+--------------------------------------------------------------------------------
+EIGEN: The Universal Intersubjective Work Token (https://docs.eigencloud.xyz/assets/files/EIGEN_Token_Whitepaper-0df8e17b7efa052fd2a22e1ade9c6f69.pdf)
+citeturn54search12 [wordlim: 200] Published: 10 months ago; Following is the high-level overview of the V1 version of the intersubjective forking protocol on EigenLayer.
+If an EIGEN1
+holder is not active for the period of Tredeem slots after the malicious attack was executed by operators, then
+the holder will never be able to redeem EIGEN2. Therefore, the baseline design doesn’t offer a solid represen-
+tation. In the next few sections, we will give a high-level outline of an intersubjective forking protocol that
+will progressively achieve this property. We also want the intersubjective protocol to be resilient against mali-
+cious behavior of the security council8 of the staking contract. Towards that end, we will start by describing a
+protocol V1 that guarantees neither solid representation nor is safe against corruption of the Security Council
+but lays the foundation of the eventual protocol that guarantees both these properties. We build V2 on top of
+V1 and it guarantees solid representation. Finally, in V3, we achieve resilience against the malicious behavior
+of the Security Council.
+2.7.2
+V1: Two-token model for the intersubjective staking protocol
+Following is the high-level overview of the V1 version of the intersubjective forking protocol on EigenLayer.
+--------------------------------------------------------------------------------
+Compound III Docs | Interest Rates (https://docs.compound.finance/interest-rates/)
+citeturn54search5 [wordlim: 200] Crawled: 6 months ago; To calculate the Compound III supply APR as a percentage, pass the current utilization to this function, and divide the result by `10 ^ 18` and multiply by the approximate number of seconds in one year and scale up by 100. ... To calculate the Compound III borrow APR as a percentage, pass the current utilization to this function, and divide the result by `10 ^ 18` and multiply by the approximate number of seconds in one year and scale up by 100.
+
+# Interest Rates
+
+Users with a positive balance of the base asset earn interest, denominated in the base asset, based on a supply rate model; users with a negative balance pay interest based on a borrow rate model. These are separate interest rate models, and set by governance.
+
+The supply and borrow interest rates are a function of the utilization rate of the base asset. Each model includes a utilization rate “kink” - above this point the interest rate increases more rapidly. Interest accrues every second using the block timestamp.
+
+Collateral assets do not earn or pay interest.
+
+### Get Supply Rate
+
+This function returns the per second supply rate as the decimal representation of a percentage scaled up by `10 ^ 18`. The formula for producing the supply rate is:
+    
+    `## If the Utilization is less than or equal to the Kink parameter
+    
+    SupplyRate = supplyPerSecondInterestRateBase + supplyPerSecondInterestRateSlopeLow * utilization
+    
+    ## Else
+    
+    SupplyRate = supplyPerSecondInterestRateBase + supplyPerSecondInterestRateSlopeLow * supplyKink + supplyPerSecondInterestRateSlopeHigh * (utilization - supplyKink)
+--------------------------------------------------------------------------------
+Compound III Docs | Account Management (https://docs.compound.finance/account-management/)
+citeturn54search6 [wordlim: 200] Crawled: 6 months ago; In addition to self-management, Compound III accounts can enable other addresses to have write permissions for their account.
+
+# Account Management
+
+In addition to self-management, Compound III accounts can enable other addresses to have write permissions for their account. Account managers can withdraw or transfer collateral within the protocol on behalf of another account. This is possible only after an account has enabled permissions by using the allow function.
+
+### Allow
+
+Allow or disallow another address to withdraw or transfer on behalf of the sender’s address.
+
+#### Comet
+    
+    `function allow(address manager, bool isAllowed)
+    `
+
+  * `msg.sender`: The address of an account to allow or disallow a manager for.
+  * `manager`: The address of an account that becomes or will no longer be the manager of the owner.
+  * `isAllowed`: True to add the manager and false to remove the manager.
+  * `RETURN`: No return, reverts on error.
+
+#### Solidity
+    
+    `Comet comet = Comet(0xCometAddress);
+    comet.allow(0xmanager, true);
+    `
+
+#### Ethers.js v5.x
+    
+    `const comet = new ethers.Contract(contractAddress, abiJson, provider);
+--------------------------------------------------------------------------------
+Compound.js Docs | Comet (https://docs.compound.finance/compound-js/comet/)
+citeturn54search7 [wordlim: 200] Crawled: 6 months ago; These methods facilitate interactions with Compound III.
+
+# Compound.js
+
+## Comet Methods
+
+These methods facilitate interactions with Compound III.
+
+## Compound III Supply
+
+Supplies the user’s Ethereum asset to Compound Comet.
+
+  * `from` (string) A string of the address that the supplied asset is supplied from. This allows approved account managers to supply on behalf of an account that has already approved their ERC-20 asset to be transferred to the Comet contract. To supply on behalf of the sender, this should be set to the sender’s address.
+  * `dst` (string) A string of the address that the supplied asset is credited to within Comet. To supply to the sender’s account, this should be set to the sender’s address.
+  * `asset` (string) A string of the name of the asset to supply.
+  * `amount` (number | string | BigNumber) A string, number, or BigNumber object of the amount of an asset to supply. Use the `mantissa` boolean in the `options` parameter to indicate if this value is scaled up (so there are no decimals) or in its natural scale.
+  * `noApprove` (boolean) Explicitly prevent this method from attempting an ERC-20 `approve` transaction prior to sending the `supply` transaction.
+  * `[options]` (CallOptions) Call options and Ethers.js overrides for the transaction.
+  * `RETURN` (object) Returns an Ethers.js transaction object of the buy transaction.
+    
+    `const compound = new Compound(window.ethereum);
+    const comet = compound.comet.MAINNET_USDC();
+    
+    (async function() {
+    
+      const me = '0xRecipient';
+    
+      console.log('Buying collateral...');
+      const trx = await comet.buyCollateral(
+        Compound.WBTC,
+        1,
+        10000
+      );
+      console.log('Ethers.js transaction object', trx);
+      await trx.wait(1);
+    
+    })().catch(console.error);
+    `
+
+## Compound III Get Price
+
+Gets the price of the asset that is passed to it in USD as an unsigned integer, scaled up by 10 ^ 8.
+
+  * `asset` (string) A string of the symbol of the asset.
+  * `RETURN` (string) Returns the price of the asset that is passed to it in USD as an unsigned integer, scaled up by 10 ^ 8.
+    
+    `const compound = new Compound(window.ethereum);
+    const comet = compound.comet.MAINNET_USDC();
+    
+    (async function () {
+      const price = await comet.getPrice(Compound.WBTC);
+      console.log('Price of WBTC', price);
+    })().catch(console.error);
+    `
+
+--------------------------------------------------------------------------------
+Compound III Docs | Liquidation (https://docs.compound.finance/liquidation/)
+citeturn54search8 [wordlim: 200] Crawled: 6 months ago; The discount of the asset is derived from the `StoreFrontPriceFactor` and the asset’s `LiquidationFactor` using the following formula.
+--------------------------------------------------------------------------------
+Compound III Docs | Helper Functions (https://docs.compound.finance/helper-functions/)
+citeturn54search9 [wordlim: 200] Crawled: 6 months ago; This function gets the maximum number of assets that can be simultaneously supported by Compound III.
+--------------------------------------------------------------------------------
+Compound.js SDK Documentation (https://docs.compound.finance/compound-js/)
+citeturn54search10 [wordlim: 200] Crawled: 6 months ago; Compound III (Comet) Object Initialization.
+--------------------------------------------------------------------------------
+Compound.js Docs | Price Feed (v2) (https://docs.compound.finance/compound-js/price-feed/)
+citeturn54search11 [wordlim: 200] Crawled: 6 months ago; For Compound III price feed methods, see the Comet section.
+--------------------------------------------------------------------------------
+EigenAI: Deterministic Inference, Verifiable Results (https://docs.eigencloud.xyz/assets/files/EigenAI_Whitepaper-f1c89ddb88c1e28ccadff250523a273c.pdf)
+citeturn54search13 [wordlim: 200] Published: 6 months ago; EigenVerify Overview (Objective Dis- ... preserving verification, and EigenLayer’s crypto-
+

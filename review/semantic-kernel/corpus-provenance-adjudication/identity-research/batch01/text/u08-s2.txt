@@ -1,0 +1,102 @@
+SparkLend is Spark's permissionless money market for supplying assets, borrowing against collateral, and managing lending positions. It has always been operated conservatively relative to peers, with a narrow collateral set, multi-oracle pricing, strict rate limits, and first-loss capital.
+Guides
+Use these guides for step-by-step SparkLend workflows:
+Overview of Markets
+Supplying Assets
+Borrowing Assets
+Borrow Stablecoins
+Adjusting Your Position
+Repaying Your Loan
+Liquidations
+E-Mode
+Isolation Mode
+Oracles
+Risk Architecture
+SparkLend's risk pillars exist in isolation. They are designed to stack, so that a failure in any single component (oracle, issuer, liquidator, market liquidity) does not cascade into bad debt.
+Restricted Collateral Set
+SparkLend lists a deliberately short set of assets. ETH e-mode collateral is limited to wstETH and rETH. BTC e-mode has been fully removed: the deprecation was publicly noticed on the Sky forum, executed in the June 2026 spell, with remaining positions force-liquidated on June 8, 2026. The removal was done through a publicly telegraphed timeline rather than an immediate parameter flip.
+Supply and Borrow Caps
+Each listed asset has per-market supply and borrow caps configured by Sky Governance. Supply caps bound total exposure to any single asset, mitigating infinite-mint and oracle-manipulation risk on listed collateral. Borrow caps modulate how much of an asset can be drawn out, capping insolvency risk under stress. Caps integrate with the
+Cap Automator
+so they scale with on-chain market depth rather than waiting on each governance cycle.
+Minimal Rehypothecation
+Collateral supplied to SparkLend reserves stays in the reserve. It is not redeployed into external strategies.
+Rate Limits
+Every cross-module flow into and out of SparkLend is rate-limited at the smart-contract level: deposits, withdrawals, cross-chain bridging, and PSM swaps each have configured rate limits. On top of that, Spark's allocation system enforces per-market debt ceilings and inventory min/max bands. A single depositor or a single adverse event cannot drain the protocol in a single block, and rate limits cap the maximum capital at risk on any single route per unit of time.
+Three-Oracle Median
+Pricing is aggregated using a three-oracle median that pulls data from RedStone, Chainlink, and Chronicle. When all three return valid, non-stale values, the median is used. When two are valid, their average is used. A single-feed fallback also exists. The outcome is that a compromised or faulty single oracle does not drive SparkLend prices.
+Killswitch Oracle for Pegged Assets
+For collateral that trades against a hardcoded or exchange-rate price (wstETH, rETH, weETH, cbBTC, WBTC, LBTC), a peg-ratio oracle continuously compares the asset's market price to its underlying. When the deviation breaches a per-asset threshold, the killswitch halts new borrowing on SparkLend, preventing users from posting distressed collateral at a stale "face value" price and walking out with healthy debt.
+Programmatic Liquidity Injection
+SparkLend's liquidity buffer is not static. The Spark Liquidity Layer automatically moves USDS, USDC, and USDT into and out of SparkLend based on target borrow rates, utilization, and available inventory at other venues. If SparkLend utilization runs high, the SLL tops up idle liquidity to allow withdrawals and liquidations to clear. If a venue elsewhere offers better risk-adjusted yield, idle capital rotates there. This is what it means for Spark to be the largest depositor in its own market: liquidity responds to demand rather than being rationed by utilization alone.
+USDC via USDS Routing
+A periphery integration can offer USDC delivery from a USDS-denominated position by sourcing USDS and swapping it 1:1 through Sky's mainnet LitePSM wrapper. In that pattern, the debt or source asset remains USDS while the wallet receives USDC. Verify the active SparkLend frontend and periphery contracts before relying on this as a specific transaction path. See the
+LitePSM developer documentation
+for the underlying Sky contract mechanics.
+Variable Liquidation Close Factor
+If a position's Health Factor drops below 1 but stays above 0.95, up to 50% of the position's debt can be covered in a liquidation call. At or below 0.95, up to 100% can be covered. The collateral transferred depends on the debt covered, oracle prices, and the applicable liquidation bonus. See
+Liquidations
+for the full mechanics.
+Granular Borrowing Power Control
+The borrowing power of any asset can be reduced down to 0% without impacting existing borrowers. This lets governance phase out a collateral type or tighten exposure on a live market without forced liquidations as the first response. Liquidating existing positions remains available where the situation requires it.
+Where to Verify
+Item
+Address or source
+Live market parameters
+Spark App
+Supply and borrow caps mechanism
+Supply & Borrow Caps
+Oracle configuration
+Oracles
+Liquidations
+Liquidations
+Cap Automator audits
+SparkLend Cap Automator
+SparkLend audits
+SparkLend Audits
+Core contract addresses
+Spark Address Registry
+Source code
+Spark GitHub
+Atlas Sources
+The following Sky Atlas sections govern the controls described above:
+SparkLend specific:
+A.6.1.1.1.3.2.1
+— SparkLend (parameters and operational processes)
+A.6.1.1.1.3.2.1.1.1
+— SparkLend Risk Parameters Definitions (LTV, Liquidation Threshold, Liquidation Bonus, Reserve Factor, Supply Cap, Borrow Cap, Interest Rate Model, Reserve State, E-Mode, Isolation Mode, Siloed Borrowing, Flash Loans)
+A.6.1.1.1.3.2.1.1.2
+— SparkLend Risk Parameters Current Configuration (per-asset values)
+A.6.1.1.1.3.2.1.1.3
+— SparkLend Cap Automators
+A.6.1.1.1.2.6.1.1.2.1.1
+— SparkLend Mainnet Instances Directory
+A.6.1.1.1.2.6.1.3.1.1
+— SparkLend Instance Configuration Documents
+Cross-cutting:
+A.6.1.1.1
+— Spark (Prime Agent definition)
+A.6.1.1.1.2.6.1
+— Allocation System Primitive
+A.6.1.1.1.2.2.2
+— Spark Root Edit Primitive
+A.3.3
+— Asset Liability Management
+FAQ
+For step-by-step questions on supplying, borrowing, repaying, and liquidations, see the
+SparkLend Guides
+— in particular the
+Supplying Assets FAQ
+and
+Borrowing Assets FAQ
+.
+On which networks is SparkLend supported?
+SparkLend is currently supported on Ethereum.
+What is the cost of interacting with SparkLend?
+Interacting with the protocol requires onchain transactions, so users pay the standard transaction fees of the network they are on. Fees depend on network conditions and transaction complexity.
+What is the difference between transparent and variable rate?
+Transparent rates act as a fixed rate in the short-term, but can change based on Sky Governance. The variable rate is set by supply and demand within SparkLend and changes continuously.
+What is the health factor?
+The health factor is the ratio of the value of your collateral, multiplied by the liquidation threshold, to the value of your debt. A higher health factor means your position is further from liquidation. If the health factor falls below 1, the position becomes liquidatable. See
+Liquidations
+for how to manage and avoid this.

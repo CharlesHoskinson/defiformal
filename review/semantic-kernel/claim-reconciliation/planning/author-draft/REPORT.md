@@ -1,0 +1,20 @@
+# Historical claim reconciliation author draft
+
+The draft is complete and strictly valid as OpenSpec planning material. It is **not an accepted planning gate**, an applied correction, a fresh Lean result or a new numerical execution.
+
+- Change: `openspec/changes/historical-claim-reconciliation/`.
+- Scope: four capabilities,18 requirements,45 scenarios,27 unchecked implementation tasks and22 planned controls.
+- Claim identity: all18 CL findings and63 original excerpts are retained. The ten adopted register rows map to17 of those findings; CL09 is an additional preparation finding, explicitly retained rather than invented as an eleventh historical row.
+- Context revision: `5dc7abbf520ad01ed7a1681d70b492855080a16d`. The claim preparation and actual m5 execution remain bound to their measured/source revision `4d42600082d4213d34ac5ab4b0dfc3eefde23d5e`.
+- Actual validation:447 passing static source/plan/binding checks and `openspec validate historical-claim-reconciliation --strict`, exit0. The first author-check attempt failed on an overly strong ten-row coverage assertion; `development-attempts.json` preserves it and the exact correction.
+- Preservation: all88 frozen Sprint10 inputs and all93 official corpus inputs are unchanged,176 unique files in their union. HEAD is unchanged. Only the three authorized new output roots were written by this task.
+
+The chosen approach joins three separately reviewable deliverables: source-specific claim/prose reconciliation; universal Lean proofs for the two exact unary graphs; and strict reporting of the unchanged bounded JavaScript experiment. The new mathematical result concerns a literal58-symbol instance and an independently defined finite saturation executor. It instantiates the existing generic intrinsic extreme-point/composition results under actual checked graph premises. Fixed-source extraction and reviewed JavaScript algorithm translation remain explicit trust boundaries; no verified Node/parser or full-admissibility correspondence is claimed.
+
+The draft preserves the sound stronger route for CL06: fully admissible A and B plus a purely negative forbidden subset of their union rule out any admissible common upper bound. Without such a full-instance argument, the correction only states failure of union closure. CL17 likewise requires a full-relation majority counterexample or analytic proof, rather than width statistics. Neither witness search nor a repaired Delta operator is silently added to this package. Historical theorem/proof environments remain unchanged; a necessary statement revision belongs to separate reviewed paper work.
+
+S9 is accepted. S10/M3/M4 remain pending separate operational packages. Corpus adjudication owns identity/source judgments and has not conferred factual acceptance on this author's research packets. All12 proposed evaluation cases remain development-exposed; this plan selects no replacements and awards no holdout credit for eager file reads. Cost proofs, full paper rewriting, deployments, runtime adapters and evaluation remain outside acceptance.
+
+The author is GPT-6 through the stock Codex harness and authored parts of the historical audit and corpus research. This is now normative-plan authorship, so this author cannot serve as its nonauthor planning reviewer. Provider telemetry is unavailable. No native reviewer, Foreman, old generator, numerical suite, Lean build or implementation was invoked. A read-only existing Graphify query returned neighboring historical solver nodes with a truncated600-token display; no theorem claim relies on it and no model-usage telemetry was provided.
+
+Before implementation, the parent must freeze the exact draft/source context and obtain nonauthor GPT-6 plus native Fable5.1 medium on the same bundle. Final substantive work requires actual native Grok/Fable reviews and scoped delivery evidence. OpenSpec's artifact-complete status only means files exist; all27 implementation tasks and every acceptance-evidence slot remain pending.

@@ -1,0 +1,751 @@
+Risk Disclosure | Liquity Docs (https://docs.liquity.org/v2-documentation/risk-disclosure)
+citeturn52search0 [wordlim: 200] Crawled: 5 months ago;   * Deployment chain: Ethereum Mainnet ... Smart Contract Risks ... To support the stability of BOLD, Liquity V2 uses borrower-paid interest to create demand and facilitate liquidations. ... To prevent BOLD from falling below $1, Liquity V2 includes a redemption mechanism.
+
+# Risk Disclosure
+
+### 
+
+Dependencies
+
+  * Oracles: Chainlink for collateral pricing
+
+  * Collateral assets: wstETH and rETH backing for BOLD
+
+### 
+
+Chain Risk
+
+  * Deployment chain: Ethereum Mainnet
+
+  * Cross-chain: none (native to Mainnet and no cross-chain risks)
+
+  * Bridging: CCIP through Chainlink
+
+While BOLD itself is native to Ethereum, it may eventually be supported by Chainlink’s Cross-Chain Interoperability Protocol (CCIP) for bridging. Once BOLD gets bridged to to other chains through CCIP, it will inherit security from Chainlink's existing network of decentralized nodes on the bridged Layer 2s.
+
+### 
+
+Smart Contract Risks
+
+Liquity V2 has no manual pause, freeze, or shutdown functions. However, the protocol is capable of initiating an automatic shutdown of a borrow market in case of an extreme price drop of the respective collateral asset leading to insufficient collateralization, or an oracle failure of that particular collateral asset.
+
+  * See our audits for more information: DeDaub and ChainSecurity
+
+  * Pause function: none
+
+  * Protocol freeze function: none
+
+  * Protocol shutdown function: Yes, it would be algorithmically targeted towards a specific branch
+
+  * BOLD whitelist or blacklist: none
+
+  * BOLD transfer freeze functionality: none
+
+### 
+
+Collateral Risk
+
+  * Collaterals assets accepted: WETH, wstETH, and rETH only
+
+  * Collaterals assets accepted within the protocol are non-upgradeable and cannot be changed
+
+What’s the shared-collateral risks? Each supported collateral asset constitutes an individual borrow market with its own group of borrowers and a separate Stability Pool backing their debts. This separation impacts user groups differently:
+
+  * Borrowers: Collateral risk is limited to the collateral asset held by the borrower. A borrower isn’t negatively affected by a failure of another collateral asset.
+
+  * BOLD Holders: As a multi-collateral stablecoin, BOLD is reliant on effective liquidations of undercollateralized loans in every borrow market to remain overcollateralized. Holders are subject to the risks of all supported collateral assets.
+### 
+
+Liquidity Risk
+
+Liquity V2 operates three distinct borrow markets, each backed by its own collateral types (ETH, wstETH, and rETH). Each market features separate stability pools, user-set interest rates, and individual Loan-to-Value (LTV) ratios tailored to the specific asset. This market structure allows for precise risk management, ensuring that liquidations and redistributions occur independently within each collateral market.
+
+To support the stability of BOLD, Liquity V2 uses borrower-paid interest to create demand and facilitate liquidations. Borrower interest is directed into two primary venues:
+
+  1. Stability Pool (75%): Each borrow market is linked to a corresponding Stability Pool, where 75% of the interest paid by borrowers is deposited. BOLD depositors in the Stability Pool earn a portion of this interest, along with liquidation gains in the respective collateral asset. This structure helps maintain liquidity and solvency in each borrow market by absorbing liquidation events.
+
+Potential risk: There's no guarantee that the liquidation gains are actually gains. In the worst case, e.g. when the oracle lags behind or an LST flash-crashes within a few blocks, the gains could turn into losses.
+
+  1. Protocol-Incentivized Liquidity (25%): The remaining 25% of interest goes to liquidity providers (LPs) as incentives, with the allocation split determined through weekly gauge voting. This incentivizes liquidity on decentralized exchanges, enhancing overall protocol stability and BOLD liquidity.
+
+Redemption mechanism and risk for BOLD Stability
+
+To prevent BOLD from falling below $1, Liquity V2 includes a redemption mechanism. Any BOLD holder can redeem 1 BOLD for $1 worth of collateral, ensuring that BOLD remains pegged to its intended value. Redemptions are prioritized by the lowest interest rate Troves first, allowing borrowers to maintain their positions while keeping the system balanced. Importantly, redemptions do not result in a net loss for borrowers but ensure the peg remains intact.
+
+Liquidation Process
+
+In the event of liquidations, the system first looks to the Stability Pool associated with the liquidated collateral type. --------------------------------------------------------------------------------
+Technical Docs & Audits | Liquity Docs (https://docs.liquity.org/v2-documentation/technical-docs-and-audits)
+citeturn52search1 [wordlim: 200] Crawled: 5 months ago; A technical system summary including contract descriptions, function descriptions, and more is available in the V2 developer README. ... Coinspect - Bold Core Smart Contract Audit, December 2024 ... Recon - Liquity Security Review, October 2024
+
+# Technical Docs & Audits
+
+A technical system summary including contract descriptions, function descriptions, and more is available in the V2 developer README.
+
+### 
+
+Technical papers
+
+Whitepaper
+
+
+Code base (Github)
+
+Bold Core Governance
+
+
+Audit reports
+
+ChainSecurity - Code Assessment, several audits between Aug 2024 and May 2025
+
+Dedaub - Core Protocol Audit Report I, August 2024
+
+Dedaub - Core Protocol Audit Report II, November 2024
+
+Certora - Formal Verification, December 2024
+
+Coinspect - Bold Core Smart Contract Audit, December 2024
+
+Coinspect - Bold Governance Audit, January 2025
+
+ChainSecurity - Governance Smart Contract Audit, January 2025
+
+Dedaub - Governance Audit 1, August 2024
+
+Dedaub - Governance Audit 2, November 2024
+
+Dedaub - Governance Audit 3, January 2025
+
+Recon - Liquity Security Review, October 2024
+
+Dedaub - Cantina fixes review, May 2025
+
+Cantina Competiton, March-April 2025
+
+
+Economic modelling and simulation
+
+Chaos Labs: Mechanism Design Review, October 2024
+
+
+Contract addresses
+
+#### 
+
+BOLD Token
+
+Contract
+
+Address
+
+BOLD Mainnet
+
+0x6440f144b7e50D6a8439336510312d2F54beB01D
+
+BOLD Base
+
+0x03569CC076654F82679C4BA2124D64774781B01D
+
+BOLD Arbitrum
+
+0x03569CC076654F82679C4BA2124D64774781B01D
+
+BOLD HyperEVM
+
+0x84533b1512A3A23F0c9668D88FDf86FEffdbb11A
+
+BOLD Optimism
+
+0x03569CC076654F82679C4BA2124D64774781B01D
+
+BOLD Scroll
+
+0x03569CC076654F82679C4BA2124D64774781B01D
+
+BOLD Avalanche
+
+0x03569CC076654F82679C4BA2124D64774781B01D
+
+BOLD Sonic
+
+0xf05a207442f14E446b0e32b12D2043bfc68Cb1C9
+
+BOLD Berachain
+
+0xf05a207442f14E446b0e32b12D2043bfc68Cb1C9
+
+BOLD Swell
+
+0x1a17b22d762c8cf2ca0f07e2b3c32e7481bb0d8c
+
+#### 
+
+Shared contracts
+
+Contract
+
+Address
+
+collateralRegistry
+
+0xf949982b91c8c61e952b3ba942cbbfaef5386684
+
+boldToken
+
+0x6440f144b7e50d6a8439336510312d2f54beb01d
+
+hintHelpers
+
+0xf0cae19c96e572234398d6665cc1147a16cbe657
+
+multiTroveGetter
+
+0xfa61db085510c64b83056db3a7acf3b6f631d235
+
+exchangeHelpers
+
+0x2f60bab0072abec7058017f48d7256ec288c8686
+
+#### 
+
+ETH branch
+
+Contract
+
+Address
+
+collToken
+
+0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2
+
+addressesRegistry
+
+0x20f7c9ad66983f6523a0881d0f82406541417526
+
+activePool
+
+0xeb5a8c825582965f1d84606e078620a84ab16afe
+
+borrowerOperations
+
+0x372abd1810eaf23cb9d941bbe7596dfb2c46bc65
+
+collSurplusPool
+
+0xedbe2509e502c0320d2e7f8b6746a49b4b50e2bf
+
+defaultPool
+
+0xd4558240d50c2e219a21c9d25afd513bb6e5b1a0
+
+sortedTroves
+
+0xa25269e41bd072513849f2e64ad221e84f3063f4
+
+stabilityPool
+
+0x5721cbbd64fc7ae3ef44a0a3f9a790a9264cf9bf
+
+troveManager
+
+0x7bcb64b2c9206a5b699ed43363f6f98d4776cf5a
+
+troveNFT
+
+0x1a0fc0b843afd9140267d25d4e575cb37a838013
+
+metadataNFT
+
+0x9b36c3b16299d68c79f174df7e728e35b6af4a12
+
+priceFeed
+
+0xcc5f8102eb670c89a4a3c567c13851260303c24f
+
+gasPool
+
+0x7b9ab3de4036cae51f1fa4ec0a2c2fd606bcf921
+
+interestRouter
+
+0x807def5e7d057df05c796f4bc75c3fe82bd6eee1
+
+wethZapper
+
+0x7022a4f4a2b9f0c30a5eb0b0073a8bb4c8e70c1f
+
+gasCompZapper
+
+0x0000000000000000000000000000000000000000
+
+leverageZapper
+
+0xdccbd7a365aee086aa3b4ede8afe895b20770ae3
+
+--------------------------------------------------------------------------------
+Redemptions and Delegation | Liquity Docs (https://docs.liquity.org/v2-faq/redemptions-and-delegation)
+citeturn52search2 [wordlim: 200] Crawled: 5 months ago; If the redeemed amount exceeds the debt of an affected Trove, it doesn’t get closed as in Liquity V1, but remains open with 0 BOLD debt and the remaining collateral. ... Step 2 You can now redeem BOLD using the `CollateralRegistry` contract:
+
+# Redemptions and Delegation
+
+### 
+
+What are redemptions?
+
+Redemptions serve the crucial purpose of keeping BOLD pegged to the US Dollar, creating a price floor around $1. They do this in a decentralized way without reliance on centralized assets or 3rd parties.
+
+A redemption is essentially swapping BOLD for ETH/LST at face value, as if 1 BOLD is exactly worth $1. Redemptions can be initiated by anyone, but are only profitable when BOLD <$1.
+
+The redeemer sends BOLD to the protocol and in return gets a mix of WETH, wstETH and rETH (minus the redemption fee). The redeemed amount is split among the different collateral assets based on their current Stability Pool backing (see link for more info).
+
+Image
+
+Redemptions start from the borrower paying the least interest.
+
+Read more about how to protect yourself from redemptions and what happens if you are redeemed.
+
+You can also watch this 9 min video on redemptions.
+
+### 
+
+When can redemptions occur?
+### 
+
+How do redemptions work using three collateral assets?
+
+In contrast to LUSD, BOLD is backed by a multitude of collaterals. Instead of letting the redeemer freely choose the collateral to redeem, Liquity V2 optimizes the process for economic safety. Redemptions are thus serviced through a collateral mix in a way that enhances the overall backing of BOLD.
+
+The process starts with the Troves paying the lowest interest rates in each collateral market and continues until the full amount of BOLD is exchanged for collateral assets. Redemptions can be partial or full, as illustrated below.
+
+In this example, the rETH market shows a full redemption of the first Trove and a partial redemption of the second. The wstETH and ETH markets have one partial and two full redemptions, respectively
+
+Image
+
+Example redemption across all three collateral markets
+
+### 
+
+How is the collateral split determined?
+
+The split is dynamic, optimizing for the economic safety of the system. The logic is straightforward: the riskier a collateral is, the more redemption volume is directed to that market. ### 
+
+How to redeem BOLD for collateral (mix of ETH, rETH and wstETH) using Etherscan
+
+Step 1
+
+To redeem BOLD you first have to give the CollateralRegistry contract an approval to use your BOLD using the approve() function of the BOLD token contract.
+
+For that matter, go to Etherscan using the following link https://etherscan.io/token/0xb01dd87b29d187f3e3a4bf6cdaebfb97f3d9ab98#writeContract
+
+After connecting your wallet through `“Connect to Web3”`, set spender to `0xd99dE73b95236F69A559117ECD6F519Af780F3f7`and the amount to be at least as high as the amount you wish to redeem, adding 18 zeros.
+
+Example for 1000 BOLD:
+
+Image
+
+Step 2 You can now redeem BOLD using the `CollateralRegistry` contract:
+
+https://etherscan.io/address/0xd99de73b95236f69a559117ecd6f519af780f3f7#writeContract Simply input the BOLD amount to redeem, the redemption fee percentage you are willing to accept and the maximum number of list iterations per collateral (limits the number of troves whose debt can be repaid on each branch).
+--------------------------------------------------------------------------------
+General | Liquity Docs (https://docs.liquity.org/v2-faq)
+citeturn52search3 [wordlim: 200] Crawled: 5 months ago; Liquity v2 is a decentralized borrowing protocol that lets users deposit ETH or LSTs as collateral, and mint the stablecoin BOLD. ... Governance has no other functions or powers, as Liquity V2’s smart contracts are immutable and not upgradeable.
+
+# General
+
+### 
+
+What is Liquity v2?
+
+Liquity v2 is a decentralized borrowing protocol that lets users deposit ETH or LSTs as collateral, and mint the stablecoin BOLD.
+
+There are 4 main use-cases:
+
+  * Borrow BOLD
+
+  * 1-click multiply (staked) ETH
+
+  * Earn yield by depositing BOLD
+
+  * Stake LQTY to direct PIL and earn
+
+### 
+
+What are the differences to V1?
+
+While there are plenty of changes coming with V2, it will keep the things V1 is known for:
+
+  * Immutability
+
+  * Decentralization
+
+  * Rigorous security
+
+  * No TradFi exposure
+
+However, V2 is innovating on multiple fronts:
+
+  * User-set interest rates - more control over your borrowing cost
+
+  * New collateral types - ETH and LSTs
+
+  * Improved redemption mechanism
+
+  * Protocol-incentivized liquidity (PIL)
+
+  * More attractive short-term loans
+
+  * Improved capital efficiency
+
+  * Multiple Troves per address (and transferable)
+
+  * No Recovery Mode
+
+  * Looping/one-click multiply
+
+### 
+
+What happens to Liquity v1 and LUSD?
+
+Liquity V1 is here to stay: it is battle-tested, and LUSD is the stablecoin of choice for users who prefer a pure ETH backing.
+
+### 
+
+Does Liquity V2 have governance?
+
+Liquity V2 is subject to minimal governance which is solely tasked with distributing Protocol Liquidity Incentives (PIL), directing 25% of the protocol's revenue to external initiatives.
+
+Governance has no other functions or powers, as Liquity V2’s smart contracts are immutable and not upgradeable.
+
+
+Last updated 2 months ago--------------------------------------------------------------------------------
+What is the new version of USDD? | USDD Docs (https://docs.usdd.io/)
+citeturn52search4 [wordlim: 200] Crawled: 5 months ago; Note: Throughout this document, all references to "USDD" specifically refer to the new version of USDD.
+
+# What is the new version of USDD?
+
+The new version of USDD is a fully decentralized stablecoin pegged to the US dollar, backed by crypto collateral. Unlike traditional stablecoins, it operates without a central authority, ensuring that its value remains stable while being governed by the community. USDD provides users with a secure and transparent digital asset, designed to maintain its 1:1 peg to the US dollar through a system of over-collateralization.
+
+USDD is tamper-proof and cannot be frozen, giving users full control over their assets. With its decentralized nature, USDD avoids the risks of centralization and provides a trustless solution for transactions within the decentralized finance (DeFi) ecosystem. It aims to bridge the gap between traditional finance and the growing world of DeFi, offering a stable and reliable currency for users to transact and invest.
+
+Note: Throughout this document, all references to "USDD" specifically refer to the new version of USDD.
+
+Last updated 15 days ago--------------------------------------------------------------------------------
+Legacy V2 and Testnet | Docs V2 🇷🇺 | Liquity Docs (https://docs.liquity.org/ru/v2-documentation/technical-resources)
+citeturn52search5 [wordlim: 200] Crawled: 5 months ago; Here you can find the contract addresses for the V2 legacy deployment and the Sepolia testnet. ... BOLD Token ... You can run Liquity V2 on testnet here: https://liquity2-sepolia.vercel.app/
+
+# Legacy V2 and Testnet
+
+Here you can find the contract addresses for the V2 legacy deployment and the Sepolia testnet.
+
+#### 
+
+BOLD Token
+
+Contract
+
+Address
+
+boldToken Mainnet
+
+0xb01dd87B29d187F3E3a4Bf6cdAebfb97F3D9aB98
+
+boldToken Base
+
+0x087C440F251Ff6Cfe62B86DdE1bE558B95b4bb9b
+
+boldToken Arbitrum
+
+0x087C440F251Ff6Cfe62B86DdE1bE558B95b4bb9b
+
+boldToken Optimism
+
+0x087C440F251Ff6Cfe62B86DdE1bE558B95b4bb9b
+
+boldToken Scroll
+
+0x087C440F251Ff6Cfe62B86DdE1bE558B95b4bb9b
+
+boldToken Avalanche
+
+0x087C440F251Ff6Cfe62B86DdE1bE558B95b4bb9b
+
+#### 
+
+Shared contracts
+
+Contract
+
+Address
+
+collateralRegistry
+
+0xd99de73b95236f69a559117ecd6f519af780f3f7
+
+hintHelpers
+
+0xe3bb97ee79ac4bdfc0c30a95ad82c243c9913ada
+
+multiTroveGetter
+
+0xa4a99f8332527a799ac46f616942dbd0d270fc41
+
+exchangeHelpers
+
+0x28c9decfacee0e796409b4b63eb263610e5e38dc
+--------------------------------------------------------------------------------
+Official Liquity V2 Documentation | Liquity Docs (https://docs.liquity.org/)
+citeturn52search6 [wordlim: 200] Crawled: 5 months ago; # Official Liquity V2 Documentation ... It enhances it in several ways to offer the best borrowing experience, a highly resilient Ethereum-native stablecoin (BOLD), and sustainable on-chain yield.
+
+# Official Liquity V2 Documentation
+
+Image
+
+Liquity V2 is a decentralized borrowing and stablecoin protocol that builds on the success of V1.
+
+It enhances it in several ways to offer the best borrowing experience, a highly resilient Ethereum-native stablecoin (BOLD), and sustainable on-chain yield.
+
+
+Last updated 3 months ago--------------------------------------------------------------------------------
+Borrowing and Multiply | Liquity Docs (https://docs.liquity.org/v2-faq/borrowing-and-liquidations)
+citeturn52search7 [wordlim: 200] Crawled: 5 months ago; Pioneering user-set interest rates, Liquity V2 allows users to borrow the stablecoin BOLD on their own terms. ... It automatically acquires additional collateral using freshly minted BOLD — all in a single transaction. ... How do Liquidations work in Liquity V2?
+
+# Borrowing and Multiply
+
+### 
+
+What makes borrowing in V2 so unique?
+
+Pioneering user-set interest rates, Liquity V2 allows users to borrow the stablecoin BOLD on their own terms. Borrowers can choose and adjust the rate they are willing to pay for their loans. Borrowers will establish market rates in accordance with their individual risk tolerance without relying on governance or algorithm rate management. Each collateral will also have their own respective borrow market which allows room for a market of rates to develop.
+
+Liquity V2 builds on the fundamentals that V1 introduced - a highly secure and immutable protocol which issues the most decentralized stablecoin in all of crypto.
+
+All of this makes for a highly capital efficient, secure and decentralized borrowing experience which cannot be matched anywhere else.
+
+### 
+
+Why is Liquity not running its own frontend?
+
+To increase decentralization and resiliency of the protocol, Liquity AG does not operate a central frontend. Instead, users can choose from several integrations and community-run instances, giving them the freedom to select the one that best suits their needs.
+
+### 
+
+How to choose which frontend to use?
+
+Choosing a frontend is a personal decision that depends on various factors, including UI/UX, additional features, and also rate management strategies.
+
+You can choose one here: https://www.liquity.org/frontend-v2
+
+### 
+
+Can I run my own local instance?
+
+Yes you can, just follow the instructions here: https://github.com/liquity/bold/tree/main/frontend/app
+
+### 
+
+What is a Trove?
+
+A Trove is Liquity’s version of a 'vault'. Each Trove is linked to an Ethereum address, and each address can have multiple Troves.
+
+Each Trove allows you to manage a loan, adjusting collateral and debt values as needed, as well as setting your own interest rate.
+
+### 
+
+What types of collateral can I use?
+
+You are able to use ETH, Lido ETH (wstETH) and Rocket Pool ETH (rETH).
+
+### 
+
+Is there a minimum debt?
+
+Yes, a minimum debt of 2,000 BOLD is required for borrowing.
+
+### 
+
+When do I need to pay back my loan?
+
+Loans issued by the protocol do not have a repayment schedule. You can leave your Trove open and repay your debt any time, as long as you maintain a healthy LTV.
+
+### 
+
+Is there a lockup period?
+
+There is no lockup period. Users are free to withdraw their collateral deposits whenever they want. As an exception, withdrawals by borrowers are temporarily suspended if the total LTV of a borrow market goes above 75%.
+
+
+### 
+
+What happens under the hood?
+
+Your exposure increases by borrowing BOLD against your ETH or LST and swapping it for more of the same asset, which is then deposited into your position.
+
+Conversely, reducing your exposure involves using some of your ETH or LST to purchase BOLD, which is then used to repay a portion of your debt.
+
+All swaps are executed using a combination of Curve and Uniswap liquidity.
+
+### 
+
+What's the difference between Loan and Multiply modes?
+
+Liquity V2 offers two ways to view your position - Loan and Multiply. You can switch it at any time.
+
+Image
+
+Mode switching
+
+Both use the same underlying mechanics but differ in how they display and adjust your position. Here’s how they compare:
+
+  * Loan Mode treats your position as a standard borrowing setup.
+
+    * Focus: your BOLD debt and the ETH/LST collateral backing it.
+
+    * You can deposit/withdraw collateral and mint/repay BOLD.
+
+    * Minted BOLD is sent directly to your wallet.
+
+  * Multiply Mode treats your position as a leveraged exposure.
+
+    * Focus: your Net Value - collateral exposure minus debt value.
+
+    * You can increase/decrease exposure, which automatically changes your BOLD debt.
+
+    * Minted BOLD is swapped for ETH/LST and added to your position, compounding exposure.
+
+Most users won’t need to switch modes, but it can be useful in certain cases. For instance, if you’ve borrowed BOLD in Loan mode and spent it, you’re effectively leveraged but can’t easily repay. Switching to Multiply lets you reduce your exposure (de-lever) and lower liquidation risk - keeping some collateral instead of losing it entirely.
+
+### 
+
+What are the limitations?
+
+When you adjust your exposure, the value of ETH/LST deposited or withdrawn is approximately equal to the BOLD borrowed or repaid, so in theory, your net position value shouldn't change.
+
+In practice, however, there are additional costs: a BOLD creation fee when increasing exposure, along with swap fees when exchanging BOLD and ETH/LST.
+
+Larger exposure adjustments cause higher price impact, meaning the exchange rate worsens as the size increases - this depends on available liquidity in Curve and Uniswap. Extremely large adjustments may not be possible due to insufficient liquidity.
+
+These costs reduce your net position value, so avoid adjusting exposure too often and always monitor price impact before confirming an adjustment.
+
+### 
+
+How do Liquidations work in Liquity V2?
+
+Troves get liquidated if the LTV goes above the maximum value (90.91% for ETH and 83.33% for wstETH and rETH).
+
+Liquity v2 uses Stability Pools as its primary liquidation mechanism to absorb liquidated debt and collateral. --------------------------------------------------------------------------------
+USDe Overview | Ethena (https://docs.ethena.fi/solution-overview/usde-overview)
+citeturn52search8 [wordlim: 200] Crawled: 5 months ago; The mechanism backing USDe enables sUSDe, the first "Internet Money" offering a crypto-native, reward-accruing asset, derived from liquid asset rewards (to the extent utilized in backing) and the funding and basis spread available in perpetual and futures markets. ... Ethena earns no profit from the minting or redeeming of USDe.
+
+# USDe Overview
+
+Ethena enables the creation and redemption of a delta-neutral synthetic dollar, USDe, crypto's first fully-backed, onchain, scalable, and censorship-resistant form of money.
+
+The mechanism backing USDe enables sUSDe, the first "Internet Money" offering a crypto-native, reward-accruing asset, derived from liquid asset rewards (to the extent utilized in backing) and the funding and basis spread available in perpetual and futures markets.
+
+Peg Stability Mechanism
+
+USDe derives its relative peg stability from executing delta-neutral hedges with respect to the underlying backing assets.
+
+Hedging the price change risk of the backing asset in the same size minimizes fluctuations in the backing asset price as the change in value of the backing assets asset is generally offset by the change in value of the hedge.
+
+This enables the synthetic USD value of the backing assets to remain relatively stable in most market conditions.
+
+Ethena does not use any material leverage to margin the delta hedging derivatives positions beyond the natural state as a result of exchanges applying slight discounts to the value of backing assets to the extent used as backing and margin collateral on the initial hedge and issuance of USDe.
+--------------------------------------------------------------------------------
+Borrowing and Liquidations | Liquity Docs (https://docs.liquity.org/faq/borrowing)
+citeturn52search9 [wordlim: 200] Crawled: 1.2 years ago; Pioneering user-set interest rates, Liquity V2 allows users to borrow the stablecoin BOLD on their own terms. ... How do Liquidations work in Liquity V2?
+
+# Borrowing and Liquidations
+
+### 
+
+What makes borrowing in V2 so unique?
+
+Pioneering user-set interest rates, Liquity V2 allows users to borrow the stablecoin BOLD on their own terms. Borrowers can choose and adjust the rate they are willing to pay for their loans. Borrowers will establish market rates in accordance with their individual risk tolerance without relying on governance or algorithm rate management. Each collateral will also have their own respective borrow market which allows room for a market of rates to develop.
+
+Liquity V2 builds on the fundamentals that V1 introduced - a highly secure and immutable protocol which issues the most decentralized stablecoin in all of crypto.
+
+All of this makes for a highly capital efficient, secure and decentralized borrowing experience which cannot be matched anywhere else.
+
+### 
+
+Why is Liquity not running its own frontend?
+
+To increase decentralization and resiliency of the protocol, Liquity AG does not operate a central frontend. Instead, users can choose from several integrations and community-run instances, giving them the freedom to select the one that best suits their needs.
+### 
+
+How do I loop my exposure?
+
+Looping allows you to borrow BOLD against your deposited collateral (ETH, wstETH or rETH) and use it to buy more collateral, increasing your exposure to the underlying . Liquity V2 comes with built-in automation to achieve this with one click (zappers).
+
+Make sure you choose a frontend that supports this functionality, and be mindful of liquidity/slippage.
+
+### 
+
+How are collateral risks mitigated?
+
+Liquity V2 will have three separate borrow markets for the different collateral types with their own Stability Pools (for efficient liquidations), user-set interest rates, and LTV factors for their respective assets (ETH, wstETH, and rETH).
+
+Risks are mitigated through temporary borrowing restrictions in times of low collateralization of a given market, a redemption logic prioritizing collateral with less Stability Pool backing, and a collateral shutdown as an emergency measure to maintain system balance and protect against market instability.
+
+Keep in mind that despite all these measures, BOLD remains dependent on the three mentioned collateral assets and there is no strict guarantee that it remains overcollateralized in case of a sudden collapse of a collateral asset.
+--------------------------------------------------------------------------------
+LQTY Staking & Voting | Liquity Docs (https://docs.liquity.org/v2-faq/lqty-staking)
+citeturn52search10 [wordlim: 200] Crawled: 5 months ago; It's a novel sustainable and adaptive incentive mechanism in Liquity v2. ... Technically, any Ethereum address can receive Protocol Liquidity Incentives, but it is generally advisable to create a smart contract for the initiative, which contains any logic necessary to direct any received funds which will be paid in BOLD.
+Conversely, when unstaking, there is an immediate drop (discontinuity) in the user's voting power, besides the obvious decrease of the slope.
+
+### 
+
+How are new initiatives proposed?
+
+Any user having at least 0.01% of the total voting power of all LQTY staked and paying the registration fee of 100 BOLD can propose new incentives.
+
+Technically, any Ethereum address can receive Protocol Liquidity Incentives, but it is generally advisable to create a smart contract for the initiative, which contains any logic necessary to direct any received funds which will be paid in BOLD. This contract should be properly reviewed and audited by the proposer to ensure that it is secure and will work as intended.
+
+Once the initiative is deployed it can be registered.
+
+First, call the `approve` function here:
+
+  * Enter the `spender` address: `0x807DEf5E7d057DF05C796F4bc75C3Fe82Bd6EeE1`
+
+  * Enter at least 100 BOLD (100 * 1e18) under `amount`
+
+Then register it here by entering your `_initiative` address under `registerInitiative`
+--------------------------------------------------------------------------------
+Friendly Fork Program | Docs V2 🇷🇺 | Liquity Docs (https://docs.liquity.org/ru/v2-documentation/friendly-fork-program)
+citeturn52search11 [wordlim: 200] Crawled: 7 months ago; In exchange for the right to deploy their own stablecoins using Liquity V2 code, these projects have committed to incentivize collaboration between their users and BOLD users. ...   * Each friendly fork is required to audit any changes made to the Liquity V2 codebase in their specific deployment.
+
+# Friendly Fork Program
+
+Image
+
+### 
+
+Program Background
+
+Liquity V2 is published under a Business Source License (BUSL) such that, while the codebase is source available, any commercial deployment needs to be approved by Liquity AG.
+
+A number of friendly forks catering to blockchain networks and collateral asset types not supported for BOLD minting have thus entered into licensing agreements with Liquity AG. In exchange for the right to deploy their own stablecoins using Liquity V2 code, these projects have committed to incentivize collaboration between their users and BOLD users.
+
+You can learn more about the program in this blog post.
+
+### 
+
+Rewards
+
+All forks will reward BOLD users by incentivizing core use cases such as the main liquidity pools and the V2 Stability Pools. While allocation size and execution will vary, each fork will share its plan in a dedicated announcement.
+
+Forks allocate and distribute their incentives directly to users by their discretion - the Leaderboard tracks all that activity.
+--------------------------------------------------------------------------------
+USDD_protocol_2.1_en (https://legacy.usdd.io/USDD-en.pdf)
+citeturn52search12 [wordlim: 200] Crawled: 9 months ago; USDD resolves short-term price fluctuations and cyclical price risks with its responsive monetary policy and mintage mechanism. ... 2 Currency Peg
+--------------------------------------------------------------------------------
+Curve lending (https://docs.curve.finance/assets/pdf/StateMind_Curve_Lending.pdf)
+citeturn52search13 [wordlim: 200] Published: 11 months ago; Final commit  | d64d55877730e653ad1f0ea32c694a232c04ac53Short Overview ... borrow any token against crvUSD in an isolated mode, powered by LLAMMA for soft-liquidations.
+--------------------------------------------------------------------------------
+• osm: The modified Oracle Security Module that provides the price feeds to the system. (https://usdd.io/USDD-V2-audit-report.pdf)
+citeturn52search14 [wordlim: 200] Published: 1.6 years ago; • gov: The modified Governance Module that oversees the USDD V2 system. ... For more details on the MakerDAO system itself, please refer to the Maker Technical Documentation. ... Dog: the Liquidation 2.0 module where liquidation of the unsafe CDPs can be started.
+--------------------------------------------------------------------------------
+Curve stablecoin design (https://docs.curve.finance/assets/pdf/whitepaper_curve_stablecoin.pdf)
+citeturn52search15 [wordlim: 200] Published: 3.9 years ago; # Overview ... - Arrow labels include “rate” from Controller to LLAMMA, “rate” from Monetary Policy upward to Controller, “pegkeeper debt” from PegKeeper toward Monetary Policy, “balances” from Stable Pool toward Monetary Policy, “deposit/withdraw” between PegKeeper and Stable Pool, and a vertical right-side label “mint/burn” connecting the Stablecoin ERC20 side to LLAMMA/PegKeeper flow.
+

@@ -1,0 +1,584 @@
+Introduction | ether.fi (https://etherfi.gitbook.io/etherfi/ether.fi-whitepaper/introduction)
+citeturn53search0 [wordlim: 200] Crawled: 5 months ago; The protocol issues liquid staking tokens: `eETH` (rebasing) and `weETH` (wrapped, non-rebasing), which allow users to earn rewards from both Ethereum consensus staking and native restaking on EigenLayer, without losing liquidity or DeFi composability. ...     * When a user mints eETH/weETH, the deposited `ETH` are sent into ether.fi, the LiquidityPool.
+We think and plan on the scale of decades. No ponzinomics f*ckery.
+
+  3. We will do the right thing for the Ethereum community, always. If and when we mess up, we will own it and course correct quickly.
+
+## 
+
+Executive Summary
+
+Ether.fi Protocol is a decentralized, non-custodial staking and restaking protocol designed to maximize user control and Ethereum network decentralization. The protocol issues liquid staking tokens: `eETH` (rebasing) and `weETH` (wrapped, non-rebasing), which allow users to earn rewards from both Ethereum consensus staking and native restaking on EigenLayer, without losing liquidity or DeFi composability.
+
+## 
+
+High-Level Operational Summary
+
+This section contains a high-level summary of ether.fi mechanisms. For a detailed description, please see the ether.fi section.
+
+The ether.fi protocol allows ETH holders to delegate staking while retaining control of their assets. There are several users and stakeholders on ether.fi:
+
+  * Depositors/Stakers: users who stake their `ETH` through the protocol. 
+### 
+
+Validator Management
+
+  * Validator Creation
+
+    * When a user mints eETH/weETH, the deposited `ETH` are sent into ether.fi, the LiquidityPool.
+
+    * In order to avoid front-running, we use partial deposit approach where we deposit 1 ETH per validator to Ethereum’s deposit contract.
+
+    * Once the oracle confirms that the withdrawal credentials are correctly set, the pool tops up the remaining ETH needed to reach 32 ETH.
+
+  * Validator Exit
+
+    * When the amount of ETH in the liquidity pool crosses below a threshold, then ether.fi initiates exits of validators via EIP-7002.
+
+### 
+
+Liquidity Pool and eETH
+
+The LiquidityPool aggregates `ETH` from depositors and stakes it through the validator creation process described above. In return, it mints `eETH`, a rebasing token whose total supply grows when staking rewards accrue. Depositors can wrap `eETH` into `weETH`, a non‑rebasing ERC‑20 token better suited for DeFi integrations.
+
+Deposits and redemptions are processed on demand:
+
+  * Minting eETH: users send ETH to the LiquidityPool and receive `eETH` shares at the current exchange rate (total eETH supply divided by total pooled ETH).
+
+  * Redeeming eETH: users burn their `eETH` or `weETH` to receive the underlying `ETH`. If the liquidity pool’s unbonded `ETH` is insufficient to satisfy a redemption, the protocol initiates validator withdrawals in accordance with the queue of redemption requests.
+
+### 
+
+Restaking
+
+Ether.fi currently restakes staked `ETH` on EigenLayer. The earned restaking rewards are distributed as KING via a separate claim process KING Rewards (Historical Reference). Once ether.fi opts in with slashable EigenLayer AVSs, it may subject restaked `ETH` to slashing if operators misbehave; ether.fi socializes both the rewards and the risks across all depositors.
+
+#### 
+
+Billing
+
+Billing for node services is executed via a billing contract. Services tracking and attribution done via a centralized service run by ether.fi. This will change over time.--------------------------------------------------------------------------------
+Technical Documentation | ether.fi (https://etherfi.gitbook.io/etherfi/ether.fi-whitepaper/technical-documentation)
+citeturn53search1 [wordlim: 200] Crawled: 5 months ago;   * ether.fi Liquid ReStaking Token (LRT) token, eETH and weETH ... The rebase mechanism is implemented via shares where the `share` represents the eETH holder's share in the total amount of ether controlled by the ether.fi protocol.
+
+# Technical Documentation
+
+ether.fi is a - truly - non-custodial and decentralized staking protocol where stakeholders retain complete control of their assets while leveraging the power of permissionless decentralization. Our protocol provides a secure and seamless delegated staking service while offering higher returns and fewer costs through innovative revenue streams and aggressive operational efficiency optimizations.
+
+## 
+
+Project Roadmap
+
+Ether.fi began as a delegated‑staking service and is maturing towards a fully permissionless restaking protocol on Ethereum. Today, users deposit `ETH` into a LiquidityPool, which creates and funds validators while allowing users to retain control over their withdrawal credentials. Depositors receive `eETH` shares that automatically rebase to include staking and restaking rewards; they may wrap these shares into `weETH` for a fixed‑supply token. Validators are operated by node‑operator clusters using Distributed Validator Technology (DVT), and the protocol restakes its pooled ETH on EigenLayer.
+
+### 
+
+✅ Phase 1. [Deleg8] Delegate Staking
+
+  * Release of ether.fi Desktop App
+
+  * Delegated staking via an auction mechanism
+
+  * Withdrawals of the staking rewards and the unstaked ETH
+
+  * ether.fi Transferrable NFT (T-NFT) and Bond NFT (B-NFT)
+
+  * ether.fi protocol treasury contract
+
+### 
+
+✅ Phase 2: [Pool Fiesta] Pooled Liquid Staking
+
+  * Integration of Oracle for validator nodes information
+
+  * Integration with EigenLayer's ReStaking
+
+  * ether.fi Liquid ReStaking Token (LRT) token, eETH and weETH
+
+  * ether.fi protocol treasury management contract
+
+  * DeFi integrations
+
+### 
+
+🚀 Phase 3: [Permission-less] Node Staking
+
+  * Integration of Distributed Validator Technology
+
+  * ether.fi institutional-grade permission-less node staking
+
+  * Add the permissioned DVT validators
+
+## 
+
+User Roles
+
+  * Depositors/ Stakers:
+
+    * Users who deposit `ETH` (or other supported assets) into the LiquidityPool.
+
+    * Depositors receive `eETH` shares and may mint Membership NFTs to track their stake, loyalty points and tier level.
+
+  * Node operators:
+
+    * Independent or permissioned entities who operate validators using DVT clusters.
+
+    * They earn a share of protocol rewards in exchange for maintaining validator uptime and security.
+
+  * Restaking services:
+
+    * Actively Validated Services (AVSs) on EigenLayer that use ether.fi’s pooled stake for additional applications.
+
+    * Rewards and slashing penalties from restaking are socialized across depositors.
+
+
+    * Operators must meet performance requirements and, once approved, are added to the pool of available DVT cluster participants.
+
+  * Depositor/Stake flows:
+
+    * When a user deposits ETH into the protocol, the LiquidityPool contract handles the validator lifecycle.
+
+    * It sends a 1 ETH seed deposit to Ethereum’s deposit contract for each new validator.
+
+    * After the protocol’s oracle verifies that the withdrawal credentials are correctly set, the pool automatically tops up the remaining ETH needed to reach 32 ETH and activates the validator.
+
+  * Tokenization:
+
+    * Depositors receive eETH shares representing their claim on the total pooled ETH.
+
+    * Users can opt to wrap their eETH into weETH (a non‑rebasing ERC‑20 token) or mint a Membership NFT that records the deposit amount, share balance and loyalty/tier points.
+
+  * Validator operation:
+
+    * Validators created by the LiquidityPool are assigned to node‑operator clusters running Distributed Validator Technology (DVT) via SSV Network.
+
+    * Operators run the validators and earn a share of staking and restaking rewards as compensation.
+
+  * Reward distribution and upgrades:
+
+    * The EtherFiOracle reports accrued consensus and restaking rewards.
+
+    * When a new report is published, the LiquidityPool rebases the supply of eETH and the MembershipManager updates reward indices for each tier.
+
+    * Upgrades to any contract are governed by a timelock and require appropriate roles via the RoleRegistry.
+
+## 
+
+Detailed Mechanisms
+
+  * Validator Creation
+
+  * Memberships NFTs
+
+  * Permissionless Withdrawals
+
+  * eETH and weETH
+
+  * Liquidity Pool
+
+  * Oracle
+
+  * Sharing Protocol Revenue
+
+### 
+
+Validator Creation
+
+When `ETH` is deposited into the LiquidityPool, the pool sends 1 `ETH` per validator to Ethereum’s deposit contract to reserve a validator index.
+
+After the protocol’s oracle confirms that the withdrawal credentials are correctly set, the pool tops up the remaining `ETH` (to reach 32 `ETH`) and activates the validator.
+
+Node operators—either permissioned or solo—join DVT clusters via SSV Network and operate the validators. The protocol does not require bids or bonds from node operators; validator assignments are handled automatically based on available cluster capacity.
+
+### 
+
+Membership NFTs
+
+Users can choose to wrap their `eETH` deposits into Membership NFTs that record the amount of `ETH` staked, the number of `eETH` shares and the user’s loyalty and tier points.
+Once the withdrawal is finalized on the beacon chain, anyone can call a function to distribute the ETH to the correct parties (depositors and node operators) according to their eETH shares and reward entitlements.
+
+  * Slashing penalties from misbehaving validators or restaking services are shared across all depositors; there is no dedicated bond. Exits and withdrawals do not require action from any individual NFT holder and are executed in a fully permissionless manner.
+
+#### 
+
+eETH and weETH
+
+eETH is ether.fi's liquid staking token. eETH is a rebasing ERC-20 token. The eETH token represents a claim on the same amount of ETH which is held by the ether.fi liquidity pool or being staked earning rewards within the Ethereum Proof-of-Stake system. The staking rewards are distributed to the eETH holders by the rebasing mechanism where its balance is updated automatically on all the addresses. The rebase mechanism is implemented via shares where the `share` represents the eETH holder's share in the total amount of ether controlled by the ether.fi protocol.
+
+The eETH balance of an `account` is computed as follows:
+
+$$
+BalanceOf(account) = TotalPooledEth * \frac {Shares[account]}{TotalShares}$$B a l an ce O f(a cco u n t)=T o t a lP oo l e d Et h∗T o t a lS ha res S ha res[a cco u n t]​
+
+- `TotalPooledEth` = the total amount of ETH controlled by the protocol - `Shares[account]` = the account's share of eETH - `TotalShares` = the total shares of eETH
+
+Here, `TotalPooledEth`` = (``D + P + R``)` as reported by the Oracle: -`D` = the total ETH deposits in the liquidity pool -`P` = the total ETH claims on principals for the T-NFTs in the liquidity pool -`R` = the total ETH claims on rewards for the T-NFTs in the liquidity pool
+
+Users may wrap their `eETH` into `weETH` to obtain a non‑rebasing ERC‑20 token. Converting between `eETH` and `weETH` is done through the LiquidityPool at the current share rate.
+
+#### 
+
+Liquidity Pool
+
+The LiquidityPool contract aggregates ETH deposits and manages validator creation, rewards accounting and redemptions. Its key functions are:
+
+  * Minting eETH: When users deposit ETH, the pool calculates the number of eETH shares to mint based on the current total pooled ETH and total eETH shares. The formula ensures that each share always represents an equal claim on the pool’s assets.
+
+  * Wrapping and Unwrapping: Depositors can wrap eETH into weETH via the WeETH contract to obtain a non‑rebasing ERC‑20 token. Unwrapping weETH returns the corresponding amount of eETH.
+
+  * Membership NFTs: Users may choose to wrap their deposit into a Membership NFT instead of holding eETH directly. The NFT records the user’s share balance and accrues loyalty and tier points that may boost future rewards.
+
+  * Redeeming eETH/weETH: To withdraw ETH, a user burns their eETH or weETH. The pool attempts to fulfill the redemption from its unbonded ETH. If insufficient ETH is available, it will queue full validator exits and process redemptions once the ETH is released from the beacon chain.
+
+  * Reward accrual: When the EtherFiOracle publishes a new reward report, the pool increases the total pooled ETH without increasing the number of eETH shares. --------------------------------------------------------------------------------
+eETH | ether.fi (https://etherfi.gitbook.io/etherfi/staking/eeth)
+citeturn53search2 [wordlim: 200] Crawled: 6 months ago; However, ether.fi's `eETH` and `weETH` are Natively ReStaked tokens at a protocol-level enabling broad DeFi composability and removing such long 14 days of un-restaking withdrawal delays.
+
+# eETH
+
+## 
+
+Overview
+
+eETH is ether.fi’s flagship Ethereum-backed liquid restaking token for native staking and multichain bridging, designed to simplify yield optimization and expand DeFi utility.
+
+eETH is backed by staked and natively restaked ETH (via EigenLayer) to deliver dual exposure to staking and restaking economics.
+
+## 
+
+Key Benefits
+
+In a conventional Liquid ReStaking strategy, the users lock their Liquid Staking Tokens such as `stETH` into the EigenLayer's Liquid ReStaking Strategy contracts. The cons are that the restaked assets are non-transferrable, non-usable in DeFi, and require 14 days withdrawal period for redemption back into the LSTs. Note that you will need additional delays to redeem ETH from your LSTs, again.
+
+However, ether.fi's `eETH` and `weETH` are Natively ReStaked tokens at a protocol-level enabling broad DeFi composability and removing such long 14 days of un-restaking withdrawal delays.
+
+By holding eETH/weETH, holders accrue:
+
+  * Base Ethereum staking rewards – reflected via protocol staking yields (rebasing in eETH; wrapped for weETH)
+
+  * Restaking emissions – aggregated weekly, converted to ETH, and automatically deposited into the LST liquidity pool, increasing token value via rebasing without requiring any claims or additional action
+
+Users can use eETH/weETH across DeFi for additional yield strategies or other activities.
+
+ETH redemptions from eETH/weETH can be processed without EigenLayer unstaking delays, as long as Ether.fi has sufficient liquidity; if liquidity is temporarily constrained, withdrawal timing may vary.
+
+For more details, visit here--------------------------------------------------------------------------------
+EigenLayer: The Restaking Collective (https://docs.eigencloud.xyz/assets/files/EigenLayer_WhitePaper-88c47923ca0319870c611decd6e562ad.pdf?trk=article-ssr-frontend-pulse_little-text-block)
+citeturn53search12 [wordlim: 200] Published: 10 months ago; EigenLayer: The Restaking Collective ... We propose EigenLayer, a restaking collective for Ethereum.
+EigenLayer: The Restaking Collective
+EigenLayer Team
+Abstract
+We propose EigenLayer, a restaking collective for Ethereum. EigenLayer is a set of smart contracts
+on Ethereum that allows consensus layer Ether (ETH) stakers to opt in to validating new software
+modules built on top of the Ethereum ecosystem. Stakers opt in by granting the EigenLayer smart
+contracts the ability to impose additional slashing conditions on their staked ETH, allowing an exten-
+sion of cryptoeconomic security. By opting in to EigenLayer, stakers can validate for many types of
+modules including consensus protocols, data availability layers, virtual machines, keeper networks,
+oracle networks, bridges, threshold cryptography schemes, and trusted execution environments. In-
+stead of fragmenting security between modules, EigenLayer aggregates ETH security across all of
+them. This increases the security of the decentralized applications (DApps) that rely on the modules.
+In addition, holders of Ether can pursue additional value through the new fee-generating opportuni-
+--------------------------------------------------------------------------------
+How To | ether.fi (https://etherfi.gitbook.io/etherfi/contracts-and-integrations/how-to)
+citeturn53search3 [wordlim: 200] Crawled: 5 months ago; You can interact directly with smart contract via Etherscan even when ether.fi's web page or dapp is down. ... Check if redeemable: use EtherFiRedemptionManager.canRedeem(amount) where amount is the ETH amount of the eETH/weETH being redeemed
+
+# How To
+
+You can interact directly with smart contract via Etherscan even when ether.fi's web page or dapp is down.
+
+## 
+
+Withdrawals
+
+#### 
+
+Standard Withdrawal with Delays
+
+this is the standard queued withdrawal without fee and without rate limit:
+
+  1. Unwrap weETH to eETH: If you hold weETH, you need to unwrap to eETH. Use weETH.unwrap. Note that you need eETH.approve with spender = weETH contract.
+
+  2. Initiate withdrawal: You can use LiquidtyPool.requestWithdrawal, then you will receive the WithdrawRequestNFT which is ERC721 NFT representing your queued withdrawal.
+
+  3. Check the status of the withdrawal: use WithdrawRequestNFT.isFinalized(nftTokenId)
+
+  4. Claim: use WithdrawRequestNFT.claimWithdraw(nftTokenId)
+
+#### 
+
+Instant Withdrawal without Delay
+
+this is the instant redemption with a small fee (0.3%) and with rate limit. Note that the instant withdrawal is only allowed when the buffer liquidity is above the low watermark (1% of eETH TVL).
+
+  1. (optional) Check the fee: use EtherFiRedemptionManager.exitFeeInBps
+
+  2. (optional) Check the low water mark: use EtherFiRedemptioNamagner.lowWatermarkInBpsOfTvl
+
+  3. Check if redeemable: use EtherFiRedemptionManager.canRedeem(amount) where amount is the ETH amount of the eETH/weETH being redeemed
+
+  4. Redeem: Use either redeemEEth or redeemWeEth. Note that you need eETH.approve or weETH.approve with spender = EtherFiRedemptionManager contract.
+--------------------------------------------------------------------------------
+Contracts and Integrations | ether.fi (https://etherfi.gitbook.io/etherfi/contracts-and-integrations)
+citeturn53search4 [wordlim: 200] Crawled: 5 months ago; https://github.com/etherfi-protocol/smart-contractsHere you will find the official deployed contracts of ether.fi, along with a list of integrations to help guide on all the places that weETH can be used throughout the DeFi ecosystem.
+
+# Contracts and Integrations
+
+ether.fi's smart contracts are fully open-sourced and available here
+
+https://github.com/etherfi-protocol/smart-contracts
+
+Here you will find the official deployed contracts of ether.fi, along with a list of integrations to help guide on all the places that weETH can be used throughout the DeFi ecosystem.
+
+You can integrate weETH into your DeFi platform using RedStone Oracles on Ethereum, Arbitrum and soon other L2s, see addresses here: https://docs.redstone.finance/docs/smart-contract-devs/price-feeds
+
+If you have any requests for integrations that do not appear here, join our discord and help contribute to the growing list of use cases for weETH.
+
+
+Last updated 1 year ago--------------------------------------------------------------------------------
+FAQ | ether.fi (https://etherfi.gitbook.io/etherfi/getting-started/faq)
+citeturn53search5 [wordlim: 200] Crawled: 5 months ago; eETH, brought to you by ether.fi, is a Liquid Restaking Token that allows users to stake their ETH to accrue staking rewards and automatically restake their ETH in EigenLayer. weETH is the wrapped non rebasing version of eETH that can be used throughout the DeFI ecosystem. ether.fi will be working with DeFi partners to create utility for weETH including Balancer, Gravita, Pendle, Aura, Maverick, and many more, as well as other layer two protocols proceeding the launch date. ... That being said, Ether.fi will be remitting any rewards received from EigenLayer that are earned from being an early depositor into the protocol.
+
+# FAQ
+
+eETH launched on November 15th, 2023 🚀
+
+eETH, brought to you by ether.fi, is a Liquid Restaking Token that allows users to stake their ETH to accrue staking rewards and automatically restake their ETH in EigenLayer. weETH is the wrapped non rebasing version of eETH that can be used throughout the DeFI ecosystem. ether.fi will be working with DeFi partners to create utility for weETH including Balancer, Gravita, Pendle, Aura, Maverick, and many more, as well as other layer two protocols proceeding the launch date.
+
+Please see FAQ below outlining all the various protocol changes that have been rolled out along with answers related to restaking. This will be a living document that will evolve as we get feedback from our community. That said, we encourage our community to reach out with any questions that they have and join our discussion on discord.
+
+General
+
+  1. How do I earn rewards from my ETH being natively restaked on EigenLayer?
+
+     * As EigenLayer is not yet in its final form to onboard active validator services, we can not provide a reliable estimate of these rewards. No other liquid staking protocol has this capability. Currently when users restake their other LST's as mentioned above, they lock their tokens, which breaks composability in DeFi. That is due to these LST's not providing a native EigenLayer restaking integration
+
+eETH
+
+  1. How do I mint eETH?
+
+     * You can mint eETH through the ether.fi Dapp. Similar to other liquid staking protocols, simply stake your ETH, and in return, receive eETH.
+
+  2. What will I be able to do with eETH
+
+     * We have many ecosystem partners which will allow eETH to be composable throughout the defi ecosystem. Please stay tuned to our socials for updates on launched integrations.
+
+  3. Will eETH be available on other chains
+
+     * refer to Layerzero
+
+  4. Can I only unwrap eETH directly on ether.fi
+
+     * Yes.
+
+  5. What will be my yield on eETH?
+
+     * You will earn Ethereum execution and consensus layer staking rewards + loyalty points + EigenLayer restaking rewards. As EigenLayer is not yet in its final form to onboard active validator services, we can not provide a reliable estimate of these rewards. --------------------------------------------------------------------------------
+EigenLayer: The Restaking Collective (https://docs.eigencloud.xyz/assets/files/EigenLayer_WhitePaper-88c47923ca0319870c611decd6e562ad.pdf)
+citeturn53search13 [wordlim: 200] Published: 10 months ago; modalities of restaking: ... governance, EigenLayer outsources the management of such risks to module developers.
+Figure 4: With EigenLayer, permissionless innovation permeates deeper into the blockchain stack.
+• Superfluid Staking. Superfluid staking reverses the ordering of liquid staking by modifying the
+core consensus protocol to allow the staking of Liquidity Provisioning (LP) tokens [8]. An LP
+token represents a share of the total liquidity contained in a DeFi exchange such as Uniswap or
+Curve.
+As shown in Fig. 5b, EigenLayer provides multiple pathways for yield stacking which allow stakers
+to earn additional yield from securing new AVSs. Broadly we can think of three distinct layers of the
+blockchain: core protocol, AVS, and DeFi. Liquid staking can be thought of as stacking yield by first
+going to the core protocol and then the DeFi layer. Superfluid staking can be thought of as first going
+through the DeFi layer before going to the core protocol layer. In EigenLayer, there can be several
+modalities of restaking:
+1. Native restaking. Validators can restake their staked ETH natively by pointing their withdrawal
+credentials to the EigenLayer contracts. This is equivalent to L1 →EigenLayer yield stacking.
+2. LST restaking. Validators can restake by staking their LSTs, ETH already restaked via protocols
+like Lido and Rocket Pool, by transferring their LSDs into the EigenLayer smart contracts. This
+is equivalent to DeFi →EigenLayer yield stacking.
+3. ETH LP restaking. Validators stake the LP token of a pair which includes ETH. This is equivalent
+to DeFi →EL yield stacking.
+4. LST LP restaking. Validators stake the LP token of a pair which includes a liquid staking ETH
+token, such as Curve’s stETH-ETH LP token, thus taking the L1 →DeFi →EL yield stacking
+route.
+Each of these pathways comes with different types of risks. In keeping with the principle of opt-in
+governance, EigenLayer outsources the management of such risks to module developers. Developers
+choose for themselves which tokens to accept as stake for their AVS. They may also choose whether
+there is preferential weighting for rewards they distribute to different types of staked tokens. For
+example, a module interested primarily in decentralization may only accept restake in the form of
+natively restaked ETH.
+5--------------------------------------------------------------------------------
+Deployed Contracts | ether.fi (https://etherfi.gitbook.io/etherfi/contracts-and-integrations/deployed-contracts)
+citeturn53search6 [wordlim: 200] Crawled: 5 months ago; eETH ... WeETH ... Etherfi Nodes Manager
+
+# 🔍Deployed Contracts
+
+Contracts are deployed on Ethereum mainnet
+
+Contract
+
+Address
+
+DepositAdapter
+
+0xcfc6d9bd7411962bfe7145451a7ef71a24b6a7a2
+
+eETH
+
+0x35fA164735182de50811E8e2E824cFb9B6118ac2
+
+WeETH
+
+0xCd5fE23C85820F7B72D0926FC9b05b43E359b7ee
+
+ETHFI
+
+0xFe0c30065B384F05761f15d0CC899D4F9F9Cc0eB
+
+Liquidity Pool
+
+0x308861A430be4cce5502d0A12724771Fc6DaF216
+
+EtherFiRedemptionManager
+
+0xdadef1ffbfeaab4f68a9fd181395f68b4e4e7ae0
+
+WithdrawRequestNFT
+
+0x7d5706f6ef3F89B3951E23e557CDFBC3239D4E2c
+
+Liquifier
+
+0x9ffdf407cde9a93c47611799da23924af3ef764f
+
+Etherfi Nodes Manager
+
+0x8B71140AD2e5d1E7018d2a7f8a288BD3CD38916F
+
+Auction Manager
+
+0x00C452aFFee3a17d9Cecc1Bcd2B8d5C7635C4CB9
+
+Staking Manager
+
+0x25e821b7197B146F7713C3b89B6A4D83516B912d
+
+BNFT
+
+0x6599861e55abd28b91dd9d86A826eC0cC8D72c2c
+
+TNFT
+
+0x7B5ae07E2AF1C861BcC4736D23f5f66A61E0cA5e
+
+Membership Manager
+
+0x3d320286E014C3e1ce99Af6d6B00f0C1D63E3000
+
+Membership NFT
+
+0xb49e4420eA6e35F98060Cd133842DbeA9c27e479
+
+Node Operator Manager
+
+0xd5edf7730ABAd812247F6F54D7bd31a52554e35E
+
+--------------------------------------------------------------------------------
+Arbitrum Canonical Bridging | ether.fi (https://etherfi.gitbook.io/etherfi/getting-started/multichain-ecosystem/arbitrum-canonical-bridging)
+citeturn53search7 [wordlim: 200] Crawled: 7 months ago; Step 1: Head to app.ether.fi and click on the eETH tab ... Step 4: Wrap wETH to receive weETH
+
+# Arbitrum Canonical Bridging
+
+## 
+
+How to
+
+Step 1: Head to app.ether.fi and click on the eETH tab
+
+Step 2: Connect your wallet
+
+Step 3: Stake ETH (or any supported liquid staking token) to receive eETH
+
+Step 4: Wrap wETH to receive weETH
+
+Step 5: Head to arbitrum.io and navigate to the bridge tab. Make sure you’re on the Ethereum Mainnet
+
+Step 6: Connect your wallet
+
+Step 7: Search for weETH on the “From” dropdown, and Arbitrum One on the “To” dropdown
+
+**DO NOT TRY TO BRIDGE eETH** There is currently no market of eETH on Arbitrum.
+
+Image
+
+Step 8: Click “Move Funds to Arbitrum One”, and then you’re done! From there you can use your weETH on Arbitrum Dapps.
+--------------------------------------------------------------------------------
+ether.fi Re-staking | ether.fi (https://etherfi.gitbook.io/etherfi/ether.fi-whitepaper/ether.fi-re-staking)
+citeturn53search8 [wordlim: 200] Crawled: 5 months ago; In ether.fi's `eETH` and `weETH` where the Native ReStaking happens in the protocol level:
+
+  1. 🗒️ether.fi Whitepaper
+
+# ether.fi Re-staking
+
+ether.fi's `eETH` and `weETH` are Natively ReStaked tokens.
+
+In a conventional Liquid ReStaking strategy, the users lock their Liquid Staking Tokens such as `stETH` into the EigenLayer's Liquid ReStaking Strategy contracts. The cons are that the restaked assets are non-transferrable, non-usable in DeFi, and require 14 days withdrawal period for redemption back into the LSTs. Note that you will need additional delays to redeem ETH from your LSTs, again.
+
+In ether.fi's `eETH` and `weETH` where the Native ReStaking happens in the protocol level:
+
+  * By holding `eETH/weETH`, you earn the staking rewards based on the staked ETH amount and protocol's staking yields.
+
+  * By holding `eETH/weETH`, you earn the restaking rewards based on the natively restaked ETH in the protocol level and protocol's restaking yields (+ EigenLayer points). Users do not need to make separate actions or lock up their assets.
+
+  * You can bring your `eETH/weETH` to another DeFi and do degens!
+
+  * you can redeem your ETH out of `eETH/weETH` without the 14 days withdrawal period as long as ether.fi has the available liquid ETH in the contract.
+
+Doc's by EigenLayer regarding the process of restaking are provided for guidance on how it works:
+
+  * Native Restaking with EigenLayer
+
+
+Last updated 7 months ago--------------------------------------------------------------------------------
+‭EigenCloud: Cloud-scale programmability with crypto-grade verifiability.‬ (https://docs.eigencloud.xyz/assets/files/EigenCloud_Whitepaper-127a6743029d2c4858e7633196c47ea4.pdf)
+citeturn53search14 [wordlim: 200] Published: 6 months ago; ‭developers‬ ‭to‬ ‭build‬ ‭app‬ ‭logic‬ ‭on‬ ‭EigenCloud,‬ ‭we‬ ‭are‬ ‭building‬ ‭three‬ ‭modular‬ ‭primitives‬ ‭on‬ ‭top‬ ‭of‬ ‭EigenLayer‬ ‭that‬ ‭solve‬ ‭specific‬ ... ‭3.2 EigenLayer is the foundation of EigenCloud‬
+Mainnet by Q4 2025.‬
+‭3.2 EigenLayer is the foundation of EigenCloud‬
+‭EigenLayer‬‭made‬‭it‬‭possible‬‭to‬‭get‬‭cloud-scale‬‭programmability‬‭at‬‭crypto-grade‬‭verifiability‬‭by‬‭allowing‬‭a‬‭developer‬‭to‬‭build‬‭offchain‬
+‭services‬ ‭that‬ ‭can‬ ‭be‬ ‭made‬ ‭verifiable.‬ ‭Verifiability‬ ‭in‬ ‭proof-of-stake‬ ‭blockchain‬ ‭networks‬ ‭comes‬ ‭from‬ ‭cryptoeconomic‬ ‭security‬ ‭-‬
+‭validators‬‭stake‬‭tokens‬‭and‬‭operate‬‭nodes‬‭to‬‭verify‬‭network‬‭activity,‬‭facing‬‭financial‬‭penalties‬‭(slashing)‬‭if‬‭they‬‭misbehave‬‭and‬‭earning‬
+‭rewards‬ ‭for‬ ‭useful‬ ‭work.‬ ‭With‬ ‭EigenLayer,‬ ‭the‬ ‭cost‬ ‭of‬ ‭bootstrapping‬ ‭economic‬ ‭security‬‭is‬‭massively‬‭reduced,‬‭allowing‬‭a‬‭variety‬‭of‬
+‭services‬‭to‬‭be‬‭built.‬‭We‬‭call‬‭these‬‭services‬‭AVS‬‭(autonomous‬‭verifiable‬‭services)‬‭-‬‭autonomous‬‭because‬‭anyone‬‭can‬‭stake‬‭and‬‭continue‬--------------------------------------------------------------------------------
+weETHs (Super Symbiotic) | ether.fi (https://etherfi.gitbook.io/etherfi/staking/weeths-super-symbiotic)
+citeturn53search9 [wordlim: 200] Crawled: 5 months ago; weETHs, the Super Symbiotic LRT, is intended to provide ether.fi customers an easy onboarding into the Symbiotic ecosystem. ... A portion of weETHs collateral is allocated to Cap Protocol, where M11 Credit acts as a borrower.
+
+# weETHs (Super Symbiotic)
+
+## 
+
+Overview
+
+weETHs, the Super Symbiotic LRT, is intended to provide ether.fi customers an easy onboarding into the Symbiotic ecosystem. Unlike other LRTs, users have numerous deposit options including WETH, eETH, weETH, wstETH, cbETH, bETH, rETH, mETH, swETH, etc. These assets will be directly restaked on Symbiotic each time the deposit caps are raised.
+
+## 
+
+Key Benefits
+
+  1. Earn staking yield
+
+  2. Don’t worry about tracking when Symbiotic deposit caps will be lifted
+
+  3. Access multiple points programs: Symbiotic points, ether.fi points and Veda points
+
+​Check weETHs on ether.fi
+
+## 
+
+Allocations
+
+A portion of weETHs deposits may be allocated to third-party protocols to seek additional rewards for depositors. Each allocation introduces its own risk profile, which may include smart contract, liquidity and counterparty risk. Below is a summary of current allocations.
+
+Cap Protocol – M11 Credit / FalconX
+
+A portion of weETHs collateral is allocated to Cap Protocol, where M11 Credit acts as a borrower. --------------------------------------------------------------------------------
+King Protocol (Historical Reference) | ether.fi (https://etherfi.gitbook.io/etherfi/king-protocol-historical-reference)
+citeturn53search10 [wordlim: 200] Crawled: 5 months ago; Starting January 2026, ether.fi has fully transitioned to the new EIGEN → ETH rebasing flow: ...   * Rewards are reflected in rebasing of eETH/weETH. ... How ether.fi previously used King Protocol (Historical Reference)
+--------------------------------------------------------------------------------
+How to bridge | ether.fi (https://etherfi.gitbook.io/etherfi/getting-started/multichain-ecosystem/how-to-bridge)
+citeturn53search11 [wordlim: 200] Crawled: 5 months ago; For "To" select weETH as your token and select an available network of your choice
+

@@ -1,0 +1,137 @@
+What is Across V4? | Across Docs
+Ask AI
+Across Docs
+Across Developer Documentation
+Search
+⌘
+K
+Introduction
+Guides
+AI Agents
+Tools
+API Reference
+Chains & Contracts
+Guides
+Guides
+Concepts
+What are Crosschain Intents?
+Intent Architecture in Across
+Intent Lifecycle in Across
+What is Across V4?
+ERC-7683 in Production
+Developer Guides
+User Guides
+Migration Guides
+What is Across V4?
+Concepts
+What is Across V4?
+ZK-powered settlement using Succinct SP1 for permissionless chain expansion.
+Copy Markdown
+Open with AI
+Across V4 integrates
+zero-knowledge proofs
+with Succinct's SP1 proving network to decouple settlement from chain-specific verification logic. This enables
+permissionless expansion to new chains
+without custom bridge adapters or audits for each new deployment.
+V4 only changes the
+settlement layer
+(Phase 3 of the
+intent lifecycle
+). The user experience and relayer network remain the same — users still get ~2 second fills.
+Why V4?
+In V3, adding a new chain requires deploying chain-specific adapters for the canonical bridge between Ethereum and that chain. Each adapter needs custom code and an audit. V4 replaces this with a universal verification mechanism: ZK proofs of Ethereum state.
+V3 Settlement
+V4 Settlement
+New chain support
+Custom adapter + audit
+Deploy UniversalSpokePool (no custom code)
+Verification
+Optimistic Oracle + canonical bridges
+ZK proofs of Ethereum state
+Trust model
+Tied to canonical bridge of each chain
+Universal — proves Ethereum state directly
+V4 Architecture
+On Ethereum L1
+UMA's Optimistic Oracle
+— Verifies repayment bundles (unchanged from V3)
+HubPoolStore
+— Stores message hashes in storage slots and emits
+StoredCallData
+events, anchoring settlement data to L1
+Off-Chain Infrastructure
+Finalizer
+— Monitors
+StoredCallData
+events from HubPoolStore. After Ethereum reaches finality (12–15 minutes), initiates ZK proof generation
+ZK API
+— Stateful service managing proof lifecycle through four statuses:
+WaitingForFinality
+,
+Generating
+,
+Success
+,
+Errored
+On Destination Chain
+SP1Helios
+— A ZK light client contract that verifies proofs and stores proven L1 state. Built on Succinct's SP1 proving system
+UniversalSpokePool
+— Executes verified messages. Calls
+relayRootBundle
+to process settlement data and
+executeRelayerRefundLeaf()
+to process relayer repayments
+Settlement Flow
+Bundle Finalized on L1
+After the optimistic challenge period passes, the confirmed bundle is written to the HubPoolStore contract. A
+StoredCallData
+event is emitted containing the message hash.
+Await Ethereum Finality
+The Finalizer waits for Ethereum to finalize the block containing the
+StoredCallData
+event (12–15 minutes). This ensures the proof is based on irreversible state.
+ZK Proof Generation
+The Finalizer submits a proof request to the ZK API, which:
+Gathers proof inputs: finalized beacon headers, sync committee signatures (512 validators), and a Merkle proof of the HubPoolStore storage slot
+Runs a pre-flight check on a local RISC-V virtual machine
+Sends the validated job to Succinct's SP1 proving network
+Proof Submission
+Once the proof is generated, the Finalizer submits two transactions on the destination chain:
+SP1Helios.update()
+— Provides the ZK proof, updating the light client's view of Ethereum state
+UniversalSpokePool.executeMessage()
+— Executes the verified settlement message
+Relayer Refunds Processed
+With the message verified, the UniversalSpokePool processes
+relayRootBundle
+and executes
+executeRelayerRefundLeaf()
+to repay relayers on the destination chain.
+Benefits
+For users
+— More chains supported, more routes available, faster token availability on new networks.
+For builders
+— A single integration that automatically works on new chains as they're added. No per-chain audits needed.
+For relayers
+— Repayments on origin chains with flexible rebalancing. New chains mean new fill opportunities.
+For chains
+— Near-frictionless integration with Across. New chains can be added permissionlessly once a UniversalSpokePool is deployed.
+Intent Lifecycle in Across
+The three phases every crosschain intent goes through — initiation, fill, and settlement.
+ERC-7683 in Production
+Submit crosschain intents using the ERC-7683 standard via AcrossOriginSettler.
+On this page
+Why V4?
+V4 Architecture
+On Ethereum L1
+Off-Chain Infrastructure
+On Destination Chain
+Settlement Flow
+Bundle Finalized on L1
+Await Ethereum Finality
+ZK Proof Generation
+Proof Submission
+Relayer Refunds Processed
+Benefits
+Ask AI
