@@ -1,6 +1,6 @@
 # DeFiFormal migration roadmap
 
-Updated 2026-09-07 UTC: Sprint 7 delivered and archived; Sprint 8 delivered and archived; Sprint 9 source and evidence accepted; branch delivery and archival in progress. Sprint 10 OpenSpec preparation is complete.
+Updated 2026-09-07 UTC: Sprint 7 delivered and archived; Sprint 8 delivered and archived; Sprint 9 source/evidence delivered and OpenSpec archived; final archive push in progress. Sprint 10 OpenSpec preparation is complete.
 Branch: `semantic-kernel-pivot`. Sprint 8 archive delivery: `9501f0a4`.
 
 The remaining objective is conditional preservation of financial properties
@@ -121,7 +121,8 @@ and [evidence](review/semantic-kernel/sprint9/EVIDENCE.md) record148 runtime
 comparisons,14 detected mutations,65 CLI controls and109 explicit theorems.
 All16 fresh Lean integration commands passed;13 legacy suites retain their
 actual c880 execution identity through checked dependency equivalence.
-Delivery and archive records are attached separately when verified.
+[Source/evidence delivery](review/semantic-kernel/sprint9/delivery.json) is verified at `ec9ed80`;
+[archive integrity](review/semantic-kernel/sprint9/archive-integrity.json) verifies all35 tasks and55 scenarios.
 
 The equivalence/extension milestone covers fixed identity types, explicit
 configuration agreement and fixed sequential contexts. Regrouping sequential

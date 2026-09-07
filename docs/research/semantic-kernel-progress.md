@@ -325,4 +325,6 @@ source/tool equivalence. Source-r1 aliases were corrected with distinct complete
 financial expectations; original evidence and the context-limited Fable attempt
 remain preserved. [Adjudication](../../review/semantic-kernel/sprint9/ADJUDICATION.md)
 and [evidence](../../review/semantic-kernel/sprint9/EVIDENCE.md) give precise scope.
-Branch delivery and OpenSpec archive are the remaining administrative actions.
+Source/evidence delivery is verified at `ec9ed804`; OpenSpec is archived with35
+checked tasks,17 requirements and55 scenarios preserved. The archive push is
+recorded separately.
