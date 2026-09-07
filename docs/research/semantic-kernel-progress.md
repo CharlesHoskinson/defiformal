@@ -141,9 +141,9 @@ verification. The stock harness also checks the final documentation commit head.
 
 ## Sprint 5: typed interfaces and sequential composition
 
-The approved [OpenSpec proposal](../../openspec/changes/typed-interfaces-sequential-composition/proposal.md),
-[design](../../openspec/changes/typed-interfaces-sequential-composition/design.md),
-and [47 tasks](../../openspec/changes/typed-interfaces-sequential-composition/tasks.md)
+The approved [OpenSpec proposal](../../openspec/changes/archive/2026-09-06-typed-interfaces-sequential-composition/proposal.md),
+[design](../../openspec/changes/archive/2026-09-06-typed-interfaces-sequential-composition/design.md),
+and [47 tasks](../../openspec/changes/archive/2026-09-06-typed-interfaces-sequential-composition/tasks.md)
 are implemented at source candidate `28ba18c446f72084ff11b4d125dccf93bf8f4162`.
 GPT-6 used the stock Codex harness, with native Grok/Fable review and no Foreman.
 
@@ -178,7 +178,13 @@ proof-carrying-state fact. Environment truth, catalog authorship and capability
 provenance remain assumptions. Structural catalog checks have negative examples
 but no individual source mutants. An optional Fable documentation-only follow-up
 was unavailable due to credits; both required final reviews completed beforehand.
-Delivery and archive verification are saved separately after the actual push.
+[Delivery verification](../../review/semantic-kernel/sprint5/delivery.json) records
+the source/evidence push at `5fb0929`, with matching remote head and clean worktree.
+OpenSpec archived the change as `2026-09-06-typed-interfaces-sequential-composition`
+and synchronized all 19 requirements to four main specifications.
+[Archive validation](../../review/semantic-kernel/sprint5/archive-validation.json)
+records strict specification and local-link checks. A subsequent metadata commit
+saves these records, with its remote head checked separately by the stock harness.
 
 ## Full migration backlog
 

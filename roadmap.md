@@ -18,15 +18,18 @@ This root roadmap is the current consolidated agenda.
 
 ## 1. Sprint 5: typed interfaces and sequential composition
 
-Accepted with limitations: [OpenSpec change](openspec/changes/typed-interfaces-sequential-composition/proposal.md),
-[design](openspec/changes/typed-interfaces-sequential-composition/design.md),
-and [47 implementation tasks](openspec/changes/typed-interfaces-sequential-composition/tasks.md).
+Accepted with limitations: [OpenSpec change](openspec/changes/archive/2026-09-06-typed-interfaces-sequential-composition/proposal.md),
+[design](openspec/changes/archive/2026-09-06-typed-interfaces-sequential-composition/design.md),
+and [47 implementation tasks](openspec/changes/archive/2026-09-06-typed-interfaces-sequential-composition/tasks.md).
 Sequential execution retains the successful prefix and stops at the first refusal.
 The [adjudication](review/semantic-kernel/sprint5/ADJUDICATION.md),
 [scenario coverage](review/semantic-kernel/sprint5/coverage.md), and
 [proof inventory](review/semantic-kernel/sprint5/proof-inventory.json) record the
 accepted scope: 93 runtime comparisons, 12 detected source mutants, and 70 named
 theorems. Both required native Grok/Fable reviews accepted with limitations.
+[Delivery verification](review/semantic-kernel/sprint5/delivery.json) records the
+source/evidence push at `5fb0929`; the OpenSpec change is archived and its four main
+specifications are synchronized.
 
 - [x] Define component interfaces: typed ports, private/shared state, inputs, outputs, assumptions, and guarantees.
 - [x] Define initialization, execution traces, and observable success/refusal behavior.

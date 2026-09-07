@@ -69,8 +69,8 @@
 
 - [x] 9.1 Update `roadmap.md`, the progress ledger, and this checklist from actual accepted evidence; verify broader composition, claim lifecycle, and fidelity work remains open and this sprint's completed boxes have evidence.
 - [x] 9.2 Run strict OpenSpec validation and whitespace/link checks on the final change; verify validation passes and all referenced delivery evidence exists.
-- [ ] 9.3 Commit and push Sprint 5 source/evidence on the authorized branch, verify remote head equals the intended local delivery head, and save the delivery record; verify the final worktree contains no unexplained changes.
-- [ ] 9.4 Archive the implemented OpenSpec change using the CLI and validate the resulting main specs; verify archiving occurs only after accepted implementation and deliver the archive/metadata commit on the same branch.
+- [x] 9.3 Commit and push Sprint 5 source/evidence on the authorized branch, verify remote head equals the intended local delivery head, and save the delivery record; verify the final worktree contains no unexplained changes.
+- [x] 9.4 Archive the implemented OpenSpec change using the CLI and validate the resulting main specs; verify archiving occurs only after accepted implementation and deliver the archive/metadata commit on the same branch.
 
 Verification commands are execution instructions, not evidence of completed runs.
 Run Lean commands from `lean/`:

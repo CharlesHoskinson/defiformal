@@ -1,8 +1,8 @@
 # Sprint 5 scenario coverage
 
-Status: source/check/proof mapping complete for the frozen implementation and bound to the successful full build, runtime and imported-axiom audit. The frozen-source semantic mutation suite passes. Required native reviews are accepted with limitations in `ADJUDICATION.md`; branch/archive delivery is tracked separately below.
+Status: source/check/proof mapping complete for the frozen implementation and bound to the successful full build, runtime and imported-axiom audit. The frozen-source semantic mutation suite passes. Required native reviews are accepted with limitations in `ADJUDICATION.md`; source/evidence delivery is verified in `delivery.json`, and archive validation is recorded in `archive-validation.json`.
 
-All 19 requirements and 42 scenarios are mapped. Two interface scenarios were added after initial review: conflicting exports and cross-domain snapshots. Each row names concrete source declarations, executed comparison labels, or an explicit pending acceptance action.
+All 19 requirements and 42 scenarios are mapped. Two interface scenarios were added after initial review: conflicting exports and cross-domain snapshots. Each row names concrete source declarations, executed comparison labels, or a recorded acceptance action.
 
 | Spec | SHA-256 | Requirements | Scenarios |
 | --- | --- | ---: | ---: |
@@ -13,7 +13,7 @@ All 19 requirements and 42 scenarios are mapped. Two interface scenarios were ad
 
 ## composition-regression-evidence
 
-Source: `../../../openspec/changes/typed-interfaces-sequential-composition/specs/composition-regression-evidence/spec.md`.
+Source: `../../../openspec/changes/archive/2026-09-06-typed-interfaces-sequential-composition/specs/composition-regression-evidence/spec.md`.
 
 ### R1: Composed reference workflow coverage
 
@@ -46,11 +46,11 @@ Implementation/acceptance tasks: 8.3, 8.4, 8.5, 9.1, 9.2, 9.3, 9.4. All scenario
 | Scenario | Tasks | Concrete check/proof IDs | Evidence kind | Evidence/status |
 | --- | --- | --- | --- | --- |
 | R4.S1: Candidate changes after review | 8.3, 8.4, 8.5 | `candidate source/hash binding and refreshed affected review records` | measurement/review | `review-summary.json`; `candidate-binding.json`; `commit-source-verification.json`; `ADJUDICATION.md` — both required final reviews accepted with limitations; all 27 committed input hashes match |
-| R4.S2: Delivery record | 9.1, 9.2, 9.3, 9.4 | `delivery.json`; `final OpenSpec/archive validation` | measurement | pending acceptance and remote delivery |
+| R4.S2: Delivery record | 9.1, 9.2, 9.3, 9.4 | `delivery.json`; `final OpenSpec/archive validation` | measurement | `delivery.json`: remote source/evidence head verified; `archive-action.json` and `archive-validation.json`: archive/spec validation completed |
 
 ## sequential-preservation
 
-Source: `../../../openspec/changes/typed-interfaces-sequential-composition/specs/sequential-preservation/spec.md`.
+Source: `../../../openspec/changes/archive/2026-09-06-typed-interfaces-sequential-composition/specs/sequential-preservation/spec.md`.
 
 ### R1: Step and trace correspondence
 
@@ -100,7 +100,7 @@ Implementation/acceptance tasks: 4.4, 5.6, 6.7. All scenario rows below contribu
 
 ## sequential-workflow-execution
 
-Source: `../../../openspec/changes/typed-interfaces-sequential-composition/specs/sequential-workflow-execution/spec.md`.
+Source: `../../../openspec/changes/archive/2026-09-06-typed-interfaces-sequential-composition/specs/sequential-workflow-execution/spec.md`.
 
 ### R1: Validated initialization and trusted execution inputs
 
@@ -147,7 +147,7 @@ Implementation/acceptance tasks: 4.4, 5.6, 6.7. All scenario rows below contribu
 
 ## typed-component-interfaces
 
-Source: `../../../openspec/changes/typed-interfaces-sequential-composition/specs/typed-component-interfaces/spec.md`.
+Source: `../../../openspec/changes/archive/2026-09-06-typed-interfaces-sequential-composition/specs/typed-component-interfaces/spec.md`.
 
 ### R1: Stable typed port declarations
 
