@@ -1,4 +1,4 @@
-All 47 planned scenarios map to concrete proof, runtime, compiler, mutation, review or delivery evidence. The implementation and review gates pass; final delivery/archive is pending.
+All 47 planned scenarios map to concrete proof, runtime, compiler, mutation, review or delivery evidence. The implementation and review gates pass. Accepted source/evidence delivery and the approved archive are recorded.
 
 Source candidate: `fae07caa2620c7a1d4ba1a39cb9a9be171ff137d`. Lean bytes match `7cb4807d1ff22c5ac804b03feb4a2530c46146f2`.
 
@@ -42,7 +42,7 @@ Acceptance evidence: 131 runtime comparisons; 388 theorem and 419 supplemental a
 | S32 | parallel-regression-evidence | New proof enters import closure | Verified |
 | S33 | parallel-regression-evidence | Historical regression or drift | Verified |
 | S34 | parallel-regression-evidence | Reviewed source changes | Verified |
-| S35 | parallel-regression-evidence | Verified branch and archive | Pending delivery/archive |
+| S35 | parallel-regression-evidence | Verified branch and archive | Verified |
 | S36 | parallel-workflow-execution | One branch refuses immediately | Verified |
 | S37 | parallel-workflow-execution | Middle and dual refusal | Verified |
 | S38 | parallel-workflow-execution | Empty branch identity | Verified |
@@ -59,3 +59,5 @@ Acceptance evidence: 131 runtime comparisons; 388 theorem and 419 supplemental a
 Proof-carrying nonnegativity is distinct from discovered invariants. Local preservation, support, initialization and peer-disjointness remain explicit premises. Trusted boundaries, environment/store authenticity and deployment correspondence are not discharged. Runtime/mutation cases are bounded development evidence, not holdouts.
 
 The raw native bundles preserve the earlier coverage snapshot, including its then-pending evidence statuses. This current editorial map advances those statuses using final artifacts; it does not rewrite any raw review input or execution log.
+
+[Delivery metadata](delivery.json) and [archive action](archive-action.json) bind the final procedural scenario. A subsequent metadata commit saves those records; its final remote head is checked separately by the stock harness.

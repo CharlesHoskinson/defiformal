@@ -45,12 +45,16 @@ local/boundary premises, and nonnegativity follows from proof-carrying states.
 
 ## 2. Sprint 6: disjoint parallel composition
 
-The [OpenSpec plan](openspec/changes/disjoint-parallel-composition/design.md)
-and [48-task checklist](openspec/changes/disjoint-parallel-composition/tasks.md)
+The [OpenSpec plan](openspec/changes/archive/2026-09-07-disjoint-parallel-composition/design.md)
+and [48-task checklist](openspec/changes/archive/2026-09-07-disjoint-parallel-composition/tasks.md)
 are implemented and independently reviewed. Source candidate: `fae07ca`.
 Both native Grok and Fable audits accepted the Lean implementation and final
 evidence with limitations. [Adjudication and review identities](review/semantic-kernel/sprint6/implementation/ADJUDICATION.md)
-record the exact reviewed inputs.
+record the exact reviewed inputs. The accepted source/evidence push
+`26bb17d` is verified on `semantic-kernel-pivot`; all 17 requirements were
+synchronized to four main specs and the approved change was archived.
+[Delivery](review/semantic-kernel/sprint6/delivery.json) and
+[archive action](review/semantic-kernel/sprint6/archive-action.json) preserve the records.
 
 Acceptance passes 131 runtime comparisons, 388 imported theorem and 419
 supplemental axiom checks with zero forbidden dependencies, all 14 Parallel
@@ -67,7 +71,7 @@ all 47 scenarios and their precise evidence classes.
 - [x] Prove full executor dependency, exact refusal framing and both actual serial-order correspondences.
 - [x] Prove joined accounting, authority, nonnegativity, supported frames and conditional initialized invariants.
 - [x] Complete financial fixtures, real mutations, regressions and native Grok/Fable implementation review.
-- [ ] Deliver the accepted branch and archive the OpenSpec change.
+- [x] Deliver the accepted branch and archive the OpenSpec change.
 
 ## Remaining composition and metatheory
 

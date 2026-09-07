@@ -48,7 +48,7 @@
 - [x] 6.3 Add funded/authorized conflict negatives for both directions, hidden/inactive-arm reads, target balances, shared outputs, malformed suffixes, and live/revoked capability siblings; verify each intended failure is discriminated from missing funds or unrelated authority.
 - [x] 6.4 Add boundary-sensitive local-index, qualified-port and peer-only-history fixtures, immediate/middle/dual refusal fixtures, and identity/frame controls; verify changing branch order preserves local principal/time binding without treating time as a price.
 - [x] 6.5 Add `Audit.lean` with a nonempty unique named runtime inventory and `Verify.lean` with imported theorem/supplemental axiom coverage; import the new verification root from `lean/DefiKernel.lean` and verify full compilation, runtime pass and zero forbidden dependencies.
-- [ ] 6.6 Save named proof statements, quantification, premises and limits in `proof-inventory.json` and map all 47 planned scenarios to actual proof/check IDs; verify the inventory distinguishes generic results, reference instances, counterexamples, bounded comparisons and imported generated declarations.
+- [x] 6.6 Save named proof statements, quantification, premises and limits in `proof-inventory.json` and map all 47 planned scenarios to actual proof/check IDs; verify the inventory distinguishes generic results, reference instances, counterexamples, bounded comparisons and imported generated declarations.
 
 ## 7. Source mutation and runner evidence
 
@@ -62,16 +62,16 @@
 ## 8. Integrated acceptance and native implementation review
 
 - [x] 8.1 Commit frozen source and run the full new and existing Lean/runtime/axiom commands below plus existing typed/composition mutations, compiler controls, runner controls, axiom controls and corpus tests; save actual commands, exits and full logs and verify required checks pass without changing preserved files.
-- [ ] 8.2 Finish the scenario map and proof/source/tool manifests with actual outcomes; verify every scenario has nonvacuous evidence, each counted proof belongs to the fresh import closure, and executed bytes match Git objects of the reviewed source candidate.
+- [x] 8.2 Finish the scenario map and proof/source/tool manifests with actual outcomes; verify every scenario has nonvacuous evidence, each counted proof belongs to the fresh import closure, and executed bytes match Git objects of the reviewed source candidate.
 - [x] 8.3 Obtain independent native Grok/Fable review of substantive compatibility/dependency proofs, execution/commutation and regression/evidence scopes; retain raw requests/responses and verify exact requested/reported identities and candidate hashes.
 - [x] 8.4 Resolve blocking findings and refresh affected validation/review on the revised candidate; save implementation `ADJUDICATION.md`, preserved dissent and scope limits; verify no required review or normative obligation remains open.
 
 ## 9. Roadmap, delivery and archive
 
-- [ ] 9.1 Update roadmap/progress/tasks from accepted evidence; verify shared-state interleaving, atomic synchronization, broader associativity, claims/provenance and deployed fidelity remain open.
-- [ ] 9.2 Run strict OpenSpec validation and editorial whitespace/local-link checks; verify all current referenced evidence exists without rewriting hash-bound raw bundles/logs.
-- [ ] 9.3 Commit/push source and evidence to `semantic-kernel-pivot`; verify remote head equals intended local head and save delivery metadata with actual commit/source identities and explained worktree state.
-- [ ] 9.4 Archive only `disjoint-parallel-composition` through OpenSpec, validate all four synchronized main specs, update archive links and deliver metadata; verify final remote head, all task states and a clean worktree.
+- [x] 9.1 Update roadmap/progress/tasks from accepted evidence; verify shared-state interleaving, atomic synchronization, broader associativity, claims/provenance and deployed fidelity remain open.
+- [x] 9.2 Run strict OpenSpec validation and editorial whitespace/local-link checks; verify all current referenced evidence exists without rewriting hash-bound raw bundles/logs.
+- [x] 9.3 Commit/push source and evidence to `semantic-kernel-pivot`; verify remote head equals intended local head and save delivery metadata with actual commit/source identities and explained worktree state.
+- [x] 9.4 Archive only `disjoint-parallel-composition` through OpenSpec, validate all four synchronized main specs, update archive links and deliver metadata; verify final remote head, all task states and a clean worktree.
 
 Verification commands below are instructions, not run evidence. Planning artifacts
 can be written and audited before task 1.3 passes. New implementation is gated.

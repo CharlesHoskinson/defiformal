@@ -215,7 +215,12 @@ records exact elaborated statements and premises. Original 165 corpus/proof path
 32 protected kernel sources and 435 historical Lean files are unchanged; the root
 import only adds the Parallel verification module.
 
-Final branch delivery and archive metadata follow the accepted evidence. Shared
+Accepted source/evidence commit `26bb17d` is verified on `semantic-kernel-pivot`.
+The approved change is archived as `2026-09-07-disjoint-parallel-composition`;
+all 17 requirements synchronized to four main specifications.
+[Delivery](../../review/semantic-kernel/sprint6/delivery.json) and
+[archive records](../../review/semantic-kernel/sprint6/archive-action.json) identify
+the actions. Shared
 state interleaving, atomic synchronization, broader associativity, claims and
 provenance, environment truth and deployed fidelity remain open. The reference
 cases are development fixtures, not untouched holdouts or deployed protocol
