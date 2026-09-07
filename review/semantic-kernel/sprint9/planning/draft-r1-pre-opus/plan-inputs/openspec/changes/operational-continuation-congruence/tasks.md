@@ -1,0 +1,58 @@
+## 1. Accepted dependency and independent planning gate
+
+- [ ] 1.1 Refresh the provisional Sprint8 source binding in this change, `wiki-llm/sprint-9-operational-continuation-congruence.md` and the planning manifest to its final accepted archived/delivered candidate; verify source/evidence acceptance, remote branch identity and unchanged historical bytes before freezing the Sprint9 bundle.
+- [ ] 1.2 Obtain separate non-author GPT-6 and native Fable planning reviews of the identical proposal/design/four specs/tasks/scenario map/source bundle; verify exact candidate and bundle hashes, substantive verdicts and adjudication, leaving both reviews pending until actually run.
+- [ ] 1.3 Capture fresh existing Lean and Python baselines and protected source/tool/driver identities under `review/semantic-kernel/sprint9/planning/baseline/`; verify all baseline commands pass with nonempty inventories before creating Metatheory implementation source, preserving full failed-attempt logs if any.
+
+## 2. Actual recursive sequential execution
+
+- [ ] 2.1 Create `lean/DefiKernel/Metatheory/SequentialGroups.lean` with SeqGroup.empty/step/seq, separate flatten and a recursive runGroup using Composition.advance at leaves and the full first-child cursor at seq; record the initial missing-feature check, then verify LSP and `lake build DefiKernel.Metatheory.SequentialGroups` from `lean/` with all runtime declarations before the proof marker.
+- [ ] 2.2 Add the first independent group expectations in `Metatheory/Examples.lean` and `Tests.lean`: transfer7 producer exporting Alice3, snapshot consumer transferring3 to Carol and Bob's return1; verify exact Alice1/Bob6/Carol3, ordered outputs, actual receipts and absolute indices for nested groups.
+- [ ] 2.3 Prove runGroup equals actual Composition.continueRun on flatten for arbitrary initial cursor, including raw event worlds, history, store, index and failure; verify the generic statement has no successful-only or initial-cursor restriction and targeted Lean checks cover administrative and prefailed instances.
+- [ ] 2.4 Derive full-cursor empty identities, refusal absorption and three-group associativity from actual recursive simulation; verify three nonempty groups and the middle-refusal inert-suffix case, retaining a separate reversed-shared-order negative result.
+
+## 3. Exact observations and restricted contexts
+
+- [ ] 3.1 Create `Metatheory/Observation.lean` with observeCursor, CursorEquivalent and the production fieldwise Boolean comparison specified in design.md; verify independently constructed equal/changed pairs for current ledger, full store, event index/action/receipt/output, frozen history, nextIndex and exact optional failure.
+- [ ] 3.2 Prove comparison iff CursorEquivalent plus reflexivity/symmetry/transitivity; verify the full elaborated statements and a pair differing only in omitted past raw event worlds, without claiming equality of their raw cursors.
+- [ ] 3.3 Prove actual Composition.advance and runGroup preserve CursorEquivalent for the same action/group; verify proofs use equal current whole world, history, nextIndex and failure while preserving the observed event prefix, including issue/revoke and actual refusal branches.
+- [ ] 3.4 Create `Metatheory/Contexts.lean` with the one-hole before/after fixed-group grammar and universal-input GroupEquivalent; prove its equivalence laws and fill substitution, then verify fixed nonempty prefixes/suffixes and an output-consuming continuation under identical configuration/boundaries.
+- [ ] 3.5 Add actual missing-history, missing-index, missing-store and one-entry-only substitution counterexamples in `Metatheory/Examples.lean`/`Tests.lean`; verify each omitted premise permits different real continuation behavior and that no diagnostic inspection, peer addition or boundary movement is admitted by the context grammar.
+
+## 4. Explicit configuration agreement and administrative scope
+
+- [ ] 4.1 Create `Metatheory/Configuration.lean` reference sets, support predicates and ConfigAgreement with both catalogs valid, supported registry/full component-interface lookups equal and all-domain trusted admins equal; verify support includes every issue Grant.operation and all static suffixes, and agreement contains no desired execution equality or invented runtime checker.
+- [ ] 4.2 Prove exact actual Composition.executeStep congruence for supported invokes by following validation, preparation/access/input resolution, execution and receipt extraction; verify generic success and all refusal branches including agreed absent lookups, with identical boundary/index/history/full world premises.
+- [ ] 4.3 Prove issue/revoke cases through actual registryAuthorityConfig and current-store lookup, using supported Grant.operation and all-domain admin equality; verify exact issue IDs, tombstones, unknown-capability/admin/domain failures and the grant-only operation-domain negative companion.
+- [ ] 4.4 Create `Metatheory/ConfigurationGroups.lean`; lift support and configuration equality through advance/startCursor/continueRun/run and recursive groups, proving support union and valid-config agreement laws; verify full cursor equality across nonempty issue/invoke/revoke groups and unreachable suffix support.
+- [ ] 4.5 Add independently executed configuration-premise witnesses for changed old registry, changed complete component/access/output lookup, invalid added catalog, changed grant-only operation domain, changed trusted admin and differing initial store; verify exact old/new outcomes and all remaining applicable premises rather than treating an unavailable proof as the counterexample.
+
+## 5. Existing operator lifting
+
+- [ ] 5.1 Create `Metatheory/OperatorLifting.lean` and prove supported analyzeInvocation/analyzeBranch equality and exact existing Parallel/Interleaving/Atomic admission equality; verify both complete valid catalogs, every static position, original error precedence, same policy and schedule, including malformed unreachable suffixes.
+- [ ] 5.2 Lift actual step congruence through Parallel isolated branch execution and merge with identical branches/initial whole world; verify exact success and refused-branch results and independently expected nonempty financial controls.
+- [ ] 5.3 Lift actual step congruence through shared Interleaving token execution using identical complete schedules and boundaries; verify exact attempt pre-worlds/outcomes, own histories, local indices and retained refusals under success and failure examples.
+- [ ] 5.4 Lift actual step congruence through Atomic attempts, receipt-derived table updates and finish/public projection with the same policy/label/schedule; verify exact committed, admission-refused, kernel-aborted, supply-aborted and unsettled results without inserting a new checker or weakening equality to balances.
+
+## 6. Independent examples and imported checks
+
+- [ ] 6.1 Complete group financial and administrative cases in `Metatheory/Examples.lean` and `Tests.lean`, including nonzero starting index/store, index-dependent actor/time, issue-use-revoke-denied-use and retained-prefix refusal; verify independent full expectations and nonempty positive controls for all eight routing mutants.
+- [ ] 6.2 Complete unrelated valid configuration-extension fixtures and existing operator siblings in `Metatheory/Examples.lean` and `Tests.lean`; verify both real catalog validity checks, explicit agreement proof instances, nonempty old-program success/refusal and exact whole-store preservation.
+- [ ] 6.3 Complete observation sensitivity pairs for every retained subfield and the six designated omission oracles; verify each changed pair differs and each equal nonempty pair compares equal without deriving expected values through the comparator under test.
+- [ ] 6.4 Add named checked counterexamples to scalar ledger-only continuation, one-entry replacement, shared reordering and moving an atomic commit boundary, plus the configuration witnesses; verify concrete success/refusal/rollback differences and record these as bounds on stronger claims rather than new operator laws.
+- [ ] 6.5 Create `Metatheory/Audit.lean` and `Verify.lean`, then integrate only the root verification import; verify all unique nonempty `metatheory.*` runtime observations, automatic imported theorem/supplemental axiom checks and zero forbidden dependencies with `lake build DefiKernel.Metatheory.Verify DefiKernel` from `lean/`.
+
+## 7. Actual mutations and defensive controls
+
+- [ ] 7.1 Add `scripts/check_metatheory_mutations.py`, `scripts/test_metatheory_mutation_runner.py` and `mutations/metatheory.json` by adapting final accepted Sprint8 runner behavior to Metatheory roots; verify real unchanged source projection, complete module/check inventory and strict executable-before-proof-boundary enforcement with fresh external output directories.
+- [ ] 7.2 Implement the exact eight production group-routing mutations M01–M08 in the new interpreter source sites listed in design.md; verify every mutant compiles, its independent full-result comparison is false and its declared nonempty positive sibling remains true, with no imported kernel edit.
+- [ ] 7.3 Implement the exact six production observation omission mutations M09–M14 in actual comparison code; verify every changed-pair sensitivity comparison becomes false and equal nonempty pairs remain true, separating this evidence from financial execution-routing detections.
+- [ ] 7.4 Adapt all 65 final established actual CLI controls, including the 11 proof-tail parser controls and two production audit-output forms, with an explicit old/new control-name map; verify every real subprocess has the expected valid/violated/blocked classification and compiler-only failures receive no semantic detection credit.
+- [ ] 7.5 Freeze Metatheory source, spec and drivers and execute all 14 production mutations plus 65 controls in fresh external trees; verify exact source Git objects, all required false/protected true observations, complete logs/UTC/tool identities, before/after drift checks and artifact manifests while retaining unsuccessful attempts separately.
+
+## 8. Final source-bound acceptance and delivery
+
+- [ ] 8.1 Run fresh full prior Lean and Python regression suites plus the new imported runtime/proof checks; verify nonempty inventories, exact existing input preservation and no regression at the frozen final candidate, distinguishing compiler controls and source-preserving equivalent metadata revisions.
+- [ ] 8.2 Generate complete elaborated/source theorem and supplemental inventories with private-name mapping, premise classes, source/module/Git provenance and every actual scenario mapping under `review/semantic-kernel/sprint9/`; verify exact inventory equality with fresh Verify output and distinguish generic proofs, reference instances, counterexamples, generated constants and execution evidence.
+- [ ] 8.3 Obtain native Grok and Fable substantive source/proof and final evidence reviews on the same bound candidate; verify model/provenance logs and adjudication, resolve concrete blockers through targeted revisions until resolved and leave missing verdicts open rather than substituting author review.
+- [ ] 8.4 After accepted reviews and complete evidence, archive this OpenSpec change, reconcile wiki/progress and source/evidence manifests, and push the authorized branch; verify archived requirement/scenario preservation, strict validation and remote commit equality without merging to main or rewriting historical accepted evidence.

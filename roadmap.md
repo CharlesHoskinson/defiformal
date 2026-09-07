@@ -1,7 +1,7 @@
 # DeFiFormal migration roadmap
 
-Updated 2026-09-07 UTC: Sprint 7 delivered and archived; Sprint 8 source/evidence accepted; delivery in progress.
-Branch: `semantic-kernel-pivot`. Sprint 6 delivery/archive head: `850d785`.
+Updated 2026-09-07 UTC: Sprint 7 delivered and archived; Sprint 8 delivered and archived; Sprint 9 planning gate in preparation.
+Branch: `semantic-kernel-pivot`. Sprint 8 archive delivery: `9501f0a4`.
 
 The remaining objective is conditional preservation of financial properties
 under composition, backed by faithful protocol models. Sprints 1–6 delivered the
@@ -106,7 +106,7 @@ The next [OpenSpec proposal](openspec/changes/archive/2026-09-07-atomic-synchron
 16 requirements and49 scenarios. The [wiki decision record](wiki-llm/sprint-8-atomic-synchronization.md)
 explains exact rollback, separate committed observations and receipt-derived typed
 transient clearing. Strict plan validation and author consistency checks pass;
-independent GPT-6 and native Fable planning reviews pass on `7a73b2d`. The accepted baseline and dependency delivery passed. Revised implementation candidate `a52fb748` passes135 financial comparisons,357 theorem/496 supplemental axiom checks with zero forbidden dependencies,18 compiling production mutants and65 actual CLI controls. The initial audit-report protocol defect is corrected with its failed attempt preserved. All11 legacy suites have verified relevant dependency equivalence to this revision. Both final native Grok and Opus source/evidence reviews accept with limitations at `99e2e2c`; final65 controls are r4 with the corrected log-path harness. Source/evidence acceptance is complete; branch delivery/archive remain open.
+independent GPT-6 and native Fable planning reviews pass on `7a73b2d`. The accepted baseline and dependency delivery passed. Revised implementation candidate `a52fb748` passes135 financial comparisons,357 theorem/496 supplemental axiom checks with zero forbidden dependencies,18 compiling production mutants and65 actual CLI controls. The initial audit-report protocol defect is corrected with its failed attempt preserved. All11 legacy suites have verified relevant dependency equivalence to this revision. Both final native Grok and Opus source/evidence reviews accept with limitations at `99e2e2c`; final65 controls are r4 with the corrected log-path harness. All40 tasks and49 scenarios are complete. Source/evidence push `2c038094` and archive push `9501f0a4` are verified.
 
 The user authorized continued execution of all remaining packages while AFK;
 [the execution agenda](wiki-llm/autonomous-execution-agenda.md) preserves dependencies,
@@ -117,7 +117,7 @@ merely because it is scheduled.
 
 - [x] Implement disjoint parallel composition.
 - [x] Implement shared-state interleaving with explicit interference conditions.
-- [ ] Implement atomic synchronization, including failure and transient-settlement semantics.
+- [x] Implement atomic synchronization, including failure and transient-settlement semantics.
 - [ ] Generalize the useful results in `Interface.lean` and `Nary.lean` into the operational model.
 - [ ] Prove behavioral associativity: regrouping compatible components preserves behavior.
 - [ ] Prove assume-guarantee composition with initialization and causal or inductive premises, not circular assumptions.

@@ -4,7 +4,7 @@ Planning research only, 2026-09-07. Source inspected at
 `bea105ec72e633a2dd66c663b96d0b552e1814a8`. This note proposes independently
 reviewable increments after atomic synchronization. It is not an approved OpenSpec
 change, an implementation, or proof evidence. Each increment needs its own frozen
-GPT-6/native Fable planning gate and native Grok/Fable result review through the
+GPT-6/native Opus planning gate and native Grok/Opus result review through the
 stock Codex harness. No Foreman. Routine scope choices follow the user's AFK
 execution authorization; no source, historical theorem or existing evidence is
 changed by this draft.

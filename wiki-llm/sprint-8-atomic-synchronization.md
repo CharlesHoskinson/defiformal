@@ -1,7 +1,6 @@
 # Sprint8: atomic synchronization
 
-Source and evidence accepted with limitations at `99e2e2c`; branch delivery and
-archive pending. Native Grok (`grok-4.6-build`) and Opus (`claude-opus-5`) pass.
+Source and evidence accepted with limitations at `99e2e2c`; source/evidence delivery `2c038094` and archive `9501f0a4` are verified. Native Grok (`grok-4.6-build`) and Opus (`claude-opus-5`) pass.
 [Adjudication](../review/semantic-kernel/sprint8/final-review/ADJUDICATION.md),
 [evidence](../review/semantic-kernel/sprint8/EVIDENCE.md),
 [scenario overlay](../review/semantic-kernel/sprint8/scenario-map-final.json), and
@@ -37,5 +36,5 @@ No deployed Balancer fidelity, machine arithmetic, general associativity, dynami
 provenance or order-independence claim is made.
 
 Sprint9's operational grouping/continuation/configuration-congruence OpenSpec
-draft and fresh baseline are in preparation. Its independent GPT-6/Opus planning
-gate and accepted Sprint8 delivery remain prerequisites to implementation.
+draft and fresh baseline are ready. Sprint8 delivery is complete; the independent
+GPT-6/Opus planning gate remains required before implementation.

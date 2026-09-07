@@ -293,7 +293,7 @@ deployed protocol fidelity, general solvency, or a complete DeFi calculus.
 
 Source `99e2e2c` and evidence are accepted with limitations by native Grok and
 Opus and pushed at `2c038094`. Four atomic OpenSpec capabilities (16 requirements,
-49 scenarios) are archived. Final archive-metadata delivery is in progress.
+49 scenarios) are archived. Archive-metadata delivery `9501f0a4` is verified; all40 tasks and49 scenarios are complete.
 Actual kernel/proof/18-production-mutant runs retain a52 identity; final65 runner
 controls execute at a52 with harness bytes committed unchanged at99. All135
 runtime comparisons and14 Lean commands pass;357 imported theorems comprise106

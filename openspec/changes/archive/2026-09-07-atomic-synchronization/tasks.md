@@ -63,7 +63,7 @@
 - [x] 9.1 Update roadmap/progress/wiki/task states from accepted evidence; verify general metatheory, dynamic provenance, full Balancer/runtime fidelity and later roadmap packages remain accurately open.
 - [x] 9.2 Validate this OpenSpec strictly and check editorial whitespace/local links while preserving raw hash-bound artifacts; verify all49 scenarios and task states match actual acceptance.
 - [x] 9.3 Commit/push the accepted implementation/evidence to `semantic-kernel-pivot` and verify actual remote identity; record delivery without merging main or including unrelated changes.
-- [ ] 9.4 Archive only `atomic-synchronization`, synchronize/validate its four main specs and repair links; push final metadata and verify clean worktree, completed task states and remote head.
+- [x] 9.4 Archive only `atomic-synchronization`, synchronize/validate its four main specs and repair links; push final metadata and verify clean worktree, completed task states and remote head.
 
 Dependencies:1 gates implementation;2→3→4→5;fixtures grow with each behavior;
 6 inventories all proofs/runtime;7 requires real production paths;8 and9 accept
