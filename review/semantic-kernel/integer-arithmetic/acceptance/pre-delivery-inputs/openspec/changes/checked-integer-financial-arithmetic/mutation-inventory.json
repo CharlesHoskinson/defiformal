@@ -1,0 +1,220 @@
+{
+  "status": "PROPOSED_RUNTIME_TARGETS_NOT_RUN",
+  "global_positives": [
+    "F01",
+    "F03"
+  ],
+  "mutants": [
+    {
+      "id": "M01",
+      "target": "Operations.add",
+      "change": "wrap overflowing addition",
+      "designated": "F04",
+      "separate_sibling": "F14",
+      "execution": "not_run",
+      "module": "DefiKernel.Arithmetic.Operations",
+      "needle": "Word.checked .addOverflow (a.value + b.value)",
+      "replacement": "Word.checked .addOverflow ((a.value + b.value) % (2^w))",
+      "required_false": [
+        "arithmetic.fixture.f04"
+      ],
+      "sibling_check": "arithmetic.fixture.f14",
+      "source_status": "PLANNED_NOT_IMPLEMENTED_OR_COMPILED",
+      "compile_obligation": "Actual unique anchor and complete projection must compile with self-contained inline Word/nonnegativity proof terms; failure is BLOCKED, never detection."
+    },
+    {
+      "id": "M02",
+      "target": "Operations.sub",
+      "change": "skip underflow check and return natural subtraction",
+      "designated": "F05",
+      "separate_sibling": "F14",
+      "execution": "not_run",
+      "module": "DefiKernel.Arithmetic.Operations",
+      "needle": "if b.value \u2264 a.value then Word.checked .subUnderflow (a.value - b.value)\n  else .error .subUnderflow",
+      "replacement": "Word.checked .subUnderflow (a.value - b.value)",
+      "required_false": [
+        "arithmetic.fixture.f05"
+      ],
+      "sibling_check": "arithmetic.fixture.f14",
+      "source_status": "PLANNED_NOT_IMPLEMENTED_OR_COMPILED",
+      "compile_obligation": "Actual unique anchor and complete projection must compile with self-contained inline Word/nonnegativity proof terms; failure is BLOCKED, never detection."
+    },
+    {
+      "id": "M03",
+      "target": "Rounding.mulDiv",
+      "change": "truncate intermediate product modulo2^w",
+      "designated": "F07",
+      "separate_sibling": "F14",
+      "execution": "not_run",
+      "module": "DefiKernel.Arithmetic.Rounding",
+      "needle": "let q \u2190 divideNat mode (a.value * b.value) denominator",
+      "replacement": "let q \u2190 divideNat mode ((a.value * b.value) % (2^w)) denominator",
+      "required_false": [
+        "arithmetic.fixture.f07"
+      ],
+      "sibling_check": "arithmetic.fixture.f14",
+      "source_status": "PLANNED_NOT_IMPLEMENTED_OR_COMPILED",
+      "compile_obligation": "Actual unique anchor and complete projection must compile with self-contained inline Word/nonnegativity proof terms; failure is BLOCKED, never detection."
+    },
+    {
+      "id": "M04",
+      "target": "Rounding.mulDiv",
+      "change": "return zero for zero denominator",
+      "designated": "F08",
+      "separate_sibling": "F14",
+      "execution": "not_run",
+      "module": "DefiKernel.Arithmetic.Rounding",
+      "needle": "if denominator = 0 then .error .divisionByZero",
+      "replacement": "if denominator = 0 then .ok 0",
+      "required_false": [
+        "arithmetic.fixture.f08"
+      ],
+      "sibling_check": "arithmetic.fixture.f14",
+      "source_status": "PLANNED_NOT_IMPLEMENTED_OR_COMPILED",
+      "compile_obligation": "Actual unique anchor and complete projection must compile with self-contained inline Word/nonnegativity proof terms; failure is BLOCKED, never detection."
+    },
+    {
+      "id": "M05",
+      "target": "Rounding.floor branch",
+      "change": "round nonexact floor upward",
+      "designated": "F09",
+      "separate_sibling": "F11",
+      "execution": "not_run",
+      "module": "DefiKernel.Arithmetic.Rounding",
+      "needle": "| .down => numerator / denominator",
+      "replacement": "| .down => numerator / denominator + (if numerator % denominator = 0 then 0 else 1)",
+      "required_false": [
+        "arithmetic.fixture.f09"
+      ],
+      "sibling_check": "arithmetic.fixture.f11",
+      "source_status": "PLANNED_NOT_IMPLEMENTED_OR_COMPILED",
+      "compile_obligation": "Actual unique anchor and complete projection must compile with self-contained inline Word/nonnegativity proof terms; failure is BLOCKED, never detection."
+    },
+    {
+      "id": "M06",
+      "target": "Rounding.ceiling branch",
+      "change": "round nonexact ceiling downward",
+      "designated": "F10",
+      "separate_sibling": "F14",
+      "execution": "not_run",
+      "module": "DefiKernel.Arithmetic.Rounding",
+      "needle": "| .up => numerator / denominator + (if numerator % denominator = 0 then 0 else 1)",
+      "replacement": "| .up => numerator / denominator",
+      "required_false": [
+        "arithmetic.fixture.f10"
+      ],
+      "sibling_check": "arithmetic.fixture.f14",
+      "source_status": "PLANNED_NOT_IMPLEMENTED_OR_COMPILED",
+      "compile_obligation": "Actual unique anchor and complete projection must compile with self-contained inline Word/nonnegativity proof terms; failure is BLOCKED, never detection."
+    },
+    {
+      "id": "M07",
+      "target": "Rounding.ceiling branch",
+      "change": "add one on exact division",
+      "designated": "F11",
+      "separate_sibling": "F14",
+      "execution": "not_run",
+      "module": "DefiKernel.Arithmetic.Rounding",
+      "needle": "| .up => numerator / denominator + (if numerator % denominator = 0 then 0 else 1)",
+      "replacement": "| .up => numerator / denominator + 1",
+      "required_false": [
+        "arithmetic.fixture.f11"
+      ],
+      "sibling_check": "arithmetic.fixture.f14",
+      "source_status": "PLANNED_NOT_IMPLEMENTED_OR_COMPILED",
+      "compile_obligation": "Actual unique anchor and complete projection must compile with self-contained inline Word/nonnegativity proof terms; failure is BLOCKED, never detection."
+    },
+    {
+      "id": "M08",
+      "target": "Rounding.final bound",
+      "change": "wrap the overflowing final quotient",
+      "designated": "F13",
+      "separate_sibling": "F14",
+      "execution": "not_run",
+      "module": "DefiKernel.Arithmetic.Rounding",
+      "needle": "Word.checked .quotientOverflow q",
+      "replacement": "Word.checked .quotientOverflow (q % (2^w))",
+      "required_false": [
+        "arithmetic.fixture.f13"
+      ],
+      "sibling_check": "arithmetic.fixture.f14",
+      "source_status": "PLANNED_NOT_IMPLEMENTED_OR_COMPILED",
+      "compile_obligation": "Actual unique anchor and complete projection must compile with self-contained inline Word/nonnegativity proof terms; failure is BLOCKED, never detection."
+    },
+    {
+      "id": "M09",
+      "target": "Fees.rate check",
+      "change": "accept an over-unit rate by clamping it",
+      "designated": "F19",
+      "separate_sibling": "F14",
+      "execution": "not_run",
+      "module": "DefiKernel.Arithmetic.Fees",
+      "needle": "if den = 0 \u2228 num > den then .error .invalidRate else .ok num",
+      "replacement": "if den = 0 then .error .invalidRate else .ok (min num den)",
+      "required_false": [
+        "arithmetic.fixture.f19"
+      ],
+      "sibling_check": "arithmetic.fixture.f14",
+      "source_status": "PLANNED_NOT_IMPLEMENTED_OR_COMPILED",
+      "compile_obligation": "Actual unique anchor and complete projection must compile with self-contained inline Word/nonnegativity proof terms; failure is BLOCKED, never detection."
+    },
+    {
+      "id": "M10",
+      "target": "Fees.feeFromGross",
+      "change": "return gross as received without subtracting fee",
+      "designated": "F14",
+      "separate_sibling": "F07",
+      "execution": "not_run",
+      "module": "DefiKernel.Arithmetic.Fees",
+      "needle": "let received \u2190 Word.checked .subUnderflow (gross.value - fee.value)",
+      "replacement": "let received \u2190 Word.checked .subUnderflow gross.value",
+      "required_false": [
+        "arithmetic.fixture.f14"
+      ],
+      "sibling_check": "arithmetic.fixture.f07",
+      "source_status": "PLANNED_NOT_IMPLEMENTED_OR_COMPILED",
+      "compile_obligation": "Actual unique anchor and complete projection must compile with self-contained inline Word/nonnegativity proof terms; failure is BLOCKED, never detection."
+    },
+    {
+      "id": "M11",
+      "target": "Quantity.toQuantity",
+      "change": "ignore the positive scale",
+      "designated": "F21",
+      "separate_sibling": "F14",
+      "execution": "not_run",
+      "module": "DefiKernel.Arithmetic.Quantity",
+      "needle": "amount := (q.value : \u211a) * scale",
+      "replacement": "amount := (q.value : \u211a)",
+      "required_false": [
+        "arithmetic.fixture.f21"
+      ],
+      "sibling_check": "arithmetic.fixture.f14",
+      "source_status": "PLANNED_NOT_IMPLEMENTED_OR_COMPILED",
+      "compile_obligation": "Actual unique anchor and complete projection must compile with self-contained inline Word/nonnegativity proof terms; failure is BLOCKED, never detection."
+    },
+    {
+      "id": "M12",
+      "target": "Reference.template",
+      "change": "omit collector credit",
+      "designated": "F25",
+      "separate_sibling": "F14",
+      "execution": "not_run",
+      "module": "DefiKernel.Arithmetic.Reference",
+      "needle": "deltas := [payerDelta quote scale payer, recipientDelta quote scale recipient,\n    collectorDelta quote scale collector]",
+      "replacement": "deltas := [payerDelta quote scale payer, recipientDelta quote scale recipient]",
+      "required_false": [
+        "arithmetic.fixture.f25"
+      ],
+      "sibling_check": "arithmetic.fixture.f14",
+      "source_status": "PLANNED_NOT_IMPLEMENTED_OR_COMPILED",
+      "compile_obligation": "Actual unique anchor and complete projection must compile with self-contained inline Word/nonnegativity proof terms; failure is BLOCKED, never detection."
+    }
+  ],
+  "pre_freeze_obligation": "Literal proposed edits fixed. Bind actual production source and exactly-once projection edits after implementation; incompatible anchor edits require reviewed amendment, never oracle weakening.",
+  "global_positive_checks": [
+    "arithmetic.fixture.f01",
+    "arithmetic.fixture.f03"
+  ],
+  "supplemental_sibling_matrix": "Record every mutant \u00d7 all45 fixture results, including actual designated false and stated independent sibling true. Query overlap is detection sensitivity, not unique fault identification.",
+  "m12_expected_actual_refusal": "accounting, after authority/balance and earlier checks pass; compare actual .error alongside designated expected-success false"
+}

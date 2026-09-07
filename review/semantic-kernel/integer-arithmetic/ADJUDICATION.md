@@ -1,0 +1,7 @@
+# Arithmetic acceptance
+
+Accepted with limitations at source `ddf1ac0e50f2e032385664a0965bab59eef91ea3`. Native Grok4.6-build and Fable5.1 medium accepted the identical1,119-input bundle aef0e4baa065fec6e7d9cd131e74e3e6680a18793ed8536fd0f650c102b0dd41 with no required changes. Root read both complete reports and rechecked every input hash. Review is advisory; Lean checks and actual execution records supply separate evidence.
+
+After the reviewers noted cache reuse, all11 Arithmetic source files were freshly elaborated successfully against the same pinned imports. No source was changed. This is still not a clean rebuild of every imported Mathlib or Typed theorem. The positive-scale reference premise is part of the stated valid-use contract; the raw template constructor does not reject negative scales. Net aggregation, explicit authority/funding premises, retained earlier revision identities and the absence of deployed-code refinement remain limits.
+
+The full disposition, exact requested/reported native identities, preserved pre-delivery inputs and supplemental checks are under acceptance/. Proposed planning inventories remain historical; measured helpers, mutation overlaps and36-scenario evidence are recorded separately. Original E07/E08 pending statuses are closed only through the acceptance/delivery overlay. The saved-artifact checker can be reproduced from evidence commit a672a1f9e0cf843bc31772c1003ded76d9ea5d17, where its frozen active-plan paths are present.

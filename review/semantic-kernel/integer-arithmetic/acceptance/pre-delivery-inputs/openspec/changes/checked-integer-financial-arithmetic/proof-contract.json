@@ -1,0 +1,101 @@
+{
+  "status": "UNIMPLEMENTED_UNIVERSAL_OBLIGATIONS",
+  "proofs": [
+    {
+      "id": "P01",
+      "scope": "Word.checked and ofNat",
+      "statement": "For every w,n, ok value exactly n iff n<2^w; otherwise exact supplied checked error / inputOverflow.",
+      "premises_and_limits": "No truncation; w=0 permitted."
+    },
+    {
+      "id": "P02",
+      "scope": "Operations.add",
+      "statement": "For every pair Word w, ok q iff q=a+b and a+b<2^w; error addOverflow iff 2^w\u2264a+b.",
+      "premises_and_limits": "No success hypothesis substituted for characterization."
+    },
+    {
+      "id": "P03",
+      "scope": "Operations.sub",
+      "statement": "ok q iff b\u2264a and q=a-b; subUnderflow iff a<b.",
+      "premises_and_limits": "Nat truncated subtraction is only used after b\u2264a."
+    },
+    {
+      "id": "P04",
+      "scope": "Operations.mul",
+      "statement": "ok q iff q=a*b and a*b<2^w; mulOverflow iff 2^w\u2264a*b.",
+      "premises_and_limits": "Exact natural product."
+    },
+    {
+      "id": "P05",
+      "scope": "Rounding.divideNat",
+      "statement": "For d>0, down ok q iff q*d\u2264n<(q+1)*d; up ok q iff n\u2264q*d and every k with n\u2264k*d satisfies q\u2264k. error divisionByZero iff d=0; no other errors.",
+      "premises_and_limits": "Numerator and denominator arbitrary Nat; no word bound."
+    },
+    {
+      "id": "P06",
+      "scope": "Rounding.mulDiv",
+      "statement": "d=0 gives divisionByZero; d>0 independent rounded q fits iff success; otherwise quotientOverflow.",
+      "premises_and_limits": "Intermediate product arbitrary Nat, final q bounded."
+    },
+    {
+      "id": "P07",
+      "scope": "Rounding laws",
+      "statement": "d>0: ceil=floor+[remainder\u22600]; equal iff d divides n; floor error n/d-floor\u2208[0,1), ceil error ceil-n/d\u2208[0,1).",
+      "premises_and_limits": "Use rational casts explicitly; checked equality requires both successes."
+    },
+    {
+      "id": "P08",
+      "scope": "Monotonicity",
+      "statement": "At fixed other inputs: successful add/mul/mulDiv values monotone in either operand; subtraction monotone in minuend and antitone in subtrahend.",
+      "premises_and_limits": "Both compared checked calls succeed; positive d for division; no refusal ordering."
+    },
+    {
+      "id": "P09",
+      "scope": "Fees.validatedRate",
+      "statement": "ok returns original num iff 0<den and num\u2264den; otherwise invalidRate.",
+      "premises_and_limits": "Wrapper rate error before divideNat; arbitrary Nat rate components."
+    },
+    {
+      "id": "P10",
+      "scope": "Fees.feeFromGross",
+      "statement": "For every valid rate and input Word, success with charged=principal=gross, fee=directed quotient, received=gross-fee and charged=received+fee; fee\u2264gross.",
+      "premises_and_limits": "Prove fit from rate bound; do not assume conservation in FeeQuote."
+    },
+    {
+      "id": "P11",
+      "scope": "Fees.feeOnTop",
+      "statement": "Valid rate gives fee\u2264principal; success iff principal+fee<2^w; received=principal, charged=principal+fee, conservation. Otherwise addOverflow.",
+      "premises_and_limits": "Zero/unit/tiny/exact laws in both modes; invalid rate first."
+    },
+    {
+      "id": "P12",
+      "scope": "Quantity",
+      "statement": "scale>0: toQuantity value=n*scale; fromRat succeeds iff amount=n*scale for some n<2^w, with same-scale round trips.",
+      "premises_and_limits": "Exact scale\u2192negative\u2192integrality\u2192bound error precedence; type preserves only chosen asset."
+    },
+    {
+      "id": "P13",
+      "scope": "Reference accounting",
+      "statement": "Every quote from successful fee API and positive scale yields sum of constructed deltas zero for every domain/asset.",
+      "premises_and_limits": "Arbitrary finite decidable party universe and coincident cells; derive by finite sums and quote law."
+    },
+    {
+      "id": "P14",
+      "scope": "Reference actual success",
+      "statement": "Given registry/actor/domain/arity/args binding, invocation and negative-net-effect authority and nonnegative resulting balances, actual execute returns complete effect-sum state and exact store.",
+      "premises_and_limits": "Derive constructed evaluation and static checks, including accounting; no assumed Valid or execute success."
+    },
+    {
+      "id": "P15",
+      "scope": "Reference exact refusal",
+      "statement": "Absent required negative-net debit authority gives unauthorizedDebit after earlier checks; negative resulting balance gives insufficientFunds after earlier authority/static checks.",
+      "premises_and_limits": "Refusal is Except.error; retained input is an observer field, not returned post-state."
+    },
+    {
+      "id": "P16",
+      "scope": "Reference locality and dimensions",
+      "statement": "Cells outside all three targets retain balances; store identical; quantity indices fixed and scale explicitly positive.",
+      "premises_and_limits": "No claims of authentication, dynamic pricing, sequential debit order or deployed fidelity."
+    }
+  ]
+}
