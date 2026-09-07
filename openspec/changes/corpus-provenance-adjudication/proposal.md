@@ -13,7 +13,9 @@ versioned decisions before stronger coverage or fidelity claims are possible.
   as unresolved unless actual provenance is recovered.
 - Add organization/product/version/deployment resolution, auditable additional
   product splits, source pins, dependency edges and ambiguity/residue records.
-- Add reusable, versioned evidence rules and an append-only adjudication overlay
+- Add authoritative literal evidence rules, uniformly reviewed interpretation
+  records, historical-primary and separate scoped source-claim projections, and
+  mandatory historical unit applicability in an append-only adjudication overlay
   for all 29 differences (32 disputed label instances) and the separate
   shared-label Liquity V1 challenge.
 - Add distinct source-code, deployment and implementation-to-model fidelity
@@ -54,9 +56,10 @@ required. Use the existing pinned Python validation dependency.
 
 This is a review-ready independent draft. Sprint 9 is accepted and delivered:
 accepted source `eec499d613688137a341f3556cd80ca461dd2ee9`, with archive delivery
-`9908d9b56be2d5ed2b58a16fa8d28b23f33733ff`. Sprint 10 planning remains pending
-its substantive native Fable review; its implementation gate is closed. No
-corpus planning acceptance or implementation is implied. Planning requires
+`9908d9b56be2d5ed2b58a16fa8d28b23f33733ff`. Sprint 10 independently passed its
+planning gate and is being implemented; corpus implementation remains ungated.
+The preserved corpus official-r1 Fable review requested changes; this author r2
+revision addresses those findings but awaits new independent acceptance. Planning requires
 nonauthor stock GPT-6 and native Fable 5.1 on the same future frozen candidate.
 Request `claude-fable-5-1[1m]` with `--effort medium` and record the actual returned
 model; implementation/evidence review uses native Grok and Fable 5.1 likewise.
@@ -71,5 +74,9 @@ These are unaccepted source inputs with actual capture/attempt records, not
 production collector runs or accepted judgments. Their historical acquisition
 limits remain distinct from the future collector's URL budget. The twelve
 previously proposed evaluation cases have all been audited as development-exposed;
-none is an untouched holdout. Refresh-03 author evidence preserves these boundaries
-and the earlier author artifacts before the official candidate is frozen.
+none is an untouched holdout. Official-r2-preparation preserves every modified
+plan before-image and regenerates the current inventories. It defines empty-body
+normalization, retained extraction bytes, bounded target accounting, terminal
+queue states, deterministic supersession and enforceable offline checks. No
+existing packet is accepted by import, and source-only support cannot close a
+historical disagreement. All factual adjudications remain pending.

@@ -20,7 +20,7 @@ The system SHALL preserve every original row, proposal byte and citation occurre
 
 ### Requirement: Truthful original recovery
 
-The system MUST require actual original bytes and an origin record for recovered attachments, and an original transcript mapping for recovered citation tokens.
+The system MUST require actual original bytes and an origin record for recovered attachments, and an original transcript mapping for recovered citation tokens, with explicit origin-trust assumptions and custody/provenance review; byte integrity alone does not authenticate a transcript.
 
 #### Scenario: SRC-03 Actual attachment recovery
 
@@ -32,9 +32,14 @@ The system MUST require actual original bytes and an origin record for recovered
 - **WHEN** a newly generated crosswalk or plausible filename is presented as the absent original attachment
 - **THEN** recovered_original is rejected and the reconstruction retains its own identity
 
+#### Scenario: SRC-13 Transcript provenance assumption
+
+- **WHEN** a supplied browsing transcript maps a historical token and its digest and span match
+- **THEN** recovery remains conditional on its explicit reviewed origin-trust assumption; unknown provenance leaves the original mapping unresolved and byte checks do not claim authenticity
+
 ### Requirement: Retained and scoped source evidence
 
-The system SHALL distinguish retained, fingerprint-only, unavailable and restricted source captures and bind claim locators to actual retained bytes and version/time scope. Validated imports of existing research packets MUST preserve original acquisition identities and failures, distinguish derived-text coordinates from response bytes, and record import-validation tools/times separately from historical acquisition tools/times; an import is not a production collector run or an accepted adjudication.
+The system SHALL distinguish retained, empty_or_non_substantive, fingerprint-only, unavailable and restricted source captures and bind claim locators to actual retained bytes and version/time scope. Validated imports of existing research packets MUST preserve original acquisition identities and failures, distinguish derived-text coordinates from response bytes, and record import-validation tools/times separately from historical acquisition tools/times; an import is not a production collector run or an accepted adjudication.
 
 #### Scenario: SRC-05 Replay retained capture
 
@@ -44,12 +49,22 @@ The system SHALL distinguish retained, fingerprint-only, unavailable and restric
 #### Scenario: SRC-06 Missing retained body
 
 - **WHEN** a source record claims retained status but its body cannot be read
-- **THEN** the required replay is blocked with the source ID and no factual promotion; an empty response retained by a transport helper likewise cannot supply substantive support
+- **THEN** the required replay is blocked with the source ID and no factual promotion; a readable empty/non-substantive body falsely marked retained is rejected with exit one and receives zero support
 
 #### Scenario: SRC-07 Present-day page for historical claim
 
 - **WHEN** only retrieval-time documentation exists for a historical corpus claim
-- **THEN** the historical claim remains not evidenced while the current scoped claim can be reviewed separately
+- **THEN** unit_applicability is current_documentation_only, the historical-primary claim remains not evidenced and semantically unresolved, and the source-claims table can show separately reviewed scoped support
+
+#### Scenario: SRC-11 Empty and wrapper import normalization
+
+- **WHEN** an old packet calls a zero-byte HTTP202 body or redirect-only/access wrapper retained
+- **THEN** import preserves raw bytes/status/manifests but creates a new empty_or_non_substantive overlay record with zero support; retained status or any support locator into it is rejected, while a substantive positive-length retained sibling replays
+
+#### Scenario: SRC-12 Retained derived coordinate space
+
+- **WHEN** a derived-text locator has only extractor metadata, missing output bytes, or an empty/out-of-range byte span
+- **THEN** missing extraction output blocks replay with missing_extraction_output, invalid readable spans violate the record contract, and only a nonempty in-range span bound to retained output and original body bytes can replay
 
 ### Requirement: Bounded explicit development acquisition
 
@@ -68,4 +83,9 @@ The collector SHALL process only declared development-source queues, record fail
 #### Scenario: SRC-10 Holdout source request
 
 - **WHEN** a collection queue contains a reserved or otherwise non-development case
-- **THEN** the collector rejects the queue before requesting its semantic sources
+- **THEN** the collector checks exact membership/ancestry against the bound development manifest and rejects the queue before any request, even if its caller-supplied role says development
+
+#### Scenario: SRC-14 Distinct target and retry accounting
+
+- **WHEN** three requested URL targets include a failed guess, a corrected slug and a third source, with retries and server redirects
+- **THEN** all three targets consume slots, same-target retries are bounded to two total attempts, redirects consume their separate five-hop bound, and a fourth requested target blocks before network access while preserving every attempt and pass identity

@@ -18,6 +18,16 @@ The system MUST keep all existing 75 candidates, design-inspected derivatives an
 - **WHEN** a current development case or its derivative is marked reserved or untouched
 - **THEN** validation rejects the promotion even if the name or version ID changed, including every case in the existing twelve-proposal exposure audit
 
+#### Scenario: EV-07 Described publisher and product exposure
+
+- **WHEN** a retained source for one development unit substantively describes another publisher or product
+- **THEN** the development manifest records each description with exact source locators and unresolved identity/alias limits, and later overlap checks include it without treating the URL host as legal identity
+
+#### Scenario: EV-08 Spoofed collector role
+
+- **WHEN** a queue request claims development while its unit/ancestry lacks bound development-manifest membership
+- **THEN** the collector rejects it before any network attempt and an actual registered development sibling remains eligible
+
 ### Requirement: Separate honest empty evaluation manifest
 
 The system SHALL emit a separate not-selected evaluation manifest and SHALL NOT report zero cases as a passed evaluation.

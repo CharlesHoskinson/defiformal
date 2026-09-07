@@ -22,10 +22,10 @@ the missing originals.
 
 This independent package does not change kernel runtime semantics. Sprint 9 was
 accepted at source `eec499d613688137a341f3556cd80ca461dd2ee9` and archived/delivered
-at `9908d9b56be2d5ed2b58a16fa8d28b23f33733ff`. Sprint 10 awaits a substantive
-native Fable planning verdict and has no implementation authorization. This
-corpus draft still requires its own frozen nonauthor GPT-6/native Fable planning
-gate. User AFK authorization covers routine execution choices, not gate bypass.
+at `9908d9b56be2d5ed2b58a16fa8d28b23f33733ff`. Sprint 10 has its own accepted
+planning gate and concurrent implementation; that does not approve this corpus
+package. Corpus official-r1 received native Fable REQUEST CHANGES; this r2 author
+revision requires a newly frozen nonauthor GPT-6/native Fable planning gate. User AFK authorization covers routine execution choices, not gate bypass.
 
 ## Goals / Non-Goals
 
@@ -48,8 +48,11 @@ Source inspection is distinct from implementation-to-model fidelity.
 
 Create `corpus/adjudicated/v1/` with `schema.json`, `rules.json`,
 `inputs/{baseline,work-queue,source-requests,sources,identities,dependencies,residues,references,
-adjudications,exposure,freeze}.json`, permitted captures under `sources/sha256/`,
-and `generated/{corpus,coverage,development-manifest,evaluation-manifest}.json`.
+adjudications,interpretations,exposure,freeze}.json`, permitted captures under `sources/sha256/`,
+and `generated/{corpus,source-claims,coverage,development-manifest,evaluation-manifest}.json`.
+`corpus.json` is the historical-primary projection defined in decision 5;
+`source-claims.json` is a separately scoped source-reading table, not a current
+replacement for the historical corpus or a new deployment assertion.
 A baseline record binds every old source, identity, annotation and output by
 path/digest and its source Git revision. Raw historic records remain byte exact.
 Additional splits add new IDs and `derived_from` links to the existing candidate;
@@ -75,7 +78,16 @@ bundle; the explicit unresolved record is still valuable and testable.
 The initial queue contains all 75 candidate identity reviews, all 29 facet
 records, one separate challenge, all 62 original citation occurrences and two
 attachment pointers. Each item has a stable ID, source pointer, exposure role,
-allowed acquisition scope, attempt references and current disposition. Distinct
+allowed acquisition scope, attempt references and current disposition. Work
+disposition is a closed enum: `not_attempted`, `attempted_unavailable`,
+`budget_exhausted`, `review_pending`, `reviewed_unresolved`, `reviewed_resolved`.
+The terminal states for complete bookkeeping are `attempted_unavailable`,
+`budget_exhausted`, `reviewed_unresolved`, `reviewed_resolved`; each requires its
+reason and attempt/review references (or an explicit no-request eligibility
+reason). `not_attempted` and `review_pending` remain open and block a claimed
+complete-work exit 0. Closed bookkeeping is not factual resolution: only the
+last state can count toward a separately checked, scope-specific factual claim.
+Coverage counts every state, including zero counts, by item kind. Distinct
 citation tokens are additionally grouped into 45 mapping records. The same
 retrieved source can serve several queue items without duplicating its bytes.
 `source-requests.json` is an explicit development-only acquisition projection of
@@ -94,9 +106,18 @@ reason, and disposition. No candidate count is predetermined beyond the frozen
 `not_evidenced`; an empty edge list does not establish independence.
 
 The future collector's bounded first acquisition pass allows at most three distinct primary source
-URLs per original candidate, prioritizing version-specific official docs, pinned
-code/release manifests, then deployment records. Each request has 30-second
-connect/read bounds, at most two retries and five redirects; each body is limited
+URL targets per original candidate per pass, prioritizing version-specific official
+docs, pinned code/release manifests, then deployment records. A target is the
+exact absolute HTTP(S) request URL after fragment removal; path/query spelling
+is retained (no guessed slug or query equivalence). Each first attempted target
+consumes one slot, including failed guesses and corrected/fallback URLs. Retries
+of the identical target use its existing slot; at most two attempts total
+(initial plus one retry) are allowed. Server-issued redirect hops are recorded
+under that target and consume the independent five-hop bound, not extra target
+slots; manually following a different URL starts a new target. Reusing a redirect
+endpoint later as a requested target consumes a slot. Every attempt records the
+full redirect chain. Each attempt has a 30-second total wall deadline covering
+connection, redirects and body reading; each body is limited
 to 20 MiB and the pass to 512 MiB. Exhaustion records `budget_exhausted` and the
 unexamined queue, never success for those items. A new explicit acquisition-pass
 manifest can extend these bounds later without rewriting earlier evidence.
@@ -124,8 +145,16 @@ A source record includes `source_id`, original/requested/final URL, UTC retrieva
 HTTP status/content type, body byte length/digest, capture path or explicit
 unavailability reason, extraction method/version, excerpt/code locators,
 product/version/time scope and source-authority rationale. Use `capture_status`
-`retained`, `fingerprint_only`, `unavailable`, or `restricted`. Evidence locators
-bind exact retained bytes; a digest without bytes cannot pass a replay check.
+`retained`, `empty_or_non_substantive`, `fingerprint_only`, `unavailable`, or
+`restricted`. `retained` requires positive body length, matching retained body
+bytes, at least one valid nonempty content locator and a documented substantive
+source classification; HTTP status alone
+does not qualify. Empty responses, access/challenge pages and redirect-only
+wrappers use `empty_or_non_substantive` with a reason and receive zero support
+credit even if their transport bytes and digest replay. Evidence locators must
+select a nonempty span `0 ≤ start < end ≤ byte_length` in an eligible retained
+coordinate space; reject zero-length/out-of-range spans and any span in an
+empty/non-substantive or redirect-wrapper record. No digest alone supplies support.
 Mutable docs support retrieval-time assertions; archived historical material must
 have an explicit historical scope. A current code commit alone does not establish
 historical deployment behavior.
@@ -144,7 +173,17 @@ where used; it retains original acquisition UTC, requested/final URLs, failures,
 limits and recorded tools. Import validation records its own command/time/tool
 identity separately and must not overwrite or backfill unknown historical tool
 metadata with current values. Derived-text offsets must identify that coordinate
-space and bind both extraction output and original response bytes. Missing
+space and bind both extraction output and original response bytes. Retain the
+actual derived output bytes with positive length and digest, extractor/version
+and input-body binding; a method name, pin or an ability to rerun extraction
+does not substitute for those bytes. Missing output bytes block dependent replay
+with `missing_extraction_output`. Span checking is mechanical; the factual
+adequacy of a nonempty excerpt still requires source review. Import writes only
+new normalized overlay records with original-record pointers and normalization
+reasons: legacy transport records marked retained but empty/wrappers become
+`empty_or_non_substantive`, with no support credit. Preserve their original
+labels, capture bytes and manifests unchanged. Unknown substantiveness remains
+non-substantive pending review, not implicitly retained. Missing
 required provenance blocks the dependent claim; honest unknown metadata remains
 unknown. Draft source interpretations stay `draft` or `review_pending` until
 independently reviewed under the frozen rule. Offline `build` validates these
@@ -160,7 +199,13 @@ Every original occurrence retains exact token/text, byte offsets, proposal hash
 and associated claim span. Pointer statuses are `unresolved_original`,
 `recovered_original`, or `reconstructed_support`. Recovery requires the actual
 original attachment bytes plus their origin record, or an original browsing
-transcript mapping the citation token to its URL. Matching a claim to a new web
+transcript mapping the citation token to its URL. Such recovery additionally
+records `origin_trust_assumption`, transcript provider/custody history where
+known, transcript digest, exact mapping span and reviewer assessment. A matching
+digest and internally consistent mapping verify byte integrity only, not the
+authenticity/completeness of the supplied browsing transcript. Unknown origin
+trust leaves the mapping unresolved; accepted recovered mappings explicitly
+remain conditional on the recorded origin assumption. Matching a claim to a new web
 page is only reconstructed support, with a separate evidence record; the original
 mapping remains unresolved. Finding a plausible CSV filename is insufficient.
 Never reproduce the missing original 31/72 statistic without its original coding
@@ -211,7 +256,12 @@ retained primary evidence. Every claim identifies product, version, operation
 and time scope. Parent text is admissible for a child only when its scope
 explicitly includes that child. The following are inclusion predicates for all
 17 currently disputed labels and the separate liquidation challenge; they do not
-assert that any named protocol satisfies them.
+assert that any named protocol satisfies them. The versioned `rules.json` is the
+authoritative predicate payload (the planning copy is supplied with this change).
+Each rule stores its literal Markdown row in addition to parsed fields; the table
+below is a literal-equality checked presentation copy. The implemented overlay
+copies the frozen payload without silently changing it. Common scope clauses
+and any interpretation selection are separately version/hash bound.
 
 | Rule / facet label | Required positive evidence | Insufficient by itself |
 | --- | --- | --- |
@@ -241,11 +291,20 @@ sources rather than choosing by provider vote. New labels outside this table
 require a new explicit predicate and rule version before promotion. All rules
 also enforce direct-service, identity/time and no-inheritance constraints.
 
+Derive the disagreement set directly from bound normalized `adjudications`
+filtered by `rule == INTERSECTION_UNRESOLVED`; derive each symmetric difference
+from its raw `a` and `b` arrays, cross-check `unresolved_labels`, and compare
+exact unit/facet/label tuples to the queue inventory. The actual baseline yields
+29 facets, 32 label instances and 24 distinct units; these numbers are outputs
+of that comparison, never authority taken from inventory counters.
+
 Each of the 29 inventory records expands its symmetric difference into label
 claims. Preserve the facet-level count of 29 even when a row has multiple labels.
 Supported and contradicted labels can coexist in one facet-level decision; a row
-is semantically resolved only when every disputed label has an accepted
-`supported`, `refuted`, or justified `not_applicable` disposition. Accepted
+is historically semantically resolved only when every disputed label has a
+unique accepted effective decision with `unit_applicability: established` and
+`supported`, `refuted`, or justified `not_applicable` disposition under the
+applicable rule/interpretation. Source-only support cannot close this count. Accepted
 `not_evidenced`/`conflicting` means reviewed unresolved, not semantic closure.
 The liquidation challenge is a separate claim about a label present in both raw
 annotations. Its actual mechanisms facet is `INTERSECTION_UNRESOLVED` at
@@ -254,13 +313,63 @@ includes redemption. Preserve that exact facet record. The historical challenge
 uses `AGREE` as label-membership shorthand; retain its text without promoting
 that wording to a facet-level rule or inventing a thirtieth disagreement.
 
-An adjudication record binds raw A/B hash and pointer, label/rule, evidence spans,
-scoped proposition, rationale, disposition, reviewer findings and process status
-`draft`, `review_pending`, `accepted`, or `superseded`. Superseding appends a new
-record and a link; it does not edit the old body. Accepted supported evidence
-updates only the effective overlay facet view. Refutation can remove an old
-provisional label from that view with a reason, while retaining its original
-observation. No agreement percentage or majority vote determines truth.
+An adjudication record binds raw A/B hash and pointer, label/rule version and
+hash, evidence spans, scoped proposition, rationale, disposition, interpretation
+references, reviewer findings and process status `draft`, `review_pending`,
+`accepted`, or `superseded`. Every record has a mandatory `unit_applicability`:
+
+| Value | Required meaning | Historical-primary effect |
+| --- | --- | --- |
+| `established` | Reviewed evidence binds this source proposition to this exact historical unit's product, version or explicitly version-unspecified scope, operation and snapshot time; unresolved deployment does not become verified | Eligible for an accepted unique effective decision |
+| `current_documentation_only` | Positive evidence supports only the explicitly named retrieval-time product/documentation scope, not the historical unit | Source-claims table only; historical claim remains not evidenced/unresolved |
+| `unresolved` | Even the source-to-unit applicability cannot be established; source reading may still be recorded at its exact scope | No historical label promotion/removal and no semantic closure |
+
+The historical-primary view targets the preserved 2026-08-04 research snapshot
+and its exact row/unit identities, retaining unresolved version/deployment fields.
+It begins with the original retained intersection as `provisional_observation`,
+not supported evidence. Only a unique accepted effective `established` decision
+can add a supported label, or remove a refuted/justifiably-not-applicable label.
+Accepted not_evidenced/conflicting leaves provisional labels visibly provisional
+and the claim unresolved. Other applicability values never alter the historical
+facet. The source-claims table shows exact product/document/version/operation/time
+and disposition for each current or narrower source scope; it is not a broad
+unit-wide current facet projection. Coverage cross-tabulates every disposition
+by applicability, review status and scope; historical semantic closure and
+source-scoped supported counts are separate. No existing research packet,
+including one with a proposed supported unit label, is automatically accepted or
+assigned established applicability. Import creates draft/review-pending records.
+
+`inputs/interpretations.json` contains append-only interpretation records with
+ID, rule ID/version/payload hash, precise ambiguity, ruling text, rationale,
+evidence/review bindings, status and supersession references. Interpretations do
+not silently change predicate text: a changed inclusion predicate requires a new
+rule version. For each (rule ID, rule version), a frozen selection names exactly
+one accepted interpretation head when any ruling applies. Every effective accepted decision
+under that rule version must reference that same selected interpretation, even
+if the reviewer considers the case straightforward. Retired/superseded historical
+records keep their original ruling and are excluded from current-head uniformity;
+selecting a replacement ruling cannot silently rewrite or reaccept older heads.
+Every affected current decision must be reviewed and superseded as needed before
+current acceptance under the new selection. The affected-unit inventory
+covers all decisions and pending proposals for the rule, including Lighter,
+ApeX and edgeX when R-appchain is reviewed; these names are review coverage, not
+new taxonomy rulings. Unresolved ambiguity or missing/unaccepted ruling keeps
+interpretation-dependent decisions review_pending. Import must flag conditional
+packet wording; it cannot infer a ruling from an author's proposed support.
+
+Decision keys are (unit_id, facet, label, rule_version, scope_id), where scope_id
+binds the full explicit historical or source scope. Supersession is an append-only
+acyclic graph within one key. A new record can supersede one or more existing
+records of that key; references must exist, cycles/self-links/cross-key links
+are violations. Only accepted successors retire an accepted predecessor in the
+effective projection; draft successors do not. A single non-superseded accepted
+head supplies the effective decision. Multiple heads produce `conflicting` with
+all IDs retained, even when their dispositions happen to agree, until a reviewed
+successor explicitly reconciles every head. No filesystem order, timestamp or
+reviewer vote chooses a winner. Interpretation selections obey the same
+acyclic/unique-head rule per rule/version; conflicting heads block acceptance
+of dependent decisions. Historical and current scopes do not supersede each
+other. All previous bytes and review observations remain available.
 
 The retained `source-research/liquity-v1/` and `liquity-v1-redemption/` packets now
 provide separate liquidation and redemption source inputs. Validate their actual
@@ -274,7 +383,13 @@ supported disposition asserts historical/deployed fidelity or closes the challen
 ### 6. Development exposure is monotonic
 
 `development-manifest.json` includes the original 75, all derived candidates,
-source hashes, and exposure reasons/times. Every design-inspected source or case
+source hashes, and exposure reasons/times. Each retained source additionally
+records the publisher identity as stated (or unresolved), and all substantively
+described organizations/products with exact source locators, their identity status
+and relation to the queued unit. These include described third-party providers,
+not only the requesting unit or URL host; source attribution is not automatic
+legal-entity resolution. The overlap inventory indexes these descriptions and
+retains aliases/unresolved identities. Every design-inspected source or case
 is permanently exposed. The separate `evaluation-manifest.json` initially has
 status `not_selected`, zero candidates and no semantic source packages. Its empty
 list is an honest planning artifact, never a passed evaluation.
@@ -311,26 +426,51 @@ python3 scripts/test_corpus_adjudication.py --repo REPO --out FRESH_DIR
 ```
 
 `collect` alone uses the network and accepts only exposure-approved development
-queue entries. It emits source/attempt records and captures for review; it never
+queue entries. Eligibility is checked against the bound development manifest
+using exact unit/ancestry membership and source exposure, not a caller-supplied
+role field; missing membership or a spoofed development role is rejected before
+a request. Task 6.1 must therefore precede task 2.4. It emits source/attempt records and captures for review; it never
 accepts an adjudication or modifies baseline inputs. `build` emits proposed
 canonical outputs from validated local records. `check` is read-only, including
 mtime, and compares the actual complete projection without repairing outputs.
 All commands bind input paths/digests and Git source revisions where tracked;
 record driver/schema/rule/dependency versions. Recheck relevant bytes and HEAD
-at completion; drift blocks the run. Fresh output paths must be external to repo
+at completion; relevant input/tool byte drift blocks the run. HEAD movement is
+recorded with both revisions and Git-object bindings; unrelated commits do not
+relabel captures or invalidate byte-identical relevant inputs. A changed relevant
+Git object or absent binding blocks the run. Fresh output paths must be external to repo
 and protected input/evidence roots, nonexistent, and free of symlink traversal.
 No overwrite or output-inside-source workaround is allowed.
 
 Exit 0 means a nonempty complete declared work inventory was processed and its
-integrity/record contract holds. It does not mean every factual item resolved.
+integrity/record contract holds, with every item in the closed terminal work
+dispositions of decision 2. It does not mean every factual item resolved. Open
+not_attempted/review_pending items give exit 3 `incomplete_work_queue`; unknown
+enum values are readable contract violations (exit 1).
 Exit 1 means readable, bound records or generated content violate a rule. Exit 3
 means required inputs/tools/captured bytes are missing, unreadable, malformed,
 empty, unbound or drifting, so the required check cannot finish. Explicit
 `unavailable`/`not_evidenced` records are valid data; a missing body claimed
 `retained` is blocked. A collection pass with missing external evidence records
 all failures and exits 3; later offline inventory validation can pass honest
-unavailable records. Structured diagnostics identify item and reason, not just a
+unavailable records. A retained zero-length/non-substantive body or invalid nonempty locator is a
+readable false record (exit 1); a missing body/output claimed retained is exit 3.
+Structured diagnostics identify item and reason, not just a
 summary substring. No stderr words override a real structured result.
+
+Offline execution uses an enforceable Linux network-denial wrapper for both
+`build` and `check`: a dedicated network namespace with no external interfaces
+and a pinned seccomp launcher denying socket/socketpair/connect plus equivalent
+network syscalls to the entire child process tree (including subprocesses). The
+launcher and policy bytes, version and self-test results are run inputs. A fresh
+subprocess socket-creation/connect probe must actually fail under that policy
+while a local-file positive succeeds. Unavailable namespace/seccomp support,
+launcher or a failed denial self-test is exit 3 `offline_isolation_unavailable`;
+never fall back to an assertion or an unenforced Python monkey-patch. DNS and
+child processes are covered; the trusted OS/launcher enforcement is explicit.
+Collector HTTP fixtures run outside that offline wrapper and are labelled separately.
+Implementation may select an existing system launcher, but must bind its exact
+executable/policy and demonstrate these behaviors before an offline claim.
 
 Controls call these actual entry points in isolated multi-record fixtures; they
 do not copy validation logic. Test missing/partial/duplicate inventory, swapped
@@ -370,8 +510,9 @@ Freeze the planning bundle and exact current context, obtain nonauthor stock
 GPT-6/native Fable 5.1 planning acceptance on that same candidate, then implement
 in the authorized branch. Request `claude-fable-5-1[1m]` with `--effort medium`
 and retain the actual returned model, including for native Grok/Fable
-implementation/evidence reviews. This refresh is provisional; no planning gate
-or native review has been performed for this corpus package. Start with
+implementation/evidence reviews. This r2 revision addresses the preserved official-r1 native REQUEST CHANGES
+report; historical GPT-6/Fable review records exist but do not approve these new
+bytes. Revised-candidate reviews and implementation remain pending. Start with
 failing real CLI controls and schemas; validate existing development source
 imports before acquiring missing development evidence; execute
 all finite queues and preserve unresolved results. Run the final checks and
@@ -385,4 +526,7 @@ ledger with unresolved deployments does not check off complete deployment
 identity; an unresolved original pointer with replacement support does not become
 recovered. Deliver/archive this package separately from accepted kernel sprints
 after its own acceptance. Prior author reports and research packets remain
-immutable; refresh-03 supplies current author bindings and is not a review verdict.
+immutable; official-r2-preparation supplies refreshed author bindings and is
+not a review verdict. At each official freeze regenerate all in-change normative
+inventories/maps/context manifests, and preserve prior versions as historical
+snapshots; a stale manifest cannot serve as the current implementation map.
