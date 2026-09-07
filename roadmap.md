@@ -1,12 +1,13 @@
 # DeFiFormal migration roadmap
 
-Updated 2026-09-07 UTC after Sprint 5. Branch: `semantic-kernel-pivot`.
-Sprint 5 source candidate: `28ba18c446f72084ff11b4d125dccf93bf8f4162`.
+Updated 2026-09-07 UTC after Sprint 6; Sprint 7 planning underway.
+Branch: `semantic-kernel-pivot`. Sprint 6 delivery/archive head: `850d785`.
 
 The remaining objective is conditional preservation of financial properties
-under composition, backed by faithful protocol models. Sprints 1–5 delivered the
+under composition, backed by faithful protocol models. Sprints 1–6 delivered the
 pilot, trusted operation contracts, provisional corpus reconstruction, typed
-execution/capabilities, and conditional sequential preservation. Checked boxes
+execution/capabilities, conditional sequential preservation and disjoint parallel
+composition. Checked boxes
 record accepted work; unchecked boxes remain open. Neither implies deployed fidelity.
 
 Sources: [approved migration design](docs/superpowers/specs/2026-09-06-semantic-kernel-design.md),
@@ -72,6 +73,23 @@ all 47 scenarios and their precise evidence classes.
 - [x] Prove joined accounting, authority, nonnegativity, supported frames and conditional initialized invariants.
 - [x] Complete financial fixtures, real mutations, regressions and native Grok/Fable implementation review.
 - [x] Deliver the accepted branch and archive the OpenSpec change.
+
+## Sprint 7: shared-state interleaving
+
+Planning in progress: [OpenSpec proposal](openspec/changes/shared-state-interleaving/proposal.md),
+[design](openspec/changes/shared-state-interleaving/design.md),
+[37 tasks](openspec/changes/shared-state-interleaving/tasks.md), and
+[wiki decision record](wiki-llm/sprint-7-shared-state-interleaving.md).
+The candidate covers explicit finite schedules, one evolving shared world,
+branch-local histories/refusals, initialized interference obligations and generic
+recovery of disjoint behavior. Implementation is gated on independent GPT-6/Fable
+planning passes and a fresh baseline; no Sprint 7 implementation is claimed here.
+
+- [ ] Pass the frozen OpenSpec planning review gate and current baseline.
+- [ ] Implement shared execution, schedules and exact observations.
+- [ ] Prove prefix preservation, explicit interference composition and disjoint recovery.
+- [ ] Complete financial examples, production mutations and full regressions.
+- [ ] Obtain native Grok/Fable result audits, deliver the branch and archive OpenSpec.
 
 ## Remaining composition and metatheory
 
