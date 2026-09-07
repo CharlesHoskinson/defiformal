@@ -1,13 +1,13 @@
 # DeFiFormal migration roadmap
 
-Updated 2026-09-06 after Sprint 4. Branch: `semantic-kernel-pivot`.
-Sprint 4 delivery head: `c16616e96ab822140b215923b14f736b063696f3`.
+Updated 2026-09-07 UTC after Sprint 5. Branch: `semantic-kernel-pivot`.
+Sprint 5 source candidate: `28ba18c446f72084ff11b4d125dccf93bf8f4162`.
 
 The remaining objective is conditional preservation of financial properties
-under composition, backed by faithful protocol models. Sprints 1–4 delivered the
-pilot, trusted operation contracts, provisional corpus reconstruction, and typed
-execution/capability foundation. The boxes below are remaining work, not completed
-claims or promises of deployed fidelity.
+under composition, backed by faithful protocol models. Sprints 1–5 delivered the
+pilot, trusted operation contracts, provisional corpus reconstruction, typed
+execution/capabilities, and conditional sequential preservation. Checked boxes
+record accepted work; unchecked boxes remain open. Neither implies deployed fidelity.
 
 Sources: [approved migration design](docs/superpowers/specs/2026-09-06-semantic-kernel-design.md),
 [original supplied plan](docs/research/2026-09-06-defi-source-plan.md),
@@ -18,19 +18,27 @@ This root roadmap is the current consolidated agenda.
 
 ## 1. Sprint 5: typed interfaces and sequential composition
 
-Planning: [OpenSpec change](openspec/changes/typed-interfaces-sequential-composition/proposal.md).
-The [design](openspec/changes/typed-interfaces-sequential-composition/design.md),
-four capability specs, and [47 implementation tasks](openspec/changes/typed-interfaces-sequential-composition/tasks.md)
-are saved and pass strict OpenSpec validation. Sequential execution retains the
-successful prefix and stops at the first refusal. Planning artifacts do not mark
-implementation tasks complete.
+Accepted with limitations: [OpenSpec change](openspec/changes/typed-interfaces-sequential-composition/proposal.md),
+[design](openspec/changes/typed-interfaces-sequential-composition/design.md),
+and [47 implementation tasks](openspec/changes/typed-interfaces-sequential-composition/tasks.md).
+Sequential execution retains the successful prefix and stops at the first refusal.
+The [adjudication](review/semantic-kernel/sprint5/ADJUDICATION.md),
+[scenario coverage](review/semantic-kernel/sprint5/coverage.md), and
+[proof inventory](review/semantic-kernel/sprint5/proof-inventory.json) record the
+accepted scope: 93 runtime comparisons, 12 detected source mutants, and 70 named
+theorems. Both required native Grok/Fable reviews accepted with limitations.
 
-- [ ] Define component interfaces: typed ports, private/shared state, inputs, outputs, assumptions, and guarantees.
-- [ ] Define initialization, execution traces, and observable success/refusal behavior.
-- [ ] Implement sequential composition with explicit state and capability propagation.
-- [ ] Lift accounting, nonnegativity, authority, and locality results from individual transitions to sequences.
-- [ ] Prove a frame theorem for predicates that depend only on protected state.
-- [ ] Add composed reference workflows and mutations covering ordering, refusal propagation, unauthorized interference, and revoked capabilities.
+- [x] Define component interfaces: typed ports, private/shared state, inputs, outputs, assumptions, and guarantees.
+- [x] Define initialization, execution traces, and observable success/refusal behavior.
+- [x] Implement sequential composition with explicit state and capability propagation.
+- [x] Lift accounting, nonnegativity, authority, and locality results from individual transitions to sequences.
+- [x] Prove a frame theorem for predicates that depend only on protected state.
+- [x] Add composed reference workflows and mutations covering ordering, refusal propagation, unauthorized interference, and revoked capabilities.
+
+The frame theorem concerns ledger predicates with explicit support and disjoint
+writes. Component locality is conditional on denied write access; general private
+noninterference is not claimed. Initialization and contract results retain explicit
+local/boundary premises, and nonnegativity follows from proof-carrying states.
 
 ## 2. Remaining composition and metatheory
 
@@ -68,7 +76,7 @@ implementation tasks complete.
 - [ ] Check typing, footprints, authority, accounting, composition compatibility, library proof instantiation, and outstanding assumptions.
 - [ ] Establish correspondence between serialized/executable representations and Lean semantics; do the same for any Quint abstraction introduced.
 - [ ] Extend audit coverage to explicit package manifests and declared audit roots.
-- [ ] Expand mutation coverage for effect application, capability allocation, composition, and execution sequences.
+- [ ] Expand mutation coverage beyond Sprint 5’s 12 sequential mutants: effect application, capability allocation, structural catalog checks, and future composition operators.
 
 ## 6. Financial libraries still to port
 

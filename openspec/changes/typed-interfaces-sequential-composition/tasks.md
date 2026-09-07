@@ -36,7 +36,7 @@
 - [x] 5.4 Prove write-union locality and per-invocation domain restrictions; verify untouched cells remain equal even when the trace ends in refusal or includes administrative steps.
 - [x] 5.5 Prove the ledger supported-predicate frame theorem from support and protected/write disjointness; verify a protected collateral predicate and a concrete counterexample to dropping the support/disjointness premises.
 - [x] 5.6 Prove append/continuation equivalence including output histories, absolute positions, and terminal failures; verify an output-consuming, boundary-sensitive suffix and document that this is a finite-list law.
-- [ ] 5.7 Save a named proof inventory with quantification, premises, and limits in `review/semantic-kernel/sprint5/proof-inventory.json`; verify every listed theorem exists in the built source and no bounded comparison is labeled a general theorem.
+- [x] 5.7 Save a named proof inventory with quantification, premises, and limits in `review/semantic-kernel/sprint5/proof-inventory.json`; verify every listed theorem exists in the built source and no bounded comparison is labeled a general theorem.
 
 ## 6. Composed reference workflows
 
@@ -52,23 +52,23 @@
 ## 7. Source mutations and runner controls
 
 - [x] 7.1 Add a scoped `scripts/check_composition_mutations.py` with `--repo`, `--spec`, and `--out`, separate executable projection, exact source hashes, and nonempty inventory checks; verify an unchanged positive run compiles and all comparisons pass in an isolated scratch output directory.
-- [ ] 7.2 Define actual source mutants for reverse/drop ordering, continue-after-refusal, reset-ledger, reset-capability-store, and omit-revocation-propagation in `review/semantic-kernel/sprint5/mutation-spec.json`; verify every mutant compiles and fails its designated executed comparison.
-- [ ] 7.3 Add interface-write-bypass, wrong-output-index/unit, dropped-supply-receipt, and reset-continuation-index mutants; verify designated comparisons discriminate each mutant and unrelated positive controls remain meaningful.
+- [x] 7.2 Define actual source mutants for reverse/drop ordering, continue-after-refusal, reset-ledger, reset-capability-store, and omit-revocation-propagation in `review/semantic-kernel/sprint5/mutation-spec.json`; verify every mutant compiles and fails its designated executed comparison.
+- [x] 7.3 Add interface-write-bypass, wrong-output-index/unit, dropped-supply-receipt, and reset-continuation-index mutants; verify designated comparisons discriminate each mutant and unrelated positive controls remain meaningful.
 - [x] 7.4 Add `scripts/test_composition_mutation_runner.py` controls for empty inventories, duplicate/unknown checks, missing or non-unique mutation sites, unchanged replacements, compile failures, surviving mutants, malformed evidence, and output-location misuse; verify actual CLI rejection and a valid accepted sibling for the runner.
-- [ ] 7.5 Run the complete composition mutation suite and runner controls against the candidate and save machine-readable outcomes; verify no unapplied, noncompiling, unexecuted, empty, or surviving required mutant is counted as a semantic detection.
+- [x] 7.5 Run the complete composition mutation suite and runner controls against the candidate and save machine-readable outcomes; verify no unapplied, noncompiling, unexecuted, empty, or surviving required mutant is counted as a semantic detection.
 
 ## 8. Integration and independent review
 
-- [ ] 8.1 Run the full build, composition and existing typed/legacy runtime and axiom drivers, existing typing/mutation/audit controls, and corpus regressions; save commands/exits and verify preserved baseline files plus all required checks.
-- [ ] 8.2 Complete the scenario coverage map with actual check/theorem identifiers and evidence paths; verify no spec scenario is uncovered and distinguish proofs, executions, measurements, counterexamples, and external assumptions.
-- [ ] 8.3 Commit a concrete candidate and prepare scoped review bundles for interfaces/contracts, execution/proofs, and regression/evidence; verify bundles and tool identities resolve to that exact source commit.
-- [ ] 8.4 Run independent native Grok and Fable review of each scope through the stock workflow, without Foreman; save raw requests/responses and verify all findings, limits, or unavailable-review statuses are recorded honestly.
-- [ ] 8.5 Resolve blocking findings and rerun affected verification/review against any changed candidate; save `ADJUDICATION.md` and candidate binding and verify no required review or blocking finding remains outstanding.
+- [x] 8.1 Run the full build, composition and existing typed/legacy runtime and axiom drivers, existing typing/mutation/audit controls, and corpus regressions; save commands/exits and verify preserved baseline files plus all required checks.
+- [x] 8.2 Complete the scenario coverage map with actual check/theorem identifiers and evidence paths; verify no spec scenario is uncovered and distinguish proofs, executions, measurements, counterexamples, and external assumptions.
+- [x] 8.3 Commit a concrete candidate and prepare scoped review bundles for interfaces/contracts, execution/proofs, and regression/evidence; verify bundles and tool identities resolve to that exact source commit.
+- [x] 8.4 Run independent native Grok and Fable review of each scope through the stock workflow, without Foreman; save raw requests/responses and verify all findings, limits, or unavailable-review statuses are recorded honestly.
+- [x] 8.5 Resolve blocking findings and rerun affected verification/review against any changed candidate; save `ADJUDICATION.md` and candidate binding and verify no required review or blocking finding remains outstanding.
 
 ## 9. Acceptance and delivery
 
-- [ ] 9.1 Update `roadmap.md`, the progress ledger, and this checklist from actual accepted evidence; verify broader composition, claim lifecycle, and fidelity work remains open and this sprint's completed boxes have evidence.
-- [ ] 9.2 Run strict OpenSpec validation and whitespace/link checks on the final change; verify validation passes and all referenced delivery evidence exists.
+- [x] 9.1 Update `roadmap.md`, the progress ledger, and this checklist from actual accepted evidence; verify broader composition, claim lifecycle, and fidelity work remains open and this sprint's completed boxes have evidence.
+- [x] 9.2 Run strict OpenSpec validation and whitespace/link checks on the final change; verify validation passes and all referenced delivery evidence exists.
 - [ ] 9.3 Commit and push Sprint 5 source/evidence on the authorized branch, verify remote head equals the intended local delivery head, and save the delivery record; verify the final worktree contains no unexplained changes.
 - [ ] 9.4 Archive the implemented OpenSpec change using the CLI and validate the resulting main specs; verify archiving occurs only after accepted implementation and deliver the archive/metadata commit on the same branch.
 

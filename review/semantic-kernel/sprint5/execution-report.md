@@ -18,3 +18,11 @@ Source SHA-256 at worker handoff:
 
 - `lean/DefiKernel/Composition/Execution.lean`: `ca91871df4657e65491fcc590a66278b0ecabb14db1afe46bf7cb0d18c95535f`
 - `lean/DefiKernel/Composition/ExecutionTests.lean`: `68cd7423cafbb63dfcca0e319381eeac9cf31ee4e9c3fd8459f2ab5f4b98a0c5`
+# Integration follow-up
+
+The initial file-level handoff below predates the final interface review fixes.
+The revised source adds receipt-write resolution, selected-component access and
+component-locality proofs. Its current source identity, full project build, and
+fresh integrated 93-comparison run are recorded in `build-verification.json` and
+`final-runtime.log`. Administrative authority is explicitly lifted in
+`TraceSound.administration`. Initial handoff hashes remain historical evidence.

@@ -76,3 +76,12 @@ These are finite reference examples and proof instances. The boundary truth and
 local guarantee in the conditional invariant remain explicit premises. Mutation
 results, project-wide axiom audits, full build, and external review are recorded
 by the integration tasks, not claimed by this file-level report.
+# Integration follow-up
+
+The initial file-level handoff below predates final formatting and the boundary
+contract correction. The final boundary fixture assumes `now = 100` and guarantees
+nondecreasing collateral; it does not interpret time as a price. Its conditional
+invariant still requires local guarantee premises. Current source hashes and all
+30 workflow comparisons are covered by the integrated `build-verification.json`
+and `final-runtime.log` (93 total comparisons). Initial handoff hashes are retained
+as historical evidence.

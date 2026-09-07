@@ -1,0 +1,143 @@
+{
+  "schema_version": 1,
+  "modules": [
+    "DefiKernel.Composition.Interfaces",
+    "DefiKernel.Composition.Contracts",
+    "DefiKernel.Composition.Execution",
+    "DefiKernel.Composition.Sequence",
+    "DefiKernel.Composition.Preservation",
+    "DefiKernel.Composition.Examples",
+    "DefiKernel.Composition.InterfaceTests",
+    "DefiKernel.Composition.ExecutionTests",
+    "DefiKernel.Composition.Tests",
+    "DefiKernel.Composition.Audit"
+  ],
+  "positive_checks": [
+    "interface.valid",
+    "execution.catalog",
+    "workflows.catalog",
+    "execution.transfer.receipt.snapshots",
+    "interface.shared-write",
+    "interface.foreign-funded-kernel-control"
+  ],
+  "mutations": [
+    {
+      "name": "reverse-order",
+      "module": "DefiKernel.Composition.Sequence",
+      "needle": "steps.foldl (advance cfg boundaries) cursor",
+      "replacement": "steps.reverse.foldl (advance cfg boundaries) cursor",
+      "required_false": [
+        "workflows.transfer.deposit.withdraw",
+        "workflows.order.transfer.first"
+      ]
+    },
+    {
+      "name": "drop-first-step",
+      "module": "DefiKernel.Composition.Sequence",
+      "needle": "steps.foldl (advance cfg boundaries) cursor",
+      "replacement": "(steps.drop 1).foldl (advance cfg boundaries) cursor",
+      "required_false": [
+        "workflows.consecutive"
+      ]
+    },
+    {
+      "name": "continue-after-refusal",
+      "module": "DefiKernel.Composition.Sequence",
+      "needle": "match cursor.failure with",
+      "replacement": "match (none : Option (LocatedFailure P A D)) with",
+      "required_false": [
+        "workflows.first.refusal",
+        "workflows.resume.terminal"
+      ]
+    },
+    {
+      "name": "reset-ledger",
+      "module": "DefiKernel.Composition.Sequence",
+      "needle": "steps.foldl (advance cfg boundaries) cursor",
+      "replacement": "steps.foldl (fun current step ↦ advance cfg boundaries\n    { current with world := { current.world with state := cursor.world.state } } step) cursor",
+      "required_false": [
+        "workflows.consecutive"
+      ]
+    },
+    {
+      "name": "reset-capability-store",
+      "module": "DefiKernel.Composition.Sequence",
+      "needle": "steps.foldl (advance cfg boundaries) cursor",
+      "replacement": "steps.foldl (fun current step ↦ advance cfg boundaries\n    { current with world := { current.world with capabilities := cursor.world.capabilities } } step) cursor",
+      "required_false": [
+        "workflows.admin.live.repeat"
+      ]
+    },
+    {
+      "name": "omit-revocation-propagation",
+      "module": "DefiKernel.Composition.Execution",
+      "needle": "return ⟨⟨pre.state, store⟩, .revoked id, []⟩",
+      "replacement": "return ⟨⟨pre.state, pre.capabilities⟩, .revoked id, []⟩",
+      "required_false": [
+        "execution.revoke.ledger.receipt",
+        "workflows.admin.revocation"
+      ]
+    },
+    {
+      "name": "interface-write-bypass",
+      "module": "DefiKernel.Composition.Interfaces",
+      "needle": "if !(writes.all component.canWrite) then throw .writeAccess",
+      "replacement": "if false then throw .writeAccess",
+      "required_false": [
+        "interface.foreign-write",
+        "interface.readonly-write",
+        "workflows.isolation.private",
+        "workflows.isolation.readonly"
+      ]
+    },
+    {
+      "name": "wrong-output-index",
+      "module": "DefiKernel.Composition.Interfaces",
+      "needle": "decide (o.step = step ∧ o.port = port)",
+      "replacement": "decide (o.step = 0 ∧ o.port = port)",
+      "required_false": [
+        "workflows.output.index"
+      ]
+    },
+    {
+      "name": "wrong-output-unit",
+      "module": "DefiKernel.Composition.Interfaces",
+      "needle": "if values.map Sigma.fst != interface.inputs.map InputPort.unit then throw .inputUnit",
+      "replacement": "if false then throw .inputUnit",
+      "required_false": [
+        "interface.wrong-output-unit",
+        "workflows.output.unit"
+      ]
+    },
+    {
+      "name": "drop-supply-receipt",
+      "module": "DefiKernel.Composition.Execution",
+      "needle": "return ⟨post, .invoked request e, snapshots index inv.component iface post.state⟩",
+      "replacement": "return ⟨post, .invoked request { e with supplies := [] },\n      snapshots index inv.component iface post.state⟩",
+      "required_false": [
+        "workflows.order.deposit.first",
+        "workflows.transfer.deposit.withdraw"
+      ]
+    },
+    {
+      "name": "reset-continuation-index",
+      "module": "DefiKernel.Composition.Sequence",
+      "needle": "steps.foldl (advance cfg boundaries) cursor",
+      "replacement": "steps.foldl (advance cfg boundaries) { cursor with nextIndex := 0 }",
+      "required_false": [
+        "workflows.resume.output",
+        "workflows.resume.time"
+      ]
+    },
+    {
+      "name": "wrong-snapshot-index",
+      "module": "DefiKernel.Composition.Interfaces",
+      "needle": "⟨index, ⟨component, o.id⟩, ⟨.amount o.cell.2.2, state.balance o.cell⟩⟩",
+      "replacement": "⟨0, ⟨component, o.id⟩, ⟨.amount o.cell.2.2, state.balance o.cell⟩⟩",
+      "required_false": [
+        "interface.snapshot-exact",
+        "workflows.output.index"
+      ]
+    }
+  ]
+}

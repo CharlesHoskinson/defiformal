@@ -139,24 +139,46 @@ Sprint4 is complete. [Delivery verification](../../review/semantic-kernel/sprint
 records the source/evidence push; a subsequent documentation commit saves that
 verification. The stock harness also checks the final documentation commit head.
 
-## Sprint 5: OpenSpec planning
+## Sprint 5: typed interfaces and sequential composition
 
-The user requested the consolidated remaining agenda in the root
-[roadmap](../../roadmap.md) and Sprint 5 planning through OpenSpec.
-The [proposal](../../openspec/changes/typed-interfaces-sequential-composition/proposal.md),
+The approved [OpenSpec proposal](../../openspec/changes/typed-interfaces-sequential-composition/proposal.md),
 [design](../../openspec/changes/typed-interfaces-sequential-composition/design.md),
-four capability specifications, and
-[47 implementation tasks](../../openspec/changes/typed-interfaces-sequential-composition/tasks.md)
-are saved. Strict OpenSpec validation passes with no issues; the CLI reports all
-planning artifacts complete. All implementation tasks remain unchecked.
+and [47 tasks](../../openspec/changes/typed-interfaces-sequential-composition/tasks.md)
+are implemented at source candidate `28ba18c446f72084ff11b4d125dccf93bf8f4162`.
+GPT-6 used the stock Codex harness, with native Grok/Fable review and no Foreman.
 
-The planned sequential operator uses the current ledger and capability store,
-retains successful steps, and stops at the first refusal. Typed interfaces enforce
-private/shared access; output snapshots route typed values. Preservation is lifted
-from actual evaluated effects, with explicit initialization/assumption premises
-and a ledger supported-predicate frame theorem. Atomic rollback and broader
-composition remain later roadmap work. No Sprint 5 implementation, new Lean
-proof, runtime result, or Grok/Fable acceptance is claimed by this planning entry.
+| Deliverable | Accepted evidence |
+| --- | --- |
+| Typed interfaces and adapter | Validated private/shared access, typed historical outputs, trusted boundary inputs, same-prestate receipt extraction |
+| Sequential execution | Current ledger/store propagation, successful prefix retained, first refusal stops execution, absolute continuation positions |
+| Named proofs | 70 named theorems: 58 generic and 12 reference fixtures; accounting, authorization, locality, conditional invariants, supported ledger frames, continuation |
+| Full build/runtime | 1016-job build; 93/93 composition comparisons; existing typed 189 and legacy 33+43 pass |
+| Imported axiom audit | Composition 328 theorem + 583 supplemental declarations; typed 524+978 and legacy 278+234; forbidden 0 |
+| Mutation evidence | 12/12 compiled composition mutants detected with 93 checks each and six protected positives; 24/24 existing typed mutants detected |
+| Controls/regressions | 36 composition and 17 legacy runner CLI controls; 99 axiom-control assertions; positive and three negative typing fixtures; 20 corpus tests |
+| Preservation/integrity | 165 original proof/corpus files byte-identical; 990 artifact-integrity assertions with zero failures |
+| Native review | Both required final Grok/Fable reviews accept with limitations; initial findings, fixes, model identities and dissent retained |
+
+[Coverage](../../review/semantic-kernel/sprint5/coverage.md) maps all 19 requirements
+and 42 scenarios. The [proof inventory](../../review/semantic-kernel/sprint5/proof-inventory.json),
+[build evidence](../../review/semantic-kernel/sprint5/build-verification.json),
+[mutation results](../../review/semantic-kernel/sprint5/mutations/summary.json), and
+[adjudication](../../review/semantic-kernel/sprint5/ADJUDICATION.md) distinguish
+proof, bounded execution, measurements, and assumptions. Execution began on a
+dirty predecessor; original records are preserved. A
+[direct Git-object comparison](../../review/semantic-kernel/sprint5/commit-source-verification.json)
+binds all 27 input files to the reviewed source commit without relabeling those
+historical execution heads. No source changed after final review.
+
+Ledger frames require explicit support/write-disjointness. Component locality
+ends at denied `canWrite`; foreign-private identification is demonstrated in
+configured workflows, not a general private-state noninterference theorem.
+Contract preservation retains local/boundary assumptions. Nonnegativity is a
+proof-carrying-state fact. Environment truth, catalog authorship and capability
+provenance remain assumptions. Structural catalog checks have negative examples
+but no individual source mutants. An optional Fable documentation-only follow-up
+was unavailable due to credits; both required final reviews completed beforehand.
+Delivery and archive verification are saved separately after the actual push.
 
 ## Full migration backlog
 
@@ -177,12 +199,12 @@ proof, runtime result, or Grok/Fable acceptance is claimed by this planning entr
    manifests and replace format-sensitive extraction as the language grows.
    Current mutations cover original checker branches, wrapper contract/borrow
    checks and24 typed authority/registry/footprint/accounting/oracle mutations.
-   Broader effect application and composition/sequence mutations remain open. Audit coverage is bound to the actual import closure.
+   Sprint 5 adds 12 sequential mutants. Broader effect application, structural catalog checks, and later composition operators remain open. Audit coverage is bound to the actual import closure.
    Review follow-ups include explicit inductive audit roots, a current-module
    exclusion fixture, script-output hygiene across multiple checkouts, and
    mutations that weaken individual actor/effect/supply comparisons.
-5. Extend the current authority/accounting/locality proofs to operational
-   composition, operation-wide noninterference, assume-guarantee discharge,
+5. Extend the accepted sequential authority/accounting/locality proofs to parallel
+   and synchronized composition, operation-wide noninterference, assume-guarantee discharge,
    claims and conservative extension.
 6. Port adversarial financial libraries with pinned contract implementations,
    differential execution, mutation tests and selected refinement proofs.
