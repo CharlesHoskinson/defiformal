@@ -1,5 +1,6 @@
 import DefiKernel.Interleaving.Audit
 import DefiKernel.Interleaving.Trace
+import DefiKernel.Interleaving.Completion
 import DefiKernel.Interleaving.Preservation
 import DefiKernel.Interleaving.Interference
 import DefiKernel.Interleaving.InterferenceFixtures
