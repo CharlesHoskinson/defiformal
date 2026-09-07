@@ -1,0 +1,51 @@
+#!/usr/bin/env python3
+"""Finish author plan metadata without implementing runtime behavior."""
+from pathlib import Path
+import json
+R=next(p for p in Path(__file__).resolve().parents if (p/'lean/lean-toolchain').is_file());P=R/'openspec/changes/checked-integer-financial-arithmetic'
+def read(n):return json.loads((P/n).read_text())
+def write(n,d):(P/n).write_text(json.dumps(d,indent=2)+'\n')
+d=(P/'design.md').read_text();d += '''\n### 8. Evidence helper boundaries and planned naming\n\nFunction names in the inventories are local to the file namespace: Word.lean uses `DefiKernel.Arithmetic` (with nested `Word.checked`); Operations uses `.Arithmetic.Operations`; Rounding uses `.Arithmetic.Rounding`; Fees uses `.Arithmetic.Fees`; Quantity uses `.Arithmetic.Quantity`; Reference, Examples, Tests and RuntimeAudit use their respective `.Arithmetic.<file>` namespaces. The type `Arithmetic.Rounding` can also have the namespace `Arithmetic.Rounding`. Use explicit type/width variables under the existing `relaxedAutoImplicit=false` setting. When Rounding.divideNat is called from Fees, qualify it explicitly. The displayed signatures are contracts, not purported compilable file contents.\n\nPlan `scripts/check_integer_arithmetic_evidence.py` as a separate saved-artifact reconciler with the A01–A04 controls in runner-contract.json. It compares exact expected variant/45-check/65-case inventories, source identities, raw log bytes and hashes, independently reparsed observation sets, actual CLI path/output/hash and stated classifications. Its own unchanged copied-evidence sibling must accept. It consumes saved records, whereas the mutation driver consumes source and executes Lean. Plan `scripts/check_integer_arithmetic_oracle.py` and a standalone development diagnostic Lean root importing Arithmetic production modules for the four-bit diagnostic domain; this diagnostic root is not added to the45-check production mutation inventory. Bind these helper paths/inputs/outputs before execution. No helper result is a mathematical proof.\n\nReference.observeExecution returns only the exact supplied input observation and the single actual Typed.execute result; it must not manufacture a result or treat input preservation as a returned refusal world. Tests.referenceObservationEq compares finite input and output tables and store records independently, with exact Except/refusal constructors. The requested wrong-world behavior is tested by the concrete reference mutation M12 and independently literal reference outcomes; the inherited65 synthetic CLI controls do not themselves execute the financial reference templates.\n'''
+(P/'design.md').write_text(d)
+p=read('projection-inventory.json')
+for m in p['modules']:
+ file=m['module'].split('.')[-1];m['namespace']='DefiKernel.Arithmetic' if file=='Word' else m['module']
+# Preserve all original runtime roots plus clearly separate diagnostics.
+p['proof_only'][0]['imports']=['DefiKernel.Arithmetic.RuntimeAudit','DefiKernel.AxiomAudit']
+p['extra_evidence_sources']=[{'path':'scripts/check_integer_arithmetic_evidence.py','role':'separate artifact reconciliation and A01–A04 controls'},{'path':'scripts/check_integer_arithmetic_oracle.py','role':'independent Python divmod diagnostic comparison'},{'path':'review/semantic-kernel/integer-arithmetic/diagnostics/Diagnostic.lean','role':'development diagnostic root with exact finite tuple inventory; excluded production mutation checks'},{'path':'review/semantic-kernel/integer-arithmetic/compiler-controls/wrong-asset.lean','role':'T01 isolated expected compiler failure'},{'path':'review/semantic-kernel/integer-arithmetic/compiler-controls/same-asset.lean','role':'T02 compile-success sibling'}]
+write('projection-inventory.json',p)
+# Exact mappings are to intended evidence, not past results.
+s=read('scenario-map.json')
+mapdata={
+'W01':(['F01','F02'],['2.1'],'constructor_iff'), 'W02':(['F30','F31'],['2.1'],'width_zero'), 'W03':(['F03','F04'],['2.1'],'add_iff'), 'W04':(['F05','F33'],['2.1'],'sub_iff'), 'W05':(['F06','F32'],['2.1'],'mul_iff'), 'W06':(['F07'],['2.2'],'mulDiv_full_product'), 'W07':([],['2.1','2.2','2.3'],'universal_operation_iff'), 'W08':([],['4.2'],'finite_diagnostic_not_proof'),
+'R01':(['F09','F10'],['2.2','2.3'],'directed_quotient'), 'R02':(['F08','F45'],['2.2'],'zero_denominator'), 'R03':(['F11'],['2.3'],'exact_division'), 'R04':(['F12','F13'],['2.3'],'floor_fit_ceiling_overflow'), 'R05':(['F14','F15'],['2.4'],'gross_quote'), 'R06':(['F16','F43'],['2.4','3.2'],'on_top_quote'), 'R07':(['F18','F19'],['2.4'],'rate_first'), 'R08':(['F17'],['2.4'],'on_top_fit_iff'), 'R09':(['F20','F29','F35','F36','F37'],['2.4'],'fee_extremes'), 'R10':([],['2.3'],'rational_error_and_exactness'),
+'Q01':(['F21'],['2.5'],'scale_round_trip'), 'Q02':(['F22'],['2.5'],'integral_multiple'), 'Q03':(['F23','F24'],['2.5'],'inverse_precedence'), 'Q04':(['F38'],['2.5'],'inverse_iff'), 'Q05':([],['3.4'],'T01_T02_typing'), 'Q06':(['F25','F42'],['3.1','3.2','3.3'],'actual_reference_success'), 'Q07':(['F26','F40','F41'],['3.2','3.3'],'aggregate_coincidence'), 'Q08':(['F27','F28'],['3.2'],'actual_reference_refusals'), 'Q09':(['F25'],['4.4'],'M12_actual_accounting_refusal'), 'Q10':([],['5.3','5.4'],'scope_limit'),
+'E01':([],['1.1','1.2'],'planning_gate'), 'E02':([],['1.1','4.3','4.5'],'projection_root_inventory'), 'E03':([],['4.4','4.5'],'actual_mutant_and_all_true_control'), 'E04':([],['4.4','4.5'],'compile_and_positive_failure_controls'), 'E05':([],['4.3','4.5'],'axiom_source_inventory_and_saved_artifact_controls'), 'E06':([],['4.2'],'finite_diagnostic'), 'E07':([],['1.2','5.4'],'native_review_availability'), 'E08':([],['5.3','5.4','5.5'],'scoped_delivery')}
+for row in s['scenarios']:
+ fixtures,tasks,proof=mapdata[row['id']];row.update(fixtures=fixtures,tasks=tasks,intended_obligation=proof,evidence_hash=None)
+ row['categories']=(['pure_runtime_comparison'] if fixtures and not set(fixtures)&{'F25','F26','F27','F28','F40','F41','F42','F43'} else ['actual_typed_executor_runtime'] if fixtures else [])
+ if row['id'] not in ['W08','Q05','Q08','Q09','Q10'] and not row['id'].startswith('E'):row['categories']+=['generic_proof_required']
+ if row['id']=='Q05':row['categories']+=['compiler_control']
+ if row['id']=='Q09':row['categories']+=['actual_runtime_mutation']
+ if row['id'] in ['W08','E06']:row['categories']+=['bounded_diagnostic']
+ if row['id'].startswith('E') or row['id']=='Q10':row['categories']+=['evidence_or_scope_gate']
+write('scenario-map.json',s)
+proofs=[
+('P01','Word.checked and ofNat','For every w,n, ok value exactly n iff n<2^w; otherwise exact supplied checked error / inputOverflow.','No truncation; w=0 permitted.'),
+('P02','Operations.add','For every pair Word w, ok q iff q=a+b and a+b<2^w; error addOverflow iff 2^w≤a+b.','No success hypothesis substituted for characterization.'),
+('P03','Operations.sub','ok q iff b≤a and q=a-b; subUnderflow iff a<b.','Nat truncated subtraction is only used after b≤a.'),
+('P04','Operations.mul','ok q iff q=a*b and a*b<2^w; mulOverflow iff 2^w≤a*b.','Exact natural product.'),
+('P05','Rounding.divideNat','For d>0, down ok q iff q*d≤n<(q+1)*d; up ok q iff n≤q*d and every k with n≤k*d satisfies q≤k. error divisionByZero iff d=0; no other errors.','Numerator and denominator arbitrary Nat; no word bound.'),
+('P06','Rounding.mulDiv','d=0 gives divisionByZero; d>0 independent rounded q fits iff success; otherwise quotientOverflow.','Intermediate product arbitrary Nat, final q bounded.'),
+('P07','Rounding laws','d>0: ceil=floor+[remainder≠0]; equal iff d divides n; floor error n/d-floor∈[0,1), ceil error ceil-n/d∈[0,1).','Use rational casts explicitly; checked equality requires both successes.'),
+('P08','Monotonicity','At fixed other inputs: successful add/mul/mulDiv values monotone in either operand; subtraction monotone in minuend and antitone in subtrahend.','Both compared checked calls succeed; positive d for division; no refusal ordering.'),
+('P09','Fees.validatedRate','ok returns original num iff 0<den and num≤den; otherwise invalidRate.','Wrapper rate error before divideNat; arbitrary Nat rate components.'),
+('P10','Fees.feeFromGross','For every valid rate and input Word, success with charged=principal=gross, fee=directed quotient, received=gross-fee and charged=received+fee; fee≤gross.','Prove fit from rate bound; do not assume conservation in FeeQuote.'),
+('P11','Fees.feeOnTop','Valid rate gives fee≤principal; success iff principal+fee<2^w; received=principal, charged=principal+fee, conservation. Otherwise addOverflow.','Zero/unit/tiny/exact laws in both modes; invalid rate first.'),
+('P12','Quantity','scale>0: toQuantity value=n*scale; fromRat succeeds iff amount=n*scale for some n<2^w, with same-scale round trips.','Exact scale→negative→integrality→bound error precedence; type preserves only chosen asset.'),
+('P13','Reference accounting','Every quote from successful fee API and positive scale yields sum of constructed deltas zero for every domain/asset.','Arbitrary finite decidable party universe and coincident cells; derive by finite sums and quote law.'),
+('P14','Reference actual success','Given registry/actor/domain/arity/args binding, invocation and negative-net-effect authority and nonnegative resulting balances, actual execute returns complete effect-sum state and exact store.','Derive constructed evaluation and static checks, including accounting; no assumed Valid or execute success.'),
+('P15','Reference exact refusal','Absent required negative-net debit authority gives unauthorizedDebit after earlier checks; negative resulting balance gives insufficientFunds after earlier authority/static checks.','Refusal is Except.error; retained input is an observer field, not returned post-state.'),
+('P16','Reference locality and dimensions','Cells outside all three targets retain balances; store identical; quantity indices fixed and scale explicitly positive.','No claims of authentication, dynamic pricing, sequential debit order or deployed fidelity.')]
+write('proof-contract.json',{'status':'UNIMPLEMENTED_UNIVERSAL_OBLIGATIONS','proofs':[dict(zip(['id','scope','statement','premises_and_limits'],p)) for p in proofs]})
+print('refined',len(s['scenarios']),'scenario mappings and',len(proofs),'universal proof obligations')
