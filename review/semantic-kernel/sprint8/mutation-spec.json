@@ -1,0 +1,184 @@
+{
+  "schema_version": 1,
+  "modules": [
+    "DefiKernel.Atomic.Policy",
+    "DefiKernel.Atomic.Execution",
+    "DefiKernel.Atomic.Observation",
+    "DefiKernel.Atomic.Examples",
+    "DefiKernel.Atomic.Tests",
+    "DefiKernel.Atomic.Audit"
+  ],
+  "mutations": [
+    {
+      "name": "retain-prefix-on-abort",
+      "module": "DefiKernel.Atomic.Execution",
+      "needle": "  | .aborted _ _ _ m => m.entryWorld",
+      "replacement": "  | .aborted _ _ _ m => m.speculative.world",
+      "required_false": [
+        "atomic.fixture.abort.middle.public"
+      ]
+    },
+    {
+      "name": "continue-after-first-failure",
+      "module": "DefiKernel.Atomic.Execution",
+      "needle": "  match m.abort with\n  | some _ => m\n  | none =>",
+      "replacement": "  match (none : Option (AbortReason P A D)) with\n  | some _ => m\n  | none =>",
+      "required_false": [
+        "atomic.fixture.abort.first.stopped"
+      ]
+    },
+    {
+      "name": "publish-aborted-outputs",
+      "module": "DefiKernel.Atomic.Execution",
+      "needle": "  | .aborted _ _ _ _ => []",
+      "replacement": "  | .aborted label schedule _ m => [diagnosticEvent label schedule m]",
+      "required_false": [
+        "atomic.fixture.abort.outputs"
+      ]
+    },
+    {
+      "name": "count-aborted-supply",
+      "module": "DefiKernel.Atomic.Execution",
+      "needle": "  | .aborted _ _ _ _ => fun _ _ => 0",
+      "replacement": "  | .aborted _ _ _ m => m.speculative.supply",
+      "required_false": [
+        "atomic.fixture.abort.supply"
+      ]
+    },
+    {
+      "name": "stale-entry-world",
+      "module": "DefiKernel.Atomic.Execution",
+      "needle": "    let next := Interleaving.advance cfg boundaries left right m.speculative branch",
+      "replacement": "    let next := Interleaving.advance cfg boundaries left right\n      { m.speculative with world := m.entryWorld } branch",
+      "required_false": [
+        "atomic.fixture.live.complete"
+      ]
+    },
+    {
+      "name": "peer-history-leakage",
+      "module": "DefiKernel.Atomic.Execution",
+      "needle": "    let next := Interleaving.advance cfg boundaries left right m.speculative branch",
+      "replacement": "    let peer := match branch with | .left => BranchId.right | .right => BranchId.left\n    let own := m.speculative.local branch\n    let leaky := m.speculative.setLocal branch\n      { own with outputs := own.outputs ++ (m.speculative.local peer).outputs }\n    let next := Interleaving.advance cfg boundaries left right leaky branch",
+      "required_false": [
+        "atomic.fixture.history.peer.only"
+      ]
+    },
+    {
+      "name": "global-boundary-index",
+      "module": "DefiKernel.Atomic.Execution",
+      "needle": "    let next := Interleaving.advance cfg boundaries left right m.speculative branch",
+      "replacement": "    let next := Interleaving.advance cfg (fun b _ \u21a6 boundaries b m.position)\n      left right m.speculative branch",
+      "required_false": [
+        "atomic.fixture.boundary.local"
+      ]
+    },
+    {
+      "name": "erase-debt-without-receipt",
+      "module": "DefiKernel.Atomic.Policy",
+      "needle": "    owed lane p - receiptEffect receipt lane.cell else owed lane p",
+      "replacement": "    (if receiptEffect receipt lane.cell = 0 then 0\n      else owed lane p - receiptEffect receipt lane.cell) else owed lane p",
+      "required_false": [
+        "atomic.fixture.settlement.noop"
+      ]
+    },
+    {
+      "name": "opposite-vault-effect-sign",
+      "module": "DefiKernel.Atomic.Policy",
+      "needle": "    owed lane p - receiptEffect receipt lane.cell else owed lane p",
+      "replacement": "    owed lane p + receiptEffect receipt lane.cell else owed lane p",
+      "required_false": [
+        "atomic.fixture.settlement.under"
+      ]
+    },
+    {
+      "name": "global-settlement-sum",
+      "module": "DefiKernel.Atomic.Policy",
+      "needle": "  policy.lanes.flatMap fun lane \u21a6 policy.participants.filterMap fun principal \u21a6",
+      "replacement": "  if (policy.lanes.flatMap fun lane \u21a6\n      policy.participants.map fun principal \u21a6 owed lane principal).sum = 0 then []\n  else policy.lanes.flatMap fun lane \u21a6 policy.participants.filterMap fun principal \u21a6",
+      "required_false": [
+        "atomic.fixture.settlement.cross.principal"
+      ]
+    },
+    {
+      "name": "collapse-principal-keys",
+      "module": "DefiKernel.Atomic.Policy",
+      "needle": "  fun lane p \u21a6 if lane \u2208 policy.lanes \u2227 p = principal then",
+      "replacement": "  fun lane p \u21a6 if lane \u2208 policy.lanes \u2227 True then",
+      "required_false": [
+        "atomic.fixture.settlement.cross.principal"
+      ]
+    },
+    {
+      "name": "collapse-asset-domain-keys",
+      "module": "DefiKernel.Atomic.Policy",
+      "needle": "    owed lane p - receiptEffect receipt lane.cell else owed lane p",
+      "replacement": "    owed lane p - (policy.lanes.map\n      (fun candidate \u21a6 receiptEffect receipt candidate.cell)).sum else owed lane p",
+      "required_false": [
+        "atomic.fixture.settlement.cross.asset",
+        "atomic.fixture.settlement.cross.domain"
+      ]
+    },
+    {
+      "name": "omit-final-lane",
+      "module": "DefiKernel.Atomic.Policy",
+      "needle": "  policy.lanes.flatMap fun lane \u21a6 policy.participants.filterMap fun principal \u21a6\n    if owed lane principal = 0 then none else some \u27e8lane, principal, owed lane principal\u27e9",
+      "replacement": "  (policy.lanes.take (policy.lanes.length - 1)).flatMap fun lane \u21a6\n    policy.participants.filterMap fun principal \u21a6\n      if owed lane principal = 0 then none else some \u27e8lane, principal, owed lane principal\u27e9",
+      "required_false": [
+        "atomic.fixture.settlement.last.lane"
+      ]
+    },
+    {
+      "name": "omit-final-participant",
+      "module": "DefiKernel.Atomic.Policy",
+      "needle": "  policy.lanes.flatMap fun lane \u21a6 policy.participants.filterMap fun principal \u21a6\n    if owed lane principal = 0 then none else some \u27e8lane, principal, owed lane principal\u27e9",
+      "replacement": "  policy.lanes.flatMap fun lane \u21a6\n    (policy.participants.take (policy.participants.length - 1)).filterMap fun principal \u21a6\n      if owed lane principal = 0 then none else some \u27e8lane, principal, owed lane principal\u27e9",
+      "required_false": [
+        "atomic.fixture.settlement.last.participant"
+      ]
+    },
+    {
+      "name": "accept-lane-supply",
+      "module": "DefiKernel.Atomic.Execution",
+      "needle": "        match checkSupply policy result.receipt with",
+      "replacement": "        match (none : Option (Lane P A D \u00d7 \u211a)) with",
+      "required_false": [
+        "atomic.fixture.supply.lane.nonvault"
+      ]
+    },
+    {
+      "name": "resurrect-revoked-grants",
+      "module": "DefiKernel.Atomic.Execution",
+      "needle": "    let next := Interleaving.advance cfg boundaries left right m.speculative branch",
+      "replacement": "    let resurrected := { m.speculative.world with capabilities :=\n      \u27e8m.speculative.world.capabilities.entries.map (fun cap \u21a6 { cap with live := true })\u27e9 }\n    let next := Interleaving.advance cfg boundaries left right\n      { m.speculative with world := resurrected } branch",
+      "required_false": [
+        "atomic.fixture.capability.revoked"
+      ]
+    },
+    {
+      "name": "omit-abort-reason",
+      "module": "DefiKernel.Atomic.Observation",
+      "needle": "def observationEq (left right : Observation P A D) : Bool :=\n  decide (left.label = right.label) && decide (left.schedule = right.schedule) &&\n    decide (left.outcome = right.outcome) && worldEq left.world right.world &&\n    decide (left.events = right.events) && decide (\u2200 d a, left.supply d a = right.supply d a)",
+      "replacement": "def observationEq (left right : Observation P A D) : Bool :=\n  let normalize : Outcome P A D \u2192 Outcome P A D := fun outcome \u21a6\n    match outcome with\n    | .aborted (.kernel branch index position invocation _) =>\n      .aborted (.kernel branch index position invocation .configuration)\n    | other => other\n  decide (left.label = right.label) && decide (left.schedule = right.schedule) &&\n    decide (normalize left.outcome = normalize right.outcome) && worldEq left.world right.world &&\n    decide (left.events = right.events) && decide (\u2200 d a, left.supply d a = right.supply d a)",
+      "required_false": [
+        "atomic.observe.abort.reason"
+      ]
+    },
+    {
+      "name": "omit-residual-amount",
+      "module": "DefiKernel.Atomic.Observation",
+      "needle": "def observationEq (left right : Observation P A D) : Bool :=\n  decide (left.label = right.label) && decide (left.schedule = right.schedule) &&\n    decide (left.outcome = right.outcome) && worldEq left.world right.world &&\n    decide (left.events = right.events) && decide (\u2200 d a, left.supply d a = right.supply d a)",
+      "replacement": "def observationEq (left right : Observation P A D) : Bool :=\n  let normalize : Outcome P A D \u2192 Outcome P A D := fun outcome \u21a6\n    match outcome with\n    | .aborted (.unsettled remaining) =>\n      .aborted (.unsettled (remaining.map fun residual \u21a6 { residual with amount := 0 }))\n    | other => other\n  decide (left.label = right.label) && decide (left.schedule = right.schedule) &&\n    decide (normalize left.outcome = normalize right.outcome) && worldEq left.world right.world &&\n    decide (left.events = right.events) && decide (\u2200 d a, left.supply d a = right.supply d a)",
+      "required_false": [
+        "atomic.observe.residual.amount"
+      ]
+    }
+  ],
+  "positive_checks": [
+    "atomic.fixture.empty",
+    "atomic.fixture.empty.batch",
+    "atomic.fixture.catalog",
+    "atomic.fixture.store",
+    "atomic.fixture.batch.single",
+    "atomic.observe.equal"
+  ]
+}
