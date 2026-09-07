@@ -1,0 +1,13 @@
+# Interface financial fixture development
+
+All20 frozen fixture contracts have executed witnesses. Final targeted Audit passes95 distinct named comparisons; the final Examples and Tests LSP check has no diagnostics. Full logs and exact commands/UTC/elapsed times are retained in targeted-runs.json. Runtime-inventory.json binds the source bytes, exact95 names and output log; fixture-map.json maps F01–F20 without promoting finite checks to universal proofs.
+
+Every world comparator covers all20 finite cells and the full capability store. Expected data retains the explicit17 live records, and administration independently appends ID17 then tombstones only that entry. Full raw events compare index, action, before world, result world, invoked request, evaluated receipt (including repeated ordered deltas and declared/read footprints), and output metadata. Full cursors additionally compare output history, nextIndex and located failure. Shared machines compare both local consumed counters and exact global accepted/refused attempt order. F20's skipped left suffix changes consumed only before the right peer executes.
+
+The global transfer positive calls actual executeStep, compares the complete independent expected StepResult, and checks production receiptDelta of its actual invoked receipt on {Alice,Bob} equals0. It does not call balanceSum or checkBindings. Its zero survives the specified arithmetic/supply/issued-only mutation semantics, but actual14-mutant survival remains pending official execution. The other global is valid empty query acceptance.
+
+F09 now explicitly filters the global A=C edge by cross-cut membership for cut{A,C}|{B}; the resulting empty list accepts while the actual global query rejects4≠5. This filter is fixture-only, not a production mode. F10 finite comparisons do not prove all-state predicate equivalence; a separate proof-only Fixtures module supplies that instance and the support/paired-effect premises. F16 preserves arbitrary supplied history without a genesis trace or A=B initialization claim.
+
+Development failures are retained in development.md and earlier build logs: finite-derivation/ambiguous-asset elaboration errors were corrected; whitespace-only helper invocations twice used a wrong relative path and changed no source. No failed compilation is counted as a semantic counterexample. The final runtime build and direct Audit both exited0.
+
+Official production mutation/control suites, complete regressions, final proof inventory and native source/evidence acceptance are separately owned and remain pending. No commits, native calls or historical source edits were performed by this task.

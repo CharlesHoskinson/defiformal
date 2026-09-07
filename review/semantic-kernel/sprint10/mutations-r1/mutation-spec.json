@@ -1,0 +1,142 @@
+{
+  "schema_version": 1,
+  "modules": [
+    "DefiKernel.Interface.Regions",
+    "DefiKernel.Interface.Bindings",
+    "DefiKernel.Interface.Examples",
+    "DefiKernel.Interface.Tests",
+    "DefiKernel.Interface.Audit"
+  ],
+  "mutations": [
+    {
+      "name": "maximum-instead-of-sum",
+      "module": "DefiKernel.Interface.Regions",
+      "needle": "region.cells.sum state.balance",
+      "replacement": "region.cells.fold max 0 state.balance",
+      "required_false": [
+        "interface.region.sum"
+      ]
+    },
+    {
+      "name": "negated-receipt-delta",
+      "module": "DefiKernel.Interface.Regions",
+      "needle": "region.cells.sum (receiptCellEffect receipt)",
+      "replacement": "-(region.cells.sum (receiptCellEffect receipt))",
+      "required_false": [
+        "interface.region.transfer-out"
+      ]
+    },
+    {
+      "name": "first-repeated-target-only",
+      "module": "DefiKernel.Interface.Regions",
+      "needle": "(e.deltas.map (fun d \u21a6 if d.1 = cell then d.2 else 0)).sum",
+      "replacement": "((e.deltas.find? (fun d \u21a6 decide (d.1 = cell))).map Prod.snd).getD 0",
+      "required_false": [
+        "interface.region.repeated"
+      ]
+    },
+    {
+      "name": "supply-masks-region-delta",
+      "module": "DefiKernel.Interface.Regions",
+      "needle": "region.cells.sum (receiptCellEffect receipt)",
+      "replacement": "if receipt.supply region.domain region.asset \u2260 0 then 0\n  else region.cells.sum (receiptCellEffect receipt)",
+      "required_false": [
+        "interface.region.mint"
+      ]
+    },
+    {
+      "name": "whole-supply-as-region-delta",
+      "module": "DefiKernel.Interface.Regions",
+      "needle": "region.cells.sum (receiptCellEffect receipt)",
+      "replacement": "receipt.supply region.domain region.asset",
+      "required_false": [
+        "interface.region.transfer-out"
+      ]
+    },
+    {
+      "name": "drop-final-binding",
+      "module": "DefiKernel.Interface.Bindings",
+      "needle": "checkEdgesFrom cfg.catalog state 0 edges",
+      "replacement": "checkEdgesFrom cfg.catalog state 0 edges.dropLast",
+      "required_false": [
+        "interface.binding.unequal"
+      ]
+    },
+    {
+      "name": "compare-left-with-itself",
+      "module": "DefiKernel.Interface.Bindings",
+      "needle": "state.balance left \u2260 state.balance right",
+      "replacement": "state.balance left \u2260 state.balance left",
+      "required_false": [
+        "interface.binding.unequal"
+      ]
+    },
+    {
+      "name": "omit-asset-comparison",
+      "module": "DefiKernel.Interface.Bindings",
+      "needle": "left.2.2 \u2260 right.2.2 then .error (.assetMismatch index left right)",
+      "replacement": "False then .error (.assetMismatch index left right)",
+      "required_false": [
+        "interface.binding.asset"
+      ]
+    },
+    {
+      "name": "omit-domain-comparison",
+      "module": "DefiKernel.Interface.Bindings",
+      "needle": "left.1 \u2260 right.1 then .error (.domainMismatch index left right)",
+      "replacement": "False then .error (.domainMismatch index left right)",
+      "required_false": [
+        "interface.binding.domain"
+      ]
+    },
+    {
+      "name": "global-port-lookup",
+      "module": "DefiKernel.Interface.Bindings",
+      "needle": "catalog.find? (fun component \u21a6 decide (component.id = name.component))",
+      "replacement": "catalog.find? (fun component \u21a6\n    component.exports.any (fun port \u21a6 decide (port.id = name.port)))",
+      "required_false": [
+        "interface.binding.unequal"
+      ]
+    },
+    {
+      "name": "missing-port-fallback",
+      "module": "DefiKernel.Interface.Bindings",
+      "needle": "| none => .error (.missingPort name)",
+      "replacement": "| none => match component.exports.head? with\n      | none => .error (.missingPort name)\n      | some port => .ok port.cell",
+      "required_false": [
+        "interface.binding.missing-port"
+      ]
+    },
+    {
+      "name": "tail-before-current-edge",
+      "module": "DefiKernel.Interface.Bindings",
+      "needle": "match checkEdge catalog edge state index with\n    | .error reason => .error reason\n    | .ok _ => checkEdgesFrom catalog state (index + 1) rest",
+      "replacement": "match checkEdgesFrom catalog state (index + 1) rest with\n    | .error reason => .error reason\n    | .ok _ => checkEdge catalog edge state index",
+      "required_false": [
+        "interface.binding.first-failure"
+      ]
+    },
+    {
+      "name": "bypass-catalog-validation",
+      "module": "DefiKernel.Interface.Bindings",
+      "needle": "if validateCatalog cfg.registry cfg.catalog then checkEdgesFrom",
+      "replacement": "if true then checkEdgesFrom",
+      "required_false": [
+        "interface.binding.invalid-empty"
+      ]
+    },
+    {
+      "name": "issue-adds-region-effect",
+      "module": "DefiKernel.Interface.Regions",
+      "needle": "| .issued _ | .revoked _ => 0",
+      "replacement": "| .issued _ => 1\n  | .revoked _ => 0",
+      "required_false": [
+        "interface.admin.issued-delta"
+      ]
+    }
+  ],
+  "positive_checks": [
+    "interface.positive.transfer",
+    "interface.positive.empty-query"
+  ]
+}

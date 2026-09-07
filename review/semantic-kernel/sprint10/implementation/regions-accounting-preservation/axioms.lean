@@ -1,0 +1,76 @@
+import DefiKernel.Interface.Regions
+import DefiKernel.Interface.Accounting
+import DefiKernel.Interface.AccountingInterleaving
+import DefiKernel.Interface.Preservation
+import DefiKernel.Interface.TypedPreservation
+import DefiKernel.Interface.BindingTransport
+
+#print axioms DefiKernel.Interface.receiptCellEffect_eq_receiptEffect
+#print axioms DefiKernel.Interface.balanceSum_empty
+#print axioms DefiKernel.Interface.receiptDelta_empty
+#print axioms DefiKernel.Interface.receiptCellEffect_issued
+#print axioms DefiKernel.Interface.receiptCellEffect_revoked
+#print axioms DefiKernel.Interface.receiptDelta_issued
+#print axioms DefiKernel.Interface.receiptDelta_revoked
+#print axioms DefiKernel.Interface.valueSupports_const
+#print axioms DefiKernel.Interface.step_receipt_cell
+#print axioms DefiKernel.Interface.step_receipt_region
+#print axioms DefiKernel.Interface.step_effect_outside_writes
+#print axioms DefiKernel.Interface.step_effect_outside
+#print axioms DefiKernel.Interface.receiptDelta_eq_inter
+#print axioms DefiKernel.Interface.step_region_neutral
+#print axioms DefiKernel.Interface.step_value_frame
+#print axioms DefiKernel.Interface.step_total_preserved
+#print axioms DefiKernel.Interface.eventDeltaSum_nil
+#print axioms DefiKernel.Interface.eventDeltaSum_append
+#print axioms DefiKernel.Interface.advance_accounting_suffix
+#print axioms DefiKernel.Interface.continueRun_accounting_suffix
+#print axioms DefiKernel.Interface.continueRun_accounting
+#print axioms DefiKernel.Interface.issue_region_unchanged
+#print axioms DefiKernel.Interface.revoke_region_unchanged
+#print axioms DefiKernel.Interface.continueRun_outputs_suffix
+#print axioms DefiKernel.Interface.attemptDeltaSum_nil
+#print axioms DefiKernel.Interface.attemptDeltaSum_append
+#print axioms DefiKernel.Interface.interleaving_advance_accounting_suffix
+#print axioms DefiKernel.Interface.interleaving_continueRun_accounting_suffix
+#print axioms DefiKernel.Interface.interleaving_continueRun_accounting
+#print axioms DefiKernel.Interface.interleaving_runPrefix_accounting
+#print axioms DefiKernel.Interface.region_localPreserves
+#print axioms DefiKernel.Interface.advance_preserves
+#print axioms DefiKernel.Interface.continueRun_preserves
+#print axioms DefiKernel.Interface.sequential_prefix_preserves
+#print axioms DefiKernel.Interface.run_preserves
+#print axioms DefiKernel.Interface.group_preserves
+#print axioms DefiKernel.Interface.group_accounting
+#print axioms DefiKernel.Interface.selected_invocation_allowed
+#print axioms DefiKernel.Interface.interleaving_advance_preserves
+#print axioms DefiKernel.Interface.interleaving_continueRun_preserves
+#print axioms DefiKernel.Interface.interleaving_prefix_preserves
+#print axioms DefiKernel.Interface.sequential_total_preserved
+#print axioms DefiKernel.Interface.interleaving_total_preserved
+#print axioms DefiKernel.Interface.sequential_ghost_total_preserved
+#print axioms DefiKernel.Interface.group_total_preserved
+#print axioms DefiKernel.Interface.binding_localPreserves
+#print axioms DefiKernel.Interface.sequential_bindings_preserved
+#print axioms DefiKernel.Interface.sequential_prefix_bindings_preserved
+#print axioms DefiKernel.Interface.group_bindings_preserved
+#print axioms DefiKernel.Interface.interleaving_bindings_preserved
+#print axioms DefiKernel.Interface.interleaving_prefix_bindings_preserved
+#print axioms DefiKernel.Interface.step_typed_total_preserved
+#print axioms DefiKernel.Interface.typed_total_localPreserves
+#print axioms DefiKernel.Interface.sequential_typed_total_preserved
+#print axioms DefiKernel.Interface.sequential_prefix_typed_total_preserved
+#print axioms DefiKernel.Interface.group_typed_total_preserved
+#print axioms DefiKernel.Interface.interleaving_typed_total_preserved
+#print axioms DefiKernel.Interface.interleaving_prefix_typed_total_preserved
+#print axioms DefiKernel.Interface.localPreserves_equiv
+#print axioms DefiKernel.Interface.localPreserves_and
+#print axioms DefiKernel.Interface.localBindings_append
+#print axioms DefiKernel.Interface.localBindings_reverse
+#print axioms DefiKernel.Interface.localBindings_duplicate
+#print axioms DefiKernel.Interface.localBindings_perm
+#print axioms DefiKernel.Interface.localBindings_assoc
+#print axioms DefiKernel.Interface.localBindings_symClosure
+#print axioms DefiKernel.Interface.sequential_prefix_query_transport
+#print axioms DefiKernel.Interface.interleaving_prefix_query_transport
+#print axioms DefiKernel.Interface.group_query_transport
