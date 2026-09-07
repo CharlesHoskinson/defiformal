@@ -22,7 +22,7 @@ The implementation SHALL exercise all F01–F20 design fixtures with independent
 
 ### Requirement: Actual mutation and defensive control evidence
 
-The implementation SHALL execute all fourteen M01–M14 design mutations against copied actual new runtime source. Each accepted detection MUST compile, flip its designated comparison and preserve its specified positive sibling. It MUST execute every inherited accepted predecessor control, including all65 currently inspected cases, with an exact name/source/expected-exit map refreshed before official freeze.
+The implementation SHALL execute all fourteen M01–M14 design mutations against copied actual new runtime source. Each accepted detection MUST compile, flip its designated comparison and preserve its specified positive sibling. It MUST execute every inherited accepted predecessor control, including all65 accepted predecessor cases, with the exact complete Metatheory-to-Interface name/source/fixture/expected-exit map and proof/production regex-string bindings. The global positive_checks schema MUST stay distinct from the source-bound per-mutant sibling matrix. Command/outer timeouts MUST remain600/1500 seconds with actual measured wall time and blocked timeout classification; accepted S9 result bindings MUST be verified at official freeze and rechecked after relevant changes.
 
 #### Scenario: RE04 Compiled discriminating mutation
 - **WHEN** a planned mutation is counted as detected
@@ -58,11 +58,11 @@ The implementation SHALL capture all imported Interface theorem/supplemental dec
 
 ### Requirement: Dependency and independent acceptance gates
 
-The change SHALL remain provisional until Sprint9 is accepted and delivered, actual M1 APIs/source/control identities are refreshed, and a frozen plan receives nonauthor GPT-6 and native Opus acceptance. Stock GPT-6 implementation MUST then receive native Grok/Opus source/evidence review, requesting opus and recording its actual returned model. No Foreman, official freeze, independent approval, implementation or completed proof SHALL be claimed by this author draft.
+The change SHALL require exact accepted Sprint9 source/evidence/delivery bindings and actual M1 API/control identity, followed by nonauthor GPT-6 and native Fable5.1 medium acceptance of the same frozen S10 plan before implementation. The accepted dependency is source eec499d, source/evidence ec9ed804 and archive/verified remote9908d9b, with full revisions in dependency-baseline.json. Stock GPT-6 implementation MUST then receive native Grok/Fable5.1-medium source/evidence review, requesting `claude-fable-5-1[1m]` with `--effort medium` and recording its actual returned model. No Foreman or independent approval, implementation or completed proof SHALL be inferred from author validation or a planning freeze.
 
-#### Scenario: RE11 Provisional prerequisite
-- **WHEN** Sprint9 acceptance/delivery or API refresh is still open
-- **THEN** implementation and official planning freeze remain gated; author validation is not independent approval
+#### Scenario: RE11 Accepted dependency binding
+- **WHEN** accepted Sprint9 source/delivery/API evidence is missing or differs from the planning binding
+- **THEN** the dependency check blocks the planning gate and implementation until reconciled; author validation is not independent approval
 
 #### Scenario: RE12 Reviewer identity
 - **WHEN** new planning or implementation reviews are executed

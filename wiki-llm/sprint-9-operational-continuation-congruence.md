@@ -33,10 +33,10 @@ not inferred from a case count. All35 plan task boxes remain unchecked until the
 actual planning gate; baseline/dependency completion is recorded separately.
 Revised-candidate independent GPT-6/native Fable 5.1 acceptance and implementation remain pending.
 
-The change is [operational-continuation-congruence](../openspec/changes/operational-continuation-congruence/proposal.md),
-with [design](../openspec/changes/operational-continuation-congruence/design.md),
-[requirements](../openspec/changes/operational-continuation-congruence/specs/) and
-[unchecked tasks](../openspec/changes/operational-continuation-congruence/tasks.md).
+The change is [operational-continuation-congruence](../openspec/changes/archive/2026-09-07-operational-continuation-congruence/proposal.md),
+with [design](../openspec/changes/archive/2026-09-07-operational-continuation-congruence/design.md),
+[requirements](../openspec/changes/archive/2026-09-07-operational-continuation-congruence/specs/) and
+[completed tasks](../openspec/changes/archive/2026-09-07-operational-continuation-congruence/tasks.md).
 It implements only increment M1 of the
 [operational metatheory draft](operational-metatheory-planning-draft.md).
 
