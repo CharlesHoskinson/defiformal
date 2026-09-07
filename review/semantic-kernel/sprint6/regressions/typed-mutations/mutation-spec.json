@@ -1,0 +1,255 @@
+{
+  "schema_version": 1,
+  "modules": [
+    "DefiKernel.Typed.Types",
+    "DefiKernel.Typed.Expr",
+    "DefiKernel.Typed.Authority",
+    "DefiKernel.Typed.Transition",
+    "DefiKernel.Typed.ExprTests",
+    "DefiKernel.Typed.AuthorityTests",
+    "DefiKernel.Typed.TransitionTests",
+    "DefiKernel.Typed.Examples",
+    "DefiKernel.Typed.Acceptance",
+    "DefiKernel.Typed.Audit"
+  ],
+  "mutations": [
+    {
+      "name": "admin-bypass",
+      "module": "DefiKernel.Typed.Authority",
+      "needle": "decide (ctx.domain = domain \u2227 ctx.principal = config.domainAdmin domain)",
+      "replacement": "true",
+      "required_false": [
+        "authority_unauthorized_issuer",
+        "authority_unauthorized_revoker"
+      ]
+    },
+    {
+      "name": "holder-bypass",
+      "module": "DefiKernel.Typed.Authority",
+      "needle": "cap.holder = ctx.principal \u2227",
+      "replacement": "True \u2227",
+      "required_false": [
+        "authority_wrong_holder",
+        "transition_wrong_cap_holder"
+      ]
+    },
+    {
+      "name": "live-bypass",
+      "module": "DefiKernel.Typed.Authority",
+      "needle": "cap.live = true \u2227 cap.holder",
+      "replacement": "True \u2227 cap.holder",
+      "required_false": [
+        "authority_same_request_after_revoke",
+        "transition_revoked_debit"
+      ]
+    },
+    {
+      "name": "cap-domain-bypass",
+      "module": "DefiKernel.Typed.Authority",
+      "needle": "cap.domain = ctx.domain \u2227",
+      "replacement": "True \u2227",
+      "required_false": [
+        "authority_wrong_authenticated_domain"
+      ]
+    },
+    {
+      "name": "cap-operation-bypass",
+      "module": "DefiKernel.Typed.Authority",
+      "needle": "cap.operation = operation \u2227",
+      "replacement": "True \u2227",
+      "required_false": [
+        "authority_wrong_operation"
+      ]
+    },
+    {
+      "name": "cap-resource-bypass",
+      "module": "DefiKernel.Typed.Authority",
+      "needle": "cap.right = right \u2227",
+      "replacement": "True \u2227",
+      "required_false": [
+        "authority_wrong_debit_owner",
+        "authority_wrong_debit_asset",
+        "authority_right_kind_mismatch"
+      ]
+    },
+    {
+      "name": "revoke-noop",
+      "module": "DefiKernel.Typed.Authority",
+      "needle": "{ cap with live := false }",
+      "replacement": "{ cap with live := true }",
+      "required_false": [
+        "authority_revoke_accepted",
+        "authority_old_revoked_id_remains_unusable",
+        "transition_revoked_debit"
+      ]
+    },
+    {
+      "name": "invoke-bypass",
+      "module": "DefiKernel.Typed.Transition",
+      "needle": "if !hasAuthority store request.capabilityIds ctx request.operation .invoke then",
+      "replacement": "if false then",
+      "required_false": [
+        "transition_invoke_required",
+        "transition_wrong_cap_holder"
+      ]
+    },
+    {
+      "name": "guard-bypass",
+      "module": "DefiKernel.Typed.Transition",
+      "needle": "if !e.guard then .error .guard",
+      "replacement": "if false then .error .guard",
+      "required_false": [
+        "transition_guard_false"
+      ]
+    },
+    {
+      "name": "state-read-bypass",
+      "module": "DefiKernel.Typed.Transition",
+      "needle": "else if !e.stateReadsOK then",
+      "replacement": "else if false then",
+      "required_false": [
+        "transition_guard_read_missing",
+        "transition_effect_read_missing",
+        "transition_supply_only_read_missing",
+        "transition_inactive_read_missing"
+      ]
+    },
+    {
+      "name": "env-read-bypass",
+      "module": "DefiKernel.Typed.Transition",
+      "needle": "else if !e.envReadsOK then",
+      "replacement": "else if false then",
+      "required_false": [
+        "transition_env_read_missing"
+      ]
+    },
+    {
+      "name": "domain-bypass",
+      "module": "DefiKernel.Typed.Transition",
+      "needle": "else if !e.domainOK ctx.domain then",
+      "replacement": "else if false then",
+      "required_false": [
+        "transition_foreign_state_read"
+      ]
+    },
+    {
+      "name": "debit-bypass",
+      "module": "DefiKernel.Typed.Transition",
+      "needle": "else if !e.debitsOK store request ctx then",
+      "replacement": "else if false then",
+      "required_false": [
+        "transition_debit_required",
+        "transition_revoked_debit"
+      ]
+    },
+    {
+      "name": "supply-bypass",
+      "module": "DefiKernel.Typed.Transition",
+      "needle": "else if !e.suppliesOK store request ctx then",
+      "replacement": "else if false then",
+      "required_false": [
+        "transition_supply_required"
+      ]
+    },
+    {
+      "name": "accounting-bypass",
+      "module": "DefiKernel.Typed.Transition",
+      "needle": "if !e.accountingOK then",
+      "replacement": "if false then",
+      "required_false": [
+        "transition_unbalanced",
+        "transition_mismatched_supply",
+        "transition_wrong_asset_accounting"
+      ]
+    },
+    {
+      "name": "write-bypass",
+      "module": "DefiKernel.Typed.Transition",
+      "needle": "else if !e.writesOK then",
+      "replacement": "else if false then",
+      "required_false": [
+        "transition_missing_write"
+      ]
+    },
+    {
+      "name": "registry-selection",
+      "module": "DefiKernel.Typed.Transition",
+      "needle": "let template \u2190 match registry request.operation with",
+      "replacement": "let template \u2190 match registry \u27e80\u27e9 with",
+      "required_false": [
+        "transition_unknown_operation"
+      ]
+    },
+    {
+      "name": "zero-division-bypass",
+      "module": "DefiKernel.Typed.Expr",
+      "needle": "if y = 0 then .error .divisionByZero else .ok (numericValue n (numericRat n x / y))",
+      "replacement": "if false then .error .divisionByZero else .ok (numericValue n (numericRat n x / y))",
+      "required_false": [
+        "expr_zero_scalar_division_refused"
+      ]
+    },
+    {
+      "name": "inactive-state-read-omission",
+      "module": "DefiKernel.Typed.Expr",
+      "needle": "condition.stateReads ++ yes.stateReads ++ no.stateReads",
+      "replacement": "condition.stateReads ++ yes.stateReads",
+      "required_false": [
+        "expr_inactive_state_branch_tracked",
+        "transition_inactive_read_missing",
+        "transition_supply_only_read_missing"
+      ]
+    },
+    {
+      "name": "supply-first-only",
+      "module": "DefiKernel.Typed.Transition",
+      "needle": "(evaluated.supplies.map (fun d \u21a6 if d.1 = (domain, asset) then d.2 else 0)).sum",
+      "replacement": "((evaluated.supplies.take 1).map (fun d \u21a6 if d.1 = (domain, asset) then d.2 else 0)).sum",
+      "required_false": [
+        "transition_repeated_supply_sum"
+      ]
+    },
+    {
+      "name": "oracle-freshness-bypass",
+      "module": "DefiKernel.Typed.Examples",
+      "needle": ".binary (.le .scalar) .now (.binary (.add .scalar) (.timestamp priceKey) (.lit 5))",
+      "replacement": ".lit true",
+      "required_false": [
+        "reference_oracle_stale"
+      ]
+    },
+    {
+      "name": "oracle-future-bypass",
+      "module": "DefiKernel.Typed.Examples",
+      "needle": ".binary (.le .scalar) (.timestamp priceKey) .now",
+      "replacement": ".lit true",
+      "required_false": [
+        "reference_oracle_future"
+      ]
+    },
+    {
+      "name": "oracle-positive-price-bypass",
+      "module": "DefiKernel.Typed.Examples",
+      "needle": ".binary (.lt (.price Asset.collateral Asset.usd)) (.lit 0) collateralPrice",
+      "replacement": ".lit true",
+      "required_false": [
+        "reference_oracle_zero_independent",
+        "reference_oracle_negative_independent"
+      ]
+    },
+    {
+      "name": "collateral-factor-weakened",
+      "module": "DefiKernel.Typed.Examples",
+      "needle": "(.binary (.scale (.amount Asset.usd)) (.lit 2) debtValue) collateralValue",
+      "replacement": "(.binary (.scale (.amount Asset.usd)) (.lit 1) debtValue) collateralValue",
+      "required_false": [
+        "reference_collateral_exceeded"
+      ]
+    }
+  ],
+  "positive_checks": [
+    "expr_exact_price_conversion",
+    "authority_issue_succeeds_with_id_zero",
+    "transition_transfer_exact"
+  ]
+}

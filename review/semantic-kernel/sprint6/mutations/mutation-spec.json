@@ -1,0 +1,148 @@
+{
+  "schema_version": 1,
+  "modules": [
+    "DefiKernel.Parallel.Compatibility",
+    "DefiKernel.Parallel.Observation",
+    "DefiKernel.Parallel.Execution",
+    "DefiKernel.Parallel.Preservation",
+    "DefiKernel.Parallel.Audit"
+  ],
+  "mutations": [
+    {
+      "name": "bypass-write-write-composite",
+      "module": "DefiKernel.Parallel.Compatibility",
+      "needle": "  match firstOverlap left.writes right.writes with\n  | some c => .error (.conflict .writeWrite c)\n  | none => match firstOverlap left.writes right.reads with\n    | some c => .error (.conflict .leftWriteRightRead c)\n    | none => match firstOverlap right.writes left.reads with\n      | some c => .error (.conflict .rightWriteLeftRead c)\n      | none => .ok ⟨⟩",
+      "replacement": "  .ok ⟨⟩",
+      "required_false": [
+        "parallel.compat.write-write-witness"
+      ]
+    },
+    {
+      "name": "omit-expression-reads-composite",
+      "module": "DefiKernel.Parallel.Compatibility",
+      "needle": "(template.requiredStateReads ++ template.stateReads)",
+      "replacement": "([] : List (PackedCellRef P A D))",
+      "required_false": [
+        "parallel.compat.hidden-inactive-guard",
+        "parallel.compat.hidden-delta",
+        "parallel.compat.hidden-supply"
+      ]
+    },
+    {
+      "name": "omit-output-dependency",
+      "module": "DefiKernel.Parallel.Compatibility",
+      "needle": "reads ++ writes ++ iface.outputs.map OutputPort.cell",
+      "replacement": "reads ++ writes",
+      "required_false": [
+        "parallel.compat.output-dependency"
+      ]
+    },
+    {
+      "name": "omit-zero-delta-target",
+      "module": "DefiKernel.Parallel.Compatibility",
+      "needle": "(template.writes ++ template.deltas.map (fun d ↦ ⟨d.asset, d.target⟩))",
+      "replacement": "template.writes",
+      "required_false": [
+        "parallel.compat.zero-target",
+        "parallel.compat.zero-target-exact"
+      ]
+    },
+    {
+      "name": "omit-reverse-conflict",
+      "module": "DefiKernel.Parallel.Compatibility",
+      "needle": "firstOverlap right.writes left.reads",
+      "replacement": "firstOverlap ([] : List (Cell P A D)) left.reads",
+      "required_false": [
+        "parallel.compat.reverse-read"
+      ]
+    },
+    {
+      "name": "cancel-peer-after-refusal",
+      "module": "DefiKernel.Parallel.Execution",
+      "needle": "    let l := runBranch cfg (boundaries .left) initial left\n    let r := runBranch cfg (boundaries .right) initial right",
+      "replacement": "    let l := runBranch cfg (boundaries .left) initial left\n    let r := runBranch cfg (boundaries .right) initial (if l.failure.isSome then [] else right)",
+      "required_false": [
+        "parallel.fixture.refusal.peer-runs"
+      ]
+    },
+    {
+      "name": "rollback-refused-prefix-at-join",
+      "module": "DefiKernel.Parallel.Execution",
+      "needle": "mergeWorld leftFootprint rightFootprint initial l.world r.world",
+      "replacement": "mergeWorld leftFootprint rightFootprint initial (if l.failure.isSome then initial else l.world) r.world",
+      "required_false": [
+        "parallel.fixture.refusal.prefix-kept"
+      ]
+    },
+    {
+      "name": "replace-merge-with-left-world",
+      "module": "DefiKernel.Parallel.Execution",
+      "needle": "  ⟨⟨fun c ↦ if c ∈ leftFootprint.writes then left.state.balance c\n      else if c ∈ rightFootprint.writes then right.state.balance c\n      else initial.state.balance c,\n    fun c ↦ by\n      split\n      · exact left.state.nonneg c\n      · split\n        · exact right.state.nonneg c\n        · exact initial.state.nonneg c⟩,\n    initial.capabilities⟩",
+      "replacement": "  left",
+      "required_false": [
+        "parallel.fixture.basic.complete"
+      ]
+    },
+    {
+      "name": "double-initial-balances",
+      "module": "DefiKernel.Parallel.Execution",
+      "needle": "  ⟨⟨fun c ↦ if c ∈ leftFootprint.writes then left.state.balance c\n      else if c ∈ rightFootprint.writes then right.state.balance c\n      else initial.state.balance c,\n    fun c ↦ by\n      split\n      · exact left.state.nonneg c\n      · split\n        · exact right.state.nonneg c\n        · exact initial.state.nonneg c⟩,\n    initial.capabilities⟩",
+      "replacement": "  ⟨⟨fun c ↦ left.state.balance c + right.state.balance c,\n    fun c ↦ add_nonneg (left.state.nonneg c) (right.state.nonneg c)⟩,\n    initial.capabilities⟩",
+      "required_false": [
+        "parallel.fixture.basic.complete"
+      ]
+    },
+    {
+      "name": "leak-peer-output-history",
+      "module": "DefiKernel.Parallel.Execution",
+      "needle": "    let l := runBranch cfg (boundaries .left) initial left\n    let r := runBranch cfg (boundaries .right) initial right",
+      "replacement": "    let r := runBranch cfg (boundaries .right) initial right\n    let l := continueRun cfg (boundaries .left)\n      { (startCursor cfg initial) with outputs := r.outputs } (left.map Step.invoke)",
+      "required_false": [
+        "parallel.fixture.routing.peer-only"
+      ]
+    },
+    {
+      "name": "reuse-left-trusted-boundary",
+      "module": "DefiKernel.Parallel.Execution",
+      "needle": "    let l := runBranch cfg (boundaries .left) initial left\n    let r := runBranch cfg (boundaries .right) initial right",
+      "replacement": "    let l := runBranch cfg (boundaries .left) initial left\n    let r := runBranch cfg (boundaries .left) initial right",
+      "required_false": [
+        "parallel.fixture.boundary.local-identity"
+      ]
+    },
+    {
+      "name": "drop-peer-supply-receipts",
+      "module": "DefiKernel.Parallel.Preservation",
+      "needle": "traceSupply joined.left.events domain asset + traceSupply joined.right.events domain asset",
+      "replacement": "traceSupply joined.left.events domain asset",
+      "required_false": [
+        "parallel.fixture.supply.both-receipts"
+      ]
+    },
+    {
+      "name": "reuse-live-capability-store",
+      "module": "DefiKernel.Parallel.Execution",
+      "needle": "    let l := runBranch cfg (boundaries .left) initial left\n    let r := runBranch cfg (boundaries .right) initial right",
+      "replacement": "    let l := runBranch cfg (boundaries .left) initial left\n    let stale : World P A D := { initial with capabilities :=\n      ⟨initial.capabilities.entries.map (fun cap ↦ { cap with live := true })⟩ }\n    let r := runBranch cfg (boundaries .right) stale right",
+      "required_false": [
+        "parallel.fixture.capability.revoked"
+      ]
+    },
+    {
+      "name": "stale-intra-branch-evaluation",
+      "module": "DefiKernel.Parallel.Execution",
+      "needle": "Composition.run cfg boundary initial (branch.map Step.invoke)",
+      "replacement": "(branch.map Step.invoke).foldl\n    (fun cursor step ↦ advance cfg boundary { cursor with world := initial } step)\n    (startCursor cfg initial)",
+      "required_false": [
+        "parallel.fixture.stateful.prefix"
+      ]
+    }
+  ],
+  "positive_checks": [
+    "parallel.compat.catalog-positive",
+    "parallel.compat.funded-left-complete",
+    "parallel.compat.funded-right-complete",
+    "parallel.compat.zero-target-funded",
+    "parallel.compat.hidden-inactive-guard-funded"
+  ]
+}

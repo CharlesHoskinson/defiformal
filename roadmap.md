@@ -43,30 +43,35 @@ writes. Component locality is conditional on denied write access; general privat
 noninterference is not claimed. Initialization and contract results retain explicit
 local/boundary premises, and nonnegativity follows from proof-carrying states.
 
-## 2. Sprint 6 candidate: disjoint parallel composition
+## 2. Sprint 6: disjoint parallel composition
 
-[OpenSpec proposal](openspec/changes/disjoint-parallel-composition/proposal.md),
-[design](openspec/changes/disjoint-parallel-composition/design.md), and
-[implementation tasks](openspec/changes/disjoint-parallel-composition/tasks.md)
-are saved at candidate `c0f6f0b`. GPT-6 accepted the corrected candidate.
-After restored access, Fable accepted the same candidate with nonblocking
-limitations. Both planning gates pass; implementation is in progress. [Planning adjudication](review/semantic-kernel/sprint6/planning/ADJUDICATION.md)
-and [gate state](review/semantic-kernel/sprint6/planning/gate.json) are saved.
-Conservative admission, exact executor dependency and both actual serial-order
-correspondence proofs compile. Focused evidence passes 42 admission comparisons,
-30 core observation/refusal comparisons and 44 mutation-runner controls.
-Financial integration, production mutations and native implementation review remain open.
+The [OpenSpec plan](openspec/changes/disjoint-parallel-composition/design.md)
+and [48-task checklist](openspec/changes/disjoint-parallel-composition/tasks.md)
+are implemented and independently reviewed. Source candidate: `fae07ca`.
+Both native Grok and Fable audits accepted the Lean implementation and final
+evidence with limitations. [Adjudication and review identities](review/semantic-kernel/sprint6/implementation/ADJUDICATION.md)
+record the exact reviewed inputs.
+
+Acceptance passes 131 runtime comparisons, 388 imported theorem and 419
+supplemental axiom checks with zero forbidden dependencies, all 14 Parallel
+mutations, all 45 Parallel runner controls, and all seven historical Python
+regression suites. The 126 explicit theorems comprise 88 generic results,
+35 reference instances and three counterexamples; generated theorem counts
+are separate. A clean repository-package rebuild and frozen administrative
+compiler controls also pass. [Coverage](review/semantic-kernel/sprint6/coverage.md)
+and [proof inventory](review/semantic-kernel/sprint6/proof-inventory.json) record
+all 47 scenarios and their precise evidence classes.
 
 - [x] Pass both planning audits on the same candidate.
-- [ ] Implement conservative concrete compatibility and independent branch execution.
-- [x] Prove full executor dependency, exact refusal framing and serial-order correspondence.
-- [ ] Prove joined accounting, authority, nonnegativity, supported frames and conditional initialized invariants.
-- [ ] Complete financial fixtures, real mutations, regression evidence and native Grok/Fable implementation review.
+- [x] Implement conservative concrete compatibility and independent branch execution.
+- [x] Prove full executor dependency, exact refusal framing and both actual serial-order correspondences.
+- [x] Prove joined accounting, authority, nonnegativity, supported frames and conditional initialized invariants.
+- [x] Complete financial fixtures, real mutations, regressions and native Grok/Fable implementation review.
 - [ ] Deliver the accepted branch and archive the OpenSpec change.
 
 ## Remaining composition and metatheory
 
-- [ ] Implement disjoint parallel composition.
+- [x] Implement disjoint parallel composition.
 - [ ] Implement shared-state interleaving with explicit interference conditions.
 - [ ] Implement atomic synchronization, including failure and transient-settlement semantics.
 - [ ] Generalize the useful results in `Interface.lean` and `Nary.lean` into the operational model.

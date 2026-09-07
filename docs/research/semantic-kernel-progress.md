@@ -186,30 +186,40 @@ and synchronized all 19 requirements to four main specifications.
 records strict specification and local-link checks. A subsequent metadata commit
 saves these records, with its remote head checked separately by the stock harness.
 
-## Sprint 6: disjoint parallel composition planning candidate
+## Sprint 6: disjoint parallel composition acceptance
 
-The user approved drafting and executing Sprint 6 after independent Fable and
-GPT-6 audits pass on the OpenSpec candidate. The
-[proposal](../../openspec/changes/disjoint-parallel-composition/proposal.md),
-[design](../../openspec/changes/disjoint-parallel-composition/design.md), and
-[tasks](../../openspec/changes/disjoint-parallel-composition/tasks.md) specify
-17 requirements and 47 scenarios across 48 tasks. Strict OpenSpec validation passes.
-The initial GPT-6 audit requested one output-fixture correction; the revision
-replaces that impossible case with feasible qualification and peer-history tests.
-GPT-6 accepted corrected candidate `c0f6f0bcc19ab30e0146a2e1e8ff209f8ce8c1a7`.
-After refreshed login, Fable accepted the same candidate with nonblocking
-limitations. Earlier credit errors and one incomplete response remain recorded. [Planning adjudication](../../review/semantic-kernel/sprint6/planning/ADJUDICATION.md)
-and [gate state](../../review/semantic-kernel/sprint6/planning/gate.json) record the
-passed planning gate. The refreshed baseline passes all eight commands;
-implementation proceeds under the existing authorization. Focused compatibility
-checks pass 42/42 and core observation/refusal checks pass 30/30. Generic proofs
-now establish exact refusal-aware correspondence to both real serial orders;
-30 named root axiom checks pass. The mutation runner passes 44 synthetic controls.
-[Core development evidence](../../review/semantic-kernel/sprint6/execution/root-core/verification.json)
-records its precise source stage; financial integration and native implementation
-audits remain pending. Capability
-administration remains outside the binary parallel operator; exact refused
-behavior and real LR/RL re-execution are mandatory proof obligations.
+The approved OpenSpec change implements binary disjoint parallel composition.
+Planning passed on `c0f6f0b`; Lean source froze at `7cb4807` and the new mutation
+runner/spec at `fae07ca`. Both native Grok and Fable reviews accepted the Lean
+implementation and final evidence with limitations. Exact identities, source
+hashes, findings and responses are recorded in the
+[adjudication](../../review/semantic-kernel/sprint6/implementation/ADJUDICATION.md).
+
+The operator conservatively analyzes every branch suffix, executes independent
+prefixes with isolated histories and fixed capabilities, retains exact refusals,
+and merges disjoint write regions. Generic proofs establish correspondence to
+both real admission-gated serial orders, actual receipt accounting, point-of-use
+authority, locality, supported frames and conditional initialized invariants.
+Proof-carrying nonnegativity is distinguished from discovered invariants.
+
+All ten integrated Lean commands pass: 131 Parallel runtime comparisons and
+388 theorem/419 supplemental axiom checks, with zero forbidden dependencies.
+There are 126 explicit theorems: 88 generic, 35 reference instances and three
+counterexamples, plus 262 generated theorem declarations. All 14 source mutants
+are detected with complete inventories and protected positives; all 45 Parallel
+CLI controls pass. All seven historical Python suites pass. A clean root-package
+build and frozen issue/revoke type-error controls also pass.
+[Coverage](../../review/semantic-kernel/sprint6/coverage.md) maps all 47 scenarios;
+[the proof inventory](../../review/semantic-kernel/sprint6/proof-inventory.json)
+records exact elaborated statements and premises. Original 165 corpus/proof paths,
+32 protected kernel sources and 435 historical Lean files are unchanged; the root
+import only adds the Parallel verification module.
+
+Final branch delivery and archive metadata follow the accepted evidence. Shared
+state interleaving, atomic synchronization, broader associativity, claims and
+provenance, environment truth and deployed fidelity remain open. The reference
+cases are development fixtures, not untouched holdouts or deployed protocol
+proofs.
 
 ## Full migration backlog
 
@@ -230,12 +240,12 @@ behavior and real LR/RL re-execution are mandatory proof obligations.
    manifests and replace format-sensitive extraction as the language grows.
    Current mutations cover original checker branches, wrapper contract/borrow
    checks and24 typed authority/registry/footprint/accounting/oracle mutations.
-   Sprint 5 adds 12 sequential mutants. Broader effect application, structural catalog checks, and later composition operators remain open. Audit coverage is bound to the actual import closure.
+   Sprint 5 adds 12 sequential mutants and Sprint 6 adds 14 disjoint-parallel mutants. Broader effect application, structural catalog checks, and later composition operators remain open. Audit coverage is bound to the actual import closure.
    Review follow-ups include explicit inductive audit roots, a current-module
    exclusion fixture, script-output hygiene across multiple checkouts, and
    mutations that weaken individual actor/effect/supply comparisons.
-5. Extend the accepted sequential authority/accounting/locality proofs to parallel
-   and synchronized composition, operation-wide noninterference, assume-guarantee discharge,
+5. Extend the accepted sequential and binary disjoint-parallel results to shared-state
+   interleaving and synchronized composition, operation-wide noninterference, assume-guarantee discharge,
    claims and conservative extension.
 6. Port adversarial financial libraries with pinned contract implementations,
    differential execution, mutation tests and selected refinement proofs.
