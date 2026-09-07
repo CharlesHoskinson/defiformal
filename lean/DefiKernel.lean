@@ -1,3 +1,4 @@
 import DefiKernel.VerifyAxioms
+import DefiKernel.Typed.Verify
 
-/-! Entry point for the bounded kernel, operation contracts, regressions and automatic axiom audit. -/
+/-! Entry point for the pilot, typed kernel, regressions and imported axiom audits. -/

@@ -50,11 +50,16 @@ def refused (reason : Refusal) : Result → Bool
   | .error actual => actual == reason
   | .ok _ => false
 
+def allBalances (post : ExecutionResult Bool Bool Bool)
+    (expected : Cell Bool Bool Bool → ℚ) : Bool :=
+  [false, true].all fun d ↦ [false, true].all fun p ↦ [false, true].all fun a ↦
+    post.state.balance (d, p, a) == expected (d, p, a)
+
 def transferExact : Result → Bool
   | .error _ => false
-  | .ok post => post.state.balance (false, false, false) == 7 &&
-      post.state.balance (false, true, false) == 13 &&
-      post.state.balance (true, false, false) == 10 &&
+  | .ok post => allBalances post
+      (fun c ↦ if c = (false, false, false) then 7
+        else if c = (false, true, false) then 13 else 10) &&
       post.capabilities == capabilities transfer
 
 def guardRead : T :=
@@ -111,6 +116,40 @@ def revoked : C :=
   | .ok store => store
   | .error _ => .empty
 
+def mintExact : Result → Bool
+  | .error _ => false
+  | .ok post =>
+    allBalances post (fun c ↦ if c = (false, true, false) then 13 else 10) &&
+    ([false, true].all fun d ↦ [false, true].all fun a ↦
+      total post.state d a == if (d, a) = (false, false) then 23 else 20) &&
+    post.capabilities == capabilities mint
+
+def clockRead : T :=
+  { transfer with
+    guard := .binary (.le .scalar) (.timestamp key) .now
+    envReads := [.observation key, .currentTime] }
+
+def foreignObserved : T :=
+  { transfer with
+    deltas := [⟨false, alice, .unary (.neg (.amount false)) (.observe ⟨⟨true, ⟨0⟩⟩⟩)⟩,
+      ⟨false, bob, .observe ⟨⟨true, ⟨0⟩⟩⟩⟩]
+    envReads := [.observation ⟨true, ⟨0⟩⟩] }
+
+def foreignNetZero : T :=
+  { transfer with deltas := transfer.deltas ++
+      [⟨false, ⟨true, .literal true⟩, .lit (-3)⟩, ⟨false, ⟨true, .literal true⟩, .lit 3⟩] }
+
+def revokedExact : Bool :=
+  decide (revoked.entries.length = 4) &&
+  revoked.lookup ⟨1⟩ == some ⟨⟨false, false, ⟨0⟩, .debit (false, false, false)⟩, false⟩ &&
+  revoked.lookup ⟨0⟩ == (capabilities transfer).lookup ⟨0⟩ &&
+  authorizesId revoked context request.operation .invoke ⟨0⟩
+
+def positiveProvisioning : Bool :=
+  [transfer, guardRead, effectRead, observed, mint, supplyRead, supplyOnlyRead, inactiveRead,
+    repeated, repeatedSupply, clockRead, foreignObserved, foreignNetZero].all
+    (fun t ↦ decide ((capabilities t).entries.length = 4))
+
 /-- Positive siblings use the same executor and expose the expected refusal precedence. -/
 def checks : List (String × Bool) :=
   [ ("transition_transfer_exact", transferExact (run transfer))
@@ -160,7 +199,7 @@ def checks : List (String × Bool) :=
         (capabilities transfer) context))
   , ("transition_revoked_debit", refused .unauthorizedDebit
       (runWith transfer request revoked context))
-  , ("transition_mint_ok", accepted (run mint))
+  , ("transition_mint_ok", mintExact (run mint))
   , ("transition_supply_required", refused .unauthorizedSupply
       (runWith mint { request with capabilityIds := [⟨0⟩, ⟨1⟩] } (capabilities mint) context))
   , ("transition_insufficient_funds", refused .insufficientFunds
@@ -174,10 +213,36 @@ def checks : List (String × Bool) :=
   , ("transition_missing_write", refused .writeFootprint
       (run { transfer with writes := [⟨false, alice⟩] }))
   , ("transition_repeated_effects_sum", transferExact (run repeated))
-  , ("transition_repeated_supply_sum", accepted (run repeatedSupply))
+  , ("transition_repeated_supply_sum", mintExact (run repeatedSupply))
   , ("transition_duplicate_cap_ids", transferExact
       (runWith transfer { request with capabilityIds := ⟨1⟩ :: request.capabilityIds }
         (capabilities transfer) context))
+  , ("transition_positive_provisioning", positiveProvisioning)
+  , ("transition_revoked_tombstone_exact", revokedExact)
+  , ("transition_clock_read_ok", transferExact (run clockRead))
+  , ("transition_now_read_missing", refused .envReadFootprint
+      (run { clockRead with envReads := [.observation key] }))
+  , ("transition_timestamp_read_missing", refused .envReadFootprint
+      (run { clockRead with envReads := [.currentTime] }))
+  , ("transition_foreign_supply", refused .crossDomain
+      (run { mint with supplyDeltas := [⟨true, false, .lit 3⟩] }))
+  , ("transition_foreign_observation_ok", transferExact (run foreignObserved))
+  , ("transition_foreign_netzero_ok", match run foreignNetZero with
+      | .error _ => false
+      | .ok post => allBalances post
+          (fun c ↦ if c = (false, false, false) then 7
+            else if c = (false, true, false) then 13 else 10) &&
+          post.capabilities == capabilities foreignNetZero)
+  , ("transition_false_guard_failing_effect_precedence", refused (.evaluation .divisionByZero)
+      (run { transfer with
+        guard := .lit false
+        deltas := [⟨false, bob, .binary (.divide (.amount false)) (.lit 3) (.lit 0)⟩] }))
+  , ("transition_underfunded_unbalanced_precedence", refused .insufficientFunds
+      (run { transfer with deltas := [⟨false, alice, .lit (-11)⟩, ⟨false, bob, .lit 12⟩] }))
+  , ("transition_false_guard_missing_read_precedence", refused .guard
+      (run { guardRead with
+        guard := .ite (.lit true) (.lit false) guardRead.guard
+        stateReads := [] }))
   ]
 
 end TransitionTests

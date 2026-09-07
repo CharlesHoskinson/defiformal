@@ -123,6 +123,8 @@ def readObservation {Asset Domain : Type} [DecidableEq Asset] {u : Unit Asset}
     if h : observation.value.1 = u then .ok (h ▸ observation.value.2)
     else .error .observationUnit
 
+/-- Binary operators, including boolean and/or, evaluate both operands. Only `ite`
+selects a branch lazily. Read inventories conservatively include every branch. -/
 def Expr.eval {Party Asset Domain : Type} [DecidableEq Asset]
     {signature : List (Unit Asset)} {u : Unit Asset}
     (ctx : EvalContext Party Asset Domain signature) :

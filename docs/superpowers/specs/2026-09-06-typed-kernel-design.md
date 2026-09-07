@@ -238,3 +238,30 @@ write access to the trusted registry is assumed.
 Record exact files/tool identities/review models and all refused/blocked results.
 Commit reviewed code and evidence, push semantic-kernel-pivot, read remote head
 back and require equality. Mark the stock harness goal complete only afterward.
+
+
+## Review clarifications for the implemented boundary
+
+A debit grant is administrator-issued authority held by the authenticated invoker
+for the exact cell. Cell-owner consent is not a separate condition of this model.
+The trusted registry, administrators, capability store, context authentication and
+observation truth are external assumptions. Callers use `execute`; directly
+calling template/evaluated-effect helpers is outside that request boundary.
+
+Footprints describe syntactic expression reads and successful net updates. They
+are not a confidentiality policy for refused execution. Arity and argument units
+are checked before invocation authority. After invocation succeeds, evaluation
+resolves references and evaluates the guard and every effect/supply expression;
+a failing effect can therefore return an evaluation refusal even when the guard
+is false. Read/domain checks occur after that evaluation. Refusal precedence is
+implemented and exercised with comparisons; the general success theorems do not
+prove a complete refusal taxonomy. Boolean and/or are eager; only `ite` selects
+a branch lazily, while both branches contribute conservative reads. Environment
+read agreement covers the whole observation record, including value and timestamp.
+
+Standalone test drivers deliberately follow the proof boundary. Mutation copies
+retain each module's executable comparison list and use the single central
+`Typed/Audit.lean` driver. This excludes concrete proofs from mutated copies while
+still executing every comparison and rejecting empty or duplicate inventories.
+Accepted source keeps all proofs and standalone drivers; the imported axiom audit
+covers the actual Types/Expr/Authority/Transition/Examples/test/Audit closure.

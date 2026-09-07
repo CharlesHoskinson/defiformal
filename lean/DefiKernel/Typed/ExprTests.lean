@@ -109,8 +109,15 @@ def checks : List (String × Bool) := [
   ("expr_timestamp_observation_tracked", decide (.observation priceKey ∈ freshness.envReads)),
   ("expr_inactive_environment_branch_tracked", decide
     (.observation otherKey ∈ withInactiveRead.envReads)),
-  ("expr_inactive_state_branch_tracked", decide (withInactiveStateRead.stateReads.length = 2)),
+  ("expr_inactive_state_branch_tracked", decide (withInactiveStateRead.stateReads =
+    [⟨TestAsset.usd, usdCell⟩, ⟨TestAsset.usd, ⟨false, .literal true⟩⟩])),
   ("expr_inactive_missing_branch_not_evaluated", decide (withInactiveRead.eval context = .ok 10)),
+  ("expr_boolean_and_is_eager", decide
+    ((Expr.binary .and (.lit false) (.observe ⟨otherKey⟩) : E .bool).eval context =
+      .error .missingObservation)),
+  ("expr_boolean_or_is_eager", decide
+    ((Expr.binary .or (.lit true) (.observe ⟨otherKey⟩) : E .bool).eval context =
+      .error .missingObservation)),
   ("expr_successful_party_lookup", decide (validParty.eval context = .ok 0)),
   ("expr_failed_party_lookup_refused", decide (badParty.eval context = .error .partyArgument)),
   ("expr_concrete_read_resolution", decide

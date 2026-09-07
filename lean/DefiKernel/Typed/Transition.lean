@@ -165,7 +165,9 @@ def applyEvaluated (store : CapabilityStore Party Asset Domain)
     else .ok ⟨⟨fun c ↦ state.balance c + e.effect c, hn⟩, store⟩
   else .error .insufficientFunds
 
-/-- Template selection, actor and domain binding precede checked argument/effect evaluation. -/
+/-- Registry selection and actor/domain binding precede `Args.check`, which precedes invoke
+checking. Template evaluation (including effect/supply expressions) precedes guard and footprint
+checks. Successful read/domain conditions are not refused-path confidentiality guarantees. -/
 def execute (registry : Registry Party Asset Domain)
     (store : CapabilityStore Party Asset Domain) (ctx : InvocationContext Party Domain)
     (env : Environment Asset Domain) (now : Nat) (request : Request Party Asset Domain)
