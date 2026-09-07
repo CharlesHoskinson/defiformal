@@ -2,7 +2,7 @@
 """Exercise the mutation runner's CLI against real temporary Lean computations.
 
 No subprocess is mocked. The temporary repository links installed dependency packages
-and reads the source repository's git metadata. All fixtures/logs stay outside the
+and has its own isolated git metadata. All fixtures/logs stay outside the
 source repository. Exit 0 means every nonempty control has the expected classification;
 exit 1 means an observed classification differs; exit 3 means the harness could not run.
 """
@@ -82,6 +82,12 @@ def cases():
          'message': 'DISCRIMINATES: 1 mutants and one nonempty unchanged control'},
         {'name': 'all-true-mutant', 'exit': 1, 'spec': specification(mutation(replacement='n ≤ 3')),
          'message': 'all comparisons still pass under mutation'},
+        {'name': 'required-observation-stays-true', 'exit': 1,
+         'spec': specification(mutation(required=['runner_positive'])),
+         'message': 'required mutation not detected'},
+        {'name': 'positive-control-flipped', 'exit': 1,
+         'spec': specification(mutation(replacement='n == 5')),
+         'message': 'positive control failed'},
         {'name': 'compilation-only-failure', 'exit': 3,
          'spec': specification(mutation('-- compiler-control', '#check runnerUndefinedConstant')),
          'message': 'failure is not solely the expected runtime comparison failure'},
@@ -152,12 +158,19 @@ def main():
     lean_version = identify('lean-version', ['lake', 'env', 'lean', '--version'])
     lean_path = Path(identify('lean-path', ['lake', 'env', 'which', 'lean']))
     git_head = identify('git-head', ['git', 'rev-parse', 'HEAD'])
-    git_dir = Path(identify('git-directory', ['git', 'rev-parse', '--absolute-git-dir']))
     fake = out / 'fixture-repo'
     lean = fake / 'lean'
     typed = lean / 'DefiKernel/Typed'
     typed.mkdir(parents=True)
-    (fake / '.git').write_text(f'gitdir: {git_dir}\n')
+    # Independent metadata prevents even optional index refreshes in the source repo.
+    for command in [
+        ['git', 'init', '--quiet', str(fake)],
+        ['git', '-C', str(fake), '-c', 'user.name=DeFiFormal fixture',
+         '-c', 'user.email=fixture@invalid', 'commit', '--allow-empty', '--quiet',
+         '-m', 'Initialize isolated mutation-runner fixture'],
+    ]:
+        proc = subprocess.run(command, text=True, capture_output=True, timeout=60)
+        require(proc.returncode == 0, f'isolated fixture git setup failed: {proc.stderr}')
     (lean / '.lake').mkdir()
     # Reuse dependency packages, never the source project's .lake/build directory.
     (lean / '.lake/packages').symlink_to(repo / 'lean/.lake/packages', target_is_directory=True)

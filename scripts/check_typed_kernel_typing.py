@@ -9,6 +9,7 @@ import argparse
 import hashlib
 import json
 from pathlib import Path
+import re
 import subprocess
 import sys
 
@@ -68,7 +69,8 @@ abbrev E := Expr Bool Bool Bool []
                                 'log_sha256': digest(out / (name + '.log'))}
         (out / 'results.json').write_text(json.dumps(results, indent=2) + '\n')
         if name == 'positive':
-            if proc.returncode != 0 or 'typing_positive: true' not in log or ': error:' in log:
+            if (proc.returncode != 0 or 'typing_positive: true' not in log or
+                    re.search(r': error(?:\([^)]*\))?:', log)):
                 raise RuntimeError('positive typing control failed')
         else:
             assert proc.returncode != 0, f'{name}: deliberately ill-typed expression accepted'
