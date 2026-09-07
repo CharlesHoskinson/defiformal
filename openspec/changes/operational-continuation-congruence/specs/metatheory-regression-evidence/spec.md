@@ -6,7 +6,7 @@ Require nonempty operational examples, honest proof and mutation inventories, de
 
 ### Requirement: Planning and baseline gates
 
-Implementation SHALL begin only after accepted Sprint8 delivery, refreshed frozen source context, independent GPT-6 and native Opus planning acceptance on identical plan bytes, and a fresh passing baseline. Author review SHALL NOT count as independent planning review. Native Opus reviews SHALL request the `opus` alias and record the actual returned model identity; unavailable reviews SHALL remain open. Historical Fable reports SHALL retain their original identity.
+Implementation SHALL begin only after accepted Sprint8 delivery, refreshed frozen source context, independent GPT-6 and native Fable 5.1 planning acceptance on identical plan bytes, and a fresh passing baseline. Author review SHALL NOT count as independent planning review. Native Fable reviews SHALL request `claude-fable-5-1[1m]` with medium effort and record the actual returned model identity; unavailable reviews SHALL remain open. Historical Opus and Fable reports SHALL retain their original identity.
 
 #### Scenario: Provisional dependency context
 
@@ -58,7 +58,7 @@ Exactly fourteen planned mutations SHALL alter actual new group-execution or obs
 
 ### Requirement: Defensive runner controls
 
-The dedicated runner SHALL adapt all sixty-five established actual CLI controls to Metatheory roots and names, preserve valid/violated/blocked classifications, and reject empty, malformed, partial, dirty or drifting evidence. Executable declarations SHALL precede proof boundaries. The complete adaptation SHALL bind driver/spec paths, scoped namespace/root/proof regexes, exact failed/empty/duplicate error strings and all fixture/production-assertion names as well as case names. Runtime audit closures SHALL avoid imported Tests and proof-only fixtures; each runner Lean/Git command SHALL have an explicit 600-second timeout, each harness runner subprocess 1500 seconds, and each command/case SHALL record measured wall time. Timeouts SHALL be blocked exit3, not detection.
+The dedicated runner SHALL adapt all sixty-five established actual CLI controls to Metatheory roots and names, preserve valid/violated/blocked classifications, and reject empty, malformed, partial, dirty or drifting evidence. Executable declarations SHALL precede proof boundaries. The complete adaptation SHALL bind driver/spec paths, scoped namespace/root/proof regexes, exact failed/empty/duplicate error strings and all fixture/production-assertion names as well as case names. Runtime audit closures SHALL avoid imported Tests and proof-only fixtures; each runner Lean/Git command SHALL have an explicit 600-second timeout, each harness runner subprocess 1500 seconds, and each completed command/case SHALL record measured wall time. Timeouts SHALL be blocked exit3, not detection. The runner mapping obligation includes a counted keep/rename inventory of every case-insensitive Atomic occurrence in both accepted scripts, supplied in planning review. Every production mutation needle SHALL occur exactly once in its target runtime prefix before replacement. Timeout retention means completed-command logs, prior records, the fresh output directory and outer stderr; the inherited runner supplies no per-command log or record for the timed-out command. No new timeout-capture path is claimed.
 
 #### Scenario: Complete actual CLI controls
 
@@ -72,7 +72,7 @@ The dedicated runner SHALL adapt all sixty-five established actual CLI controls 
 
 ### Requirement: Imported audits and accepted delivery
 
-Final acceptance SHALL include exact imported theorem and supplemental inventories with complete statements, premises and private-name provenance; all previous regression suites; native Grok/Opus result and evidence reviews; and verified branch delivery. Empty checks or missing reviewers SHALL remain open gates.
+Final acceptance SHALL include exact imported theorem and supplemental inventories with complete statements, premises and private-name provenance; all previous regression suites; native Grok/Fable 5.1 result and evidence reviews; and verified branch delivery. Empty checks or missing reviewers SHALL remain open gates.
 
 #### Scenario: Complete proof inventory
 

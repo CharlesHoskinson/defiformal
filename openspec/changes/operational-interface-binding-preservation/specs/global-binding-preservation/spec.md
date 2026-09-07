@@ -65,8 +65,8 @@ The system SHALL derive edge preservation from initialized equality and equal ac
 - **THEN** the binding remains4=4 with exact successful prefix and first refusal
 
 #### Scenario: GB13 Shared peer progression
-- **WHEN** two selected paired debits succeed before one stream refuses under left,right,left
-- **THEN** A=B=3 after the two receipts and refusal, with both local histories sourced from actual steps
+- **WHEN** F17 runs under left,right,left and companion F19 runs under left,left,right
+- **THEN** A=B=3 in both final states; F19 retains the exact left refusal at4/4/2 before the right peer progresses, with both actual histories and the unchanged store
 
 #### Scenario: GB14 Administrative or skipped step
 - **WHEN** an actual administrative transition or failed/exhausted-stream identity occurs

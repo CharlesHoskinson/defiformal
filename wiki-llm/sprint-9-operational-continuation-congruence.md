@@ -25,7 +25,7 @@ production-form controls;12 controls concern proof-tail behavior in total, inclu
 All65 executed in the fresh baseline. Their accepted harness source hash is bound,
 not inferred from a case count. All35 plan task boxes remain unchecked until the
 actual planning gate; baseline/dependency completion is recorded separately.
-Revised-candidate independent GPT-6/native Opus acceptance and implementation remain pending.
+Revised-candidate independent GPT-6/native Fable 5.1 acceptance and implementation remain pending.
 
 The change is [operational-continuation-congruence](../openspec/changes/operational-continuation-congruence/proposal.md),
 with [design](../openspec/changes/operational-continuation-congruence/design.md),
@@ -126,7 +126,7 @@ Planning coverage and author validation live under
 full Lean statements, axiom/private-name provenance, exact source/Git/tool/log
 bindings, nonempty runtime checks, 14 actual mutants, 65 controls and every prior
 regression. Independent planning approval precedes implementation; native Grok and
-Opus review substantive results and final evidence before accepted OpenSpec
+Fable 5.1 at medium effort review substantive results and final evidence before accepted OpenSpec
 archive and user-authorized branch push with remote verification. No Foreman or
 merge to main.
 
@@ -134,3 +134,9 @@ M2 interface/binding theory, new finite participants, parallel tree routing,
 causal monitors, active-peer conservative extension, identity/provenance theory
 and atomic-boundary regrouping remain separate later increments. This plan does
 not close those roadmap obligations by analogy with sequential list algebra.
+
+## Focused runner clarification review
+
+The r2 semantic plan was accepted with limitations by GPT-6 and Opus. Three further Opus requests clarify inherited timeout evidence, exhaustive literal adaptation and exact-once mutation needles. The r3 review supplies the full revised plan and runner scripts with the counted adaptation inventory, while binding unchanged semantic source to its already-reviewed r2 Git objects. No implementation begins before both revised verdicts pass. The inaccurate old spec locator is corrected to the actual explicit `review/semantic-kernel/sprint8/mutation-spec.json` input.
+
+The user restored Fable 5.1 at medium effort for future external reviews. The r3 bundle therefore includes the complete unchanged semantic-source closure for Fable to inspect independently, alongside the runner clarifications. Completed Opus reports remain historical evidence under their actual model identity.

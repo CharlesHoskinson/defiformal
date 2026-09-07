@@ -1,38 +1,30 @@
-# Provisional Sprint10 author report
+# Provisional Sprint10 peer-continuation correction
 
-The complete provisional `operational-interface-binding-preservation` OpenSpec
-draft passes strict validation. It contains **4 capabilities, 17 requirements,
-55 scenarios and 34 unchecked tasks**, with18 independent fixture contracts,
-14 planned compiled source mutation/oracle pairs and65 inspected inherited CLI
-controls. All requirements/scenarios and every task have author coverage. The
-controls and mutants were **not executed**; no Lean implementation/proof or
-independent planning approval is claimed.
+The bounded constructibility finding is addressed in the provisional draft.
+Original F17 remains required. F19 uses the same branches under left,left,right:
+paired debit reaches4/4/2, left refusal retains4/4/2, and the right peer then reaches
+3/3/4. F20 adds a failed left mint suffix under left,left,left,right: the skipped
+token advances only consumed, adds no attempt/receipt/supply, and the peer still
+executes. Both bind exact failure, histories, local indices, full store and actual
+attempt order independently in the design. No fixture was executed by this task.
 
-The design fixes ordered query resolution and failure precedence, typed finite
-region accounting from actual receipts, value-valued support and initialized
-actual-step/prefix proof obligations. It distinguishes real import/export identity
-from equal balances at distinct exports, actual successful negative transitions
-from refusals, global constraint algebra from participant regrouping, and
-query-success equivalence from identical diagnostic payloads. Continuation receipt
-folds count newly appended events; shared total fixtures include Alice/Bob/Carol.
+Strict validation passes:4 capabilities,17 requirements,57 scenarios,34 unchecked
+tasks,20 fixture contracts,14 planned mutants and65 inspected controls. RA12/RA13
+are new scenarios; related total/binding requirements and tasks explicitly cover
+the companions. Failed and exhausted identities remain separate generic proof
+cases. Author coverage and all exact source/tool bindings were regenerated.
 
-Final bounded validation completed at `2026-09-07T15:47:37.608796+00:00` with16 author checks.
-Commands, UTC, full stdout/stderr, Python/OpenSpec executable hashes, exact plan
-bindings and coverage are in `author-validation.json`. Financial/source files
-match their inspected a52fb748 Git objects; the inherited runner is separately
-bound to its actual revision including the accepted99e2e2c log-path fix. See
-`source-context.json`, `inherited-controls.json`, `planned-mutations.json` and
-`validation-history.md`. An older-run binding attempt and a case-sensitive author
-assertion were corrected without claiming either was a financial test result.
+The prior draft/author evidence is preserved under
+`before-peer-continuation-companion/` with a verified snapshot manifest.
+The independent `provisional-constructibility-gpt6.md` report is retained unchanged;
+it was a bounded reading, not official planning acceptance. No native review,
+Lean implementation or proof, mutation/control run, provider call or commit was
+performed. Accepted/delivered Sprint9, real M1 API/source refresh and the official
+independent planning gate remain required; no current M1 API existence is claimed.
 
-**Still gated:** accepted and delivered Sprint9; refresh of its actual M1
-API/source/control closure; official planning freeze; independent nonauthor GPT-6
-and native Opus planning acceptance. Request alias `opus` and record the returned
-model. This author cannot supply independent approval of this plan. Later
-implementation/evidence gates require native Grok/Opus and all specified Lean,
-mutation, control and regression obligations. No Foreman, source edits, provider
-calls, official freeze or commits were performed by this task.
-
-Only the new OpenSpec change, Sprint10 planning evidence and Sprint10 wiki were
-written. Existing Sprint8/Sprint9 source and review artifacts were not edited.
-This author checkpoint is stable; no further writes are planned in this turn.
+Sprint10 wiki was deliberately left unchanged because Sprint9 author evidence
+binds its hash. Reconcile its historical outline after the active Sprint9 review
+window. This task wrote no Sprint9 files. The final frozen-input readback is in
+`peer-continuation-resolution.json`; concurrent root-owned Sprint9 revisions, if
+present, are listed rather than misreported as unchanged source. All Sprint10
+files written by this task are now stable.

@@ -1,0 +1,29 @@
+# Provisional Sprint10 constructibility check
+
+Status: bounded independent read-only check, **not official planning acceptance**. Reviewed the current proposal/design/four specs/tasks against actual interface, receipt, authority and shared-execution definitions at HEAD `47cd83136ab69b0975594a77c519f6611f6fb555` on 2026-09-07T16:50:46.779644+00:00. Sprint9 APIs remain unimplemented and its accepted/delivered dependency must replace the provisional context before official freeze. No Lean elaboration, fixture execution, mutations, native review, implementation or commits were performed.
+
+No material false or circular mathematical claim was found in this bounded reading. One concrete fixture coverage gap should be addressed before the official planning freeze.
+
+## Actionable coverage gap
+
+**F17 does not exercise peer continuation after refusal.** Design F17 and RA11 use `[left,right,left]`: both paired debits succeed before the final left refusal. Task4.2 nevertheless requires verification of peer continuation. Existing `Interleaving.advance` permanently stops only the selected failed stream, so this behavior is relevant and different from sequential global stopping. Add a companion using the same funded entry5/5/0 and branches left=[op102,op106], right=[op102], with `[left,left,right]`. Expected states are4/4/2, unchanged4/4/2 after left refusal at local index1, then3/3/4 after the peer succeeds. Preserve the exact left failure, both successful receipts in actual order, full store and both branch histories. Keep original F17 for its stated scenario.
+
+IT11/GB14 also mention failed/exhausted-stream identity. Make their proof branches explicit. A finite failed-suffix companion can extend left with op101 and use `[left,left,left,right]`: the third token adds no receipt or mint, then the peer still succeeds. This is a suggested additional runtime witness, not a claim the current table already contains it.
+
+## Constructible core and necessary boundaries
+
+- `Atomic.step_receipt_balance` in `lean/DefiKernel/Atomic/Settlement.lean:28` covers arbitrary actual `Composition.StepSound`, including issue/revoke. `Composition.executeStep_sound` supplies the bridge from actual success. `Evaluated.effect` sums every matching signed target; matching the proposed facade to `Atomic.receiptEffect` and summing over a Finset supports region accounting. `StepSound.locality` plus that cell equation yields zero effect outside actual writes. Whole-dimension supply cannot replace region delta; F02/F03/F04 distinguish boundary flow, issuance and repeated targets.
+- Total preservation retains initialization, value-valued support and write exclusion. Its universally quantified local obligation allows the current invariant as an inductive antecedent, but does not assume a completed run or future peer result. F05 provides a supported positive, F06 an actually authorized write breaking support exclusion, IT06 missing initialization, and F02 missing region neutrality. These are the necessary financial negative companions; the draft does not substitute access refusal for an accepted violation.
+- Actual `validateCatalog` (`Composition/Interfaces.lean:106`) forbids duplicate exported cells, checks exact import source/cell/write access, and reserves component-wide port IDs across resources and invocation inputs/outputs. The described port0 resources, op107 input11 and F16 output10 avoid collisions. The private-total catalog can contain unused op105: structural validation does not certify its write access. Actual invocation checks access separately; F06's exposed-total variant must add C6's export and C0's writable import as specified.
+- Exact qualification, ordered left/right resolution, dimension checks and first failure are implementable using current list lookups. Live resource exports are separate from frozen outputs. Self-edges, symmetric closure sufficiency and transitive redundancy are sound at the Agrees/query-success level; they do not give identical diagnostics or a participant regrouping theorem. F08–F13 provide accepted one-sided violation, global-edge loss, transitive redundancy, dimensional and structural negatives.
+- F16 is conditional on the eventual accepted M1 simulation. Current `resolveSource` requires an earlier absolute index and exact qualified output; snapshot4 at index2 followed by op107 at3 can yield return2 and restore6/4 with the listed Bob debit grant. No present `runGroup` implementation or compiled F16 is claimed. Refresh its exact signature, imported proof closure and final control catalog after Sprint9 delivery.
+
+The fourteen mutation sites are plausible runtime edits with finite discriminating observations. This reading does not establish that they compile or that all chosen positive siblings survive. M12 tests diagnostic order and M08/M09/M11/M13 test typed/structural query checks; keep those distinct from financial accounting evidence. The predecessor schema supports global positive lists, so any per-mutant protected siblings need explicit measured assertions in final evidence rather than silently assuming schema support.
+
+## Input identity and scope
+
+Design SHA256: `c742af3d947bb9f04b5e2bc69b75b9fcdad4304a508d40474f8c867de8adf4ce`.
+Proposal SHA256: `c8f3099f89cb6c03cbf3ef78dc65176c8ae5811b9e87a564ee38a90b8770b805`.
+Tasks SHA256: `d953957cc18ff513dd17a17824b1f6357d07073c0ad8b2ec3c13c1117ed67ee4`.
+
+The author correctly marks the source/API context provisional and requires accepted Sprint9 delivery, refreshed actual dependencies, a frozen shared plan and nonauthor GPT-6/native Opus acceptance. This report neither closes those gates nor replaces those reviews. Existing Sprint8/Sprint9 frozen files were not edited. The reviewer is independent of this Sprint10 draft's author, but authored earlier mutation tooling; no independent re-audit of that earlier tooling is claimed.

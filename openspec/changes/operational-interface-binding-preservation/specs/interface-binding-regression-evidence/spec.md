@@ -6,7 +6,7 @@ Bind operational interface claims to independent expected observations, genuine 
 
 ### Requirement: Independent funded observations and negative companions
 
-The implementation SHALL exercise all F01–F18 design fixtures with independent complete expected ledgers, stores, receipts, histories, positions, query payloads and failures relevant to each case. Nonzero neutral flows and actual successful invariant violations MUST be distinguished from refused calls and compiler controls.
+The implementation SHALL exercise all F01–F20 design fixtures with independent complete expected ledgers, stores, receipts, histories, positions, query payloads and failures relevant to each case. Nonzero neutral flows and actual successful invariant violations MUST be distinguished from refused calls and compiler controls.
 
 #### Scenario: RE01 Independent expected data
 - **WHEN** a financial or binding comparison is registered

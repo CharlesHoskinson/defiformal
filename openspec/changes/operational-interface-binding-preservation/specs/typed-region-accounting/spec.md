@@ -63,3 +63,11 @@ The system SHALL prove telescoping region accounting over actual successful sequ
 #### Scenario: RA11 Shared global receipt fold
 - **WHEN** complete schedule left,right,left executes two paired debits then a left insufficient-funds refusal in region Alice/Bob/Carol
 - **THEN** the reached ledger is3/3/4 and exactly the two actual global successful receipts contribute
+
+#### Scenario: RA12 Peer continues after refusal
+- **WHEN** the same F17 branches run under left,left,right from5/5/0
+- **THEN** the first paired debit reaches4/4/2, left refusal at local index1 retains4/4/2, then the peer reaches3/3/4 with two actual successful receipts, exact retained left failure and unchanged full store
+
+#### Scenario: RA13 Failed suffix skip before peer
+- **WHEN** left=[op102,op106,op101] and right=[op102] run under left,left,left,right
+- **THEN** the failed left mint suffix adds no attempt, receipt or supply; left consumed becomes3 with nextIndex1, and the right peer still reaches3/3/4 with the exact earlier failure retained

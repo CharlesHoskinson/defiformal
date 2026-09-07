@@ -112,6 +112,24 @@ Freeze these operations: ID100 transfer2 (alice −2,bob +2); ID101 mint3 (bob +
 | F16 | Entry Alice6/Bob4, region {Alice,Bob}; accepted M1 group, entry index2 and one independently initialized prior output (index1,component0/port12,USD9); leaves op100 and snapshot-driven return2 Bob→Alice | First emits Alice4 at absolute index2; second reads that exact output and divides by literal2 to move2; final6,4, indices2/3 and nextIndex4, old history preserved, region10; capabilities include exact return-operation rights |
 | F17 | Region home/USD {Alice,Bob,Carol}; binary admitted schedule [left,right,left], left=[op102,op106], right=[op102], initial alice=bob=5 | Complete actual run: left paired→4,4,2; right paired→3,3,4; left op106 refuses; actual attempt fold has two receipts; binding A=B and total10 persist |
 | F18 | Entry Alice6/Bob4, region singleton Alice; authorized issue then revoke starting from explicit store length n=17 | Receipts issued n/revoked n; appended capability then tombstone; balances unchanged and region delta0; include rejected non-admin case with unchanged store |
+| F19 | F17 entry/region/branches, schedule [left,left,right] | Left paired→4/4/2, left op106 refuses at local index1 leaving4/4/2, then right paired→3/3/4; left refusal retained, two successful receipts and one failed attempt in actual global order |
+| F20 | F19 with left=[op102,op106,op101], right=[op102], schedule [left,left,left,right] | Third token skips the failed left mint suffix, preserving4/4/2 without an attempt/receipt/supply; peer then reaches3/3/4; exact left refusal and store retained |
+
+F19 and F20 are bounded companions added after the provisional constructibility
+check; original F17 remains required. Their independent global attempt sequence
+is left/index0/op102 at5/5/0 → ok4/4/2, left/index1/op106 at4/4/2 →
+error(kernel.insufficientFunds), right/index0/op102 at4/4/2 → ok3/3/4.
+The full17-entry store remains unchanged. Left has one successful event at index0,
+nextIndex1 and failure(index1,Some invoke op106,kernel.insufficientFunds); right
+has one successful event at index0, nextIndex1 and no failure. Both output
+histories are[], and each raw event retains the just-specified before/result world.
+Left consumed is2 for F19 and3 for F20; right consumed is1 in both. F20's skipped
+third left token changes only consumed and adds no global attempt. All20 ledger
+cells are checked; region Alice/Bob/Carol totals10 at every prefix and A=B changes
+5→4→3. These schedules directly exercise peer continuation after refusal, which
+F17's refusal-last order does not. Failed and exhausted selection remain separate
+identity cases in the generic prefix proofs; F20 is the explicit failed-suffix
+runtime witness. No actual execution or present M1 API is claimed by this addition.
 
 F12 uses query [(A,Y)] for the right missingPort oracle, [(X,A)] for left missingComponent, [(A,X)] for right missingComponent, [(X,Y)] for left-before-right precedence, and [(A,B),(A,X)] for earlier inequality0 versus missing endpoint1. F11 queries exactly [(A,U)], [(A,V)] and [(A,W)]. Also query valid C0 input-only port11 and, in the F16 catalog, output-only port10: each is missingPort for live resource resolution.
 

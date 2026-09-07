@@ -9,10 +9,10 @@ verified on `semantic-kernel-pivot`. Native Grok/Opus final acceptance and exact
 source/evidence identities are retained in Sprint8's final-review and delivery
 records. Fresh Sprint9 baseline evidence at the accepted source passed14 Lean
 commands and13 Python suites; corrected final Python metadata is bound in the
-planning dependency manifest. These completed prerequisites do not approve this revised plan. The frozen r1
-reviews are retained separately; native Opus returned ACCEPT WITH LIMITATIONS
-with six required changes. This revision addresses them and still needs independent
-review of its new candidate bytes before implementation. Author remediation is
+planning dependency manifest. These completed prerequisites do not approve this revised plan. The frozen r1/r2
+reviews are retained separately; native Opus accepted the semantic plan with
+limitations. This revision clarifies three remaining runner requirements and
+still needs independent review of its new candidate bytes before implementation. Author remediation is
 not independent acceptance.
 
 `Composition.Cursor` stores the whole world, raw events, frozen outputs, absolute
@@ -282,7 +282,12 @@ runtime/proof boundary parser. Production mutation targets are ONLY the new
 SequentialGroups/Observation runtime definitions. Imported kernel source stays
 byte-identical. Every mutation must compile, change exactly one intended source
 site, make its designated independent comparison false, and preserve declared
-nonempty positive comparisons. A compiler error earns no financial detection.
+nonempty positive comparisons. A compiler error earns no financial detection. Each M01–M08 needle must occur
+exactly once in its target module runtime prefix. M01–M07 may share the same
+unique seq-branch needle across separate variants; each replaces it once. Use a
+textually distinct leaf-call needle for M08, scoped with its step constructor
+where necessary. Record the measured count before applying each replacement;
+zero or duplicate matches are blocked, never semantic detections.
 
 | ID | Actual mutation | Designated independent oracle | Protected positive |
 | --- | --- | --- | --- |
@@ -334,7 +339,7 @@ site in the implementation map; preserve all other behavior and expected exits:
 |---|---|---|
 | Driver/default harness path | `scripts/check_atomic_mutations.py` | `scripts/check_metatheory_mutations.py` |
 | Harness path | `scripts/test_atomic_mutation_runner.py` | `scripts/test_metatheory_mutation_runner.py` |
-| Spec path | `mutations/atomic.json` | `mutations/metatheory.json` |
+| Explicit `--spec` path (driver has no default) | `review/semantic-kernel/sprint8/mutation-spec.json` | `mutations/metatheory.json` |
 | Scoped-module regex | `DefiKernel\.Atomic(?:\.[A-Za-z][A-Za-z0-9]*)+` | `DefiKernel\.Metatheory(?:\.[A-Za-z][A-Za-z0-9]*)+` |
 | Proof-trimming prefix | `DefiKernel.Atomic.` | `DefiKernel.Metatheory.` |
 | Required audit root | `DefiKernel.Atomic.Audit` | `DefiKernel.Metatheory.Audit` |
@@ -372,8 +377,14 @@ command); the CLI-control harness gives each runner subprocess 1500 seconds.
 Record UTC start/finish and measured monotonic wall time for every command and
 case, with the 15 production variants (control plus14 mutants) reported separately.
 Import pruning is the first response to excessive cost; any timeout or incomplete
-output is blocked evidence (exit3), never semantic detection. Preserve partial
-logs and the timed-out command/limit; fix and rerun affected jobs. These are
+output is blocked evidence (exit3), never semantic detection. Preserve
+already completed command logs, the retained fresh output directory and prior
+results.json records, plus the outer captured stderr identifying the timed-out
+command and limit. Preserve the accepted runner behavior: it does not emit a
+per-command log or results.json entry for the timed-out command, and partial
+stdout from that command is unavailable. Do not claim a complete inventory or
+measured completed-command record for it. No timeout-capture implementation or
+additional control is introduced by this sprint; fix and rerun affected jobs. These are
 per-command bounds, not a 1500-second cap on the whole 65-control suite.
 
 ### 7. Evidence and integration
@@ -412,13 +423,13 @@ constants, runtime observations and compiler controls separately.
 ## Migration Plan
 
 1. Verify the recorded accepted Sprint8 source/delivery/archive and passing baseline
-   bindings, freeze this complete plan and obtain independent GPT-6/native Opus
+   bindings, freeze this complete plan and obtain independent GPT-6/native Fable 5.1
    planning verdicts on identical bytes.
 2. Recheck baseline input identities before implementation; rerun only if relevant
    inputs changed. Implement only new Metatheory modules, with targeted proof/runtime
    checks before root integration.
 3. Freeze implementation/spec/runner source, execute complete new and prior evidence,
-   obtain native Grok/Opus substantive-result and evidence reviews, and address
+   obtain native Grok/Fable 5.1 substantive-result and evidence reviews, and address
    concrete blockers through targeted revisions until resolved.
 4. Archive OpenSpec only after acceptance, reconcile source/evidence manifests and
    push the user-authorized branch with remote verification. No merge to main.
@@ -426,7 +437,9 @@ constants, runtime observations and compiler controls separately.
    revision; retain failed review/mutation artifacts and historical accepted bytes.
 
 Reviewer binding follows the 2026-09-07 user override in `AGENTS.md`: future
-planning uses nonauthor GPT-6 plus native Opus; substantive source/evidence
-reviews use native Grok plus native Opus. Request `opus`, record the actual
-returned model identity, and keep unavailable reviews open. Historical Fable
+planning uses nonauthor GPT-6 plus native Fable 5.1; substantive source/evidence
+reviews use native Grok plus native Fable 5.1. Request `claude-fable-5-1[1m]`
+with medium effort, record the actual returned model identity, and keep unavailable
+reviews open. This follows the latest user instruction, superseding the Opus
+selection for future reviews. Historical Opus and Fable
 reports and accepted historical plan bytes retain their original identity.

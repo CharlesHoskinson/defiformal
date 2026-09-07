@@ -58,7 +58,7 @@ The system SHALL lift local actual-step total obligations through every sequenti
 
 #### Scenario: IT10 Shared total invariant
 - **WHEN** initialized Alice/Bob/Carol region total10 is preserved by each actually selected paired debit and peer refusal
-- **THEN** every shared prefix retains total10, including the final3/3/4 state
+- **THEN** every shared prefix retains total10, including F19 peer continuation after retained4/4/2 refusal and F20 failed-suffix skip before final3/3/4
 
 #### Scenario: IT11 Absorbed failure
 - **WHEN** a sequential cursor has already refused or a selected shared stream is failed or exhausted

@@ -1,3 +1,9 @@
+# Current focused r3 author revision
+
+Strict OpenSpec and coverage checks pass with4 capabilities,17 requirements,55 scenarios,35 unchecked tasks,14 planned mutants and65 inherited controls. Three r2 Opus runner clarifications are resolved by preserving inherited timeout evidence, supplying exhaustive literal decisions, and requiring exact-once source needles. Prior r2 author bytes are in author-r2-snapshot. Independent same-candidate r3 reviews remain pending; no Metatheory implementation exists. See r3-resolution.md and the counted literal inventory.
+
+## Prior author assessment retained below
+
 # Targeted author remediation after r1 planning reviews
 
 This is author remediation, not independent approval. Frozen r1 nonauthor GPT-6

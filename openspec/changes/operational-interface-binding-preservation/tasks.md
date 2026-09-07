@@ -9,7 +9,7 @@
 - [ ] 2.1 Add `lean/DefiKernel/Interface/Regions.lean` finite typed regions, set-valued balance sums and well-formedness; first record the honest missing-feature check, then verify empty, duplicate and mixed-dimension cases RA01–RA03 with LSP and a pinned targeted build from `lean/`.
 - [ ] 2.2 Add complete signed `receiptCellEffect` and `receiptDelta` before the proof marker and prove agreement with the accepted actual receipt-effect bridge; verify F01–F04 exact effects, repeated targets and nonzero supply without computing expected data from production queries.
 - [ ] 2.3 Add `Accounting.lean` generic actual successful-step region accounting and issue/revoke balance corollaries; verify the theorem quantifies actual executeStep equality and F18 retains the exact appended/tombstoned store while all region effects are zero.
-- [ ] 2.4 Prove actual successful-event receipt-fold telescoping for sequential traces and actual shared global attempts; verify F15/F17 count only accepted prefix receipts, with refused/skipped/suffix cases explicitly absent from the fold.
+- [ ] 2.4 Prove actual successful-event receipt-fold telescoping for sequential traces and actual shared global attempts; verify F15/F17/F19/F20 count only accepted prefix receipts, with refused/skipped/suffix cases explicitly absent from the fold.
 - [ ] 2.5 Add `Bindings.lean` real qualified export resolution, exact failure types and ordered production query plus Boolean success projection; verify catalog-first, left/right, domain/asset/balance and original-index precedence using F08/F10–F13, with all runtime helpers before the proof marker.
 - [ ] 2.6 Prove query acceptance iff catalog validity and global agreement, resolution uniqueness under valid catalogs, and exact first-failure characterization; verify F07–F14 cover unresolved self-edges, outputs excluded from resource lookup, colliding local port IDs and deterministic failure payloads.
 
@@ -23,7 +23,7 @@
 ## 4. Operational binding lifting and algebra
 
 - [ ] 4.1 Add `Preservation.lean` actual sequential-prefix total and binding preservation from initialized local obligations; verify actual step induction, exact successful-prefix failure behavior and F07/F15 rather than merely final-state tests.
-- [ ] 4.2 Prove existing binary shared-prefix total, binding and receipt-fold corollaries from actual Interleaving reachability; verify F17 left/right/left, both actual histories, peer continuation and final refusal, without assuming disjointness or schedule independence.
+- [ ] 4.2 Prove existing binary shared-prefix total, binding and receipt-fold corollaries from actual Interleaving reachability; verify original F17 left/right/left and F19 left/left/right with explicit4/4/2 retained refusal then peer3/3/4; verify F20 failed-suffix skip, exact histories/indices/store, and separate failed/exhausted identity proof cases, without assuming disjointness or schedule independence.
 - [ ] 4.3 Lift total and binding invariants through the accepted M1 actual recursive-group simulation; verify F16 starts at absolute index2, retains history, consumes the actual snapshot and reaches nextIndex4, with the actual prerequisite signature recorded.
 - [ ] 4.4 Prove initialized edge preservation from equal actual endpoint receipt effects and derive frame, self-edge, administrative and existing import/export identity corollaries; verify nonzero F07, breaking F08 and actual alias F14/F18.
 - [ ] 4.5 Prove global append/conjunction, edge reversal, duplicate idempotence, permutation and associativity laws and transport initialized local obligations to prefixes; verify F09/F10 and explicitly distinguish successful-query equivalence from changed exact first-failure diagnostics.
@@ -34,7 +34,7 @@
 - [ ] 5.1 Add `Examples.lean` and `Tests.lean` literal finite universes, catalog/store/operation definitions and full expected observations for F01–F04; verify all20 ledger cells, request and ordered receipt fields, exact capabilities and independent amounts, including empty/set-duplicate controls.
 - [ ] 5.2 Add F05/F06 and initialization/support/neutrality negative companions; verify the successful private-total case, actually accepted exposed-total violation and zero-supply crossing separately from access refusals.
 - [ ] 5.3 Add F07–F14 exact query, typed/global-binding and algebra examples; verify all endpoint/precedence payloads, valid colliding local names, real canonical import alias and global edge counterexample without a three-participant execution claim.
-- [ ] 5.4 Add F15–F18 actual refusal, nonzero-index group, binary shared and administrative scenarios; verify full worlds/stores, outputs, histories, absolute positions and successful receipt counts against literal expected observations.
+- [ ] 5.4 Add F15–F20 actual refusal, nonzero-index group, binary shared and administrative scenarios; verify full worlds/stores, outputs, histories, absolute positions and successful receipt counts against literal expected observations.
 - [ ] 5.5 Add nonempty `Audit.lean`, automatic `Verify.lean` and root `lean/DefiKernel.lean` integration; verify unique comparison names, complete dynamic test/proof manifests, honest counts and fresh `lake build DefiKernel.Interface.Verify DefiKernel` plus direct Audit/Verify runs from `lean/`.
 
 ## 6. Actual mutations and defensive controls
