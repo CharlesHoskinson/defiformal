@@ -43,7 +43,22 @@ writes. Component locality is conditional on denied write access; general privat
 noninterference is not claimed. Initialization and contract results retain explicit
 local/boundary premises, and nonnegativity follows from proof-carrying states.
 
-## 2. Remaining composition and metatheory
+## 2. Sprint 6 candidate: disjoint parallel composition
+
+[OpenSpec proposal](openspec/changes/disjoint-parallel-composition/proposal.md),
+[design](openspec/changes/disjoint-parallel-composition/design.md), and
+[implementation tasks](openspec/changes/disjoint-parallel-composition/tasks.md)
+are drafted. Independent Fable and GPT-6 planning audits must pass before execution.
+This is a planning candidate; no Sprint 6 implementation or proof is complete.
+
+- [ ] Pass both planning audits on the same candidate.
+- [ ] Implement conservative concrete compatibility and independent branch execution.
+- [ ] Prove full executor dependency, exact refusal framing and serial-order correspondence.
+- [ ] Prove joined accounting, authority, nonnegativity, supported frames and conditional initialized invariants.
+- [ ] Complete financial fixtures, real mutations, regression evidence and native Grok/Fable implementation review.
+- [ ] Deliver the accepted branch and archive the OpenSpec change.
+
+## Remaining composition and metatheory
 
 - [ ] Implement disjoint parallel composition.
 - [ ] Implement shared-state interleaving with explicit interference conditions.

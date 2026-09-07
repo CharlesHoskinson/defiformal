@@ -186,6 +186,18 @@ and synchronized all 19 requirements to four main specifications.
 records strict specification and local-link checks. A subsequent metadata commit
 saves these records, with its remote head checked separately by the stock harness.
 
+## Sprint 6: disjoint parallel composition planning candidate
+
+The user approved drafting and executing Sprint 6 after independent Fable and
+GPT-6 audits pass on the OpenSpec candidate. The
+[proposal](../../openspec/changes/disjoint-parallel-composition/proposal.md),
+[design](../../openspec/changes/disjoint-parallel-composition/design.md), and
+[tasks](../../openspec/changes/disjoint-parallel-composition/tasks.md) specify
+17 requirements and 47 scenarios. Strict OpenSpec validation passes; both planning
+reviews are pending. No new implementation starts until both pass. Capability
+administration remains outside the binary parallel operator; exact refused
+behavior and real LR/RL re-execution are mandatory proof obligations.
+
 ## Full migration backlog
 
 1. Finish claim-site reconciliation across the old paper and working ledgers;
