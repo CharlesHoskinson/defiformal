@@ -48,8 +48,11 @@ local/boundary premises, and nonnegativity follows from proof-carrying states.
 [OpenSpec proposal](openspec/changes/disjoint-parallel-composition/proposal.md),
 [design](openspec/changes/disjoint-parallel-composition/design.md), and
 [implementation tasks](openspec/changes/disjoint-parallel-composition/tasks.md)
-are drafted. Independent Fable and GPT-6 planning audits must pass before execution.
-This is a planning candidate; no Sprint 6 implementation or proof is complete.
+are saved at candidate `c0f6f0b`. GPT-6 accepted the corrected candidate.
+Fable's native audit returned a credit-limit error; its required final-candidate
+review remains pending. [Planning adjudication](review/semantic-kernel/sprint6/planning/ADJUDICATION.md)
+and [gate state](review/semantic-kernel/sprint6/planning/gate.json) are saved.
+Execution is paused until Fable passes. No Sprint 6 implementation or proof is complete.
 
 - [ ] Pass both planning audits on the same candidate.
 - [ ] Implement conservative concrete compatibility and independent branch execution.

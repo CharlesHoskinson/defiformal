@@ -33,6 +33,18 @@ needed. All exact executor/refusal, serial correspondence and preservation proof
 obligations remain mandatory. The author independently identified B1; that record
 is preserved as author analysis and never labeled an independent review.
 
-A final GPT-6 audit of the committed revision is pending. Fable must audit the same
-final candidate after provider access is restored. No substitute provider, retry
-without changed availability, or prior Sprint 5 approval can discharge this gate.
+## Final candidate gate
+
+Candidate `c0f6f0bcc19ab30e0146a2e1e8ff209f8ce8c1a7`; bundle
+`73f4ff8c70b85e8468e33f4c63d784b37c8543c1ed068341ed120607d19942fa`.
+GPT-6 returned **ACCEPT** in `r2-gpt6.md`. It independently verified 21 committed
+bundle inputs, all 24 preserved context entries, all 47 scenario mappings, and
+strict OpenSpec validation. B1 is closed, with no new blocking finding. This is
+planning/source review, not a Lean build or execution of the future semantics.
+
+Fable must still audit this same final candidate after provider access is restored.
+Its unavailable R1 call is not a verdict on R2, and no retry is claimed. No substitute
+provider or prior Sprint 5 approval can discharge this gate. `gate.json` records
+implementation as unauthorized by the unsatisfied conditional gate and not started.
+`RESUME.md` gives the exact native review invocation. Both required passing verdicts
+are necessary before any new Parallel implementation.
