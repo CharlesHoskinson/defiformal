@@ -1,11 +1,11 @@
 # Sprint 7: shared-state interleaving
 
-Status on 2026-09-07: **Implementation/evidence accepted with limitations; delivery underway**.
+Status on 2026-09-07: **Accepted with limitations; source/evidence delivered and OpenSpec archived**.
 Base: `850d785d41dc311785dc33cdb3f65c368756434c`.
 
-Authoritative links: [proposal](../openspec/changes/shared-state-interleaving/proposal.md),
-[design](../openspec/changes/shared-state-interleaving/design.md),
-[tasks](../openspec/changes/shared-state-interleaving/tasks.md).
+Authoritative links: [proposal](../openspec/changes/archive/2026-09-07-shared-state-interleaving/proposal.md),
+[design](../openspec/changes/archive/2026-09-07-shared-state-interleaving/design.md),
+[tasks](../openspec/changes/archive/2026-09-07-shared-state-interleaving/tasks.md).
 
 ## Decision summaries
 
@@ -68,7 +68,7 @@ constructions/corollaries. Generated theorem counts are separate.
 and [final coverage](../review/semantic-kernel/sprint7/coverage-final.md) retain exact
 inputs, findings and limitations. Cancelled or tool-markup-only native attempts
 received no acceptance credit; substantive native final verdicts closed those
-review obligations. Branch delivery and OpenSpec archive are in progress.
+review obligations. The source/evidence push `b0f9bbf` is verified; OpenSpec archived15 requirements into four main specs. Final archive metadata delivery is being recorded.
 
 ## Adopted review guidance
 

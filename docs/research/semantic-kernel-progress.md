@@ -245,7 +245,7 @@ and2counterexample corollaries;135 others are generated. Original execution revi
 `6de24fe` is retained, with25+3 exact runtime input bindings to the proof supplement.
 Historical1117paths remain unchanged and the root only adds the new verification
 import. [Coverage](../../review/semantic-kernel/sprint7/coverage-final.md) maps43
-scenarios. Delivery/archive is being recorded separately.
+scenarios. The source/evidence push `b0f9bbf` is verified and OpenSpec archived15 requirements into four main specs; final archive metadata delivery is being recorded separately.
 
 Atomic synchronization is the next proposed increment. Trusted initial store and
 boundaries, finite schedules, exact arithmetic and explicit frame/interference

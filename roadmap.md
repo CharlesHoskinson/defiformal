@@ -76,9 +76,9 @@ all 47 scenarios and their precise evidence classes.
 
 ## Sprint 7: shared-state interleaving
 
-Accepted with limitations at source `bea105ec`: [OpenSpec proposal](openspec/changes/shared-state-interleaving/proposal.md),
-[design](openspec/changes/shared-state-interleaving/design.md),
-[37 tasks](openspec/changes/shared-state-interleaving/tasks.md), and
+Accepted with limitations at source `bea105ec`: [OpenSpec proposal](openspec/changes/archive/2026-09-07-shared-state-interleaving/proposal.md),
+[design](openspec/changes/archive/2026-09-07-shared-state-interleaving/design.md),
+[37 tasks](openspec/changes/archive/2026-09-07-shared-state-interleaving/tasks.md), and
 [wiki record](wiki-llm/sprint-7-shared-state-interleaving.md).
 Both native Grok and Fable accepted the Lean implementation and final proof/evidence
 supplement. [Adjudication](review/semantic-kernel/sprint7/implementation/ADJUDICATION.md)
@@ -96,7 +96,7 @@ Delivery/archive is the remaining Sprint 7 action.
 - [x] Implement shared execution, schedules and exact observations.
 - [x] Prove prefix preservation, explicit interference composition and disjoint recovery.
 - [x] Complete financial examples, production mutations and full regressions.
-- [ ] Obtain native Grok/Fable result audits, deliver the branch and archive OpenSpec.
+- [x] Obtain native Grok/Fable result audits, deliver the branch and archive OpenSpec.
 
 ## Sprint 8 candidate: atomic synchronization
 
@@ -106,7 +106,7 @@ The next [OpenSpec proposal](openspec/changes/atomic-synchronization/proposal.md
 16 requirements and49 scenarios. The [wiki decision record](wiki-llm/sprint-8-atomic-synchronization.md)
 explains exact rollback, separate committed observations and receipt-derived typed
 transient clearing. Strict plan validation and author consistency checks pass;
-independent GPT-6/Fable planning reviews and all implementation remain pending.
+independent GPT-6 and native Fable planning reviews pass on `7a73b2d`. A fresh accepted baseline and final dependency delivery precede implementation.
 
 The user authorized continued execution of all remaining packages while AFK;
 [the execution agenda](wiki-llm/autonomous-execution-agenda.md) preserves dependencies,
