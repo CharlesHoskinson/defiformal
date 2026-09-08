@@ -1,6 +1,6 @@
 # DeFiFormal migration roadmap
 
-Updated 2026-09-07 UTC: Sprints 7–10 are accepted, delivered and archived. Sprint 10 archive delivery is verified at `ec8f163`. Checked arithmetic and corpus tooling are in implementation under accepted planning gates.
+Updated 2026-09-08 UTC: Sprints 7–10 and checked integer arithmetic are accepted, delivered and archived (Sprint 10 archive `ec8f163`; integer archive `6d73e6dc`). Sprint 11/M3 finite-participant causal composition is code/evidence-ready at `94f70e50` under independent GPT-6 ACCEPT WITH LIMITATIONS; delivery/archive/remote verification remain task 8.5. Corpus tooling, historical-tooling whole package, M4–M6 and the rest of the program remain open.
 Branch: `semantic-kernel-pivot`. Sprint 8 archive delivery: `9501f0a4`.
 
 The remaining objective is conditional preservation of financial properties
@@ -16,6 +16,30 @@ Sources: [approved migration design](docs/superpowers/specs/2026-09-06-semantic-
 [Sprint 4 adjudication](review/semantic-kernel/sprint4/ADJUDICATION.md).
 Historical uppercase `ROADMAP.md` files retain their original evidence and scope.
 This root roadmap is the current consolidated agenda.
+
+## Sprint 11 planning recovery: Grok worker, GPT-6 check
+
+The finite-participant causal-composition planning package and revised plan
+are accepted with limitations under the user's Grok 4.6 worker / independent
+GPT-6 checker assignment. Native telemetry reports `grok-4.6-build`.
+[Acceptance and recovery records](review/semantic-kernel/sprint11/planning/grok-gpt6-acceptance/acceptance.json)
+bind the frozen package, reviews, fixes and primary-checkout verification.
+The [review entrypoint](review/semantic-kernel/sprint11/planning/grok-gpt6-r1/ENTRYPOINT.md)
+uses hashed local inputs instead of the oversized inlined prompt. The earlier
+Fable `Prompt is too long` attempt remains no verdict.
+
+The package clarifies separate one-mutant runs, F05's catalog-valid producer
+and timeout-log limits. No Nary implementation or new financial proof is
+accepted by this planning result. All implementation tasks remain unchecked;
+next work is the fresh implementation baseline and accepted Sprint 11 tasks.
+Sealed worker records retain their pre-review status; the linked acceptance
+record is the subsequent independent decision. Changes are local and uncommitted.
+
+This section is the planning-gate recovery record. Later independent GPT-6
+final adjudication of source candidate `94f70e502c75132656bd0902a17be60ca45ab1c2`
+is ACCEPT WITH LIMITATIONS for code/evidence readiness; delivery remains task
+8.5. Historical wording above is preserved. “All implementation tasks remain
+unchecked” is the planning-gate state, not the current implementation state.
 
 ## 1. Sprint 5: typed interfaces and sequential composition
 
@@ -150,14 +174,35 @@ This ports the region/binding portion of the operational metatheory. General
 finite participants, tree regrouping, active extension and atomic transfer remain
 open; the broad Interface/Nary roadmap item below is not yet complete.
 
+## Sprint 11: finite-participant causal composition (delivery pending)
+
+Native Grok 4.6 authored source candidate
+`94f70e502c75132656bd0902a17be60ca45ab1c2`. Independent GPT-6 accepted that
+code/evidence candidate with limitations and no required fixes. Report:
+[final adjudication](review/semantic-kernel/sprint11/implementation/gpt6-review/final-adjudication-r1.md).
+Native closure docs:
+[grok-release-r1](review/semantic-kernel/sprint11/implementation/acceptance/grok-release-r1/).
+This does not claim Fable checked the implementation.
+
+Coverage: 19 requirements, 52 scenarios, 35 tasks (34 checked for release), 19
+fixtures, 16 actual production mutants, 65 inherited actual controls, 310 r5
+runtime labels, 1,459 imported theorems and 1,131 supplemental rows. Task 8.5
+publish/archive/remote verification is pending. This roadmap invents no remote
+commit. M4 participant-tree regrouping and later milestones stay open.
+
+- [x] Freeze the recovered OpenSpec planning package and obtain independent GPT-6 package review (planning gate; Fable no-verdict preserved).
+- [x] Implement generic finite roster, actual dispatcher, whole-machine observations, binary correspondence and continuation chunks at `94f70e50`.
+- [x] Prove initialized finite interference, causal monitors, funded reserve/success with enabledness, and the classified negatives. Delivery/archive pending.
+- [ ] Publish accepted source/evidence, archive the OpenSpec change, and verify remote bytes (task 8.5).
+
 ## Remaining composition and metatheory
 
 - [x] Implement disjoint parallel composition.
 - [x] Implement shared-state interleaving with explicit interference conditions.
 - [x] Implement atomic synchronization, including failure and transient-settlement semantics.
-- [ ] Generalize the useful results in `Interface.lean` and `Nary.lean` into the operational model.
+- [ ] Generalize the useful results in `Interface.lean` and `Nary.lean` into the operational model. Finite-participant Nary is proved at `94f70e50` (Sprint 11 delivery/archive pending). Sprint 10 Interface binding is already delivered. Participant-tree regrouping remains M4.
 - [ ] Prove behavioral associativity: regrouping compatible components preserves behavior.
-- [ ] Prove assume-guarantee composition with initialization and causal or inductive premises, not circular assumptions.
+- [x] Prove assume-guarantee composition with initialization and causal or inductive premises, not circular assumptions. Proved for finite initialized/causal composition at `94f70e50`; delivery/archive pending. Does not close participant-tree regrouping or later milestones.
 - [x] Define observational equivalence and prove conservative extension: unrelated additions preserve existing behavior.
 - [ ] Establish capability provenance and component isolation where required, beyond the current trusted-store assumption.
 
@@ -241,3 +286,8 @@ Current reviewer policy (2026-09-07): the user restored native Fable5.1 at mediu
 effort. OpenSpec gates use nonauthor GPT-6 plus Fable; implementation/evidence
 gates use Grok plus Fable. Completed Opus and historical Fable reports retain
 their original model identities. See [working instructions](AGENTS.md).
+
+Current implementation assignment (2026-09-08) for remaining program work:
+native Grok 4.6 authors; independent GPT-6 checks; no Foreman. Historical
+Grok/Fable and GPT-6-author records above retain their original identities.
+This section does not relabel completed reviews.

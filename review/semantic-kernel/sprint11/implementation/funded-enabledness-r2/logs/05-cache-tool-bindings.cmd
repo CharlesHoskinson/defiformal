@@ -1,0 +1,1 @@
+lake env sh -c echo LEAN=$(command -v lean); echo LAKE=$(command -v lake); echo LEAN_REAL=$(readlink -f "$(command -v lean)"); echo LAKE_REAL=$(readlink -f "$(command -v lake)"); sha256sum "$(command -v lean)" "$(command -v lake)"; lean --version; lake --version; cat lean-toolchain

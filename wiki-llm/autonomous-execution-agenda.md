@@ -104,3 +104,31 @@ changes or deployment-fidelity findings.
 
 Use `current-work.json` for the current evidence paths and polling handles.
 A stored process handle is not proof that its process is still running.
+
+## Current execution, 2026-09-08
+
+The user authorized the remaining FormalDeFi program with native Grok 4.6 as
+author and independent GPT-6 as checker. No Foreman. Publish accepted work to
+`semantic-kernel-pivot` only; do not merge to main.
+
+Sprint 10 is delivered. Checked integer arithmetic is delivered and archived at
+`6d73e6dc`. Package 9 in the table above is complete. Stale “in implementation”
+wording for that package is superseded.
+
+Sprint 11 / M3 finite-participant causal composition is code/evidence-ready at
+source candidate `94f70e502c75132656bd0902a17be60ca45ab1c2`. Independent GPT-6
+final adjudication is ACCEPT WITH LIMITATIONS with no required source or proof
+fixes. Native closure docs:
+`review/semantic-kernel/sprint11/implementation/acceptance/grok-release-r1/`.
+Task 8.5 publication, OpenSpec archive and remote-byte verification remain
+parent work. This agenda invents no remote commit.
+
+The finite initialized/causal assume-guarantee item is proved pending delivery.
+Participant-tree regrouping remains M4. Do not close M4–M6 or the entire
+project. Independent corpus implementation, historical-tooling whole-package
+acceptance, claims/async/certificates/remaining libraries/fidelity/evaluation
+and publication remain open.
+
+The earlier sentence that Sprint 10 “is the active planning gate” is historical.
+It is not the current milestone. After parent delivery of Sprint 11, continue
+the remaining agenda immediately.

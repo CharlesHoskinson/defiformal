@@ -1,0 +1,188 @@
+--- /home/charl/defiformal-wt-sprint11-grok-gpt6-20260907/review/semantic-kernel/sprint11/implementation/funded-causal-r3/source-snapshot-before/FundedCausal.lean	2026-09-07 22:51:39.643394850 -0600
++++ /home/charl/defiformal-wt-sprint11-grok-gpt6-20260907/review/semantic-kernel/sprint11/implementation/funded-causal-r3/source-snapshot/FundedCausal.lean	2026-09-07 23:37:49.098609108 -0600
+@@ -1,5 +1,6 @@
+ import DefiKernel.Nary.Causal
+ import DefiKernel.Nary.Examples
++import DefiKernel.Nary.FundedEnabledness
+ import DefiKernel.Nary.LocalOrder
+ import DefiKernel.Nary.Observation
+ import DefiKernel.Interface.Accounting
+@@ -8,12 +9,16 @@
+ `continueMonitored_initialized` are discharged from initialization, own-output provenance,
+ deposit arithmetic and actual `executeStep` equations. This module does not assume the
+ desired whole-run `K` as a premise, does not treat the twelve Boolean schedule checks as
+-the proof, and does not manufacture expected worlds by calling the candidate dispatcher. -/
++the proof, and does not manufacture expected worlds by calling the candidate dispatcher.
++Live selected `executeStep = .ok` at an arbitrary current `FundedK` world is transported
++from `FundedEnabledness` helpers; it is not a future-success or whole-run hypothesis. -/
+ namespace DefiKernel.Nary.FundedCausal
+ open Typed Composition
+ open DefiKernel.Nary
+ open DefiKernel.Nary.Examples
+ open Interface (receiptCellEffect step_receipt_cell)
++open DefiKernel.Nary.FundedEnabledness
++  (f10_producer_enabled f10_consumer_enabled f10_deposit1_enabled f10_deposit2_enabled)
+ 
+ variable {Q : Type}
+ 
+@@ -1163,7 +1168,8 @@
+ /-- Guard facts from current K for a live selected token. These are the actual
+ enabledness premises (identity producer, 6 ≤ vault at consume, donor funding at
+ nextIndex = 0). They are not an `executeStep = .ok` claim: catalog/authority/accounting
+-checks sit outside the financial guards, and StepSound does not imply progress. -/
++checks sit outside the financial guards, and StepSound does not imply progress.
++The actual current-world `executeStep = .ok` bridge is `f10_live_selected_enabled`. -/
+ theorem f10_selected_guards {q : ReservePhase} {m : M3} {b : Fin 3}
+     {inv : Invocation P A D}
+     (hk : FundedK q m) (hf : (m.locals b).failure = none)
+@@ -1199,8 +1205,135 @@
+     simp at ha
+     exact Or.inr (Or.inr (Or.inr ⟨rfl, rfl, hn2, ha hn2⟩))
+ 
++/-- Donor (and any participant) own-output history is empty while `nextIndex = 0`.
++Skip and refuse preserve both fields; a selected accept increments `nextIndex`, so
++the index-zero case never observes a successful own emission. This is a Reachable
++local invariant, not an extra FundedK premise. -/
++theorem f10_reachable_empty_outputs {m : M3}
++    (h : Reachable f10Cfg f10Bounds f10Branches f10Initial m) :
++    ∀ b : Fin 3, (m.locals b).nextIndex = 0 → (m.locals b).outputs = [] := by
++  induction h with
++  | start =>
++    intro b hidx
++    simp [start_locals]
++  | @next pre post sel previous step ih =>
++    intro own hidx
++    cases step with
++    | halted _ _ =>
++      rw [skip_outputs pre sel own]
++      rw [skip_nextIndex pre sel own] at hidx
++      exact ih own hidx
++    | exhausted _ _ =>
++      rw [skip_outputs pre sel own]
++      rw [skip_nextIndex pre sel own] at hidx
++      exact ih own hidx
++    | refused inv reason _ _ _ =>
++      rw [refuse_outputs pre sel own inv reason]
++      rw [refuse_nextIndex pre sel own inv reason] at hidx
++      exact ih own hidx
++    | accepted inv result _ _ _ =>
++      by_cases ho : own = sel
++      · subst own
++        rw [accept_nextIndex_sel pre sel inv result] at hidx
++        omega
++      · rw [accept_outputs_away pre sel own inv result ho]
++        rw [accept_nextIndex_away pre sel own inv result ho] at hidx
++        exact ih own hidx
++
++/-- Exact helper receipt, output, store and cell facts for a live selected call at an
++arbitrary current `FundedK` world. Derived from `f10_selected_guards`, store/budget
++from K, and empty donor history from Reachable. Not a future or whole-run success
++hypothesis. -/
++theorem f10_live_selected_enabled_details {q : ReservePhase} {m : M3} {b : Fin 3}
++    {inv : Invocation P A D}
++    (hk : FundedK q m) (hf : (m.locals b).failure = none)
++    (hs : (f10Branches b)[(m.locals b).consumed]? = some inv) :
++    ∃ result, executeStep f10Cfg (f10Bounds b (m.locals b).nextIndex)
++        (m.locals b).nextIndex (m.locals b).outputs (.invoke inv) m.world = .ok result ∧
++      result.world.capabilities = f10Store ∧
++      ((b = 0 ∧ inv = inv200 ∧ result.receipt = rec200 ∧ result.outputs = [budgetOut 0] ∧
++          ∀ c, result.world.state.balance c = m.world.state.balance c) ∨
++        (b = 0 ∧ inv = inv201 ∧ result.receipt = rec201 ∧ result.outputs = [] ∧
++          result.world.state.balance vaultC = m.world.state.balance vaultC + (-6) ∧
++          result.world.state.balance recipientC = m.world.state.balance recipientC + 6 ∧
++          ∀ c, c ≠ vaultC → c ≠ recipientC →
++            result.world.state.balance c = m.world.state.balance c) ∨
++        (b = 1 ∧ inv = inv202 ∧ result.receipt = rec202 ∧ result.outputs = [] ∧
++          result.world.state.balance donor1C = m.world.state.balance donor1C + (-1) ∧
++          result.world.state.balance vaultC = m.world.state.balance vaultC + 1 ∧
++          ∀ c, c ≠ donor1C → c ≠ vaultC →
++            result.world.state.balance c = m.world.state.balance c) ∨
++        (b = 2 ∧ inv = inv203 ∧ result.receipt = rec203 ∧ result.outputs = [] ∧
++          result.world.state.balance donor2C = m.world.state.balance donor2C + (-2) ∧
++          result.world.state.balance vaultC = m.world.state.balance vaultC + 2 ∧
++          ∀ c, c ≠ donor2C → c ≠ vaultC →
++            result.world.state.balance c = m.world.state.balance c)) := by
++  have hstore := f10_store_preserved hk
++  have hbudget := f10_budget_initialized hk
++  rcases f10_selected_guards hk hf hs with hprod | hcons | hd1 | hd2
++  · rcases hprod with ⟨hb, hinv, hn0, hout⟩
++    subst b
++    subst inv
++    rcases f10_producer_enabled m.world hstore hbudget with
++      ⟨result, hstep, hrec, houts, hcap, hbal⟩
++    refine ⟨result, ?_, hcap, Or.inl ⟨rfl, rfl, hrec, houts, hbal⟩⟩
++    simpa [hn0, hout] using hstep
++  · rcases hcons with ⟨hb, hinv, hn0, hout, hvault⟩
++    subst b
++    subst inv
++    rcases f10_consumer_enabled m.world hstore hvault with
++      ⟨result, hstep, hrec, houts, hcap, hv, hr, hfr⟩
++    refine ⟨result, ?_, hcap, Or.inr (Or.inl ⟨rfl, rfl, hrec, houts, hv, hr, hfr⟩)⟩
++    simpa [hn0, hout] using hstep
++  · rcases hd1 with ⟨hb, hinv, hn1, hfund⟩
++    subst b
++    subst inv
++    have hout : (m.locals 1).outputs = [] := f10_reachable_empty_outputs hk.1 1 hn1
++    rcases f10_deposit1_enabled m.world hstore hfund with
++      ⟨result, hstep, hrec, houts, hcap, hd, hv, hfr⟩
++    refine ⟨result, ?_, hcap, Or.inr (Or.inr (Or.inl ⟨rfl, rfl, hrec, houts, hd, hv, hfr⟩))⟩
++    simpa [hn1, hout] using hstep
++  · rcases hd2 with ⟨hb, hinv, hn2, hfund⟩
++    subst b
++    subst inv
++    have hout : (m.locals 2).outputs = [] := f10_reachable_empty_outputs hk.1 2 hn2
++    rcases f10_deposit2_enabled m.world hstore hfund with
++      ⟨result, hstep, hrec, houts, hcap, hd, hv, hfr⟩
++    refine ⟨result, ?_, hcap, Or.inr (Or.inr (Or.inr ⟨rfl, rfl, hrec, houts, hd, hv, hfr⟩))⟩
++    simpa [hn2, hout] using hstep
++
++/-- Actual `executeStep = .ok` for the live selected invocation at an arbitrary current
++`FundedK` world. Premises are current K, selected-branch `failure = none`, and the
++actual current branch lookup. Index, own history, store, budget and funding are
++derived; donor index-0 history is the Reachable empty-output invariant. This does
++not assume future or whole-run success and does not replace symbolic enabledness by
++a finite runtime check. -/
++theorem f10_live_selected_enabled {q : ReservePhase} {m : M3} {b : Fin 3}
++    {inv : Invocation P A D}
++    (hk : FundedK q m) (hf : (m.locals b).failure = none)
++    (hs : (f10Branches b)[(m.locals b).consumed]? = some inv) :
++    ∃ result, executeStep f10Cfg (f10Bounds b (m.locals b).nextIndex)
++        (m.locals b).nextIndex (m.locals b).outputs (.invoke inv) m.world = .ok result := by
++  obtain ⟨result, hstep, _⟩ := f10_live_selected_enabled_details hk hf hs
++  exact ⟨result, hstep⟩
++
++/-- Initialized arbitrary-prefix corollary: after any `schedule.take n`, a live selected
++call at the resulting monitored machine is actually `executeStep = .ok`. -/
++theorem f10_initialized_prefix_enabled (schedule : Schedule (Fin 3)) (n : Nat)
++    {b : Fin 3} {inv : Invocation P A D} :
++    let m := (continueMonitored f10Cfg f10Bounds f10Branches reserveUpdate
++      (.awaiting, start f10Initial) (schedule.take n)).2
++    (m.locals b).failure = none →
++      (f10Branches b)[(m.locals b).consumed]? = some inv →
++        ∃ result, executeStep f10Cfg (f10Bounds b (m.locals b).nextIndex)
++          (m.locals b).nextIndex (m.locals b).outputs (.invoke inv) m.world = .ok result :=
++  fun hf hs =>
++    f10_live_selected_enabled (f10_monitored_initialized (schedule.take n)).1 hf hs
++
+ /-- F12: authorized peer withdrawal 3 after the producer, then consumer 6, leaves vault 1.
+-The deposit-only rely used by the funded instance is false of this peer step. -/
++The generic funded instance rely is `fundedRely` (post-state `fundedInv`), not
++`depositOnlyRely`. Fuller F12 readiness and actual-step proofs live in the companion
++module; this tail theorem does not replace them. -/
+ theorem f12_vault_final :
+     (runPrefix f12Cfg f12Bounds f12Initial f12Branches f12Schedule).world.state.balance vaultC =
+       1 := by
+@@ -1211,8 +1344,11 @@
+   simpa [heq, f12Expected, f12AfterCons] using
+     (by decide +kernel : f12AfterCons.state.balance vaultC = 1)
+ 
+-/-- Deposit-only peer rely of the funded instance: vault does not fall. F12's authorized
+-withdrawal 3 after the producer falsifies it (10 to 7) while all three calls still succeed. -/
++/-- Separate monotone peer relation used to exhibit the F12 readiness issue: vault does
++not fall. This is not the generic funded instance rely; `fundedRely` is post `fundedInv`.
++F12's authorized withdrawal 3 after the producer falsifies it (10 to 7) while all three
++calls still succeed. The companion module contains fuller F12 proofs. This relation is
++not used by the generic funded instance. -/
+ def depositOnlyRely (pre post : State P A D) : Prop :=
+   pre.balance vaultC ≤ post.balance vaultC
+ 

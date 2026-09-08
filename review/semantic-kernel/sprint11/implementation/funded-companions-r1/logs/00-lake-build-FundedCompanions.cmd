@@ -1,0 +1,1 @@
+cd /home/charl/defiformal-wt-sprint11-grok-gpt6-20260907/lean && lake build DefiKernel.Nary.FundedCompanions

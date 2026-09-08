@@ -1,0 +1,518 @@
+import Mathlib.Data.Fintype.Basic
+import Mathlib.Data.List.FinRange
+
+/-! Fixed historical source transcription. The comparison extractor did not supply these literals. -/
+namespace DefiHistorical.Convex.Data
+
+structure Symbol where
+  id : String
+  sym : String
+  name : String
+  group : String
+  stratum : Nat
+  atom : String
+  status : String
+  deriving DecidableEq, Repr
+
+structure Term where
+  alts : List String
+  prose : String
+  external : Bool
+  mixed : Bool
+  deriving DecidableEq, Repr
+
+structure Law where
+  id : String
+  rawRule : String
+  rawSubject : String
+  sourcePath : String
+  sourceLine : Nat
+  sourceText : String
+  subjectDecision : String
+  subjects : List String
+  terms : List Term
+  deriving DecidableEq, Repr
+
+inductive Instance | lstar | parsedNew
+  deriving DecidableEq, Repr
+
+instance : Fintype Instance := ⟨{.lstar, .parsedNew}, by
+  intro i
+  cases i <;> simp⟩
+
+def symbols : List Symbol := [
+  ⟨"E001", "Sh", "Pro-rata share accounting", "G01", 0, "R", "core"⟩,
+  ⟨"E002", "Ix", "Index-based accrual", "G01", 0, "R", "core"⟩,
+  ⟨"E003", "Rb", "Rebasing accounting", "G01", 0, "R", "core"⟩,
+  ⟨"E004", "Cp", "Constant-product invariant", "G02", 1, "R", "core"⟩,
+  ⟨"E005", "Wg", "Weighted-geometric invariant", "G02", 1, "R", "core"⟩,
+  ⟨"E006", "St", "Stable-hybrid invariant", "G02", 1, "R", "core"⟩,
+  ⟨"E007", "Cl", "Concentrated liquidity", "G02", 1, "R", "core"⟩,
+  ⟨"E008", "Pm", "Oracle-priced inventory curve", "G02", 1, "R", "core"⟩,
+  ⟨"CSM", "CSM", "Constant sum", "G02", 1, "R", "limit"⟩,
+  ⟨"E009", "Ob", "On-chain order book", "G03", 1, "R", "core"⟩,
+  ⟨"E010", "Rf", "Request for quote", "G03", 1, "N", "core"⟩,
+  ⟨"E011", "Ba", "Batch-auction clearing", "G03", 2, "N", "core"⟩,
+  ⟨"E012", "In", "Intent & solver execution", "G03", 4, "N", "core"⟩,
+  ⟨"E039", "Ag", "Aggregation & routing", "G04", 1, "R", "core"⟩,
+  ⟨"E040", "Fl", "Atomic flash liquidity", "G04", 1, "I", "core"⟩,
+  ⟨"E013", "Pl", "Pooled lending", "G05", 3, "R", "core"⟩,
+  ⟨"E014", "Im", "Isolated lending market", "G05", 3, "R", "core"⟩,
+  ⟨"E015", "Cd", "Collateralized-debt minting", "G05", 3, "R", "core"⟩,
+  ⟨"E016", "Uc", "Undercollateralized credit", "G05", 3, "N", "core"⟩,
+  ⟨"E017", "Ft", "Fixed-term debt", "G05", 3, "N", "core"⟩,
+  ⟨"E018", "Ct", "Collateral-threshold test", "G06", 3, "R", "core"⟩,
+  ⟨"E019", "Li", "Incentivized liquidation", "G06", 3, "R", "core"⟩,
+  ⟨"E020", "Ad", "Auto-deleveraging", "G06", 3, "R", "core"⟩,
+  ⟨"E021", "Sl", "Socialized-loss allocation", "G06", 3, "N", "core"⟩,
+  ⟨"E022", "Bs", "Staked backstop", "G06", 3, "R", "core"⟩,
+  ⟨"E023", "Pf", "Perpetual funding transfer", "G07", 3, "R", "core"⟩,
+  ⟨"E024", "Op", "Option payoff", "G07", 3, "N", "core"⟩,
+  ⟨"E025", "Tr", "Tranche waterfall", "G07", 3, "N", "core"⟩,
+  ⟨"E026", "Cv", "Mutual cover pool", "G07", 3, "N", "core"⟩,
+  ⟨"E027", "Py", "Principal/yield separation", "G07", 3, "N", "core"⟩,
+  ⟨"E057", "Sv", "Servicing & determination discretion", "G07", 3, "N", "candidate"⟩,
+  ⟨"E060", "Dp", "Directional position & hedge maintenance", "G07", 3, "N", "candidate"⟩,
+  ⟨"E028", "Ex", "External data oracle", "G08", 2, "N", "core"⟩,
+  ⟨"E029", "Tp", "Time-weighted price", "G08", 2, "R", "core"⟩,
+  ⟨"E030", "Oa", "Optimistic assertion oracle", "G08", 2, "N", "core"⟩,
+  ⟨"E031", "At", "Reserve / NAV attestation", "G08", 2, "N", "core"⟩,
+  ⟨"E032", "Sr", "Streaming accrual", "G09", 2, "N", "core"⟩,
+  ⟨"E033", "Ep", "Epoch-gated transition", "G09", 2, "N", "core"⟩,
+  ⟨"E034", "Wq", "Withdrawal queue", "G09", 2, "N", "core"⟩,
+  ⟨"E035", "Em", "Protocol-funded emissions", "G10", 2, "N", "core"⟩,
+  ⟨"E058", "Fd", "Surplus & fee distribution", "G10", 2, "N", "candidate"⟩,
+  ⟨"E036", "Tg", "Delayed-governance execution", "G11", 4, "N", "core"⟩,
+  ⟨"E037", "Up", "Mutable implementation proxy", "G11", 4, "N", "core"⟩,
+  ⟨"E038", "Gp", "Guardian or pause", "G11", 4, "N", "core"⟩,
+  ⟨"E050", "Au", "Delegated execution scope", "G11", 4, "N", "core"⟩,
+  ⟨"E051", "Gs", "Sponsored-fee liability", "G11", 3, "N", "candidate"⟩,
+  ⟨"E041", "Xm", "Cross-domain message verification", "G12", 4, "N", "core"⟩,
+  ⟨"E042", "Xf", "Cross-domain asset transfer", "G12", 4, "N", "core"⟩,
+  ⟨"E053", "Rl", "Resource lock / reservation", "G12", 4, "N", "candidate"⟩,
+  ⟨"E054", "Of", "Optimistic fill & reimbursement", "G12", 4, "N", "candidate"⟩,
+  ⟨"E043", "Rd", "Direct redemption right", "G13", 3, "R", "core"⟩,
+  ⟨"E044", "Ps", "Peg-swap module", "G13", 3, "N", "core"⟩,
+  ⟨"E045", "As", "Algorithmic supply adjustment", "G13", 3, "N", "core"⟩,
+  ⟨"E046", "Aw", "Permission / identity gate", "G14", 2, "N", "core"⟩,
+  ⟨"E047", "Sb", "Shielded-balance state", "G14", 2, "R", "core"⟩,
+  ⟨"E048", "Sd", "Selective-disclosure proof", "G14", 2, "N", "candidate"⟩,
+  ⟨"E056", "Fz", "Freeze / forced transfer", "G14", 2, "N", "candidate"⟩,
+  ⟨"E049", "Rs", "Restaking / shared security", "G15", 4, "N", "candidate"⟩,
+  ⟨"E059", "Vl", "Staking & validator lifecycle", "G16", 3, "N", "candidate"⟩]
+
+def lstarLaws : List Law := [
+  ⟨"L1a",
+    "",
+    "",
+    "formal/v2/tables.mjs",
+    88,
+    "  [\"L1a\", [\"Pl\", \"Im\", \"Cd\", \"Pf\", \"Op\"], [PRICE]],",
+    "explicit",
+    ["Pl", "Im", "Cd", "Pf", "Op"],
+    [⟨["Ex", "Tp", "At", "Oa", "Sv", "Cl", "Cp", "St", "Wg"], "", false, false⟩]⟩,
+  ⟨"L1c",
+    "",
+    "",
+    "formal/v2/tables.mjs",
+    89,
+    "  [\"L1c\", [\"Pl\", \"Im\", \"Cd\", \"Pf\"], [[\"Ct\"]]],",
+    "explicit",
+    ["Pl", "Im", "Cd", "Pf"],
+    [⟨["Ct"], "", false, false⟩]⟩,
+  ⟨"L1d",
+    "",
+    "",
+    "formal/v2/tables.mjs",
+    90,
+    "  [\"L1d\", [\"Pl\", \"Im\", \"Cd\", \"Pf\"], [LOSS]],",
+    "explicit",
+    ["Pl", "Im", "Cd", "Pf"],
+    [⟨["Li", "Ad", "Sl", "Bs"], "", false, false⟩]⟩,
+  ⟨"L2",
+    "",
+    "",
+    "formal/v2/tables.mjs",
+    91,
+    "  [\"L2\", [\"Pl\"], [[\"Sh\", \"Ix\", \"Rb\"], TERMINAL]],",
+    "explicit",
+    ["Pl"],
+    [⟨["Sh", "Ix", "Rb"], "", false, false⟩, ⟨["Sl", "Ad", "Bs", "Tr", "Cv", "Wq", "Rd", "Ps", "Sv", "Im", "Of"], "", false, false⟩]⟩,
+  ⟨"L3",
+    "",
+    "",
+    "formal/v2/tables.mjs",
+    92,
+    "  [\"L3\", [\"Uc\"], [[\"Aw\"], [\"At\"], [\"Bs\", \"Tr\", \"Sv\", \"Ft\", \"Ct\"], [\"Sv\", \"Ft\", \"Fz\", \"Ep\", \"Tr\"]]],",
+    "explicit",
+    ["Uc"],
+    [⟨["Aw"], "", false, false⟩, ⟨["At"], "", false, false⟩, ⟨["Bs", "Tr", "Sv", "Ft", "Ct"], "", false, false⟩, ⟨["Sv", "Ft", "Fz", "Ep", "Tr"], "", false, false⟩]⟩,
+  ⟨"L4",
+    "",
+    "",
+    "formal/v2/tables.mjs",
+    93,
+    "  [\"L4\", [\"Pf\"], [INDEX, [\"Ct\"], [\"Li\", \"Ad\", \"Sl\", \"Bs\"]]],",
+    "explicit",
+    ["Pf"],
+    [⟨["Ex", "Tp", "Oa", "At"], "", false, false⟩, ⟨["Ct"], "", false, false⟩, ⟨["Li", "Ad", "Sl", "Bs"], "", false, false⟩]⟩,
+  ⟨"L5",
+    "",
+    "",
+    "formal/v2/tables.mjs",
+    94,
+    "  [\"L5\", [\"Py\"], [[\"Sh\", \"Ix\", \"Rb\"], [\"Ep\"], [\"Rd\"]]],",
+    "explicit",
+    ["Py"],
+    [⟨["Sh", "Ix", "Rb"], "", false, false⟩, ⟨["Ep"], "", false, false⟩, ⟨["Rd"], "", false, false⟩]⟩,
+  ⟨"L7",
+    "",
+    "",
+    "formal/v2/tables.mjs",
+    95,
+    "  [\"L7\", [\"Cd\"], [[\"Rd\", \"Ps\", \"Li\", \"Ad\", \"Sl\", \"Bs\"]]],",
+    "explicit",
+    ["Cd"],
+    [⟨["Rd", "Ps", "Li", "Ad", "Sl", "Bs"], "", false, false⟩]⟩,
+  ⟨"L19",
+    "",
+    "",
+    "formal/v2/tables.mjs",
+    96,
+    "  [\"L19\", [\"Of\"], [[\"Xm\"], [\"Xf\"], [\"Bs\", \"Sl\"]]],",
+    "explicit",
+    ["Of"],
+    [⟨["Xm"], "", false, false⟩, ⟨["Xf"], "", false, false⟩, ⟨["Bs", "Sl"], "", false, false⟩]⟩,
+  ⟨"L20",
+    "",
+    "",
+    "formal/v2/tables.mjs",
+    97,
+    "  [\"L20\", [\"Rl\"], [[\"Au\"]]],",
+    "explicit",
+    ["Rl"],
+    [⟨["Au"], "", false, false⟩]⟩,
+  ⟨"L21",
+    "",
+    "",
+    "formal/v2/tables.mjs",
+    98,
+    "  [\"L21\", [\"Gs\"], [[\"Au\"]]],",
+    "explicit",
+    ["Gs"],
+    [⟨["Au"], "", false, false⟩]⟩]
+
+def parsedNewLaws : List Law := [
+  ⟨"L1",
+    "(Pl|Im|Cd|Pf|Op) → (Ex|Tp|At) + Ct + (Li|Ad|Sl|Bs)",
+    "(Pl|Im|Cd|Pf|Op) ",
+    "viz/src/data.ts",
+    184,
+    "  { id: \"L1\", rule: \"(Pl|Im|Cd|Pf|Op) → (Ex|Tp|At) + Ct + (Li|Ad|Sl|Bs)\", async: \"no\" },",
+    "parsed",
+    ["Pl", "Im", "Cd", "Pf", "Op"],
+    [⟨["Ex", "Tp", "At"], "(Ex|Tp|At)", false, false⟩, ⟨["Ct"], "Ct", false, false⟩, ⟨["Li", "Ad", "Sl", "Bs"], "(Li|Ad|Sl|Bs)", false, false⟩]⟩,
+  ⟨"L2",
+    "Pl → (Sh|Ix) + exit-liquidity",
+    "Pl ",
+    "viz/src/data.ts",
+    185,
+    "  { id: \"L2\", rule: \"Pl → (Sh|Ix) + exit-liquidity\", async: \"yes\" },",
+    "parsed",
+    ["Pl"],
+    [⟨["Sh", "Ix"], "(Sh|Ix)", false, false⟩, ⟨[], "exit-liquidity", true, false⟩]⟩,
+  ⟨"L3",
+    "Uc → Aw + At{subject=borrower-financials} + (Bs|Tr) + obligor",
+    "Uc ",
+    "viz/src/data.ts",
+    186,
+    "  { id: \"L3\", rule: \"Uc → Aw + At{subject=borrower-financials} + (Bs|Tr) + obligor\", async: \"yes\" },",
+    "parsed",
+    ["Uc"],
+    [⟨["Aw"], "Aw", false, false⟩, ⟨["At"], "At{subject=borrower-financials}", false, false⟩, ⟨["Bs", "Tr"], "(Bs|Tr)", false, false⟩, ⟨[], "obligor", true, false⟩]⟩,
+  ⟨"L4",
+    "Pf → Ex + Ct + Li + (Ad|Sl|Bs)",
+    "Pf ",
+    "viz/src/data.ts",
+    187,
+    "  { id: \"L4\", rule: \"Pf → Ex + Ct + Li + (Ad|Sl|Bs)\", async: \"no\" },",
+    "parsed",
+    ["Pf"],
+    [⟨["Ex"], "Ex", false, false⟩, ⟨["Ct"], "Ct", false, false⟩, ⟨["Li"], "Li", false, false⟩, ⟨["Ad", "Sl", "Bs"], "(Ad|Sl|Bs)", false, false⟩]⟩,
+  ⟨"L5",
+    "Py → (Sh|Ix|Rb) + Ep + Rd",
+    "Py ",
+    "viz/src/data.ts",
+    188,
+    "  { id: \"L5\", rule: \"Py → (Sh|Ix|Rb) + Ep + Rd\", async: \"yes\" },",
+    "parsed",
+    ["Py"],
+    [⟨["Sh", "Ix", "Rb"], "(Sh|Ix|Rb)", false, false⟩, ⟨["Ep"], "Ep", false, false⟩, ⟨["Rd"], "Rd", false, false⟩]⟩,
+  ⟨"L6",
+    "Tr → (Sv | mechanical trigger) + declared seniority + dispute forum + recovery-timing assumption",
+    "Tr ",
+    "viz/src/data.ts",
+    189,
+    "  { id: \"L6\", rule: \"Tr → (Sv | mechanical trigger) + declared seniority + dispute forum + recovery-timing assumption\", async: \"no\", isNew: true },",
+    "parsed",
+    ["Tr"],
+    [⟨["Sv"], "(Sv | mechanical trigger)", true, true⟩, ⟨[], "declared seniority", true, false⟩, ⟨[], "dispute forum", true, false⟩, ⟨[], "recovery-timing assumption", true, false⟩]⟩,
+  ⟨"L7",
+    "Cd → Rd | Ps | liquidation capacity",
+    "Cd ",
+    "viz/src/data.ts",
+    190,
+    "  { id: \"L7\", rule: \"Cd → Rd | Ps | liquidation capacity\", async: \"yes\" },",
+    "parsed",
+    ["Cd"],
+    [⟨["Rd", "Ps"], "Rd | Ps | liquidation capacity", true, true⟩]⟩,
+  ⟨"L8",
+    "Xf → Xm | named custodian, plus a global claim ledger",
+    "Xf ",
+    "viz/src/data.ts",
+    191,
+    "  { id: \"L8\", rule: \"Xf → Xm | named custodian, plus a global claim ledger\", async: \"yes\" },",
+    "parsed",
+    ["Xf"],
+    [⟨["Xm"], "Xm | named custodian, plus a global claim ledger", true, true⟩]⟩,
+  ⟨"L9",
+    "Xf → debit(source) = credit(destination)",
+    "Xf ",
+    "viz/src/data.ts",
+    192,
+    "  { id: \"L9\", rule: \"Xf → debit(source) = credit(destination)\", async: \"yes\" },",
+    "parsed",
+    ["Xf"],
+    [⟨[], "debit(source) = credit(destination)", true, false⟩]⟩,
+  ⟨"L10",
+    "Sb → proof verifier + nullifier set",
+    "Sb ",
+    "viz/src/data.ts",
+    193,
+    "  { id: \"L10\", rule: \"Sb → proof verifier + nullifier set\", async: \"yes\" },",
+    "parsed",
+    ["Sb"],
+    [⟨[], "proof verifier", true, false⟩, ⟨[], "nullifier set", true, false⟩]⟩,
+  ⟨"L11",
+    "Sd → credential source + verifier + revocation",
+    "Sd ",
+    "viz/src/data.ts",
+    194,
+    "  { id: \"L11\", rule: \"Sd → credential source + verifier + revocation\", async: \"yes\" },",
+    "parsed",
+    ["Sd"],
+    [⟨[], "credential source", true, false⟩, ⟨[], "verifier", true, false⟩, ⟨[], "revocation", true, false⟩]⟩,
+  ⟨"L12",
+    "In → signed constraints + settlement verifier + (solver|fallback) + timeout",
+    "In ",
+    "viz/src/data.ts",
+    195,
+    "  { id: \"L12\", rule: \"In → signed constraints + settlement verifier + (solver|fallback) + timeout\", async: \"yes\" },",
+    "parsed",
+    ["In"],
+    [⟨[], "signed constraints", true, false⟩, ⟨[], "settlement verifier", true, false⟩, ⟨[], "(solver|fallback)", true, false⟩, ⟨[], "timeout", true, false⟩]⟩,
+  ⟨"L13",
+    "Ex → freshness validation; Gp preferred for high-value obligations",
+    "Ex ",
+    "viz/src/data.ts",
+    196,
+    "  { id: \"L13\", rule: \"Ex → freshness validation; Gp preferred for high-value obligations\", async: \"yes\" },",
+    "parsed",
+    ["Ex"],
+    [⟨[], "freshness validation; Gp preferred for high-value obligations", true, false⟩]⟩,
+  ⟨"L14",
+    "illiquid backing → Wq | bounded liquidity reserve",
+    "illiquid backing ",
+    "viz/src/data.ts",
+    197,
+    "  { id: \"L14\", rule: \"illiquid backing → Wq | bounded liquidity reserve\", async: \"yes\" },",
+    "prose_subject_zero",
+    [],
+    [⟨["Wq"], "Wq | bounded liquidity reserve", true, true⟩]⟩,
+  ⟨"L15",
+    "Up → Tg | bounded emergency process",
+    "Up ",
+    "viz/src/data.ts",
+    198,
+    "  { id: \"L15\", rule: \"Up → Tg | bounded emergency process\", async: \"yes\" },",
+    "parsed",
+    ["Up"],
+    [⟨["Tg"], "Tg | bounded emergency process", true, true⟩]⟩,
+  ⟨"L16",
+    "Aw → transfer-time enforcement where eligibility follows the holder",
+    "Aw ",
+    "viz/src/data.ts",
+    199,
+    "  { id: \"L16\", rule: \"Aw → transfer-time enforcement where eligibility follows the holder\", async: \"no\" },",
+    "parsed",
+    ["Aw"],
+    [⟨[], "transfer-time enforcement where eligibility follows the holder", true, false⟩]⟩,
+  ⟨"L17",
+    "Au → bounded scope + revocation + expiry + nonce/domain separation",
+    "Au ",
+    "viz/src/data.ts",
+    200,
+    "  { id: \"L17\", rule: \"Au → bounded scope + revocation + expiry + nonce/domain separation\", async: \"yes\" },",
+    "parsed",
+    ["Au"],
+    [⟨[], "bounded scope", true, false⟩, ⟨[], "revocation", true, false⟩, ⟨[], "expiry", true, false⟩, ⟨[], "nonce/domain separation", true, false⟩]⟩,
+  ⟨"L18",
+    "Xm → explicit finality + chain/domain binding + replay protection",
+    "Xm ",
+    "viz/src/data.ts",
+    201,
+    "  { id: \"L18\", rule: \"Xm → explicit finality + chain/domain binding + replay protection\", async: \"yes\" },",
+    "parsed",
+    ["Xm"],
+    [⟨[], "explicit finality", true, false⟩, ⟨[], "chain/domain binding", true, false⟩, ⟨[], "replay protection", true, false⟩]⟩,
+  ⟨"L19",
+    "Of → Xm + Xf + (Bs|Sl) + timeout",
+    "Of ",
+    "viz/src/data.ts",
+    202,
+    "  { id: \"L19\", rule: \"Of → Xm + Xf + (Bs|Sl) + timeout\", async: \"yes\" },",
+    "parsed",
+    ["Of"],
+    [⟨["Xm"], "Xm", false, false⟩, ⟨["Xf"], "Xf", false, false⟩, ⟨["Bs", "Sl"], "(Bs|Sl)", false, false⟩, ⟨[], "timeout", true, false⟩]⟩,
+  ⟨"L20",
+    "Rl → Au + single-spend + expiry + fulfillment proof + release",
+    "Rl ",
+    "viz/src/data.ts",
+    203,
+    "  { id: \"L20\", rule: \"Rl → Au + single-spend + expiry + fulfillment proof + release\", async: \"yes\" },",
+    "parsed",
+    ["Rl"],
+    [⟨["Au"], "Au", false, false⟩, ⟨[], "single-spend", true, false⟩, ⟨[], "expiry", true, false⟩, ⟨[], "fulfillment proof", true, false⟩, ⟨[], "release", true, false⟩]⟩,
+  ⟨"L21",
+    "Gs → Au + metering + fee settlement",
+    "Gs ",
+    "viz/src/data.ts",
+    204,
+    "  { id: \"L21\", rule: \"Gs → Au + metering + fee settlement\", async: \"yes\" },",
+    "parsed",
+    ["Gs"],
+    [⟨["Au"], "Au", false, false⟩, ⟨[], "metering", true, false⟩, ⟨[], "fee settlement", true, false⟩]⟩,
+  ⟨"L22",
+    "Rs → attributed slash condition + non-reflexive capital + loss waterfall",
+    "Rs ",
+    "viz/src/data.ts",
+    205,
+    "  { id: \"L22\", rule: \"Rs → attributed slash condition + non-reflexive capital + loss waterfall\", async: \"yes\" },",
+    "parsed",
+    ["Rs"],
+    [⟨[], "attributed slash condition", true, false⟩, ⟨[], "non-reflexive capital", true, false⟩, ⟨[], "loss waterfall", true, false⟩]⟩,
+  ⟨"L23",
+    "Sq → Xm + independent settlement finality",
+    "Sq ",
+    "viz/src/data.ts",
+    206,
+    "  { id: \"L23\", rule: \"Sq → Xm + independent settlement finality\", async: \"yes\" },",
+    "prose_subject_zero",
+    [],
+    [⟨["Xm"], "Xm", false, false⟩, ⟨[], "independent settlement finality", true, false⟩]⟩,
+  ⟨"L24",
+    "(In|Rf|Ba) → an explicit informational edge with a catalog tag",
+    "(In|Rf|Ba) ",
+    "viz/src/data.ts",
+    207,
+    "  { id: \"L24\", rule: \"(In|Rf|Ba) → an explicit informational edge with a catalog tag\", async: \"yes\" },",
+    "parsed",
+    ["In", "Rf", "Ba"],
+    [⟨[], "an explicit informational edge with a catalog tag", true, false⟩]⟩,
+  ⟨"L25",
+    "wrapped cross-domain collateral → haircut + cap + independent exit",
+    "wrapped cross-domain collateral ",
+    "viz/src/data.ts",
+    208,
+    "  { id: \"L25\", rule: \"wrapped cross-domain collateral → haircut + cap + independent exit\", async: \"yes\" },",
+    "prose_subject_zero",
+    [],
+    [⟨[], "haircut", true, false⟩, ⟨[], "cap", true, false⟩, ⟨[], "independent exit", true, false⟩]⟩,
+  ⟨"L26",
+    "Aw + Xf → destination-enforced eligibility + revocation propagation + jurisdictional binding",
+    "Aw + Xf ",
+    "viz/src/data.ts",
+    209,
+    "  { id: \"L26\", rule: \"Aw + Xf → destination-enforced eligibility + revocation propagation + jurisdictional binding\", async: \"no\", isNew: true },",
+    "prose_subject_zero",
+    [],
+    [⟨[], "destination-enforced eligibility", true, false⟩, ⟨[], "revocation propagation", true, false⟩, ⟨[], "jurisdictional binding", true, false⟩]⟩,
+  ⟨"L27",
+    "At → named attester + independence + stated assurance + staleness bound + recourse",
+    "At ",
+    "viz/src/data.ts",
+    210,
+    "  { id: \"L27\", rule: \"At → named attester + independence + stated assurance + staleness bound + recourse\", async: \"yes\", isNew: true },",
+    "parsed",
+    ["At"],
+    [⟨[], "named attester", true, false⟩, ⟨[], "independence", true, false⟩, ⟨[], "stated assurance", true, false⟩, ⟨[], "staleness bound", true, false⟩, ⟨[], "recourse", true, false⟩]⟩,
+  ⟨"L28",
+    "Fz → named authority + enumerated triggers + appeal path + holder disclosure",
+    "Fz ",
+    "viz/src/data.ts",
+    211,
+    "  { id: \"L28\", rule: \"Fz → named authority + enumerated triggers + appeal path + holder disclosure\", async: \"yes\", isNew: true },",
+    "parsed",
+    ["Fz"],
+    [⟨[], "named authority", true, false⟩, ⟨[], "enumerated triggers", true, false⟩, ⟨[], "appeal path", true, false⟩, ⟨[], "holder disclosure", true, false⟩]⟩,
+  ⟨"L29",
+    "(In|Ba|Rf|Of) → a declared surplus-allocation rule naming the residual claimant",
+    "(In|Ba|Rf|Of) ",
+    "viz/src/data.ts",
+    212,
+    "  { id: \"L29\", rule: \"(In|Ba|Rf|Of) → a declared surplus-allocation rule naming the residual claimant\", async: \"yes\", isNew: true },",
+    "parsed",
+    ["In", "Ba", "Rf", "Of"],
+    [⟨[], "a declared surplus-allocation rule naming the residual claimant", true, false⟩]⟩]
+
+def laws : Instance → List Law
+  | .lstar => lstarLaws
+  | .parsedNew => parsedNewLaws
+
+def mechanismNames : List String := (symbols.filter (fun s ↦ s.status != "limit")).map Symbol.sym
+
+abbrev Vertex := Fin 58
+
+def decode (v : Vertex) : String := mechanismNames[v.val]?.getD ""
+
+def encode (name : String) : Option Vertex :=
+  (List.finRange 58).find? (fun v ↦ decode v == name)
+
+/-- Ordered non-self unary occurrences. All external and non-unary terms are excluded. -/
+def occurrencePairs (i : Instance) : List (String × String) :=
+  (laws i).flatMap fun law ↦ law.terms.flatMap fun term ↦
+    if !term.external && term.alts.length == 1 then
+      law.subjects.filterMap fun subject ↦
+        let target := term.alts.headD ""
+        if subject == target then none else some (subject, target)
+    else []
+
+/-- Keep the first occurrence of each directed edge. -/
+def relationEdges (i : Instance) : List (String × String) :=
+  (occurrencePairs i).foldl (fun seen pair ↦
+    if seen.contains pair then seen else seen ++ [pair]) []
+
+/-- The same named edge list is exported and used by the finite-instance proofs. -/
+def edge (i : Instance) (a b : Vertex) : Prop :=
+  (decode a, decode b) ∈ relationEdges i
+
+instance (i : Instance) : DecidableRel (edge i) := fun a b ↦
+  inferInstanceAs (Decidable ((decode a, decode b) ∈ relationEdges i))
+
+/-- Check complete parsed subjects and alternatives before selecting unary edges. -/
+def allNamesBound (i : Instance) : Bool :=
+  (laws i).all fun law ↦
+    law.subjects.all (fun name ↦ mechanismNames.contains name) &&
+    law.terms.all (fun term ↦ term.alts.all (fun name ↦ mechanismNames.contains name))
+
+theorem symbols_length : symbols.length = 59 := by decide
+theorem mechanismNames_length : mechanismNames.length = 58 := by decide
+theorem mechanismNames_nodup : mechanismNames.Nodup := by decide
+theorem names_bound (i : Instance) : allNamesBound i = true := by cases i <;> decide
+theorem encode_decode : ∀ v : Vertex, encode (decode v) = some v := by decide
+
+theorem decode_encode (name : String) (v : Vertex) (found : encode name = some v) :
+    decode v = name := by
+  simpa only [beq_iff_eq] using List.find?_some found
+
+end DefiHistorical.Convex.Data

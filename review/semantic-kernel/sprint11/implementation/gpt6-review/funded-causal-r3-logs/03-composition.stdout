@@ -1,0 +1,87 @@
+<stdin>:21:6: error: 'change' tactic failed, pattern
+  false = true
+is not definitionally equal to target
+  (analyzeAll f10Cfg f10Bounds f10Branches fin3Roster.order).isOk = true
+theorem IndependentReview.f10_admitted_expected : ∀ (s : Schedule (Fin 3)),
+  List.count 0 s = 2 →
+    List.count 1 s = 1 →
+      List.count 2 s = 1 →
+        runNary f10Cfg fin3Roster f10Bounds f10Initial f10Branches s =
+          Result.executed s (expectedF10 (List.map Fin.val s)) :=
+fun s h0 h1 h2 =>
+  have hc := fun b =>
+    Or.casesOn (fin3_cases b)
+      (fun hb =>
+        Eq.symm hb ▸
+          Eq.mpr
+            (id
+              (congrArg (Eq (List.count 0 s))
+                (Eq.trans
+                  (congrArg List.length
+                    (ite_cond_eq_true [inv200, inv201] (if 0 = 1 then [inv202] else [inv203]) (eq_self 0)))
+                  (congrFun' (congrArg HAdd.hAdd (zero_add 1)) 1))))
+            h0)
+      fun h =>
+      Or.casesOn h
+        (fun hb =>
+          Eq.symm hb ▸
+            Eq.mpr
+              (id
+                (congrArg (Eq (List.count 1 s))
+                  (Eq.trans
+                    (congrArg List.length
+                      (Eq.trans
+                        (ite_cond_eq_false [inv200, inv201] (if 1 = 1 then [inv202] else [inv203])
+                          (Eq.trans Fin.one_eq_zero_iff._simp_1 (OfNat.ofNat_ne_one._simp_1 3)))
+                        (ite_cond_eq_true [inv202] [inv203] (eq_self 1))))
+                    (zero_add 1))))
+              h1)
+        fun hb =>
+        Eq.symm hb ▸
+          Eq.mpr
+            (id
+              (congrArg (Eq (List.count 2 s))
+                (Eq.trans
+                  (congrArg List.length
+                    (Eq.trans
+                      (ite_cond_eq_false [inv200, inv201] (if 2 = 1 then [inv202] else [inv203])
+                        (eq_false_of_decide (Eq.refl false)))
+                      (ite_cond_eq_false [inv202] [inv203] (eq_false_of_decide (Eq.refl false)))))
+                  (zero_add 1))))
+            h2;
+  have hana :=
+    have h := IndependentReview.f10_admitted_expected._proof_1_1;
+    Except.casesOn (motive := fun t =>
+      analyzeAll f10Cfg f10Bounds f10Branches fin3Roster.order = t →
+        ∃ fps, analyzeAll f10Cfg f10Bounds f10Branches fin3Roster.order = Except.ok fps)
+      (analyzeAll f10Cfg f10Bounds f10Branches fin3Roster.order)
+      (fun reason h =>
+        Eq.ndrec (motive := fun x =>
+          analyzeAll f10Cfg f10Bounds f10Branches fin3Roster.order = x → ∃ fps, x = Except.ok fps) (fun he => sorry)
+          (Eq.symm h) (Eq.refl (analyzeAll f10Cfg f10Bounds f10Branches fin3Roster.order)))
+      (fun fps h =>
+        Eq.ndrec (motive := fun x =>
+          analyzeAll f10Cfg f10Bounds f10Branches fin3Roster.order = x → ∃ fps, x = Except.ok fps)
+          (fun he => Exists.intro fps rfl) (Eq.symm h)
+          (Eq.refl (analyzeAll f10Cfg f10Bounds f10Branches fin3Roster.order)))
+      (Eq.refl (analyzeAll f10Cfg f10Bounds f10Branches fin3Roster.order));
+  Exists.casesOn hana fun fps ha =>
+    have hadmit := admit_of_checks f10Cfg fin3Roster f10Bounds f10Branches s fps f10_catalog_valid ha hc;
+    have heq :=
+      (machineEq_iff fin3Roster (runPrefix f10Cfg f10Bounds f10Initial f10Branches s)
+            (expectedF10 (List.map Fin.val s))).mp
+        (f10_member_machineEq s (f10_complete_mem s h0 h1 h2));
+    Eq.mpr
+      (id
+        (congrArg (fun _a => _a = Result.executed s (expectedF10 (List.map Fin.val s)))
+          (runNary_executed f10Cfg fin3Roster f10Bounds f10Initial f10Branches s fps hadmit)))
+      (Eq.mpr
+        (id (congrArg (fun _a => Result.executed s _a = Result.executed s (expectedF10 (List.map Fin.val s))) heq))
+        (Eq.refl (Result.executed s (expectedF10 (List.map Fin.val s)))))
+'IndependentReview.f10_admitted_expected' depends on axioms: [propext, sorryAx, Classical.choice, Quot.sound]
+'DefiKernel.Nary.FundedCausal.f10_reachable_empty_outputs' depends on axioms: [propext, Classical.choice, Quot.sound]
+'DefiKernel.Nary.FundedCausal.f10_live_selected_enabled_details' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'DefiKernel.Nary.FundedCausal.f10_live_selected_enabled' depends on axioms: [propext, Classical.choice, Quot.sound]
+'DefiKernel.Nary.FundedCausal.f10_initialized_prefix_enabled' depends on axioms: [propext, Classical.choice, Quot.sound]

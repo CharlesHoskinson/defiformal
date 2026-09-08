@@ -1,0 +1,240 @@
+@DefiKernel.Nary.ofBinaryAttempt_toBinary : ∀ {P A D : Type} [DecidableEq P] [DecidableEq A] [DecidableEq D]
+  (attempt : DefiKernel.Nary.Attempt DefiKernel.Parallel.BranchId P A D),
+  DefiKernel.Nary.ofBinaryAttempt (DefiKernel.Nary.toBinaryAttempt attempt) = attempt
+'DefiKernel.Nary.ofBinaryAttempt_toBinary' depends on axioms: [propext, Quot.sound]
+@DefiKernel.Nary.toBinaryAttempt_ofBinary : ∀ {P A D : Type} [DecidableEq P] [DecidableEq A] [DecidableEq D]
+  (attempt : DefiKernel.Interleaving.Attempt P A D),
+  DefiKernel.Nary.toBinaryAttempt (DefiKernel.Nary.ofBinaryAttempt attempt) = attempt
+'DefiKernel.Nary.toBinaryAttempt_ofBinary' depends on axioms: [propext, Quot.sound]
+@DefiKernel.Nary.ofBinaryMachine_toBinary : ∀ {P A D : Type} [DecidableEq P] [DecidableEq A] [DecidableEq D]
+  (m : DefiKernel.Nary.Machine DefiKernel.Parallel.BranchId P A D),
+  DefiKernel.Nary.ofBinaryMachine (DefiKernel.Nary.toBinaryMachine m) = m
+'DefiKernel.Nary.ofBinaryMachine_toBinary' depends on axioms: [propext, Quot.sound]
+@DefiKernel.Nary.toBinaryMachine_ofBinary : ∀ {P A D : Type} [DecidableEq P] [DecidableEq A] [DecidableEq D]
+  (m : DefiKernel.Interleaving.Machine P A D), DefiKernel.Nary.toBinaryMachine (DefiKernel.Nary.ofBinaryMachine m) = m
+'DefiKernel.Nary.toBinaryMachine_ofBinary' depends on axioms: [propext, Quot.sound]
+@DefiKernel.Nary.toBinary_advance : ∀ {P A D : Type} [inst : DecidableEq P] [inst_1 : DecidableEq A]
+  [inst_2 : DecidableEq D] [inst_3 : Fintype P] [inst_4 : Fintype A] [inst_5 : Fintype D]
+  (cfg : DefiKernel.Composition.Config P A D)
+  (boundaries : DefiKernel.Nary.Boundaries DefiKernel.Parallel.BranchId P A D)
+  (branches : DefiKernel.Nary.Branches DefiKernel.Parallel.BranchId P A D)
+  (m : DefiKernel.Nary.Machine DefiKernel.Parallel.BranchId P A D) (b : DefiKernel.Parallel.BranchId),
+  DefiKernel.Nary.toBinaryMachine (DefiKernel.Nary.advance cfg boundaries branches m b) =
+    DefiKernel.Nary.existingBinaryAdvance cfg boundaries branches (DefiKernel.Nary.toBinaryMachine m) b
+'DefiKernel.Nary.toBinary_advance' depends on axioms: [propext, Classical.choice, Quot.sound]
+@DefiKernel.Nary.toBinary_advance_failed : ∀ {P A D : Type} [inst : DecidableEq P] [inst_1 : DecidableEq A]
+  [inst_2 : DecidableEq D] [inst_3 : Fintype P] [inst_4 : Fintype A] [inst_5 : Fintype D]
+  (cfg : DefiKernel.Composition.Config P A D)
+  (boundaries : DefiKernel.Nary.Boundaries DefiKernel.Parallel.BranchId P A D)
+  (branches : DefiKernel.Nary.Branches DefiKernel.Parallel.BranchId P A D)
+  (m : DefiKernel.Nary.Machine DefiKernel.Parallel.BranchId P A D) (b : DefiKernel.Parallel.BranchId)
+  (failure : DefiKernel.Composition.LocatedFailure P A D),
+  (m.locals b).failure = some failure →
+    DefiKernel.Nary.toBinaryMachine (DefiKernel.Nary.advance cfg boundaries branches m b) =
+      (DefiKernel.Nary.toBinaryMachine m).skip b
+'DefiKernel.Nary.toBinary_advance_failed' depends on axioms: [propext, Classical.choice, Quot.sound]
+@DefiKernel.Nary.toBinary_advance_exhausted : ∀ {P A D : Type} [inst : DecidableEq P] [inst_1 : DecidableEq A]
+  [inst_2 : DecidableEq D] [inst_3 : Fintype P] [inst_4 : Fintype A] [inst_5 : Fintype D]
+  (cfg : DefiKernel.Composition.Config P A D)
+  (boundaries : DefiKernel.Nary.Boundaries DefiKernel.Parallel.BranchId P A D)
+  (branches : DefiKernel.Nary.Branches DefiKernel.Parallel.BranchId P A D)
+  (m : DefiKernel.Nary.Machine DefiKernel.Parallel.BranchId P A D) (b : DefiKernel.Parallel.BranchId),
+  (m.locals b).failure = none →
+    (branches b)[(m.locals b).consumed]? = none →
+      DefiKernel.Nary.toBinaryMachine (DefiKernel.Nary.advance cfg boundaries branches m b) =
+        (DefiKernel.Nary.toBinaryMachine m).skip b
+'DefiKernel.Nary.toBinary_advance_exhausted' depends on axioms: [propext, Classical.choice, Quot.sound]
+@DefiKernel.Nary.toBinary_advance_refused : ∀ {P A D : Type} [inst : DecidableEq P] [inst_1 : DecidableEq A]
+  [inst_2 : DecidableEq D] [inst_3 : Fintype P] [inst_4 : Fintype A] [inst_5 : Fintype D]
+  (cfg : DefiKernel.Composition.Config P A D)
+  (boundaries : DefiKernel.Nary.Boundaries DefiKernel.Parallel.BranchId P A D)
+  (branches : DefiKernel.Nary.Branches DefiKernel.Parallel.BranchId P A D)
+  (m : DefiKernel.Nary.Machine DefiKernel.Parallel.BranchId P A D) (b : DefiKernel.Parallel.BranchId)
+  (inv : DefiKernel.Composition.Invocation P A D) (reason : DefiKernel.Composition.Failure),
+  (m.locals b).failure = none →
+    (branches b)[(m.locals b).consumed]? = some inv →
+      DefiKernel.Composition.executeStep cfg (boundaries b (m.locals b).nextIndex) (m.locals b).nextIndex
+            (m.locals b).outputs (DefiKernel.Composition.Step.invoke inv) m.world =
+          Except.error reason →
+        DefiKernel.Nary.toBinaryMachine (DefiKernel.Nary.advance cfg boundaries branches m b) =
+          (DefiKernel.Nary.toBinaryMachine m).refuse b inv reason
+'DefiKernel.Nary.toBinary_advance_refused' depends on axioms: [propext, Classical.choice, Quot.sound]
+@DefiKernel.Nary.toBinary_advance_accepted : ∀ {P A D : Type} [inst : DecidableEq P] [inst_1 : DecidableEq A]
+  [inst_2 : DecidableEq D] [inst_3 : Fintype P] [inst_4 : Fintype A] [inst_5 : Fintype D]
+  (cfg : DefiKernel.Composition.Config P A D)
+  (boundaries : DefiKernel.Nary.Boundaries DefiKernel.Parallel.BranchId P A D)
+  (branches : DefiKernel.Nary.Branches DefiKernel.Parallel.BranchId P A D)
+  (m : DefiKernel.Nary.Machine DefiKernel.Parallel.BranchId P A D) (b : DefiKernel.Parallel.BranchId)
+  (inv : DefiKernel.Composition.Invocation P A D) (result : DefiKernel.Composition.StepResult P A D),
+  (m.locals b).failure = none →
+    (branches b)[(m.locals b).consumed]? = some inv →
+      DefiKernel.Composition.executeStep cfg (boundaries b (m.locals b).nextIndex) (m.locals b).nextIndex
+            (m.locals b).outputs (DefiKernel.Composition.Step.invoke inv) m.world =
+          Except.ok result →
+        DefiKernel.Nary.toBinaryMachine (DefiKernel.Nary.advance cfg boundaries branches m b) =
+          (DefiKernel.Nary.toBinaryMachine m).accept b inv result
+'DefiKernel.Nary.toBinary_advance_accepted' depends on axioms: [propext, Classical.choice, Quot.sound]
+@DefiKernel.Nary.toBinary_continueRun : ∀ {P A D : Type} [inst : DecidableEq P] [inst_1 : DecidableEq A]
+  [inst_2 : DecidableEq D] [inst_3 : Fintype P] [inst_4 : Fintype A] [inst_5 : Fintype D]
+  (cfg : DefiKernel.Composition.Config P A D)
+  (boundaries : DefiKernel.Nary.Boundaries DefiKernel.Parallel.BranchId P A D)
+  (branches : DefiKernel.Nary.Branches DefiKernel.Parallel.BranchId P A D)
+  (m : DefiKernel.Nary.Machine DefiKernel.Parallel.BranchId P A D)
+  (schedule : DefiKernel.Nary.Schedule DefiKernel.Parallel.BranchId),
+  DefiKernel.Nary.toBinaryMachine (DefiKernel.Nary.continueRun cfg boundaries branches m schedule) =
+    DefiKernel.Nary.existingBinaryContinue cfg boundaries branches (DefiKernel.Nary.toBinaryMachine m) schedule
+'DefiKernel.Nary.toBinary_continueRun' depends on axioms: [propext, Classical.choice, Quot.sound]
+@DefiKernel.Nary.toBinary_runPrefix : ∀ {P A D : Type} [inst : DecidableEq P] [inst_1 : DecidableEq A]
+  [inst_2 : DecidableEq D] [inst_3 : Fintype P] [inst_4 : Fintype A] [inst_5 : Fintype D]
+  (cfg : DefiKernel.Composition.Config P A D)
+  (boundaries : DefiKernel.Nary.Boundaries DefiKernel.Parallel.BranchId P A D)
+  (initial : DefiKernel.Composition.World P A D)
+  (branches : DefiKernel.Nary.Branches DefiKernel.Parallel.BranchId P A D)
+  (schedule : DefiKernel.Nary.Schedule DefiKernel.Parallel.BranchId),
+  DefiKernel.Nary.toBinaryMachine (DefiKernel.Nary.runPrefix cfg boundaries initial branches schedule) =
+    DefiKernel.Nary.existingBinaryPrefix cfg boundaries initial branches schedule
+'DefiKernel.Nary.toBinary_runPrefix' depends on axioms: [propext, Classical.choice, Quot.sound]
+@DefiKernel.Nary.continueRun_three_chunk : ∀ {B P A D : Type} [inst : DecidableEq B] [inst_1 : DecidableEq P]
+  [inst_2 : DecidableEq A] [inst_3 : DecidableEq D] [inst_4 : Fintype P] [inst_5 : Fintype A] [inst_6 : Fintype D]
+  (cfg : DefiKernel.Composition.Config P A D) (boundaries : DefiKernel.Nary.Boundaries B P A D)
+  (branches : DefiKernel.Nary.Branches B P A D) (m : DefiKernel.Nary.Machine B P A D)
+  (s t u : DefiKernel.Nary.Schedule B),
+  DefiKernel.Nary.continueRun cfg boundaries branches m (s ++ t ++ u) =
+    DefiKernel.Nary.continueRun cfg boundaries branches
+      (DefiKernel.Nary.continueRun cfg boundaries branches (DefiKernel.Nary.continueRun cfg boundaries branches m s) t)
+      u
+'DefiKernel.Nary.continueRun_three_chunk' depends on axioms: [propext, Classical.choice, Quot.sound]
+@DefiKernel.Nary.continueRun_chunk_assoc : ∀ {B P A D : Type} [inst : DecidableEq B] [inst_1 : DecidableEq P]
+  [inst_2 : DecidableEq A] [inst_3 : DecidableEq D] [inst_4 : Fintype P] [inst_5 : Fintype A] [inst_6 : Fintype D]
+  (cfg : DefiKernel.Composition.Config P A D) (boundaries : DefiKernel.Nary.Boundaries B P A D)
+  (branches : DefiKernel.Nary.Branches B P A D) (m : DefiKernel.Nary.Machine B P A D)
+  (s t u : DefiKernel.Nary.Schedule B),
+  DefiKernel.Nary.continueRun cfg boundaries branches (DefiKernel.Nary.continueRun cfg boundaries branches m (s ++ t))
+      u =
+    DefiKernel.Nary.continueRun cfg boundaries branches (DefiKernel.Nary.continueRun cfg boundaries branches m s)
+      (t ++ u)
+'DefiKernel.Nary.continueRun_chunk_assoc' depends on axioms: [propext, Classical.choice, Quot.sound]
+@DefiKernel.Nary.Complete_binary : ∀ {P A D : Type} [DecidableEq P] [DecidableEq A] [DecidableEq D]
+  (branches : DefiKernel.Nary.Branches DefiKernel.Parallel.BranchId P A D)
+  (schedule : DefiKernel.Nary.Schedule DefiKernel.Parallel.BranchId),
+  DefiKernel.Nary.Complete branches schedule ↔
+    DefiKernel.Interleaving.Complete (DefiKernel.Nary.binaryLeft branches) (DefiKernel.Nary.binaryRight branches)
+      schedule
+'DefiKernel.Nary.Complete_binary' does not depend on any axioms
+@DefiKernel.Nary.projectScheduleMismatch_eq : ∀ {P A D : Type} [DecidableEq P] [DecidableEq A] [DecidableEq D]
+  (branches : DefiKernel.Nary.Branches DefiKernel.Parallel.BranchId P A D)
+  (schedule : DefiKernel.Nary.Schedule DefiKernel.Parallel.BranchId)
+  (mismatch : DefiKernel.Nary.ScheduleMismatch DefiKernel.Parallel.BranchId),
+  DefiKernel.Nary.projectScheduleMismatch branches schedule mismatch =
+    { expectedLeft := List.length (branches DefiKernel.Parallel.BranchId.left),
+      observedLeft := List.count DefiKernel.Parallel.BranchId.left schedule,
+      expectedRight := List.length (branches DefiKernel.Parallel.BranchId.right),
+      observedRight := List.count DefiKernel.Parallel.BranchId.right schedule }
+'DefiKernel.Nary.projectScheduleMismatch_eq' does not depend on any axioms
+@DefiKernel.Nary.checkSchedule_error_project : ∀ {P A D : Type} [DecidableEq P] [DecidableEq A] [DecidableEq D]
+  (branches : DefiKernel.Nary.Branches DefiKernel.Parallel.BranchId P A D)
+  (schedule : DefiKernel.Nary.Schedule DefiKernel.Parallel.BranchId)
+  (mismatch : DefiKernel.Nary.ScheduleMismatch DefiKernel.Parallel.BranchId),
+  DefiKernel.Nary.checkSchedule DefiKernel.Nary.binaryParticipants branches schedule = Except.error mismatch →
+    DefiKernel.Interleaving.checkSchedule (List.length (branches DefiKernel.Parallel.BranchId.left))
+        (List.length (branches DefiKernel.Parallel.BranchId.right)) schedule =
+      Except.error (DefiKernel.Nary.projectScheduleMismatch branches schedule mismatch)
+'DefiKernel.Nary.checkSchedule_error_project' depends on axioms: [propext, Classical.choice, Quot.sound]
+@DefiKernel.Nary.analyzeAll_binary : ∀ {P A D : Type} [inst : DecidableEq P] [inst_1 : DecidableEq A]
+  [inst_2 : DecidableEq D] [Fintype P] [Fintype A] [Fintype D] (cfg : DefiKernel.Composition.Config P A D)
+  (boundaries : DefiKernel.Nary.Boundaries DefiKernel.Parallel.BranchId P A D)
+  (branches : DefiKernel.Nary.Branches DefiKernel.Parallel.BranchId P A D),
+  DefiKernel.Nary.analyzeAll cfg boundaries branches DefiKernel.Nary.binaryParticipants.order =
+    match
+      DefiKernel.Parallel.analyzeBranch cfg (boundaries DefiKernel.Parallel.BranchId.left)
+        (branches DefiKernel.Parallel.BranchId.left) with
+    | Except.error failure =>
+      Except.error (DefiKernel.Nary.AdmissionFailure.structural DefiKernel.Parallel.BranchId.left failure)
+    | Except.ok lf =>
+      match
+        DefiKernel.Parallel.analyzeBranch cfg (boundaries DefiKernel.Parallel.BranchId.right)
+          (branches DefiKernel.Parallel.BranchId.right) with
+      | Except.error failure =>
+        Except.error (DefiKernel.Nary.AdmissionFailure.structural DefiKernel.Parallel.BranchId.right failure)
+      | Except.ok rf => Except.ok [(DefiKernel.Parallel.BranchId.left, lf), (DefiKernel.Parallel.BranchId.right, rf)]
+'DefiKernel.Nary.analyzeAll_binary' depends on axioms: [propext, Classical.choice, Quot.sound]
+@DefiKernel.Nary.admit_invalid_catalog_binary : ∀ {P A D : Type} [inst : DecidableEq P] [inst_1 : DecidableEq A]
+  [inst_2 : DecidableEq D] [Fintype P] [Fintype A] [Fintype D] (cfg : DefiKernel.Composition.Config P A D)
+  (boundaries : DefiKernel.Nary.Boundaries DefiKernel.Parallel.BranchId P A D)
+  (branches : DefiKernel.Nary.Branches DefiKernel.Parallel.BranchId P A D)
+  (schedule : DefiKernel.Nary.Schedule DefiKernel.Parallel.BranchId),
+  DefiKernel.Composition.validateCatalog cfg.registry cfg.catalog = false →
+    DefiKernel.Nary.admit cfg DefiKernel.Nary.binaryParticipants boundaries branches schedule =
+        Except.error DefiKernel.Nary.AdmissionFailure.configuration ∧
+      DefiKernel.Nary.existingBinaryAdmit cfg boundaries branches schedule =
+        Except.error DefiKernel.Interleaving.AdmissionFailure.configuration
+'DefiKernel.Nary.admit_invalid_catalog_binary' depends on axioms: [propext, Classical.choice, Quot.sound]
+@DefiKernel.Nary.admit_correspondence : ∀ {P A D : Type} [inst : DecidableEq P] [inst_1 : DecidableEq A]
+  [inst_2 : DecidableEq D] [Fintype P] [Fintype A] [Fintype D] (cfg : DefiKernel.Composition.Config P A D)
+  (boundaries : DefiKernel.Nary.Boundaries DefiKernel.Parallel.BranchId P A D)
+  (branches : DefiKernel.Nary.Branches DefiKernel.Parallel.BranchId P A D)
+  (schedule : DefiKernel.Nary.Schedule DefiKernel.Parallel.BranchId),
+  DefiKernel.Nary.existingBinaryAdmit cfg boundaries branches schedule =
+    match DefiKernel.Nary.admit cfg DefiKernel.Nary.binaryParticipants boundaries branches schedule with
+    | Except.error reason => Except.error (DefiKernel.Nary.projectAdmissionFailure branches schedule reason)
+    | Except.ok fps =>
+      match DefiKernel.Nary.projectAdmitSuccess fps with
+      | some pair => Except.ok pair
+      | none => Except.error DefiKernel.Interleaving.AdmissionFailure.configuration
+'DefiKernel.Nary.admit_correspondence' depends on axioms: [propext, Classical.choice, Quot.sound]
+@DefiKernel.Nary.admit_ok_projected : ∀ {P A D : Type} [inst : DecidableEq P] [inst_1 : DecidableEq A]
+  [inst_2 : DecidableEq D] [Fintype P] [Fintype A] [Fintype D] (cfg : DefiKernel.Composition.Config P A D)
+  (boundaries : DefiKernel.Nary.Boundaries DefiKernel.Parallel.BranchId P A D)
+  (branches : DefiKernel.Nary.Branches DefiKernel.Parallel.BranchId P A D)
+  (schedule : DefiKernel.Nary.Schedule DefiKernel.Parallel.BranchId)
+  (fps : List (DefiKernel.Parallel.BranchId × DefiKernel.Parallel.Footprint P A D)),
+  DefiKernel.Nary.admit cfg DefiKernel.Nary.binaryParticipants boundaries branches schedule = Except.ok fps →
+    ∃ pair, DefiKernel.Nary.projectAdmitSuccess fps = some pair
+'DefiKernel.Nary.admit_ok_projected' depends on axioms: [propext, Classical.choice, Quot.sound]
+@DefiKernel.Nary.toBinary_runNary : ∀ {P A D : Type} [inst : DecidableEq P] [inst_1 : DecidableEq A]
+  [inst_2 : DecidableEq D] [inst_3 : Fintype P] [inst_4 : Fintype A] [inst_5 : Fintype D]
+  (cfg : DefiKernel.Composition.Config P A D)
+  (boundaries : DefiKernel.Nary.Boundaries DefiKernel.Parallel.BranchId P A D)
+  (initial : DefiKernel.Composition.World P A D)
+  (branches : DefiKernel.Nary.Branches DefiKernel.Parallel.BranchId P A D)
+  (schedule : DefiKernel.Nary.Schedule DefiKernel.Parallel.BranchId),
+  DefiKernel.Nary.toBinaryResult branches
+      (DefiKernel.Nary.runNary cfg DefiKernel.Nary.binaryParticipants boundaries initial branches schedule) =
+    DefiKernel.Nary.existingBinaryRun cfg boundaries initial branches schedule
+'DefiKernel.Nary.toBinary_runNary' depends on axioms: [propext, Classical.choice, Quot.sound]
+@DefiKernel.Nary.interleavingMachineEq_iff : ∀ {P A D : Type} [inst : DecidableEq P] [inst_1 : DecidableEq A]
+  [inst_2 : DecidableEq D] [inst_3 : Fintype P] [inst_4 : Fintype A] [inst_5 : Fintype D]
+  (left right : DefiKernel.Interleaving.Machine P A D),
+  DefiKernel.Nary.interleavingMachineEq left right = true ↔ left = right
+'DefiKernel.Nary.interleavingMachineEq_iff' depends on axioms: [propext, Classical.choice, Quot.sound]
+@DefiKernel.Nary.interleavingResultEq_iff : ∀ {P A D : Type} [inst : DecidableEq P] [inst_1 : DecidableEq A]
+  [inst_2 : DecidableEq D] [inst_3 : Fintype P] [inst_4 : Fintype A] [inst_5 : Fintype D]
+  (left right : DefiKernel.Interleaving.Result P A D),
+  DefiKernel.Nary.interleavingResultEq left right = true ↔ left = right
+'DefiKernel.Nary.interleavingResultEq_iff' depends on axioms: [propext, Classical.choice, Quot.sound]
+@DefiKernel.Nary.machineEq_iff : ∀ {B P A D : Type} [inst : DecidableEq B] [inst_1 : DecidableEq P]
+  [inst_2 : DecidableEq A] [inst_3 : DecidableEq D] [inst_4 : Fintype P] [inst_5 : Fintype A] [inst_6 : Fintype D]
+  (roster : DefiKernel.Nary.Roster B) (left right : DefiKernel.Nary.Machine B P A D),
+  DefiKernel.Nary.machineEq roster left right = true ↔ left = right
+'DefiKernel.Nary.machineEq_iff' depends on axioms: [propext, Classical.choice, Quot.sound]
+@DefiKernel.Nary.resultEq_iff : ∀ {B P A D : Type} [inst : DecidableEq B] [inst_1 : DecidableEq P]
+  [inst_2 : DecidableEq A] [inst_3 : DecidableEq D] [inst_4 : Fintype P] [inst_5 : Fintype A] [inst_6 : Fintype D]
+  (roster : DefiKernel.Nary.Roster B) (left right : DefiKernel.Nary.Result B P A D),
+  DefiKernel.Nary.resultEq roster left right = true ↔ left = right
+'DefiKernel.Nary.resultEq_iff' depends on axioms: [propext, Classical.choice, Quot.sound]
+@DefiKernel.Nary.binaryRunAgrees_true : ∀ {P A D : Type} [inst : DecidableEq P] [inst_1 : DecidableEq A]
+  [inst_2 : DecidableEq D] [inst_3 : Fintype P] [inst_4 : Fintype A] [inst_5 : Fintype D]
+  (cfg : DefiKernel.Composition.Config P A D)
+  (boundaries : DefiKernel.Nary.Boundaries DefiKernel.Parallel.BranchId P A D)
+  (initial : DefiKernel.Composition.World P A D)
+  (branches : DefiKernel.Nary.Branches DefiKernel.Parallel.BranchId P A D)
+  (schedule : DefiKernel.Nary.Schedule DefiKernel.Parallel.BranchId),
+  DefiKernel.Nary.binaryRunAgrees cfg boundaries initial branches schedule = true
+'DefiKernel.Nary.binaryRunAgrees_true' depends on axioms: [propext, Classical.choice, Quot.sound]
+@DefiKernel.Nary.binaryAdmitAgrees_true : ∀ {P A D : Type} [inst : DecidableEq P] [inst_1 : DecidableEq A]
+  [inst_2 : DecidableEq D] [Fintype P] [Fintype A] [Fintype D] (cfg : DefiKernel.Composition.Config P A D)
+  (boundaries : DefiKernel.Nary.Boundaries DefiKernel.Parallel.BranchId P A D)
+  (branches : DefiKernel.Nary.Branches DefiKernel.Parallel.BranchId P A D)
+  (schedule : DefiKernel.Nary.Schedule DefiKernel.Parallel.BranchId),
+  DefiKernel.Nary.binaryAdmitAgrees cfg boundaries branches schedule = true
+'DefiKernel.Nary.binaryAdmitAgrees_true' depends on axioms: [propext, Classical.choice, Quot.sound]

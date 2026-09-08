@@ -1,0 +1,1 @@
+bash -lc echo "which_lean=$(command -v lean)"; echo "which_lake=$(command -v lake)"; echo "elan_lean=$(elan which lean)"; echo "elan_lake=$(elan which lake)"; sha256sum "$(elan which lean)" "$(elan which lake)"; ls -l "$(elan which lean)" "$(elan which lake)"

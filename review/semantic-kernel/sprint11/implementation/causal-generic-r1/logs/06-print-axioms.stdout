@@ -1,0 +1,232 @@
+@DefiKernel.Nary.continueMonitored_initialized : ∀ {B P A D : Type} [inst : DecidableEq.{1} B]
+  [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A] [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P]
+  [inst_5 : Fintype.{0} A] [inst_6 : Fintype.{0} D] {Q : Type} (cfg : DefiKernel.Composition.Config P A D)
+  (boundaries : DefiKernel.Nary.Boundaries B P A D) (branches : DefiKernel.Nary.Branches B P A D)
+  (update : Q → DefiKernel.Nary.MonitorInput B P A D → Q) (entry : Prod.{0, 0} Q (DefiKernel.Nary.Machine B P A D))
+  (K : DefiKernel.Nary.JointInvariant Q B P A D) (invariant : B → DefiKernel.Typed.State P A D → Prop)
+  (guarantee rely : B → DefiKernel.Typed.State P A D → DefiKernel.Typed.State P A D → Prop)
+  (assumption : DefiKernel.Nary.AssumptionFamily B Q P A D) (external : DefiKernel.Nary.ExternalFamily B Q P A D),
+  K entry.1 entry.2 →
+    DefiKernel.Nary.InvariantDerivation K invariant →
+      DefiKernel.Nary.AssumptionDerivation K assumption external →
+        DefiKernel.Nary.PresentExternal K external →
+          DefiKernel.Nary.SelectedSuccessGuarantee cfg boundaries branches invariant guarantee assumption →
+            DefiKernel.Nary.GuaranteeInclusion guarantee rely →
+              DefiKernel.Nary.RelyStable invariant rely →
+                DefiKernel.Nary.SkipUpdateObligation cfg boundaries branches update K →
+                  DefiKernel.Nary.RefusalUpdateObligation cfg boundaries branches update K →
+                    DefiKernel.Nary.SuccessUpdateObligation cfg boundaries branches update K invariant guarantee
+                        assumption →
+                      ∀ (schedule : DefiKernel.Nary.Schedule B),
+                        K (DefiKernel.Nary.continueMonitored cfg boundaries branches update entry schedule).1
+                            (DefiKernel.Nary.continueMonitored cfg boundaries branches update entry schedule).2 ∧
+                          ∀ (b : B),
+                            invariant b
+                              (DefiKernel.Nary.continueMonitored cfg boundaries branches update entry
+                                      schedule).2.world.state
+@DefiKernel.Nary.continueMonitored_every_prefix : ∀ {B P A D : Type} [inst : DecidableEq.{1} B]
+  [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A] [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P]
+  [inst_5 : Fintype.{0} A] [inst_6 : Fintype.{0} D] {Q : Type} (cfg : DefiKernel.Composition.Config P A D)
+  (boundaries : DefiKernel.Nary.Boundaries B P A D) (branches : DefiKernel.Nary.Branches B P A D)
+  (update : Q → DefiKernel.Nary.MonitorInput B P A D → Q) (entry : Prod.{0, 0} Q (DefiKernel.Nary.Machine B P A D))
+  (K : DefiKernel.Nary.JointInvariant Q B P A D) (invariant : B → DefiKernel.Typed.State P A D → Prop)
+  (guarantee rely : B → DefiKernel.Typed.State P A D → DefiKernel.Typed.State P A D → Prop)
+  (assumption : DefiKernel.Nary.AssumptionFamily B Q P A D) (external : DefiKernel.Nary.ExternalFamily B Q P A D),
+  K entry.1 entry.2 →
+    DefiKernel.Nary.InvariantDerivation K invariant →
+      DefiKernel.Nary.AssumptionDerivation K assumption external →
+        DefiKernel.Nary.PresentExternal K external →
+          DefiKernel.Nary.SelectedSuccessGuarantee cfg boundaries branches invariant guarantee assumption →
+            DefiKernel.Nary.GuaranteeInclusion guarantee rely →
+              DefiKernel.Nary.RelyStable invariant rely →
+                DefiKernel.Nary.SkipUpdateObligation cfg boundaries branches update K →
+                  DefiKernel.Nary.RefusalUpdateObligation cfg boundaries branches update K →
+                    DefiKernel.Nary.SuccessUpdateObligation cfg boundaries branches update K invariant guarantee
+                        assumption →
+                      ∀ (schedule : DefiKernel.Nary.Schedule B) (length : ℕ),
+                        K
+                            (DefiKernel.Nary.continueMonitored cfg boundaries branches update entry
+                                (List.take.{0} length schedule)).1
+                            (DefiKernel.Nary.continueMonitored cfg boundaries branches update entry
+                                (List.take.{0} length schedule)).2 ∧
+                          ∀ (b : B),
+                            invariant b
+                              (DefiKernel.Nary.continueMonitored cfg boundaries branches update entry
+                                      (List.take.{0} length schedule)).2.world.state
+@DefiKernel.Nary.continueMonitored_start_initialized : ∀ {B P A D : Type} [inst : DecidableEq.{1} B]
+  [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A] [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P]
+  [inst_5 : Fintype.{0} A] [inst_6 : Fintype.{0} D] {Q : Type} (cfg : DefiKernel.Composition.Config P A D)
+  (boundaries : DefiKernel.Nary.Boundaries B P A D) (branches : DefiKernel.Nary.Branches B P A D)
+  (update : Q → DefiKernel.Nary.MonitorInput B P A D → Q) (q0 : Q) (initial : DefiKernel.Composition.World P A D)
+  (K : DefiKernel.Nary.JointInvariant Q B P A D) (invariant : B → DefiKernel.Typed.State P A D → Prop)
+  (guarantee rely : B → DefiKernel.Typed.State P A D → DefiKernel.Typed.State P A D → Prop)
+  (assumption : DefiKernel.Nary.AssumptionFamily B Q P A D) (external : DefiKernel.Nary.ExternalFamily B Q P A D),
+  K q0 (DefiKernel.Nary.start initial) →
+    DefiKernel.Nary.InvariantDerivation K invariant →
+      DefiKernel.Nary.AssumptionDerivation K assumption external →
+        DefiKernel.Nary.PresentExternal K external →
+          DefiKernel.Nary.SelectedSuccessGuarantee cfg boundaries branches invariant guarantee assumption →
+            DefiKernel.Nary.GuaranteeInclusion guarantee rely →
+              DefiKernel.Nary.RelyStable invariant rely →
+                DefiKernel.Nary.SkipUpdateObligation cfg boundaries branches update K →
+                  DefiKernel.Nary.RefusalUpdateObligation cfg boundaries branches update K →
+                    DefiKernel.Nary.SuccessUpdateObligation cfg boundaries branches update K invariant guarantee
+                        assumption →
+                      ∀ (schedule : DefiKernel.Nary.Schedule B),
+                        K
+                            (DefiKernel.Nary.continueMonitored cfg boundaries branches update
+                                (Prod.mk.{0, 0} q0 (DefiKernel.Nary.start initial)) schedule).1
+                            (DefiKernel.Nary.continueMonitored cfg boundaries branches update
+                                (Prod.mk.{0, 0} q0 (DefiKernel.Nary.start initial)) schedule).2 ∧
+                          ∀ (b : B),
+                            invariant b
+                              (DefiKernel.Nary.continueMonitored cfg boundaries branches update
+                                      (Prod.mk.{0, 0} q0 (DefiKernel.Nary.start initial)) schedule).2.world.state
+@DefiKernel.Nary.continueMonitored_replay : ∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P]
+  [inst_2 : DecidableEq.{1} A] [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P] [inst_5 : Fintype.{0} A]
+  [inst_6 : Fintype.{0} D] {Q : Type} (cfg : DefiKernel.Composition.Config P A D)
+  (boundaries : DefiKernel.Nary.Boundaries B P A D) (branches : DefiKernel.Nary.Branches B P A D)
+  (update : Q → DefiKernel.Nary.MonitorInput B P A D → Q) (entry : Prod.{0, 0} Q (DefiKernel.Nary.Machine B P A D))
+  (schedule : DefiKernel.Nary.Schedule B),
+  DefiKernel.Nary.Replay cfg boundaries branches update entry schedule
+    (DefiKernel.Nary.continueMonitored cfg boundaries branches update entry schedule)
+@DefiKernel.Nary.Replay.eq_continueMonitored : ∀ {B P A D : Type} [inst : DecidableEq.{1} B]
+  [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A] [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P]
+  [inst_5 : Fintype.{0} A] [inst_6 : Fintype.{0} D] {Q : Type} {cfg : DefiKernel.Composition.Config P A D}
+  {boundaries : DefiKernel.Nary.Boundaries B P A D} {branches : DefiKernel.Nary.Branches B P A D}
+  {update : Q → DefiKernel.Nary.MonitorInput B P A D → Q} {entry : Prod.{0, 0} Q (DefiKernel.Nary.Machine B P A D)}
+  {schedule : DefiKernel.Nary.Schedule B} {result : Prod.{0, 0} Q (DefiKernel.Nary.Machine B P A D)},
+  DefiKernel.Nary.Replay cfg boundaries branches update entry schedule result →
+    Eq.{1} result (DefiKernel.Nary.continueMonitored cfg boundaries branches update entry schedule)
+@DefiKernel.Nary.Replay.erase : ∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P]
+  [inst_2 : DecidableEq.{1} A] [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P] [inst_5 : Fintype.{0} A]
+  [inst_6 : Fintype.{0} D] {Q : Type} {cfg : DefiKernel.Composition.Config P A D}
+  {boundaries : DefiKernel.Nary.Boundaries B P A D} {branches : DefiKernel.Nary.Branches B P A D}
+  {update : Q → DefiKernel.Nary.MonitorInput B P A D → Q} {entry : Prod.{0, 0} Q (DefiKernel.Nary.Machine B P A D)}
+  {schedule : DefiKernel.Nary.Schedule B} {result : Prod.{0, 0} Q (DefiKernel.Nary.Machine B P A D)},
+  DefiKernel.Nary.Replay cfg boundaries branches update entry schedule result →
+    Eq.{1} result.2 (DefiKernel.Nary.continueRun cfg boundaries branches entry.2 schedule)
+@DefiKernel.Nary.continueMonitored_fixed_parameter_shared_prefix : ∀ {B P A D : Type} [inst : DecidableEq.{1} B]
+  [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A] [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P]
+  [inst_5 : Fintype.{0} A] [inst_6 : Fintype.{0} D] {Q : Type} (cfg : DefiKernel.Composition.Config P A D)
+  (boundaries : DefiKernel.Nary.Boundaries B P A D) (branches : DefiKernel.Nary.Branches B P A D)
+  (update : Q → DefiKernel.Nary.MonitorInput B P A D → Q) (entry : Prod.{0, 0} Q (DefiKernel.Nary.Machine B P A D))
+  (preTokens suffix₁ suffix₂ : DefiKernel.Nary.Schedule B),
+  Eq.{1}
+      (DefiKernel.Nary.continueMonitored cfg boundaries branches update entry
+        (List.take.{0} (List.length.{0} preTokens) (HAppend.hAppend.{0, 0, 0} preTokens suffix₁)))
+      (DefiKernel.Nary.continueMonitored cfg boundaries branches update entry preTokens) ∧
+    Eq.{1}
+        (DefiKernel.Nary.continueMonitored cfg boundaries branches update entry
+          (List.take.{0} (List.length.{0} preTokens) (HAppend.hAppend.{0, 0, 0} preTokens suffix₂)))
+        (DefiKernel.Nary.continueMonitored cfg boundaries branches update entry preTokens) ∧
+      Eq.{1}
+        (DefiKernel.Nary.continueMonitored cfg boundaries branches update entry
+          (List.take.{0} (List.length.{0} preTokens) (HAppend.hAppend.{0, 0, 0} preTokens suffix₁)))
+        (DefiKernel.Nary.continueMonitored cfg boundaries branches update entry
+          (List.take.{0} (List.length.{0} preTokens) (HAppend.hAppend.{0, 0, 0} preTokens suffix₂)))
+@DefiKernel.Nary.continueMonitored_erase : ∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P]
+  [inst_2 : DecidableEq.{1} A] [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P] [inst_5 : Fintype.{0} A]
+  [inst_6 : Fintype.{0} D] {Q : Type} (cfg : DefiKernel.Composition.Config P A D)
+  (boundaries : DefiKernel.Nary.Boundaries B P A D) (branches : DefiKernel.Nary.Branches B P A D)
+  (update : Q → DefiKernel.Nary.MonitorInput B P A D → Q) (entry : Prod.{0, 0} Q (DefiKernel.Nary.Machine B P A D))
+  (schedule : DefiKernel.Nary.Schedule B),
+  Eq.{1} (DefiKernel.Nary.continueMonitored cfg boundaries branches update entry schedule).2
+    (DefiKernel.Nary.continueRun cfg boundaries branches entry.2 schedule)
+@DefiKernel.Nary.AdvanceSound.appended_option : ∀ {B P A D : Type} [inst : DecidableEq.{1} B]
+  [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A] [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P]
+  [inst_5 : Fintype.{0} A] [inst_6 : Fintype.{0} D] {cfg : DefiKernel.Composition.Config P A D}
+  {boundaries : DefiKernel.Nary.Boundaries B P A D} {branches : DefiKernel.Nary.Branches B P A D}
+  {m post : DefiKernel.Nary.Machine B P A D} {b : B},
+  DefiKernel.Nary.AdvanceSound cfg boundaries branches m b post →
+    Eq.{1} post (m.skip b) ∧
+        Eq.{1} (getElem?.{0, 0, 0} post.attempts (List.length.{0} m.attempts)) none.{0} ∧
+          Eq.{1} post.attempts m.attempts ∨
+      (∃ inv reason,
+          Eq.{1} (m.locals b).failure none.{0} ∧
+            Eq.{1} (getElem?.{0, 0, 0} (branches b) (m.locals b).consumed) (some.{0} inv) ∧
+              Eq.{1}
+                  (DefiKernel.Composition.executeStep cfg (boundaries b (m.locals b).nextIndex) (m.locals b).nextIndex
+                    (m.locals b).outputs (DefiKernel.Composition.Step.invoke inv) m.world)
+                  (Except.error.{0, 0} reason) ∧
+                Eq.{1} post (m.refuse b inv reason) ∧
+                  Eq.{1} (getElem?.{0, 0, 0} post.attempts (List.length.{0} m.attempts))
+                    (some.{0}
+                      { participant := b, index := (m.locals b).nextIndex, invocation := inv, before := m.world,
+                        outcome := Except.error.{0, 0} reason })) ∨
+        ∃ inv result,
+          Eq.{1} (m.locals b).failure none.{0} ∧
+            Eq.{1} (getElem?.{0, 0, 0} (branches b) (m.locals b).consumed) (some.{0} inv) ∧
+              Eq.{1}
+                  (DefiKernel.Composition.executeStep cfg (boundaries b (m.locals b).nextIndex) (m.locals b).nextIndex
+                    (m.locals b).outputs (DefiKernel.Composition.Step.invoke inv) m.world)
+                  (Except.ok.{0, 0} result) ∧
+                Eq.{1} post (m.accept b inv result) ∧
+                  Eq.{1} (getElem?.{0, 0, 0} post.attempts (List.length.{0} m.attempts))
+                    (some.{0}
+                      { participant := b, index := (m.locals b).nextIndex, invocation := inv, before := m.world,
+                        outcome := Except.ok.{0, 0} result })
+@DefiKernel.Nary.AdvanceSound.eq_advance : ∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P]
+  [inst_2 : DecidableEq.{1} A] [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P] [inst_5 : Fintype.{0} A]
+  [inst_6 : Fintype.{0} D] {cfg : DefiKernel.Composition.Config P A D} {boundaries : DefiKernel.Nary.Boundaries B P A D}
+  {branches : DefiKernel.Nary.Branches B P A D} {m post : DefiKernel.Nary.Machine B P A D} {b : B},
+  DefiKernel.Nary.AdvanceSound cfg boundaries branches m b post →
+    Eq.{1} post (DefiKernel.Nary.advance cfg boundaries branches m b)
+@DefiKernel.Nary.joint_advanceMonitored : ∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P]
+  [inst_2 : DecidableEq.{1} A] [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P] [inst_5 : Fintype.{0} A]
+  [inst_6 : Fintype.{0} D] {Q : Type} (cfg : DefiKernel.Composition.Config P A D)
+  (boundaries : DefiKernel.Nary.Boundaries B P A D) (branches : DefiKernel.Nary.Branches B P A D)
+  (update : Q → DefiKernel.Nary.MonitorInput B P A D → Q) (K : DefiKernel.Nary.JointInvariant Q B P A D)
+  (invariant : B → DefiKernel.Typed.State P A D → Prop)
+  (guarantee rely : B → DefiKernel.Typed.State P A D → DefiKernel.Typed.State P A D → Prop)
+  (assumption : DefiKernel.Nary.AssumptionFamily B Q P A D) (external : DefiKernel.Nary.ExternalFamily B Q P A D),
+  DefiKernel.Nary.InvariantDerivation K invariant →
+    DefiKernel.Nary.AssumptionDerivation K assumption external →
+      DefiKernel.Nary.PresentExternal K external →
+        DefiKernel.Nary.SelectedSuccessGuarantee cfg boundaries branches invariant guarantee assumption →
+          DefiKernel.Nary.GuaranteeInclusion guarantee rely →
+            DefiKernel.Nary.RelyStable invariant rely →
+              DefiKernel.Nary.SkipUpdateObligation cfg boundaries branches update K →
+                DefiKernel.Nary.RefusalUpdateObligation cfg boundaries branches update K →
+                  DefiKernel.Nary.SuccessUpdateObligation cfg boundaries branches update K invariant guarantee
+                      assumption →
+                    ∀ (entry : Prod.{0, 0} Q (DefiKernel.Nary.Machine B P A D)),
+                      K entry.1 entry.2 →
+                        ∀ (b : B),
+                          K (DefiKernel.Nary.advanceMonitored cfg boundaries branches update entry b).1
+                              (DefiKernel.Nary.advanceMonitored cfg boundaries branches update entry b).2 ∧
+                            ∀ (own : B),
+                              invariant own
+                                (DefiKernel.Nary.advanceMonitored cfg boundaries branches update entry b).2.world.state
+@DefiKernel.Nary.derived_monitor_step_preserves : ∀ {B P A D : Type} [inst : DecidableEq.{1} B]
+  [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A] [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P]
+  [inst_5 : Fintype.{0} A] [inst_6 : Fintype.{0} D] {Q : Type} (cfg : DefiKernel.Composition.Config P A D)
+  (boundaries : DefiKernel.Nary.Boundaries B P A D) (branches : DefiKernel.Nary.Branches B P A D)
+  (update : Q → DefiKernel.Nary.MonitorInput B P A D → Q) (entry : Prod.{0, 0} Q (DefiKernel.Nary.Machine B P A D))
+  (K : DefiKernel.Nary.JointInvariant Q B P A D) (invariant : B → DefiKernel.Typed.State P A D → Prop)
+  (guarantee rely : B → DefiKernel.Typed.State P A D → DefiKernel.Typed.State P A D → Prop)
+  (assumption : DefiKernel.Nary.AssumptionFamily B Q P A D) (external : DefiKernel.Nary.ExternalFamily B Q P A D),
+  K entry.1 entry.2 →
+    DefiKernel.Nary.InvariantDerivation K invariant →
+      DefiKernel.Nary.AssumptionDerivation K assumption external →
+        DefiKernel.Nary.PresentExternal K external →
+          DefiKernel.Nary.SelectedSuccessGuarantee cfg boundaries branches invariant guarantee assumption →
+            DefiKernel.Nary.GuaranteeInclusion guarantee rely →
+              DefiKernel.Nary.RelyStable invariant rely →
+                DefiKernel.Nary.SkipUpdateObligation cfg boundaries branches update K →
+                  DefiKernel.Nary.RefusalUpdateObligation cfg boundaries branches update K →
+                    DefiKernel.Nary.SuccessUpdateObligation cfg boundaries branches update K invariant guarantee
+                        assumption →
+                      ∀ (b : B),
+                        K (DefiKernel.Nary.advanceMonitored cfg boundaries branches update entry b).1
+                          (DefiKernel.Nary.advanceMonitored cfg boundaries branches update entry b).2
+'DefiKernel.Nary.continueMonitored_initialized' depends on axioms: [propext, Classical.choice.{u}, Quot.sound.{u}]
+'DefiKernel.Nary.continueMonitored_every_prefix' depends on axioms: [propext, Classical.choice.{u}, Quot.sound.{u}]
+'DefiKernel.Nary.continueMonitored_replay' depends on axioms: [propext, Classical.choice.{u}, Quot.sound.{u}]
+'DefiKernel.Nary.Replay.eq_continueMonitored' depends on axioms: [propext, Classical.choice.{u}, Quot.sound.{u}]
+'DefiKernel.Nary.Replay.erase' depends on axioms: [propext, Classical.choice.{u}, Quot.sound.{u}]
+'DefiKernel.Nary.continueMonitored_fixed_parameter_shared_prefix' depends on axioms: [propext,
+ Classical.choice.{u},
+ Quot.sound.{u}]
+'DefiKernel.Nary.AdvanceSound.appended_option' depends on axioms: [propext, Classical.choice.{u}, Quot.sound.{u}]
+'DefiKernel.Nary.joint_advanceMonitored' depends on axioms: [propext, Classical.choice.{u}, Quot.sound.{u}]

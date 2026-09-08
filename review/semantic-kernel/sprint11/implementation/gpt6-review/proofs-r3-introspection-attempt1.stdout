@@ -1,0 +1,254 @@
+<stdin>:5:0: error: Unknown option `pp.width`
+@DefiKernel.Nary.AdvanceSound.cell_accounting : ∀ {B P A D : Type} [inst : DecidableEq.{1} B]
+  [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A] [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P]
+  [inst_5 : Fintype.{0} A] [inst_6 : Fintype.{0} D] {cfg : DefiKernel.Composition.Config P A D}
+  {boundaries : DefiKernel.Nary.Boundaries B P A D} {branches : DefiKernel.Nary.Branches B P A D}
+  {m post : DefiKernel.Nary.Machine B P A D} {b : B},
+  DefiKernel.Nary.AdvanceSound cfg boundaries branches m b post →
+    ∀ (cell : DefiKernel.Typed.Cell P A D),
+      Eq.{1} (post.world.state.balance cell)
+        (HAdd.hAdd.{0, 0, 0} (m.world.state.balance cell)
+          (HSub.hSub.{0, 0, 0} (post.cellEffect cell) (m.cellEffect cell)))
+'DefiKernel.Nary.AdvanceSound.cell_accounting' depends on axioms: [propext, Classical.choice.{u}, Quot.sound.{u}]
+@DefiKernel.Nary.continueRun_cell_accounting : ∀ {B P A D : Type} [inst : DecidableEq.{1} B]
+  [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A] [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P]
+  [inst_5 : Fintype.{0} A] [inst_6 : Fintype.{0} D] (cfg : DefiKernel.Composition.Config P A D)
+  (boundaries : DefiKernel.Nary.Boundaries B P A D) (branches : DefiKernel.Nary.Branches B P A D)
+  (m : DefiKernel.Nary.Machine B P A D) (schedule : DefiKernel.Nary.Schedule B) (cell : DefiKernel.Typed.Cell P A D),
+  Eq.{1} ((DefiKernel.Nary.continueRun cfg boundaries branches m schedule).world.state.balance cell)
+    (HAdd.hAdd.{0, 0, 0} (m.world.state.balance cell)
+      (HSub.hSub.{0, 0, 0} ((DefiKernel.Nary.continueRun cfg boundaries branches m schedule).cellEffect cell)
+        (m.cellEffect cell)))
+'DefiKernel.Nary.continueRun_cell_accounting' depends on axioms: [propext, Classical.choice.{u}, Quot.sound.{u}]
+@DefiKernel.Nary.Reachable.cell_accounting : ∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P]
+  [inst_2 : DecidableEq.{1} A] [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P] [inst_5 : Fintype.{0} A]
+  [inst_6 : Fintype.{0} D] {cfg : DefiKernel.Composition.Config P A D} {boundaries : DefiKernel.Nary.Boundaries B P A D}
+  {branches : DefiKernel.Nary.Branches B P A D} {initial : DefiKernel.Composition.World P A D}
+  {m : DefiKernel.Nary.Machine B P A D},
+  DefiKernel.Nary.Reachable cfg boundaries branches initial m →
+    ∀ (cell : DefiKernel.Typed.Cell P A D),
+      Eq.{1} (m.world.state.balance cell) (HAdd.hAdd.{0, 0, 0} (initial.state.balance cell) (m.cellEffect cell))
+'DefiKernel.Nary.Reachable.cell_accounting' depends on axioms: [propext, Classical.choice.{u}, Quot.sound.{u}]
+@DefiKernel.Nary.runPrefix_cell_accounting : ∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P]
+  [inst_2 : DecidableEq.{1} A] [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P] [inst_5 : Fintype.{0} A]
+  [inst_6 : Fintype.{0} D] (cfg : DefiKernel.Composition.Config P A D) (boundaries : DefiKernel.Nary.Boundaries B P A D)
+  (initial : DefiKernel.Composition.World P A D) (branches : DefiKernel.Nary.Branches B P A D)
+  (schedule : DefiKernel.Nary.Schedule B) (cell : DefiKernel.Typed.Cell P A D),
+  Eq.{1} ((DefiKernel.Nary.runPrefix cfg boundaries initial branches schedule).world.state.balance cell)
+    (HAdd.hAdd.{0, 0, 0} (initial.state.balance cell)
+      ((DefiKernel.Nary.runPrefix cfg boundaries initial branches schedule).cellEffect cell))
+'DefiKernel.Nary.runPrefix_cell_accounting' depends on axioms: [propext, Classical.choice.{u}, Quot.sound.{u}]
+@DefiKernel.Nary.Reachable.event_index_seq : ∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P]
+  [inst_2 : DecidableEq.{1} A] [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P] [inst_5 : Fintype.{0} A]
+  [inst_6 : Fintype.{0} D] {cfg : DefiKernel.Composition.Config P A D} {boundaries : DefiKernel.Nary.Boundaries B P A D}
+  {branches : DefiKernel.Nary.Branches B P A D} {initial : DefiKernel.Composition.World P A D}
+  {m : DefiKernel.Nary.Machine B P A D},
+  DefiKernel.Nary.Reachable cfg boundaries branches initial m →
+    ∀ (b : B),
+      Eq.{1} (List.map.{0, 0} DefiKernel.Composition.Event.index (m.locals b).events)
+        (List.range (List.length.{0} (m.locals b).events))
+'DefiKernel.Nary.Reachable.event_index_seq' depends on axioms: [propext, Classical.choice.{u}, Quot.sound.{u}]
+@DefiKernel.Nary.Reachable.event_index_at : ∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P]
+  [inst_2 : DecidableEq.{1} A] [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P] [inst_5 : Fintype.{0} A]
+  [inst_6 : Fintype.{0} D] {cfg : DefiKernel.Composition.Config P A D} {boundaries : DefiKernel.Nary.Boundaries B P A D}
+  {branches : DefiKernel.Nary.Branches B P A D} {initial : DefiKernel.Composition.World P A D}
+  {m : DefiKernel.Nary.Machine B P A D},
+  DefiKernel.Nary.Reachable cfg boundaries branches initial m →
+    ∀ (b : B) (n : ℕ) (event : DefiKernel.Composition.Event P A D),
+      Eq.{1} (getElem?.{0, 0, 0} (m.locals b).events n) (some.{0} event) → Eq.{1} event.index n
+'DefiKernel.Nary.Reachable.event_index_at' depends on axioms: [propext, Classical.choice.{u}, Quot.sound.{u}]
+@DefiKernel.Nary.Reachable.own_history : ∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P]
+  [inst_2 : DecidableEq.{1} A] [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P] [inst_5 : Fintype.{0} A]
+  [inst_6 : Fintype.{0} D] {cfg : DefiKernel.Composition.Config P A D} {boundaries : DefiKernel.Nary.Boundaries B P A D}
+  {branches : DefiKernel.Nary.Branches B P A D} {initial : DefiKernel.Composition.World P A D}
+  {m : DefiKernel.Nary.Machine B P A D},
+  DefiKernel.Nary.Reachable cfg boundaries branches initial m →
+    ∀ (b : B), Eq.{1} (m.locals b).outputs (DefiKernel.Nary.ownHistory m.attempts b)
+'DefiKernel.Nary.Reachable.own_history' depends on axioms: [propext, Classical.choice.{u}, Quot.sound.{u}]
+@DefiKernel.Nary.AttemptChain.prefix_before : ∀ {B P A D : Type} [DecidableEq.{1} B] [DecidableEq.{1} P]
+  [DecidableEq.{1} A] [DecidableEq.{1} D] [Fintype.{0} P] [Fintype.{0} A] [Fintype.{0} D]
+  {initial : DefiKernel.Composition.World P A D} {attempts : List.{0} (DefiKernel.Nary.Attempt B P A D)}
+  {world : DefiKernel.Composition.World P A D},
+  DefiKernel.Nary.AttemptChain initial attempts world →
+    ∀ (i : ℕ) (attempt : DefiKernel.Nary.Attempt B P A D),
+      Eq.{1} (getElem?.{0, 0, 0} attempts i) (some.{0} attempt) →
+        DefiKernel.Nary.AttemptChain initial (List.take.{0} i attempts) attempt.before
+'DefiKernel.Nary.AttemptChain.prefix_before' depends on axioms: [propext, Classical.choice.{u}, Quot.sound.{u}]
+@DefiKernel.Nary.Reachable.attempt_exact : ∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P]
+  [inst_2 : DecidableEq.{1} A] [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P] [inst_5 : Fintype.{0} A]
+  [inst_6 : Fintype.{0} D] {cfg : DefiKernel.Composition.Config P A D} {boundaries : DefiKernel.Nary.Boundaries B P A D}
+  {branches : DefiKernel.Nary.Branches B P A D} {initial : DefiKernel.Composition.World P A D}
+  {m : DefiKernel.Nary.Machine B P A D},
+  DefiKernel.Nary.Reachable cfg boundaries branches initial m →
+    ∀ (i : ℕ) (attempt : DefiKernel.Nary.Attempt B P A D),
+      Eq.{1} (getElem?.{0, 0, 0} m.attempts i) (some.{0} attempt) →
+        Eq.{1}
+            (DefiKernel.Composition.executeStep cfg (boundaries attempt.participant attempt.index) attempt.index
+              (DefiKernel.Nary.ownHistory (List.take.{0} i m.attempts) attempt.participant)
+              (DefiKernel.Composition.Step.invoke attempt.invocation) attempt.before)
+            attempt.outcome ∧
+          Eq.{1} attempt.index
+              (List.length.{0}
+                (List.filterMap.{0, 0} (DefiKernel.Nary.successfulEvent attempt.participant)
+                  (List.take.{0} i m.attempts))) ∧
+            DefiKernel.Nary.AttemptChain initial (List.take.{0} i m.attempts) attempt.before
+'DefiKernel.Nary.Reachable.attempt_exact' depends on axioms: [propext, Classical.choice.{u}, Quot.sound.{u}]
+@DefiKernel.Nary.runPrefix_attempt_exact : ∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P]
+  [inst_2 : DecidableEq.{1} A] [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P] [inst_5 : Fintype.{0} A]
+  [inst_6 : Fintype.{0} D] (cfg : DefiKernel.Composition.Config P A D) (boundaries : DefiKernel.Nary.Boundaries B P A D)
+  (initial : DefiKernel.Composition.World P A D) (branches : DefiKernel.Nary.Branches B P A D)
+  (schedule : DefiKernel.Nary.Schedule B) (i : ℕ) (attempt : DefiKernel.Nary.Attempt B P A D),
+  Eq.{1} (getElem?.{0, 0, 0} (DefiKernel.Nary.runPrefix cfg boundaries initial branches schedule).attempts i)
+      (some.{0} attempt) →
+    Eq.{1}
+        (DefiKernel.Composition.executeStep cfg (boundaries attempt.participant attempt.index) attempt.index
+          (DefiKernel.Nary.ownHistory
+            (List.take.{0} i (DefiKernel.Nary.runPrefix cfg boundaries initial branches schedule).attempts)
+            attempt.participant)
+          (DefiKernel.Composition.Step.invoke attempt.invocation) attempt.before)
+        attempt.outcome ∧
+      Eq.{1} attempt.index
+          (List.length.{0}
+            (List.filterMap.{0, 0} (DefiKernel.Nary.successfulEvent attempt.participant)
+              (List.take.{0} i (DefiKernel.Nary.runPrefix cfg boundaries initial branches schedule).attempts))) ∧
+        DefiKernel.Nary.AttemptChain initial
+          (List.take.{0} i (DefiKernel.Nary.runPrefix cfg boundaries initial branches schedule).attempts) attempt.before
+'DefiKernel.Nary.runPrefix_attempt_exact' depends on axioms: [propext, Classical.choice.{u}, Quot.sound.{u}]
+@DefiKernel.Nary.Reachable.branch_projection : ∀ {B P A D : Type} [inst : DecidableEq.{1} B]
+  [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A] [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P]
+  [inst_5 : Fintype.{0} A] [inst_6 : Fintype.{0} D] {cfg : DefiKernel.Composition.Config P A D}
+  {boundaries : DefiKernel.Nary.Boundaries B P A D} {branches : DefiKernel.Nary.Branches B P A D}
+  {initial : DefiKernel.Composition.World P A D} {m : DefiKernel.Nary.Machine B P A D},
+  DefiKernel.Nary.Reachable cfg boundaries branches initial m →
+    ∀ (b : B), Eq.{1} (m.locals b).events (List.filterMap.{0, 0} (DefiKernel.Nary.successfulEvent b) m.attempts)
+'DefiKernel.Nary.Reachable.branch_projection' depends on axioms: [propext, Classical.choice.{u}, Quot.sound.{u}]
+@DefiKernel.Nary.Reachable.local_order : ∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P]
+  [inst_2 : DecidableEq.{1} A] [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P] [inst_5 : Fintype.{0} A]
+  [inst_6 : Fintype.{0} D] {cfg : DefiKernel.Composition.Config P A D} {boundaries : DefiKernel.Nary.Boundaries B P A D}
+  {branches : DefiKernel.Nary.Branches B P A D} {initial : DefiKernel.Composition.World P A D}
+  {m : DefiKernel.Nary.Machine B P A D},
+  DefiKernel.Nary.Reachable cfg boundaries branches initial m →
+    ∀ (b : B),
+      Eq.{1} (List.map.{0, 0} DefiKernel.Composition.Event.step (m.locals b).events)
+        (List.map.{0, 0} DefiKernel.Composition.Step.invoke (List.take.{0} (m.locals b).nextIndex (branches b)))
+'DefiKernel.Nary.Reachable.local_order' depends on axioms: [propext, Classical.choice.{u}, Quot.sound.{u}]
+@DefiKernel.Nary.continueRun_refusal_stable : ∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P]
+  [inst_2 : DecidableEq.{1} A] [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P] [inst_5 : Fintype.{0} A]
+  [inst_6 : Fintype.{0} D] (cfg : DefiKernel.Composition.Config P A D) (boundaries : DefiKernel.Nary.Boundaries B P A D)
+  (branches : DefiKernel.Nary.Branches B P A D) (m : DefiKernel.Nary.Machine B P A D)
+  (schedule : DefiKernel.Nary.Schedule B) (own : B) (failure : DefiKernel.Composition.LocatedFailure P A D),
+  Eq.{1} (m.locals own).failure (some.{0} failure) →
+    have post := DefiKernel.Nary.continueRun cfg boundaries branches m schedule;
+    Eq.{1} (post.locals own).failure (some.{0} failure) ∧
+      Eq.{1} (post.locals own).events (m.locals own).events ∧
+        Eq.{1} (post.locals own).outputs (m.locals own).outputs ∧
+          Eq.{1} (post.locals own).nextIndex (m.locals own).nextIndex
+'DefiKernel.Nary.continueRun_refusal_stable' depends on axioms: [propext, Classical.choice.{u}, Quot.sound.{u}]
+@DefiKernel.Nary.runPrefix_complete_exhausted_or_refused : ∀ {B P A D : Type} [inst : DecidableEq.{1} B]
+  [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A] [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P]
+  [inst_5 : Fintype.{0} A] [inst_6 : Fintype.{0} D] (cfg : DefiKernel.Composition.Config P A D)
+  (boundaries : DefiKernel.Nary.Boundaries B P A D) (initial : DefiKernel.Composition.World P A D)
+  (branches : DefiKernel.Nary.Branches B P A D) (schedule : DefiKernel.Nary.Schedule B),
+  DefiKernel.Nary.Complete branches schedule →
+    ∀ (b : B),
+      Eq.{1} ((DefiKernel.Nary.runPrefix cfg boundaries initial branches schedule).locals b).failure none.{0} ∧
+          Eq.{1} ((DefiKernel.Nary.runPrefix cfg boundaries initial branches schedule).locals b).nextIndex
+            (List.length.{0} (branches b)) ∨
+        ∃ failure,
+          Eq.{1} ((DefiKernel.Nary.runPrefix cfg boundaries initial branches schedule).locals b).failure
+              (some.{0} failure) ∧
+            Eq.{1} failure.index
+              ((DefiKernel.Nary.runPrefix cfg boundaries initial branches schedule).locals b).nextIndex
+'DefiKernel.Nary.runPrefix_complete_exhausted_or_refused' depends on axioms: [propext,
+ Classical.choice.{u},
+ Quot.sound.{u}]
+@DefiKernel.Nary.Reachable.accounting : ∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P]
+  [inst_2 : DecidableEq.{1} A] [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P] [inst_5 : Fintype.{0} A]
+  [inst_6 : Fintype.{0} D] {cfg : DefiKernel.Composition.Config P A D} {boundaries : DefiKernel.Nary.Boundaries B P A D}
+  {branches : DefiKernel.Nary.Branches B P A D} {initial : DefiKernel.Composition.World P A D}
+  {m : DefiKernel.Nary.Machine B P A D},
+  DefiKernel.Nary.Reachable cfg boundaries branches initial m →
+    ∀ (d : D) (a : A),
+      Eq.{1} (DefiKernel.Typed.total m.world.state d a)
+        (HAdd.hAdd.{0, 0, 0} (DefiKernel.Typed.total initial.state d a) (m.supply d a))
+'DefiKernel.Nary.Reachable.accounting' depends on axioms: [propext, Classical.choice.{u}, Quot.sound.{u}]
+@DefiKernel.Nary.Reachable.authority : ∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P]
+  [inst_2 : DecidableEq.{1} A] [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P] [inst_5 : Fintype.{0} A]
+  [inst_6 : Fintype.{0} D] {cfg : DefiKernel.Composition.Config P A D} {boundaries : DefiKernel.Nary.Boundaries B P A D}
+  {branches : DefiKernel.Nary.Branches B P A D} {initial : DefiKernel.Composition.World P A D}
+  {m : DefiKernel.Nary.Machine B P A D},
+  DefiKernel.Nary.Reachable cfg boundaries branches initial m →
+    ∀ (attempt : DefiKernel.Nary.Attempt B P A D),
+      Membership.mem.{0, 0} m.attempts attempt →
+        ∀ (result : DefiKernel.Composition.StepResult P A D),
+          Eq.{1} attempt.outcome (Except.ok.{0, 0} result) →
+            DefiKernel.Composition.ReceiptAuthorized attempt.before (boundaries attempt.participant attempt.index)
+              result.receipt
+'DefiKernel.Nary.Reachable.authority' depends on axioms: [propext, Classical.choice.{u}, Quot.sound.{u}]
+@DefiKernel.Nary.Reachable.initial_store_authority : ∀ {B P A D : Type} [inst : DecidableEq.{1} B]
+  [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A] [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P]
+  [inst_5 : Fintype.{0} A] [inst_6 : Fintype.{0} D] {cfg : DefiKernel.Composition.Config P A D}
+  {boundaries : DefiKernel.Nary.Boundaries B P A D} {branches : DefiKernel.Nary.Branches B P A D}
+  {initial : DefiKernel.Composition.World P A D} {m : DefiKernel.Nary.Machine B P A D},
+  DefiKernel.Nary.Reachable cfg boundaries branches initial m →
+    ∀ (attempt : DefiKernel.Nary.Attempt B P A D),
+      Membership.mem.{0, 0} m.attempts attempt →
+        ∀ (result : DefiKernel.Composition.StepResult P A D),
+          Eq.{1} attempt.outcome (Except.ok.{0, 0} result) →
+            DefiKernel.Composition.ReceiptAuthorized
+              { state := attempt.before.state, capabilities := initial.capabilities }
+              (boundaries attempt.participant attempt.index) result.receipt
+'DefiKernel.Nary.Reachable.initial_store_authority' depends on axioms: [propext, Classical.choice.{u}, Quot.sound.{u}]
+@DefiKernel.Nary.Reachable.analyzed_predicate_frame : ∀ {B P A D : Type} [inst : DecidableEq.{1} B]
+  [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A] [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P]
+  [inst_5 : Fintype.{0} A] [inst_6 : Fintype.{0} D] {cfg : DefiKernel.Composition.Config P A D}
+  {boundaries : DefiKernel.Nary.Boundaries B P A D} {branches : DefiKernel.Nary.Branches B P A D}
+  {initial : DefiKernel.Composition.World P A D} {m : DefiKernel.Nary.Machine B P A D},
+  DefiKernel.Nary.Reachable cfg boundaries branches initial m →
+    ∀ (order : List.{0} B) (fps : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))),
+      (∀ (b : B), Membership.mem.{0, 0} order b) →
+        Eq.{1} (DefiKernel.Nary.analyzeAll cfg boundaries branches order) (Except.ok.{0, 0} fps) →
+          ∀ (region : Set.{0} (DefiKernel.Typed.Cell P A D)) (predicate : DefiKernel.Typed.State P A D → Prop),
+            DefiKernel.Composition.Supports region predicate →
+              (∀ (c : DefiKernel.Typed.Cell P A D),
+                  Membership.mem.{0, 0} region c → c ∉ DefiKernel.Nary.analyzedWrites fps) →
+                (predicate initial.state ↔ predicate m.world.state)
+'DefiKernel.Nary.Reachable.analyzed_predicate_frame' depends on axioms: [propext, Classical.choice.{u}, Quot.sound.{u}]
+@DefiKernel.Nary.runPrefix_analyzed_locality_roster : ∀ {B P A D : Type} [inst : DecidableEq.{1} B]
+  [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A] [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P]
+  [inst_5 : Fintype.{0} A] [inst_6 : Fintype.{0} D] (cfg : DefiKernel.Composition.Config P A D)
+  (roster : DefiKernel.Nary.Roster B) (boundaries : DefiKernel.Nary.Boundaries B P A D)
+  (initial : DefiKernel.Composition.World P A D) (branches : DefiKernel.Nary.Branches B P A D)
+  (schedule : DefiKernel.Nary.Schedule B) (fps : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))),
+  Eq.{1} (DefiKernel.Nary.analyzeAll cfg boundaries branches roster.order) (Except.ok.{0, 0} fps) →
+    ∀ c ∉ DefiKernel.Nary.analyzedWrites fps,
+      Eq.{1} ((DefiKernel.Nary.runPrefix cfg boundaries initial branches schedule).world.state.balance c)
+        (initial.state.balance c)
+'DefiKernel.Nary.runPrefix_analyzed_locality_roster' depends on axioms: [propext, Classical.choice.{u}, Quot.sound.{u}]
+@DefiKernel.Nary.runPrefix_invariants : ∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P]
+  [inst_2 : DecidableEq.{1} A] [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P] [inst_5 : Fintype.{0} A]
+  [inst_6 : Fintype.{0} D] (cfg : DefiKernel.Composition.Config P A D) (boundaries : DefiKernel.Nary.Boundaries B P A D)
+  (initial : DefiKernel.Composition.World P A D) (branches : DefiKernel.Nary.Branches B P A D)
+  (schedule : DefiKernel.Nary.Schedule B) (invariant : B → DefiKernel.Nary.LedgerPredicate P A D)
+  (guarantee rely : B → DefiKernel.Nary.LedgerRelation P A D),
+  (∀ (b : B), invariant b initial.state) →
+    DefiKernel.Nary.LocalObligation cfg boundaries branches invariant guarantee →
+      DefiKernel.Nary.CrossInclusion guarantee rely →
+        DefiKernel.Nary.Stable invariant rely →
+          ∀ (b : B), invariant b (DefiKernel.Nary.runPrefix cfg boundaries initial branches schedule).world.state
+'DefiKernel.Nary.runPrefix_invariants' depends on axioms: [propext, Classical.choice.{u}, Quot.sound.{u}]
+@DefiKernel.Nary.continueRun_invariants : ∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P]
+  [inst_2 : DecidableEq.{1} A] [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P] [inst_5 : Fintype.{0} A]
+  [inst_6 : Fintype.{0} D] {cfg : DefiKernel.Composition.Config P A D} {boundaries : DefiKernel.Nary.Boundaries B P A D}
+  {branches : DefiKernel.Nary.Branches B P A D} {initial : DefiKernel.Composition.World P A D}
+  {m : DefiKernel.Nary.Machine B P A D},
+  DefiKernel.Nary.Reachable cfg boundaries branches initial m →
+    ∀ (invariant : B → DefiKernel.Nary.LedgerPredicate P A D)
+      (guarantee rely : B → DefiKernel.Nary.LedgerRelation P A D),
+      (∀ (b : B), invariant b initial.state) →
+        DefiKernel.Nary.LocalObligation cfg boundaries branches invariant guarantee →
+          DefiKernel.Nary.CrossInclusion guarantee rely →
+            DefiKernel.Nary.Stable invariant rely →
+              ∀ (schedule : DefiKernel.Nary.Schedule B) (b : B),
+                invariant b (DefiKernel.Nary.continueRun cfg boundaries branches m schedule).world.state
+'DefiKernel.Nary.continueRun_invariants' depends on axioms: [propext, Classical.choice.{u}, Quot.sound.{u}]

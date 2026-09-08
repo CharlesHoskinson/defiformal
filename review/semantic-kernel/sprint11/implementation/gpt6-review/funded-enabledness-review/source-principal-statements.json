@@ -1,0 +1,22 @@
+[
+  {
+    "name": "DefiKernel.Nary.FundedEnabledness.executeStep_invoke_ok",
+    "source_statement": "theorem executeStep_invoke_ok {cfg : Config P A D} {boundary : Boundary P A D}\n    {index : Nat} {history : List (OutputObservation A)} {inv : Invocation P A D}\n    {pre post : W} {iface : OperationInterface P A D} {request : Request P A D}\n    {e : Evaluated P A D}\n    (hv : validateCatalog cfg.registry cfg.catalog = true)\n    (hp : prepareInvocation cfg boundary index history inv = .ok (iface, request))\n    (hx : execute cfg.registry pre.capabilities boundary.ctx boundary.env boundary.now\n        request pre.state = .ok post)\n    (he : extractReceipt cfg boundary request pre = .ok e) :\n    executeStep cfg boundary index history (.invoke inv) pre =\n      .ok \u27e8post, .invoked request e, snapshots index inv.component iface post.state\u27e9"
+  },
+  {
+    "name": "DefiKernel.Nary.FundedEnabledness.f10_producer_enabled",
+    "source_statement": "theorem f10_producer_enabled (pre : W)\n    (hstore : pre.capabilities = f10Store)\n    (hbudget : pre.state.balance budgetC = 6) :\n    \u2203 result, executeStep f10Cfg (f10Bounds (0 : Fin 3) 0) 0 [] (.invoke inv200) pre =\n        .ok result \u2227\n      result.receipt = rec200 \u2227\n      result.outputs = [budgetOut 0] \u2227\n      result.world.capabilities = f10Store \u2227\n      \u2200 c, result.world.state.balance c = pre.state.balance c"
+  },
+  {
+    "name": "DefiKernel.Nary.FundedEnabledness.f10_consumer_enabled",
+    "source_statement": "theorem f10_consumer_enabled (pre : W)\n    (hstore : pre.capabilities = f10Store)\n    (hvault : 6 \u2264 pre.state.balance vaultC) :\n    \u2203 result, executeStep f10Cfg (f10Bounds (0 : Fin 3) 1) 1 [budgetOut 0]\n        (.invoke inv201) pre = .ok result \u2227\n      result.receipt = rec201 \u2227\n      result.outputs = [] \u2227\n      result.world.capabilities = f10Store \u2227\n      result.world.state.balance vaultC = pre.state.balance vaultC + (-6) \u2227\n      result.world.state.balance recipientC = pre.state.balance recipientC + 6 \u2227\n      \u2200 c, c \u2260 vaultC \u2192 c \u2260 recipientC \u2192\n        result.world.state.balance c = pre.state.balance c"
+  },
+  {
+    "name": "DefiKernel.Nary.FundedEnabledness.f10_deposit1_enabled",
+    "source_statement": "theorem f10_deposit1_enabled (pre : W)\n    (hstore : pre.capabilities = f10Store)\n    (hdonor : 1 \u2264 pre.state.balance donor1C) :\n    \u2203 result, executeStep f10Cfg (f10Bounds (1 : Fin 3) 0) 0 [] (.invoke inv202) pre =\n        .ok result \u2227\n      result.receipt = rec202 \u2227\n      result.outputs = [] \u2227\n      result.world.capabilities = f10Store \u2227\n      result.world.state.balance donor1C = pre.state.balance donor1C + (-1) \u2227\n      result.world.state.balance vaultC = pre.state.balance vaultC + 1 \u2227\n      \u2200 c, c \u2260 donor1C \u2192 c \u2260 vaultC \u2192\n        result.world.state.balance c = pre.state.balance c"
+  },
+  {
+    "name": "DefiKernel.Nary.FundedEnabledness.f10_deposit2_enabled",
+    "source_statement": "theorem f10_deposit2_enabled (pre : W)\n    (hstore : pre.capabilities = f10Store)\n    (hdonor : 2 \u2264 pre.state.balance donor2C) :\n    \u2203 result, executeStep f10Cfg (f10Bounds (2 : Fin 3) 0) 0 [] (.invoke inv203) pre =\n        .ok result \u2227\n      result.receipt = rec203 \u2227\n      result.outputs = [] \u2227\n      result.world.capabilities = f10Store \u2227\n      result.world.state.balance donor2C = pre.state.balance donor2C + (-2) \u2227\n      result.world.state.balance vaultC = pre.state.balance vaultC + 2 \u2227\n      \u2200 c, c \u2260 donor2C \u2192 c \u2260 vaultC \u2192\n        result.world.state.balance c = pre.state.balance c"
+  }
+]

@@ -1,0 +1,33 @@
+import DefiKernel.Nary.FundedEnabledness
+import DefiKernel.AxiomAudit
+open Lean Elab Command DefiKernel.AxiomAudit
+set_option pp.maxSteps 1000000
+set_option pp.universes true
+set_option pp.explicit true
+set_option pp.proofs true
+set_option pp.fullNames true
+set_option pp.funBinderTypes true
+set_option pp.piBinderTypes true
+elab "#independent_enabledness_types" : command => do
+  let env ← getEnv
+  for (name, moduleName) in importedTheorems env `DefiKernel.Nary do
+    if moduleName == `DefiKernel.Nary.FundedEnabledness then
+      let some info := env.find? name | throwError "missing theorem {name}"
+      let ty ← liftTermElabM (Meta.ppExpr info.type)
+      let expanded ← liftTermElabM do Meta.ppExpr (← Meta.whnf info.type)
+      let axioms ← collectAxioms name
+      let row := Json.mkObj [("name", toJson name.toString), ("module", toJson moduleName.toString),
+        ("statement", toJson ty.pretty), ("expanded_outer_type", toJson expanded.pretty),
+        ("axioms", toJson (axioms.map Name.toString))]
+      logInfo m!"INDEPENDENT_ENABLEDNESS_JSON {row.compress}"
+#independent_enabledness_types
+
+#print axioms DefiKernel.Nary.FundedEnabledness.f10_producer_enabled
+
+#print axioms DefiKernel.Nary.FundedEnabledness.f10_consumer_enabled
+
+#print axioms DefiKernel.Nary.FundedEnabledness.f10_deposit1_enabled
+
+#print axioms DefiKernel.Nary.FundedEnabledness.f10_deposit2_enabled
+
+#print axioms DefiKernel.Nary.FundedEnabledness.executeStep_invoke_ok

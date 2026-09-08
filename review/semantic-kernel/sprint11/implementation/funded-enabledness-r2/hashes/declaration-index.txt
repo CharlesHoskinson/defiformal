@@ -1,0 +1,115 @@
+13: def producerIface : OperationInterface P A D := ⟨⟨200⟩, [], [⟨⟨7⟩, budgetC⟩]⟩
+14: def consumerIface : OperationInterface P A D := ⟨⟨201⟩, [⟨⟨8⟩, .amount .usd⟩], []⟩
+15: def deposit1Iface : OperationInterface P A D := ⟨⟨202⟩, [], []⟩
+16: def deposit2Iface : OperationInterface P A D := ⟨⟨203⟩, [], []⟩
+18: def producerRequest : Request P A D := ⟨⟨200⟩, [], [], ids [0], none⟩
+19: def consumerRequest : Request P A D :=
+21: def deposit1Request : Request P A D := ⟨⟨202⟩, [], [], ids [3, 4], none⟩
+22: def deposit2Request : Request P A D := ⟨⟨203⟩, [], [], ids [5, 6], none⟩
+24: def producerEval : Evaluated P A D := evaluated true [] [] []
+25: def consumerEval : Evaluated P A D :=
+27: def deposit1Eval : Evaluated P A D :=
+29: def deposit2Eval : Evaluated P A D :=
+32: def applyWorld (state : State P A D) (store : Store) (e : Evaluated P A D)
+42: theorem f10_catalog_valid : validateCatalog f10Cfg.registry f10Cfg.catalog = true := by
+45: theorem f10_bounds_producer (n : Nat) : f10Bounds (0 : Fin 3) n = vaultBound := rfl
+46: theorem f10_bounds_deposit1 (n : Nat) : f10Bounds (1 : Fin 3) n = donor1Bound := rfl
+47: theorem f10_bounds_deposit2 (n : Nat) : f10Bounds (2 : Fin 3) n = donor2Bound := rfl
+49: theorem prepare_producer :
+54: theorem prepare_consumer :
+59: theorem prepare_deposit1 :
+64: theorem prepare_deposit2 :
+69: theorem executeStep_invoke_ok {cfg : Config P A D} {boundary : Boundary P A D}
+82: theorem producer_effect (c : C) : producerEval.effect c = 0 := by
+85: theorem producer_extract (pre : W) :
+89: theorem producer_invoke_auth :
+93: theorem producer_valid (state : State P A D) :
+101: theorem producer_execute (state : State P A D)
+112: theorem budget_asset : budgetC.2.2 = Asset.usd := rfl
+114: theorem producer_snapshots (state : State P A D) (h : state.balance budgetC = 6) :
+118: theorem f10_producer_enabled (pre : W)
+151: theorem consumer_args :
+155: theorem consumer_invoke_auth :
+159: theorem consumer_debit_auth :
+166: theorem amount_le_decide {q v : ℚ} (h : q ≤ v) :
+171: theorem amount_zero_le_six :
+176: def consumerCtx (state : State P A D) :
+180: theorem consumer_guard (state : State P A D) (h : 6 ≤ state.balance vaultC) :
+188: theorem vaultC_tuple : (Domain.home, Party.vault, Asset.usd) = vaultC := rfl
+189: theorem recipientC_tuple : (Domain.home, Party.recipient, Asset.usd) = recipientC := rfl
+190: theorem donor1C_tuple : (Domain.home, Party.donor1, Asset.usd) = donor1C := rfl
+191: theorem donor2C_tuple : (Domain.home, Party.donor2, Asset.usd) = donor2C := rfl
+193: theorem consumer_caller (state : State P A D) :
+195: theorem consumer_parties_ctx (state : State P A D) :
+198: theorem consumer_resolve_required (state : State P A D) :
+207: theorem consumer_resolve_declared (state : State P A D) :
+214: theorem consumer_resolve_writes (state : State P A D) :
+222: theorem consumer_delta_eval (state : State P A D) :
+237: theorem consumer_evaluate (state : State P A D) (h : 6 ≤ state.balance vaultC) :
+250: theorem consumer_extract (pre : W) (h : 6 ≤ pre.state.balance vaultC) :
+263: theorem vaultC_ne_recipientC : vaultC ≠ recipientC := by decide
+265: theorem consumer_effect (c : C) :
+275: theorem consumer_stateReadsOK : consumerEval.stateReadsOK = true := by decide
+276: theorem consumer_envReadsOK : consumerEval.envReadsOK = true := by decide
+277: theorem consumer_domainOK : consumerEval.domainOK Domain.home = true := by decide +kernel
+278: theorem consumer_debitsOK :
+281: theorem consumer_suppliesOK :
+284: theorem consumer_accountingOK : consumerEval.accountingOK = true := by decide +kernel
+285: theorem consumer_writesOK : consumerEval.writesOK = true := by decide +kernel
+287: theorem consumer_nonneg (state : State P A D) (h : 6 ≤ state.balance vaultC) :
+298: theorem consumer_valid (state : State P A D) (h : 6 ≤ state.balance vaultC) :
+304: theorem consumer_execute (state : State P A D) (h : 6 ≤ state.balance vaultC)
+316: theorem consumer_snapshots (state : State P A D) :
+319: theorem f10_consumer_enabled (pre : W)
+352: def deposit1Ctx (state : State P A D) :
+356: def deposit2Ctx (state : State P A D) :
+360: theorem deposit1_args :
+363: theorem deposit2_args :
+367: theorem deposit1_invoke_auth :
+370: theorem deposit1_debit_auth :
+373: theorem deposit2_invoke_auth :
+376: theorem deposit2_debit_auth :
+380: theorem deposit1_caller (state : State P A D) :
+382: theorem deposit1_parties_ctx (state : State P A D) :
+384: theorem deposit2_caller (state : State P A D) :
+386: theorem deposit2_parties_ctx (state : State P A D) :
+389: theorem deposit1_guard (state : State P A D) (h : 1 ≤ state.balance donor1C) :
+396: theorem deposit2_guard (state : State P A D) (h : 2 ≤ state.balance donor2C) :
+403: theorem deposit1_resolve_required (state : State P A D) :
+412: theorem deposit1_resolve_declared (state : State P A D) :
+419: theorem deposit1_resolve_writes (state : State P A D) :
+427: theorem deposit2_resolve_required (state : State P A D) :
+436: theorem deposit2_resolve_declared (state : State P A D) :
+443: theorem deposit2_resolve_writes (state : State P A D) :
+451: theorem deposit1_evaluate (state : State P A D) (h : 1 ≤ state.balance donor1C) :
+463: theorem deposit2_evaluate (state : State P A D) (h : 2 ≤ state.balance donor2C) :
+475: theorem deposit1_extract (pre : W) (h : 1 ≤ pre.state.balance donor1C) :
+488: theorem deposit2_extract (pre : W) (h : 2 ≤ pre.state.balance donor2C) :
+501: theorem donor1C_ne_vaultC : donor1C ≠ vaultC := by decide
+502: theorem donor2C_ne_vaultC : donor2C ≠ vaultC := by decide
+504: theorem deposit1_effect (c : C) :
+517: theorem deposit2_effect (c : C) :
+530: theorem deposit1_stateReadsOK : deposit1Eval.stateReadsOK = true := by decide
+531: theorem deposit1_envReadsOK : deposit1Eval.envReadsOK = true := by decide
+532: theorem deposit1_domainOK : deposit1Eval.domainOK Domain.home = true := by decide +kernel
+533: theorem deposit1_debitsOK :
+536: theorem deposit1_suppliesOK :
+539: theorem deposit1_accountingOK : deposit1Eval.accountingOK = true := by decide +kernel
+540: theorem deposit1_writesOK : deposit1Eval.writesOK = true := by decide +kernel
+542: theorem deposit2_stateReadsOK : deposit2Eval.stateReadsOK = true := by decide
+543: theorem deposit2_envReadsOK : deposit2Eval.envReadsOK = true := by decide
+544: theorem deposit2_domainOK : deposit2Eval.domainOK Domain.home = true := by decide +kernel
+545: theorem deposit2_debitsOK :
+548: theorem deposit2_suppliesOK :
+551: theorem deposit2_accountingOK : deposit2Eval.accountingOK = true := by decide +kernel
+552: theorem deposit2_writesOK : deposit2Eval.writesOK = true := by decide +kernel
+554: theorem deposit1_nonneg (state : State P A D) (h : 1 ≤ state.balance donor1C) :
+565: theorem deposit2_nonneg (state : State P A D) (h : 2 ≤ state.balance donor2C) :
+576: theorem deposit1_valid (state : State P A D) (h : 1 ≤ state.balance donor1C) :
+582: theorem deposit2_valid (state : State P A D) (h : 2 ≤ state.balance donor2C) :
+588: theorem deposit1_execute (state : State P A D) (h : 1 ≤ state.balance donor1C)
+600: theorem deposit2_execute (state : State P A D) (h : 2 ≤ state.balance donor2C)
+612: theorem deposit1_snapshots (state : State P A D) :
+614: theorem deposit2_snapshots (state : State P A D) :
+617: theorem f10_deposit1_enabled (pre : W)
+650: theorem f10_deposit2_enabled (pre : W)

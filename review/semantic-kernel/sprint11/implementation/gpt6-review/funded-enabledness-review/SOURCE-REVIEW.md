@@ -1,0 +1,26 @@
+# FundedEnabledness archived r1 source review — provisional
+
+Status: source mathematics reviewed; **no final acceptance yet**. Final source equality, finish-only build/statement/axiom evidence, and native provenance remain pending. Reviewer is independent GPT-6 / gpt-6-astra. No cache command or Lean probe was run; the native finishing author retains cache ownership.
+
+The reviewed source is the r1 archive's final snapshot, SHA-256 `98eccaec1a755d5758d1b88fcb5e0f18e6a35d327ee990beb1094b22bc90f0b7`, 34,369 bytes. Archive SHA-256 is `88f99b6a1e2ce2091bdbccb905ee79ec5b0258d2d9a6ed5d4a164c04610a8580`. Source-before bytes are separately retained rather than confused with the final snapshot. Probe32 records exit0 and a successful940-job build. The outer native process subsequently timed out with exit124 during evidence preparation; direct parsing confirms zero end events in its stream. No actual end-record modelUsage attribution is inferred for r1.
+
+No false mathematical premise or circular success argument was found in the four top-level helpers. Each takes an arbitrary current `W`, whose State type already certifies nonnegative balances, and fixed F10 store equality. Additional premises and supplied local inputs are:
+
+| Helper | Additional current premise | Actual supplied call/history |
+| --- | --- | --- |
+| producer | budget cell equals6 | p0 bounds/index0, inv200, empty history |
+| consumer | vault at least6 | p0 bounds/index1, inv201, singleton qualified budget output |
+| donor1 | donor1 at least1 | p1 bounds/index0, inv202, empty history |
+| donor2 | donor2 at least2 | p2 bounds/index0, inv203, empty history |
+
+Each concludes existence of an actual `executeStep ... = .ok result`, exact full receipt rec200/201/202/203, exact output list, and unchanged fixed capability store. Producer frames every ledger cell. Consumer proves vault-6, recipient+6 and equality at every other cell. Donors prove own -1/-2, vault+1/+2 and equality at every other cell. The world need not be the literal initial world or a listed intermediate world. No K, Reachable, prior whole-run equation, candidate result, desired post-state success, or future-success assumption occurs in the top-level premises. The consumer needs only vault≥6 for success; reserve≥4 is a separate stronger conclusion under the K-derived vault≥10 bound.
+
+The proof constructs `applyWorld` from exact evaluated effects and a derived proof that every resulting balance is nonnegative. The internal `*_execute` helpers expose that nonnegativity argument because the constructed world needs it; the public enabledness theorems derive it from the funding premise plus State.nonneg, so it is not an unproved postcondition at their interface. They discharge `execute_ok_iff` using the actual registry template, actor/domain/arity, checked arguments, invoke authority, concrete guard/evaluation, complete Evaluated.Valid checks, unchanged store, and pointwise effect equations. This includes debit authority, declared/required reads, supply checks, accounting, writes, and domain, rather than bypassing financial validity.
+
+`executeStep_invoke_ok` then combines catalog validity, actual prepareInvocation, proved Typed.execute success, actual receipt extraction, and actual snapshots. This transport helper is parameterized by configuration and intermediate data for the fixed fixture type family; its typed-success premise is discharged by the four concrete constructions. It is not a premise of the four top-level enabledness statements. No argument derives progress from StepSound. Evaluation and extraction use the fixed f10Cfg/templates; the configuration has not been weakened or replaced by an always-successful executor.
+
+The producer's extra budget=6 premise is appropriate to the promised exact exported value and is available from FundedK. Consumer's singleton own-output history is an explicit supplied argument, not a premise that a future producer succeeds. Its qualified key/index and actual amount preparation are preserved. Consumer/donor receipts include guard=true and full evaluated metadata, not just delta approximations. NumericRat/typed amount guard normalization preserves the actual ℚ inequalities.
+
+One concrete bridge obligation needs attention: donor helpers are specialized to empty history, while current FundedK records only p0's output history. A future live-selected-K theorem must either derive donor empty history at index0 from actual reachability, or prove inv202/203 executeStep is independent of supplied history because these invocations have no inputs. Do not add empty donor histories or live-call success as unproved assumptions to the final initialized result. Bounds, index0/1 selection, fixed store, producer budget and current funding are otherwise directly compatible with the reviewed FundedCausal interface.
+
+This source review does not accept a completed K bridge, arbitrary schedules' no-failure theorem, all companion scenarios, or full Sprint11. The stage source and exact principal source statements are retained here. Once finish-only evidence is frozen, compare final source bytes to this snapshot, verify the final manifest and direct native end identity, and coordinate any independent read-only statement/axiom inspection with root before finalizing the verdict.

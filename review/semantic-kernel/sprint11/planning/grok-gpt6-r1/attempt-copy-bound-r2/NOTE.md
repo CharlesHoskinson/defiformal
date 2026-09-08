@@ -1,0 +1,1 @@
+Failed copy_bound control run. `record_controls` deleted `validation/controls` before copying MANIFEST rows, so the intact sibling blocked on missing evidence files. Not a planning verdict. The subsequent checker copies the union of source-inventory paths and MANIFEST files, plus inventory, manifest and anchor.

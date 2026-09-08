@@ -1,0 +1,55 @@
+import DefiHistorical.Convex.Verify
+open Lean Elab Command DefiKernel.AxiomAudit
+set_option pp.maxSteps 1000000
+set_option pp.universes true
+set_option pp.explicit true
+set_option pp.proofs true
+set_option pp.fullNames true
+elab "#independent_historical_inventory" : command => do
+  let env ← getEnv
+  let ts := importedTheorems env `DefiHistorical
+  let ds := importedSupplemental env `DefiHistorical
+  let entries := ts.map (fun (n,m) => (n,m,"theorem")) ++ ds
+  for (name, mod, kind) in entries do
+    let some info := env.find? name | throwError "Missing {name}"
+    let statement ← liftTermElabM (Meta.ppExpr info.type)
+    let axioms ← collectAxioms name
+    let row := Json.mkObj [("name", toJson name.toString), ("module", toJson mod.toString),
+      ("kind", toJson kind), ("statement", toJson statement.pretty),
+      ("axioms", toJson (axioms.map Name.toString))]
+    logInfo m!"INDEPENDENT_HISTORICAL_JSON {row.compress}"
+#independent_historical_inventory
+
+#print axioms DefiHistorical.Convex.mem_saturate
+
+#print axioms DefiHistorical.Convex.saturate_fixed
+
+#print axioms DefiHistorical.Convex.reachableDecidable
+
+#print axioms DefiHistorical.Convex.saturate_eq_reachSet
+
+#print axioms DefiHistorical.Convex.reachSet_decider_independent
+
+#print axioms DefiHistorical.Convex.remove_loops_saturate
+
+#print axioms DefiHistorical.Convex.instance_antisymm
+
+#print axioms DefiHistorical.Convex.instance_saturation
+
+#print axioms DefiHistorical.Convex.intrinsic_eq_paperMaximal
+
+#print axioms DefiHistorical.Convex.instance_unique_minimum_generator
+
+#print axioms DefiHistorical.Convex.intrinsic_generates
+
+#print axioms DefiHistorical.Convex.intrinsic_contained_in_generator
+
+#print axioms DefiHistorical.Convex.intrinsic_union
+
+#print axioms DefiHistorical.Convex.intrinsic_oplus
+
+#print axioms DefiHistorical.Convex.Counterexamples.cycle_not_antiExchange
+
+#print axioms DefiHistorical.Convex.Counterexamples.deletion_is_material
+
+#print axioms DefiHistorical.Convex.Counterexamples.cycle_extremes_do_not_generate

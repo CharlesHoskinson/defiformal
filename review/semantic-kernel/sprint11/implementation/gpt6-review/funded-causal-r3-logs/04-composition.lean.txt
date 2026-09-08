@@ -1,0 +1,37 @@
+import DefiKernel.Nary.FundedCausal
+open DefiKernel Typed Composition Nary Nary.Examples
+open DefiKernel.Nary.FundedCausal
+set_option maxHeartbeats 1200000
+namespace IndependentReview
+ theorem f10_admitted_expected (s : Schedule (Fin 3))
+    (h0 : s.count 0 = 2) (h1 : s.count 1 = 1) (h2 : s.count 2 = 1) :
+    runNary f10Cfg fin3Roster f10Bounds f10Initial f10Branches s =
+      .executed s (expectedF10 (s.map Fin.val)) := by
+  have hc : Complete f10Branches s := by
+    intro b
+    rcases fin3_cases b with hb | hb | hb <;> subst b
+    · simpa [f10Branches] using h0
+    · simpa [f10Branches] using h1
+    · simpa [f10Branches] using h2
+  have hana : ∃ fps, analyzeAll f10Cfg f10Bounds f10Branches fin3Roster.order = .ok fps := by
+    have h : (analyzeAll f10Cfg f10Bounds f10Branches fin3Roster.order).isOk = true := by
+      decide +kernel
+    cases he : analyzeAll f10Cfg f10Bounds f10Branches fin3Roster.order with
+    | error reason =>
+      rw [he] at h
+      change false = true at h
+      cases h
+    | ok fps => exact ⟨fps, rfl⟩
+  obtain ⟨fps, ha⟩ := hana
+  have hadmit := admit_of_checks f10Cfg fin3Roster f10Bounds f10Branches s fps
+    f10_catalog_valid ha hc
+  have heq := (machineEq_iff fin3Roster _ _).mp
+    (f10_member_machineEq s (f10_complete_mem s h0 h1 h2))
+  rw [runNary_executed f10Cfg fin3Roster f10Bounds f10Initial f10Branches s fps hadmit, heq]
+end IndependentReview
+#print IndependentReview.f10_admitted_expected
+#print axioms IndependentReview.f10_admitted_expected
+#print axioms DefiKernel.Nary.FundedCausal.f10_reachable_empty_outputs
+#print axioms DefiKernel.Nary.FundedCausal.f10_live_selected_enabled_details
+#print axioms DefiKernel.Nary.FundedCausal.f10_live_selected_enabled
+#print axioms DefiKernel.Nary.FundedCausal.f10_initialized_prefix_enabled

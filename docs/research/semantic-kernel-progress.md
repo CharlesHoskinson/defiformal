@@ -5,6 +5,11 @@ Authorization: user approved saving and executing the assessed plan on 2026-09-0
 Implementation: GPT-6 / stock Codex harness. Review: native Grok and Fable CLIs.
 Foreman is not used.
 
+Current user assignment (2026-09-08) for remaining program work: native Grok 4.6
+authors; independent GPT-6 checks; stock Codex harness; no Foreman. Historical
+sprint sections below retain original model identities. This ledger does not
+relabel completed GPT, Grok, Fable or Opus reviews.
+
 ## Source identity
 
 `2026-09-06-defi-source-plan.md` is a byte-for-byte copy of the user-supplied
@@ -382,3 +387,39 @@ archive delivery `6d73e6dcf7b99c2b6cd1114985562a9f4081f4c4` is verified. See
 Net-effect accounting, explicit authority/funding/positive-scale premises and
 absence of deployed-code refinement remain limits. Concentrated liquidity and
 other protocol-specific arithmetic remain open.
+
+## Sprint 11: finite-participant causal composition (code/evidence ready)
+
+Source candidate `94f70e502c75132656bd0902a17be60ca45ab1c2`. Native Grok 4.6
+authored the Nary feature layers (`grok-4.6-build` on eleven final native
+lanes). Independent nonauthor GPT-6 / gpt-6-astra agent `/root/causal_check`
+accepted the identical code/evidence candidate with limitations and no required
+fixes. Report
+`review/semantic-kernel/sprint11/implementation/gpt6-review/final-adjudication-r1.md`
+SHA-256 `b2e46b5c962b9a205a2a0cc085ed0fc388d281a4cade1bcc6744cbb7e98b36cd`.
+This does not claim that Fable checked the implementation. Official-r1 Fable
+`Prompt is too long` remains no verdict.
+
+The package implements a generic finite complete roster, actual `executeStep`
+dispatcher, whole-machine observations, binary correspondence, continuation
+chunks, initialized interference, causal monitors, and a funded 2/1/1 witness
+with enabledness, all-prefix reserve and arbitrary complete-schedule success.
+F18 instantiates accepted M2 total/global-binding hypotheses. F11/F13/F14/F15/F19
+cover authorization-only, unstable peers, missing initialization, circular
+promises and omitted global edges. F15 is a logical counterexample, not a funded
+execution. Direct 310 r5 runtime labels are not 310 independent semantic proofs.
+Imported inventory 1,459 theorems / 1,131 supplemental rows include inherited,
+generated, private and concrete constants; 317 source-owner attributions remain
+unresolved, with full statements and axioms present. Standard axioms only:
+`propext`, `Classical.choice`, `Quot.sound`. Sixteen separate production mutants
+and 65 inherited actual controls are retained. The blocked malformed-label M01
+run keeps zero mutant credit; r5 is a label-only translation.
+
+Thirty-four of 35 OpenSpec tasks are checked for release. Task 8.5
+publication, archive transport and remote-byte verification remain parent work.
+This ledger invents no remote commit and does not close M4 participant-tree
+regrouping, later milestones, historical-tooling whole package, deployed
+fidelity, untouched holdouts, liveness or unconditional solvency.
+
+Closure documentation:
+`review/semantic-kernel/sprint11/implementation/acceptance/grok-release-r1/`.

@@ -1,0 +1,49 @@
+import DefiKernel.Nary.FundedCausal
+import DefiKernel.AxiomAudit
+open Lean Elab Command DefiKernel.AxiomAudit
+set_option pp.maxSteps 1000000
+set_option pp.universes true
+set_option pp.explicit true
+set_option pp.proofs true
+set_option pp.fullNames true
+set_option pp.funBinderTypes true
+set_option pp.piBinderTypes true
+elab "#independent_funded_types" : command => do
+  let env ← getEnv
+  for (name, moduleName) in importedTheorems env `DefiKernel.Nary do
+    if moduleName == `DefiKernel.Nary.FundedCausal then
+      let some info := env.find? name | throwError "missing theorem {name}"
+      let ty ← liftTermElabM (Meta.ppExpr info.type)
+      let expanded ← liftTermElabM do Meta.ppExpr (← Meta.whnf info.type)
+      let axioms ← collectAxioms name
+      let row := Json.mkObj [("name", toJson name.toString), ("module", toJson moduleName.toString),
+        ("statement", toJson ty.pretty), ("expanded_outer_type", toJson expanded.pretty),
+        ("axioms", toJson (axioms.map Name.toString))]
+      logInfo m!"INDEPENDENT_FUNDED_JSON {row.compress}"
+#independent_funded_types
+
+#print DefiKernel.Nary.FundedCausal.FundedK
+
+#print DefiKernel.Nary.FundedCausal.fundedInvariant
+
+#print DefiKernel.Nary.FundedCausal.fundedBalances
+
+#print DefiKernel.Nary.FundedCausal.fundedAssumption
+
+#print DefiKernel.Nary.FundedCausal.fundedGuarantee
+
+#print DefiKernel.Nary.FundedCausal.fundedRely
+
+#print DefiKernel.Nary.FundedCausal.fundedExternal
+
+#print DefiKernel.Nary.SelectedSuccessGuarantee
+
+#print DefiKernel.Nary.AssumptionDerivation
+
+#print DefiKernel.Nary.PresentExternal
+
+#print DefiKernel.Nary.SuccessUpdateObligation
+
+#print DefiKernel.Nary.RefusalUpdateObligation
+
+#print DefiKernel.Nary.SkipUpdateObligation
