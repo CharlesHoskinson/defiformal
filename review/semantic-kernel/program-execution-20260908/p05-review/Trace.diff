@@ -1,0 +1,392 @@
+--- r1/Trace
++++ r2/Trace
+@@ -98,6 +98,15 @@
+   cases h with
+   | revoke id pre store hr =>
+     exact ⟨store, rfl, rfl, rfl, rfl, hr⟩
++
++theorem stepSound_invoke_receipt {cfg : Config P A D} {boundary : Boundary P A D}
++    {index : Nat} {history : List (OutputObservation A)} {inv : Invocation P A D}
++    {pre : World P A D} {result : StepResult P A D}
++    (h : StepSound cfg boundary index history (.invoke inv) pre result) :
++    ∃ request e, result.receipt = .invoked request e := by
++  cases h with
++  | invoke inv pre post iface request e hp hx he ha =>
++    exact ⟨request, e, rfl⟩
+ 
+ theorem stepSound_length {cfg : Config P A D} {boundary : Boundary P A D}
+     {index : Nat} {history : List (OutputObservation A)} {step : Step P A D}
+@@ -649,6 +658,373 @@
+         simp [issuedOrigin, hs']
+         exact ih mem (fun e hm hrr ↦ unique e (List.mem_cons.mpr (Or.inr hm)) hrr)
+ 
++theorem trace_receipt_issued_step {cfg : Config P A D}
++    {boundaries : Nat → Boundary P A D} {initial final : World P A D}
++    {events : List (Event P A D)} {history : List (OutputObservation A)} {index : Nat}
++    (h : TraceSound cfg boundaries initial events final history index)
++    (event : Event P A D) (mem : event ∈ events) (id : CapabilityId)
++    (hr : event.result.receipt = .issued id) :
++    ∃ grant, event.step = .issue grant := by
++  obtain ⟨prior, accepted⟩ := Composition.TraceSound.steps h event mem
++  cases hs : event.step with
++  | invoke inv =>
++    have hacc : StepSound cfg (boundaries event.index) event.index prior
++        (.invoke inv) event.before event.result := hs ▸ accepted
++    obtain ⟨_, _, hrec⟩ := stepSound_invoke_receipt hacc
++    rw [hrec] at hr
++    cases hr
++  | issue grant => exact ⟨grant, rfl⟩
++  | revoke rid =>
++    have hacc : StepSound cfg (boundaries event.index) event.index prior
++        (.revoke rid) event.before event.result := hs ▸ accepted
++    obtain ⟨_, hrec, _, _, _, _⟩ := stepSound_revoke_equation hacc
++    rw [hrec] at hr
++    cases hr
++
++theorem originAt_issued_not_initial {cfg : Config P A D}
++    {boundaries : Nat → Boundary P A D} {trusted : TrustedRoot P A D}
++    {initial final : World P A D} {events : List (Event P A D)}
++    {history : List (OutputObservation A)} {index : Nat}
++    (trace : TraceSound cfg boundaries initial events final history index)
++    (roots : RootsAccepted trusted initial.capabilities)
++    (id : CapabilityId) {idx : Nat} {grant : Grant P A D}
++    (h : OriginAt cfg boundaries trusted initial events id (.issued idx grant)) :
++    initial.capabilities.lookup id = none := by
++  cases hlook : initial.capabilities.lookup id with
++  | none => rfl
++  | some cap =>
++    have hinit : OriginAt cfg boundaries trusted initial events id
++        (.initial cap.toGrant) := ⟨cap, hlook, rfl, roots id cap hlook⟩
++    have heq := originAt_unique trace roots id _ _ hinit h
++    cases heq
++
++theorem originOf_complete {cfg : Config P A D} {boundaries : Nat → Boundary P A D}
++    {trusted : TrustedRoot P A D} {initial final : World P A D}
++    {events : List (Event P A D)} {history : List (OutputObservation A)} {index : Nat}
++    (trace : TraceSound cfg boundaries initial events final history index)
++    (roots : RootsAccepted trusted initial.capabilities)
++    (id : CapabilityId) (origin : Origin P A D)
++    (h : OriginAt cfg boundaries trusted initial events id origin) :
++    originOf initial events id = some origin := by
++  cases origin with
++  | initial grant => exact originOf_complete_initial h
++  | issued idx grant =>
++    have hnone := originAt_issued_not_initial trace roots id h
++    simp [originOf, hnone]
++    obtain ⟨event, mem, hi, hs, hr, heq⟩ := h
++    have huniq : ∀ e ∈ events, e.result.receipt = .issued id → e = event := by
++      intro e hm hrec
++      obtain ⟨grant', hs'⟩ := trace_receipt_issued_step trace e hm id hrec
++      have ho' : OriginAt cfg boundaries trusted initial events id
++          (.issued e.index grant') :=
++        ⟨e, hm, rfl, hs', hrec, issued_event_equation trace e hm grant' id hs' hrec⟩
++      have horig : OriginAt cfg boundaries trusted initial events id
++          (.issued idx grant) := ⟨event, mem, hi, hs, hr, heq⟩
++      have heqo := originAt_unique trace roots id _ _ horig ho'
++      injection heqo with hidx _hg
++      have hie : event.index = e.index := hi.trans hidx
++      exact (trace_unique_index trace event e mem hm hie).symm
++    have hio := issuedOrigin_of_unique hs hr mem huniq
++    rw [hi] at hio
++    exact hio
++
++/-- Runtime query correspondence under an initialized actual trace. Arbitrary event
++lists without `TraceSound` are not certificates. -/
++theorem originOf_iff {cfg : Config P A D} {boundaries : Nat → Boundary P A D}
++    {trusted : TrustedRoot P A D} {initial final : World P A D}
++    {events : List (Event P A D)} {history : List (OutputObservation A)} {index : Nat}
++    (trace : TraceSound cfg boundaries initial events final history index)
++    (roots : RootsAccepted trusted initial.capabilities)
++    (id : CapabilityId) (origin : Origin P A D) :
++    originOf initial events id = some origin ↔
++      OriginAt cfg boundaries trusted initial events id origin :=
++  ⟨originOf_sound trace roots id origin, originOf_complete trace roots id origin⟩
++
++theorem currentAuthorityOrigin_eq_some_iff {initial : World P A D}
++    {cursor : Cursor P A D} {ctx : InvocationContext P D} {operation : OperationId}
++    {right : Right P A D} {ids : List CapabilityId} {id : CapabilityId}
++    {origin : Origin P A D} :
++    currentAuthorityOrigin initial cursor ctx operation right ids = some (id, origin) ↔
++      ∃ pref rest,
++        ids = pref ++ id :: rest ∧
++        (∀ x ∈ pref,
++          authorizesId cursor.world.capabilities ctx operation right x = false) ∧
++        authorizesId cursor.world.capabilities ctx operation right id = true ∧
++        originOf initial cursor.events id = some origin := by
++  induction ids with
++  | nil =>
++    constructor
++    · intro h
++      simp [currentAuthorityOrigin] at h
++    · rintro ⟨pref, rest, hs, _, _, _⟩
++      cases pref <;> cases hs
++  | cons head tail ih =>
++    constructor
++    · intro h
++      cases hauth : authorizesId cursor.world.capabilities ctx operation right head with
++      | true =>
++        cases horig : originOf initial cursor.events head with
++        | none =>
++          simp [currentAuthorityOrigin, hauth, horig] at h
++        | some o =>
++          simp [currentAuthorityOrigin, hauth, horig] at h
++          obtain ⟨rfl, rfl⟩ := h
++          refine ⟨[], tail, rfl, ?_, hauth, horig⟩
++          intro x hx
++          cases hx
++      | false =>
++        simp [currentAuthorityOrigin, hauth] at h
++        obtain ⟨pref, rest, hs, hpref, hid, ho⟩ := ih.mp h
++        refine ⟨head :: pref, rest, by simp [hs], ?_, hid, ho⟩
++        intro x hx
++        simp only [List.mem_cons] at hx
++        rcases hx with rfl | hx
++        · exact hauth
++        · exact hpref x hx
++    · rintro ⟨pref, rest, hs, hpref, hid, ho⟩
++      cases pref with
++      | nil =>
++        simp only [List.nil_append, List.cons.injEq] at hs
++        obtain ⟨rfl, rfl⟩ := hs
++        simp [currentAuthorityOrigin, hid, ho]
++      | cons p ps =>
++        simp only [List.cons_append, List.cons.injEq] at hs
++        obtain ⟨rfl, hs⟩ := hs
++        have hp : authorizesId cursor.world.capabilities ctx operation right head = false :=
++          hpref head (List.mem_cons.mpr (Or.inl rfl))
++        simp [currentAuthorityOrigin, hp]
++        exact ih.mpr ⟨ps, rest, hs,
++          fun x hx ↦ hpref x (List.mem_cons.mpr (Or.inr hx)), hid, ho⟩
++
++theorem exists_first_authorizing {store : CapabilityStore P A D}
++    {ctx : InvocationContext P D} {operation : OperationId}
++    {right : Right P A D} {ids : List CapabilityId}
++    (h : ∃ id ∈ ids, authorizesId store ctx operation right id = true) :
++    ∃ pref id rest,
++      ids = pref ++ id :: rest ∧
++      (∀ x ∈ pref, authorizesId store ctx operation right x = false) ∧
++      authorizesId store ctx operation right id = true := by
++  induction ids with
++  | nil =>
++    obtain ⟨_, hid, _⟩ := h
++    cases hid
++  | cons head tail ih =>
++    cases hb : authorizesId store ctx operation right head with
++    | true =>
++      refine ⟨[], head, tail, rfl, ?_, hb⟩
++      intro x hx
++      cases hx
++    | false =>
++      have htail : ∃ id ∈ tail, authorizesId store ctx operation right id = true := by
++        obtain ⟨id, hid, ha⟩ := h
++        simp only [List.mem_cons] at hid
++        rcases hid with rfl | hid
++        · simp [hb] at ha
++        · exact ⟨id, hid, ha⟩
++      obtain ⟨pref, id, rest, hs, hp, ha⟩ := ih htail
++      refine ⟨head :: pref, id, rest, by simp [hs], ?_, ha⟩
++      intro x hx
++      simp only [List.mem_cons] at hx
++      rcases hx with rfl | hx
++      · exact hb
++      · exact hp x hx
++
++theorem originOf_of_lookup {cfg : Config P A D} {boundaries : Nat → Boundary P A D}
++    {trusted : TrustedRoot P A D} {initial final : World P A D}
++    {events : List (Event P A D)} {history : List (OutputObservation A)} {index : Nat}
++    (trace : TraceSound cfg boundaries initial events final history index)
++    (roots : RootsAccepted trusted initial.capabilities)
++    (id : CapabilityId) (cap : Capability P A D)
++    (hlook : final.capabilities.lookup id = some cap) :
++    ∃ origin, originOf initial events id = some origin ∧
++      OriginAt cfg boundaries trusted initial events id origin ∧
++      origin.grant = cap.toGrant := by
++  obtain ⟨origin, ho, hg⟩ := originAt_complete trace roots id cap hlook
++  exact ⟨origin, originOf_complete trace roots id origin ho, ho, hg⟩
++
++theorem originOf_of_authorizesId {cfg : Config P A D} {boundaries : Nat → Boundary P A D}
++    {trusted : TrustedRoot P A D} {initial : World P A D} {cursor : Cursor P A D}
++    (trace : TraceSound cfg boundaries initial cursor.events cursor.world
++      cursor.outputs cursor.nextIndex)
++    (roots : RootsAccepted trusted initial.capabilities)
++    (ctx : InvocationContext P D) (operation : OperationId)
++    (right : Right P A D) (id : CapabilityId)
++    (hauth : authorizesId cursor.world.capabilities ctx operation right id = true) :
++    ∃ origin, originOf initial cursor.events id = some origin ∧
++      OriginAt cfg boundaries trusted initial cursor.events id origin := by
++  obtain ⟨cap, hlook, _⟩ := (authorizesId_iff ..).mp hauth
++  obtain ⟨origin, hoq, ho, _⟩ := originOf_of_lookup trace roots id cap hlook
++  exact ⟨origin, hoq, ho⟩
++
++/-- Initialized-cursor correspondence: the returned ID is the first requested ID that
++the *current* store authorizes, paired with its initialized origin. This is not
++`hasAuthority`'s existential witness. -/
++theorem currentAuthorityOrigin_iff {cfg : Config P A D}
++    {boundaries : Nat → Boundary P A D} {trusted : TrustedRoot P A D}
++    {initial : World P A D} {cursor : Cursor P A D}
++    (trace : TraceSound cfg boundaries initial cursor.events cursor.world
++      cursor.outputs cursor.nextIndex)
++    (roots : RootsAccepted trusted initial.capabilities)
++    (ctx : InvocationContext P D) (operation : OperationId)
++    (right : Right P A D) (ids : List CapabilityId) (id : CapabilityId)
++    (origin : Origin P A D) :
++    currentAuthorityOrigin initial cursor ctx operation right ids = some (id, origin) ↔
++      ∃ pref rest,
++        ids = pref ++ id :: rest ∧
++        (∀ x ∈ pref,
++          authorizesId cursor.world.capabilities ctx operation right x = false) ∧
++        authorizesId cursor.world.capabilities ctx operation right id = true ∧
++        OriginAt cfg boundaries trusted initial cursor.events id origin := by
++  constructor
++  · intro h
++    obtain ⟨pref, rest, hs, hpref, hauth, hoq⟩ :=
++      (currentAuthorityOrigin_eq_some_iff).mp h
++    exact ⟨pref, rest, hs, hpref, hauth, originOf_sound trace roots id origin hoq⟩
++  · rintro ⟨pref, rest, hs, hpref, hauth, ho⟩
++    have hoq := originOf_complete trace roots id origin ho
++    exact (currentAuthorityOrigin_eq_some_iff).mpr ⟨pref, rest, hs, hpref, hauth, hoq⟩
++
++theorem currentAuthorityOrigin_none_iff {cfg : Config P A D}
++    {boundaries : Nat → Boundary P A D} {trusted : TrustedRoot P A D}
++    {initial : World P A D} {cursor : Cursor P A D}
++    (trace : TraceSound cfg boundaries initial cursor.events cursor.world
++      cursor.outputs cursor.nextIndex)
++    (roots : RootsAccepted trusted initial.capabilities)
++    (ctx : InvocationContext P D) (operation : OperationId)
++    (right : Right P A D) (ids : List CapabilityId) :
++    currentAuthorityOrigin initial cursor ctx operation right ids = none ↔
++      ∀ id ∈ ids, authorizesId cursor.world.capabilities ctx operation right id = false := by
++  constructor
++  · intro hnone id hid
++    cases hauth : authorizesId cursor.world.capabilities ctx operation right id with
++    | false => rfl
++    | true =>
++      have hex : ∃ x ∈ ids,
++          authorizesId cursor.world.capabilities ctx operation right x = true :=
++        ⟨id, hid, hauth⟩
++      obtain ⟨pref, fid, rest, hs, hpref, hfa⟩ := exists_first_authorizing hex
++      obtain ⟨origin, hoq, _ho⟩ :=
++        originOf_of_authorizesId trace roots ctx operation right fid hfa
++      have hsome := (currentAuthorityOrigin_eq_some_iff).mpr
++        ⟨pref, rest, hs, hpref, hfa, hoq⟩
++      simp [hsome] at hnone
++  · intro hall
++    induction ids with
++    | nil => simp [currentAuthorityOrigin]
++    | cons head tail ih =>
++      have hp : authorizesId cursor.world.capabilities ctx operation right head = false :=
++        hall head (List.mem_cons.mpr (Or.inl rfl))
++      simp [currentAuthorityOrigin, hp]
++      exact ih (fun id hid ↦ hall id (List.mem_cons.mpr (Or.inr hid)))
++
++theorem currentAuthorityOrigin_of_hasAuthority {cfg : Config P A D}
++    {boundaries : Nat → Boundary P A D} {trusted : TrustedRoot P A D}
++    {initial : World P A D} {cursor : Cursor P A D}
++    (trace : TraceSound cfg boundaries initial cursor.events cursor.world
++      cursor.outputs cursor.nextIndex)
++    (roots : RootsAccepted trusted initial.capabilities)
++    (ctx : InvocationContext P D) (operation : OperationId)
++    (right : Right P A D) (ids : List CapabilityId)
++    (h : hasAuthority cursor.world.capabilities ids ctx operation right = true) :
++    ∃ id origin,
++      currentAuthorityOrigin initial cursor ctx operation right ids = some (id, origin) ∧
++      authorizesId cursor.world.capabilities ctx operation right id = true ∧
++      OriginAt cfg boundaries trusted initial cursor.events id origin := by
++  obtain ⟨wid, hmem, ha⟩ := (hasAuthority_iff ..).mp h
++  have hex : ∃ x ∈ ids, authorizesId cursor.world.capabilities ctx operation right x = true :=
++    ⟨wid, hmem, ha⟩
++  obtain ⟨pref, fid, rest, hs, hpref, hfa⟩ := exists_first_authorizing hex
++  obtain ⟨origin, hoq, ho⟩ := originOf_of_authorizesId trace roots ctx operation right fid hfa
++  exact ⟨fid, origin,
++    (currentAuthorityOrigin_eq_some_iff).mpr ⟨pref, rest, hs, hpref, hfa, hoq⟩, hfa, ho⟩
++
++theorem revoked_event_equation {cfg : Config P A D} {boundaries : Nat → Boundary P A D}
++    {initial final : World P A D} {events : List (Event P A D)}
++    {history : List (OutputObservation A)} {index : Nat}
++    (h : TraceSound cfg boundaries initial events final history index)
++    (event : Event P A D) (mem : event ∈ events) (rid : CapabilityId)
++    (hs : event.step = .revoke rid) (hr : event.result.receipt = .revoked rid) :
++    revokeCapability cfg.authority (boundaries event.index).ctx
++      event.before.capabilities rid = .ok event.result.world.capabilities := by
++  obtain ⟨prior, accepted⟩ := Composition.TraceSound.steps h event mem
++  have hacc : StepSound cfg (boundaries event.index) event.index prior
++      (.revoke rid) event.before event.result := hs ▸ accepted
++  obtain ⟨store, hrec, _, _, hstore, hrk⟩ := stepSound_revoke_equation hacc
++  rw [hr] at hrec
++  cases hrec
++  simpa [hstore] using hrk
++
++/-- A successful revoke in an initialized prefix remains a permanent tombstone at the
++final store. This is not the initially-dead lemma. -/
++theorem trace_prefix_revoke_dead_at_final {cfg : Config P A D}
++    {boundaries : Nat → Boundary P A D} {initial final : World P A D}
++    {events : List (Event P A D)} {history : List (OutputObservation A)} {index : Nat}
++    (h : TraceSound cfg boundaries initial events final history index)
++    (event : Event P A D) (mem : event ∈ events) (rid : CapabilityId)
++    (hs : event.step = .revoke rid) (hr : event.result.receipt = .revoked rid) :
++    ∃ cap cap',
++      event.result.world.capabilities.lookup rid = some cap ∧ cap.live = false ∧
++      final.capabilities.lookup rid = some cap' ∧ cap'.live = false ∧
++      cap'.toGrant = cap.toGrant := by
++  revert mem
++  induction h with
++  | nil =>
++    intro mem
++    cases mem
++  | @snoc evs pre hist idx previous step result accepted ih =>
++    intro mem
++    simp only [List.mem_append, List.mem_singleton] at mem
++    rcases mem with mem | hev
++    · obtain ⟨cap, cap', hrev, hd, hfin, hfd, hg⟩ := ih mem
++      obtain ⟨cap'', hc'', hd'', hg''⟩ :=
++        stepSound_preserves_dead accepted rid cap' hfin hfd
++      exact ⟨cap, cap'', hrev, hd, hc'', hd'', hg''.trans hg⟩
++    · subst hev
++      have hacc : StepSound cfg (boundaries idx) idx hist
++          (.revoke rid) pre result := hs ▸ accepted
++      obtain ⟨store, hrec, _, _, hstore, hrk⟩ := stepSound_revoke_equation hacc
++      obtain ⟨cap0, _hpre, hpost, _⟩ := revokeCapability_tombstone _ _ _ _ store hrk
++      have hcap : result.world.capabilities.lookup rid =
++          some { cap0 with live := false } := by
++        simpa [hstore] using hpost
++      exact ⟨{ cap0 with live := false }, { cap0 with live := false },
++        hcap, rfl, by simpa [hstore] using hpost, rfl, rfl⟩
++
++theorem issued_after_revoke_fresh {cfg : Config P A D}
++    {boundaries : Nat → Boundary P A D} {initial final : World P A D}
++    {events : List (Event P A D)} {history : List (OutputObservation A)} {index : Nat}
++    (h : TraceSound cfg boundaries initial events final history index)
++    (rev iss : Event P A D) (mrev : rev ∈ events) (miss : iss ∈ events)
++    (rid nid : CapabilityId) (grant : Grant P A D)
++    (hsr : rev.step = .revoke rid) (hrr : rev.result.receipt = .revoked rid)
++    (hsi : iss.step = .issue grant) (hri : iss.result.receipt = .issued nid)
++    (hlt : rev.index < iss.index) :
++    nid ≠ rid ∧
++    ∃ cap cap',
++      rev.result.world.capabilities.lookup rid = some cap ∧ cap.live = false ∧
++      final.capabilities.lookup rid = some cap' ∧ cap'.live = false ∧
++      cap'.toGrant = cap.toGrant := by
++  obtain ⟨cap, cap', hrev, hd, hfin, hfd, hg⟩ :=
++    trace_prefix_revoke_dead_at_final h rev mrev rid hsr hrr
++  have heq := issued_event_equation h iss miss grant nid hsi hri
++  obtain ⟨_, _, _, hid, _⟩ := (issueCapability_ok_iff ..).mp heq
++  have hge := trace_later_before_ge_after h rev iss mrev miss hlt
++  have hltid : rid.value < rev.result.world.capabilities.entries.length := lookup_lt hrev
++  have hnval : nid.value = iss.before.capabilities.entries.length := by
++    simp [hid, CapabilityStore.nextId]
++  refine ⟨?_, cap, cap', hrev, hd, hfin, hfd, hg⟩
++  intro heq'
++  have : nid.value = rid.value := by cases heq'; rfl
++  omega
++
++theorem refused_admin_inert_suffix {cfg : Config P A D}
++    {boundaries : Nat → Boundary P A D} {cursor : Cursor P A D}
++    {failure : LocatedFailure P A D} (hf : cursor.failure = some failure)
++    (steps : List (Step P A D)) :
++    continueRun cfg boundaries cursor steps = cursor :=
++  continueRun_failed cfg boundaries cursor failure hf steps
++
+ end DefiKernel.CapabilityProvenance
+ 
+ 
++

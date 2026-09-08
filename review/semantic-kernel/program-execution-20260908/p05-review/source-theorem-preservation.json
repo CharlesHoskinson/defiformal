@@ -1,0 +1,535 @@
+{
+  "r1_named_theorems": 71,
+  "unchanged_headers": [
+    {
+      "module": "Origins",
+      "name": "rootsAccepted_empty",
+      "header_sha256": "390e7a6096defa2b42d4f5a35b408cfdb2b7ffa594a6cacf28ec8a68666dc5c1",
+      "header": "theorem rootsAccepted_empty (trusted : TrustedRoot P A D) :\n    RootsAccepted trusted CapabilityStore.empty "
+    },
+    {
+      "module": "Origins",
+      "name": "issuedOrigin_nil",
+      "header_sha256": "76b814697b665b0f95806a334a0bc5178ec8e50cd97e722a8db82ca7427d17ed",
+      "header": "theorem issuedOrigin_nil (id : CapabilityId) :\n    issuedOrigin ([] : List (Event P A D)) id = none "
+    },
+    {
+      "module": "Origins",
+      "name": "originOf_initial_lookup",
+      "header_sha256": "cca1f46353cc3c851618b5784c466f350f6ef3482dd4ca9c205ca09cc2351b7f",
+      "header": "theorem originOf_initial_lookup (initial : World P A D) (events : List (Event P A D))\n    (id : CapabilityId) (cap : Capability P A D)\n    (h : initial.capabilities.lookup id = some cap) :\n    originOf initial events id = some (.initial cap.toGrant) "
+    },
+    {
+      "module": "Origins",
+      "name": "originOf_issued_absent",
+      "header_sha256": "467961ade4b4a36ac75c518f7a914e8e5bc56958e54c1a8b31dfd11bf793f410",
+      "header": "theorem originOf_issued_absent (initial : World P A D) (events : List (Event P A D))\n    (id : CapabilityId) (h : initial.capabilities.lookup id = none) :\n    originOf initial events id = issuedOrigin events id "
+    },
+    {
+      "module": "Origins",
+      "name": "issuedOrigin_cons_hit",
+      "header_sha256": "3234aba95d299d1b066d26b1d4a14430aa0cc7c6039e3847b7b5193511a841eb",
+      "header": "theorem issuedOrigin_cons_hit (event : Event P A D) (rest : List (Event P A D))\n    (id : CapabilityId) (grant : Grant P A D)\n    (hs : event.step = .issue grant) (hr : event.result.receipt = .issued id) :\n    issuedOrigin (event :: rest) id = some (.issued event.index grant) "
+    },
+    {
+      "module": "Origins",
+      "name": "issuedOrigin_cons_skip_id",
+      "header_sha256": "d1dc25fe2825b156331e3de240a72b0209dac719fd8292d8ef8ce13843cbd708",
+      "header": "theorem issuedOrigin_cons_skip_id (event : Event P A D) (rest : List (Event P A D))\n    (id other : CapabilityId) (grant : Grant P A D) (hne : other \u2260 id)\n    (hs : event.step = .issue grant) (hr : event.result.receipt = .issued other) :\n    issuedOrigin (event :: rest) id = issuedOrigin rest id "
+    },
+    {
+      "module": "Origins",
+      "name": "issuedOrigin_cons_skip_kind",
+      "header_sha256": "72823914fd6f5f8144ba829df2eacad5034182275aea882fd474701648454213",
+      "header": "theorem issuedOrigin_cons_skip_kind (event : Event P A D) (rest : List (Event P A D))\n    (id : CapabilityId)\n    (hskip : \u2200 grant issuedId,\n      \u00ac(event.step = .issue grant \u2227 event.result.receipt = .issued issuedId)) :\n    issuedOrigin (event :: rest) id = issuedOrigin rest id "
+    },
+    {
+      "module": "Origins",
+      "name": "issuedOrigin_sound_raw",
+      "header_sha256": "a3294b3c3c932aad5c93b6da6fa412d86e5c0b1f3a2503305a7d199da5e67065",
+      "header": "theorem issuedOrigin_sound_raw (events : List (Event P A D)) (id : CapabilityId)\n    (origin : Origin P A D) (h : issuedOrigin events id = some origin) :\n    \u2203 event grant, event \u2208 events \u2227 origin = .issued event.index grant \u2227\n      event.step = .issue grant \u2227 event.result.receipt = .issued id "
+    },
+    {
+      "module": "Origins",
+      "name": "currentAuthorityOrigin_nil",
+      "header_sha256": "98e23b3d50ac19df77ed383f79ce58540eda165ab59e7a38cf705675f7255c25",
+      "header": "theorem currentAuthorityOrigin_nil (initial : World P A D) (cursor : Cursor P A D)\n    (ctx : InvocationContext P D) (operation : OperationId) (right : Right P A D) :\n    currentAuthorityOrigin initial cursor ctx operation right [] = none "
+    },
+    {
+      "module": "Origins",
+      "name": "currentAuthorityOrigin_cons_hit",
+      "header_sha256": "f1d92a80b76e2c5783f13466306828d5d91828dbb523114bc96d10fe40ed8358",
+      "header": "theorem currentAuthorityOrigin_cons_hit (initial : World P A D) (cursor : Cursor P A D)\n    (ctx : InvocationContext P D) (operation : OperationId) (right : Right P A D)\n    (id : CapabilityId) (rest : List CapabilityId) (origin : Origin P A D)\n    (hauth : authorizesId cursor.world.capabilities ctx operation right id = true)\n    (horigin : originOf initial cursor.events id = some origin) :\n    currentAuthorityOrigin initial cursor ctx operation right (id :: rest) =\n      some (id, origin) "
+    },
+    {
+      "module": "Origins",
+      "name": "currentAuthorityOrigin_cons_unauthorized",
+      "header_sha256": "6fb565d8884d447aa5ef94071c03a15bc5e89df3193a626b92c0843aacf978ea",
+      "header": "theorem currentAuthorityOrigin_cons_unauthorized (initial : World P A D) (cursor : Cursor P A D)\n    (ctx : InvocationContext P D) (operation : OperationId) (right : Right P A D)\n    (id : CapabilityId) (rest : List CapabilityId)\n    (hauth : authorizesId cursor.world.capabilities ctx operation right id = false) :\n    currentAuthorityOrigin initial cursor ctx operation right (id :: rest) =\n      currentAuthorityOrigin initial cursor ctx operation right rest "
+    },
+    {
+      "module": "Origins",
+      "name": "currentAuthorityOrigin_cons_authorized_no_origin",
+      "header_sha256": "a7b5a74f74d8cbe83bb02d580c712d37b5bf57054a185b25f2d5f8bf9fa7ccfa",
+      "header": "theorem currentAuthorityOrigin_cons_authorized_no_origin (initial : World P A D)\n    (cursor : Cursor P A D) (ctx : InvocationContext P D) (operation : OperationId)\n    (right : Right P A D) (id : CapabilityId) (rest : List CapabilityId)\n    (hauth : authorizesId cursor.world.capabilities ctx operation right id = true)\n    (horigin : originOf initial cursor.events id = none) :\n    currentAuthorityOrigin initial cursor ctx operation right (id :: rest) = none "
+    },
+    {
+      "module": "Origins",
+      "name": "auditRun_delegates",
+      "header_sha256": "7ae493b27b57e5886fe650cd86f6fbe5d1b3d1cb807d372c7593dcf377e3e24a",
+      "header": "theorem auditRun_delegates (cfg : Config P A D) (boundaries : Nat \u2192 Boundary P A D)\n    (world : World P A D) (steps : List (Step P A D)) (request : OriginRequest P A D) :\n    (auditRun cfg boundaries world steps request).cursor =\n      Composition.run cfg boundaries world steps "
+    },
+    {
+      "module": "Origins",
+      "name": "auditRun_origins",
+      "header_sha256": "dda9928bb6177ccf87c4c9cf0bf41882084e945f128e3e8d5787ea2ecfebe8f3",
+      "header": "theorem auditRun_origins (cfg : Config P A D) (boundaries : Nat \u2192 Boundary P A D)\n    (world : World P A D) (steps : List (Step P A D)) (request : OriginRequest P A D) :\n    (auditRun cfg boundaries world steps request).origins =\n      request.originIds.map (fun id \u21a6\n        (id, originOf world (Composition.run cfg boundaries world steps).events id)) "
+    },
+    {
+      "module": "Origins",
+      "name": "auditRun_current",
+      "header_sha256": "2ccf753f3073aedefd2b29d5dccd91b0604f082600c1d8af915043fc846006a2",
+      "header": "theorem auditRun_current (cfg : Config P A D) (boundaries : Nat \u2192 Boundary P A D)\n    (world : World P A D) (steps : List (Step P A D)) (request : OriginRequest P A D) :\n    (auditRun cfg boundaries world steps request).current =\n      currentAuthorityOrigin world (Composition.run cfg boundaries world steps)\n        request.ctx request.operation request.right request.authorityIds "
+    },
+    {
+      "module": "Observation",
+      "name": "capEq_iff",
+      "header_sha256": "a6a0661c883b08bd6056b32eaeb48938aeb9bbd511c599f2d51270a95639c0e4",
+      "header": "theorem capEq_iff (left right : Capability P A D) :\n    capEq left right = true \u2194\n      left.holder = right.holder \u2227 left.domain = right.domain \u2227\n      left.operation = right.operation \u2227 left.right = right.right \u2227\n      left.live = right.live "
+    },
+    {
+      "module": "Observation",
+      "name": "capEq_eq",
+      "header_sha256": "0384413681acf5033bfce6c2f676209209d586b214413baf574f33067cbd2a1b",
+      "header": "theorem capEq_eq (left right : Capability P A D) :\n    capEq left right = true \u2194 left = right "
+    },
+    {
+      "module": "Observation",
+      "name": "capOptionEq_iff",
+      "header_sha256": "efbb4fb0d3437246b87e15f33578309e46d0f7756a51e6a7be9d025d9589391a",
+      "header": "theorem capOptionEq_iff (left right : Option (Capability P A D)) :\n    capOptionEq left right = true \u2194 left = right "
+    },
+    {
+      "module": "Observation",
+      "name": "storeEntryEq_iff",
+      "header_sha256": "4107a19aa755bee4ece3a92f3ceace1f145a62d5ba3c564334717dd100a8abf1",
+      "header": "theorem storeEntryEq_iff (left right : CapabilityId \u00d7 Option (Capability P A D)) :\n    storeEntryEq left right = true \u2194 left = right "
+    },
+    {
+      "module": "Observation",
+      "name": "storeListEq_iff",
+      "header_sha256": "1ae2c3b37e0c799e79b8ee9417630408ac378358a0c3d25dc60545aaab1ff848",
+      "header": "theorem storeListEq_iff (left right : List (CapabilityId \u00d7 Option (Capability P A D))) :\n    storeListEq left right = true \u2194 left = right "
+    },
+    {
+      "module": "Observation",
+      "name": "ledgerEq_iff",
+      "header_sha256": "e8346c5b86539f39d6e777a3bd12046f49d3778048f87a010d081ee40dce40b5",
+      "header": "theorem ledgerEq_iff (left right : List (Cell P A D \u00d7 \u211a)) :\n    ledgerEq left right = true \u2194 left = right "
+    },
+    {
+      "module": "Observation",
+      "name": "viewEq_iff",
+      "header_sha256": "a5bedd22ee96bbf548fecde4a4cc652957a2ba744c251dca31db2fec14a784c2",
+      "header": "theorem viewEq_iff (left right : ObservedWorld P A D) :\n    viewEq left right = true \u2194 left = right "
+    },
+    {
+      "module": "Observation",
+      "name": "observeWorld_ledger",
+      "header_sha256": "598eb0fbc3b65791887de3e078e161e806daa43c6fc49f269f290da6d740b2e4",
+      "header": "theorem observeWorld_ledger (policy : SupportPolicy P A D) (world : World P A D) :\n    (observeWorld policy world).ledger =\n      policy.cells.map (fun c \u21a6 (c, world.state.balance c)) "
+    },
+    {
+      "module": "Observation",
+      "name": "observeWorld_store",
+      "header_sha256": "f00df155a35e4a76e202f09defd81f825f1d32c42bf7b38759d70eefb7c5170c",
+      "header": "theorem observeWorld_store (policy : SupportPolicy P A D) (world : World P A D) :\n    (observeWorld policy world).store =\n      policy.capabilityIds.map (fun id \u21a6 (id, world.capabilities.lookup id)) "
+    },
+    {
+      "module": "Observation",
+      "name": "observeWorld_nextId_true",
+      "header_sha256": "510a0da2e407f20f823e1a82e6906788b50192f068f51d6a16a4308b751ccd88",
+      "header": "theorem observeWorld_nextId_true (policy : SupportPolicy P A D) (world : World P A D)\n    (h : policy.observeNextId = true) :\n    (observeWorld policy world).nextId = some world.capabilities.nextId "
+    },
+    {
+      "module": "Observation",
+      "name": "observeWorld_nextId_false",
+      "header_sha256": "9e0354c1e8ce17df38551e64a2eb43ad0cdbc8c351631dc3998aeef674d98227",
+      "header": "theorem observeWorld_nextId_false (policy : SupportPolicy P A D) (world : World P A D)\n    (h : policy.observeNextId = false) :\n    (observeWorld policy world).nextId = none "
+    },
+    {
+      "module": "Observation",
+      "name": "map_selected_balances",
+      "header_sha256": "bc842de9d039e1a31f7059d0001788d3d0a8d559bf11479f9c2e91d0b21ce72d",
+      "header": "theorem map_selected_balances {cells : List (Cell P A D)} {pre post : World P A D}\n    (h : \u2200 c \u2208 cells, pre.state.balance c = post.state.balance c) :\n    cells.map (fun c \u21a6 (c, pre.state.balance c)) =\n      cells.map (fun c \u21a6 (c, post.state.balance c)) "
+    },
+    {
+      "module": "Observation",
+      "name": "map_selected_lookups",
+      "header_sha256": "07a0cb515575498803c5875fcd35fa1b5111f06dd95c1669c487fcba3af95f1a",
+      "header": "theorem map_selected_lookups {ids : List CapabilityId} {pre post : World P A D}\n    (h : \u2200 id \u2208 ids, pre.capabilities.lookup id = post.capabilities.lookup id) :\n    ids.map (fun id \u21a6 (id, pre.capabilities.lookup id)) =\n      ids.map (fun id \u21a6 (id, post.capabilities.lookup id)) "
+    },
+    {
+      "module": "Observation",
+      "name": "balances_of_mapped",
+      "header_sha256": "fd7bd9f48472b5bda09b9aa0aae9e10e19e27dee09ef9bf8925b7915e9eb3e6f",
+      "header": "theorem balances_of_mapped {cells : List (Cell P A D)} {pre post : World P A D}\n    (h : cells.map (fun c \u21a6 (c, pre.state.balance c)) =\n      cells.map (fun c \u21a6 (c, post.state.balance c))) :\n    \u2200 c \u2208 cells, pre.state.balance c = post.state.balance c "
+    },
+    {
+      "module": "Observation",
+      "name": "lookups_of_mapped",
+      "header_sha256": "9c41d015a4f1552e2ea866c3265307e7615e6dc3b1f7d5e3dd7168753c92a989",
+      "header": "theorem lookups_of_mapped {ids : List CapabilityId} {pre post : World P A D}\n    (h : ids.map (fun id \u21a6 (id, pre.capabilities.lookup id)) =\n      ids.map (fun id \u21a6 (id, post.capabilities.lookup id))) :\n    \u2200 id \u2208 ids, pre.capabilities.lookup id = post.capabilities.lookup id "
+    },
+    {
+      "module": "Observation",
+      "name": "observeWorld_eq_iff",
+      "header_sha256": "fbbde738f00dff088ede7a82103aab60d64f0d3b1f05a0c8c89227b7374e6cfd",
+      "header": "theorem observeWorld_eq_iff {policy : SupportPolicy P A D} {pre post : World P A D} :\n    observeWorld policy pre = observeWorld policy post \u2194 WorldAgrees policy pre post "
+    },
+    {
+      "module": "Observation",
+      "name": "observeWorld_supported",
+      "header_sha256": "6645d18ac97dee62eef8a1d74eb65ca7643420c70bc9f42d8b0f2015213652da",
+      "header": "theorem observeWorld_supported (policy : SupportPolicy P A D) :\n    SupportsObservation policy (observeWorld policy) "
+    },
+    {
+      "module": "Observation",
+      "name": "viewEq_observeWorld_iff",
+      "header_sha256": "a62f59bbe42051c277ebb615dd6c099216690dab94cfd2b46b20cedde0dd0670",
+      "header": "theorem viewEq_observeWorld_iff (policy : SupportPolicy P A D)\n    (pre post : World P A D) :\n    viewEq (observeWorld policy pre) (observeWorld policy post) = true \u2194\n      WorldAgrees policy pre post "
+    },
+    {
+      "module": "Trace",
+      "name": "lookup_lt",
+      "header_sha256": "50d6b0e44fa9e95a4d582a2d17240025c580b89b4028973a330cc70a12318822",
+      "header": "theorem lookup_lt {store : CapabilityStore P A D} {id : CapabilityId}\n    {cap : Capability P A D} (h : store.lookup id = some cap) :\n    id.value < store.entries.length "
+    },
+    {
+      "module": "Trace",
+      "name": "issueCount_nil",
+      "header_sha256": "c74f3cfb8ded7bde980538bf51e0c9a572678b15f6fc9ab4ee04db7f141ba059",
+      "header": "theorem issueCount_nil : issueCount ([] : List (Event P A D)) = 0 "
+    },
+    {
+      "module": "Trace",
+      "name": "issueCount_append",
+      "header_sha256": "47297450ccd3f6bb6174320dc045f767c8d15765aaac4ceb94426ea635d1bc75",
+      "header": "theorem issueCount_append (xs ys : List (Event P A D)) :\n    issueCount (xs ++ ys) = issueCount xs + issueCount ys "
+    },
+    {
+      "module": "Trace",
+      "name": "issueCount_singleton_invoke",
+      "header_sha256": "7bd3162d132044e239b022a3292550fdba9c77890006b38a8473fc2c1907e14d",
+      "header": "theorem issueCount_singleton_invoke (event : Event P A D) (inv : Invocation P A D)\n    (h : event.step = .invoke inv) : issueCount [event] = 0 "
+    },
+    {
+      "module": "Trace",
+      "name": "issueCount_singleton_issue",
+      "header_sha256": "d366683d67d746277e5b4e8f3f35aa80988b97bd65b643f46ce31a09c1dc303f",
+      "header": "theorem issueCount_singleton_issue (event : Event P A D) (grant : Grant P A D)\n    (h : event.step = .issue grant) : issueCount [event] = 1 "
+    },
+    {
+      "module": "Trace",
+      "name": "issueCount_singleton_revoke",
+      "header_sha256": "121769301c77491effff1616355b774b59afb3b1603be22662c94362c3e2ac67",
+      "header": "theorem issueCount_singleton_revoke (event : Event P A D) (id : CapabilityId)\n    (h : event.step = .revoke id) : issueCount [event] = 0 "
+    },
+    {
+      "module": "Trace",
+      "name": "originAt_append",
+      "header_sha256": "191edfc4ed5a5b3213ef18d1db4da51f1feea7833b3cc78fc90e87b22fb5a5fd",
+      "header": "theorem originAt_append (cfg : Config P A D) (boundaries : Nat \u2192 Boundary P A D)\n    (trusted : TrustedRoot P A D) (initial : World P A D)\n    (events more : List (Event P A D)) (id : CapabilityId) (origin : Origin P A D)\n    (h : OriginAt cfg boundaries trusted initial events id origin) :\n    OriginAt cfg boundaries trusted initial (events ++ more) id origin "
+    },
+    {
+      "module": "Trace",
+      "name": "stepSound_issue_equation",
+      "header_sha256": "9b381033ff22d0b98867a5333474fbaa638378a2e0b7d68812516b8a73caa93f",
+      "header": "theorem stepSound_issue_equation {cfg : Config P A D} {boundary : Boundary P A D}\n    {index : Nat} {history : List (OutputObservation A)} {grant : Grant P A D}\n    {pre : World P A D} {result : StepResult P A D}\n    (h : StepSound cfg boundary index history (.issue grant) pre result) :\n    \u2203 id store,\n      result.receipt = .issued id \u2227 result.outputs = [] \u2227\n      result.world.state = pre.state \u2227 result.world.capabilities = store \u2227\n      issueCapability cfg.authority boundary.ctx pre.capabilities grant = .ok (id, store) "
+    },
+    {
+      "module": "Trace",
+      "name": "stepSound_revoke_equation",
+      "header_sha256": "79039eafbe57bb50d2a790f8429d36493483fab9a8c1ed6ef054a8100a106fea",
+      "header": "theorem stepSound_revoke_equation {cfg : Config P A D} {boundary : Boundary P A D}\n    {index : Nat} {history : List (OutputObservation A)} {id : CapabilityId}\n    {pre : World P A D} {result : StepResult P A D}\n    (h : StepSound cfg boundary index history (.revoke id) pre result) :\n    \u2203 store,\n      result.receipt = .revoked id \u2227 result.outputs = [] \u2227\n      result.world.state = pre.state \u2227 result.world.capabilities = store \u2227\n      revokeCapability cfg.authority boundary.ctx pre.capabilities id = .ok store "
+    },
+    {
+      "module": "Trace",
+      "name": "stepSound_length",
+      "header_sha256": "4910e707faa28ab0bdea81e6cdae645ddf93fd031be3b8be4da8fd2dbf321b44",
+      "header": "theorem stepSound_length {cfg : Config P A D} {boundary : Boundary P A D}\n    {index : Nat} {history : List (OutputObservation A)} {step : Step P A D}\n    {pre : World P A D} {result : StepResult P A D}\n    (h : StepSound cfg boundary index history step pre result) :\n    result.world.capabilities.entries.length =\n      pre.capabilities.entries.length + eventIssueCount \u27e8index, step, pre, result\u27e9 "
+    },
+    {
+      "module": "Trace",
+      "name": "stepSound_preserves_allocated",
+      "header_sha256": "738932f2ce0a636d77db9f38f39b688ca9a34fea1465af7c2701182c9515f862",
+      "header": "theorem stepSound_preserves_allocated {cfg : Config P A D} {boundary : Boundary P A D}\n    {index : Nat} {history : List (OutputObservation A)} {step : Step P A D}\n    {pre : World P A D} {result : StepResult P A D}\n    (h : StepSound cfg boundary index history step pre result)\n    (id : CapabilityId) (cap : Capability P A D)\n    (hlook : pre.capabilities.lookup id = some cap) :\n    \u2203 cap', result.world.capabilities.lookup id = some cap' \u2227\n      cap'.toGrant = cap.toGrant "
+    },
+    {
+      "module": "Trace",
+      "name": "stepSound_preserves_dead",
+      "header_sha256": "56845936e05c1bb8327944b6f2880dcf6504f45f42aaebf9ed97409388dd29d3",
+      "header": "theorem stepSound_preserves_dead {cfg : Config P A D} {boundary : Boundary P A D}\n    {index : Nat} {history : List (OutputObservation A)} {step : Step P A D}\n    {pre : World P A D} {result : StepResult P A D}\n    (h : StepSound cfg boundary index history step pre result)\n    (id : CapabilityId) (cap : Capability P A D)\n    (hlook : pre.capabilities.lookup id = some cap) (hdead : cap.live = false) :\n    \u2203 cap', result.world.capabilities.lookup id = some cap' \u2227\n      cap'.live = false \u2227 cap'.toGrant = cap.toGrant "
+    },
+    {
+      "module": "Trace",
+      "name": "traceBefore",
+      "header_sha256": "6e331537a005c12ab9db8af81b80d20a74b00ccf1a445d9fa5cdc055d73542a1",
+      "header": "theorem traceBefore {cfg : Config P A D} {boundaries : Nat \u2192 Boundary P A D}\n    {initial final : World P A D} {events : List (Event P A D)}\n    {history : List (OutputObservation A)} {index : Nat}\n    (h : TraceSound cfg boundaries initial events final history index)\n    (event : Event P A D) (mem : event \u2208 events) :\n    \u2203 front hist suffix,\n      events = front ++ event :: suffix \u2227\n      TraceSound cfg boundaries initial front event.before hist event.index "
+    },
+    {
+      "module": "Trace",
+      "name": "trace_allocation_count",
+      "header_sha256": "78bb1252854588d21181f2bac444287db1045cb8d84f4c6953fd1ca3de37b407",
+      "header": "theorem trace_allocation_count {cfg : Config P A D}\n    {boundaries : Nat \u2192 Boundary P A D} {initial final : World P A D}\n    {events : List (Event P A D)} {history : List (OutputObservation A)} {index : Nat}\n    (h : TraceSound cfg boundaries initial events final history index) :\n    final.capabilities.entries.length =\n      initial.capabilities.entries.length + issueCount events "
+    },
+    {
+      "module": "Trace",
+      "name": "trace_persistent_grant",
+      "header_sha256": "8abc3a1eed430fc9c07168e1f132b7b5389d93aac816b55a625d0e039c446044",
+      "header": "theorem trace_persistent_grant {cfg : Config P A D}\n    {boundaries : Nat \u2192 Boundary P A D} {initial final : World P A D}\n    {events : List (Event P A D)} {history : List (OutputObservation A)} {index : Nat}\n    (h : TraceSound cfg boundaries initial events final history index)\n    (id : CapabilityId) (cap : Capability P A D)\n    (hlook : initial.capabilities.lookup id = some cap) :\n    \u2203 cap', final.capabilities.lookup id = some cap' \u2227 cap'.toGrant = cap.toGrant "
+    },
+    {
+      "module": "Trace",
+      "name": "trace_dead_stays_dead",
+      "header_sha256": "87bd949f3f6f6bc4c6e7191e7da9cf30cec619507898ee12d4544ec0d1a8b99f",
+      "header": "theorem trace_dead_stays_dead {cfg : Config P A D}\n    {boundaries : Nat \u2192 Boundary P A D} {initial final : World P A D}\n    {events : List (Event P A D)} {history : List (OutputObservation A)} {index : Nat}\n    (h : TraceSound cfg boundaries initial events final history index)\n    (id : CapabilityId) (cap : Capability P A D)\n    (hlook : initial.capabilities.lookup id = some cap) (hdead : cap.live = false) :\n    \u2203 cap', final.capabilities.lookup id = some cap' \u2227 cap'.live = false \u2227\n      cap'.toGrant = cap.toGrant "
+    },
+    {
+      "module": "Trace",
+      "name": "trace_before_length_ge",
+      "header_sha256": "83bb0b91bef856820ab4a93ecbf3b4b50881b2b9a958380018c88f209598a584",
+      "header": "theorem trace_before_length_ge {cfg : Config P A D}\n    {boundaries : Nat \u2192 Boundary P A D} {initial final : World P A D}\n    {events : List (Event P A D)} {history : List (OutputObservation A)} {index : Nat}\n    (h : TraceSound cfg boundaries initial events final history index)\n    (event : Event P A D) (mem : event \u2208 events) :\n    initial.capabilities.entries.length \u2264\n      event.before.capabilities.entries.length "
+    },
+    {
+      "module": "Trace",
+      "name": "issued_event_equation",
+      "header_sha256": "a9e44dc2309b1aaffc8c25f12373a4b6fd253d68c82d02487d3f63e8d2466894",
+      "header": "theorem issued_event_equation {cfg : Config P A D} {boundaries : Nat \u2192 Boundary P A D}\n    {initial final : World P A D} {events : List (Event P A D)}\n    {history : List (OutputObservation A)} {index : Nat}\n    (h : TraceSound cfg boundaries initial events final history index)\n    (event : Event P A D) (mem : event \u2208 events) (grant : Grant P A D)\n    (id : CapabilityId) (hs : event.step = .issue grant)\n    (hr : event.result.receipt = .issued id) :\n    issueCapability cfg.authority (boundaries event.index).ctx\n      event.before.capabilities grant =\n        .ok (id, event.result.world.capabilities) "
+    },
+    {
+      "module": "Trace",
+      "name": "originAt_complete",
+      "header_sha256": "71b983519fb5ed0e85a7bb1270a8ceec887bddfe2506821249853afa90c0d233",
+      "header": "theorem originAt_complete {cfg : Config P A D} {boundaries : Nat \u2192 Boundary P A D}\n    {trusted : TrustedRoot P A D} {initial final : World P A D}\n    {events : List (Event P A D)} {history : List (OutputObservation A)} {index : Nat}\n    (trace : TraceSound cfg boundaries initial events final history index)\n    (roots : RootsAccepted trusted initial.capabilities)\n    (id : CapabilityId) (cap : Capability P A D)\n    (hlook : final.capabilities.lookup id = some cap) :\n    \u2203 origin, OriginAt cfg boundaries trusted initial events id origin \u2227\n      origin.grant = cap.toGrant "
+    },
+    {
+      "module": "Trace",
+      "name": "trace_index_lt",
+      "header_sha256": "1b0d820a9cc2219fea483d60765cc53cb4cbb576d1951c5210767f48deca584d",
+      "header": "theorem trace_index_lt {cfg : Config P A D} {boundaries : Nat \u2192 Boundary P A D}\n    {initial final : World P A D} {events : List (Event P A D)}\n    {history : List (OutputObservation A)} {index : Nat}\n    (h : TraceSound cfg boundaries initial events final history index)\n    (event : Event P A D) (mem : event \u2208 events) : event.index < index "
+    },
+    {
+      "module": "Trace",
+      "name": "trace_unique_index",
+      "header_sha256": "ddb568f4483cc0a34e1d9e25a2e24eeb3ff27bc112a0aeabef2b155e85717649",
+      "header": "theorem trace_unique_index {cfg : Config P A D} {boundaries : Nat \u2192 Boundary P A D}\n    {initial final : World P A D} {events : List (Event P A D)}\n    {history : List (OutputObservation A)} {index : Nat}\n    (h : TraceSound cfg boundaries initial events final history index)\n    (e1 e2 : Event P A D) (m1 : e1 \u2208 events) (m2 : e2 \u2208 events)\n    (hi : e1.index = e2.index) : e1 = e2 "
+    },
+    {
+      "module": "Trace",
+      "name": "trace_event_result_le_final",
+      "header_sha256": "0fd489b2e39b10db9b98d4573778a2d6084ee300d5c89de13285003a9cd696db",
+      "header": "theorem trace_event_result_le_final {cfg : Config P A D}\n    {boundaries : Nat \u2192 Boundary P A D} {initial final : World P A D}\n    {events : List (Event P A D)} {history : List (OutputObservation A)} {index : Nat}\n    (h : TraceSound cfg boundaries initial events final history index)\n    (event : Event P A D) (mem : event \u2208 events) :\n    event.result.world.capabilities.entries.length \u2264\n      final.capabilities.entries.length "
+    },
+    {
+      "module": "Trace",
+      "name": "trace_later_before_ge_after",
+      "header_sha256": "38b60a2f438f90f08b968bbc73f7f1880a2f15aa9166cd3d3dd638b7a085066d",
+      "header": "theorem trace_later_before_ge_after {cfg : Config P A D}\n    {boundaries : Nat \u2192 Boundary P A D} {initial final : World P A D}\n    {events : List (Event P A D)} {history : List (OutputObservation A)} {index : Nat}\n    (h : TraceSound cfg boundaries initial events final history index)\n    (e1 e2 : Event P A D) (m1 : e1 \u2208 events) (m2 : e2 \u2208 events)\n    (hlt : e1.index < e2.index) :\n    e1.result.world.capabilities.entries.length \u2264\n      e2.before.capabilities.entries.length "
+    },
+    {
+      "module": "Trace",
+      "name": "originAt_issued_nextId",
+      "header_sha256": "2a73a47028f7425877a19c492394867c3f52c75de083d553a2f2f25330da895b",
+      "header": "theorem originAt_issued_nextId {cfg : Config P A D} {boundaries : Nat \u2192 Boundary P A D}\n    {trusted : TrustedRoot P A D} {initial : World P A D}\n    {events : List (Event P A D)} {id : CapabilityId} {idx : Nat}\n    {grant : Grant P A D}\n    (h : OriginAt cfg boundaries trusted initial events id (.issued idx grant)) :\n    \u2203 event, event \u2208 events \u2227 event.index = idx \u2227 event.step = .issue grant \u2227\n      event.result.receipt = .issued id \u2227\n      id = event.before.capabilities.nextId "
+    },
+    {
+      "module": "Trace",
+      "name": "originAt_unique",
+      "header_sha256": "b199f9130c84ad9be6f4586613c929107b1fce860380a842a91616d6b2c69397",
+      "header": "theorem originAt_unique {cfg : Config P A D} {boundaries : Nat \u2192 Boundary P A D}\n    {trusted : TrustedRoot P A D} {initial final : World P A D}\n    {events : List (Event P A D)} {history : List (OutputObservation A)} {index : Nat}\n    (trace : TraceSound cfg boundaries initial events final history index)\n    (roots : RootsAccepted trusted initial.capabilities)\n    (id : CapabilityId) (o1 o2 : Origin P A D)\n    (h1 : OriginAt cfg boundaries trusted initial events id o1)\n    (h2 : OriginAt cfg boundaries trusted initial events id o2) : o1 = o2 "
+    },
+    {
+      "module": "Trace",
+      "name": "originOf_sound",
+      "header_sha256": "c87da0adc5ee6322e351e19226407c736c58e4609b95372dca72070191aab164",
+      "header": "theorem originOf_sound {cfg : Config P A D} {boundaries : Nat \u2192 Boundary P A D}\n    {trusted : TrustedRoot P A D} {initial final : World P A D}\n    {events : List (Event P A D)} {history : List (OutputObservation A)} {index : Nat}\n    (trace : TraceSound cfg boundaries initial events final history index)\n    (roots : RootsAccepted trusted initial.capabilities)\n    (id : CapabilityId) (origin : Origin P A D)\n    (h : originOf initial events id = some origin) :\n    OriginAt cfg boundaries trusted initial events id origin "
+    },
+    {
+      "module": "Trace",
+      "name": "hasAuthority_origin_witness",
+      "header_sha256": "b331fef534e451bb4f4073bfd0031cd2fe2bb1837619a73c13719ee40ac89a64",
+      "header": "theorem hasAuthority_origin_witness {cfg : Config P A D}\n    {boundaries : Nat \u2192 Boundary P A D} {trusted : TrustedRoot P A D}\n    {initial final : World P A D} {events : List (Event P A D)}\n    {history : List (OutputObservation A)} {index : Nat}\n    (trace : TraceSound cfg boundaries initial events final history index)\n    (roots : RootsAccepted trusted initial.capabilities)\n    (ids : List CapabilityId) (ctx : InvocationContext P D)\n    (operation : OperationId) (right : Right P A D)\n    (hauth : hasAuthority final.capabilities ids ctx operation right = true) :\n    \u2203 id origin, id \u2208 ids \u2227\n      authorizesId final.capabilities ctx operation right id = true \u2227\n      OriginAt cfg boundaries trusted initial events id origin "
+    },
+    {
+      "module": "Trace",
+      "name": "accepted_invoke_current_authority",
+      "header_sha256": "f1941389819d301083fd89f36e3ff3c7f24442872fe66af1ce3970f78978a850",
+      "header": "theorem accepted_invoke_current_authority {cfg : Config P A D}\n    {boundaries : Nat \u2192 Boundary P A D} {trusted : TrustedRoot P A D}\n    {initial final : World P A D} {events : List (Event P A D)}\n    {history : List (OutputObservation A)} {index : Nat}\n    (trace : TraceSound cfg boundaries initial events final history index)\n    (roots : RootsAccepted trusted initial.capabilities)\n    (event : Event P A D) (mem : event \u2208 events) (inv : Invocation P A D)\n    (request : Request P A D) (e : Evaluated P A D)\n    (hs : event.step = .invoke inv)\n    (hr : event.result.receipt = .invoked request e) :\n    hasAuthority event.before.capabilities request.capabilityIds\n      (boundaries event.index).ctx request.operation .invoke = true \u2227\n    (\u2200 c, e.effect c < 0 \u2192\n      hasAuthority event.before.capabilities request.capabilityIds\n        (boundaries event.index).ctx request.operation (.debit c) = true) \u2227\n    (\u2200 d a, e.supply d a \u2260 0 \u2192\n      hasAuthority event.before.capabilities request.capabilityIds\n        (boundaries event.index).ctx request.operation (.changeSupply d a) = true) \u2227\n    (\u2200 right, hasAuthority event.before.capabilities request.capabilityIds\n        (boundaries event.index).ctx request.operation right = true \u2192\n      \u2203 id origin, id \u2208 request.capabilityIds \u2227\n        authorizesId event.before.capabilities (boundaries event.index).ctx\n          request.operation right id = true \u2227\n        OriginAt cfg boundaries trusted initial events id origin) "
+    },
+    {
+      "module": "Trace",
+      "name": "executeStep_issue_error",
+      "header_sha256": "53cf8da9d29efd57765a63a1608ead69eb0f63e622894818dffe37f10076a897",
+      "header": "theorem executeStep_issue_error {cfg : Config P A D} {boundary : Boundary P A D}\n    {index : Nat} {history : List (OutputObservation A)} {grant : Grant P A D}\n    {pre : World P A D} {reason : AuthorityFailure}\n    (hv : validateCatalog cfg.registry cfg.catalog = true)\n    (hi : issueCapability cfg.authority boundary.ctx pre.capabilities grant = .error reason) :\n    executeStep cfg boundary index history (.issue grant) pre = .error (.authority reason) "
+    },
+    {
+      "module": "Trace",
+      "name": "executeStep_revoke_error",
+      "header_sha256": "0c66bfcd411562939fe57349f5e97bea84b550fed253fd880cbed6fb14e20ce0",
+      "header": "theorem executeStep_revoke_error {cfg : Config P A D} {boundary : Boundary P A D}\n    {index : Nat} {history : List (OutputObservation A)} {id : CapabilityId}\n    {pre : World P A D} {reason : AuthorityFailure}\n    (hv : validateCatalog cfg.registry cfg.catalog = true)\n    (hr : revokeCapability cfg.authority boundary.ctx pre.capabilities id = .error reason) :\n    executeStep cfg boundary index history (.revoke id) pre = .error (.authority reason) "
+    },
+    {
+      "module": "Trace",
+      "name": "advance_rejected_prefix",
+      "header_sha256": "b4366fe344180131bf56bb182d27e6a9eed0cbcf0c88507549b66d36cbf8fc64",
+      "header": "theorem advance_rejected_prefix {cfg : Config P A D}\n    {boundaries : Nat \u2192 Boundary P A D} {cursor : Cursor P A D}\n    {step : Step P A D} {reason : Failure}\n    (hf : cursor.failure = none)\n    (he : executeStep cfg (boundaries cursor.nextIndex) cursor.nextIndex\n      cursor.outputs step cursor.world = .error reason) :\n    (advance cfg boundaries cursor step).world = cursor.world \u2227\n    (advance cfg boundaries cursor step).events = cursor.events \u2227\n    (advance cfg boundaries cursor step).outputs = cursor.outputs \u2227\n    (advance cfg boundaries cursor step).nextIndex = cursor.nextIndex \u2227\n    (advance cfg boundaries cursor step).failure =\n      some \u27e8cursor.nextIndex, some step, reason\u27e9 "
+    },
+    {
+      "module": "Trace",
+      "name": "revoke_unknown_before_admin",
+      "header_sha256": "c1a626b4978d5c87a6dfcd929c221fec3b3c3e890f53e348e7793b08c3528233",
+      "header": "theorem revoke_unknown_before_admin {config : AuthorityConfig P D}\n    {ctx : InvocationContext P D} {store : CapabilityStore P A D}\n    {id : CapabilityId} (h : store.lookup id = none) :\n    revokeCapability config ctx store id = .error .unknownCapability "
+    },
+    {
+      "module": "Trace",
+      "name": "issue_unauthorized_before_domains",
+      "header_sha256": "dd85fb0b256daa573c771353c90f08f40f6734d55ae02d7c1a3e756d734b130f",
+      "header": "theorem issue_unauthorized_before_domains {config : AuthorityConfig P D}\n    {ctx : InvocationContext P D} {store : CapabilityStore P A D}\n    {grant : Grant P A D} (h : isDomainAdmin config ctx grant.domain = false) :\n    issueCapability config ctx store grant = .error .unauthorizedAdmin "
+    },
+    {
+      "module": "Trace",
+      "name": "originOf_complete_initial",
+      "header_sha256": "5719e5278ee342e83e7786f8bce7a2af96867a81f792712ca8e9f858adfa0de1",
+      "header": "theorem originOf_complete_initial {cfg : Config P A D}\n    {boundaries : Nat \u2192 Boundary P A D} {trusted : TrustedRoot P A D}\n    {initial : World P A D} {events : List (Event P A D)} {id : CapabilityId}\n    {grant : Grant P A D}\n    (h : OriginAt cfg boundaries trusted initial events id (.initial grant)) :\n    originOf initial events id = some (.initial grant) "
+    },
+    {
+      "module": "Trace",
+      "name": "issuedOrigin_of_unique",
+      "header_sha256": "e03ffec73bee3762dba9d6af54341d811078a7d704916b16f0907f38eead2c88",
+      "header": "theorem issuedOrigin_of_unique {events : List (Event P A D)} {id : CapabilityId}\n    {event : Event P A D} {grant : Grant P A D}\n    (hs : event.step = .issue grant)\n    (hr : event.result.receipt = .issued id)\n    (mem : event \u2208 events)\n    (unique : \u2200 e \u2208 events, e.result.receipt = .issued id \u2192 e = event) :\n    issuedOrigin events id = some (.issued event.index grant) "
+    },
+    {
+      "module": "FoundationChecks",
+      "name": "empty_roots",
+      "header_sha256": "a1dcfc4413fc2ee2576f022ba21284b22d382943b95ec3e61c7559c77852b748",
+      "header": "theorem empty_roots : RootsAccepted allRoots (CapabilityStore.empty : CapabilityStore P A D) "
+    },
+    {
+      "module": "FoundationChecks",
+      "name": "nonempty_roots",
+      "header_sha256": "8fcf6a0009247085a2c153b0da2260a321fe672d2f3bdc421a2083fb768380a8",
+      "header": "theorem nonempty_roots : RootsAccepted allRoots nonemptyStore "
+    },
+    {
+      "module": "FoundationChecks",
+      "name": "empty_world_roots",
+      "header_sha256": "1c3cd8ccfc174f8ce43c77cc225c96b39560b438d9e80e66f9c05f6f1d10d6de",
+      "header": "theorem empty_world_roots : RootsAccepted allRoots emptyWorld.capabilities "
+    }
+  ],
+  "new_named_theorems": 20,
+  "new_theorems": [
+    {
+      "module": "Trace",
+      "name": "stepSound_invoke_receipt",
+      "header": "theorem stepSound_invoke_receipt {cfg : Config P A D} {boundary : Boundary P A D}\n    {index : Nat} {history : List (OutputObservation A)} {inv : Invocation P A D}\n    {pre : World P A D} {result : StepResult P A D}\n    (h : StepSound cfg boundary index history (.invoke inv) pre result) :\n    \u2203 request e, result.receipt = .invoked request e "
+    },
+    {
+      "module": "Trace",
+      "name": "trace_receipt_issued_step",
+      "header": "theorem trace_receipt_issued_step {cfg : Config P A D}\n    {boundaries : Nat \u2192 Boundary P A D} {initial final : World P A D}\n    {events : List (Event P A D)} {history : List (OutputObservation A)} {index : Nat}\n    (h : TraceSound cfg boundaries initial events final history index)\n    (event : Event P A D) (mem : event \u2208 events) (id : CapabilityId)\n    (hr : event.result.receipt = .issued id) :\n    \u2203 grant, event.step = .issue grant "
+    },
+    {
+      "module": "Trace",
+      "name": "originAt_issued_not_initial",
+      "header": "theorem originAt_issued_not_initial {cfg : Config P A D}\n    {boundaries : Nat \u2192 Boundary P A D} {trusted : TrustedRoot P A D}\n    {initial final : World P A D} {events : List (Event P A D)}\n    {history : List (OutputObservation A)} {index : Nat}\n    (trace : TraceSound cfg boundaries initial events final history index)\n    (roots : RootsAccepted trusted initial.capabilities)\n    (id : CapabilityId) {idx : Nat} {grant : Grant P A D}\n    (h : OriginAt cfg boundaries trusted initial events id (.issued idx grant)) :\n    initial.capabilities.lookup id = none "
+    },
+    {
+      "module": "Trace",
+      "name": "originOf_complete",
+      "header": "theorem originOf_complete {cfg : Config P A D} {boundaries : Nat \u2192 Boundary P A D}\n    {trusted : TrustedRoot P A D} {initial final : World P A D}\n    {events : List (Event P A D)} {history : List (OutputObservation A)} {index : Nat}\n    (trace : TraceSound cfg boundaries initial events final history index)\n    (roots : RootsAccepted trusted initial.capabilities)\n    (id : CapabilityId) (origin : Origin P A D)\n    (h : OriginAt cfg boundaries trusted initial events id origin) :\n    originOf initial events id = some origin "
+    },
+    {
+      "module": "Trace",
+      "name": "originOf_iff",
+      "header": "theorem originOf_iff {cfg : Config P A D} {boundaries : Nat \u2192 Boundary P A D}\n    {trusted : TrustedRoot P A D} {initial final : World P A D}\n    {events : List (Event P A D)} {history : List (OutputObservation A)} {index : Nat}\n    (trace : TraceSound cfg boundaries initial events final history index)\n    (roots : RootsAccepted trusted initial.capabilities)\n    (id : CapabilityId) (origin : Origin P A D) :\n    originOf initial events id = some origin \u2194\n      OriginAt cfg boundaries trusted initial events id origin "
+    },
+    {
+      "module": "Trace",
+      "name": "currentAuthorityOrigin_eq_some_iff",
+      "header": "theorem currentAuthorityOrigin_eq_some_iff {initial : World P A D}\n    {cursor : Cursor P A D} {ctx : InvocationContext P D} {operation : OperationId}\n    {right : Right P A D} {ids : List CapabilityId} {id : CapabilityId}\n    {origin : Origin P A D} :\n    currentAuthorityOrigin initial cursor ctx operation right ids = some (id, origin) \u2194\n      \u2203 pref rest,\n        ids = pref ++ id :: rest \u2227\n        (\u2200 x \u2208 pref,\n          authorizesId cursor.world.capabilities ctx operation right x = false) \u2227\n        authorizesId cursor.world.capabilities ctx operation right id = true \u2227\n        originOf initial cursor.events id = some origin "
+    },
+    {
+      "module": "Trace",
+      "name": "exists_first_authorizing",
+      "header": "theorem exists_first_authorizing {store : CapabilityStore P A D}\n    {ctx : InvocationContext P D} {operation : OperationId}\n    {right : Right P A D} {ids : List CapabilityId}\n    (h : \u2203 id \u2208 ids, authorizesId store ctx operation right id = true) :\n    \u2203 pref id rest,\n      ids = pref ++ id :: rest \u2227\n      (\u2200 x \u2208 pref, authorizesId store ctx operation right x = false) \u2227\n      authorizesId store ctx operation right id = true "
+    },
+    {
+      "module": "Trace",
+      "name": "originOf_of_lookup",
+      "header": "theorem originOf_of_lookup {cfg : Config P A D} {boundaries : Nat \u2192 Boundary P A D}\n    {trusted : TrustedRoot P A D} {initial final : World P A D}\n    {events : List (Event P A D)} {history : List (OutputObservation A)} {index : Nat}\n    (trace : TraceSound cfg boundaries initial events final history index)\n    (roots : RootsAccepted trusted initial.capabilities)\n    (id : CapabilityId) (cap : Capability P A D)\n    (hlook : final.capabilities.lookup id = some cap) :\n    \u2203 origin, originOf initial events id = some origin \u2227\n      OriginAt cfg boundaries trusted initial events id origin \u2227\n      origin.grant = cap.toGrant "
+    },
+    {
+      "module": "Trace",
+      "name": "originOf_of_authorizesId",
+      "header": "theorem originOf_of_authorizesId {cfg : Config P A D} {boundaries : Nat \u2192 Boundary P A D}\n    {trusted : TrustedRoot P A D} {initial : World P A D} {cursor : Cursor P A D}\n    (trace : TraceSound cfg boundaries initial cursor.events cursor.world\n      cursor.outputs cursor.nextIndex)\n    (roots : RootsAccepted trusted initial.capabilities)\n    (ctx : InvocationContext P D) (operation : OperationId)\n    (right : Right P A D) (id : CapabilityId)\n    (hauth : authorizesId cursor.world.capabilities ctx operation right id = true) :\n    \u2203 origin, originOf initial cursor.events id = some origin \u2227\n      OriginAt cfg boundaries trusted initial cursor.events id origin "
+    },
+    {
+      "module": "Trace",
+      "name": "currentAuthorityOrigin_iff",
+      "header": "theorem currentAuthorityOrigin_iff {cfg : Config P A D}\n    {boundaries : Nat \u2192 Boundary P A D} {trusted : TrustedRoot P A D}\n    {initial : World P A D} {cursor : Cursor P A D}\n    (trace : TraceSound cfg boundaries initial cursor.events cursor.world\n      cursor.outputs cursor.nextIndex)\n    (roots : RootsAccepted trusted initial.capabilities)\n    (ctx : InvocationContext P D) (operation : OperationId)\n    (right : Right P A D) (ids : List CapabilityId) (id : CapabilityId)\n    (origin : Origin P A D) :\n    currentAuthorityOrigin initial cursor ctx operation right ids = some (id, origin) \u2194\n      \u2203 pref rest,\n        ids = pref ++ id :: rest \u2227\n        (\u2200 x \u2208 pref,\n          authorizesId cursor.world.capabilities ctx operation right x = false) \u2227\n        authorizesId cursor.world.capabilities ctx operation right id = true \u2227\n        OriginAt cfg boundaries trusted initial cursor.events id origin "
+    },
+    {
+      "module": "Trace",
+      "name": "currentAuthorityOrigin_none_iff",
+      "header": "theorem currentAuthorityOrigin_none_iff {cfg : Config P A D}\n    {boundaries : Nat \u2192 Boundary P A D} {trusted : TrustedRoot P A D}\n    {initial : World P A D} {cursor : Cursor P A D}\n    (trace : TraceSound cfg boundaries initial cursor.events cursor.world\n      cursor.outputs cursor.nextIndex)\n    (roots : RootsAccepted trusted initial.capabilities)\n    (ctx : InvocationContext P D) (operation : OperationId)\n    (right : Right P A D) (ids : List CapabilityId) :\n    currentAuthorityOrigin initial cursor ctx operation right ids = none \u2194\n      \u2200 id \u2208 ids, authorizesId cursor.world.capabilities ctx operation right id = false "
+    },
+    {
+      "module": "Trace",
+      "name": "currentAuthorityOrigin_of_hasAuthority",
+      "header": "theorem currentAuthorityOrigin_of_hasAuthority {cfg : Config P A D}\n    {boundaries : Nat \u2192 Boundary P A D} {trusted : TrustedRoot P A D}\n    {initial : World P A D} {cursor : Cursor P A D}\n    (trace : TraceSound cfg boundaries initial cursor.events cursor.world\n      cursor.outputs cursor.nextIndex)\n    (roots : RootsAccepted trusted initial.capabilities)\n    (ctx : InvocationContext P D) (operation : OperationId)\n    (right : Right P A D) (ids : List CapabilityId)\n    (h : hasAuthority cursor.world.capabilities ids ctx operation right = true) :\n    \u2203 id origin,\n      currentAuthorityOrigin initial cursor ctx operation right ids = some (id, origin) \u2227\n      authorizesId cursor.world.capabilities ctx operation right id = true \u2227\n      OriginAt cfg boundaries trusted initial cursor.events id origin "
+    },
+    {
+      "module": "Trace",
+      "name": "revoked_event_equation",
+      "header": "theorem revoked_event_equation {cfg : Config P A D} {boundaries : Nat \u2192 Boundary P A D}\n    {initial final : World P A D} {events : List (Event P A D)}\n    {history : List (OutputObservation A)} {index : Nat}\n    (h : TraceSound cfg boundaries initial events final history index)\n    (event : Event P A D) (mem : event \u2208 events) (rid : CapabilityId)\n    (hs : event.step = .revoke rid) (hr : event.result.receipt = .revoked rid) :\n    revokeCapability cfg.authority (boundaries event.index).ctx\n      event.before.capabilities rid = .ok event.result.world.capabilities "
+    },
+    {
+      "module": "Trace",
+      "name": "trace_prefix_revoke_dead_at_final",
+      "header": "theorem trace_prefix_revoke_dead_at_final {cfg : Config P A D}\n    {boundaries : Nat \u2192 Boundary P A D} {initial final : World P A D}\n    {events : List (Event P A D)} {history : List (OutputObservation A)} {index : Nat}\n    (h : TraceSound cfg boundaries initial events final history index)\n    (event : Event P A D) (mem : event \u2208 events) (rid : CapabilityId)\n    (hs : event.step = .revoke rid) (hr : event.result.receipt = .revoked rid) :\n    \u2203 cap cap',\n      event.result.world.capabilities.lookup rid = some cap \u2227 cap.live = false \u2227\n      final.capabilities.lookup rid = some cap' \u2227 cap'.live = false \u2227\n      cap'.toGrant = cap.toGrant "
+    },
+    {
+      "module": "Trace",
+      "name": "issued_after_revoke_fresh",
+      "header": "theorem issued_after_revoke_fresh {cfg : Config P A D}\n    {boundaries : Nat \u2192 Boundary P A D} {initial final : World P A D}\n    {events : List (Event P A D)} {history : List (OutputObservation A)} {index : Nat}\n    (h : TraceSound cfg boundaries initial events final history index)\n    (rev iss : Event P A D) (mrev : rev \u2208 events) (miss : iss \u2208 events)\n    (rid nid : CapabilityId) (grant : Grant P A D)\n    (hsr : rev.step = .revoke rid) (hrr : rev.result.receipt = .revoked rid)\n    (hsi : iss.step = .issue grant) (hri : iss.result.receipt = .issued nid)\n    (hlt : rev.index < iss.index) :\n    nid \u2260 rid \u2227\n    \u2203 cap cap',\n      rev.result.world.capabilities.lookup rid = some cap \u2227 cap.live = false \u2227\n      final.capabilities.lookup rid = some cap' \u2227 cap'.live = false \u2227\n      cap'.toGrant = cap.toGrant "
+    },
+    {
+      "module": "Trace",
+      "name": "refused_admin_inert_suffix",
+      "header": "theorem refused_admin_inert_suffix {cfg : Config P A D}\n    {boundaries : Nat \u2192 Boundary P A D} {cursor : Cursor P A D}\n    {failure : LocatedFailure P A D} (hf : cursor.failure = some failure)\n    (steps : List (Step P A D)) :\n    continueRun cfg boundaries cursor steps = cursor "
+    },
+    {
+      "module": "FoundationChecks",
+      "name": "issuedCursor_originOf_iff",
+      "header": "theorem issuedCursor_originOf_iff :\n    originOf emptyWorld issuedCursor.events \u27e80\u27e9 = some (.issued 0 liveGrant) \u2194\n      OriginAt cfg bounds allRoots emptyWorld issuedCursor.events \u27e80\u27e9\n        (.issued 0 liveGrant) "
+    },
+    {
+      "module": "FoundationChecks",
+      "name": "nonempty_dead_originOf_iff",
+      "header": "theorem nonempty_dead_originOf_iff :\n    originOf nonemptyWorld [] \u27e81\u27e9 = some (.initial deadGrant) \u2194\n      OriginAt cfg bounds allRoots nonemptyWorld [] \u27e81\u27e9 (.initial deadGrant) "
+    },
+    {
+      "module": "FoundationChecks",
+      "name": "twoIssue_originOf_iff",
+      "header": "theorem twoIssue_originOf_iff :\n    originOf emptyWorld twoIssueCursor.events \u27e81\u27e9 = some (.issued 1 liveGrant) \u2194\n      OriginAt cfg bounds allRoots emptyWorld twoIssueCursor.events \u27e81\u27e9\n        (.issued 1 liveGrant) "
+    },
+    {
+      "module": "FoundationChecks",
+      "name": "reissue_current_none_iff",
+      "header": "theorem reissue_current_none_iff :\n    currentAuthorityOrigin emptyWorld reissueCursor holder op .invoke [\u27e80\u27e9] = none \u2194\n      \u2200 id \u2208 ([\u27e80\u27e9] : List CapabilityId),\n        authorizesId reissueCursor.world.capabilities holder op .invoke id = false "
+    }
+  ],
+  "method": "All r1 source theorem headers exactly preserved; Trace has additions only, Origins/Observation identical, FoundationChecks existing theorem section unchanged. Nine imported predecessor modules byte-identical to delivered base."
+}

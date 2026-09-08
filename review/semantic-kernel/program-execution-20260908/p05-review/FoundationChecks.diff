@@ -1,0 +1,91 @@
+--- r1/FoundationChecks
++++ r2/FoundationChecks
+@@ -82,6 +82,10 @@
+   | 0 => admin
+   | _ => ⟨holder, env, 0⟩
+ def rejectedAdmin := run cfg mixedBounds emptyWorld [issueStep, issueStep]
++def twoIssueCursor := run cfg bounds emptyWorld [issueStep, issueStep]
++def reissueCursor := run cfg bounds emptyWorld [issueStep, revokeStep, issueStep]
++def reissueContinued :=
++  continueRun cfg mixedBounds rejectedAdmin [issueStep, revokeStep]
+ 
+ def req : OriginRequest P A D :=
+   ⟨[⟨0⟩], holder, op, .invoke, [⟨0⟩]⟩
+@@ -150,7 +154,42 @@
+         ⟨emptyState, ⟨nonemptyStore.entries ++ [⟨liveGrant, true⟩]⟩⟩)),
+   ("foundation.selected.not.full.store",
+     decide (worldA.capabilities ≠ worldB.capabilities) &&
+-      decide (worldA.capabilities.lookup ⟨0⟩ = worldB.capabilities.lookup ⟨0⟩))
++      decide (worldA.capabilities.lookup ⟨0⟩ = worldB.capabilities.lookup ⟨0⟩)),
++  ("foundation.origin.duplicate-grant.distinct-ids",
++    match twoIssueCursor.events with
++    | [e0, e1] =>
++      match e0.result.receipt, e1.result.receipt with
++      | .issued a, .issued b => decide (a ≠ b ∧ a = ⟨0⟩ ∧ b = ⟨1⟩)
++      | _, _ => false
++    | _ => false),
++  ("foundation.origin.duplicate-grant.issued-query",
++    decide (originOf emptyWorld twoIssueCursor.events ⟨0⟩ =
++      some (.issued 0 liveGrant)) &&
++    decide (originOf emptyWorld twoIssueCursor.events ⟨1⟩ =
++      some (.issued 1 liveGrant))),
++  ("foundation.authority.current-none-revoked-id",
++    match currentAuthorityOrigin emptyWorld reissueCursor holder op .invoke [⟨0⟩] with
++    | none => true
++    | some _ => false),
++  ("foundation.authority.origin-issued-after-revoke",
++    decide (originOf emptyWorld reissueCursor.events ⟨0⟩ =
++      some (.issued 0 liveGrant))),
++  ("foundation.authority.reissue-first-fresh",
++    match currentAuthorityOrigin emptyWorld reissueCursor holder op .invoke
++        [⟨0⟩, ⟨1⟩] with
++    | some (id, .issued idx g) => decide (id = ⟨1⟩ ∧ idx = 2 ∧ g = liveGrant)
++    | _ => false),
++  ("foundation.revoke.old-dead-new-live",
++    match reissueCursor.world.capabilities.lookup ⟨0⟩,
++        reissueCursor.world.capabilities.lookup ⟨1⟩ with
++    | some old, some neu =>
++      decide (old.live = false ∧ neu.live = true ∧
++        old.toGrant = liveGrant ∧ neu.toGrant = liveGrant)
++    | _, _ => false),
++  ("foundation.revoke.inert-suffix",
++    decide (reissueContinued.events.length = rejectedAdmin.events.length ∧
++      reissueContinued.failure.isSome ∧
++      reissueContinued.nextIndex = rejectedAdmin.nextIndex))
+ ]
+ 
+ def main : IO Unit := do
+@@ -179,4 +218,33 @@
+ theorem empty_world_roots : RootsAccepted allRoots emptyWorld.capabilities :=
+   empty_roots
+ 
++theorem issuedCursor_originOf_iff :
++    originOf emptyWorld issuedCursor.events ⟨0⟩ = some (.issued 0 liveGrant) ↔
++      OriginAt cfg bounds allRoots emptyWorld issuedCursor.events ⟨0⟩
++        (.issued 0 liveGrant) :=
++  originOf_iff (run_trace_sound cfg bounds emptyWorld [issueStep])
++    empty_world_roots ⟨0⟩ _
++
++theorem nonempty_dead_originOf_iff :
++    originOf nonemptyWorld [] ⟨1⟩ = some (.initial deadGrant) ↔
++      OriginAt cfg bounds allRoots nonemptyWorld [] ⟨1⟩ (.initial deadGrant) :=
++  originOf_iff (.nil : TraceSound cfg bounds nonemptyWorld [] nonemptyWorld [] 0)
++    nonempty_roots ⟨1⟩ _
++
++theorem twoIssue_originOf_iff :
++    originOf emptyWorld twoIssueCursor.events ⟨1⟩ = some (.issued 1 liveGrant) ↔
++      OriginAt cfg bounds allRoots emptyWorld twoIssueCursor.events ⟨1⟩
++        (.issued 1 liveGrant) :=
++  originOf_iff (run_trace_sound cfg bounds emptyWorld [issueStep, issueStep])
++    empty_world_roots ⟨1⟩ _
++
++theorem reissue_current_none_iff :
++    currentAuthorityOrigin emptyWorld reissueCursor holder op .invoke [⟨0⟩] = none ↔
++      ∀ id ∈ ([⟨0⟩] : List CapabilityId),
++        authorizesId reissueCursor.world.capabilities holder op .invoke id = false :=
++  currentAuthorityOrigin_none_iff
++    (run_trace_sound cfg bounds emptyWorld [issueStep, revokeStep, issueStep])
++    empty_world_roots holder op .invoke [⟨0⟩]
++
+ end DefiKernel.CapabilityProvenance.FoundationChecks
++
