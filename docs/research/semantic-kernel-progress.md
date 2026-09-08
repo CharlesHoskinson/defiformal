@@ -388,7 +388,7 @@ Net-effect accounting, explicit authority/funding/positive-scale premises and
 absence of deployed-code refinement remain limits. Concentrated liquidity and
 other protocol-specific arithmetic remain open.
 
-## Sprint 11: finite-participant causal composition (code/evidence ready)
+## Sprint 11: finite-participant causal composition (accepted, delivered and archived)
 
 Source candidate `94f70e502c75132656bd0902a17be60ca45ab1c2`. Native Grok 4.6
 authored the Nary feature layers (`grok-4.6-build` on eleven final native
@@ -415,11 +415,14 @@ unresolved, with full statements and axioms present. Standard axioms only:
 and 65 inherited actual controls are retained. The blocked malformed-label M01
 run keeps zero mutant credit; r5 is a label-only translation.
 
-Thirty-four of 35 OpenSpec tasks are checked for release. Task 8.5
-publication, archive transport and remote-byte verification remain parent work.
-This ledger invents no remote commit and does not close M4 participant-tree
-regrouping, later milestones, historical-tooling whole package, deployed
-fidelity, untouched holdouts, liveness or unconditional solvency.
+All 35 OpenSpec tasks are complete. Source/evidence delivery `3e736fb0` and
+archive delivery `681362d8` are remotely verified; all 15 archived files and
+five synchronized main specs preserve 19 requirements and 52 scenarios. See
+[delivery](../../review/semantic-kernel/sprint11/delivery.json) and
+[archive delivery](../../review/semantic-kernel/sprint11/archive-delivery.json).
+M3 is complete. M4 participant-tree regrouping, later milestones, historical
+tooling as a whole, deployed fidelity, untouched holdouts, liveness and
+unconditional solvency remain outside this acceptance.
 
 Closure documentation:
 `review/semantic-kernel/sprint11/implementation/acceptance/grok-release-r1/`.

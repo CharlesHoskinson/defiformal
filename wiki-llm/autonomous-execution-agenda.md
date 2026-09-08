@@ -115,20 +115,22 @@ Sprint 10 is delivered. Checked integer arithmetic is delivered and archived at
 `6d73e6dc`. Package 9 in the table above is complete. Stale “in implementation”
 wording for that package is superseded.
 
-Sprint 11 / M3 finite-participant causal composition is code/evidence-ready at
+Sprint 11 / M3 finite-participant causal composition is accepted with limitations at
 source candidate `94f70e502c75132656bd0902a17be60ca45ab1c2`. Independent GPT-6
 final adjudication is ACCEPT WITH LIMITATIONS with no required source or proof
 fixes. Native closure docs:
 `review/semantic-kernel/sprint11/implementation/acceptance/grok-release-r1/`.
-Task 8.5 publication, OpenSpec archive and remote-byte verification remain
-parent work. This agenda invents no remote commit.
+Source/evidence delivery `3e736fb0` and archive delivery `681362d8` are remotely
+verified. All 35 OpenSpec tasks, including task 8.5, are complete. See
+[delivery](../review/semantic-kernel/sprint11/delivery.json) and
+[archive delivery](../review/semantic-kernel/sprint11/archive-delivery.json).
 
-The finite initialized/causal assume-guarantee item is proved pending delivery.
+The finite initialized/causal assume-guarantee item is proved and delivered.
 Participant-tree regrouping remains M4. Do not close M4–M6 or the entire
 project. Independent corpus implementation, historical-tooling whole-package
 acceptance, claims/async/certificates/remaining libraries/fidelity/evaluation
 and publication remain open.
 
 The earlier sentence that Sprint 10 “is the active planning gate” is historical.
-It is not the current milestone. After parent delivery of Sprint 11, continue
-the remaining agenda immediately.
+It is not the current milestone. Sprint 11 is complete; continue immediately
+with M4 and the remaining agenda.

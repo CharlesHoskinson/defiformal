@@ -1,6 +1,6 @@
 # DeFiFormal migration roadmap
 
-Updated 2026-09-08 UTC: Sprints 7–10 and checked integer arithmetic are accepted, delivered and archived (Sprint 10 archive `ec8f163`; integer archive `6d73e6dc`). Sprint 11/M3 finite-participant causal composition is code/evidence-ready at `94f70e50` under independent GPT-6 ACCEPT WITH LIMITATIONS; delivery/archive/remote verification remain task 8.5. Corpus tooling, historical-tooling whole package, M4–M6 and the rest of the program remain open.
+Updated 2026-09-08 UTC: Sprints 7–10 and checked integer arithmetic are accepted, delivered and archived (Sprint 10 archive `ec8f163`; integer archive `6d73e6dc`). Sprint 11/M3 finite-participant causal composition is accepted with limitations at `94f70e50`, delivered at `3e736fb0`, and archived with remote verification at `681362d8`; all 35 tasks are complete. Corpus tooling, historical-tooling whole package, M4–M6 and the rest of the program remain open.
 Branch: `semantic-kernel-pivot`. Sprint 8 archive delivery: `9501f0a4`.
 
 The remaining objective is conditional preservation of financial properties
@@ -174,7 +174,7 @@ This ports the region/binding portion of the operational metatheory. General
 finite participants, tree regrouping, active extension and atomic transfer remain
 open; the broad Interface/Nary roadmap item below is not yet complete.
 
-## Sprint 11: finite-participant causal composition (delivery pending)
+## Sprint 11: finite-participant causal composition (accepted, delivered and archived)
 
 Native Grok 4.6 authored source candidate
 `94f70e502c75132656bd0902a17be60ca45ab1c2`. Independent GPT-6 accepted that
@@ -184,25 +184,26 @@ Native closure docs:
 [grok-release-r1](review/semantic-kernel/sprint11/implementation/acceptance/grok-release-r1/).
 This does not claim Fable checked the implementation.
 
-Coverage: 19 requirements, 52 scenarios, 35 tasks (34 checked for release), 19
+Coverage: 19 requirements, 52 scenarios, 35 completed tasks, 19
 fixtures, 16 actual production mutants, 65 inherited actual controls, 310 r5
-runtime labels, 1,459 imported theorems and 1,131 supplemental rows. Task 8.5
-publish/archive/remote verification is pending. This roadmap invents no remote
-commit. M4 participant-tree regrouping and later milestones stay open.
+runtime labels, 1,459 imported theorems and 1,131 supplemental rows. Source/evidence
+[delivery](review/semantic-kernel/sprint11/delivery.json) is verified at `3e736fb0`;
+[archive delivery](review/semantic-kernel/sprint11/archive-delivery.json) at
+`681362d8` completes task 8.5 and M3. M4 and later milestones stay open.
 
 - [x] Freeze the recovered OpenSpec planning package and obtain independent GPT-6 package review (planning gate; Fable no-verdict preserved).
 - [x] Implement generic finite roster, actual dispatcher, whole-machine observations, binary correspondence and continuation chunks at `94f70e50`.
-- [x] Prove initialized finite interference, causal monitors, funded reserve/success with enabledness, and the classified negatives. Delivery/archive pending.
-- [ ] Publish accepted source/evidence, archive the OpenSpec change, and verify remote bytes (task 8.5).
+- [x] Prove initialized finite interference, causal monitors, funded reserve/success with enabledness, and the classified negatives. Delivery and archive are verified.
+- [x] Publish accepted source/evidence, archive the OpenSpec change, and verify remote bytes (task 8.5).
 
 ## Remaining composition and metatheory
 
 - [x] Implement disjoint parallel composition.
 - [x] Implement shared-state interleaving with explicit interference conditions.
 - [x] Implement atomic synchronization, including failure and transient-settlement semantics.
-- [ ] Generalize the useful results in `Interface.lean` and `Nary.lean` into the operational model. Finite-participant Nary is proved at `94f70e50` (Sprint 11 delivery/archive pending). Sprint 10 Interface binding is already delivered. Participant-tree regrouping remains M4.
+- [ ] Generalize the useful results in `Interface.lean` and `Nary.lean` into the operational model. Finite-participant Nary is proved at `94f70e50` (Sprint 11 delivery and archive verified). Sprint 10 Interface binding is already delivered. Participant-tree regrouping remains M4.
 - [ ] Prove behavioral associativity: regrouping compatible components preserves behavior.
-- [x] Prove assume-guarantee composition with initialization and causal or inductive premises, not circular assumptions. Proved for finite initialized/causal composition at `94f70e50`; delivery/archive pending. Does not close participant-tree regrouping or later milestones.
+- [x] Prove assume-guarantee composition with initialization and causal or inductive premises, not circular assumptions. Proved for finite initialized/causal composition at `94f70e50`; delivery and archive verified. Does not close participant-tree regrouping or later milestones.
 - [x] Define observational equivalence and prove conservative extension: unrelated additions preserve existing behavior.
 - [ ] Establish capability provenance and component isolation where required, beyond the current trusted-store assumption.
 
