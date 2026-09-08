@@ -18,3 +18,5 @@ Fresh independent strict OpenSpec validation and36 targeted checks pass. Root's 
 Native r2's capped25-turn attempt, evidence-only continuation, author checker exception and root archive-path setup error remain preserved with their actual outcomes. The final continuation ended normally with process0. Author report counts/model attribution are interpreted against measured headings and native telemetry; the prior164 baseline-task statement is incorrect (baseline169), and final model telemetry identifies `grok-4.6-build`.
 
 The user instruction “begin implementing” resumes authorized execution. P01 compatible recovery is delivered; P15 minimum contracts is the next active scope, followed by the independently accepted P16 token0 slice. Full M4/P02, P17 reuse, remaining libraries, metatheory, source fidelity, evaluation and publication remain open. This planning acceptance does not accept the original unreviewed liquidity plan, any future implementation or the whole program.
+
+[Delivery verification](plan-delivery.json) binds the accepted15-file package to commit80fcb96 and remote readback on `semantic-kernel-pivot`.
