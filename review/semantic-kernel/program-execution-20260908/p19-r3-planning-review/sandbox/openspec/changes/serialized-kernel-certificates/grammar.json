@@ -1,0 +1,178 @@
+{
+  "status": "planning_contract_unelaborated",
+  "compiler_check_recorded": false,
+  "supported_language": "full delivered first-order Typed Expr/Template/Request/State/Capability plus sequential Composition catalog/step/run",
+  "unsupported_honest": [
+    "treeJoin",
+    "naryAdvance",
+    "parallel",
+    "interleave",
+    "atomicCommit",
+    "claimCreate",
+    "claimDischarge",
+    "quintModule",
+    "cryptoValid",
+    "arbitraryPropExecutable",
+    "Var constructors other than index encoding of here/there",
+    "Registry as a non-list function object",
+    "partial state objects that omit enumerated cells"
+  ],
+  "entrypoints": {
+    "decodeBytes": {
+      "type": "ByteArray → CodecResult",
+      "CodecResult": "ok DecodedIR | malformed DecodeFailure | blocked ResourceLimit",
+      "never_calls_kernel": true
+    },
+    "encodeModule": {
+      "type": "DecodedIR → ByteArray",
+      "bytes": "canonical UTF-8 JSON, no BOM, compact production only: no extra whitespace (no space after ':' or ',', no pretty-print LF). Decoder acceptance equals this compact form. Extra whitespace is DecodeFailure.noncanonicalWhitespace after the lexical scan. JSON strings escape quote, reverse solidus, and U+0000–U+001F as \\uXXXX. JSON numbers are integers as in lexical_number_policy. Key order is canonical_nested_key_order, with lexicographic UTF-8 fallback for unnamed object types and for dynamic source_map keys."
+    },
+    "checkBytes": {
+      "type": "ByteArray → Outcome",
+      "order": "decodeBytes first; malformed/blocked never reach Typed.execute or Composition.executeStep/run",
+      "Outcome": "codec CodecResult.malformed/blocked | execution Report | audit AuditResult"
+    },
+    "checkIR": {
+      "type": "DecodedExecution → Report",
+      "requires": "already supported decoded execution IR (typed-execute | composition-step | composition-run); used only after decodeBytes = ok. Codec and audit decoded values are not DecodedExecution and SHALL NOT be passed to checkIR."
+    },
+    "checkAudit": {
+      "type": "DecodedAudit → AuditResult",
+      "requires": "mode = audit after decodeBytes = ok"
+    },
+    "checkCertificate": {
+      "type": "CertificateEnvelope → Outcome",
+      "equals": "checkBytes of the envelope's raw identity; claimed_* fields are inputs inside the decoded IR, never ambient"
+    }
+  },
+  "no_ambient_inputs": {
+    "registry": "must appear as payload.registry or payload.config.registry with identity source_pin",
+    "environment": "must appear as payload.env or payload.boundary.env",
+    "config": "must appear as payload.config for composition modes",
+    "domainAdmin": "must appear as payload.config.domainAdmin complete list",
+    "forbidden": "module-level global registry/env/config lookup"
+  },
+  "modes": ["codec", "typed-execute", "composition-step", "composition-run", "audit"],
+  "decoded_domains": {
+    "CodecResult.ok": "sum of DecodedExecution | DecodedAudit | DecodedCodecDocument",
+    "DecodedExecution": "modes typed-execute, composition-step, composition-run with the corresponding payload object",
+    "DecodedAudit": "mode audit",
+    "DecodedCodecDocument": "mode codec; checkBytes returns CodecResult and never a Report",
+    "checkIR_domain": "DecodedExecution only",
+    "silent_execution_report_from_audit_or_codec": "forbidden"
+  },
+  "lexical_number_policy": {
+    "scan": "before JSON parse, tokenize raw UTF-8; any JSON number token containing '.' or 'e' or 'E' is DecodeFailure.lexicalScientificOrFloat",
+    "rationals": "never encoded as JSON numbers; only {num:int, den:posint}",
+    "nat_int_ids": "JSON integers without sign for Nat; JSON integers possibly signed for RatEnc.num only",
+    "does_not_rely_on": "Lean.Data.Json preserving scientific notation"
+  },
+  "duplicate_json_keys": "DecodeFailure.duplicateKey at the first duplicated key in object_pairs order; do not last-key-win",
+  "array_order": "significant for deltas, supplies, writes, reads, catalog, store.entries, history, steps, events, outputs, arguments, parties, capabilityIds",
+  "registry_entries_duplicate_ids": "DecodeFailure.uniqueness.registry (distinct from catalog component-id Nodup which is configuration after successful decode)",
+  "canonical_nested_key_order": {
+    "RatEnc": ["num", "den"],
+    "Unit": ["tag", "asset", "base", "quote"],
+    "NumericUnit": ["tag", "asset", "base", "quote"],
+    "PackedValue": ["unit", "value"],
+    "PartyRef": ["tag", "party", "index"],
+    "Cell": ["domain", "party", "asset"],
+    "CellRef": ["domain", "owner"],
+    "PackedCellRef": ["asset", "cell"],
+    "ObservationKey": ["domain", "id"],
+    "ObservationRef": ["key", "unit"],
+    "EnvRead": ["tag", "key"],
+    "UnaryOp": ["tag", "numeric"],
+    "BinaryOp": ["tag", "numeric", "base", "quote", "unit"],
+    "Expr": ["tag", "unit", "value", "index", "cell", "ref", "key", "op", "x", "y", "condition", "yes", "no"],
+    "CellDelta": ["asset", "target", "amount"],
+    "SupplyDelta": ["domain", "asset", "amount"],
+    "Template": ["signature", "domain", "partyArity", "guard", "deltas", "supplyDeltas", "stateReads", "envReads", "writes"],
+    "Registry": ["entries"],
+    "RegistryEntry": ["id", "template"],
+    "Request": ["operation", "parties", "arguments", "capabilityIds", "claimedActor"],
+    "Right": ["tag", "cell", "domain", "asset"],
+    "Grant": ["holder", "domain", "operation", "right"],
+    "Capability": ["holder", "domain", "operation", "right", "live"],
+    "Store": ["entries"],
+    "State": ["cells"],
+    "StateCell": ["domain", "party", "asset", "amount"],
+    "Context": ["principal", "domain"],
+    "Observation": ["value", "timestamp"],
+    "Environment": ["entries"],
+    "EnvironmentEntry": ["key", "observation"],
+    "Boundary": ["ctx", "env", "now"],
+    "DomainAdmin": ["domain", "party"],
+    "InputPort": ["id", "unit"],
+    "OutputPort": ["id", "cell"],
+    "ResourcePort": ["id", "cell", "writable"],
+    "ResourceImport": ["source", "cell", "writable"],
+    "QualifiedPort": ["component", "port"],
+    "OperationInterface": ["operation", "inputs", "outputs"],
+    "Component": ["id", "privateCells", "exports", "imports", "operations"],
+    "Config": ["registry", "domainAdmin", "catalog"],
+    "InputSource": ["tag", "value", "step", "port"],
+    "Invocation": ["component", "operation", "parties", "inputs", "capabilityIds", "claimedActor"],
+    "Step": ["tag", "invocation", "grant", "id"],
+    "World": ["state", "capabilities"],
+    "OutputObservation": ["step", "port", "value"],
+    "Envelope": ["schema_version", "mode", "source_pin", "audit_roots", "types", "assumptions", "invariants", "libraries", "source_map", "payload", "claimed_judgments", "claimed_next_state", "require_library_discharge", "require_invariant_discharge"],
+    "TypesEnum": ["parties", "assets", "domains"],
+    "SourcePin": ["git", "lean_toolchain", "mathlib_rev", "checker_candidate", "compiler_record", "audit_record"],
+    "TypedExecutePayload": ["registry", "store", "ctx", "env", "now", "request", "state"],
+    "CompositionStepPayload": ["config", "boundary", "index", "history", "step", "pre"],
+    "CompositionRunPayload": ["config", "boundaries", "world", "steps"],
+    "FailurePath": ["class", "ctor", "payload"],
+    "JudgmentResult": ["family", "outcome", "claimed", "match"],
+    "LocatedFailure": ["index", "step", "reason"],
+    "SourceMap": "present keys emitted in lexicographic UTF-8 byte order; each value is a string"
+  },
+  "canonical_fallback": "any object type not named in canonical_nested_key_order emits its present keys in lexicographic UTF-8 byte order; absent keys are not invented",
+  "canonical_decoder_match": "decodeBytes accepts a document iff encodeModule of the decoded IR equals the raw bytes; key-order differences and extra whitespace are refusals, not normalized away",
+  "expr_constructors_supported": ["lit", "arg", "balance", "observe", "timestamp", "now", "unary", "binary", "ite"],
+  "unary_ops_supported": ["neg", "not"],
+  "binary_ops_supported": ["add", "sub", "scale", "divide", "ratio", "convert", "unconvert", "le", "lt", "eq", "and", "or"],
+  "arg_index": "Nat index i encodes Var as i-fold there of here; decode fails unknownIdentifier if i ≥ signature.length or unit mismatch",
+  "state_table": {
+    "complete": "exactly types.domains.length × types.parties.length × types.assets.length rows; 32 is only the current declared universe 2×4×4, not a universal constant",
+    "order": "nested loops domains, parties, assets in declaration order",
+    "missing_cell": "DecodeFailure.missingField.stateCell",
+    "duplicate_cell": "DecodeFailure.uniqueness.stateCell",
+    "negative": "DecodeFailure.stateNonneg",
+    "extensional_equality": "pointwise amount equality on the finite table; no function extensionality axiom in the checker"
+  },
+  "resource_limits": {
+    "max_bytes": 1048576,
+    "max_json_depth": 64,
+    "max_array_length": 4096,
+    "timeout": "CLI/harness timeout is Outcome.blocked ResourceLimit.timeout, never semantic accepted/refused",
+    "exceeded": "CodecResult.blocked, not malformed and not kernel refusal"
+  },
+  "first_failures_decode": [
+    "emptyDocument",
+    "resourceLimit",
+    "lexicalScientificOrFloat",
+    "notJsonObject",
+    "duplicateKey",
+    "noncanonicalWhitespace",
+    "schemaVersion",
+    "missingField",
+    "jsonType",
+    "unknownIdentifier",
+    "uniqueness",
+    "illegalRational",
+    "stateNonneg",
+    "unknownExecutableField",
+    "unsupportedForm"
+  ],
+  "source_map": {
+    "Unit": "lean/DefiKernel/Typed/Types.lean inductive Unit",
+    "Expr": "lean/DefiKernel/Typed/Expr.lean inductive Expr",
+    "Template": "lean/DefiKernel/Typed/Transition.lean structure Template",
+    "execute": "lean/DefiKernel/Typed/Transition.lean def execute",
+    "CapabilityStore": "lean/DefiKernel/Typed/Authority.lean",
+    "Catalog": "lean/DefiKernel/Composition/Interfaces.lean",
+    "executeStep": "lean/DefiKernel/Composition/Execution.lean def executeStep",
+    "run": "lean/DefiKernel/Composition/Sequence.lean def run"
+  }
+}

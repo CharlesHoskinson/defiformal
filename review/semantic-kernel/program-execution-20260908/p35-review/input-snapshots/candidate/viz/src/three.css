@@ -1,0 +1,51 @@
+/* 3D mode. The resting frame is deliberately near-identical to the flat
+   document: no horizon, no ground plane, no fog, no gloss, no shadow.
+   Depth reads in rule weight and occlusion, because colour means hazard and
+   lightness is already carrying stratum. */
+
+#table.is3d {
+  position: relative;
+  overflow: visible;
+  perspective-origin: 50% 50%;
+}
+
+/* the packed containers stop laying out; the scene owns position */
+#table.is3d .depth,
+#table.is3d .band,
+#table.is3d .band-body,
+#table.is3d .fam,
+#table.is3d .fam-row,
+#table.is3d .families { display: none !important; }
+
+#table.is3d .tile {
+  border-width: 1px;
+  transition: opacity 200ms ease, border-color 200ms ease;
+  pointer-events: auto;   /* the renderer container is pointer-events:none */
+}
+
+/* nearer planes carry heavier linework — the only depth cue left to us */
+#table.is3d .tile.s0 { border-color: var(--ink-3); }
+#table.is3d .tile.s1 { border-color: var(--line-2); }
+#table.is3d .tile.s2 { border-color: var(--line-2); }
+#table.is3d .tile.s3 { border-color: var(--line); }
+#table.is3d .tile.s4 { border-color: var(--line); }
+
+#table.is3d .tile.member {
+  border-color: var(--ink);
+  border-width: 1px;
+}
+#table.is3d .tile.dim { opacity: 0.28; }
+
+/* no overlay: drag is bound on the host itself, and an absolutely
+   positioned ::after would paint over the scene and eat every click */
+#table.is3d { cursor: grab; }
+#table.is3d:active { cursor: grabbing; }
+#table.is3d .tile { cursor: pointer; }
+
+.dim-hint {
+  font-size: 11px; color: var(--ink-3); margin-top: 6px;
+}
+
+/* the loop, once it has broken */
+.readout.broke-done .cycle .cyar:last-of-type { color: var(--hz-f); font-weight: 700; }
+.readout.broke-done .loss { text-decoration: none; }
