@@ -1,0 +1,40 @@
+{
+  "status": "planning_mapping_not_executed",
+  "inherited": {
+    "source": "scripts/run_interface_mutations.py",
+    "git": "a12b7cac05a818cc8d35c2ca440b7170a2807e92",
+    "spec_keys": ["schema_version", "modules", "mutations", "positive_checks"],
+    "mutation_keys": ["name", "module", "needle", "replacement", "required_false"],
+    "schema_version": 1,
+    "timeout_child_seconds": 600,
+    "timeout_harness_seconds": 1500,
+    "output_outside_repo": true,
+    "timeout_honesty": "inherited runner writes child stdout/stderr only after subprocess.run returns; TimeoutExpired bypasses that write; outer invocation record required"
+  },
+  "successor": {
+    "driver": "scripts/run_certificate_mutations.py",
+    "harness": "scripts/test_certificate_mutation_runner.py",
+    "audit_root_required_in_modules": "DefiKernel.Certificates.Audit",
+    "production_mode": "sixteen_separate_one_mutant_spec_invocations",
+    "projection": "mutation-projection.json",
+    "proof_strip_prefixes": [
+      "DefiKernel.Certificates.",
+      "DefiKernel.Typed.",
+      "DefiKernel.Composition."
+    ],
+    "forbidden": "one 16-mutant SPEC whose positive_checks is the union of per-mutant expected_protected_check labels",
+    "command_shape": "python3 scripts/run_certificate_mutations.py --repo ROOT --spec SPEC_Mxx --out NEW_EXTERNAL_OUTPUT_Mxx --timeout-seconds 600"
+  },
+  "literal_adaptations": [
+    "Interface → Certificates / interface → certificate in comments and required module names",
+    "proof-tail strip condition changes from Interface-only to Typed/Composition/Certificates prefixes",
+    "namespace closure regex uses the actual module namespace",
+    "retain malformed and duplicate-key JSON controls as exact text",
+    "retain empty-module, timeout, missing-source blocked exits"
+  ],
+  "not_in_scope": [
+    "implementing kernel mutations during planning",
+    "changing inherited timeout log-write behavior",
+    "claiming arithmetic or Atomic mutation results as certificate detection"
+  ]
+}

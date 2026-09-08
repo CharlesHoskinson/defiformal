@@ -1,0 +1,61 @@
+{
+  "status": "quoted_delivered_source_at_D_not_proposed",
+  "git": "a12b7cac05a818cc8d35c2ca440b7170a2807e92",
+  "note": "Signatures copied from inspected source. Not elaborated here. No private cache.",
+  "entrypoints": {
+    "Typed.Args.check": "signature → List PackedValue → Except EvalFailure (Args signature)",
+    "Typed.Expr.eval": "EvalContext → Expr → Except EvalFailure (Value u)",
+    "Typed.Template.evaluate": "EvalContext → Except EvalFailure (Evaluated P A D)",
+    "Typed.execute": "registry store ctx env now request state → Except Refusal (ExecutionResult P A D)",
+    "Typed.applyEvaluated": "store ctx request state e → Except Refusal (ExecutionResult P A D)",
+    "Typed.issueCapability": "config ctx store grant → Except AuthorityFailure (CapabilityId × CapabilityStore)",
+    "Typed.revokeCapability": "config ctx store id → Except AuthorityFailure CapabilityStore",
+    "Typed.hasAuthority": "store ids ctx operation right → Bool",
+    "Typed.authorizesId": "store ctx operation right id → Bool",
+    "Typed.Evaluated.accountingOK": "e → Bool  -- ∀ d a, ∑ p, effect (d,p,a) = supply d a",
+    "Typed.Evaluated.stateReadsOK": "requiredStateReads ⊆ declaredStateReads",
+    "Typed.Evaluated.envReadsOK": "requiredEnvReads ⊆ declaredEnvReads",
+    "Typed.Evaluated.writesOK": "c ∉ writes → effect c = 0",
+    "Typed.Evaluated.debitsOK": "effect c < 0 → hasAuthority debit c",
+    "Typed.Evaluated.suppliesOK": "supply d a ≠ 0 → hasAuthority changeSupply d a",
+    "Composition.validateCatalog": "registry catalog → Bool",
+    "Composition.checkAccess": "component template ctx parties → Except InterfaceFailure PUnit",
+    "Composition.resolveInputs": "index history interface sources → Except InterfaceFailure (List PackedValue)",
+    "Composition.executeStep": "cfg boundary index history step pre → Except Failure (StepResult P A D)",
+    "Composition.extractReceipt": "cfg boundary request pre → Except Failure (Evaluated P A D)",
+    "Composition.run": "cfg boundaries world steps → Cursor P A D",
+    "Composition.startCursor": "invalid catalog ⇒ failure index 0 step none configuration",
+    "AxiomAudit.#audit_axioms": "imported theorems under prefix; empty scope blocked; not a serialized checker"
+  },
+  "execute_refusal_order": [
+    "unknownOperation",
+    "actorMismatch",
+    "domainMismatch",
+    "partyArity",
+    "evaluation (Args.check)",
+    "unauthorizedInvoke",
+    "evaluation (template.evaluate)",
+    "guard",
+    "stateReadFootprint",
+    "envReadFootprint",
+    "crossDomain",
+    "unauthorizedDebit",
+    "unauthorizedSupply",
+    "insufficientFunds",
+    "accounting",
+    "writeFootprint"
+  ],
+  "not_executable": {
+    "ComponentContract.initial": "Prop",
+    "ComponentContract.assumes": "Prop",
+    "ComponentContract.invariant": "Prop",
+    "ComponentContract.guarantees": "Prop",
+    "ContractObligations": "proof structure",
+    "comment": "Composition/Contracts.lean: predicates are not executable certificates"
+  },
+  "execute_accepts_no_caller_certificate": "Typed.execute recomputes checks; caller cannot supply Evaluated as a validity certificate",
+  "examples_are_correspondence_targets_not_certificate_acceptance": [
+    "lean/DefiKernel/Typed/Examples.lean",
+    "lean/DefiKernel/Composition/Examples.lean"
+  ]
+}

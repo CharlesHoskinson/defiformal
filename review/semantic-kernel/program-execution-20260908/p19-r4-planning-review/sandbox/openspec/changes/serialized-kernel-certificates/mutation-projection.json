@@ -1,0 +1,124 @@
+{
+  "status": "planned_projection_not_executed",
+  "do_not_implement_kernel_mutations_during_planning": true,
+  "inherited_insufficient": "scripts/run_interface_mutations.py strips proof tails only when module.startswith('DefiKernel.Interface.'); Typed/Composition computational mutations retain old proof terms and fail to compile. Compilation failure is blocked, not semantic detection.",
+  "mechanism": "Certificates driver inlines the local DefiKernel closure then strips every `-- BEGIN PROOFS` suffix in DefiKernel.Certificates.*, DefiKernel.Typed.*, and DefiKernel.Composition.* modules in that closure. Mathlib/Lean imports remain external. Guard: no runtime declaration tokens after the marker. Namespace end restored. Intact projected sibling (same strip, no needle replacement) must reproduce independent expected observations.",
+  "preserved_from_interface_runner": [
+    "SPEC keys schema_version/modules/mutations/positive_checks",
+    "mutation keys name/module/needle/replacement/required_false",
+    "one-mutant SPEC invocations",
+    "positive_checks is that mutant's protected check only",
+    "timeout 600/1500, outside-repo output",
+    "timeout/empty/malformed/compiler error = blocked exit 3",
+    "outer invocation record because child logs write after subprocess.run returns"
+  ],
+  "audit_root_required": "DefiKernel.Certificates.Audit",
+  "does_not_import_Composition_Examples": true,
+  "preservation_conditional": "If a later Certificates.Examples imports Composition.Examples, add DefiKernel.Composition.Preservation to the local closure and to Composition audit prefix. This increment copies literals instead.",
+  "existing_9_targets": {
+    "M03": {
+      "module": "DefiKernel.Typed.Transition",
+      "path": "lean/DefiKernel/Typed/Transition.lean",
+      "runtime_prefix_before": "-- BEGIN PROOFS",
+      "consumers_in_closure": [
+        "DefiKernel.Typed.Expr",
+        "DefiKernel.Typed.Authority",
+        "DefiKernel.Typed.Types",
+        "DefiKernel.Composition.Contracts",
+        "DefiKernel.Composition.Interfaces",
+        "DefiKernel.Composition.Execution",
+        "DefiKernel.Composition.Sequence"
+      ]
+    },
+    "M04": {"module": "DefiKernel.Typed.Transition", "same_as": "M03"},
+    "M08": {"module": "DefiKernel.Typed.Transition", "same_as": "M03"},
+    "M12": {"module": "DefiKernel.Typed.Transition", "same_as": "M03"},
+    "M05": {
+      "module": "DefiKernel.Composition.Interfaces",
+      "path": "lean/DefiKernel/Composition/Interfaces.lean",
+      "consumers_in_closure": [
+        "DefiKernel.Composition.Execution",
+        "DefiKernel.Composition.Sequence",
+        "DefiKernel.Typed.Transition"
+      ]
+    },
+    "M06": {"module": "DefiKernel.Composition.Interfaces", "same_as": "M05"},
+    "M14": {"module": "DefiKernel.Composition.Interfaces", "same_as": "M05"},
+    "M13": {
+      "module": "DefiKernel.Typed.Authority",
+      "path": "lean/DefiKernel/Typed/Authority.lean",
+      "consumers_in_closure": [
+        "DefiKernel.Typed.Transition",
+        "DefiKernel.Composition.Execution"
+      ]
+    },
+    "M15": {
+      "module": "DefiKernel.Typed.Expr",
+      "path": "lean/DefiKernel/Typed/Expr.lean",
+      "consumers_in_closure": [
+        "DefiKernel.Typed.Transition",
+        "DefiKernel.Composition.Execution"
+      ]
+    }
+  },
+  "future_7_targets": {
+    "M01": "DefiKernel.Certificates.Check",
+    "M02": "DefiKernel.Certificates.Check",
+    "M09": "DefiKernel.Certificates.Check",
+    "M10": "DefiKernel.Certificates.Check",
+    "M07": "DefiKernel.Certificates.Decode",
+    "M16": "DefiKernel.Certificates.Decode",
+    "M11": "DefiKernel.Certificates.Observation"
+  },
+  "marker": "-- BEGIN PROOFS",
+  "no_generic_parser": true,
+  "no_implementation_now": true,
+  "proof_only_allowlist": [
+    {
+      "module": "DefiKernel.Composition.Execution",
+      "name": "StepSound",
+      "kind": "inductive",
+      "sort": "Prop",
+      "line": 181,
+      "source": "lean/DefiKernel/Composition/Execution.lean",
+      "input_sha256": "34ac2f2185434d2fc8931b10f3688d909cc984e4e24e16e26c2d115b6fe13602"
+    },
+    {
+      "module": "DefiKernel.Composition.Execution",
+      "name": "ReceiptAuthorized",
+      "kind": "def",
+      "sort": "Prop",
+      "line": 332,
+      "source": "lean/DefiKernel/Composition/Execution.lean",
+      "input_sha256": "34ac2f2185434d2fc8931b10f3688d909cc984e4e24e16e26c2d115b6fe13602"
+    },
+    {
+      "module": "DefiKernel.Composition.Sequence",
+      "name": "TraceSound",
+      "kind": "inductive",
+      "sort": "Prop",
+      "line": 56,
+      "source": "lean/DefiKernel/Composition/Sequence.lean",
+      "input_sha256": "32bcdbbce182bf9d494dab76a8a114f9e238f92564ef86e7cab2cd123bc0b729"
+    },
+    {
+      "module": "DefiKernel.Composition.Sequence",
+      "name": "RefusalSound",
+      "kind": "def",
+      "sort": "Prop",
+      "line": 68,
+      "source": "lean/DefiKernel/Composition/Sequence.lean",
+      "input_sha256": "32bcdbbce182bf9d494dab76a8a114f9e238f92564ef86e7cab2cd123bc0b729"
+    }
+  ],
+  "classification_rules": {
+    "marker": "exact ASCII line `-- BEGIN PROOFS`",
+    "allowlist_match": "module+name+kind+sort+source path+input_sha256; names are the four listed declarations only",
+    "proof_only": "allowlisted Prop inductive/def after the marker are logical declarations, not runtime discard",
+    "runtime_discard_forbidden": "any other def/abbrev/structure/inductive after the marker, or an allowlisted name whose source hash changed, is unrecognized changed source and blocks the run",
+    "computational_before_marker": "runtime declarations remain before the marker; discarding them is forbidden",
+    "dependencies_versus_consumers": "existing_9_targets list mutated modules; consumers_in_closure are importers, not mutation sites"
+  },
+  "no_runtime_discard": "each stripped module is checked for def/abbrev/structure/inductive after the marker except the four proof-only allowlisted Prop declarations; forbidden tokens block the run",
+  "intact_projected_sibling": "control variant with projection and no replacement must still satisfy F25/F27/F08/F15/F21/F23/F24/F40/F47/F50 independent observations used as protected checks. The allowlist makes that sibling constructible: the guard does not treat StepSound/ReceiptAuthorized/TraceSound/RefusalSound as discarded runtime."
+}

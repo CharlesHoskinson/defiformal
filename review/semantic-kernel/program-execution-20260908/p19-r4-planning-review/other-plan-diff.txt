@@ -1,0 +1,182 @@
+--- r3/openspec/changes/serialized-kernel-certificates/proposal.md
++++ r4/openspec/changes/serialized-kernel-certificates/proposal.md
+@@ -28,6 +28,6 @@
+ 
+ ## Impact
+ 
+-Future modules under `lean/DefiKernel/Certificates/`, parent-owned root import after planning acceptance, `scripts/run_certificate_mutations.py` plus harness adapted from the inherited Interface mutation protocol with Typed/Composition proof-tail projection, and evidence under `review/semantic-kernel/certificates/planning/grok-gpt6-official-r3/`. Historical r1/r2 packages remain unchanged. Source D `a12b7cac05a818cc8d35c2ca440b7170a2807e92`. Worker native Grok 4.6; independent checker GPT-6 / gpt-6-astra; no Foreman. Official r1 archive `a845bc2b5d6a055252152c47c700adfd3dd89aeb3a7c25c0f1e792d7ccbba3ed` and root launch failure remain historical with no authorship credit.
++Future modules under `lean/DefiKernel/Certificates/`, parent-owned root import after planning acceptance, `scripts/run_certificate_mutations.py` plus harness adapted from the inherited Interface mutation protocol with Typed/Composition proof-tail projection, and evidence under `review/semantic-kernel/certificates/planning/grok-gpt6-official-r4/`. Historical r1/r2/r3 packages remain unchanged. Source D `a12b7cac05a818cc8d35c2ca440b7170a2807e92`. Worker native Grok 4.6; independent checker GPT-6 / gpt-6-astra; no Foreman. Official r1 archive `a845bc2b5d6a055252152c47c700adfd3dd89aeb3a7c25c0f1e792d7ccbba3ed` and root launch failure remain historical with no authorship credit.
+ 
+ Roadmap §5 lines 230–235 and agenda package 8 are the bounded coverage of this increment; library instantiation, Quint, Claims/Tree/Nary/parallel/atomic certificates, fidelity, async, observation truth and unimported-module audits remain named later obligations. Do not check those global boxes in this planning revision.
+
+--- r3/openspec/changes/serialized-kernel-certificates/proposed-api.json
++++ r4/openspec/changes/serialized-kernel-certificates/proposed-api.json
+@@ -18,12 +18,14 @@
+     "Report": "14 fields in result-algebra.json",
+     "AuditResult": "passed | failed | blocked",
+     "FailurePath": "{class, ctor, payload}",
+-    "ExecutionResultEnc": "world state+store; this is the claimed_next_state layer, not StateEnc"
++    "ExecutionResultEnc": "world state+store; this is the claimed_next_state layer, not StateEnc",
++    "RawObservation": "world; receipt; outputs; events; nextIndex; cursorFailure; kernelFailure. Not a Report."
+   },
+   "runtime_signatures": {
+     "decodeBytes": "ByteArray → CodecResult",
+     "encodeModule": "DecodedIR → ByteArray",
+     "checkBytes": "ByteArray → Outcome",
++    "rawExecute": "DecodedExecution → RawObservation",
+     "checkIR": "DecodedExecution → Report",
+     "checkAudit": "DecodedAudit → AuditResult",
+     "checkCertificate": "CertificateEnvelope → Outcome",
+@@ -36,7 +38,9 @@
+     "malformed/blocked never call Typed.execute or Composition.executeStep/run",
+     "no ambient registry/env/config",
+     "claimed_judgments never evidence",
+-    "claimed_next_state compared as ExecutionResultEnc after recomputation; mismatch observationMismatch"
++    "claimed_next_state compared as ExecutionResultEnc after recomputation; mismatch observationMismatch",
++    "source_identity mismatch: checkIR is staleSource, rawExecute is not the report projection, Typed.execute is not called",
++    "rawExecute never consults source_identity, six-class presence, claimed_next_state, or require_*_discharge"
+   ],
+   "proposed_imports": [
+     "Lean.Data.Json",
+
+--- r3/openspec/changes/serialized-kernel-certificates/judgment-contract.json
++++ r4/openspec/changes/serialized-kernel-certificates/judgment-contract.json
+@@ -30,7 +30,7 @@
+     }
+   },
+   "outcomes": ["true", "false", "not_reached", "not_applicable"],
+-  "aggregation": "result-algebra.json staged_family_aggregation is authoritative. accountingCorrect is Evaluated.accountingOK and nonnegative post-balance; insufficientFunds is that family's false, including on composition-run F49. Unreached stage predicates are not called to fill an outcome.",
++  "aggregation": "result-algebra.json staged_family_aggregation is authoritative. accountingCorrect is only Evaluated.accountingOK and nonnegative post-balance. Guard is a prior class, not an accounting stage. F17/F18 therefore keep accountingCorrect not_reached. insufficientFunds is accountingCorrect false, including on composition-run F49. Unreached stage predicates are not called to fill an outcome.",
+   "not_evidence": [
+     "theorem name",
+     "string invariant",
+
+--- r3/openspec/changes/serialized-kernel-certificates/design.md
++++ r4/openspec/changes/serialized-kernel-certificates/design.md
+@@ -15,7 +15,7 @@
+ 
+ Worker: native Grok 4.6. Independent checker: GPT-6 / gpt-6-astra. No Foreman. Original root launch failure is preserved at `review/semantic-kernel/program-loop-20260908/native-worker/certificates-official-planning-r1-attempt1/` with empty jsonl and no authorship credit.
+ 
+-Official r1 candidate archive SHA-256 `a845bc2b5d6a055252152c47c700adfd3dd89aeb3a7c25c0f1e792d7ccbba3ed` was independently reviewed NEEDS REVISION. Official r2 archive SHA-256 `122118df438c8c05a09f48e5097fb6f6bfd3c19cedece4dee20aa32757c4bc13` was independently reviewed CHANGES_REQUIRED (REVIEW SHA `b4a7558255cd315ea324740ad2e815c6e3edb60a832f0e52ae8f599a570b82c7`). This revision repairs R1–R5 only. r1/r2 bytes remain historical. Review package for this freeze is `review/semantic-kernel/certificates/planning/grok-gpt6-official-r3/`.
++Official r1 candidate archive SHA-256 `a845bc2b5d6a055252152c47c700adfd3dd89aeb3a7c25c0f1e792d7ccbba3ed` was independently reviewed NEEDS REVISION. Official r2 archive SHA-256 `122118df438c8c05a09f48e5097fb6f6bfd3c19cedece4dee20aa32757c4bc13` was independently reviewed CHANGES_REQUIRED. Official r3 archive SHA-256 `e5b6415c6fe74b8654e9633e48dbc528118072b2f1306865b2c56855dab9b6a9` was independently reviewed CHANGES_REQUIRED (REVIEW SHA `19e74032fdde1d1502a6211f928a7761b6a5f98fc28fcbe07585ebf3a57a70f1`) for remaining R1/R3. This revision repairs only those remaining R1/R3 planning statements. r1/r2/r3 bytes remain historical. Review package for this freeze is `review/semantic-kernel/certificates/planning/grok-gpt6-official-r4/`.
+ 
+ ## Goals / Non-Goals
+ 
+@@ -213,11 +213,11 @@
+ 
+ ### D16. Correspondence statements (CERT-P6)
+ 
+-`correspondence-theorems.json` states quantified encode/decode and kernel ok/error, step ok/error and run-cursor projections separately from report-policy acceptance. Finite fixture equality is bounded evidence and does not discharge universal RC01 or P20.
++`correspondence-theorems.json` states quantified `rawExecute` ok/error, step and run-cursor correspondence, then a conditional `checkIR` projection that requires source-identity and `requested_discharge_ok`. Finite fixture equality is bounded evidence and does not discharge universal RC01 or P20.
+ 
+ ### D17. Real planning controls (CERT-P7)
+ 
+-r3 `package.py` isolates copies and invokes the actual `--check` CLI. r1 synthetic `if not []` controls and r2 CLI controls remain historical and are not relabelled as this candidate's executions.
++r4 `package.py` isolates copies and invokes the actual `--check` CLI. r1 synthetic `if not []` controls and r2/r3 CLI controls remain historical and are not relabelled as this candidate's executions.
+ 
+ ### D12. Approaches considered
+ 
+
+--- r3/openspec/changes/serialized-kernel-certificates/tasks.md
++++ r4/openspec/changes/serialized-kernel-certificates/tasks.md
+@@ -1,6 +1,6 @@
+ ## 1. Independent planning gate
+ 
+-- [ ] 1.1 Freeze this OpenSpec package and `review/semantic-kernel/certificates/planning/grok-gpt6-official-r3/` with `STATUS.gate_accepted=false`; verify independent GPT-6 reviews the frozen bytes, r1 archive `a845bc2b5d6a055252152c47c700adfd3dd89aeb3a7c25c0f1e792d7ccbba3ed` and r2 archive `122118df438c8c05a09f48e5097fb6f6bfd3c19cedece4dee20aa32757c4bc13` are unchanged, and no Lean/Python certificate implementation exists outside the planning checker.
++- [ ] 1.1 Freeze this OpenSpec package and `review/semantic-kernel/certificates/planning/grok-gpt6-official-r4/` with `STATUS.gate_accepted=false`; verify independent GPT-6 reviews the frozen bytes, r1 archive `a845bc2b5d6a055252152c47c700adfd3dd89aeb3a7c25c0f1e792d7ccbba3ed`, r2 archive `122118df438c8c05a09f48e5097fb6f6bfd3c19cedece4dee20aa32757c4bc13` and r3 archive `e5b6415c6fe74b8654e9633e48dbc528118072b2f1306865b2c56855dab9b6a9` are unchanged, and no Lean/Python certificate implementation exists outside the planning checker.
+ - [ ] 1.2 Bind used Typed/Composition sources and the three Lean/Lake pins to Git `a12b7cac05a818cc8d35c2ca440b7170a2807e92`; verify each listed path's blob equals D and that original 53 readiness hashes are unchanged.
+ - [ ] 1.3 Preserve the attempt-1 root-setup failure, r1 synthetic controls, and every later failed planning check; verify those bytes still exist and receive no authorship credit.
+ 
+
+--- r3/openspec/changes/serialized-kernel-certificates/grammar.json
++++ r4/openspec/changes/serialized-kernel-certificates/grammar.json
+@@ -32,9 +32,14 @@
+       "order": "decodeBytes first; malformed/blocked never reach Typed.execute or Composition.executeStep/run",
+       "Outcome": "codec CodecResult.malformed/blocked | execution Report | audit AuditResult"
+     },
++    "rawExecute": {
++      "type": "DecodedExecution → RawObservation",
++      "requires": "already supported decoded execution IR; calls Typed.execute or Composition.executeStep/run by mode; does not consult source_identity, assumptions, claimed_next_state, or require_*_discharge",
++      "RawObservation": "world, receipt, outputs, events, nextIndex, cursorFailure, kernelFailure; not a Report"
++    },
+     "checkIR": {
+       "type": "DecodedExecution → Report",
+-      "requires": "already supported decoded execution IR (typed-execute | composition-step | composition-run); used only after decodeBytes = ok. Codec and audit decoded values are not DecodedExecution and SHALL NOT be passed to checkIR."
++      "requires": "already supported decoded execution IR (typed-execute | composition-step | composition-run); used only after decodeBytes = ok. Codec and audit decoded values are not DecodedExecution and SHALL NOT be passed to checkIR. source_identity is a prior guard: mismatch is staleSource with pre-world, null receipt, execution families not_reached, and neither rawExecute nor Typed.execute is used as the report kernel projection."
+     },
+     "checkAudit": {
+       "type": "DecodedAudit → AuditResult",
+@@ -59,6 +64,7 @@
+     "DecodedAudit": "mode audit",
+     "DecodedCodecDocument": "mode codec; checkBytes returns CodecResult and never a Report",
+     "checkIR_domain": "DecodedExecution only",
++    "rawExecute_domain": "DecodedExecution only; not a Report",
+     "silent_execution_report_from_audit_or_codec": "forbidden"
+   },
+   "lexical_number_policy": {
+
+--- r3/openspec/changes/serialized-kernel-certificates/remainder-obligations.json
++++ r4/openspec/changes/serialized-kernel-certificates/remainder-obligations.json
+@@ -76,7 +76,7 @@
+     {
+       "id": "L12",
+       "name": "P20 quantified correspondence and compatibility proofs",
+-      "treatment_now": "T-roundtrip, T-canonical-bytes, T-kernel-execute-ok/error, T-kernel-step-ok/error, T-run-cursor, T-report-policy-accepted, T-observation-mismatch remain unelaborated. Finite fixtures do not discharge them. Qualified semantic certificate delivery stays behind P20."
++      "treatment_now": "T-roundtrip, T-canonical-bytes, T-raw-typed/step/run, T-checkIR-stale/typed/step/run, T-report-policy-accepted, T-observation-mismatch remain unelaborated. Finite fixtures do not discharge them. Qualified semantic certificate delivery stays behind P20."
+     }
+   ]
+ }
+
+--- r3/openspec/changes/serialized-kernel-certificates/specs/recomputing-certificate-checker/spec.md
++++ r4/openspec/changes/serialized-kernel-certificates/specs/recomputing-certificate-checker/spec.md
+@@ -134,7 +134,7 @@
+ 
+ ### Requirement: CC08 Staged family aggregation and retained worlds
+ 
+-Per-attempt staged family results SHALL combine as in `result-algebra.json`. A family is false if a reached stage of that family failed; unreached later stages of the same family SHALL NOT be called to fill an outcome. `insufficientFunds` is the nonnegative conjunct of accountingCorrect, so F24 and F49 SHALL have accountingCorrect false. Complete state tables SHALL have size `|domains|×|parties|×|assets|`. Kernel refusal SHALL retain pre-world; policy refusal after successful execution SHALL retain the recomputed post-world. Receipt SHALL be null iff no successful invoke/issue/revoke occurred; issue/revoke success receipts are never null.
++Per-attempt staged family results SHALL combine as in `result-algebra.json`. AccountingCorrect SHALL be only `Evaluated.accountingOK` and nonnegative post-balance. Guard SHALL remain before footprint in execute order and SHALL be a prior class, not an accounting stage; a successful guard SHALL NOT make accountingCorrect true. F17 and F18 SHALL therefore store accountingCorrect not_reached. A family is false if a reached stage of that family failed; unreached later stages of the same family SHALL NOT be called to fill an outcome. `insufficientFunds` is the nonnegative conjunct of accountingCorrect, so F24 and F49 SHALL have accountingCorrect false, including after F49's successful prefix. Complete state tables SHALL have size `|domains|×|parties|×|assets|`. Kernel refusal SHALL retain pre-world; policy refusal after successful execution SHALL retain the recomputed post-world. Receipt SHALL be null iff no successful invoke/issue/revoke occurred; issue/revoke success receipts are never null.
+ 
+ #### Scenario: S91 Failed insufficientFunds attempt makes accountingCorrect false
+ 
+
+--- r3/openspec/changes/serialized-kernel-certificates/specs/representation-correspondence/spec.md
++++ r4/openspec/changes/serialized-kernel-certificates/specs/representation-correspondence/spec.md
+@@ -90,29 +90,29 @@
+ 
+ ### Requirement: RC07 Kernel correspondence is separate from report policy
+ 
+-Quantified kernel/decoded-execution correspondence SHALL be stated for Typed success, Typed error, step success, step error and run-cursor projections without assuming Report.status. Report.accepted SHALL require kernel success plus source-identity, six-class presence and optional claimed-world agreement, in that precedence. F25 and F36 MAY share an identical kernel payload; F36's false claimed_next_state SHALL refuse observationMismatch.claimedNextState and retain the recomputed post-world. Proofs remain P20; finite fixtures SHALL NOT discharge them.
++Quantified kernel correspondence SHALL be stated for `rawExecute` on Typed success, Typed error, step success, step error and run-cursor, without mentioning `checkIR` or assuming Report.status. Every theorem that projects `checkIR` SHALL require the supported decoded execution domain/mode and the actual prior source-identity guard. `checkIR` is a conditional report projection of `rawExecute` after that guard. Report.accepted SHALL additionally require six-class presence, claimed-world agreement, `requested_discharge_ok` for `require_library_discharge` / `require_invariant_discharge` with recorded compiler/evidence predicates, unsupported none and required reached families. F25, F36, F37 and F41 MAY share an identical kernel payload; F37 staleSource SHALL keep pre-world, null receipt and execution not reached; F36 SHALL refuse observationMismatch.claimedNextState and retain the recomputed post-world. A stale report SHALL NOT carry a kernel failure merely because a hypothetical execution would return that constructor. Proofs remain P20; finite fixtures SHALL NOT discharge them.
+ 
+ #### Scenario: S82 Kernel success is not Report.accepted
+ 
+-- **WHEN** F25's transfer-three request has Typed.execute = ok post
+-- **THEN** the kernel projection world equals post, and Report.accepted holds only because source identity, six assumption classes and null claimed_next_state also hold.
++- **WHEN** F25's transfer-three request has Typed.execute = ok post and source identity holds
++- **THEN** `rawExecute` world equals post, `checkIR` kernel fields equal `rawExecute`, and Report.accepted holds only because source identity, six assumption classes, null claimed_next_state and `requested_discharge_ok` also hold.
+ 
+ #### Scenario: S83 Identical kernel payload with false claimed state refuses observationMismatch
+ 
+-- **WHEN** F36 uses the same registry/store/ctx/env/now/request/state as F25 and claims the pre-world as next state
++- **WHEN** F36 uses the same registry/store/ctx/env/now/request/state as F25, source identity holds, and the certificate claims the pre-world as next state
+ - **THEN** the checker reports observationMismatch.claimedNextState, retains alice USD 7 / bob USD 3, and does not accept the module.
+ 
+ #### Scenario: S84 Policy premises have defined precedence
+ 
+ - **WHEN** F37 pins a stale git id, or F41 omits environment-authenticity after a successful execute
+-- **THEN** F37 is staleSource with pre-world and no kernel invoke, and F41 is incompleteObligation retaining the recomputed post-world.
++- **THEN** F37 is staleSource with pre-world, null receipt and no kernel invoke, and F41 is incompleteObligation retaining the recomputed post-world.
+ 
+ #### Scenario: S85 Step projections are not report-only fields
+ 
+-- **WHEN** a composition-step succeeds or fails
+-- **THEN** world, receipt and outputs equal executeStep, while status, judgments, assumptions, outstanding, source_pin, audit_roots and unsupported remain report-only policy fields.
++- **WHEN** a composition-step succeeds or fails and source identity holds
++- **THEN** `rawExecute` world, receipt and outputs equal executeStep, `checkIR` kernel fields equal `rawExecute`, and status, judgments, assumptions, outstanding, source_pin, audit_roots and unsupported remain report-only policy fields.
+ 
+ #### Scenario: S86 Run cursor is distinct from report policy
+ 
+-- **WHEN** F48 or F49 is checked
+-- **THEN** world, events, outputs, nextIndex and cursorFailure equal Composition.run, and Report.status is not a cursor field. Quantified proof remains P20.
++- **WHEN** F48 or F49 is checked and source identity holds
++- **THEN** `rawExecute` world, events, outputs, nextIndex and cursorFailure equal Composition.run, `checkIR` kernel fields equal `rawExecute`, and Report.status is not a cursor field. Quantified proof remains P20.

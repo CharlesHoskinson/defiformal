@@ -1,0 +1,118 @@
+{
+  "status": "planning_contract",
+  "modes": {
+    "codec": {
+      "type": "CodecResult",
+      "constructors": ["ok", "malformed", "blocked"],
+      "not_a_Report": true,
+      "equality": "constructor and payload equality"
+    },
+    "execution": {
+      "type": "Report",
+      "fields_14": [
+        "status",
+        "failure",
+        "judgments",
+        "world",
+        "receipt",
+        "outputs",
+        "events",
+        "nextIndex",
+        "cursorFailure",
+        "assumptions",
+        "outstanding",
+        "source_pin",
+        "audit_roots",
+        "unsupported"
+      ],
+      "status_values": ["accepted", "refused", "incomplete"],
+      "malformed_not_in_execution_status": "codec malformed/blocked never appear as Report.status"
+    },
+    "audit": {
+      "type": "AuditResult",
+      "constructors": ["passed", "failed", "blocked"],
+      "not_a_Report": true,
+      "empty_theorem_scope": "blocked"
+    }
+  },
+  "report_field_rules": {
+    "status": "always one of accepted|refused|incomplete",
+    "failure": {
+      "accepted": null,
+      "refused": "exact FailurePath object {class, ctor, payload}",
+      "incomplete": "incompleteObligation.{name} or null when only outstanding informational"
+    },
+    "judgments": "exactly the eight families, each with family, outcome, claimed, match",
+    "world": "always a complete |domains|×|parties|×|assets| State plus full store (32 cells only for the current 2×4×4 universe). Kernel/interface/authority/configuration refusal retains the pre-world. Policy refusal after a successful recomputed execution (observationMismatch, incompleteObligation after kernel ok) retains the recomputed post-world. Sequential refusal-prefix retains Sequence.advance's world (successful prefix, inert suffix).",
+    "receipt": "null iff this command has no successful invoke/issue/revoke. Successful invoke: {tag:invoked, request, evaluated}. Successful issue: {tag:issued, id}, never null. Successful revoke: {tag:revoked, id}, never null. Kernel/interface/authority/configuration refusal: null. Policy refusal after successful execution retains the successful command receipt. composition-run uses the last successful prefix receipt, or null if no successful step.",
+    "outputs": "list, empty when no successful invoke snapshots",
+    "events": "list of sequential events; empty in typed-execute mode",
+    "nextIndex": "Nat; typed-execute uses 0; composition-run uses cursor.nextIndex",
+    "cursorFailure": "null or {index, step (null|Step), reason}; startCursor invalid catalog uses index 0, step null, reason configuration",
+    "assumptions": "object mapping all six classes to present|missing",
+    "outstanding": "list of informational families not discharged",
+    "source_pin": "object always present in execution reports",
+    "audit_roots": "list always present in execution reports",
+    "unsupported": "null or UnsupportedForm"
+  },
+  "failure_path": {
+    "class": ["kernel", "interface", "authority", "configuration", "internalReceipt", "staleSource", "observationMismatch", "incompleteObligation"],
+    "kernel_payload": "Typed.Refusal constructor plus EvalFailure when evaluation",
+    "interface_payload": "InterfaceFailure constructor plus EvalFailure when resolution",
+    "authority_payload": "AuthorityFailure constructor",
+    "configuration": "no extra payload",
+    "refused_prefix": "world/store/outputs/events/nextIndex equal the cursor immediately before the failing step; later steps inert and absent from events"
+  },
+  "judgment_outcome": {
+    "true": "recomputed predicate holds",
+    "false": "recomputed predicate fails at this family",
+    "not_reached": "short-circuit stopped before this family's entrypoint",
+    "not_applicable": "this command kind never runs that family (issue/revoke typeCorrect/footprintCorrect/accountingCorrect; typed-execute compositionCompatible; codec-only)"
+  },
+  "staged_family_aggregation": {
+    "stage_order_typed_execute": [
+      "typeCorrect.unknownOperation_actor_domain_arity",
+      "typeCorrect.Args.check",
+      "authorityCorrect.invoke",
+      "evaluation.template.evaluate (prior class; not a family)",
+      "guard (prior class; not a family; Evaluated.guard is not accountingCorrect)",
+      "footprintCorrect.stateReadsOK",
+      "footprintCorrect.envReadsOK",
+      "authorityCorrect.debitsOK",
+      "authorityCorrect.suppliesOK",
+      "accountingCorrect.nonnegative",
+      "accountingCorrect.accountingOK",
+      "footprintCorrect.writesOK"
+    ],
+    "combine_one_command": "Family F is false if any reached F-stage failed. Family F is not_reached if zero F-stages were reached. Family F is not_applicable if the command kind never has F. Family F is true if at least one F-stage was reached, every reached F-stage succeeded, and unreached later F-stages are not evaluated merely to fill an outcome. Prior-class checks (template.evaluate, guard) are not family stages and do not make accountingCorrect true.",
+    "combine_run": "Walk attempts in order. A later inert suffix is not evaluated. Family F is false if any reached attempt's F is false. Successful-prefix true does not justify a later failed attempt's conjunct (F49 insufficientFunds makes accountingCorrect false). compositionCompatible remains true when catalog/run machinery ran and the failure is a kernel family.",
+    "insufficientFunds_family": "accountingCorrect (nonnegative post-balance conjunct). Do not call accountingOK after that failure.",
+    "guard_family": "none. Guard remains before footprint in execute order. F17/F18 reach a true guard then footprint refusal; accountingCorrect stays not_reached because accountingOK and nonnegative were not reached.",
+    "evaluation_missingObservation_family": "prior class after invoke; typeCorrect is Args.check (true if that passed); authorityCorrect true if invoke passed; footprint/accounting not_reached"
+  },
+  "short_circuit": {
+    "typed-execute": ["unknownOperation", "actorMismatch", "domainMismatch", "partyArity", "evaluation.Args.check", "unauthorizedInvoke", "evaluation.template.evaluate", "guard", "stateReadFootprint", "envReadFootprint", "crossDomain", "unauthorizedDebit", "unauthorizedSupply", "insufficientFunds", "accounting", "writeFootprint"],
+    "composition-step": ["configuration.validateCatalog", "prepareInvocation.lookup", "resolveInputs", "registry", "checkAccess", "then typed-execute order", "issue/revoke AuthorityFailure"],
+    "do_not_call_Args.check_before_unknownOperation": "F30 remains kernel.unknownOperation; typeCorrect outcome is not_reached"
+  },
+  "truth_table_complete_for_increment": {
+    "accepted": "decode ok, unsupported null, required reached families outcome true, six assumption classes present, source_pin matches delivered identity records, no observationMismatch, and (¬require_library_discharge ∨ recorded_library_compiler_check) ∧ (¬require_invariant_discharge ∨ recorded_invariant_compiler_check)",
+    "complete_refused": "decode ok, unsupported null, observed FailurePath equals entrypoint error, families whose stages were reached before the failure and succeeded are true, the failing family is false if the failure is a family stage, or the failure is a prior class (template.evaluate or guard) with later families not_reached; this IS a complete checked report, not an accepted module",
+    "incomplete": "missing required assumption class, or require_library_discharge/require_invariant_discharge set without recorded compiler check, or missing source_pin/audit_roots fields",
+    "library_and_source_refinement": "informational outstanding by default; never outcome true without recorded compiler check; do not make complete_for_increment false merely by being listed",
+    "prop_invariants": "outstanding proof; not executable; not complete-by-that-field",
+    "claimed_next_state_mismatch": "refused observationMismatch, complete_refused",
+    "tags_evaluated_unknown_fields": "codec malformed, not Report"
+  },
+  "assumption_classes_6": [
+    "registry-trust",
+    "administrator-trust",
+    "context-authenticity",
+    "observation-truth",
+    "environment-authenticity",
+    "replay-prevention-outside-model"
+  ],
+  "environment_authenticity": "named sixth class; not subsumed by observation-truth. observation-truth is value correctness of delivered observations; environment-authenticity is that the environment map itself is the adapter-supplied function identity",
+  "reportEq": "execution Reports only; codec and audit use their own equality; mixed-mode comparison is a planning error",
+  "uniqueness_policy": "JSON/registry duplicate ids are decode uniqueness failures; catalog component-id duplicates decode successfully then validateCatalog is false (F08 configuration). Those are distinct boundaries."
+}

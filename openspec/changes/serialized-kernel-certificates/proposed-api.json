@@ -1,0 +1,66 @@
+{
+  "status": "proposed_unimplemented_unelaborated",
+  "namespace": "DefiKernel.Certificates",
+  "compiler_check_recorded": false,
+  "grammar": "openspec/changes/serialized-kernel-certificates/grammar.json",
+  "result_algebra": "openspec/changes/serialized-kernel-certificates/result-algebra.json",
+  "types": {
+    "RatEnc": "num : Int; den : Nat",
+    "DecodedIR": "sum DecodedExecution | DecodedAudit | DecodedCodecDocument",
+    "DecodedExecution": "mode typed-execute | composition-step | composition-run plus the matching payload",
+    "DecodedAudit": "mode audit",
+    "DecodedCodecDocument": "mode codec",
+    "CodecResult": "ok DecodedIR | malformed DecodeFailure | blocked ResourceLimit",
+    "Outcome": "codec CodecResult | execution Report | audit AuditResult",
+    "JudgmentOutcome": "true | false | notReached | notApplicable; never outstanding or accepted",
+    "JudgmentResult": "family; outcome; claimed : Bool; match : Bool",
+    "outstanding": "separate list of informational names; not a JudgmentOutcome constructor",
+    "Report": "14 fields in result-algebra.json",
+    "AuditResult": "passed | failed | blocked",
+    "FailurePath": "{class, ctor, payload}",
+    "ExecutionResultEnc": "world state+store; this is the claimed_next_state layer, not StateEnc",
+    "RawObservation": "world; receipt; outputs; events; nextIndex; cursorFailure; kernelFailure. Not a Report."
+  },
+  "runtime_signatures": {
+    "decodeBytes": "ByteArray → CodecResult",
+    "encodeModule": "DecodedIR → ByteArray",
+    "checkBytes": "ByteArray → Outcome",
+    "rawExecute": "DecodedExecution → RawObservation",
+    "checkIR": "DecodedExecution → Report",
+    "checkAudit": "DecodedAudit → AuditResult",
+    "checkCertificate": "CertificateEnvelope → Outcome",
+    "reportEq": "Report → Report → Bool",
+    "codecEq": "CodecResult → CodecResult → Bool",
+    "auditEq": "AuditResult → AuditResult → Bool"
+  },
+  "checkBytes_contract": [
+    "decodeBytes first using grammar first_failures_decode",
+    "malformed/blocked never call Typed.execute or Composition.executeStep/run",
+    "no ambient registry/env/config",
+    "claimed_judgments never evidence",
+    "claimed_next_state compared as ExecutionResultEnc after recomputation; mismatch observationMismatch",
+    "source_identity mismatch: checkIR is staleSource, rawExecute is not the report projection, Typed.execute is not called",
+    "rawExecute never consults source_identity, six-class presence, claimed_next_state, or require_*_discharge"
+  ],
+  "proposed_imports": [
+    "Lean.Data.Json",
+    "DefiKernel.Typed.Transition",
+    "DefiKernel.Typed.Expr",
+    "DefiKernel.Typed.Authority",
+    "DefiKernel.Typed.Types",
+    "DefiKernel.Composition.Sequence",
+    "DefiKernel.Composition.Interfaces",
+    "DefiKernel.Composition.Execution",
+    "DefiKernel.Composition.Contracts"
+  ],
+  "not_imported_in_runtime": [
+    "DefiKernel.Composition.Examples",
+    "DefiKernel.Composition.Preservation",
+    "DefiKernel.Typed.Examples"
+  ],
+  "proof_modules": [
+    "DefiKernel.Certificates.Correspondence",
+    "DefiKernel.Certificates.Soundness",
+    "DefiKernel.Certificates.Verify"
+  ]
+}
