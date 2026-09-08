@@ -50,3 +50,33 @@ for substantive implementation and evidence reviews. Invoke Claude with model
 Preserve completed Opus and historical Fable reports with their original
 identities; they are not relabelled as new Fable reviews. GPT-6 stock-harness
 implementation, no Foreman, and existing execution authorization remain unchanged.
+
+## Worker/checker change, 2026-09-07
+
+The user instructed: "have Grok 4.6 do this work and have GPT 6 check".
+This supersedes the older GPT implementation / Fable review roles for the
+Sprint11 finite-participant-causal-composition planning-package recovery and
+independent GPT-6 planning gate. Native Grok 4.6 is the worker. Independent
+GPT-6 checks results. No Foreman. Do not implement Nary Lean in that task.
+Do not treat the worker as the planning-acceptance reviewer. Preserve the
+official-r1 native Fable failure (`Prompt is too long`) with its original
+identity. Independent GPT-6 original-plan review is ACCEPT WITH LIMITATIONS
+with no required mathematical fixes; that verdict does not accept the
+recovered package or close the planning gate. Previous reviewer-change
+sections remain historical instructions.
+
+## Autonomous implementation scope, 2026-09-08
+
+The user subsequently instructed: "resume", "begin", "Going AFk, complete the
+rest of the agenda. Arm a loop", and "No all remaining sprints to finish the
+entire DeFi Formal". Continue the entire remaining FormalDeFi program, including
+implementation and evidence, with native Grok 4.6 as author and independent
+GPT-6 as checker. This supersedes the earlier Sprint11 planning-only scope and
+historical model roles for future work. Preserve original reviews and model
+identities. No Foreman. Integrate and publish accepted work to the existing
+semantic-kernel-pivot delivery branch with verification; do not merge to main.
+The original frozen planning packages remain historical byte-bound evidence;
+record authorized implementation transitions separately. Recover the active
+program from review/semantic-kernel/program-loop-20260908/WORKSTATE.json. The
+current Sprint11 goal is one milestone; completion must immediately continue
+into the remaining program agenda.

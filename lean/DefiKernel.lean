@@ -7,5 +7,6 @@ import DefiKernel.Atomic.Verify
 import DefiKernel.Metatheory.Verify
 import DefiKernel.Interface.Verify
 import DefiKernel.Arithmetic.Verify
+import DefiKernel.Nary.Verify
 
 /-! Entry point for the pilot, typed kernel, regressions and imported axiom audits. -/

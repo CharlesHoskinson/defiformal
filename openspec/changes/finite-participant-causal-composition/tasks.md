@@ -3,7 +3,7 @@
 - [ ] 1.1 Bind accepted/delivered S10 source, evidence and remote archive; verify exact M2 API/local-premise signatures and close the dependency refresh record without attributing implementation to a planning revision.
 - [ ] 1.2 Freeze the literal final-predecessor/Nary runner mapping, full inherited controls and fixture designs; verify every old root, namespace, proof regex, error string, fixture and command has a mapped successor.
 - [ ] 1.3 Capture accepted baseline source/tool/driver identities and appropriate actual checks; verify any retained regression run has explicit dependency byte-equivalence and its original execution revision.
-- [ ] 1.4 Freeze a strict-valid source-bound planning bundle and obtain same-candidate nonauthor GPT-6/native Fable5.1 medium substantive verdicts; verify required findings are resolved before any implementation.
+- [ ] 1.4 Freeze a strict-valid hashed local planning package and obtain independent nonauthor GPT-6 substantive review of that package; preserve the official-r1 Fable no-verdict; verify required findings are resolved before any implementation. Do not treat original-plan ACCEPT WITH LIMITATIONS as package-gate acceptance.
 
 ## 2. Roster, schedule and admission
 
@@ -46,8 +46,8 @@
 
 - [ ] 7.1 Complete all nineteen fixture IDs from fixtures.json and their explicitly classified variants, exact expected observations and unique nonempty runtime check IDs; obtain nonauthor fixture source review and map every scenario to its actual proof/check evidence.
 - [ ] 7.2 Implement Nary Audit and defensive CLI adaptation with runtime-only imports and precise proof-tail stripping; verify all final inherited controls plus any separately justified additions, including actual production-form evaluation/error controls.
-- [ ] 7.3 Freeze the sixteen literal runtime anchors from planned-mutations.json as unique actual source sites and run each compiled production mutation; verify its intended false semantic check, protected positives, source isolation and actual per-command timeout/duration.
-- [ ] 7.4 Preserve every compiler failure, timeout, cancellation, malformed/empty output and retry; verify none receives semantic detection credit and every accepted mutant has full stdout/stderr/source/artifact hashes.
+- [ ] 7.3 Freeze the sixteen literal runtime anchors from planned-mutations.json as unique actual source sites and run each compiled production mutation as its own one-mutant SPEC invocation, with that mutant's required_false and expected_protected_check as that SPEC's positive_checks; verify its intended false semantic check, protected positives, source isolation and actual per-command timeout/duration. Do not run one 16-mutant SPEC whose positive_checks unions protected checks that other mutants must falsify. Aggregate only after all sixteen succeed.
+- [ ] 7.4 Preserve every compiler failure, timeout, cancellation, malformed/empty output and retry; verify none receives semantic detection credit. Record an explicit outer invocation for timeouts. The unchanged inherited runner writes child stdout/stderr only after subprocess.run returns, so TimeoutExpired does not save that child log; do not claim complete partial child logs from a BLOCKED summary. Accepted non-timeout mutants still require full stdout/stderr/source/artifact hashes.
 
 ## 8. Integrated proof and acceptance evidence
 

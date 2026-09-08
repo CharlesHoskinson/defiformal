@@ -45,7 +45,7 @@ Each active available token SHALL call the actual invocation executor with the s
 - **THEN** the exact shared balances, all three independent histories and ordered actual attempts match independent expectations
 
 #### Scenario: Same qualified keys in distinct histories
-- **WHEN** two streams produce different values with the same qualified key and index
+- **WHEN** two streams produce different values with the same qualified key and index using one catalog-valid parameterized producer (component port IDs are unique, so two producer interfaces cannot share one output port)
 - **THEN** each consumer reads its own producer value only
 
 #### Scenario: Position-sensitive trusted boundary

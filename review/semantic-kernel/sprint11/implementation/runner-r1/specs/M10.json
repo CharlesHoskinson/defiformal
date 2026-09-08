@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "modules": [
+    "DefiKernel.Nary.Schedule",
+    "DefiKernel.Nary.Execution",
+    "DefiKernel.Nary.Observation",
+    "DefiKernel.Nary.CausalRuntime",
+    "DefiKernel.Nary.Examples",
+    "DefiKernel.Nary.Tests",
+    "DefiKernel.Nary.Audit"
+  ],
+  "mutations": [
+    {
+      "name": "m10-falsify-event-guard",
+      "module": "DefiKernel.Nary.Execution",
+      "needle": "let storedReceipt := result.receipt",
+      "replacement": "let storedReceipt := match result.receipt with\n    | .invoked req e => .invoked req { e with guard := false }\n    | receipt => receipt",
+      "required_false": [
+        "nary.receipt.evaluated"
+      ]
+    }
+  ],
+  "positive_checks": [
+    "nary.empty.exact"
+  ]
+}

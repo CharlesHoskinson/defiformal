@@ -2,14 +2,82 @@
   "status": "planned_source_sites_not_implemented_or_run",
   "count": 16,
   "compile_contract": "These exact needles are proposed runtime anchors to implement before the proof marker; freeze and check each unique source match at implementation. No oracle edit, compile-only credit or source-slice stand-in. A necessary API correction requires reviewed plan reconciliation before the final source freeze.",
+  "production_spec_batching": {
+    "mode": "sixteen_separate_one_mutant_spec_invocations",
+    "inherited_runner": {
+      "source": "scripts/run_interface_mutations.py",
+      "schema_fields": [
+        "schema_version",
+        "modules",
+        "mutations",
+        "positive_checks"
+      ],
+      "positive_checks_scope": "one global list enforced on the unchanged control and every mutation variant inside that SPEC",
+      "lines": {
+        "schema_require": 127,
+        "positive_true_require": 352
+      },
+      "successor_driver": "scripts/run_nary_mutations.py"
+    },
+    "forbidden": "one 16-mutant SPEC whose positive_checks is the union of per-mutant expected_protected_check labels",
+    "conflicts": [
+      {
+        "check": "nary.routing.locals",
+        "required_false_for": [
+          "M01"
+        ],
+        "protected_true_for": [
+          "M04",
+          "M05",
+          "M06",
+          "M09",
+          "M11",
+          "M12"
+        ]
+      },
+      {
+        "check": "nary.monitor.actual_producer",
+        "required_false_for": [
+          "M13"
+        ],
+        "protected_true_for": [
+          "M15"
+        ]
+      }
+    ],
+    "command_shape": "python3 scripts/run_nary_mutations.py --repo ROOT --spec SPEC_Mxx --out NEW_EXTERNAL_OUTPUT_Mxx --timeout-seconds 600",
+    "aggregation": "record per-mutant mapping; aggregate only after all sixteen one-mutant invocations succeed",
+    "same_site_needles": [
+      {
+        "needle": "let appended := post.attempts[pre.attempts.length]?",
+        "mutations": [
+          "M13",
+          "M15"
+        ],
+        "rule": "one unique source occurrence; alternative replacements in separate SPECs; do not duplicate the line to manufacture two needles"
+      }
+    ],
+    "timeout_honesty": {
+      "unchanged_runner_writes_child_log_only_after_return": true,
+      "TimeoutExpired_bypasses_child_log_write": true,
+      "outer_invocation_record_required": true,
+      "do_not_claim_complete_partial_child_logs_from_BLOCKED_line": true,
+      "new_runner_capture_instrumentation_out_of_literal_adaptation_scope": true
+    },
+    "status": "planning_disposition_not_executed"
+  },
   "mutations": [
     {
       "id": "M01",
+      "runner_name": "m01-set-local-all-peers",
       "module_site": "Execution selected-local update",
       "original_contract": "if peer = selected then updated else old peer",
       "replacement_contract": "updated for every peer",
       "fixture": "F02",
       "oracle_label": "nary.routing.locals",
+      "required_false": [
+        "nary.routing.locals"
+      ],
       "independent_false_observation": "unselected participants incorrectly share first local event/consumed; expected all three distinct",
       "protected_positive": "F04 empty",
       "module": "DefiKernel.Nary.Execution",
@@ -23,11 +91,15 @@
     },
     {
       "id": "M02",
+      "runner_name": "m02-accept-pre-world",
       "module_site": "Execution accept world",
       "original_contract": "world := result.world",
       "replacement_contract": "world := pre.world",
       "fixture": "F02",
       "oracle_label": "nary.world.exact",
+      "required_false": [
+        "nary.world.exact"
+      ],
       "independent_false_observation": "vault first transfer expected9 but remains10",
       "protected_positive": "F04 empty",
       "module": "DefiKernel.Nary.Execution",
@@ -41,11 +113,15 @@
     },
     {
       "id": "M03",
+      "runner_name": "m03-erase-store",
       "module_site": "Execution accept capability field",
       "original_contract": "publish result.world unchanged",
       "replacement_contract": "publish {result.world with capabilities := CapabilityStore.empty}",
       "fixture": "F02",
       "oracle_label": "nary.store.exact",
+      "required_false": [
+        "nary.store.exact"
+      ],
       "independent_false_observation": "literal nonempty store unexpectedly erased",
       "protected_positive": "F04 empty",
       "module": "DefiKernel.Nary.Execution",
@@ -59,11 +135,15 @@
     },
     {
       "id": "M04",
+      "runner_name": "m04-drop-own-outputs",
       "module_site": "Execution actual call history",
       "original_contract": "executeStep ... own.outputs ...",
       "replacement_contract": "executeStep ... [] ...",
       "fixture": "F05",
       "oracle_label": "nary.history.own_input",
+      "required_false": [
+        "nary.history.own_input"
+      ],
       "independent_false_observation": "consumer cannot resolve actual own prior output; expected success/effects6 and2",
       "protected_positive": "F02 literal inputs",
       "module": "DefiKernel.Nary.Execution",
@@ -77,11 +157,15 @@
     },
     {
       "id": "M05",
+      "runner_name": "m05-boundary-index-zero",
       "module_site": "Execution current boundary",
       "original_contract": "boundaries selected own.nextIndex",
       "replacement_contract": "boundaries selected 0",
       "fixture": "F06",
       "oracle_label": "nary.boundary.index1",
+      "required_false": [
+        "nary.boundary.index1"
+      ],
       "independent_false_observation": "expected actual index1 unauthorizedInvoke refusal becomes success",
       "protected_positive": "F02 index0",
       "module": "DefiKernel.Nary.Execution",
@@ -95,11 +179,15 @@
     },
     {
       "id": "M06",
+      "runner_name": "m06-skip-without-consume",
       "module_site": "Execution skip consumed",
       "original_contract": "consumed := own.consumed + 1",
       "replacement_contract": "consumed := own.consumed",
       "fixture": "F08",
       "oracle_label": "nary.skip.consumed",
+      "required_false": [
+        "nary.skip.consumed"
+      ],
       "independent_false_observation": "expected consumed2 remains1 although no attempt is added",
       "protected_positive": "F02 no skips",
       "module": "DefiKernel.Nary.Execution",
@@ -113,11 +201,15 @@
     },
     {
       "id": "M07",
+      "runner_name": "m07-freeze-next-index",
       "module_site": "Execution accepted nextIndex",
       "original_contract": "nextIndex := own.nextIndex + 1",
       "replacement_contract": "nextIndex := own.nextIndex",
       "fixture": "F02",
       "oracle_label": "nary.success.index",
+      "required_false": [
+        "nary.success.index"
+      ],
       "independent_false_observation": "expected successful index1 remains0",
       "protected_positive": "F04 empty",
       "module": "DefiKernel.Nary.Execution",
@@ -131,11 +223,15 @@
     },
     {
       "id": "M08",
+      "runner_name": "m08-halt-peers-on-error",
       "module_site": "Execution active failure gate",
       "original_contract": "skip only on selected own.failure",
       "replacement_contract": "also skip when pre.attempts.any has an error outcome",
       "fixture": "F07",
       "oracle_label": "nary.refusal.peer_continues",
+      "required_false": [
+        "nary.refusal.peer_continues"
+      ],
       "independent_false_observation": "funded peer deposit1/2 omitted after p0 error; expected final12 becomes9",
       "protected_positive": "F02 no failures",
       "module": "DefiKernel.Nary.Execution",
@@ -149,11 +245,15 @@
     },
     {
       "id": "M09",
+      "runner_name": "m09-omit-error-attempt",
       "module_site": "Execution refused attempt append",
       "original_contract": "pre.attempts ++ [actualErrorAttempt]",
       "replacement_contract": "pre.attempts",
       "fixture": "F07",
       "oracle_label": "nary.refusal.attempt",
+      "required_false": [
+        "nary.refusal.attempt"
+      ],
       "independent_false_observation": "expected one actual error and total4 attempts loses error",
       "protected_positive": "F02 only success",
       "module": "DefiKernel.Nary.Execution",
@@ -167,11 +267,15 @@
     },
     {
       "id": "M10",
+      "runner_name": "m10-falsify-event-guard",
       "module_site": "Execution stored successful receipt",
       "original_contract": "store actual result receipt in local event",
       "replacement_contract": "for .invoked request e store .invoked request {e with guard := false}, retain world/outputs and actual attempt",
       "fixture": "F02",
       "oracle_label": "nary.receipt.evaluated",
+      "required_false": [
+        "nary.receipt.evaluated"
+      ],
       "independent_false_observation": "literal evaluated guard true becomes false in event without changing balances",
       "protected_positive": "F04 empty",
       "module": "DefiKernel.Nary.Execution",
@@ -185,11 +289,15 @@
     },
     {
       "id": "M11",
+      "runner_name": "m11-counts-before-analyze",
       "module_site": "Schedule admission precedence",
       "original_contract": "analyze all branches before checkSchedule",
       "replacement_contract": "checkSchedule before branch analysis, retaining catalog first",
       "fixture": "F01",
       "oracle_label": "nary.admission.suffix_precedence",
+      "required_false": [
+        "nary.admission.suffix_precedence"
+      ],
       "independent_false_observation": "expected p1 index1 unknownOperation becomes count mismatch",
       "protected_positive": "F02 valid counts",
       "module": "DefiKernel.Nary.Schedule",
@@ -203,11 +311,15 @@
     },
     {
       "id": "M12",
+      "runner_name": "m12-drop-last-count",
       "module_site": "Schedule count traversal",
       "original_contract": "roster.order",
       "replacement_contract": "roster.order.dropLast only for count traversal",
       "fixture": "F01",
       "oracle_label": "nary.schedule.final_participant",
+      "required_false": [
+        "nary.schedule.final_participant"
+      ],
       "independent_false_observation": "expected final p2 mismatch disappears; roster value and other analyses unchanged",
       "protected_positive": "F02 complete counts",
       "module": "DefiKernel.Nary.Schedule",
@@ -221,11 +333,15 @@
     },
     {
       "id": "M13",
+      "runner_name": "m13-stale-attempt-lookup",
       "module_site": "CausalRuntime appended attempt lookup",
       "original_contract": "post.attempts[pre.attempts.length]?",
       "replacement_contract": "pre.attempts[pre.attempts.length - 1]?",
       "fixture": "F10",
       "oracle_label": "nary.monitor.actual_producer",
+      "required_false": [
+        "nary.monitor.actual_producer"
+      ],
       "independent_false_observation": "first actual producer is omitted/delayed; expected Ready6 immediately stays Awaiting",
       "protected_positive": "F04 empty",
       "module": "DefiKernel.Nary.CausalRuntime",
@@ -239,11 +355,15 @@
     },
     {
       "id": "M14",
+      "runner_name": "m14-drop-monitor-attempt",
       "module_site": "CausalRuntime monitor input",
       "original_contract": "attempt := actual newly appended attempt option",
       "replacement_contract": "attempt := none",
       "fixture": "F10",
       "oracle_label": "nary.monitor.success_input",
+      "required_false": [
+        "nary.monitor.success_input"
+      ],
       "independent_false_observation": "actual producer success never establishes Ready6",
       "protected_positive": "F04 empty",
       "module": "DefiKernel.Nary.CausalRuntime",
@@ -257,11 +377,15 @@
     },
     {
       "id": "M15",
+      "runner_name": "m15-replay-last-on-skip",
       "module_site": "CausalRuntime skip input",
       "original_contract": "post.attempts[pre.attempts.length]?",
       "replacement_contract": "post.attempts.getLast?",
       "fixture": "F08",
       "oracle_label": "nary.monitor.skip_no_replay",
+      "required_false": [
+        "nary.monitor.skip_no_replay"
+      ],
       "independent_false_observation": "actual-attempt count monitor expected1 becomes2 on exhausted token",
       "protected_positive": "F02 no skip with current last attempt",
       "module": "DefiKernel.Nary.CausalRuntime",
@@ -275,11 +399,15 @@
     },
     {
       "id": "M16",
+      "runner_name": "m16-reset-monitor-fold",
       "module_site": "CausalRuntime fold monitor state",
       "original_contract": "pass current accumulated q to each update",
       "replacement_contract": "pass continuation entry q to every update while preserving accumulated base machine",
       "fixture": "F10",
       "oracle_label": "nary.monitor.retained_phase",
+      "required_false": [
+        "nary.monitor.retained_phase"
+      ],
       "independent_false_observation": "consumer sees Awaiting again instead of Ready and fails to reach Consumed",
       "protected_positive": "F04 empty",
       "module": "DefiKernel.Nary.CausalRuntime",

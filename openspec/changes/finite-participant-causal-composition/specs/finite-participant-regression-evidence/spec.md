@@ -21,8 +21,8 @@ Evidence SHALL cover the nineteen fixed fixture IDs with independently construct
 Every planned mutation SHALL change the actual production runtime closure, compile it and make its named independent semantic oracle false while protected positives remain true; blocked or vacuous executions SHALL receive no detection credit.
 
 #### Scenario: Sixteen real faults
-- **WHEN** each planned mutation is run separately on the frozen runtime source
-- **THEN** each compiles and produces its named false check with nonempty results and protected positives
+- **WHEN** each planned mutation is run as its own one-mutant SPEC invocation on the frozen runtime source, with that mutant's required_false and that mutant's expected_protected_check as that SPEC's positive_checks
+- **THEN** each compiles and produces its named false check with nonempty results and protected positives. A single 16-mutant SPEC whose positive_checks unions labels that other mutants must falsify is not production evidence
 
 #### Scenario: Timeout or compiler refusal
 - **WHEN** a mutated closure times out, fails compilation or emits no valid nonempty checks
@@ -42,7 +42,7 @@ The runner SHALL preserve all final accepted predecessor defensive controls thro
 
 ### Requirement: Dependency and independent acceptance gate
 
-Official planning freeze SHALL require accepted/delivered M2 and refreshed exact dependencies, then same-candidate nonauthor GPT-6/native Fable5.1 medium planning review; implementation acceptance SHALL require actual checks and independent native Grok/Fable5.1 medium reports with exact source, tool, model and evidence identities.
+Official planning freeze SHALL require accepted/delivered M2 and refreshed exact dependencies, then independent nonauthor GPT-6 review of the hashed local planning package. The preserved official-r1 Fable 5.1 medium invocation is not a verdict. Implementation acceptance SHALL require actual checks and independent native Grok/Fable5.1 medium reports with exact source, tool, model and evidence identities.
 
 #### Scenario: Pending predecessor or no verdict
 - **WHEN** M2 is unaccepted, or a native invocation is unavailable or returns no substantive verdict
