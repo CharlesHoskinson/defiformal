@@ -1,0 +1,1724 @@
+DefiKernel.Nary.Tree.admitIsolated_base
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A]
+  [inst_3 : DecidableEq.{1} D] [Fintype.{0} P] [Fintype.{0} A] [Fintype.{0} D]
+  (cfg : DefiKernel.Composition.Config P A D) (roster : @DefiKernel.Nary.Roster B inst)
+  (boundaries : DefiKernel.Nary.Boundaries B P A D) (branches : DefiKernel.Nary.Branches B P A D)
+  (schedule : DefiKernel.Nary.Schedule B) (tree : DefiKernel.Nary.Tree.Tree B)
+  (reason : DefiKernel.Nary.Tree.TreeAdmissionFailure B P A D),
+  @Eq.{1}
+      (Except.{0, 0} (DefiKernel.Nary.Tree.TreeAdmissionFailure B P A D)
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))))
+      (@DefiKernel.Nary.Tree.admitTree B P A D inst inst_1 inst_2 inst_3 cfg roster boundaries branches schedule tree)
+      (@Except.error.{0, 0} (DefiKernel.Nary.Tree.TreeAdmissionFailure B P A D)
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) reason) →
+    @Eq.{1}
+      (Except.{0, 0}
+        (Sum.{0, 0} (DefiKernel.Nary.Tree.TreeAdmissionFailure B P A D) (DefiKernel.Nary.Tree.PairConflict B P A D))
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))))
+      (@DefiKernel.Nary.Tree.admitIsolated B P A D inst inst_1 inst_2 inst_3 cfg roster boundaries branches schedule
+        tree)
+      (@Except.error.{0, 0}
+        (Sum.{0, 0} (DefiKernel.Nary.Tree.TreeAdmissionFailure B P A D) (DefiKernel.Nary.Tree.PairConflict B P A D))
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D)))
+        (@Sum.inl.{0, 0} (DefiKernel.Nary.Tree.TreeAdmissionFailure B P A D) (DefiKernel.Nary.Tree.PairConflict B P A D)
+          reason))
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.admitIsolated_conflict
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A]
+  [inst_3 : DecidableEq.{1} D] [Fintype.{0} P] [Fintype.{0} A] [Fintype.{0} D]
+  (cfg : DefiKernel.Composition.Config P A D) (roster : @DefiKernel.Nary.Roster B inst)
+  (boundaries : DefiKernel.Nary.Boundaries B P A D) (branches : DefiKernel.Nary.Branches B P A D)
+  (schedule : DefiKernel.Nary.Schedule B) (tree : DefiKernel.Nary.Tree.Tree B)
+  (assoc : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D)))
+  (conflict : DefiKernel.Nary.Tree.PairConflict B P A D),
+  @Eq.{1}
+      (Except.{0, 0} (DefiKernel.Nary.Tree.TreeAdmissionFailure B P A D)
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))))
+      (@DefiKernel.Nary.Tree.admitTree B P A D inst inst_1 inst_2 inst_3 cfg roster boundaries branches schedule tree)
+      (@Except.ok.{0, 0} (DefiKernel.Nary.Tree.TreeAdmissionFailure B P A D)
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) assoc) →
+    @Eq.{1} (Except.{0, 0} (DefiKernel.Nary.Tree.PairConflict B P A D) Unit)
+        (@DefiKernel.Nary.Tree.checkPairwise B P A D inst_1 inst_2 inst_3 assoc)
+        (@Except.error.{0, 0} (DefiKernel.Nary.Tree.PairConflict B P A D) Unit conflict) →
+      @Eq.{1}
+        (Except.{0, 0}
+          (Sum.{0, 0} (DefiKernel.Nary.Tree.TreeAdmissionFailure B P A D) (DefiKernel.Nary.Tree.PairConflict B P A D))
+          (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))))
+        (@DefiKernel.Nary.Tree.admitIsolated B P A D inst inst_1 inst_2 inst_3 cfg roster boundaries branches schedule
+          tree)
+        (@Except.error.{0, 0}
+          (Sum.{0, 0} (DefiKernel.Nary.Tree.TreeAdmissionFailure B P A D) (DefiKernel.Nary.Tree.PairConflict B P A D))
+          (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D)))
+          (@Sum.inr.{0, 0} (DefiKernel.Nary.Tree.TreeAdmissionFailure B P A D)
+            (DefiKernel.Nary.Tree.PairConflict B P A D) conflict))
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.admitIsolated_ok
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A]
+  [inst_3 : DecidableEq.{1} D] [Fintype.{0} P] [Fintype.{0} A] [Fintype.{0} D]
+  (cfg : DefiKernel.Composition.Config P A D) (roster : @DefiKernel.Nary.Roster B inst)
+  (boundaries : DefiKernel.Nary.Boundaries B P A D) (branches : DefiKernel.Nary.Branches B P A D)
+  (schedule : DefiKernel.Nary.Schedule B) (tree : DefiKernel.Nary.Tree.Tree B)
+  (assoc : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))),
+  @Eq.{1}
+      (Except.{0, 0} (DefiKernel.Nary.Tree.TreeAdmissionFailure B P A D)
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))))
+      (@DefiKernel.Nary.Tree.admitTree B P A D inst inst_1 inst_2 inst_3 cfg roster boundaries branches schedule tree)
+      (@Except.ok.{0, 0} (DefiKernel.Nary.Tree.TreeAdmissionFailure B P A D)
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) assoc) →
+    @Eq.{1} (Except.{0, 0} (DefiKernel.Nary.Tree.PairConflict B P A D) Unit)
+        (@DefiKernel.Nary.Tree.checkPairwise B P A D inst_1 inst_2 inst_3 assoc)
+        (@Except.ok.{0, 0} (DefiKernel.Nary.Tree.PairConflict B P A D) Unit Unit.unit) →
+      @Eq.{1}
+        (Except.{0, 0}
+          (Sum.{0, 0} (DefiKernel.Nary.Tree.TreeAdmissionFailure B P A D) (DefiKernel.Nary.Tree.PairConflict B P A D))
+          (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))))
+        (@DefiKernel.Nary.Tree.admitIsolated B P A D inst inst_1 inst_2 inst_3 cfg roster boundaries branches schedule
+          tree)
+        (@Except.ok.{0, 0}
+          (Sum.{0, 0} (DefiKernel.Nary.Tree.TreeAdmissionFailure B P A D) (DefiKernel.Nary.Tree.PairConflict B P A D))
+          (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) assoc)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.admitted_branch
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A]
+  [inst_3 : DecidableEq.{1} D] [Fintype.{0} P] [Fintype.{0} A] [Fintype.{0} D]
+  (cfg : DefiKernel.Composition.Config P A D) (boundaries : DefiKernel.Nary.Boundaries B P A D)
+  (branches : DefiKernel.Nary.Branches B P A D) (roster : @DefiKernel.Nary.Roster B inst)
+  (assoc : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))),
+  @Eq.{1}
+      (Except.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))))
+      (@DefiKernel.Nary.analyzeAll B P A D inst_1 inst_2 inst_3 cfg boundaries branches
+        (@DefiKernel.Nary.Roster.order B inst roster))
+      (@Except.ok.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) assoc) →
+    ∀ (b : B),
+      @Eq.{1} (Except.{0, 0} DefiKernel.Parallel.LocalFailure (DefiKernel.Parallel.Footprint P A D))
+        (@DefiKernel.Parallel.analyzeBranch P A D inst_1 inst_2 inst_3 cfg (boundaries b) (branches b))
+        (@Except.ok.{0, 0} DefiKernel.Parallel.LocalFailure (DefiKernel.Parallel.Footprint P A D)
+          (@DefiKernel.Nary.Tree.footprintOf B P A D inst assoc b))
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.admitted_writes_read
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A]
+  [inst_3 : DecidableEq.{1} D] [Fintype.{0} P] [Fintype.{0} A] [Fintype.{0} D]
+  (cfg : DefiKernel.Composition.Config P A D) (boundaries : DefiKernel.Nary.Boundaries B P A D)
+  (branches : DefiKernel.Nary.Branches B P A D) (roster : @DefiKernel.Nary.Roster B inst)
+  (assoc : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))),
+  @Eq.{1}
+      (Except.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))))
+      (@DefiKernel.Nary.analyzeAll B P A D inst_1 inst_2 inst_3 cfg boundaries branches
+        (@DefiKernel.Nary.Roster.order B inst roster))
+      (@Except.ok.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) assoc) →
+    ∀ (b : B) (c : DefiKernel.Typed.Cell P A D),
+      @Membership.mem.{0, 0} (DefiKernel.Typed.Cell P A D) (List.{0} (DefiKernel.Typed.Cell P A D))
+          (@List.instMembership.{0} (DefiKernel.Typed.Cell P A D))
+          (@DefiKernel.Parallel.Footprint.writes P A D (@DefiKernel.Nary.Tree.footprintOf B P A D inst assoc b)) c →
+        @Membership.mem.{0, 0} (DefiKernel.Typed.Cell P A D) (List.{0} (DefiKernel.Typed.Cell P A D))
+          (@List.instMembership.{0} (DefiKernel.Typed.Cell P A D))
+          (@DefiKernel.Parallel.Footprint.reads P A D (@DefiKernel.Nary.Tree.footprintOf B P A D inst assoc b)) c
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.advance_branch_frame
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A]
+  [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P] [inst_5 : Fintype.{0} A] [inst_6 : Fintype.{0} D]
+  (cfg : DefiKernel.Composition.Config P A D) (boundaries : DefiKernel.Nary.Boundaries B P A D)
+  (initial : DefiKernel.Composition.World P A D) (branches : DefiKernel.Nary.Branches B P A D)
+  (roster : @DefiKernel.Nary.Roster B inst) (assoc : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))),
+  @Eq.{1}
+      (Except.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))))
+      (@DefiKernel.Nary.analyzeAll B P A D inst_1 inst_2 inst_3 cfg boundaries branches
+        (@DefiKernel.Nary.Roster.order B inst roster))
+      (@Except.ok.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) assoc) →
+    ∀ (m : DefiKernel.Nary.Machine B P A D),
+      @DefiKernel.Nary.Reachable B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg boundaries branches initial
+          m →
+        ∀ (b : B),
+          ∀ c ∉ @DefiKernel.Parallel.Footprint.writes P A D (@DefiKernel.Nary.Tree.footprintOf B P A D inst assoc b),
+            @Eq.{1} Rat
+              (@DefiKernel.Typed.State.balance P A D
+                (@DefiKernel.Typed.ExecutionResult.state P A D
+                  (@DefiKernel.Nary.Machine.world B P A D
+                    (@DefiKernel.Nary.advance B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg boundaries
+                      branches m b)))
+                c)
+              (@DefiKernel.Typed.State.balance P A D
+                (@DefiKernel.Typed.ExecutionResult.state P A D (@DefiKernel.Nary.Machine.world B P A D m)) c)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.advance_own_agrees
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A]
+  [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P] [inst_5 : Fintype.{0} A] [inst_6 : Fintype.{0} D]
+  (cfg : DefiKernel.Composition.Config P A D) (boundaries : DefiKernel.Nary.Boundaries B P A D)
+  (initial : DefiKernel.Composition.World P A D) (branches : DefiKernel.Nary.Branches B P A D)
+  (roster : @DefiKernel.Nary.Roster B inst) (assoc : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))),
+  @Eq.{1}
+      (Except.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))))
+      (@DefiKernel.Nary.analyzeAll B P A D inst_1 inst_2 inst_3 cfg boundaries branches
+        (@DefiKernel.Nary.Roster.order B inst roster))
+      (@Except.ok.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) assoc) →
+    ∀ (m : DefiKernel.Nary.Machine B P A D),
+      @DefiKernel.Nary.Reachable B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg boundaries branches initial
+          m →
+        ∀ (b : B),
+          @DefiKernel.Parallel.CursorAgrees P A D
+              (@Set.ofPred.{0} (DefiKernel.Typed.Cell P A D) fun c =>
+                @Membership.mem.{0, 0} (DefiKernel.Typed.Cell P A D) (List.{0} (DefiKernel.Typed.Cell P A D))
+                  (@List.instMembership.{0} (DefiKernel.Typed.Cell P A D))
+                  (@DefiKernel.Parallel.Footprint.reads P A D
+                    (@DefiKernel.Nary.Tree.isolatedFootprint B P A D inst assoc b))
+                  c)
+              (@DefiKernel.Interleaving.LocalState.toCursor P A D (@DefiKernel.Nary.Machine.locals B P A D m b)
+                (@DefiKernel.Nary.Machine.world B P A D m))
+              (@DefiKernel.Nary.Tree.isolated P A D inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg (boundaries b) initial
+                (branches b)
+                (@DefiKernel.Interleaving.LocalState.consumed P A D (@DefiKernel.Nary.Machine.locals B P A D m b))) →
+            have post :=
+              @DefiKernel.Nary.advance B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg boundaries branches m
+                b;
+            @DefiKernel.Parallel.CursorAgrees P A D
+              (@Set.ofPred.{0} (DefiKernel.Typed.Cell P A D) fun c =>
+                @Membership.mem.{0, 0} (DefiKernel.Typed.Cell P A D) (List.{0} (DefiKernel.Typed.Cell P A D))
+                  (@List.instMembership.{0} (DefiKernel.Typed.Cell P A D))
+                  (@DefiKernel.Parallel.Footprint.reads P A D
+                    (@DefiKernel.Nary.Tree.isolatedFootprint B P A D inst assoc b))
+                  c)
+              (@DefiKernel.Interleaving.LocalState.toCursor P A D (@DefiKernel.Nary.Machine.locals B P A D post b)
+                (@DefiKernel.Nary.Machine.world B P A D post))
+              (@DefiKernel.Nary.Tree.isolated P A D inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg (boundaries b) initial
+                (branches b)
+                (@DefiKernel.Interleaving.LocalState.consumed P A D (@DefiKernel.Nary.Machine.locals B P A D post b)))
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.advance_simulates
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A]
+  [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P] [inst_5 : Fintype.{0} A] [inst_6 : Fintype.{0} D]
+  (cfg : DefiKernel.Composition.Config P A D) (boundaries : DefiKernel.Nary.Boundaries B P A D)
+  (initial : DefiKernel.Composition.World P A D) (branches : DefiKernel.Nary.Branches B P A D)
+  (roster : @DefiKernel.Nary.Roster B inst) (assoc : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))),
+  @Eq.{1}
+      (Except.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))))
+      (@DefiKernel.Nary.analyzeAll B P A D inst_1 inst_2 inst_3 cfg boundaries branches
+        (@DefiKernel.Nary.Roster.order B inst roster))
+      (@Except.ok.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) assoc) →
+    @DefiKernel.Nary.Tree.PairwiseCompatible B P A D assoc →
+      ∀ (m : DefiKernel.Nary.Machine B P A D),
+        @DefiKernel.Nary.Reachable B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg boundaries branches
+            initial m →
+          @DefiKernel.Nary.Tree.Simulates B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg boundaries initial
+              branches assoc m →
+            ∀ (b : B),
+              @DefiKernel.Nary.Tree.Simulates B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg boundaries
+                initial branches assoc
+                (@DefiKernel.Nary.advance B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg boundaries branches
+                  m b)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.analyzeAll_map_fst
+∀ {B P A D : Type} [DecidableEq.{1} B] [inst : DecidableEq.{1} P] [inst_1 : DecidableEq.{1} A]
+  [inst_2 : DecidableEq.{1} D] [Fintype.{0} P] [Fintype.{0} A] [Fintype.{0} D]
+  (cfg : DefiKernel.Composition.Config P A D) (boundaries : DefiKernel.Nary.Boundaries B P A D)
+  (branches : DefiKernel.Nary.Branches B P A D) (order : List.{0} B)
+  (fps : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))),
+  @Eq.{1}
+      (Except.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))))
+      (@DefiKernel.Nary.analyzeAll B P A D inst inst_1 inst_2 cfg boundaries branches order)
+      (@Except.ok.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) fps) →
+    @Eq.{1} (List.{0} B)
+      (@List.map.{0, 0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D)) B
+        (@Prod.fst.{0, 0} B (DefiKernel.Parallel.Footprint P A D)) fps)
+      order
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.analyzeAll_nodup
+∀ {B P A D : Type} [DecidableEq.{1} B] [inst : DecidableEq.{1} P] [inst_1 : DecidableEq.{1} A]
+  [inst_2 : DecidableEq.{1} D] [Fintype.{0} P] [Fintype.{0} A] [Fintype.{0} D]
+  (cfg : DefiKernel.Composition.Config P A D) (boundaries : DefiKernel.Nary.Boundaries B P A D)
+  (branches : DefiKernel.Nary.Branches B P A D) (order : List.{0} B)
+  (assoc : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))),
+  @List.Nodup.{0} B order →
+    @Eq.{1}
+        (Except.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+          (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))))
+        (@DefiKernel.Nary.analyzeAll B P A D inst inst_1 inst_2 cfg boundaries branches order)
+        (@Except.ok.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+          (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) assoc) →
+      @List.Nodup.{0} B
+        (@List.map.{0, 0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D)) B
+          (@Prod.fst.{0, 0} B (DefiKernel.Parallel.Footprint P A D)) assoc)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.canonicalBranchEq_iff
+∀ {P A D : Type} [inst : DecidableEq.{1} P] [inst_1 : DecidableEq.{1} A] [inst_2 : DecidableEq.{1} D] [Fintype.{0} P]
+  [Fintype.{0} A] [Fintype.{0} D] (left right : DefiKernel.Parallel.BranchObservation P A D),
+  Iff (@Eq.{1} Bool (@DefiKernel.Nary.Tree.canonicalBranchEq P A D inst inst_1 inst_2 left right) Bool.true)
+    (@Eq.{1} (DefiKernel.Parallel.BranchObservation P A D) left right)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.canonicalEq_iff
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A]
+  [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P] [inst_5 : Fintype.{0} A] [inst_6 : Fintype.{0} D]
+  (left right : DefiKernel.Nary.Tree.CanonicalObservation B P A D),
+  Iff
+    (@Eq.{1} Bool (@DefiKernel.Nary.Tree.canonicalEq B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 left right)
+      Bool.true)
+    (And
+      (@DefiKernel.Parallel.WorldEquivalent P A D (@DefiKernel.Nary.Tree.CanonicalObservation.world B P A D left)
+        (@DefiKernel.Nary.Tree.CanonicalObservation.world B P A D right))
+      (@Eq.{1} (List.{0} (Prod.{0, 0} B (DefiKernel.Nary.Tree.CanonicalLocal P A D)))
+        (@DefiKernel.Nary.Tree.CanonicalObservation.locals B P A D left)
+        (@DefiKernel.Nary.Tree.CanonicalObservation.locals B P A D right)))
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.canonicalEq_symm
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A]
+  [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P] [inst_5 : Fintype.{0} A] [inst_6 : Fintype.{0} D]
+  (a b : DefiKernel.Nary.Tree.CanonicalObservation B P A D),
+  @Eq.{1} Bool (@DefiKernel.Nary.Tree.canonicalEq B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 a b)
+      Bool.true →
+    @Eq.{1} Bool (@DefiKernel.Nary.Tree.canonicalEq B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 b a)
+      Bool.true
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.canonicalEq_trans
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A]
+  [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P] [inst_5 : Fintype.{0} A] [inst_6 : Fintype.{0} D]
+  (a b c : DefiKernel.Nary.Tree.CanonicalObservation B P A D),
+  @Eq.{1} Bool (@DefiKernel.Nary.Tree.canonicalEq B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 a b)
+      Bool.true →
+    @Eq.{1} Bool (@DefiKernel.Nary.Tree.canonicalEq B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 b c)
+        Bool.true →
+      @Eq.{1} Bool (@DefiKernel.Nary.Tree.canonicalEq B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 a c)
+        Bool.true
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.canonicalEventEq_iff
+∀ {P A D : Type} [inst : DecidableEq.{1} P] [inst_1 : DecidableEq.{1} A] [inst_2 : DecidableEq.{1} D] [Fintype.{0} P]
+  [Fintype.{0} A] [Fintype.{0} D] (left right : DefiKernel.Parallel.EventObservation P A D),
+  Iff (@Eq.{1} Bool (@DefiKernel.Nary.Tree.canonicalEventEq P A D inst inst_1 inst_2 left right) Bool.true)
+    (@Eq.{1} (DefiKernel.Parallel.EventObservation P A D) left right)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.canonicalEventsEq_iff
+∀ {P A D : Type} [inst : DecidableEq.{1} P] [inst_1 : DecidableEq.{1} A] [inst_2 : DecidableEq.{1} D] [Fintype.{0} P]
+  [Fintype.{0} A] [Fintype.{0} D] (left right : List.{0} (DefiKernel.Parallel.EventObservation P A D)),
+  Iff (@Eq.{1} Bool (@DefiKernel.Nary.Tree.canonicalEventsEq P A D inst inst_1 inst_2 left right) Bool.true)
+    (@Eq.{1} (List.{0} (DefiKernel.Parallel.EventObservation P A D)) left right)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.canonicalLocalEq_iff
+∀ {P A D : Type} [inst : DecidableEq.{1} P] [inst_1 : DecidableEq.{1} A] [inst_2 : DecidableEq.{1} D] [Fintype.{0} P]
+  [Fintype.{0} A] [Fintype.{0} D] (left right : DefiKernel.Nary.Tree.CanonicalLocal P A D),
+  Iff (@Eq.{1} Bool (@DefiKernel.Nary.Tree.canonicalLocalEq P A D inst inst_1 inst_2 left right) Bool.true)
+    (@Eq.{1} (DefiKernel.Nary.Tree.CanonicalLocal P A D) left right)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.canonicalLocalsEq_iff
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A]
+  [inst_3 : DecidableEq.{1} D] [Fintype.{0} P] [Fintype.{0} A] [Fintype.{0} D]
+  (left right : List.{0} (Prod.{0, 0} B (DefiKernel.Nary.Tree.CanonicalLocal P A D))),
+  Iff (@Eq.{1} Bool (@DefiKernel.Nary.Tree.canonicalLocalsEq B P A D inst inst_1 inst_2 inst_3 left right) Bool.true)
+    (@Eq.{1} (List.{0} (Prod.{0, 0} B (DefiKernel.Nary.Tree.CanonicalLocal P A D))) left right)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.checkAgainst_nil
+∀ {B P A D : Type} [DecidableEq.{1} B] [inst : DecidableEq.{1} P] [inst_1 : DecidableEq.{1} A]
+  [inst_2 : DecidableEq.{1} D] [Fintype.{0} P] [Fintype.{0} A] [Fintype.{0} D]
+  (head : Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D)),
+  @Eq.{1} (Except.{0, 0} (DefiKernel.Nary.Tree.PairConflict B P A D) Unit)
+    (@DefiKernel.Nary.Tree.checkAgainst B P A D inst inst_1 inst_2 head
+      (@List.nil.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))))
+    (@Except.ok.{0, 0} (DefiKernel.Nary.Tree.PairConflict B P A D) Unit Unit.unit)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.checkAgainst_ok_iff
+∀ {B P A D : Type} [DecidableEq.{1} B] [inst : DecidableEq.{1} P] [inst_1 : DecidableEq.{1} A]
+  [inst_2 : DecidableEq.{1} D] [Fintype.{0} P] [Fintype.{0} A] [Fintype.{0} D]
+  (head : Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))
+  (rest : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))),
+  Iff
+    (@Eq.{1} (Except.{0, 0} (DefiKernel.Nary.Tree.PairConflict B P A D) Unit)
+      (@DefiKernel.Nary.Tree.checkAgainst B P A D inst inst_1 inst_2 head rest)
+      (@Except.ok.{0, 0} (DefiKernel.Nary.Tree.PairConflict B P A D) Unit Unit.unit))
+    (∀ (q : Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D)),
+      @Membership.mem.{0, 0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))
+          (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D)))
+          (@List.instMembership.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) rest q →
+        @DefiKernel.Parallel.Compatible P A D (@Prod.snd.{0, 0} B (DefiKernel.Parallel.Footprint P A D) head)
+          (@Prod.snd.{0, 0} B (DefiKernel.Parallel.Footprint P A D) q))
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.checkAgainst_ok_of
+∀ {B P A D : Type} [DecidableEq.{1} B] [inst : DecidableEq.{1} P] [inst_1 : DecidableEq.{1} A]
+  [inst_2 : DecidableEq.{1} D] [Fintype.{0} P] [Fintype.{0} A] [Fintype.{0} D]
+  (head : Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))
+  (rest : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))),
+  (∀ (q : Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D)),
+      @Membership.mem.{0, 0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))
+          (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D)))
+          (@List.instMembership.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) rest q →
+        @DefiKernel.Parallel.Compatible P A D (@Prod.snd.{0, 0} B (DefiKernel.Parallel.Footprint P A D) head)
+          (@Prod.snd.{0, 0} B (DefiKernel.Parallel.Footprint P A D) q)) →
+    @Eq.{1} (Except.{0, 0} (DefiKernel.Nary.Tree.PairConflict B P A D) Unit)
+      (@DefiKernel.Nary.Tree.checkAgainst B P A D inst inst_1 inst_2 head rest)
+      (@Except.ok.{0, 0} (DefiKernel.Nary.Tree.PairConflict B P A D) Unit Unit.unit)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.checkPair_conflict_writeWrite
+∀ {B P A D : Type} [DecidableEq.{1} B] [inst : DecidableEq.{1} P] [inst_1 : DecidableEq.{1} A]
+  [inst_2 : DecidableEq.{1} D] [Fintype.{0} P] [Fintype.{0} A] [Fintype.{0} D] (leftId rightId : B)
+  (left right : DefiKernel.Parallel.Footprint P A D) (cell : DefiKernel.Typed.Cell P A D),
+  @Eq.{1} (Option.{0} (DefiKernel.Typed.Cell P A D))
+      (@DefiKernel.Parallel.firstOverlap P A D inst inst_1 inst_2 (@DefiKernel.Parallel.Footprint.writes P A D left)
+        (@DefiKernel.Parallel.Footprint.writes P A D right))
+      (@Option.some.{0} (DefiKernel.Typed.Cell P A D) cell) →
+    @Eq.{1} (Except.{0, 0} (DefiKernel.Nary.Tree.PairConflict B P A D) Unit)
+      (@DefiKernel.Nary.Tree.checkPair B P A D inst inst_1 inst_2 leftId rightId left right)
+      (@Except.error.{0, 0} (DefiKernel.Nary.Tree.PairConflict B P A D) Unit
+        (@DefiKernel.Nary.Tree.PairConflict.mk B P A D leftId rightId DefiKernel.Parallel.ConflictKind.writeWrite cell))
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.checkPair_error_iff
+∀ {B P A D : Type} [DecidableEq.{1} B] [inst : DecidableEq.{1} P] [inst_1 : DecidableEq.{1} A]
+  [inst_2 : DecidableEq.{1} D] [Fintype.{0} P] [Fintype.{0} A] [Fintype.{0} D] (leftId rightId : B)
+  (left right : DefiKernel.Parallel.Footprint P A D) (k : DefiKernel.Parallel.ConflictKind)
+  (c : DefiKernel.Typed.Cell P A D),
+  Iff
+    (@Eq.{1} (Except.{0, 0} (DefiKernel.Nary.Tree.PairConflict B P A D) Unit)
+      (@DefiKernel.Nary.Tree.checkPair B P A D inst inst_1 inst_2 leftId rightId left right)
+      (@Except.error.{0, 0} (DefiKernel.Nary.Tree.PairConflict B P A D) Unit
+        (@DefiKernel.Nary.Tree.PairConflict.mk B P A D leftId rightId k c)))
+    (@Eq.{u_1 + 1} (Except.{0, u_1} (DefiKernel.Parallel.AdmissionFailure P A D) PUnit.{u_1 + 1})
+      (@DefiKernel.Parallel.checkCompatibility.{u_1} P A D inst inst_1 inst_2 left right)
+      (@Except.error.{0, u_1} (DefiKernel.Parallel.AdmissionFailure P A D) PUnit.{u_1 + 1}
+        (@DefiKernel.Parallel.AdmissionFailure.conflict P A D k c)))
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.checkPair_ok
+∀ {B P A D : Type} [DecidableEq.{1} B] [inst : DecidableEq.{1} P] [inst_1 : DecidableEq.{1} A]
+  [inst_2 : DecidableEq.{1} D] [Fintype.{0} P] [Fintype.{0} A] [Fintype.{0} D] (leftId rightId : B)
+  (left right : DefiKernel.Parallel.Footprint P A D),
+  @Eq.{u_1 + 1} (Except.{0, u_1} (DefiKernel.Parallel.AdmissionFailure P A D) PUnit.{u_1 + 1})
+      (@DefiKernel.Parallel.checkCompatibility.{u_1} P A D inst inst_1 inst_2 left right)
+      (@Except.ok.{0, u_1} (DefiKernel.Parallel.AdmissionFailure P A D) PUnit.{u_1 + 1} PUnit.unit.{u_1 + 1}) →
+    @Eq.{1} (Except.{0, 0} (DefiKernel.Nary.Tree.PairConflict B P A D) Unit)
+      (@DefiKernel.Nary.Tree.checkPair B P A D inst inst_1 inst_2 leftId rightId left right)
+      (@Except.ok.{0, 0} (DefiKernel.Nary.Tree.PairConflict B P A D) Unit Unit.unit)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.checkPair_ok_iff
+∀ {B P A D : Type} [DecidableEq.{1} B] [inst : DecidableEq.{1} P] [inst_1 : DecidableEq.{1} A]
+  [inst_2 : DecidableEq.{1} D] [Fintype.{0} P] [Fintype.{0} A] [Fintype.{0} D] (leftId rightId : B)
+  (left right : DefiKernel.Parallel.Footprint P A D),
+  Iff
+    (@Eq.{1} (Except.{0, 0} (DefiKernel.Nary.Tree.PairConflict B P A D) Unit)
+      (@DefiKernel.Nary.Tree.checkPair B P A D inst inst_1 inst_2 leftId rightId left right)
+      (@Except.ok.{0, 0} (DefiKernel.Nary.Tree.PairConflict B P A D) Unit Unit.unit))
+    (@DefiKernel.Parallel.Compatible P A D left right)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.checkPairwiseFrom_ok_implies
+∀ {B P A D : Type} [DecidableEq.{1} B] [inst : DecidableEq.{1} P] [inst_1 : DecidableEq.{1} A]
+  [inst_2 : DecidableEq.{1} D] [Fintype.{0} P] [Fintype.{0} A] [Fintype.{0} D]
+  (assoc rest : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))),
+  @Eq.{1} (Except.{0, 0} (DefiKernel.Nary.Tree.PairConflict B P A D) Unit)
+      (@DefiKernel.Nary.Tree.checkPairwiseFrom B P A D inst inst_1 inst_2 assoc rest)
+      (@Except.ok.{0, 0} (DefiKernel.Nary.Tree.PairConflict B P A D) Unit Unit.unit) →
+    ∀ (p : Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D)),
+      @Membership.mem.{0, 0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))
+          (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D)))
+          (@List.instMembership.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) rest p →
+        ∀ (q : Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D)),
+          @Membership.mem.{0, 0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))
+              (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D)))
+              (@List.instMembership.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) rest q →
+            @Ne.{1} B (@Prod.fst.{0, 0} B (DefiKernel.Parallel.Footprint P A D) p)
+                (@Prod.fst.{0, 0} B (DefiKernel.Parallel.Footprint P A D) q) →
+              @DefiKernel.Parallel.Compatible P A D (@Prod.snd.{0, 0} B (DefiKernel.Parallel.Footprint P A D) p)
+                (@Prod.snd.{0, 0} B (DefiKernel.Parallel.Footprint P A D) q)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.checkPairwiseFrom_ok_of
+∀ {B P A D : Type} [DecidableEq.{1} B] [inst : DecidableEq.{1} P] [inst_1 : DecidableEq.{1} A]
+  [inst_2 : DecidableEq.{1} D] [Fintype.{0} P] [Fintype.{0} A] [Fintype.{0} D]
+  (assoc rest : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))),
+  @List.Nodup.{0} B
+      (@List.map.{0, 0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D)) B
+        (@Prod.fst.{0, 0} B (DefiKernel.Parallel.Footprint P A D)) rest) →
+    (∀ (p : Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D)),
+        @Membership.mem.{0, 0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))
+            (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D)))
+            (@List.instMembership.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) rest p →
+          ∀ (q : Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D)),
+            @Membership.mem.{0, 0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))
+                (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D)))
+                (@List.instMembership.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) rest q →
+              @Ne.{1} B (@Prod.fst.{0, 0} B (DefiKernel.Parallel.Footprint P A D) p)
+                  (@Prod.fst.{0, 0} B (DefiKernel.Parallel.Footprint P A D) q) →
+                @DefiKernel.Parallel.Compatible P A D (@Prod.snd.{0, 0} B (DefiKernel.Parallel.Footprint P A D) p)
+                  (@Prod.snd.{0, 0} B (DefiKernel.Parallel.Footprint P A D) q)) →
+      @Eq.{1} (Except.{0, 0} (DefiKernel.Nary.Tree.PairConflict B P A D) Unit)
+        (@DefiKernel.Nary.Tree.checkPairwiseFrom B P A D inst inst_1 inst_2 assoc rest)
+        (@Except.ok.{0, 0} (DefiKernel.Nary.Tree.PairConflict B P A D) Unit Unit.unit)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.checkPairwise_nil
+∀ {B P A D : Type} [DecidableEq.{1} B] [inst : DecidableEq.{1} P] [inst_1 : DecidableEq.{1} A]
+  [inst_2 : DecidableEq.{1} D] [Fintype.{0} P] [Fintype.{0} A] [Fintype.{0} D],
+  @Eq.{1} (Except.{0, 0} (DefiKernel.Nary.Tree.PairConflict B P A D) Unit)
+    (@DefiKernel.Nary.Tree.checkPairwise B P A D inst inst_1 inst_2
+      (@List.nil.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))))
+    (@Except.ok.{0, 0} (DefiKernel.Nary.Tree.PairConflict B P A D) Unit Unit.unit)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.checkPairwise_ok_iff
+∀ {B P A D : Type} [DecidableEq.{1} B] [inst : DecidableEq.{1} P] [inst_1 : DecidableEq.{1} A]
+  [inst_2 : DecidableEq.{1} D] [Fintype.{0} P] [Fintype.{0} A] [Fintype.{0} D]
+  (assoc : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))),
+  @List.Nodup.{0} B
+      (@List.map.{0, 0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D)) B
+        (@Prod.fst.{0, 0} B (DefiKernel.Parallel.Footprint P A D)) assoc) →
+    Iff
+      (@Eq.{1} (Except.{0, 0} (DefiKernel.Nary.Tree.PairConflict B P A D) Unit)
+        (@DefiKernel.Nary.Tree.checkPairwise B P A D inst inst_1 inst_2 assoc)
+        (@Except.ok.{0, 0} (DefiKernel.Nary.Tree.PairConflict B P A D) Unit Unit.unit))
+      (@DefiKernel.Nary.Tree.PairwiseCompatible B P A D assoc)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.checkPairwise_ok_of
+∀ {B P A D : Type} [DecidableEq.{1} B] [inst : DecidableEq.{1} P] [inst_1 : DecidableEq.{1} A]
+  [inst_2 : DecidableEq.{1} D] [Fintype.{0} P] [Fintype.{0} A] [Fintype.{0} D]
+  (assoc : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))),
+  @List.Nodup.{0} B
+      (@List.map.{0, 0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D)) B
+        (@Prod.fst.{0, 0} B (DefiKernel.Parallel.Footprint P A D)) assoc) →
+    @DefiKernel.Nary.Tree.PairwiseCompatible B P A D assoc →
+      @Eq.{1} (Except.{0, 0} (DefiKernel.Nary.Tree.PairConflict B P A D) Unit)
+        (@DefiKernel.Nary.Tree.checkPairwise B P A D inst inst_1 inst_2 assoc)
+        (@Except.ok.{0, 0} (DefiKernel.Nary.Tree.PairConflict B P A D) Unit Unit.unit)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.compatible_peer_reads
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A]
+  [inst_3 : DecidableEq.{1} D] [Fintype.{0} P] [Fintype.{0} A] [Fintype.{0} D]
+  (cfg : DefiKernel.Composition.Config P A D) (boundaries : DefiKernel.Nary.Boundaries B P A D)
+  (branches : DefiKernel.Nary.Branches B P A D) (roster : @DefiKernel.Nary.Roster B inst)
+  (assoc : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))),
+  @Eq.{1}
+      (Except.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))))
+      (@DefiKernel.Nary.analyzeAll B P A D inst_1 inst_2 inst_3 cfg boundaries branches
+        (@DefiKernel.Nary.Roster.order B inst roster))
+      (@Except.ok.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) assoc) →
+    @DefiKernel.Nary.Tree.PairwiseCompatible B P A D assoc →
+      ∀ (b peer : B),
+        @Ne.{1} B b peer →
+          ∀ (c : DefiKernel.Typed.Cell P A D),
+            @Membership.mem.{0, 0} (DefiKernel.Typed.Cell P A D) (List.{0} (DefiKernel.Typed.Cell P A D))
+                (@List.instMembership.{0} (DefiKernel.Typed.Cell P A D))
+                (@DefiKernel.Parallel.Footprint.reads P A D (@DefiKernel.Nary.Tree.footprintOf B P A D inst assoc peer))
+                c →
+              c ∉ @DefiKernel.Parallel.Footprint.writes P A D (@DefiKernel.Nary.Tree.footprintOf B P A D inst assoc b)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.competing_writes_not_compatible
+∀ {P A D : Type} [DecidableEq.{1} P] [DecidableEq.{1} A] [DecidableEq.{1} D] [Fintype.{0} P] [Fintype.{0} A]
+  [Fintype.{0} D] (left right : DefiKernel.Parallel.Footprint P A D) (c : DefiKernel.Typed.Cell P A D),
+  @Membership.mem.{0, 0} (DefiKernel.Typed.Cell P A D) (List.{0} (DefiKernel.Typed.Cell P A D))
+      (@List.instMembership.{0} (DefiKernel.Typed.Cell P A D)) (@DefiKernel.Parallel.Footprint.writes P A D left) c →
+    @Membership.mem.{0, 0} (DefiKernel.Typed.Cell P A D) (List.{0} (DefiKernel.Typed.Cell P A D))
+        (@List.instMembership.{0} (DefiKernel.Typed.Cell P A D)) (@DefiKernel.Parallel.Footprint.writes P A D right) c →
+      Not (@DefiKernel.Parallel.Compatible P A D left right)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.complete_consumed
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A]
+  [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P] [inst_5 : Fintype.{0} A] [inst_6 : Fintype.{0} D]
+  (cfg : DefiKernel.Composition.Config P A D) (boundaries : DefiKernel.Nary.Boundaries B P A D)
+  (initial : DefiKernel.Composition.World P A D) (branches : DefiKernel.Nary.Branches B P A D)
+  (schedule : DefiKernel.Nary.Schedule B),
+  @DefiKernel.Nary.Complete B P A D inst branches schedule →
+    ∀ (b : B),
+      @Eq.{1} Nat
+        (@DefiKernel.Interleaving.LocalState.consumed P A D
+          (@DefiKernel.Nary.Machine.locals B P A D
+            (@DefiKernel.Nary.runPrefix B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg boundaries initial
+              branches schedule)
+            b))
+        (@List.length.{0} (DefiKernel.Composition.Invocation P A D) (branches b))
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.complete_local_observation
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A]
+  [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P] [inst_5 : Fintype.{0} A] [inst_6 : Fintype.{0} D]
+  (cfg : DefiKernel.Composition.Config P A D) (boundaries : DefiKernel.Nary.Boundaries B P A D)
+  (initial : DefiKernel.Composition.World P A D) (branches : DefiKernel.Nary.Branches B P A D)
+  (roster : @DefiKernel.Nary.Roster B inst) (assoc : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))),
+  @Eq.{1} Bool
+      (@DefiKernel.Composition.validateCatalog P A D inst_1 inst_2 inst_3
+        (@DefiKernel.Composition.Config.registry P A D cfg) (@DefiKernel.Composition.Config.catalog P A D cfg))
+      Bool.true →
+    @Eq.{1}
+        (Except.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+          (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))))
+        (@DefiKernel.Nary.analyzeAll B P A D inst_1 inst_2 inst_3 cfg boundaries branches
+          (@DefiKernel.Nary.Roster.order B inst roster))
+        (@Except.ok.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+          (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) assoc) →
+      @DefiKernel.Nary.Tree.PairwiseCompatible B P A D assoc →
+        ∀ (schedule : DefiKernel.Nary.Schedule B),
+          @DefiKernel.Nary.Complete B P A D inst branches schedule →
+            ∀ (b : B),
+              @Eq.{1} (DefiKernel.Nary.Tree.CanonicalLocal P A D)
+                (@DefiKernel.Nary.Tree.toCanonicalLocal P A D
+                  (@DefiKernel.Nary.Machine.locals B P A D
+                    (@DefiKernel.Nary.runPrefix B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg boundaries
+                      initial branches schedule)
+                    b)
+                  (@DefiKernel.Nary.Machine.world B P A D
+                    (@DefiKernel.Nary.runPrefix B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg boundaries
+                      initial branches schedule)))
+                (@DefiKernel.Nary.Tree.isolatedCanonicalLocal P A D
+                  (@DefiKernel.Nary.Tree.IsolatedRef.cursor P A D
+                    (@DefiKernel.Nary.Tree.runIsolatedLeaf P A D inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg
+                      (boundaries b) initial (branches b)))
+                  (branches b))
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.complete_schedule_canonicalEq
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A]
+  [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P] [inst_5 : Fintype.{0} A] [inst_6 : Fintype.{0} D]
+  (cfg : DefiKernel.Composition.Config P A D) (boundaries : DefiKernel.Nary.Boundaries B P A D)
+  (initial : DefiKernel.Composition.World P A D) (branches : DefiKernel.Nary.Branches B P A D)
+  (roster : @DefiKernel.Nary.Roster B inst) (assoc : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D)))
+  (tree : DefiKernel.Nary.Tree.Tree B) (schedule : DefiKernel.Nary.Schedule B),
+  @DefiKernel.Nary.Tree.WellFormed B inst roster tree →
+    @Eq.{1} Bool
+        (@DefiKernel.Composition.validateCatalog P A D inst_1 inst_2 inst_3
+          (@DefiKernel.Composition.Config.registry P A D cfg) (@DefiKernel.Composition.Config.catalog P A D cfg))
+        Bool.true →
+      @Eq.{1}
+          (Except.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+            (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))))
+          (@DefiKernel.Nary.analyzeAll B P A D inst_1 inst_2 inst_3 cfg boundaries branches
+            (@DefiKernel.Nary.Roster.order B inst roster))
+          (@Except.ok.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+            (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) assoc) →
+        @DefiKernel.Nary.Tree.PairwiseCompatible B P A D assoc →
+          @DefiKernel.Nary.Complete B P A D inst branches schedule →
+            @Eq.{1} Bool
+              (@DefiKernel.Nary.Tree.canonicalEq B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6
+                (@DefiKernel.Nary.Tree.canonicalOf B P A D inst roster
+                  (@DefiKernel.Nary.Tree.runTreePrefix B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg
+                    boundaries initial tree branches schedule))
+                (@DefiKernel.Nary.Tree.isolatedCanonical B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 roster
+                  cfg boundaries initial branches assoc tree))
+              Bool.true
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.complete_schedule_canonicalEq_of_admitIsolated
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A]
+  [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P] [inst_5 : Fintype.{0} A] [inst_6 : Fintype.{0} D]
+  (cfg : DefiKernel.Composition.Config P A D) (boundaries : DefiKernel.Nary.Boundaries B P A D)
+  (initial : DefiKernel.Composition.World P A D) (branches : DefiKernel.Nary.Branches B P A D)
+  (roster : @DefiKernel.Nary.Roster B inst) (assoc : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D)))
+  (tree : DefiKernel.Nary.Tree.Tree B) (schedule : DefiKernel.Nary.Schedule B),
+  @Eq.{1}
+      (Except.{0, 0}
+        (Sum.{0, 0} (DefiKernel.Nary.Tree.TreeAdmissionFailure B P A D) (DefiKernel.Nary.Tree.PairConflict B P A D))
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))))
+      (@DefiKernel.Nary.Tree.admitIsolated B P A D inst inst_1 inst_2 inst_3 cfg roster boundaries branches schedule
+        tree)
+      (@Except.ok.{0, 0}
+        (Sum.{0, 0} (DefiKernel.Nary.Tree.TreeAdmissionFailure B P A D) (DefiKernel.Nary.Tree.PairConflict B P A D))
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) assoc) →
+    @Eq.{1} Bool
+      (@DefiKernel.Nary.Tree.canonicalEq B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6
+        (@DefiKernel.Nary.Tree.canonicalOf B P A D inst roster
+          (@DefiKernel.Nary.Tree.runTreePrefix B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg boundaries
+            initial tree branches schedule))
+        (@DefiKernel.Nary.Tree.isolatedCanonical B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 roster cfg
+          boundaries initial branches assoc tree))
+      Bool.true
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.complete_schedule_independence
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A]
+  [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P] [inst_5 : Fintype.{0} A] [inst_6 : Fintype.{0} D]
+  (cfg : DefiKernel.Composition.Config P A D) (boundaries : DefiKernel.Nary.Boundaries B P A D)
+  (initial : DefiKernel.Composition.World P A D) (branches : DefiKernel.Nary.Branches B P A D)
+  (roster : @DefiKernel.Nary.Roster B inst) (assoc : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D)))
+  (tree : DefiKernel.Nary.Tree.Tree B) (s1 s2 : DefiKernel.Nary.Schedule B),
+  @DefiKernel.Nary.Tree.WellFormed B inst roster tree →
+    @Eq.{1} Bool
+        (@DefiKernel.Composition.validateCatalog P A D inst_1 inst_2 inst_3
+          (@DefiKernel.Composition.Config.registry P A D cfg) (@DefiKernel.Composition.Config.catalog P A D cfg))
+        Bool.true →
+      @Eq.{1}
+          (Except.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+            (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))))
+          (@DefiKernel.Nary.analyzeAll B P A D inst_1 inst_2 inst_3 cfg boundaries branches
+            (@DefiKernel.Nary.Roster.order B inst roster))
+          (@Except.ok.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+            (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) assoc) →
+        @DefiKernel.Nary.Tree.PairwiseCompatible B P A D assoc →
+          @DefiKernel.Nary.Complete B P A D inst branches s1 →
+            @DefiKernel.Nary.Complete B P A D inst branches s2 →
+              @Eq.{1} Bool
+                (@DefiKernel.Nary.Tree.canonicalEq B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6
+                  (@DefiKernel.Nary.Tree.canonicalOf B P A D inst roster
+                    (@DefiKernel.Nary.Tree.runTreePrefix B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg
+                      boundaries initial tree branches s1))
+                  (@DefiKernel.Nary.Tree.canonicalOf B P A D inst roster
+                    (@DefiKernel.Nary.Tree.runTreePrefix B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg
+                      boundaries initial tree branches s2)))
+                Bool.true
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.complete_world
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A]
+  [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P] [inst_5 : Fintype.{0} A] [inst_6 : Fintype.{0} D]
+  (cfg : DefiKernel.Composition.Config P A D) (boundaries : DefiKernel.Nary.Boundaries B P A D)
+  (initial : DefiKernel.Composition.World P A D) (branches : DefiKernel.Nary.Branches B P A D)
+  (roster : @DefiKernel.Nary.Roster B inst) (assoc : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D)))
+  (tree : DefiKernel.Nary.Tree.Tree B) (schedule : DefiKernel.Nary.Schedule B),
+  @DefiKernel.Nary.Tree.WellFormed B inst roster tree →
+    @Eq.{1} Bool
+        (@DefiKernel.Composition.validateCatalog P A D inst_1 inst_2 inst_3
+          (@DefiKernel.Composition.Config.registry P A D cfg) (@DefiKernel.Composition.Config.catalog P A D cfg))
+        Bool.true →
+      @Eq.{1}
+          (Except.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+            (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))))
+          (@DefiKernel.Nary.analyzeAll B P A D inst_1 inst_2 inst_3 cfg boundaries branches
+            (@DefiKernel.Nary.Roster.order B inst roster))
+          (@Except.ok.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+            (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) assoc) →
+        @DefiKernel.Nary.Tree.PairwiseCompatible B P A D assoc →
+          @DefiKernel.Nary.Complete B P A D inst branches schedule →
+            @DefiKernel.Parallel.WorldEquivalent P A D
+              (@DefiKernel.Nary.Machine.world B P A D
+                (@DefiKernel.Nary.runPrefix B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg boundaries
+                  initial branches schedule))
+              (@Prod.fst.{0, 0} (DefiKernel.Composition.World P A D)
+                (List.{0} (Prod.{0, 0} B (DefiKernel.Nary.Tree.CanonicalLocal P A D)))
+                (@DefiKernel.Nary.Tree.runIsolatedTree B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg
+                  boundaries initial branches assoc tree))
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.continue_outside
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A]
+  [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P] [inst_5 : Fintype.{0} A] [inst_6 : Fintype.{0} D]
+  (cfg : DefiKernel.Composition.Config P A D) (boundaries : DefiKernel.Nary.Boundaries B P A D)
+  (initial : DefiKernel.Composition.World P A D) (branches : DefiKernel.Nary.Branches B P A D)
+  (roster : @DefiKernel.Nary.Roster B inst) (assoc : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))),
+  @Eq.{1}
+      (Except.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))))
+      (@DefiKernel.Nary.analyzeAll B P A D inst_1 inst_2 inst_3 cfg boundaries branches
+        (@DefiKernel.Nary.Roster.order B inst roster))
+      (@Except.ok.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) assoc) →
+    ∀ (m : DefiKernel.Nary.Machine B P A D),
+      @DefiKernel.Nary.Reachable B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg boundaries branches initial
+          m →
+        ∀ (schedule : DefiKernel.Nary.Schedule B) (c : DefiKernel.Typed.Cell P A D),
+          (∀ (b : B),
+              c ∉
+                @DefiKernel.Parallel.Footprint.writes P A D (@DefiKernel.Nary.Tree.footprintOf B P A D inst assoc b)) →
+            @Eq.{1} Rat
+              (@DefiKernel.Typed.State.balance P A D
+                (@DefiKernel.Typed.ExecutionResult.state P A D
+                  (@DefiKernel.Nary.Machine.world B P A D
+                    (@DefiKernel.Nary.continueRun B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg boundaries
+                      branches m schedule)))
+                c)
+              (@DefiKernel.Typed.State.balance P A D
+                (@DefiKernel.Typed.ExecutionResult.state P A D (@DefiKernel.Nary.Machine.world B P A D m)) c)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.continue_simulates
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A]
+  [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P] [inst_5 : Fintype.{0} A] [inst_6 : Fintype.{0} D]
+  (cfg : DefiKernel.Composition.Config P A D) (boundaries : DefiKernel.Nary.Boundaries B P A D)
+  (initial : DefiKernel.Composition.World P A D) (branches : DefiKernel.Nary.Branches B P A D)
+  (roster : @DefiKernel.Nary.Roster B inst) (assoc : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))),
+  @Eq.{1}
+      (Except.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))))
+      (@DefiKernel.Nary.analyzeAll B P A D inst_1 inst_2 inst_3 cfg boundaries branches
+        (@DefiKernel.Nary.Roster.order B inst roster))
+      (@Except.ok.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) assoc) →
+    @DefiKernel.Nary.Tree.PairwiseCompatible B P A D assoc →
+      ∀ (m : DefiKernel.Nary.Machine B P A D),
+        @DefiKernel.Nary.Reachable B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg boundaries branches
+            initial m →
+          @DefiKernel.Nary.Tree.Simulates B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg boundaries initial
+              branches assoc m →
+            ∀ (schedule : DefiKernel.Nary.Schedule B),
+              @DefiKernel.Nary.Tree.Simulates B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg boundaries
+                initial branches assoc
+                (@DefiKernel.Nary.continueRun B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg boundaries
+                  branches m schedule)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.foldIsolatedWorld_owner
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A]
+  [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P] [inst_5 : Fintype.{0} A] [inst_6 : Fintype.{0} D]
+  (cfg : DefiKernel.Composition.Config P A D) (boundaries : DefiKernel.Nary.Boundaries B P A D)
+  (initial : DefiKernel.Composition.World P A D) (branches : DefiKernel.Nary.Branches B P A D)
+  (roster : @DefiKernel.Nary.Roster B inst) (assoc : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))),
+  @Eq.{1}
+      (Except.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))))
+      (@DefiKernel.Nary.analyzeAll B P A D inst_1 inst_2 inst_3 cfg boundaries branches
+        (@DefiKernel.Nary.Roster.order B inst roster))
+      (@Except.ok.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) assoc) →
+    @DefiKernel.Nary.Tree.PairwiseCompatible B P A D assoc →
+      ∀ (order : List.{0} B),
+        @List.Nodup.{0} B order →
+          ∀ (b : B),
+            @Membership.mem.{0, 0} B (List.{0} B) (@List.instMembership.{0} B) order b →
+              ∀ (c : DefiKernel.Typed.Cell P A D),
+                @Membership.mem.{0, 0} (DefiKernel.Typed.Cell P A D) (List.{0} (DefiKernel.Typed.Cell P A D))
+                    (@List.instMembership.{0} (DefiKernel.Typed.Cell P A D))
+                    (@DefiKernel.Parallel.Footprint.writes P A D
+                      (@DefiKernel.Nary.Tree.footprintOf B P A D inst assoc b))
+                    c →
+                  @Eq.{1} Rat
+                    (@DefiKernel.Typed.State.balance P A D
+                      (@DefiKernel.Typed.ExecutionResult.state P A D
+                        (@DefiKernel.Nary.Tree.foldIsolatedWorld B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6
+                          cfg boundaries initial branches assoc order))
+                      c)
+                    (@DefiKernel.Typed.State.balance P A D
+                      (@DefiKernel.Typed.ExecutionResult.state P A D
+                        (@DefiKernel.Nary.Tree.IsolatedRef.world P A D
+                          (@DefiKernel.Nary.Tree.runIsolatedLeaf P A D inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg
+                            (boundaries b) initial (branches b))))
+                      c)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.foldIsolatedWorld_store
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A]
+  [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P] [inst_5 : Fintype.{0} A] [inst_6 : Fintype.{0} D]
+  (cfg : DefiKernel.Composition.Config P A D) (boundaries : DefiKernel.Nary.Boundaries B P A D)
+  (initial : DefiKernel.Composition.World P A D) (branches : DefiKernel.Nary.Branches B P A D)
+  (assoc : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) (order : List.{0} B),
+  @Eq.{1} (DefiKernel.Typed.CapabilityStore P A D)
+    (@DefiKernel.Typed.ExecutionResult.capabilities P A D
+      (@DefiKernel.Nary.Tree.foldIsolatedWorld B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg boundaries
+        initial branches assoc order))
+    (@DefiKernel.Typed.ExecutionResult.capabilities P A D initial)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.foldIsolatedWorld_unowned
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A]
+  [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P] [inst_5 : Fintype.{0} A] [inst_6 : Fintype.{0} D]
+  (cfg : DefiKernel.Composition.Config P A D) (boundaries : DefiKernel.Nary.Boundaries B P A D)
+  (initial : DefiKernel.Composition.World P A D) (branches : DefiKernel.Nary.Branches B P A D)
+  (assoc : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) (order : List.{0} B)
+  (c : DefiKernel.Typed.Cell P A D),
+  (∀ (b : B),
+      @Membership.mem.{0, 0} B (List.{0} B) (@List.instMembership.{0} B) order b →
+        c ∉ @DefiKernel.Parallel.Footprint.writes P A D (@DefiKernel.Nary.Tree.footprintOf B P A D inst assoc b)) →
+    @Eq.{1} Rat
+      (@DefiKernel.Typed.State.balance P A D
+        (@DefiKernel.Typed.ExecutionResult.state P A D
+          (@DefiKernel.Nary.Tree.foldIsolatedWorld B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg boundaries
+            initial branches assoc order))
+        c)
+      (@DefiKernel.Typed.State.balance P A D (@DefiKernel.Typed.ExecutionResult.state P A D initial) c)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.foldl_fork_leaves
+∀ {B : Type} [DecidableEq.{1} B] (ids : List.{0} B),
+  @Eq.{1} (List.{0} B)
+    (@DefiKernel.Nary.Tree.Tree.leaves B
+      (@List.foldl.{0, 0} (DefiKernel.Nary.Tree.Tree B) B
+        (fun t x => @DefiKernel.Nary.Tree.Tree.fork B t (@DefiKernel.Nary.Tree.Tree.leaf B x))
+        (@DefiKernel.Nary.Tree.Tree.empty B) ids))
+    ids
+AXIOMS ['propext']
+
+DefiKernel.Nary.Tree.foldl_fork_leaves_from
+∀ {B : Type} [DecidableEq.{1} B] (acc : DefiKernel.Nary.Tree.Tree B) (ids : List.{0} B),
+  @Eq.{1} (List.{0} B)
+    (@DefiKernel.Nary.Tree.Tree.leaves B
+      (@List.foldl.{0, 0} (DefiKernel.Nary.Tree.Tree B) B
+        (fun t x => @DefiKernel.Nary.Tree.Tree.fork B t (@DefiKernel.Nary.Tree.Tree.leaf B x)) acc ids))
+    (@HAppend.hAppend.{0, 0, 0} (List.{0} B) (List.{0} B) (List.{0} B)
+      (@instHAppendOfAppend.{0} (List.{0} B) (@List.instAppend.{0} B)) (@DefiKernel.Nary.Tree.Tree.leaves B acc) ids)
+AXIOMS ['propext']
+
+DefiKernel.Nary.Tree.footprintOf_cons_eq
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [DecidableEq.{1} P] [DecidableEq.{1} A] [DecidableEq.{1} D]
+  [Fintype.{0} P] [Fintype.{0} A] [Fintype.{0} D] (b : B) (fp : DefiKernel.Parallel.Footprint P A D)
+  (rest : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))),
+  @Eq.{1} (DefiKernel.Parallel.Footprint P A D)
+    (@DefiKernel.Nary.Tree.footprintOf B P A D inst
+      (@List.cons.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))
+        (@Prod.mk.{0, 0} B (DefiKernel.Parallel.Footprint P A D) b fp) rest)
+      b)
+    fp
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.footprintOf_cons_ne
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [DecidableEq.{1} P] [DecidableEq.{1} A] [DecidableEq.{1} D]
+  [Fintype.{0} P] [Fintype.{0} A] [Fintype.{0} D] (id b : B) (fp : DefiKernel.Parallel.Footprint P A D)
+  (rest : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))),
+  @Ne.{1} B id b →
+    @Eq.{1} (DefiKernel.Parallel.Footprint P A D)
+      (@DefiKernel.Nary.Tree.footprintOf B P A D inst
+        (@List.cons.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))
+          (@Prod.mk.{0, 0} B (DefiKernel.Parallel.Footprint P A D) id fp) rest)
+        b)
+      (@DefiKernel.Nary.Tree.footprintOf B P A D inst rest b)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.footprintOf_nil
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [DecidableEq.{1} P] [DecidableEq.{1} A] [DecidableEq.{1} D]
+  [Fintype.{0} P] [Fintype.{0} A] [Fintype.{0} D] (b : B),
+  @Eq.{1} (DefiKernel.Parallel.Footprint P A D)
+    (@DefiKernel.Nary.Tree.footprintOf B P A D inst
+      (@List.nil.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) b)
+    (@DefiKernel.Parallel.Footprint.empty P A D)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.footprintOf_of_mem
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [DecidableEq.{1} P] [DecidableEq.{1} A] [DecidableEq.{1} D]
+  [Fintype.{0} P] [Fintype.{0} A] [Fintype.{0} D]
+  (assoc : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) (b : B)
+  (fp : DefiKernel.Parallel.Footprint P A D),
+  @Membership.mem.{0, 0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))
+      (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D)))
+      (@List.instMembership.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) assoc
+      (@Prod.mk.{0, 0} B (DefiKernel.Parallel.Footprint P A D) b fp) →
+    @List.Nodup.{0} B
+        (@List.map.{0, 0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D)) B
+          (@Prod.fst.{0, 0} B (DefiKernel.Parallel.Footprint P A D)) assoc) →
+      @Eq.{1} (DefiKernel.Parallel.Footprint P A D) (@DefiKernel.Nary.Tree.footprintOf B P A D inst assoc b) fp
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.isolatedConsumed_eq
+∀ {P A D : Type} [DecidableEq.{1} P] [DecidableEq.{1} A] [DecidableEq.{1} D] [Fintype.{0} P] [Fintype.{0} A]
+  [Fintype.{0} D] (branch : DefiKernel.Parallel.Branch P A D),
+  @Eq.{1} Nat (@DefiKernel.Nary.Tree.isolatedConsumed P A D branch)
+    (@List.length.{0} (DefiKernel.Composition.Invocation P A D) branch)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.isolated_exhausted
+∀ {P A D : Type} [inst : DecidableEq.{1} P] [inst_1 : DecidableEq.{1} A] [inst_2 : DecidableEq.{1} D]
+  [inst_3 : Fintype.{0} P] [inst_4 : Fintype.{0} A] [inst_5 : Fintype.{0} D] (cfg : DefiKernel.Composition.Config P A D)
+  (boundary : Nat → DefiKernel.Composition.Boundary P A D) (initial : DefiKernel.Composition.World P A D)
+  (branch : DefiKernel.Parallel.Branch P A D) (n : Nat),
+  @Eq.{1} (Option.{0} (DefiKernel.Composition.Invocation P A D))
+      (@GetElem?.getElem?.{0, 0, 0} (DefiKernel.Parallel.Branch P A D) Nat (DefiKernel.Composition.Invocation P A D)
+        (fun as i => @LT.lt.{0} Nat instLTNat i (@List.length.{0} (DefiKernel.Composition.Invocation P A D) as))
+        (@List.instGetElem?NatLtLength.{0} (DefiKernel.Composition.Invocation P A D)) branch n)
+      (@Option.none.{0} (DefiKernel.Composition.Invocation P A D)) →
+    @Eq.{1} (DefiKernel.Composition.Cursor P A D)
+      (@DefiKernel.Nary.Tree.isolated P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 cfg boundary initial branch
+        (@HAdd.hAdd.{0, 0, 0} Nat Nat Nat (@instHAdd.{0} Nat instAddNat) n
+          (@OfNat.ofNat.{0} Nat (nat_lit 1) (instOfNatNat (nat_lit 1)))))
+      (@DefiKernel.Nary.Tree.isolated P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 cfg boundary initial branch n)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.isolated_full
+∀ {P A D : Type} [inst : DecidableEq.{1} P] [inst_1 : DecidableEq.{1} A] [inst_2 : DecidableEq.{1} D]
+  [inst_3 : Fintype.{0} P] [inst_4 : Fintype.{0} A] [inst_5 : Fintype.{0} D] (cfg : DefiKernel.Composition.Config P A D)
+  (boundary : Nat → DefiKernel.Composition.Boundary P A D) (initial : DefiKernel.Composition.World P A D)
+  (branch : DefiKernel.Parallel.Branch P A D),
+  @Eq.{1} (DefiKernel.Composition.Cursor P A D)
+    (@DefiKernel.Nary.Tree.isolated P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 cfg boundary initial branch
+      (@List.length.{0} (DefiKernel.Composition.Invocation P A D) branch))
+    (@DefiKernel.Parallel.runBranch P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 cfg boundary initial branch)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.isolated_step
+∀ {P A D : Type} [inst : DecidableEq.{1} P] [inst_1 : DecidableEq.{1} A] [inst_2 : DecidableEq.{1} D]
+  [inst_3 : Fintype.{0} P] [inst_4 : Fintype.{0} A] [inst_5 : Fintype.{0} D] (cfg : DefiKernel.Composition.Config P A D)
+  (boundary : Nat → DefiKernel.Composition.Boundary P A D) (initial : DefiKernel.Composition.World P A D)
+  (branch : DefiKernel.Parallel.Branch P A D) (n : Nat) (inv : DefiKernel.Composition.Invocation P A D),
+  @Eq.{1} (Option.{0} (DefiKernel.Composition.Invocation P A D))
+      (@GetElem?.getElem?.{0, 0, 0} (DefiKernel.Parallel.Branch P A D) Nat (DefiKernel.Composition.Invocation P A D)
+        (fun as i => @LT.lt.{0} Nat instLTNat i (@List.length.{0} (DefiKernel.Composition.Invocation P A D) as))
+        (@List.instGetElem?NatLtLength.{0} (DefiKernel.Composition.Invocation P A D)) branch n)
+      (@Option.some.{0} (DefiKernel.Composition.Invocation P A D) inv) →
+    @Eq.{1} (DefiKernel.Composition.Cursor P A D)
+      (@DefiKernel.Nary.Tree.isolated P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 cfg boundary initial branch
+        (@HAdd.hAdd.{0, 0, 0} Nat Nat Nat (@instHAdd.{0} Nat instAddNat) n
+          (@OfNat.ofNat.{0} Nat (nat_lit 1) (instOfNatNat (nat_lit 1)))))
+      (@DefiKernel.Composition.advance P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 cfg boundary
+        (@DefiKernel.Nary.Tree.isolated P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 cfg boundary initial branch n)
+        (@DefiKernel.Composition.Step.invoke P A D inv))
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.isolated_zero
+∀ {P A D : Type} [inst : DecidableEq.{1} P] [inst_1 : DecidableEq.{1} A] [inst_2 : DecidableEq.{1} D]
+  [inst_3 : Fintype.{0} P] [inst_4 : Fintype.{0} A] [inst_5 : Fintype.{0} D] (cfg : DefiKernel.Composition.Config P A D)
+  (boundary : Nat → DefiKernel.Composition.Boundary P A D) (initial : DefiKernel.Composition.World P A D)
+  (branch : DefiKernel.Parallel.Branch P A D),
+  @Eq.{1} (DefiKernel.Composition.Cursor P A D)
+    (@DefiKernel.Nary.Tree.isolated P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 cfg boundary initial branch
+      (@OfNat.ofNat.{0} Nat (nat_lit 0) (instOfNatNat (nat_lit 0))))
+    (@DefiKernel.Composition.startCursor P A D inst inst_1 inst_2 cfg initial)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.mem_analyzedWrites_iff
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A]
+  [inst_3 : DecidableEq.{1} D] [Fintype.{0} P] [Fintype.{0} A] [Fintype.{0} D]
+  (cfg : DefiKernel.Composition.Config P A D) (boundaries : DefiKernel.Nary.Boundaries B P A D)
+  (branches : DefiKernel.Nary.Branches B P A D) (roster : @DefiKernel.Nary.Roster B inst)
+  (assoc : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))),
+  @Eq.{1}
+      (Except.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))))
+      (@DefiKernel.Nary.analyzeAll B P A D inst_1 inst_2 inst_3 cfg boundaries branches
+        (@DefiKernel.Nary.Roster.order B inst roster))
+      (@Except.ok.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) assoc) →
+    ∀ (c : DefiKernel.Typed.Cell P A D),
+      Iff
+        (@Membership.mem.{0, 0} (DefiKernel.Typed.Cell P A D) (List.{0} (DefiKernel.Typed.Cell P A D))
+          (@List.instMembership.{0} (DefiKernel.Typed.Cell P A D)) (@DefiKernel.Nary.analyzedWrites B P A D assoc) c)
+        (∃ b,
+          And
+            (@Membership.mem.{0, 0} B (List.{0} B) (@List.instMembership.{0} B)
+              (@DefiKernel.Nary.Roster.order B inst roster) b)
+            (@Membership.mem.{0, 0} (DefiKernel.Typed.Cell P A D) (List.{0} (DefiKernel.Typed.Cell P A D))
+              (@List.instMembership.{0} (DefiKernel.Typed.Cell P A D))
+              (@DefiKernel.Parallel.Footprint.writes P A D (@DefiKernel.Nary.Tree.footprintOf B P A D inst assoc b)) c))
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.mem_unionLeaves_reads
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [DecidableEq.{1} P] [DecidableEq.{1} A] [DecidableEq.{1} D]
+  [Fintype.{0} P] [Fintype.{0} A] [Fintype.{0} D]
+  (assoc : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) (tree : DefiKernel.Nary.Tree.Tree B)
+  (c : DefiKernel.Typed.Cell P A D),
+  Iff
+    (@Membership.mem.{0, 0} (DefiKernel.Typed.Cell P A D) (List.{0} (DefiKernel.Typed.Cell P A D))
+      (@List.instMembership.{0} (DefiKernel.Typed.Cell P A D))
+      (@DefiKernel.Parallel.Footprint.reads P A D (@DefiKernel.Nary.Tree.unionLeaves B P A D inst assoc tree)) c)
+    (∃ b,
+      And
+        (@Membership.mem.{0, 0} B (List.{0} B) (@List.instMembership.{0} B) (@DefiKernel.Nary.Tree.Tree.leaves B tree)
+          b)
+        (@Membership.mem.{0, 0} (DefiKernel.Typed.Cell P A D) (List.{0} (DefiKernel.Typed.Cell P A D))
+          (@List.instMembership.{0} (DefiKernel.Typed.Cell P A D))
+          (@DefiKernel.Parallel.Footprint.reads P A D (@DefiKernel.Nary.Tree.footprintOf B P A D inst assoc b)) c))
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.mem_unionLeaves_writes
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [DecidableEq.{1} P] [DecidableEq.{1} A] [DecidableEq.{1} D]
+  [Fintype.{0} P] [Fintype.{0} A] [Fintype.{0} D]
+  (assoc : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) (tree : DefiKernel.Nary.Tree.Tree B)
+  (c : DefiKernel.Typed.Cell P A D),
+  Iff
+    (@Membership.mem.{0, 0} (DefiKernel.Typed.Cell P A D) (List.{0} (DefiKernel.Typed.Cell P A D))
+      (@List.instMembership.{0} (DefiKernel.Typed.Cell P A D))
+      (@DefiKernel.Parallel.Footprint.writes P A D (@DefiKernel.Nary.Tree.unionLeaves B P A D inst assoc tree)) c)
+    (∃ b,
+      And
+        (@Membership.mem.{0, 0} B (List.{0} B) (@List.instMembership.{0} B) (@DefiKernel.Nary.Tree.Tree.leaves B tree)
+          b)
+        (@Membership.mem.{0, 0} (DefiKernel.Typed.Cell P A D) (List.{0} (DefiKernel.Typed.Cell P A D))
+          (@List.instMembership.{0} (DefiKernel.Typed.Cell P A D))
+          (@DefiKernel.Parallel.Footprint.writes P A D (@DefiKernel.Nary.Tree.footprintOf B P A D inst assoc b)) c))
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.mergeBalance_left
+∀ {P A D : Type} [inst : DecidableEq.{1} P] [inst_1 : DecidableEq.{1} A] [inst_2 : DecidableEq.{1} D] [Fintype.{0} P]
+  [Fintype.{0} A] [Fintype.{0} D] (leftFp rightFp : DefiKernel.Parallel.Footprint P A D)
+  (initial left right : DefiKernel.Composition.World P A D) (c : DefiKernel.Typed.Cell P A D),
+  @Membership.mem.{0, 0} (DefiKernel.Typed.Cell P A D) (List.{0} (DefiKernel.Typed.Cell P A D))
+      (@List.instMembership.{0} (DefiKernel.Typed.Cell P A D)) (@DefiKernel.Parallel.Footprint.writes P A D leftFp) c →
+    @Eq.{1} Rat (@DefiKernel.Nary.Tree.mergeBalance P A D inst inst_1 inst_2 leftFp rightFp initial left right c)
+      (@DefiKernel.Typed.State.balance P A D (@DefiKernel.Typed.ExecutionResult.state P A D left) c)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.mergeBalance_outside
+∀ {P A D : Type} [inst : DecidableEq.{1} P] [inst_1 : DecidableEq.{1} A] [inst_2 : DecidableEq.{1} D] [Fintype.{0} P]
+  [Fintype.{0} A] [Fintype.{0} D] (leftFp rightFp : DefiKernel.Parallel.Footprint P A D)
+  (initial left right : DefiKernel.Composition.World P A D),
+  ∀ c ∉ @DefiKernel.Parallel.Footprint.writes P A D leftFp,
+    c ∉ @DefiKernel.Parallel.Footprint.writes P A D rightFp →
+      @Eq.{1} Rat (@DefiKernel.Nary.Tree.mergeBalance P A D inst inst_1 inst_2 leftFp rightFp initial left right c)
+        (@DefiKernel.Typed.State.balance P A D (@DefiKernel.Typed.ExecutionResult.state P A D initial) c)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.mergeBalance_right
+∀ {P A D : Type} [inst : DecidableEq.{1} P] [inst_1 : DecidableEq.{1} A] [inst_2 : DecidableEq.{1} D] [Fintype.{0} P]
+  [Fintype.{0} A] [Fintype.{0} D] (leftFp rightFp : DefiKernel.Parallel.Footprint P A D)
+  (initial left right : DefiKernel.Composition.World P A D),
+  ∀ c ∉ @DefiKernel.Parallel.Footprint.writes P A D leftFp,
+    @Membership.mem.{0, 0} (DefiKernel.Typed.Cell P A D) (List.{0} (DefiKernel.Typed.Cell P A D))
+        (@List.instMembership.{0} (DefiKernel.Typed.Cell P A D)) (@DefiKernel.Parallel.Footprint.writes P A D rightFp)
+        c →
+      @Eq.{1} Rat (@DefiKernel.Nary.Tree.mergeBalance P A D inst inst_1 inst_2 leftFp rightFp initial left right c)
+        (@DefiKernel.Typed.State.balance P A D (@DefiKernel.Typed.ExecutionResult.state P A D right) c)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.mergeOwned_balance
+∀ {P A D : Type} [inst : DecidableEq.{1} P] [inst_1 : DecidableEq.{1} A] [inst_2 : DecidableEq.{1} D] [Fintype.{0} P]
+  [Fintype.{0} A] [Fintype.{0} D] (leftFp rightFp : DefiKernel.Parallel.Footprint P A D)
+  (initial left right : DefiKernel.Composition.World P A D) (c : DefiKernel.Typed.Cell P A D),
+  @Eq.{1} Rat
+    (@DefiKernel.Typed.State.balance P A D
+      (@DefiKernel.Typed.ExecutionResult.state P A D
+        (@DefiKernel.Nary.Tree.mergeOwned P A D inst inst_1 inst_2 leftFp rightFp initial left right))
+      c)
+    (@DefiKernel.Nary.Tree.mergeBalance P A D inst inst_1 inst_2 leftFp rightFp initial left right c)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.mergeOwned_eq_mergeWorld
+∀ {P A D : Type} [inst : DecidableEq.{1} P] [inst_1 : DecidableEq.{1} A] [inst_2 : DecidableEq.{1} D] [Fintype.{0} P]
+  [Fintype.{0} A] [Fintype.{0} D] (leftFp rightFp : DefiKernel.Parallel.Footprint P A D)
+  (initial left right : DefiKernel.Composition.World P A D),
+  @DefiKernel.Parallel.WorldEquivalent P A D
+    (@DefiKernel.Nary.Tree.mergeOwned P A D inst inst_1 inst_2 leftFp rightFp initial left right)
+    (@DefiKernel.Parallel.mergeWorld P A D inst inst_1 inst_2 leftFp rightFp initial left right)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.mergeOwned_outside
+∀ {P A D : Type} [inst : DecidableEq.{1} P] [inst_1 : DecidableEq.{1} A] [inst_2 : DecidableEq.{1} D] [Fintype.{0} P]
+  [Fintype.{0} A] [Fintype.{0} D] (leftFp rightFp : DefiKernel.Parallel.Footprint P A D)
+  (initial left right : DefiKernel.Composition.World P A D),
+  ∀ c ∉ @DefiKernel.Parallel.Footprint.writes P A D leftFp,
+    c ∉ @DefiKernel.Parallel.Footprint.writes P A D rightFp →
+      @Eq.{1} Rat
+        (@DefiKernel.Typed.State.balance P A D
+          (@DefiKernel.Typed.ExecutionResult.state P A D
+            (@DefiKernel.Nary.Tree.mergeOwned P A D inst inst_1 inst_2 leftFp rightFp initial left right))
+          c)
+        (@DefiKernel.Typed.State.balance P A D (@DefiKernel.Typed.ExecutionResult.state P A D initial) c)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.mergeOwned_store
+∀ {P A D : Type} [inst : DecidableEq.{1} P] [inst_1 : DecidableEq.{1} A] [inst_2 : DecidableEq.{1} D] [Fintype.{0} P]
+  [Fintype.{0} A] [Fintype.{0} D] (leftFp rightFp : DefiKernel.Parallel.Footprint P A D)
+  (initial left right : DefiKernel.Composition.World P A D),
+  @Eq.{1} (DefiKernel.Typed.CapabilityStore P A D)
+    (@DefiKernel.Typed.ExecutionResult.capabilities P A D
+      (@DefiKernel.Nary.Tree.mergeOwned P A D inst inst_1 inst_2 leftFp rightFp initial left right))
+    (@DefiKernel.Typed.ExecutionResult.capabilities P A D initial)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.nary_advance_exhausted_cursor
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A]
+  [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P] [inst_5 : Fintype.{0} A] [inst_6 : Fintype.{0} D]
+  (cfg : DefiKernel.Composition.Config P A D) (boundaries : DefiKernel.Nary.Boundaries B P A D)
+  (branches : DefiKernel.Nary.Branches B P A D) (m : DefiKernel.Nary.Machine B P A D) (b : B),
+  @Eq.{1} (Option.{0} (DefiKernel.Composition.Invocation P A D))
+      (@GetElem?.getElem?.{0, 0, 0} (DefiKernel.Parallel.Branch P A D) Nat (DefiKernel.Composition.Invocation P A D)
+        (fun as i => @LT.lt.{0} Nat instLTNat i (@List.length.{0} (DefiKernel.Composition.Invocation P A D) as))
+        (@List.instGetElem?NatLtLength.{0} (DefiKernel.Composition.Invocation P A D)) (branches b)
+        (@DefiKernel.Interleaving.LocalState.consumed P A D (@DefiKernel.Nary.Machine.locals B P A D m b)))
+      (@Option.none.{0} (DefiKernel.Composition.Invocation P A D)) →
+    have post :=
+      @DefiKernel.Nary.advance B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg boundaries branches m b;
+    @Eq.{1} (DefiKernel.Composition.Cursor P A D)
+      (@DefiKernel.Interleaving.LocalState.toCursor P A D (@DefiKernel.Nary.Machine.locals B P A D post b)
+        (@DefiKernel.Nary.Machine.world B P A D post))
+      (@DefiKernel.Interleaving.LocalState.toCursor P A D (@DefiKernel.Nary.Machine.locals B P A D m b)
+        (@DefiKernel.Nary.Machine.world B P A D m))
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.nary_advance_own_cursor
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A]
+  [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P] [inst_5 : Fintype.{0} A] [inst_6 : Fintype.{0} D]
+  (cfg : DefiKernel.Composition.Config P A D) (boundaries : DefiKernel.Nary.Boundaries B P A D)
+  (branches : DefiKernel.Nary.Branches B P A D) (m : DefiKernel.Nary.Machine B P A D) (b : B)
+  (inv : DefiKernel.Composition.Invocation P A D),
+  @Eq.{1} (Option.{0} (DefiKernel.Composition.Invocation P A D))
+      (@GetElem?.getElem?.{0, 0, 0} (DefiKernel.Parallel.Branch P A D) Nat (DefiKernel.Composition.Invocation P A D)
+        (fun as i => @LT.lt.{0} Nat instLTNat i (@List.length.{0} (DefiKernel.Composition.Invocation P A D) as))
+        (@List.instGetElem?NatLtLength.{0} (DefiKernel.Composition.Invocation P A D)) (branches b)
+        (@DefiKernel.Interleaving.LocalState.consumed P A D (@DefiKernel.Nary.Machine.locals B P A D m b)))
+      (@Option.some.{0} (DefiKernel.Composition.Invocation P A D) inv) →
+    have post :=
+      @DefiKernel.Nary.advance B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg boundaries branches m b;
+    @Eq.{1} (DefiKernel.Composition.Cursor P A D)
+      (@DefiKernel.Interleaving.LocalState.toCursor P A D (@DefiKernel.Nary.Machine.locals B P A D post b)
+        (@DefiKernel.Nary.Machine.world B P A D post))
+      (@DefiKernel.Composition.advance P A D inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg (boundaries b)
+        (@DefiKernel.Interleaving.LocalState.toCursor P A D (@DefiKernel.Nary.Machine.locals B P A D m b)
+          (@DefiKernel.Nary.Machine.world B P A D m))
+        (@DefiKernel.Composition.Step.invoke P A D inv))
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.nary_advance_peer
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A]
+  [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P] [inst_5 : Fintype.{0} A] [inst_6 : Fintype.{0} D]
+  (cfg : DefiKernel.Composition.Config P A D) (boundaries : DefiKernel.Nary.Boundaries B P A D)
+  (branches : DefiKernel.Nary.Branches B P A D) (m : DefiKernel.Nary.Machine B P A D) (b peer : B),
+  @Ne.{1} B peer b →
+    @Eq.{1} (DefiKernel.Interleaving.LocalState P A D)
+      (@DefiKernel.Nary.Machine.locals B P A D
+        (@DefiKernel.Nary.advance B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg boundaries branches m b)
+        peer)
+      (@DefiKernel.Nary.Machine.locals B P A D m peer)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.runIsolatedLeaf_cursor
+∀ {P A D : Type} [inst : DecidableEq.{1} P] [inst_1 : DecidableEq.{1} A] [inst_2 : DecidableEq.{1} D]
+  [inst_3 : Fintype.{0} P] [inst_4 : Fintype.{0} A] [inst_5 : Fintype.{0} D] (cfg : DefiKernel.Composition.Config P A D)
+  (boundary : Nat → DefiKernel.Composition.Boundary P A D) (initial : DefiKernel.Composition.World P A D)
+  (branch : DefiKernel.Parallel.Branch P A D),
+  @Eq.{1} (DefiKernel.Composition.Cursor P A D)
+    (@DefiKernel.Nary.Tree.IsolatedRef.cursor P A D
+      (@DefiKernel.Nary.Tree.runIsolatedLeaf P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 cfg boundary initial branch))
+    (@DefiKernel.Parallel.runBranch P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 cfg boundary initial branch)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.runIsolatedLeaf_frame
+∀ {P A D : Type} [inst : DecidableEq.{1} P] [inst_1 : DecidableEq.{1} A] [inst_2 : DecidableEq.{1} D]
+  [inst_3 : Fintype.{0} P] [inst_4 : Fintype.{0} A] [inst_5 : Fintype.{0} D] (cfg : DefiKernel.Composition.Config P A D)
+  (boundary : Nat → DefiKernel.Composition.Boundary P A D) (initial : DefiKernel.Composition.World P A D)
+  (branch : DefiKernel.Parallel.Branch P A D) (fp : DefiKernel.Parallel.Footprint P A D),
+  @Eq.{1} (Except.{0, 0} DefiKernel.Parallel.LocalFailure (DefiKernel.Parallel.Footprint P A D))
+      (@DefiKernel.Parallel.analyzeBranch P A D inst inst_1 inst_2 cfg boundary branch)
+      (@Except.ok.{0, 0} DefiKernel.Parallel.LocalFailure (DefiKernel.Parallel.Footprint P A D) fp) →
+    ∀ c ∉ @DefiKernel.Parallel.Footprint.writes P A D fp,
+      @Eq.{1} Rat
+        (@DefiKernel.Typed.State.balance P A D
+          (@DefiKernel.Typed.ExecutionResult.state P A D
+            (@DefiKernel.Nary.Tree.IsolatedRef.world P A D
+              (@DefiKernel.Nary.Tree.runIsolatedLeaf P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 cfg boundary initial
+                branch)))
+          c)
+        (@DefiKernel.Typed.State.balance P A D (@DefiKernel.Typed.ExecutionResult.state P A D initial) c)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.runIsolatedLeaf_world
+∀ {P A D : Type} [inst : DecidableEq.{1} P] [inst_1 : DecidableEq.{1} A] [inst_2 : DecidableEq.{1} D]
+  [inst_3 : Fintype.{0} P] [inst_4 : Fintype.{0} A] [inst_5 : Fintype.{0} D] (cfg : DefiKernel.Composition.Config P A D)
+  (boundary : Nat → DefiKernel.Composition.Boundary P A D) (initial : DefiKernel.Composition.World P A D)
+  (branch : DefiKernel.Parallel.Branch P A D),
+  @Eq.{1} (DefiKernel.Composition.World P A D)
+    (@DefiKernel.Nary.Tree.IsolatedRef.world P A D
+      (@DefiKernel.Nary.Tree.runIsolatedLeaf P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 cfg boundary initial branch))
+    (@DefiKernel.Composition.Cursor.world P A D
+      (@DefiKernel.Parallel.runBranch P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 cfg boundary initial branch))
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.runIsolatedTree_assoc
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A]
+  [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P] [inst_5 : Fintype.{0} A] [inst_6 : Fintype.{0} D]
+  (cfg : DefiKernel.Composition.Config P A D) (boundaries : DefiKernel.Nary.Boundaries B P A D)
+  (initial : DefiKernel.Composition.World P A D) (branches : DefiKernel.Nary.Branches B P A D)
+  (roster : @DefiKernel.Nary.Roster B inst) (assoc : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))),
+  @Eq.{1}
+      (Except.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))))
+      (@DefiKernel.Nary.analyzeAll B P A D inst_1 inst_2 inst_3 cfg boundaries branches
+        (@DefiKernel.Nary.Roster.order B inst roster))
+      (@Except.ok.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) assoc) →
+    @DefiKernel.Nary.Tree.PairwiseCompatible B P A D assoc →
+      ∀ (a b c : DefiKernel.Nary.Tree.Tree B),
+        @DefiKernel.Parallel.WorldEquivalent P A D
+          (@Prod.fst.{0, 0} (DefiKernel.Composition.World P A D)
+            (List.{0} (Prod.{0, 0} B (DefiKernel.Nary.Tree.CanonicalLocal P A D)))
+            (@DefiKernel.Nary.Tree.runIsolatedTree B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg boundaries
+              initial branches assoc (@DefiKernel.Nary.Tree.Tree.fork B (@DefiKernel.Nary.Tree.Tree.fork B a b) c)))
+          (@Prod.fst.{0, 0} (DefiKernel.Composition.World P A D)
+            (List.{0} (Prod.{0, 0} B (DefiKernel.Nary.Tree.CanonicalLocal P A D)))
+            (@DefiKernel.Nary.Tree.runIsolatedTree B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg boundaries
+              initial branches assoc (@DefiKernel.Nary.Tree.Tree.fork B a (@DefiKernel.Nary.Tree.Tree.fork B b c))))
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.runIsolatedTree_empty
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A]
+  [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P] [inst_5 : Fintype.{0} A] [inst_6 : Fintype.{0} D]
+  (cfg : DefiKernel.Composition.Config P A D) (boundaries : DefiKernel.Nary.Boundaries B P A D)
+  (initial : DefiKernel.Composition.World P A D) (branches : DefiKernel.Nary.Branches B P A D)
+  (assoc : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))),
+  @Eq.{1}
+    (Prod.{0, 0} (DefiKernel.Composition.World P A D)
+      (List.{0} (Prod.{0, 0} B (DefiKernel.Nary.Tree.CanonicalLocal P A D))))
+    (@DefiKernel.Nary.Tree.runIsolatedTree B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg boundaries initial
+      branches assoc (@DefiKernel.Nary.Tree.Tree.empty B))
+    (@Prod.mk.{0, 0} (DefiKernel.Composition.World P A D)
+      (List.{0} (Prod.{0, 0} B (DefiKernel.Nary.Tree.CanonicalLocal P A D))) initial
+      (@List.nil.{0} (Prod.{0, 0} B (DefiKernel.Nary.Tree.CanonicalLocal P A D))))
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.runIsolatedTree_empty_left
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A]
+  [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P] [inst_5 : Fintype.{0} A] [inst_6 : Fintype.{0} D]
+  (cfg : DefiKernel.Composition.Config P A D) (boundaries : DefiKernel.Nary.Boundaries B P A D)
+  (initial : DefiKernel.Composition.World P A D) (branches : DefiKernel.Nary.Branches B P A D)
+  (roster : @DefiKernel.Nary.Roster B inst) (assoc : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))),
+  @Eq.{1}
+      (Except.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))))
+      (@DefiKernel.Nary.analyzeAll B P A D inst_1 inst_2 inst_3 cfg boundaries branches
+        (@DefiKernel.Nary.Roster.order B inst roster))
+      (@Except.ok.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) assoc) →
+    @DefiKernel.Nary.Tree.PairwiseCompatible B P A D assoc →
+      ∀ (tree : DefiKernel.Nary.Tree.Tree B),
+        @DefiKernel.Parallel.WorldEquivalent P A D
+          (@Prod.fst.{0, 0} (DefiKernel.Composition.World P A D)
+            (List.{0} (Prod.{0, 0} B (DefiKernel.Nary.Tree.CanonicalLocal P A D)))
+            (@DefiKernel.Nary.Tree.runIsolatedTree B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg boundaries
+              initial branches assoc (@DefiKernel.Nary.Tree.Tree.fork B (@DefiKernel.Nary.Tree.Tree.empty B) tree)))
+          (@Prod.fst.{0, 0} (DefiKernel.Composition.World P A D)
+            (List.{0} (Prod.{0, 0} B (DefiKernel.Nary.Tree.CanonicalLocal P A D)))
+            (@DefiKernel.Nary.Tree.runIsolatedTree B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg boundaries
+              initial branches assoc tree))
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.runIsolatedTree_empty_right
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A]
+  [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P] [inst_5 : Fintype.{0} A] [inst_6 : Fintype.{0} D]
+  (cfg : DefiKernel.Composition.Config P A D) (boundaries : DefiKernel.Nary.Boundaries B P A D)
+  (initial : DefiKernel.Composition.World P A D) (branches : DefiKernel.Nary.Branches B P A D)
+  (roster : @DefiKernel.Nary.Roster B inst) (assoc : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))),
+  @Eq.{1}
+      (Except.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))))
+      (@DefiKernel.Nary.analyzeAll B P A D inst_1 inst_2 inst_3 cfg boundaries branches
+        (@DefiKernel.Nary.Roster.order B inst roster))
+      (@Except.ok.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) assoc) →
+    @DefiKernel.Nary.Tree.PairwiseCompatible B P A D assoc →
+      ∀ (tree : DefiKernel.Nary.Tree.Tree B),
+        @DefiKernel.Parallel.WorldEquivalent P A D
+          (@Prod.fst.{0, 0} (DefiKernel.Composition.World P A D)
+            (List.{0} (Prod.{0, 0} B (DefiKernel.Nary.Tree.CanonicalLocal P A D)))
+            (@DefiKernel.Nary.Tree.runIsolatedTree B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg boundaries
+              initial branches assoc (@DefiKernel.Nary.Tree.Tree.fork B tree (@DefiKernel.Nary.Tree.Tree.empty B))))
+          (@Prod.fst.{0, 0} (DefiKernel.Composition.World P A D)
+            (List.{0} (Prod.{0, 0} B (DefiKernel.Nary.Tree.CanonicalLocal P A D)))
+            (@DefiKernel.Nary.Tree.runIsolatedTree B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg boundaries
+              initial branches assoc tree))
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.runIsolatedTree_flat
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A]
+  [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P] [inst_5 : Fintype.{0} A] [inst_6 : Fintype.{0} D]
+  (cfg : DefiKernel.Composition.Config P A D) (boundaries : DefiKernel.Nary.Boundaries B P A D)
+  (initial : DefiKernel.Composition.World P A D) (branches : DefiKernel.Nary.Branches B P A D)
+  (roster : @DefiKernel.Nary.Roster B inst) (assoc : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D)))
+  (tree : DefiKernel.Nary.Tree.Tree B),
+  @DefiKernel.Nary.Tree.WellFormed B inst roster tree →
+    @Eq.{1}
+        (Except.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+          (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))))
+        (@DefiKernel.Nary.analyzeAll B P A D inst_1 inst_2 inst_3 cfg boundaries branches
+          (@DefiKernel.Nary.Roster.order B inst roster))
+        (@Except.ok.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+          (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) assoc) →
+      @DefiKernel.Nary.Tree.PairwiseCompatible B P A D assoc →
+        @DefiKernel.Parallel.WorldEquivalent P A D
+          (@Prod.fst.{0, 0} (DefiKernel.Composition.World P A D)
+            (List.{0} (Prod.{0, 0} B (DefiKernel.Nary.Tree.CanonicalLocal P A D)))
+            (@DefiKernel.Nary.Tree.runIsolatedTree B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg boundaries
+              initial branches assoc tree))
+          (@DefiKernel.Nary.Tree.foldIsolatedWorld B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg boundaries
+            initial branches assoc (@DefiKernel.Nary.Roster.order B inst roster))
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.runIsolatedTree_frame
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A]
+  [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P] [inst_5 : Fintype.{0} A] [inst_6 : Fintype.{0} D]
+  (cfg : DefiKernel.Composition.Config P A D) (boundaries : DefiKernel.Nary.Boundaries B P A D)
+  (initial : DefiKernel.Composition.World P A D) (branches : DefiKernel.Nary.Branches B P A D)
+  (roster : @DefiKernel.Nary.Roster B inst) (assoc : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D)))
+  (tree : DefiKernel.Nary.Tree.Tree B),
+  @Eq.{1}
+      (Except.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))))
+      (@DefiKernel.Nary.analyzeAll B P A D inst_1 inst_2 inst_3 cfg boundaries branches
+        (@DefiKernel.Nary.Roster.order B inst roster))
+      (@Except.ok.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) assoc) →
+    ∀ c ∉ @DefiKernel.Parallel.Footprint.writes P A D (@DefiKernel.Nary.Tree.unionLeaves B P A D inst assoc tree),
+      @Eq.{1} Rat
+        (@DefiKernel.Typed.State.balance P A D
+          (@DefiKernel.Typed.ExecutionResult.state P A D
+            (@Prod.fst.{0, 0} (DefiKernel.Composition.World P A D)
+              (List.{0} (Prod.{0, 0} B (DefiKernel.Nary.Tree.CanonicalLocal P A D)))
+              (@DefiKernel.Nary.Tree.runIsolatedTree B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg
+                boundaries initial branches assoc tree)))
+          c)
+        (@DefiKernel.Typed.State.balance P A D (@DefiKernel.Typed.ExecutionResult.state P A D initial) c)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.runIsolatedTree_leaves_eq
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A]
+  [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P] [inst_5 : Fintype.{0} A] [inst_6 : Fintype.{0} D]
+  (cfg : DefiKernel.Composition.Config P A D) (boundaries : DefiKernel.Nary.Boundaries B P A D)
+  (initial : DefiKernel.Composition.World P A D) (branches : DefiKernel.Nary.Branches B P A D)
+  (roster : @DefiKernel.Nary.Roster B inst) (assoc : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))),
+  @Eq.{1}
+      (Except.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))))
+      (@DefiKernel.Nary.analyzeAll B P A D inst_1 inst_2 inst_3 cfg boundaries branches
+        (@DefiKernel.Nary.Roster.order B inst roster))
+      (@Except.ok.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) assoc) →
+    @DefiKernel.Nary.Tree.PairwiseCompatible B P A D assoc →
+      ∀ (left right : DefiKernel.Nary.Tree.Tree B),
+        (∀ (b : B),
+            Iff
+              (@Membership.mem.{0, 0} B (List.{0} B) (@List.instMembership.{0} B)
+                (@DefiKernel.Nary.Tree.Tree.leaves B left) b)
+              (@Membership.mem.{0, 0} B (List.{0} B) (@List.instMembership.{0} B)
+                (@DefiKernel.Nary.Tree.Tree.leaves B right) b)) →
+          @DefiKernel.Parallel.WorldEquivalent P A D
+            (@Prod.fst.{0, 0} (DefiKernel.Composition.World P A D)
+              (List.{0} (Prod.{0, 0} B (DefiKernel.Nary.Tree.CanonicalLocal P A D)))
+              (@DefiKernel.Nary.Tree.runIsolatedTree B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg
+                boundaries initial branches assoc left))
+            (@Prod.fst.{0, 0} (DefiKernel.Composition.World P A D)
+              (List.{0} (Prod.{0, 0} B (DefiKernel.Nary.Tree.CanonicalLocal P A D)))
+              (@DefiKernel.Nary.Tree.runIsolatedTree B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg
+                boundaries initial branches assoc right))
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.runIsolatedTree_owner
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A]
+  [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P] [inst_5 : Fintype.{0} A] [inst_6 : Fintype.{0} D]
+  (cfg : DefiKernel.Composition.Config P A D) (boundaries : DefiKernel.Nary.Boundaries B P A D)
+  (initial : DefiKernel.Composition.World P A D) (branches : DefiKernel.Nary.Branches B P A D)
+  (roster : @DefiKernel.Nary.Roster B inst) (assoc : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))),
+  @Eq.{1}
+      (Except.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))))
+      (@DefiKernel.Nary.analyzeAll B P A D inst_1 inst_2 inst_3 cfg boundaries branches
+        (@DefiKernel.Nary.Roster.order B inst roster))
+      (@Except.ok.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) assoc) →
+    @DefiKernel.Nary.Tree.PairwiseCompatible B P A D assoc →
+      ∀ (tree : DefiKernel.Nary.Tree.Tree B) (b : B),
+        @Membership.mem.{0, 0} B (List.{0} B) (@List.instMembership.{0} B) (@DefiKernel.Nary.Tree.Tree.leaves B tree)
+            b →
+          ∀ (c : DefiKernel.Typed.Cell P A D),
+            @Membership.mem.{0, 0} (DefiKernel.Typed.Cell P A D) (List.{0} (DefiKernel.Typed.Cell P A D))
+                (@List.instMembership.{0} (DefiKernel.Typed.Cell P A D))
+                (@DefiKernel.Parallel.Footprint.writes P A D (@DefiKernel.Nary.Tree.footprintOf B P A D inst assoc b))
+                c →
+              @Eq.{1} Rat
+                (@DefiKernel.Typed.State.balance P A D
+                  (@DefiKernel.Typed.ExecutionResult.state P A D
+                    (@Prod.fst.{0, 0} (DefiKernel.Composition.World P A D)
+                      (List.{0} (Prod.{0, 0} B (DefiKernel.Nary.Tree.CanonicalLocal P A D)))
+                      (@DefiKernel.Nary.Tree.runIsolatedTree B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg
+                        boundaries initial branches assoc tree)))
+                  c)
+                (@DefiKernel.Typed.State.balance P A D
+                  (@DefiKernel.Typed.ExecutionResult.state P A D
+                    (@DefiKernel.Nary.Tree.IsolatedRef.world P A D
+                      (@DefiKernel.Nary.Tree.runIsolatedLeaf P A D inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg
+                        (boundaries b) initial (branches b))))
+                  c)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.runIsolatedTree_store
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A]
+  [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P] [inst_5 : Fintype.{0} A] [inst_6 : Fintype.{0} D]
+  (cfg : DefiKernel.Composition.Config P A D) (boundaries : DefiKernel.Nary.Boundaries B P A D)
+  (initial : DefiKernel.Composition.World P A D) (branches : DefiKernel.Nary.Branches B P A D)
+  (roster : @DefiKernel.Nary.Roster B inst) (assoc : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))),
+  @Eq.{1}
+      (Except.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))))
+      (@DefiKernel.Nary.analyzeAll B P A D inst_1 inst_2 inst_3 cfg boundaries branches
+        (@DefiKernel.Nary.Roster.order B inst roster))
+      (@Except.ok.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) assoc) →
+    ∀ (tree : DefiKernel.Nary.Tree.Tree B),
+      @Eq.{1} (DefiKernel.Typed.CapabilityStore P A D)
+        (@DefiKernel.Typed.ExecutionResult.capabilities P A D
+          (@Prod.fst.{0, 0} (DefiKernel.Composition.World P A D)
+            (List.{0} (Prod.{0, 0} B (DefiKernel.Nary.Tree.CanonicalLocal P A D)))
+            (@DefiKernel.Nary.Tree.runIsolatedTree B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg boundaries
+              initial branches assoc tree)))
+        (@DefiKernel.Typed.ExecutionResult.capabilities P A D initial)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.runIsolatedTree_unowned
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A]
+  [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P] [inst_5 : Fintype.{0} A] [inst_6 : Fintype.{0} D]
+  (cfg : DefiKernel.Composition.Config P A D) (boundaries : DefiKernel.Nary.Boundaries B P A D)
+  (initial : DefiKernel.Composition.World P A D) (branches : DefiKernel.Nary.Branches B P A D)
+  (roster : @DefiKernel.Nary.Roster B inst) (assoc : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))),
+  @Eq.{1}
+      (Except.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))))
+      (@DefiKernel.Nary.analyzeAll B P A D inst_1 inst_2 inst_3 cfg boundaries branches
+        (@DefiKernel.Nary.Roster.order B inst roster))
+      (@Except.ok.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) assoc) →
+    ∀ (tree : DefiKernel.Nary.Tree.Tree B) (c : DefiKernel.Typed.Cell P A D),
+      (∀ (b : B),
+          @Membership.mem.{0, 0} B (List.{0} B) (@List.instMembership.{0} B) (@DefiKernel.Nary.Tree.Tree.leaves B tree)
+              b →
+            c ∉ @DefiKernel.Parallel.Footprint.writes P A D (@DefiKernel.Nary.Tree.footprintOf B P A D inst assoc b)) →
+        @Eq.{1} Rat
+          (@DefiKernel.Typed.State.balance P A D
+            (@DefiKernel.Typed.ExecutionResult.state P A D
+              (@Prod.fst.{0, 0} (DefiKernel.Composition.World P A D)
+                (List.{0} (Prod.{0, 0} B (DefiKernel.Nary.Tree.CanonicalLocal P A D)))
+                (@DefiKernel.Nary.Tree.runIsolatedTree B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg
+                  boundaries initial branches assoc tree)))
+            c)
+          (@DefiKernel.Typed.State.balance P A D (@DefiKernel.Typed.ExecutionResult.state P A D initial) c)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.runPrefix_simulates
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A]
+  [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P] [inst_5 : Fintype.{0} A] [inst_6 : Fintype.{0} D]
+  (cfg : DefiKernel.Composition.Config P A D) (boundaries : DefiKernel.Nary.Boundaries B P A D)
+  (initial : DefiKernel.Composition.World P A D) (branches : DefiKernel.Nary.Branches B P A D)
+  (roster : @DefiKernel.Nary.Roster B inst) (assoc : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))),
+  @Eq.{1} Bool
+      (@DefiKernel.Composition.validateCatalog P A D inst_1 inst_2 inst_3
+        (@DefiKernel.Composition.Config.registry P A D cfg) (@DefiKernel.Composition.Config.catalog P A D cfg))
+      Bool.true →
+    @Eq.{1}
+        (Except.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+          (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))))
+        (@DefiKernel.Nary.analyzeAll B P A D inst_1 inst_2 inst_3 cfg boundaries branches
+          (@DefiKernel.Nary.Roster.order B inst roster))
+        (@Except.ok.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+          (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) assoc) →
+      @DefiKernel.Nary.Tree.PairwiseCompatible B P A D assoc →
+        ∀ (schedule : DefiKernel.Nary.Schedule B),
+          @DefiKernel.Nary.Tree.Simulates B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg boundaries initial
+            branches assoc
+            (@DefiKernel.Nary.runPrefix B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg boundaries initial
+              branches schedule)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.selected_part
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A]
+  [inst_3 : DecidableEq.{1} D] [Fintype.{0} P] [Fintype.{0} A] [Fintype.{0} D]
+  (cfg : DefiKernel.Composition.Config P A D) (boundaries : DefiKernel.Nary.Boundaries B P A D)
+  (branches : DefiKernel.Nary.Branches B P A D) (roster : @DefiKernel.Nary.Roster B inst)
+  (assoc : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))),
+  @Eq.{1}
+      (Except.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))))
+      (@DefiKernel.Nary.analyzeAll B P A D inst_1 inst_2 inst_3 cfg boundaries branches
+        (@DefiKernel.Nary.Roster.order B inst roster))
+      (@Except.ok.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) assoc) →
+    ∀ (b : B) (n : Nat) (inv : DefiKernel.Composition.Invocation P A D),
+      @Eq.{1} (Option.{0} (DefiKernel.Composition.Invocation P A D))
+          (@GetElem?.getElem?.{0, 0, 0} (DefiKernel.Parallel.Branch P A D) Nat (DefiKernel.Composition.Invocation P A D)
+            (fun as i => @LT.lt.{0} Nat instLTNat i (@List.length.{0} (DefiKernel.Composition.Invocation P A D) as))
+            (@List.instGetElem?NatLtLength.{0} (DefiKernel.Composition.Invocation P A D)) (branches b) n)
+          (@Option.some.{0} (DefiKernel.Composition.Invocation P A D) inv) →
+        ∃ part,
+          And
+            (@Eq.{1} (Except.{0, 0} DefiKernel.Composition.Failure (DefiKernel.Parallel.Footprint P A D))
+              (@DefiKernel.Parallel.analyzeInvocation P A D inst_1 inst_2 inst_3 cfg (boundaries b n) inv)
+              (@Except.ok.{0, 0} DefiKernel.Composition.Failure (DefiKernel.Parallel.Footprint P A D) part))
+            (And
+              (∀ (c : DefiKernel.Typed.Cell P A D),
+                @Membership.mem.{0, 0} (DefiKernel.Typed.Cell P A D) (List.{0} (DefiKernel.Typed.Cell P A D))
+                    (@List.instMembership.{0} (DefiKernel.Typed.Cell P A D))
+                    (@DefiKernel.Parallel.Footprint.reads P A D part) c →
+                  @Membership.mem.{0, 0} (DefiKernel.Typed.Cell P A D) (List.{0} (DefiKernel.Typed.Cell P A D))
+                    (@List.instMembership.{0} (DefiKernel.Typed.Cell P A D))
+                    (@DefiKernel.Parallel.Footprint.reads P A D
+                      (@DefiKernel.Nary.Tree.footprintOf B P A D inst assoc b))
+                    c)
+              (∀ (c : DefiKernel.Typed.Cell P A D),
+                @Membership.mem.{0, 0} (DefiKernel.Typed.Cell P A D) (List.{0} (DefiKernel.Typed.Cell P A D))
+                    (@List.instMembership.{0} (DefiKernel.Typed.Cell P A D))
+                    (@DefiKernel.Parallel.Footprint.writes P A D part) c →
+                  @Membership.mem.{0, 0} (DefiKernel.Typed.Cell P A D) (List.{0} (DefiKernel.Typed.Cell P A D))
+                    (@List.instMembership.{0} (DefiKernel.Typed.Cell P A D))
+                    (@DefiKernel.Parallel.Footprint.writes P A D
+                      (@DefiKernel.Nary.Tree.footprintOf B P A D inst assoc b))
+                    c))
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.unionLeaves_compatible
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [DecidableEq.{1} P] [DecidableEq.{1} A] [DecidableEq.{1} D]
+  [Fintype.{0} P] [Fintype.{0} A] [Fintype.{0} D]
+  (assoc : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) (left right : DefiKernel.Nary.Tree.Tree B),
+  (∀ (b : B),
+      @Membership.mem.{0, 0} B (List.{0} B) (@List.instMembership.{0} B) (@DefiKernel.Nary.Tree.Tree.leaves B left) b →
+        ∀ (c : B),
+          @Membership.mem.{0, 0} B (List.{0} B) (@List.instMembership.{0} B) (@DefiKernel.Nary.Tree.Tree.leaves B right)
+              c →
+            @DefiKernel.Parallel.Compatible P A D (@DefiKernel.Nary.Tree.footprintOf B P A D inst assoc b)
+              (@DefiKernel.Nary.Tree.footprintOf B P A D inst assoc c)) →
+    @DefiKernel.Parallel.Compatible P A D (@DefiKernel.Nary.Tree.unionLeaves B P A D inst assoc left)
+      (@DefiKernel.Nary.Tree.unionLeaves B P A D inst assoc right)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.unionLeaves_empty
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [DecidableEq.{1} P] [DecidableEq.{1} A] [DecidableEq.{1} D]
+  [Fintype.{0} P] [Fintype.{0} A] [Fintype.{0} D]
+  (assoc : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))),
+  @Eq.{1} (DefiKernel.Parallel.Footprint P A D)
+    (@DefiKernel.Nary.Tree.unionLeaves B P A D inst assoc (@DefiKernel.Nary.Tree.Tree.empty B))
+    (@DefiKernel.Parallel.Footprint.empty P A D)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.unionLeaves_empty_left
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [DecidableEq.{1} P] [DecidableEq.{1} A] [DecidableEq.{1} D]
+  [Fintype.{0} P] [Fintype.{0} A] [Fintype.{0} D]
+  (assoc : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) (tree : DefiKernel.Nary.Tree.Tree B),
+  @DefiKernel.Parallel.Compatible P A D
+    (@DefiKernel.Nary.Tree.unionLeaves B P A D inst assoc (@DefiKernel.Nary.Tree.Tree.empty B))
+    (@DefiKernel.Nary.Tree.unionLeaves B P A D inst assoc tree)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.unionLeaves_empty_right
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [DecidableEq.{1} P] [DecidableEq.{1} A] [DecidableEq.{1} D]
+  [Fintype.{0} P] [Fintype.{0} A] [Fintype.{0} D]
+  (assoc : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) (tree : DefiKernel.Nary.Tree.Tree B),
+  @DefiKernel.Parallel.Compatible P A D (@DefiKernel.Nary.Tree.unionLeaves B P A D inst assoc tree)
+    (@DefiKernel.Nary.Tree.unionLeaves B P A D inst assoc (@DefiKernel.Nary.Tree.Tree.empty B))
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.unionLeaves_fork
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [DecidableEq.{1} P] [DecidableEq.{1} A] [DecidableEq.{1} D]
+  [Fintype.{0} P] [Fintype.{0} A] [Fintype.{0} D]
+  (assoc : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) (left right : DefiKernel.Nary.Tree.Tree B),
+  @Eq.{1} (DefiKernel.Parallel.Footprint P A D)
+    (@DefiKernel.Nary.Tree.unionLeaves B P A D inst assoc (@DefiKernel.Nary.Tree.Tree.fork B left right))
+    (@DefiKernel.Parallel.Footprint.append P A D (@DefiKernel.Nary.Tree.unionLeaves B P A D inst assoc left)
+      (@DefiKernel.Nary.Tree.unionLeaves B P A D inst assoc right))
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.unionLeaves_leaf
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [DecidableEq.{1} P] [DecidableEq.{1} A] [DecidableEq.{1} D]
+  [Fintype.{0} P] [Fintype.{0} A] [Fintype.{0} D]
+  (assoc : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) (b : B),
+  @Eq.{1} (DefiKernel.Parallel.Footprint P A D)
+    (@DefiKernel.Nary.Tree.unionLeaves B P A D inst assoc (@DefiKernel.Nary.Tree.Tree.leaf B b))
+    (@DefiKernel.Nary.Tree.footprintOf B P A D inst assoc b)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.unique_writer
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A]
+  [inst_3 : DecidableEq.{1} D] [Fintype.{0} P] [Fintype.{0} A] [Fintype.{0} D]
+  (cfg : DefiKernel.Composition.Config P A D) (boundaries : DefiKernel.Nary.Boundaries B P A D)
+  (branches : DefiKernel.Nary.Branches B P A D) (roster : @DefiKernel.Nary.Roster B inst)
+  (assoc : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))),
+  @Eq.{1}
+      (Except.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))))
+      (@DefiKernel.Nary.analyzeAll B P A D inst_1 inst_2 inst_3 cfg boundaries branches
+        (@DefiKernel.Nary.Roster.order B inst roster))
+      (@Except.ok.{0, 0} (DefiKernel.Nary.AdmissionFailure B P A D)
+        (List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))) assoc) →
+    @DefiKernel.Nary.Tree.PairwiseCompatible B P A D assoc →
+      ∀ (b1 b2 : B),
+        @Ne.{1} B b1 b2 →
+          ∀ (c : DefiKernel.Typed.Cell P A D),
+            @Membership.mem.{0, 0} (DefiKernel.Typed.Cell P A D) (List.{0} (DefiKernel.Typed.Cell P A D))
+                (@List.instMembership.{0} (DefiKernel.Typed.Cell P A D))
+                (@DefiKernel.Parallel.Footprint.writes P A D (@DefiKernel.Nary.Tree.footprintOf B P A D inst assoc b1))
+                c →
+              @Membership.mem.{0, 0} (DefiKernel.Typed.Cell P A D) (List.{0} (DefiKernel.Typed.Cell P A D))
+                  (@List.instMembership.{0} (DefiKernel.Typed.Cell P A D))
+                  (@DefiKernel.Parallel.Footprint.writes P A D
+                    (@DefiKernel.Nary.Tree.footprintOf B P A D inst assoc b2))
+                  c →
+                False
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.wellFormed_leaves_nodup
+∀ {B : Type} [inst : DecidableEq.{1} B] (roster : @DefiKernel.Nary.Roster B inst) (tree : DefiKernel.Nary.Tree.Tree B),
+  @DefiKernel.Nary.Tree.WellFormed B inst roster tree → @List.Nodup.{0} B (@DefiKernel.Nary.Tree.Tree.leaves B tree)
+AXIOMS ['propext', 'Quot.sound']
+
+DefiKernel.Nary.Tree.wellFormed_mem_leaves
+∀ {B : Type} [inst : DecidableEq.{1} B] (roster : @DefiKernel.Nary.Roster B inst) (tree : DefiKernel.Nary.Tree.Tree B),
+  @DefiKernel.Nary.Tree.WellFormed B inst roster tree →
+    ∀ (b : B),
+      Iff
+        (@Membership.mem.{0, 0} B (List.{0} B) (@List.instMembership.{0} B) (@DefiKernel.Nary.Tree.Tree.leaves B tree)
+          b)
+        (@Membership.mem.{0, 0} B (List.{0} B) (@List.instMembership.{0} B)
+          (@DefiKernel.Nary.Roster.order B inst roster) b)
+AXIOMS ['propext', 'Quot.sound']
+
+DefiKernel.Nary.Tree.Simulates.start
+∀ {B P A D : Type} [inst : DecidableEq.{1} B] [inst_1 : DecidableEq.{1} P] [inst_2 : DecidableEq.{1} A]
+  [inst_3 : DecidableEq.{1} D] [inst_4 : Fintype.{0} P] [inst_5 : Fintype.{0} A] [inst_6 : Fintype.{0} D]
+  (cfg : DefiKernel.Composition.Config P A D) (boundaries : DefiKernel.Nary.Boundaries B P A D)
+  (initial : DefiKernel.Composition.World P A D) (branches : DefiKernel.Nary.Branches B P A D)
+  (assoc : List.{0} (Prod.{0, 0} B (DefiKernel.Parallel.Footprint P A D))),
+  @Eq.{1} Bool
+      (@DefiKernel.Composition.validateCatalog P A D inst_1 inst_2 inst_3
+        (@DefiKernel.Composition.Config.registry P A D cfg) (@DefiKernel.Composition.Config.catalog P A D cfg))
+      Bool.true →
+    @DefiKernel.Nary.Tree.Simulates B P A D inst inst_1 inst_2 inst_3 inst_4 inst_5 inst_6 cfg boundaries initial
+      branches assoc (@DefiKernel.Nary.start B P A D initial)
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.RecoveryChecks.Funded.funded_catalog
+@Eq.{1} Bool
+  (@DefiKernel.Composition.validateCatalog DefiKernel.Typed.Examples.Party DefiKernel.Typed.Examples.Asset
+    DefiKernel.Typed.Examples.Domain DefiKernel.Typed.Examples.instDecidableEqParty
+    DefiKernel.Typed.Examples.instDecidableEqAsset DefiKernel.Typed.Examples.instDecidableEqDomain
+    (@DefiKernel.Composition.Config.registry DefiKernel.Typed.Examples.Party DefiKernel.Typed.Examples.Asset
+      DefiKernel.Typed.Examples.Domain DefiKernel.Nary.Tree.RecoveryChecks.Funded.fundedCfg)
+    (@DefiKernel.Composition.Config.catalog DefiKernel.Typed.Examples.Party DefiKernel.Typed.Examples.Asset
+      DefiKernel.Typed.Examples.Domain DefiKernel.Nary.Tree.RecoveryChecks.Funded.fundedCfg))
+  Bool.true
+AXIOMS ['propext', 'Quot.sound']
+
+DefiKernel.Nary.Tree.RecoveryChecks.Funded.funded_disj_complete
+@DefiKernel.Nary.Complete (Fin (@OfNat.ofNat.{0} Nat (nat_lit 2) (instOfNatNat (nat_lit 2))))
+  DefiKernel.Typed.Examples.Party DefiKernel.Typed.Examples.Asset DefiKernel.Typed.Examples.Domain
+  (instDecidableEqFin (@OfNat.ofNat.{0} Nat (nat_lit 2) (instOfNatNat (nat_lit 2))))
+  DefiKernel.Nary.Tree.RecoveryChecks.Funded.disjBranches
+  (@List.cons.{0} (Fin (@OfNat.ofNat.{0} Nat (nat_lit 2) (instOfNatNat (nat_lit 2))))
+    (@OfNat.ofNat.{0} (Fin (@OfNat.ofNat.{0} Nat (nat_lit 2) (instOfNatNat (nat_lit 2)))) (nat_lit 0)
+      (@Fin.instOfNat (@OfNat.ofNat.{0} Nat (nat_lit 2) (instOfNatNat (nat_lit 2)))
+        (@Nat.instNeZeroSucc (@OfNat.ofNat.{0} Nat (nat_lit 1) (instOfNatNat (nat_lit 1)))) (nat_lit 0)))
+    (@List.cons.{0} (Fin (@OfNat.ofNat.{0} Nat (nat_lit 2) (instOfNatNat (nat_lit 2))))
+      (@OfNat.ofNat.{0} (Fin (@OfNat.ofNat.{0} Nat (nat_lit 2) (instOfNatNat (nat_lit 2)))) (nat_lit 1)
+        (@Fin.instOfNat (@OfNat.ofNat.{0} Nat (nat_lit 2) (instOfNatNat (nat_lit 2)))
+          (@Nat.instNeZeroSucc (@OfNat.ofNat.{0} Nat (nat_lit 1) (instOfNatNat (nat_lit 1)))) (nat_lit 1)))
+      (@List.nil.{0} (Fin (@OfNat.ofNat.{0} Nat (nat_lit 2) (instOfNatNat (nat_lit 2)))))))
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.RecoveryChecks.Funded.funded_f15_complete
+@DefiKernel.Nary.Complete (Fin (@OfNat.ofNat.{0} Nat (nat_lit 2) (instOfNatNat (nat_lit 2))))
+  DefiKernel.Typed.Examples.Party DefiKernel.Typed.Examples.Asset DefiKernel.Typed.Examples.Domain
+  (instDecidableEqFin (@OfNat.ofNat.{0} Nat (nat_lit 2) (instOfNatNat (nat_lit 2))))
+  DefiKernel.Nary.Tree.RecoveryChecks.Funded.f15Branches
+  (@List.cons.{0} (Fin (@OfNat.ofNat.{0} Nat (nat_lit 2) (instOfNatNat (nat_lit 2))))
+    (@OfNat.ofNat.{0} (Fin (@OfNat.ofNat.{0} Nat (nat_lit 2) (instOfNatNat (nat_lit 2)))) (nat_lit 0)
+      (@Fin.instOfNat (@OfNat.ofNat.{0} Nat (nat_lit 2) (instOfNatNat (nat_lit 2)))
+        (@Nat.instNeZeroSucc (@OfNat.ofNat.{0} Nat (nat_lit 1) (instOfNatNat (nat_lit 1)))) (nat_lit 0)))
+    (@List.cons.{0} (Fin (@OfNat.ofNat.{0} Nat (nat_lit 2) (instOfNatNat (nat_lit 2))))
+      (@OfNat.ofNat.{0} (Fin (@OfNat.ofNat.{0} Nat (nat_lit 2) (instOfNatNat (nat_lit 2)))) (nat_lit 1)
+        (@Fin.instOfNat (@OfNat.ofNat.{0} Nat (nat_lit 2) (instOfNatNat (nat_lit 2)))
+          (@Nat.instNeZeroSucc (@OfNat.ofNat.{0} Nat (nat_lit 1) (instOfNatNat (nat_lit 1)))) (nat_lit 1)))
+      (@List.nil.{0} (Fin (@OfNat.ofNat.{0} Nat (nat_lit 2) (instOfNatNat (nat_lit 2)))))))
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']
+
+DefiKernel.Nary.Tree.RecoveryChecks.Funded.funded_wf
+@DefiKernel.Nary.Tree.WellFormed (Fin (@OfNat.ofNat.{0} Nat (nat_lit 2) (instOfNatNat (nat_lit 2))))
+  (instDecidableEqFin (@OfNat.ofNat.{0} Nat (nat_lit 2) (instOfNatNat (nat_lit 2))))
+  DefiKernel.Nary.Tree.RecoveryChecks.Funded.fin2Roster DefiKernel.Nary.Tree.RecoveryChecks.Funded.fin2Fork
+AXIOMS ['propext', 'Classical.choice', 'Quot.sound']

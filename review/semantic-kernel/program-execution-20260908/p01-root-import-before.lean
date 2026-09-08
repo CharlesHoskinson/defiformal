@@ -8,6 +8,5 @@ import DefiKernel.Metatheory.Verify
 import DefiKernel.Interface.Verify
 import DefiKernel.Arithmetic.Verify
 import DefiKernel.Nary.Verify
-import DefiKernel.Nary.Tree.Recovery
 
 /-! Entry point for the pilot, typed kernel, regressions and imported axiom audits. -/

@@ -1,0 +1,199 @@
+New named theorems and the lookup definition added in this candidate.
+Existing complete_schedule_canonicalEq / complete_schedule_independence /
+complete_schedule_canonicalEq_of_admitIsolated / competing_writes_not_compatible
+statements are unchanged. Independent GPT-6 will inventory the elaborated closure.
+
+== Recovery.lean definition ==
+
+def lookupIsolatedLocal (pairs : List (B × CanonicalLocal P A D)) (b : B) :
+    Option (CanonicalLocal P A D)
+
+== Recovery.lean theorems ==
+
+theorem isolatedLocals_nil (cfg : Config P A D) (boundaries : Boundaries B P A D)
+    (initial : World P A D) (branches : Branches B P A D) :
+    isolatedLocals cfg boundaries initial branches [] = []
+
+theorem isolatedLocals_append (cfg : Config P A D) (boundaries : Boundaries B P A D)
+    (initial : World P A D) (branches : Branches B P A D) (xs ys : List B) :
+    isolatedLocals cfg boundaries initial branches (xs ++ ys) =
+      isolatedLocals cfg boundaries initial branches xs ++
+        isolatedLocals cfg boundaries initial branches ys
+
+theorem runIsolatedTree_locals (cfg : Config P A D) (boundaries : Boundaries B P A D)
+    (initial : World P A D) (branches : Branches B P A D)
+    (assoc : List (B × Footprint P A D)) :
+    ∀ tree, (runIsolatedTree cfg boundaries initial branches assoc tree).2 =
+      isolatedLocals cfg boundaries initial branches (Tree.leaves tree)
+
+theorem runIsolatedTree_locals_empty_left (cfg : Config P A D)
+    (boundaries : Boundaries B P A D) (initial : World P A D)
+    (branches : Branches B P A D) (assoc : List (B × Footprint P A D)) (tree : Tree B) :
+    (runIsolatedTree cfg boundaries initial branches assoc
+      ((Tree.empty : Tree B).fork tree)).2 =
+      (runIsolatedTree cfg boundaries initial branches assoc tree).2
+
+theorem runIsolatedTree_locals_empty_right (cfg : Config P A D)
+    (boundaries : Boundaries B P A D) (initial : World P A D)
+    (branches : Branches B P A D) (assoc : List (B × Footprint P A D)) (tree : Tree B) :
+    (runIsolatedTree cfg boundaries initial branches assoc
+      (tree.fork (Tree.empty : Tree B))).2 =
+      (runIsolatedTree cfg boundaries initial branches assoc tree).2
+
+theorem runIsolatedTree_locals_assoc (cfg : Config P A D)
+    (boundaries : Boundaries B P A D) (initial : World P A D)
+    (branches : Branches B P A D) (assoc : List (B × Footprint P A D))
+    (a b c : Tree B) :
+    (runIsolatedTree cfg boundaries initial branches assoc ((a.fork b).fork c)).2 =
+      (runIsolatedTree cfg boundaries initial branches assoc (a.fork (b.fork c))).2
+
+theorem lookupIsolatedLocal_nil (b : B) :
+    lookupIsolatedLocal ([] : List (B × CanonicalLocal P A D)) b = none
+
+theorem lookupIsolatedLocal_cons_eq (b : B) (loc : CanonicalLocal P A D)
+    (rest : List (B × CanonicalLocal P A D)) :
+    lookupIsolatedLocal ((b, loc) :: rest) b = some loc
+
+theorem lookupIsolatedLocal_cons_ne (id b : B) (loc : CanonicalLocal P A D)
+    (rest : List (B × CanonicalLocal P A D)) (h : id ≠ b) :
+    lookupIsolatedLocal ((id, loc) :: rest) b = lookupIsolatedLocal rest b
+
+theorem lookupIsolatedLocal_map (f : B → CanonicalLocal P A D)
+    (order : List B) (b : B) (hb : b ∈ order) :
+    lookupIsolatedLocal (List.map (fun x => (x, f x)) order) b = some (f b)
+
+theorem isolatedLocals_lookup_mem (cfg : Config P A D) (boundaries : Boundaries B P A D)
+    (initial : World P A D) (branches : Branches B P A D) (order : List B)
+    (b : B) (hb : b ∈ order) :
+    lookupIsolatedLocal (isolatedLocals cfg boundaries initial branches order) b =
+      some (isolatedCanonicalLocal
+        (runIsolatedLeaf cfg (boundaries b) initial (branches b)).cursor
+        (branches b))
+
+theorem runIsolatedTree_lookup_mem (cfg : Config P A D) (boundaries : Boundaries B P A D)
+    (initial : World P A D) (branches : Branches B P A D)
+    (assoc : List (B × Footprint P A D)) (tree : Tree B) (b : B)
+    (hb : b ∈ Tree.leaves tree) :
+    lookupIsolatedLocal (runIsolatedTree cfg boundaries initial branches assoc tree).2 b =
+      some (isolatedCanonicalLocal
+        (runIsolatedLeaf cfg (boundaries b) initial (branches b)).cursor
+        (branches b))
+
+theorem wellFormed_isolated_lookup (cfg : Config P A D) (boundaries : Boundaries B P A D)
+    (initial : World P A D) (branches : Branches B P A D) (roster : Roster B)
+    (assoc : List (B × Footprint P A D)) (tree : Tree B)
+    (hwf : WellFormed roster tree) (b : B) :
+    lookupIsolatedLocal (runIsolatedTree cfg boundaries initial branches assoc tree).2 b =
+      lookupIsolatedLocal (isolatedLocals cfg boundaries initial branches roster.order) b
+
+theorem isolatedCanonical_lookup (cfg : Config P A D) (boundaries : Boundaries B P A D)
+    (initial : World P A D) (branches : Branches B P A D) (roster : Roster B)
+    (assoc : List (B × Footprint P A D)) (tree : Tree B)
+    (hwf : WellFormed roster tree) (b : B) :
+    lookupIsolatedLocal
+        (isolatedCanonical roster cfg boundaries initial branches assoc tree).locals b =
+      lookupIsolatedLocal (runIsolatedTree cfg boundaries initial branches assoc tree).2 b
+
+theorem isolatedReference_roster_normalized (cfg : Config P A D)
+    (boundaries : Boundaries B P A D) (initial : World P A D)
+    (branches : Branches B P A D) (roster : Roster B)
+    (assoc : List (B × Footprint P A D)) (tree : Tree B)
+    (hwf : WellFormed roster tree) :
+    Parallel.WorldEquivalent
+        (runIsolatedTree cfg boundaries initial branches assoc tree).1
+        (isolatedCanonical roster cfg boundaries initial branches assoc tree).world ∧
+      ∀ b, lookupIsolatedLocal
+          (runIsolatedTree cfg boundaries initial branches assoc tree).2 b =
+        lookupIsolatedLocal
+          (isolatedCanonical roster cfg boundaries initial branches assoc tree).locals b
+
+theorem complete_schedule_recursive_lookup (cfg : Config P A D)
+    (boundaries : Boundaries B P A D) (initial : World P A D)
+    (branches : Branches B P A D) (roster : Roster B)
+    (assoc : List (B × Footprint P A D)) (tree : Tree B) (schedule : Schedule B)
+    (hwf : WellFormed roster tree)
+    (hv : validateCatalog cfg.registry cfg.catalog = true)
+    (ha : Nary.analyzeAll cfg boundaries branches roster.order = .ok assoc)
+    (hc : PairwiseCompatible assoc) (hC : Nary.Complete branches schedule) (b : B) :
+    lookupIsolatedLocal
+        (canonicalOf roster (runTreePrefix cfg boundaries initial tree branches schedule)).locals
+        b =
+      lookupIsolatedLocal (runIsolatedTree cfg boundaries initial branches assoc tree).2 b
+
+== RecoveryChecks.lean theorems ==
+
+theorem funded_refuse_complete_001 :
+    Nary.Complete refuseBranches refuseSched001
+
+theorem funded_refuse_complete_100 :
+    Nary.Complete refuseBranches refuseSched100
+
+theorem funded_f15_normative_complete :
+    Nary.Complete f15NormativeBranches ([0, 1] : Schedule (Fin 2))
+
+theorem funded_f15_normative_complete_rl :
+    Nary.Complete f15NormativeBranches ([1, 0] : Schedule (Fin 2))
+
+theorem funded_refuse_canonicalEq_001
+    (assoc : List (Fin 2 × Footprint Party Asset Domain))
+    (h : admitIsolated fundedCfg fin2Roster naryBounds refuseBranches refuseSched001 fin2Fork
+      = .ok assoc) :
+    canonicalEq
+      (canonicalOf fin2Roster tmRefuse001)
+      (isolatedCanonical fin2Roster fundedCfg naryBounds fundedInitial refuseBranches
+        assoc fin2Fork) = true
+
+theorem funded_refuse_canonicalEq_100
+    (assoc : List (Fin 2 × Footprint Party Asset Domain))
+    (h : admitIsolated fundedCfg fin2Roster naryBounds refuseBranches refuseSched100 fin2Fork
+      = .ok assoc) :
+    canonicalEq
+      (canonicalOf fin2Roster tmRefuse100)
+      (isolatedCanonical fin2Roster fundedCfg naryBounds fundedInitial refuseBranches
+        assoc fin2Fork) = true
+
+theorem funded_refuse_independence_of_admit
+    (assoc : List (Fin 2 × Footprint Party Asset Domain))
+    (h001 : admitIsolated fundedCfg fin2Roster naryBounds refuseBranches refuseSched001 fin2Fork
+      = .ok assoc)
+    (h100 : admitIsolated fundedCfg fin2Roster naryBounds refuseBranches refuseSched100 fin2Fork
+      = .ok assoc) :
+    canonicalEq (canonicalOf fin2Roster tmRefuse001) (canonicalOf fin2Roster tmRefuse100) = true
+
+theorem funded_refuse_admit_001_isOk :
+    (match refuseAdmit001 with
+      | .ok _ => true
+      | .error _ => false) = true
+
+theorem funded_refuse_admit_001_exists :
+    ∃ assoc, refuseAdmit001 = .ok assoc
+
+theorem funded_f15_normative_lr_alice3 :
+    tmF15NormLR.world.state.balance Parallel.Examples.aliceUSD = 3
+
+theorem funded_f15_normative_rl_alice4 :
+    tmF15NormRL.world.state.balance Parallel.Examples.aliceUSD = 4
+
+theorem funded_f15_normative_canonical_ne :
+    canonicalEq (canonicalOf fin2Roster tmF15NormLR) (canonicalOf fin2Roster tmF15NormRL) =
+      false
+
+theorem funded_f15_normative_incompatible_check :
+    (match Nary.analyzeAll fundedCfg naryBounds f15NormativeBranches [0, 1] with
+      | .ok assoc =>
+        match checkPairwise assoc with
+        | .error _ => true
+        | .ok _ => false
+      | .error _ => false) = true
+
+theorem funded_f15_normative_incompatible :
+    match Nary.analyzeAll fundedCfg naryBounds f15NormativeBranches [0, 1] with
+    | .ok assoc => checkPairwise assoc ≠ .ok ()
+    | .error _ => False
+
+Retained unchanged concrete theorems: funded_catalog, funded_disj_complete,
+funded_f15_complete, funded_wf.
+
+Axioms: none declared. Computational kernel theorems use `decide +kernel`, not
+`native_decide`. Source token scan of the two edited files found zero `sorry`,
+zero `native_decide`, zero `axiom` declarations.

@@ -426,3 +426,26 @@ unconditional solvency remain outside this acceptance.
 
 Closure documentation:
 `review/semantic-kernel/sprint11/implementation/acceptance/grok-release-r1/`.
+
+## P01: compatible tree recovery (bounded acceptance)
+
+Native Grok4.6 (`grok-4.6-build`) authored the exact r3 candidate. Independent
+GPT-6 accepted it with limitations after closing four concrete findings. Generic
+complete-schedule recovery now connects the actual recursive isolated local list
+to roster-normalized observations. Funded compatible refusal and normative7/6
+competing-withdrawal witnesses retain complete observations; comparator controls
+distinguish canonical from full machine state.
+
+The candidate59 runtime checks pass. Six separately attributed reviewer checks
+supply literal receipt/output/failure-location expectations and must be retained
+with the accepted evidence. The48-module elaborated inventory has5,797 declarations,
+including2,415 theorem constants, with zero forbidden axioms; these include inherited
+and generated declarations, not separate financial guarantees. Existing1,360 explicit
+declaration types and all accepted foundation/dependency bytes are unchanged.
+
+[Acceptance and scope](../../review/semantic-kernel/program-execution-20260908/P01-ACCEPTANCE.md),
+[integration](../../review/semantic-kernel/program-execution-20260908/p01-integration.json),
+and [delivery](../../review/semantic-kernel/program-execution-20260908/p01-delivery.json)
+record the exact evidence and separate transport status. P02's full fixtures,
+mutations, contracts and monitor work remains open. This is not whole-M4,
+deployed-protocol or whole-program acceptance.
