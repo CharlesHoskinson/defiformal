@@ -1,0 +1,174 @@
+--- r1/openspec/changes/reusable-verification-platform-program/contracts/adapter-observation-contract.md
++++ r2/openspec/changes/reusable-verification-platform-program/contracts/adapter-observation-contract.md
+@@ -20,8 +20,10 @@
+ 5. Distinguish standalone function admissibility from reachability inside a
+    larger protocol (pool swap, vault callback, token transfer).
+ 6. Protocol-specific adapters are expected. They are not reuse failure if a
+-   named shared library lemma/contract and a named shared executor result
+-   are instantiated unchanged when `P17.platform_reuse` is claimed.
++   named shared library lemma or financial contract and a named delivered
++   executor or composition theorem, with its premises, are instantiated
++   unchanged for both cases when `P17.platform_reuse` is claimed. Sharing
++   only an executable entrypoint is not that theorem.
+ 
+ The Typed wrap observation already delivered for fee quotes is
+ `Arithmetic.Reference.observeExecution`
+@@ -170,12 +172,24 @@
+    case. A wrapper around two separate engines does not count.
+ 2. A **named shared financial lemma or contract** from these P15 contracts
+    or delivered Arithmetic, instantiated in both cases.
+-3. A **named shared executor result**. Expected candidates, not yet chosen:
+-   `Typed.execute : Except Refusal ExecutionResult` and/or
+-   `Composition.executeStep : Except Failure StepResult`.
+-   A theorem used only by the vault does not count.
++3. Distinguish the **common executable entrypoint** from the **shared
++   proved result**. Routing both adapters through one function is not
++   enough.
++   - Entrypoint examples, not selected now: `Typed.execute` returning
++     `Except Refusal ExecutionResult`, and `Composition.executeStep`
++     returning `Except Failure StepResult`.
++   - Shared proved result: a **named delivered executor or composition
++     theorem**, its explicit premises, and checked unchanged instantiations
++     for **both** the token0 case and the vault case. Examples of actual
++     delivered theorem names that may later be considered, not selected or
++     instantiated in this freeze: `DefiKernel.Typed.execute_ok_iff`
++     (`lean/DefiKernel/Typed/Transition.lean` line 219) and
++     `DefiKernel.Composition.executeStep_sound`
++     (`lean/DefiKernel/Composition/Execution.lean` line 201). A theorem
++     used only by the vault does not count.
+ 4. The **token0 library-to-Typed kernel bridge** exists and is checked.
+-5. **Both adapters** are checked against that same executor result.
++5. **Both adapters** are checked against that named theorem and against
++   the common executable entrypoint.
+ 6. A **case-two inventory** records new definitions, new assumptions,
+    interface changes, and effort for the vault case relative to token0.
+ 
+--- r1/openspec/changes/reusable-verification-platform-program/contracts/evidence-packet-usage.md
++++ r2/openspec/changes/reusable-verification-platform-program/contracts/evidence-packet-usage.md
+@@ -25,14 +25,24 @@
+ evidence and source refinement open. P16/P18 are expected to do that.
+ P30 remains required before full-program closure.
+ 
++That publication of two classes does **not** close complete P16/P17
++operational or source-bound operation acceptance. Complete operation
++acceptance still requires the mutation and control evidence in §2–§4.
++
+ Certificates, if later delivered, first accept the repaired Typed/sequential
+ grammar and invoke actual Lean semantics. A caller judgment, source hash, or
+ theorem name is not proof. Certificates are **not** a P16 prerequisite.
+ 
+ ## 2. Required bindings
+ 
+-A credited packet must bind all of the following. Missing any item makes the
+-packet incomplete for that claim class.
++Two credit levels apply. Do not treat a narrower class report as complete
++operation acceptance.
++
++**Complete P16/P17 operational or source-bound operation credit** requires
++every item below. Missing actual characteristic production mutations **or**
++independently verified unaffected controls leaves that complete-operation
++packet incomplete or open. It does not become complete by omitting a
++separate “mutation sensitivity” claim.
+ 
+ 1. Exact **source** identity (revision, path, SHA-256). Compiler settings
+    when the source is compiled. Observation relation id.
+@@ -42,13 +52,22 @@
+ 5. Relevant Lean **theorems**, full premises, and axiom evidence, or an
+    explicit statement that the class is not a model_proof claim.
+ 6. **Actual** pinned-source and model executions over predeclared nonempty
+-   partitions, including refusal behavior, when claiming
+-   `bounded_source_execution`.
+-7. **Actual** characteristic production mutations with separately verified
+-   unaffected controls, when claiming mutation sensitivity.
++   partitions, including refusal behavior.
++7. **Actual** characteristic production mutations **and** independently
++   verified unaffected controls. Both are required. Neither is optional
++   when claiming complete operation acceptance.
+ 8. Independent exact-candidate **verdict** with requested/reported model
+    identity, or `pending` with `credit_eligible=false`.
+ 9. Explicit **remaining obligations**.
++
++**Narrower evidence** remains reportable with explicit limitations:
++
++- `model_proof` only
++- `accepted_historical` pointers
++- other class-bounded records that do not claim complete operation credit
++
++Those records must keep `credit_eligible=false` for complete P16/P17
++operation acceptance. They cannot close that gate.
+ 
+ ## 3. Scoring rules the schema cannot prove
+ 
+@@ -67,25 +86,50 @@
+    as holding. Record `open` or `blocked`.
+ 4. **Python-only mutation is not production mutation credit.**
+    Compilation failure, timeout, or in-memory Python-only edit earns none.
+-5. **Structural schema validity is not semantic acceptance**, not a
++5. **Missing production mutations or missing independently verified
++   unaffected controls block complete operation acceptance.**
++   If `denominators.mutations.compiled_production` is 0 **or**
++   `denominators.mutations.unaffected_controls` is 0, a P16/P17 operation
++   packet is incomplete or open for operational or source-bound credit.
++   This holds even when model proof and bounded source agreement are
++   present, and even when no separate mutation-sensitivity claim is made.
++6. **Structural schema validity is not semantic acceptance**, not a
+    certificate checker, and not a proof.
+-6. **This author freeze cannot set `credit_eligible=true`** for P15, P16,
++7. **This author freeze cannot set `credit_eligible=true`** for P15, P16,
+    or P17. Independent GPT-6 reviews the freeze. Later implementation
+    packets are scored after those implementations exist.
+-7. Historical accepted Arithmetic may be **cited** as `accepted_historical`
++8. Historical accepted Arithmetic may be **cited** as `accepted_historical`
+    model_proof evidence. Citing it here does not re-accept it and does not
+-   close P16 source obligations.
++   close P16 source obligations or complete operation acceptance.
++
++### Documentation control: omitted mutations stay uncredited
++
++Suppose a future token0 packet binds source/model/tools, a nonempty
++execution matrix, and a model theorem, but records
++`mutations.compiled_production = 0` or `mutations.unaffected_controls = 0`.
++That packet may report `model_proof` and `bounded_source_execution` as
++narrower classes. It remains incomplete for complete operational or
++source-bound operation credit. The existing examples
++`examples/token0-unexecuted-incomplete.packet.json` and
++`examples/illustrative-not-credited.packet.json` already keep
++`credit_eligible=false` with empty mutation denominators. This freeze
++does not run a mutation campaign.
+ 
+ ## 4. Denominators that must be printed
+ 
+-Each packet prints nonempty counts for every class it scores:
++Each packet prints nonempty counts for every class it scores.
++
++For **complete P16/P17 operational or source-bound operation credit**,
++zero on a required row blocks that credit. Narrower class reports still
++print the integers. They do not become complete operation acceptance
++when a complete-operation row is zero.
+ 
+ | Denominator | Blocked when |
+ | --- | --- |
+-| `partitions.declared` / `partitions.nonempty` | declared = 0 or nonempty = 0 while claiming bounded execution |
+-| `executions.actually_run` | 0 while claiming source/model agreement |
+-| `mutations.compiled_production` | 0 while claiming production mutation credit |
+-| `mutations.unaffected_controls` | 0 while claiming controls |
++| `partitions.declared` / `partitions.nonempty` | declared = 0 or nonempty = 0 while claiming bounded execution or complete operation credit |
++| `executions.actually_run` | 0 while claiming source/model agreement or complete operation credit |
++| `mutations.compiled_production` | 0 while claiming complete P16/P17 operational or source-bound operation credit. Missing production mutations leave that credit incomplete or open |
++| `mutations.unaffected_controls` | 0 while claiming complete P16/P17 operational or source-bound operation credit. Missing independently verified unaffected controls leave that credit incomplete or open |
+ | `theorems.named` | 0 while claiming model_proof |
+ | `independent_reviews` | 0 while claiming independent acceptance |
+ 
+--- r1/openspec/changes/reusable-verification-platform-program/contracts/kernel-operator-contract.md
++++ r2/openspec/changes/reusable-verification-platform-program/contracts/kernel-operator-contract.md
+@@ -270,7 +270,9 @@
+ 
+ | Surface | Returned type | State | Authority | Use for P16 token0 |
+ | --- | --- | --- | --- | --- |
+-| `Arithmetic.Operations.add/sub/mul`, `Rounding.mulDiv`, `Fees.*`, `Quantity.*` | `Except Failure (Word w)` or `FeeQuote` | none | none | Allowed. Arithmetic-only P16/P18 may omit a Typed wrapper |
++| `Arithmetic.Operations.add/sub/mul`, `Rounding.mulDiv`, `Fees.*` | `Except Failure (Word w)` or `FeeQuote` | none | none | Allowed. Arithmetic-only P16/P18 may omit a Typed wrapper |
++| `Quantity.toQuantity` | `Typed.Quantity asset` directly | none | none | Scale conversion into a typed quantity. Not an `Except` |
++| `Quantity.fromRat` | `Except Failure (Word w)` | none | none | Inverse conversion. Checked failure, not a direct quantity |
+ | `Arithmetic.Reference.observeExecution` | `((State × Store) × Except Refusal ExecutionResult)` | yes | yes | Pattern for a quote-derived Typed wrap. Not token0 |
+ | `Typed.execute` | `Except Refusal ExecutionResult` | yes | yes | Required only if token0 is used as kernel-platform evidence |
+ | `Composition.executeStep` / `run` | `Except Failure StepResult` / `Cursor` | yes, plus output history | yes | Required for sequential composition claims, not for pure token0 |

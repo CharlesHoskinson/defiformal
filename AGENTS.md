@@ -104,7 +104,9 @@ read `review/semantic-kernel/program-execution-20260908/PLAN-ACCEPTANCE.md`,
 including its two editorial interpretations. Native Grok4.6 authors; independent
 GPT-6 checks; no Foreman; publish accepted work only to semantic-kernel-pivot.
 P01 bounded compatible recovery is delivered at35a27c9, with metadata01490b5;
-full M4/P02 remains open. P15 minimum reusable contracts is the active next scope.
+full M4/P02 remains open. P15 minimum reusable contracts is accepted; see
+review/semantic-kernel/program-execution-20260908/P15-ACCEPTANCE.md.
+P16 exact token0 planning/oracle repair is the active next scope.
 Read CURRENT.json plus program-execution-20260908/STATE.json for live progress.
 Frozen planning checkboxes and original candidate hashes remain historical
 inputs, not instructions to redispatch accepted P01. Follow each remaining

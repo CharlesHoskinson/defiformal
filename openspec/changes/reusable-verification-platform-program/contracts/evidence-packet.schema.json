@@ -1,0 +1,497 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://defiformal.local/openspec/changes/reusable-verification-platform-program/contracts/evidence-packet.schema.json",
+  "title": "P15 minimum evidence packet",
+  "description": "Structural envelope for one selected operation. Schema validity is not semantic acceptance, not a certificate checker, and not a proof. Scoring rules live in evidence-packet-usage.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id",
+    "schema_version",
+    "packet_id",
+    "packet_status",
+    "credit_eligible",
+    "credit_eligible_reason",
+    "operation",
+    "identities",
+    "observation_relation",
+    "obligation_classes",
+    "theorem_evidence",
+    "executions",
+    "mutations",
+    "independent_verdict",
+    "remaining_obligations",
+    "denominators"
+  ],
+  "properties": {
+    "schema_id": {
+      "type": "string",
+      "const": "reusable-verification-platform.p15.evidence-packet"
+    },
+    "schema_version": {
+      "type": "string",
+      "const": "0.1.0"
+    },
+    "packet_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "packet_status": {
+      "type": "string",
+      "enum": [
+        "illustrative",
+        "blocked",
+        "incomplete",
+        "ready_for_independent_review",
+        "independently_reviewed"
+      ]
+    },
+    "credit_eligible": {
+      "type": "boolean",
+      "description": "Must be false for illustrative, blocked, or incomplete packets, empty denominators, unexecuted tools, or author self-assertion."
+    },
+    "credit_eligible_reason": {
+      "type": "string",
+      "minLength": 1
+    },
+    "operation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "name"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "kind": {
+          "type": "string",
+          "enum": ["pure_function", "stateful", "typed_wrapped"]
+        },
+        "name": { "type": "string", "minLength": 1 },
+        "pin_status": {
+          "type": "string",
+          "enum": [
+            "established",
+            "captured_not_executed",
+            "not_established",
+            "blocked_missing_source"
+          ]
+        }
+      }
+    },
+    "identities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "model", "tools"],
+      "properties": {
+        "source": { "$ref": "#/$defs/artifactIdentity" },
+        "model": { "$ref": "#/$defs/artifactIdentity" },
+        "tools": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/toolIdentity" }
+        }
+      }
+    },
+    "observation_relation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "inputs", "outputs", "refusals", "includes_ledger_history"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "kind": {
+          "type": "string",
+          "enum": ["pure_function", "stateful", "typed_wrapped"]
+        },
+        "inputs": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "pre_state": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "outputs": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "post_state": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "refusals": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "includes_ledger_history": { "type": "boolean" },
+        "notes": { "type": "string" }
+      }
+    },
+    "obligation_classes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["class", "status", "claim_boundary"],
+        "properties": {
+          "class": {
+            "type": "string",
+            "enum": [
+              "model_proof",
+              "bounded_source_execution",
+              "representation_correspondence",
+              "source_refinement",
+              "authenticity_environment_assumption"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "open",
+              "blocked",
+              "recorded_historical",
+              "ready_for_independent_review",
+              "independently_reviewed"
+            ]
+          },
+          "claim_boundary": { "type": "string", "minLength": 1 },
+          "evidence_refs": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    },
+    "theorem_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["theorems", "premises", "axioms", "inventory_ref"],
+      "properties": {
+        "theorems": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "status"],
+            "properties": {
+              "name": { "type": "string", "minLength": 1 },
+              "module": { "type": "string" },
+              "path": { "type": "string" },
+              "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+              "status": {
+                "type": "string",
+                "enum": ["named", "not_yet_proved", "historical_pointer"]
+              }
+            }
+          }
+        },
+        "premises": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "axioms": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "inventory_ref": {
+          "type": ["string", "null"]
+        }
+      }
+    },
+    "executions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["partitions", "source_runs", "model_runs"],
+      "properties": {
+        "partitions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/partition" }
+        },
+        "source_runs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/runRecord" }
+        },
+        "model_runs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/runRecord" }
+        }
+      }
+    },
+    "mutations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["production", "unaffected_controls", "python_only"],
+      "properties": {
+        "production": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/mutationRecord" }
+        },
+        "unaffected_controls": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/mutationRecord" }
+        },
+        "python_only": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/mutationRecord" }
+        }
+      }
+    },
+    "independent_verdict": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reviewer_role",
+        "requested_model",
+        "reported_model",
+        "verdict",
+        "input_sha256",
+        "review_path"
+      ],
+      "properties": {
+        "reviewer_role": { "type": "string", "minLength": 1 },
+        "requested_model": { "type": ["string", "null"] },
+        "reported_model": { "type": ["string", "null"] },
+        "verdict": {
+          "type": "string",
+          "enum": [
+            "pending",
+            "unavailable",
+            "REJECT",
+            "CHANGES_REQUIRED",
+            "ACCEPT_WITH_LIMITATIONS",
+            "ACCEPT"
+          ]
+        },
+        "input_sha256": { "type": ["string", "null"] },
+        "review_path": { "type": ["string", "null"] },
+        "notes": { "type": "string" }
+      }
+    },
+    "remaining_obligations": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "denominators": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["partitions", "executions", "mutations", "theorems", "independent_reviews"],
+      "properties": {
+        "partitions": { "$ref": "#/$defs/countTriple" },
+        "executions": { "$ref": "#/$defs/runCounts" },
+        "mutations": { "$ref": "#/$defs/mutationCounts" },
+        "theorems": { "$ref": "#/$defs/theoremCounts" },
+        "independent_reviews": { "$ref": "#/$defs/reviewCounts" }
+      }
+    },
+    "notes": { "type": "string" }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "packet_status": {
+            "enum": ["illustrative", "blocked", "incomplete"]
+          }
+        },
+        "required": ["packet_status"]
+      },
+      "then": {
+        "properties": { "credit_eligible": { "const": false } }
+      }
+    },
+    {
+      "if": {
+        "properties": { "credit_eligible": { "const": true } },
+        "required": ["credit_eligible"]
+      },
+      "then": {
+        "properties": {
+          "packet_status": { "enum": ["independently_reviewed"] },
+          "independent_verdict": {
+            "properties": {
+              "verdict": {
+                "enum": ["ACCEPT", "ACCEPT_WITH_LIMITATIONS"]
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "artifactIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "kind"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "established",
+            "captured_not_executed",
+            "accepted_historical",
+            "not_established",
+            "blocked_missing_source",
+            "diagnostic_only"
+          ]
+        },
+        "kind": { "type": "string", "minLength": 1 },
+        "path": { "type": ["string", "null"] },
+        "revision": { "type": ["string", "null"] },
+        "sha256": {
+          "anyOf": [
+            { "type": "null" },
+            { "$ref": "#/$defs/sha256" }
+          ]
+        },
+        "bytes": { "type": ["integer", "null"], "minimum": 0 },
+        "compiler": { "type": ["string", "null"] },
+        "compiler_settings": { "type": ["string", "null"] },
+        "notes": { "type": "string" }
+      }
+    },
+    "toolIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "status"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "status": {
+          "type": "string",
+          "enum": ["recorded", "not_executed", "not_established"]
+        },
+        "path": { "type": ["string", "null"] },
+        "version": { "type": ["string", "null"] },
+        "sha256": {
+          "anyOf": [
+            { "type": "null" },
+            { "$ref": "#/$defs/sha256" }
+          ]
+        },
+        "argv": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "partition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "description", "nonempty", "count"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "nonempty": { "type": "boolean" },
+        "count": { "type": "integer", "minimum": 0 },
+        "cases": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "nonempty": { "const": true } }, "required": ["nonempty"] },
+          "then": { "properties": { "count": { "minimum": 1 } } }
+        },
+        {
+          "if": { "properties": { "nonempty": { "const": false } }, "required": ["nonempty"] },
+          "then": { "properties": { "count": { "const": 0 } } }
+        }
+      ]
+    },
+    "runRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "status"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "status": {
+          "type": "string",
+          "enum": ["not_run", "blocked", "executed"]
+        },
+        "tool": { "type": ["string", "null"] },
+        "exit_code": { "type": ["integer", "null"] },
+        "log_sha256": {
+          "anyOf": [
+            { "type": "null" },
+            { "$ref": "#/$defs/sha256" }
+          ]
+        },
+        "notes": { "type": "string" }
+      }
+    },
+    "mutationRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "status"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "status": {
+          "type": "string",
+          "enum": [
+            "not_run",
+            "blocked",
+            "compiled_production",
+            "python_only_no_credit",
+            "historical_pointer"
+          ]
+        },
+        "designated_observation": { "type": ["string", "null"] },
+        "unaffected_sibling": { "type": ["string", "null"] },
+        "notes": { "type": "string" }
+      }
+    },
+    "countTriple": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["declared", "nonempty", "empty"],
+      "properties": {
+        "declared": { "type": "integer", "minimum": 0 },
+        "nonempty": { "type": "integer", "minimum": 0 },
+        "empty": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "runCounts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["planned", "actually_run", "unexecuted"],
+      "properties": {
+        "planned": { "type": "integer", "minimum": 0 },
+        "actually_run": { "type": "integer", "minimum": 0 },
+        "unexecuted": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "mutationCounts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["planned", "compiled_production", "python_only", "unaffected_controls", "unexecuted"],
+      "properties": {
+        "planned": { "type": "integer", "minimum": 0 },
+        "compiled_production": { "type": "integer", "minimum": 0 },
+        "python_only": { "type": "integer", "minimum": 0 },
+        "unaffected_controls": { "type": "integer", "minimum": 0 },
+        "unexecuted": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "theoremCounts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["named", "not_yet_proved"],
+      "properties": {
+        "named": { "type": "integer", "minimum": 0 },
+        "not_yet_proved": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "reviewCounts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required", "completed"],
+      "properties": {
+        "required": { "type": "integer", "minimum": 0 },
+        "completed": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}
