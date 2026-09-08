@@ -1,0 +1,53 @@
+{
+  "status": "PROPOSED_NOT_EXECUTED",
+  "success": {
+    "kind": "Except.ok",
+    "compare": "every numeric field as a decimal string; booleans exact; records fieldwise",
+    "no_fabricated_poststate": true,
+    "independent_expected": "fixtures.json literals from cl_oracle.py"
+  },
+  "refusal": {
+    "kind": "Except.error",
+    "named_constructors": [
+      "divisionByZero",
+      "quotientOverflow",
+      "tickOutOfBounds",
+      "ratioOutOfBounds",
+      "priceZero",
+      "liquidityZero",
+      "uint256Overflow",
+      "uint160Overflow",
+      "addOverflow",
+      "subUnderflow",
+      "liquidityUnderflow",
+      "liquidityOverflow",
+      "intOverflow",
+      "invalidFee",
+      "invalidSpacing",
+      "zeroDenominatorUnsafe",
+      "bitMathZero"
+    ],
+    "preserves_inputs": true,
+    "not_an_invented_post_world": true,
+    "source_revert_strings_are_labels_only": {
+      "T": "tickOutOfBounds",
+      "R": "ratioOutOfBounds",
+      "LS": "liquidityUnderflow",
+      "LA": "liquidityOverflow",
+      "AS": "out of scope pool entry",
+      "LOK": "out of scope pool lock",
+      "SPL": "out of scope pool price limit",
+      "IIA": "out of scope callback payment"
+    },
+    "not_evm_revert_identity": true
+  },
+  "precedence": {
+    "mulDiv": ["divisionByZero", "quotientOverflow"],
+    "getSqrtRatioAtTick": ["intOverflow if not int24", "tickOutOfBounds"],
+    "getTickAtSqrtRatio": ["ratioOutOfBounds"],
+    "getNextSqrtPriceFromInput": ["priceZero", "liquidityZero", "uint256Overflow/addOverflow/uint160Overflow as encountered"],
+    "computeSwapStep": ["invalidFee", "intOverflow on int256 min", "then nested SqrtPriceMath/FullMath errors"],
+    "addDelta": ["liquidityUnderflow XOR liquidityOverflow"],
+    "compress": ["invalidSpacing"]
+  }
+}

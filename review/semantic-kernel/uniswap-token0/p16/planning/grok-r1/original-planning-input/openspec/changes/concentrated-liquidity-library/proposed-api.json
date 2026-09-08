@@ -1,0 +1,136 @@
+{
+  "status": "PROPOSED_DESIGN_CONTRACT_NOT_COMPILED",
+  "namespace": "DefiKernel.ConcentratedLiquidity",
+  "reuses": {
+    "DefiKernel.Arithmetic.Word": {
+      "path": "lean/DefiKernel/Arithmetic/Word.lean",
+      "sha256": "5c0f467384bc3fe320ab363b7124f1c94b9ea688293c61cac7c5e08af8cb879b",
+      "role": "unsigned words"
+    },
+    "DefiKernel.Arithmetic.Rounding.mulDiv": {
+      "path": "lean/DefiKernel/Arithmetic/Rounding.lean",
+      "sha256": "0bd0c65af77bc809f4ff3b8cb5d98ab7eca5be0e0e7216e9e88263e4e02649f0",
+      "role": "unbounded natural product then final-word check; FullMath documented spec at w=256"
+    }
+  },
+  "does_not_invent": ["Claims exports", "M4 tree exports", "Typed pool swap transition", "Composition executor changes"],
+  "constants": {
+    "Q96": "79228162514264337593543950336",
+    "FEE_DEN": "1000000",
+    "MIN_TICK": "-887272",
+    "MAX_TICK": "887272",
+    "MIN_SQRT_RATIO": "4295128739",
+    "MAX_SQRT_RATIO": "1461446703485210103287273052203988822378723970342"
+  },
+  "types": {
+    "Failure": "inductive named refusals in observation-contracts.json",
+    "Word w": "existing unsigned",
+    "Signed w": "new; w≥1; -2^(w-1) ≤ value < 2^(w-1)",
+    "U24/U128/U160/U256": "Word 24/128/160/256",
+    "I24/I128/I256": "Signed 24/128/256",
+    "SwapStep": {
+      "sqrtRatioNextX96": "Word 160",
+      "amountIn": "Word 256",
+      "amountOut": "Word 256",
+      "feeAmount": "Word 256"
+    }
+  },
+  "functions": [
+    {
+      "name": "FullMath.mulDiv",
+      "args": ["a: Word 256", "b: Word 256", "d: Word 256"],
+      "returns": "Except Failure (Word 256)",
+      "rounding": "floor of exact product",
+      "failures": ["divisionByZero", "quotientOverflow"]
+    },
+    {
+      "name": "FullMath.mulDivRoundingUp",
+      "args": ["a: Word 256", "b: Word 256", "d: Word 256"],
+      "returns": "Except Failure (Word 256)",
+      "rounding": "ceil of exact product",
+      "failures": ["divisionByZero", "quotientOverflow"]
+    },
+    {
+      "name": "TickMath.getSqrtRatioAtTick",
+      "args": ["tick: Signed 24"],
+      "returns": "Except Failure (Word 160)",
+      "failures": ["tickOutOfBounds"]
+    },
+    {
+      "name": "TickMath.getTickAtSqrtRatio",
+      "args": ["sqrtPriceX96: Word 160"],
+      "returns": "Except Failure (Signed 24)",
+      "failures": ["ratioOutOfBounds"],
+      "inverse_domain": "MIN_SQRT_RATIO inclusive, MAX_SQRT_RATIO exclusive"
+    },
+    {
+      "name": "SqrtPriceMath.getAmount0Delta",
+      "args": ["sqrtA: Word 160", "sqrtB: Word 160", "liquidity: Word 128", "roundUp: Bool"],
+      "returns": "Except Failure (Word 256)"
+    },
+    {
+      "name": "SqrtPriceMath.getAmount1Delta",
+      "args": ["sqrtA: Word 160", "sqrtB: Word 160", "liquidity: Word 128", "roundUp: Bool"],
+      "returns": "Except Failure (Word 256)"
+    },
+    {
+      "name": "SqrtPriceMath.getNextSqrtPriceFromInput",
+      "args": ["sqrtPX96: Word 160", "liquidity: Word 128", "amountIn: Word 256", "zeroForOne: Bool"],
+      "returns": "Except Failure (Word 160)",
+      "failures": ["priceZero", "liquidityZero"]
+    },
+    {
+      "name": "SqrtPriceMath.getNextSqrtPriceFromOutput",
+      "args": ["sqrtPX96: Word 160", "liquidity: Word 128", "amountOut: Word 256", "zeroForOne: Bool"],
+      "returns": "Except Failure (Word 160)"
+    },
+    {
+      "name": "SwapMath.computeSwapStep",
+      "args": ["sqrtRatioCurrentX96: Word 160", "sqrtRatioTargetX96: Word 160", "liquidity: Word 128", "amountRemaining: Signed 256", "feePips: Nat"],
+      "returns": "Except Failure SwapStep",
+      "direction": "zeroForOne iff current ≥ target",
+      "exactIn": "amountRemaining ≥ 0",
+      "fee": "remainder-as-fee if exactIn and next ≠ target else mulDivRoundingUp(amountIn, feePips, 1e6-feePips)",
+      "failures": ["invalidFee if feePips ≥ 1e6", "intOverflow if amountRemaining = -2^255"]
+    },
+    {
+      "name": "TickBitmap.compress",
+      "args": ["tick: Int", "spacing: Int"],
+      "returns": "Except Failure Int",
+      "semantics": "floor toward -∞"
+    },
+    {
+      "name": "TickBitmap.position",
+      "args": ["compressed: Int"],
+      "returns": "Int × Nat",
+      "semantics": "wordPos = compressed >> 8 arithmetic; bitPos Euclidean 0..255"
+    },
+    {
+      "name": "TickBitmap.nextInitializedTickWithinOneWord",
+      "args": ["words: Int → Word 256", "tick: Int", "spacing: Int", "lte: Bool"],
+      "returns": "Except Failure (Int × Bool)",
+      "not": "full pool traversal"
+    },
+    {
+      "name": "LiquidityMath.addDelta",
+      "args": ["x: Word 128", "y: Signed 128"],
+      "returns": "Except Failure (Word 128)"
+    },
+    {
+      "name": "FactoryContext.feeSpacingValid",
+      "args": ["fee: Nat", "spacing: Int"],
+      "returns": "Bool",
+      "rule": "fee < 1000000 ∧ 0 < spacing ∧ spacing < 16384"
+    },
+    {
+      "name": "SafeCast.toInt256",
+      "args": ["y: Word 256"],
+      "returns": "Except Failure (Signed 256)",
+      "failures": ["intOverflow if y ≥ 2^255"]
+    }
+  ],
+  "termination": {
+    "in_scope": "all listed functions are non-recursive except TickMath bit loops over 19 fixed flags and inverse msb/log with fixed iteration counts from source",
+    "out_of_scope": "UniswapV3Pool.swap while remaining ≠ 0 ∧ price ≠ limit; no termination proof claimed for that loop"
+  }
+}

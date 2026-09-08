@@ -1,0 +1,142 @@
+{
+  "status": "PROPOSED_RUNTIME_TARGETS_NOT_RUN",
+  "python_only_no_credit": true,
+  "compiled_production": false,
+  "compile_failure_is": "BLOCKED_not_detection",
+  "source_execution_failure_is_not_tool_setup_failure": true,
+  "each_mutant_has_one_solidity_edit": true,
+  "token0_production_mutants": [
+    {
+      "id": "T0-ID-SKIP",
+      "class": "identity",
+      "language": "Solidity",
+      "file": "contracts/libraries/SqrtPriceMath.sol",
+      "edit_site": "getNextSqrtPriceFromAmount0RoundingUp line 35",
+      "actual_source_change": "Delete the single statement `if (amount == 0) return sqrtPX96;`. Keep the subsequent `(product = amount * sqrtPX96) / amount` test unchanged.",
+      "not_the_same_mutation": "Deleting an identity branch from a Python/Lean helper that treats amount==0 as product-fit (`product_fits_u256` returns True) is not this mutant. The Solidity edit reaches explicit high-level division by amount at amount 0.",
+      "designated_false": "P16-I-ADD",
+      "unaffected_positive": "P16-ADD",
+      "required_false": ["P16-I-ADD"],
+      "sibling_check": "P16-ADD",
+      "original_public": {"ok": "79228162514264337593543950336"},
+      "mutant_public": {
+        "status": "exceptional_failure",
+        "mechanism": "high-level product/amount division with amount==0",
+        "evm_classification": "record at compiled implementation; not claimed now",
+        "not_compiled_evidence": true
+      },
+      "source_status": "PLANNED_NOT_COMPILED"
+    },
+    {
+      "id": "T0-WRAP-SKIP",
+      "class": "overflow",
+      "language": "Solidity",
+      "file": "contracts/libraries/SqrtPriceMath.sol",
+      "edit_site": "getNextSqrtPriceFromAmount0RoundingUp line 42",
+      "actual_source_change": "Keep native wrapped `product = amount * sqrtPX96` and `denominator = numerator1 + product`. Replace `if (denominator >= numerator1)` with `if (true)`.",
+      "designated_false": "P16-WRAP",
+      "unaffected_positive": "P16-ADD",
+      "required_false": ["P16-WRAP"],
+      "sibling_check": "P16-ADD",
+      "original_public": {"ok": "340269576638287423012608907232989748562"},
+      "mutant_public": {
+        "ok": "1430089493431239948923811608424801982436782118539",
+        "before_bare_uint160": "26959946667150639797558606217781773540764640863681657483196324910731",
+        "note": "Source add-path bare uint160 truncates the FullMath word. Diagnostic planning value, not compiled credit."
+      },
+      "ordinary_control": {"ok": "39614081257132168796771975168"},
+      "source_status": "PLANNED_NOT_COMPILED"
+    },
+    {
+      "id": "T0-PROD-SKIP",
+      "class": "overflow",
+      "language": "Solidity",
+      "file": "contracts/libraries/SqrtPriceMath.sol",
+      "edit_site": "getNextSqrtPriceFromAmount0RoundingUp line 40",
+      "actual_source_change": "Retain the assignment `product = amount * sqrtPX96` (native wrap). Replace the product-fit condition `(product = amount * sqrtPX96) / amount == sqrtPX96` with `true` after that assignment, e.g. `product = amount * sqrtPX96; if (true)`.",
+      "designated_false": "P16-PROD",
+      "unaffected_positive": "P16-ADD",
+      "required_false": ["P16-PROD"],
+      "sibling_check": "P16-ADD",
+      "original_public": {"ok": "4294967296"},
+      "mutant_public": {"ok": "79228162514264337593543950336"},
+      "ordinary_control": {"ok": "39614081257132168796771975168"},
+      "source_status": "PLANNED_NOT_COMPILED"
+    },
+    {
+      "id": "T0-REQ-SKIP",
+      "class": "boundary",
+      "language": "Solidity",
+      "file": "contracts/libraries/SqrtPriceMath.sol",
+      "edit_site": "getNextSqrtPriceFromAmount0RoundingUp line 52",
+      "actual_source_change": "Keep the product-fit conjunct. Delete only `&& numerator1 > product` from `require((product = amount * sqrtPX96) / amount == sqrtPX96 && numerator1 > product);`.",
+      "designated_false": "P16-REQ-STRICT",
+      "equality_baseline_control": "P16-REQ",
+      "unaffected_positive": "P16-ADD",
+      "required_false": ["P16-REQ-STRICT"],
+      "sibling_check": "P16-ADD",
+      "note": "Equality (2^96,1,1,false) still publicly refuses after the edit because wrapped subtraction yields denominator 0 and FullMath require(denominator>0) fails. It is a required baseline/control, not the designated false witness.",
+      "original_public_strict": {"error": "require", "inputs": "P16-REQ-STRICT"},
+      "mutant_public_strict": {"ok": "1", "wrapped_denominator": "115792089237316195423570985008687907853269984665640564039457584007913129639936"},
+      "source_status": "PLANNED_NOT_COMPILED"
+    },
+    {
+      "id": "T0-FLOOR",
+      "class": "rounding",
+      "language": "Solidity",
+      "file": "contracts/libraries/SqrtPriceMath.sol",
+      "edit_site": "getNextSqrtPriceFromAmount0RoundingUp line 44",
+      "actual_source_change": "Replace `FullMath.mulDivRoundingUp` with `FullMath.mulDiv` on the add-path primary return.",
+      "designated_false": "P16-ADD-ROUND",
+      "unaffected_positive": "P16-ADD",
+      "required_false": ["P16-ADD-ROUND"],
+      "sibling_check": "P16-ADD",
+      "original_public": {"ok": "26409387504754779197847983446"},
+      "mutant_public": {"ok": "26409387504754779197847983445"},
+      "ordinary_control": {"ok": "39614081257132168796771975168"},
+      "source_status": "PLANNED_NOT_COMPILED"
+    },
+    {
+      "id": "T0-CHECKED-ADD",
+      "class": "overflow",
+      "language": "Solidity",
+      "file": "contracts/libraries/SqrtPriceMath.sol",
+      "edit_site": "getNextSqrtPriceFromAmount0RoundingUp line 41",
+      "actual_source_change": "Replace `uint256 denominator = numerator1 + product;` with `uint256 denominator = numerator1.add(product);` (LowGasSafeMath.add already in scope via `using LowGasSafeMath for uint256`).",
+      "not_the_production_edit": "DefiKernel.Arithmetic.Operations.add and the model label addOverflow are separate model descriptions, not this source edit.",
+      "designated_false": "P16-WRAP",
+      "unaffected_positive": "P16-ADD",
+      "required_false": ["P16-WRAP"],
+      "sibling_check": "P16-ADD",
+      "original_public": {"ok": "340269576638287423012608907232989748562"},
+      "mutant_public": {
+        "status": "source_revert",
+        "mechanism": "LowGasSafeMath.add require((z=x+y)>=x) on the wrapping sum",
+        "model_label_not_payload": "addOverflow",
+        "actual_evm_observation": "bind at compiled execution through the observation adapter; not claimed now"
+      },
+      "source_status": "PLANNED_NOT_COMPILED"
+    }
+  ],
+  "m09_control_plan_repair": {
+    "compiled_execution": "P21_not_this_increment",
+    "original_mutant": "M09",
+    "target": "future DefiKernel.ConcentratedLiquidity.SwapMath Lean direction predicate",
+    "actual_source_change": "Flip zeroForOne from current >= target to current < target",
+    "model_preguards": ["invalidFee if feePips >= 1e6", "intOverflow if amountRemaining = int256 min"],
+    "original_designated_false": "F31",
+    "original_unaffected_positive": "F28",
+    "diagnosed": "F28 amountIn 2→1 under direction flip",
+    "repaired_unaffected_positive": "F32",
+    "repaired_unaffected_scope": "supported model-side control for the planned Lean SwapMath with those preguards; captured Solidity computeSwapStep has no corresponding pre-predicate invalidFee guard, so F32 is not automatically a pinned Solidity control",
+    "repaired_designated_false": "F31",
+    "additional_model_control": "F33",
+    "failed_original_plan_preserved": "review/semantic-kernel/uniswap-token0/p16/planning/grok-r1/original-planning-input/openspec/changes/concentrated-liquidity-library/planned-mutations.json"
+  },
+  "not_mutants_here": [
+    "M01–M12 compiled campaign including compiled M09 SwapMath",
+    "Python-only oracle edits as production credit",
+    "Deleting a Lean/Python amount==0 identity as if it were T0-ID-SKIP",
+    "Pool.swap, Tick.cross, callback"
+  ]
+}
