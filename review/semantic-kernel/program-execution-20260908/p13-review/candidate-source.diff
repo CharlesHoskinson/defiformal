@@ -1,0 +1,55 @@
+diff --git a/formal/v3/negtest-reporting.sh b/formal/v3/negtest-reporting.sh
+index 4edb928..4a822e9 100755
+--- a/formal/v3/negtest-reporting.sh
++++ b/formal/v3/negtest-reporting.sh
+@@ -345,17 +345,10 @@ fi
+ # Reverting each of these left only the dirty-tree assertion red, i.e. the
+ # headline fix of ab5f334 was locked by nothing. Each probe drives the REAL
+ # function lifted from source.
+-
+-# (i) want()'s ok-path must require rc=0
+-cat > "$FX/w_rc.sh" <<SNIP
+-declare -A HOUT HRC
+-HOUT[pairs]="pairs: 1830"; HRC[pairs]=7
+-fail=0; blkd=0
+-. "$FX/attrib/fns.sh"
+-want "died but printed the needle" 'pairs: 1830' pairs
+-SNIP
+-wout=$(bash "$FX/w_rc.sh" 2>&1)
+-want_not "want(): a dead harness is not ok on a stray needle" "$wout" "  ok   died but printed"
++#
++# (i) want()'s rc=0 lock lives after attrib/fns.sh is lifted, not here.
++# Placing it here sourced a missing file, `want` was undefined, and want_not
++# still CAUGHT because the ok needle was absent (measured 2026-09-08 closeout).
+ 
+ # (ii) chk()'s BLOCKED branch must require a non-zero exit
+ cat > "$FX/c_blk.sh" <<SNIP
+@@ -543,6 +536,28 @@ if grep -qE '^(echo|one |want "|===== )' "$FX/attrib/fns.sh"; then
+ else
+   caught "attribution probe: the lift is bounded to the function body"
+ fi
++
++# (i) want()'s ok-path must require rc=0. Must run AFTER attrib/fns.sh exists.
++# A 2026-09-08 closeout reproduction placed this probe before the lift; bash
++# reported `want: command not found` and want_not still CAUGHT because the ok
++# needle was absent. Require FAIL from the real lifted want(), not silence.
++if [ ! -s "$FX/attrib/fns.sh" ]; then
++  missed "want() rc=0 lock: attrib/fns.sh missing; want() was not invoked"
++else
++  cat > "$FX/w_rc.sh" <<SNIP
++declare -A HOUT HRC
++HOUT[pairs]="pairs: 1830"; HRC[pairs]=7
++fail=0; blkd=0
++. "$FX/attrib/fns.sh"
++want "died but printed the needle" 'pairs: 1830' pairs
++SNIP
++  wout=$(bash "$FX/w_rc.sh" 2>&1)
++  want_not "want() rc=0 lock did not collapse to a missing lift" "$wout" "No such file or directory"
++  want_not "want() rc=0 lock did not collapse to command-not-found" "$wout" "command not found"
++  want_not "want(): a dead harness is not ok on a stray needle" "$wout" "  ok   died but printed"
++  want_has "want(): a dead harness with a stray needle is FAIL" "$wout" "  FAIL died but printed"
++fi
++
+ # F3: the guards above have no positive control -- nothing proved they FIRE on a
+ # defeating reformat, so the guard mechanism could be reverted with every
+ # assertion staying green. Construct the reformat: a one-line definition has no
