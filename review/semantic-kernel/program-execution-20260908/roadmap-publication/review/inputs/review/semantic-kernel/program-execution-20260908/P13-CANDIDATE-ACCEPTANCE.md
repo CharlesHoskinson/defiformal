@@ -1,0 +1,13 @@
+# P13 reporting regression candidate accepted
+
+The reporting regression test previously sourced its lifted `want()` function before that file existed. The resulting setup failure could satisfy the negative assertion without testing the zero-exit requirement. Native Grok's accepted patch moves the probe after extraction, rejects setup errors, and requires the actual failure observation. Production `want()` already required a zero exit; this change repairs its test.
+
+Root adopts independent GPT-6's [ACCEPT_WITH_LIMITATIONS](p13-review/REVIEW.md) for task14.1 and integrates the exact source for task14.2 delivery. Candidate archive SHA-256 is `6e2a7315945080c021c84b19a25a996991d77bfa547b3e48ef1a2901a6c45f07`; the sole source change, `formal/v3/negtest-reporting.sh`, is SHA-256 `36c7c7b03fdb9f68d51f277ee6daa621f9a6d599b573babe7ccc1037be4e98b9`. Native telemetry identifies `grok-4.6-build`; independent reviewer is GPT-6/gpt-6-astra in the stock harness. Original model and attempt records are preserved. No Foreman was used.
+
+The fresh private harness returned210 caught,0 missed,exit0. Eight targeted outcomes passed, covering exit0/1/3 and the exact repaired assertions: intact4/0,exit0; removed-zero-exit-guard mutant2/2,exit1. These are harness assertions and targeted lifted-source controls, not Lean proofs or210 semantic mutants. Both original failed206/1 and209/1 runs remain failures. Root checked all452 current reporting inputs against the reviewed candidate after copying the single patch; they match exactly. A second full run in the dirty primary is unnecessary and was not performed.
+
+[The accepted review manifest](p13-review/accepted-evidence-manifest.json), SHA-256 `55c252e71ca1cf516846c798ef21aed8398345861b84b62c01fa58bfdaeb9892`, binds69 review artifacts and6 historical archive/receipt/terminal paths. [Historical path translations](p13-historical-path-translations.json) retain each external input at identical bytes in this repository. [Integration](p13-integration.json) binds the source and dependency check. Sixteen generated files were restored during review, and candidate/primary hashes remained unchanged until this authorized integration.
+
+Tasks14.3/R43 (malformed diagnostics, standalone schema and package inventory) and14.4/R44 (current-module exclusion, broader audit-root and empty theorem-scope fixtures) remain mandatory and open. Whole P13 and the program remain open. Historical checked planning tasks do not imply these outcomes are delivered. Existing reporting/source-text/citation limits remain in force.
+
+Publication is restricted to `semantic-kernel-pivot`. The subsequent p13-delivery.json records the source/evidence commit and remote readback.
