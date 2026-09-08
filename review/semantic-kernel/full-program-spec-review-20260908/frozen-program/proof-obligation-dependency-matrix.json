@@ -1,0 +1,171 @@
+{
+  "schema": "proof-obligation-dependency-matrix/v1",
+  "note": "Three observation classes: ordinary success, successful exceptional/control, and actual executor refusal from a real source guard. Source-independent negatives are a fourth, mathematical category. For unpinned families, source-entry selects the actual guard from the later pin and must not invent a current source. These are planned expectations, not fresh EVM or Lean execution.",
+  "families": [
+    {
+      "sprint": "P16",
+      "proposed_module": "lean/DefiKernel/ConcentratedLiquidity/",
+      "pin_status": "established_planning_input",
+      "pin": "Uniswap v3-core e3589b192d0be27e100cd0daaf6c97204fdb1899",
+      "source": "review/semantic-kernel/program-loop-20260908/concentrated-liquidity-source-readiness-gpt6-evidence/upstream/contracts/libraries/SqrtPriceMath.sol lines 28-56",
+      "helper": "getNextSqrtPriceFromAmount0RoundingUp",
+      "no_fee_parameter": true,
+      "conditional_property": "Directed rounding and uint256 word bounds for token0 next-price, stating the branch-specific 0.7.6 fallback equation, including the wrapped-sum overflow fallback when the product fits and the denominator sum overflows.",
+      "success_class": "Ordinary add/remove next-price, including planned `(2^96,1,1,true)` returns `2^95`.",
+      "exceptional_success_class": "Zero-amount identity: planned `(2^96,1,0,add=true or false)` returns `2^96`.",
+      "refusal_class": "Removal-denominator require: planned `(2^96,1,1,false)` fails because numerator1 and product both equal `2^96`, so `numerator1 > product` is false.",
+      "characteristic_mutation": "Disable wrapped-sum fallback or flip add/remove direction (repaired M09/F28 control).",
+      "source_independent_negative": "Constructed inputs where unbounded addition disagrees with wrapped-sum fallback.",
+      "required_branch_cannot_exclude": "denominator-sum overflow",
+      "dependencies": ["P15"],
+      "kernel_integration": "Optional Typed operation wrapper for arithmetic-only P18. Required before P17 may claim cross-case kernel/platform reuse."
+    },
+    {
+      "sprint": "P17",
+      "proposed_module": "lean/DefiKernel/Vault/",
+      "pin_status": "not_established",
+      "pin": null,
+      "conditional_property": "Vault share/asset conversion bounds and authorized supply changes under declared rounding, with transfer refusal preserving pre-state.",
+      "success_class": "Ordinary deposit or withdrawal converting assets and shares within the declared rounding bound.",
+      "exceptional_success_class": "Selected from the later pin at source-entry; not invented now.",
+      "refusal_class": "Selected from the later pin's actual transfer/authorization guard at source-entry; not invented now.",
+      "characteristic_mutation": "Flip rounding direction or skip the transfer check.",
+      "source_independent_negative": "Share mint without a matching asset credit, independent of any later pin.",
+      "entry_freeze": "Observation classes frozen against a later pin; actual guard selected from that pin.",
+      "dependencies": ["P16"],
+      "arithmetic_only_reuse": "May be published without the token0 kernel bridge; does not close the stronger platform resource gate.",
+      "platform_reuse_requires": "Token0 library-to-kernel bridge plus both case adapters checked against the same named executor result. A vault-only theorem does not count. No fabricated financial composition."
+    },
+    {
+      "sprint": "P21",
+      "proposed_module": "lean/DefiKernel/ConcentratedLiquidity/",
+      "pin_status": "extends_P16_pin",
+      "conditional_property": "Tick-crossing liquidity and amount/fee accounting across declared multi-word traversal.",
+      "success_class": "Traversal that crosses at least two initialized ticks with independently expected amounts and fees.",
+      "exceptional_success_class": "Exact-output cap in SwapMath.sol lines 89-92 is bounded success, not refusal.",
+      "refusal_class": "Pinned UniswapV3Pool.swap SPL guard, lines 603-613.",
+      "characteristic_mutation": "Skip a tick cross or drop fee remainder.",
+      "source_independent_negative": "Liquidity delta applied without a corresponding tick cross.",
+      "cannot_exclude_to_close": ["R22", "P21", "whole_program"],
+      "dependencies": ["P16"],
+      "resource_gate": "P17 platform reuse, not arithmetic-only reuse"
+    },
+    {
+      "sprint": "P22",
+      "proposed_module": "lean/DefiKernel/Curve/",
+      "pin_status": "not_established",
+      "conditional_property": "Iteration bounds and honest residual/nonconvergence: if the bound is hit without the invariant tolerance, the result is the specified refusal, not a fabricated convergent output.",
+      "success_class": "Convergent iteration within bound matching the later pin.",
+      "exceptional_success_class": "If the later pin treats bound-exhaustion as a residual rather than a revert, that residual is exceptional success. Classify at source-entry; do not invent now.",
+      "refusal_class": "Only if the later pin actually reverts or requires on bound-exhaustion. Selected at source-entry; not invented now.",
+      "characteristic_mutation": "Force a convergent output after bound exhaustion.",
+      "source_independent_negative": "Loop that reports success after exceeding a declared iteration bound.",
+      "entry_freeze": true,
+      "resource_gate": "P17"
+    },
+    {
+      "sprint": "P23",
+      "proposed_module": "lean/DefiKernel/Redemption/",
+      "pin_status": "not_established",
+      "conditional_property": "Ordered eligible redemption and matching payment/debt reduction.",
+      "success_class": "Partial or full redemption of the first eligible trove in the pinned order.",
+      "refusal_class": "Empty redeemable set refuses without rewriting liquidation-source overlay P10.",
+      "characteristic_mutation": "Skip the first eligible trove or reduce the wrong debt.",
+      "source_independent_negative": "Payment that does not reduce the redeemed debt.",
+      "dependencies_note": "Separate from P10 liquidation-source challenge.",
+      "resource_gate": "P17"
+    },
+    {
+      "sprint": "P24",
+      "proposed_module": "lean/DefiKernel/LossAllocation/",
+      "pin_status": "not_established",
+      "conditional_property": "Recognized loss equals allocated reductions plus an explicit remainder; nonnegative balances are not solvency.",
+      "success_class": "Reachable bad-debt realization with allocated reductions summing with remainder to the recognized loss.",
+      "exceptional_success_class": "No-bad-debt/no-op control leaves shares unchanged. This is a successful control, not an executor refusal.",
+      "refusal_class": "Selected from the later pin's actual revert/require at source-entry; not invented now.",
+      "characteristic_mutation": "Drop remainder or allocate to the wrong party.",
+      "source_independent_negative": "Allocated reductions that do not sum with remainder to recognized loss.",
+      "resource_gate": "P17"
+    },
+    {
+      "sprint": "P25",
+      "proposed_module": "lean/DefiKernel/SharedVault/",
+      "pin_status": "not_established",
+      "conditional_property": "Vault cash-plus-owed accounting and rollback: hook revert does not publish transient state.",
+      "success_class": "Shared-vault join with matching cash and outstanding owed.",
+      "refusal_class": "Hook revert leaves committed state unchanged.",
+      "characteristic_mutation": "Publish transient balances on revert.",
+      "source_independent_negative": "Cash plus owed disagrees with the declared conservation equation.",
+      "resource_gate": "P17"
+    },
+    {
+      "sprint": "P26",
+      "proposed_module": "lean/DefiKernel/Async/",
+      "pin_status": "workflow_selected_at_entry",
+      "conditional_property": "At-most-once message consumption and exclusive terminal settlement or refund.",
+      "success_class": "First delivery of a message identifier reaches the declared terminal.",
+      "refusal_class": "Replay after finality refuses and retains the original observation.",
+      "characteristic_mutation": "Accept a replayed identifier or assume synchronous rollback.",
+      "source_independent_negative": "Two terminals for one message identifier.",
+      "resource_gate": "P17"
+    },
+    {
+      "sprint": "P27",
+      "proposed_module": "lean/DefiKernel/Margin/",
+      "pin_status": "not_established",
+      "conditional_property": "Signed funding and equity reconciliation with an explicit bankruptcy residual; unsettled PnL is not cash unless the source says so.",
+      "success_class": "Funding application that preserves the signed equity equation.",
+      "exceptional_success_class": "Allowed liquidation or bankruptcy transition with explicit residual. This is a successful exceptional outcome, not an executor refusal.",
+      "refusal_class": "Selected from the later pin's actual revert/require at source-entry; not invented now.",
+      "characteristic_mutation": "Treat unsettled PnL as withdrawable cash.",
+      "source_independent_negative": "Equity equation that ignores funding or residual.",
+      "resource_gate": "P17"
+    },
+    {
+      "sprint": "P28",
+      "proposed_module": "lean/DefiKernel/ConditionalClaims/",
+      "pin_status": "not_established",
+      "conditional_property": "Conditional payoff discharge only through authorized lifecycle transitions; oracle/custody/legal truth remains an assumption.",
+      "success_class": "Authorized discharge under the declared attestation.",
+      "refusal_class": "Missing attestation or unauthorized party refuses.",
+      "characteristic_mutation": "Discharge without an authorized transition.",
+      "source_independent_negative": "Liability disappearance without a lifecycle witness.",
+      "conditional_dependencies": {"claims_lifecycle_if_reused": ["P07"]},
+      "resource_gate": "P17"
+    },
+    {
+      "sprint": "P29",
+      "proposed_module": "lean/DefiKernel/CrossDomain/",
+      "pin_status": "not_established",
+      "conditional_property": "Cross-domain accounting of locked, in-flight, and compensated obligations with no synchronous rollback.",
+      "success_class": "Remote finality that unlocks the matching local obligation.",
+      "exceptional_success_class": "Timeout compensation or challenge without silent local rollback. This is a successful exceptional workflow outcome, not an executor refusal.",
+      "refusal_class": "Selected from the later workflow source's actual rejection guard at source-entry; not invented now.",
+      "characteristic_mutation": "Roll back committed local state when the remote domain times out.",
+      "source_independent_negative": "In-flight amount missing from both local locked and remote credited sets.",
+      "dependencies": ["P26"],
+      "resource_gate": "P17"
+    }
+  ],
+  "certificate_obligations": {
+    "P19": "Implementation candidate for recomputing Typed/sequential checker. Not qualified delivery.",
+    "P20": {
+      "correspondence": "Quantified representation-to-Lean correspondence for the supported domain.",
+      "compatibility_operator": "Executable DefiKernel.Parallel.admit on decoded catalog/branches (recomputes footprints) or checkCompatibility on those recomputed footprints, connected by checkCompatibility_ok_iff (Compatibility.lean lines 66-95). Parallel.Compatible is a proof-level Prop after the proof marker and is not the executable checker. Caller-supplied footprint labels are not accepted. Sequential catalog validation alone is insufficient for R18 composition-compatibility.",
+      "library_instantiation": "Actual Lean check of an accepted Arithmetic theorem, or P16 token0 theorem when P16 is accepted. Theorem-name tags are not instantiation.",
+      "qualified_delivery_after": "P20 successful_exit"
+    }
+  },
+  "adapter_obligations": {
+    "Moriarty": {"readiness_task": "32.1", "implementation_task": "32.5a", "depends_on_certificates": false},
+    "Compact": {"readiness_task": "32.2", "implementation_task": "32.5b", "depends_on_certificates": false},
+    "ZKIR": {"readiness_task": "32.3", "implementation_task": "32.5c", "depends_on_certificates": false},
+    "proof-carrying-transaction": {"readiness_task": "32.4", "implementation_task": "32.5d", "depends_on_certificates": "P20"}
+  },
+  "environments": ["EVM", "Solana", "Cosmos", "Move/Sui", "sovereign cross-chain", "payment-channel"],
+  "evaluation": {
+    "P32": "Per-environment pin or blocked_unavailable.",
+    "P33": "Freeze declared evaluated API/library hashes from P18 plus any additional declared libraries. Version change invalidates untouched-label reuse; prior runs remain interim evidence.",
+    "P34": "Actual nonempty success and refusal execution per required environment. Unavailable environments keep P34 and full evaluation open."
+  }
+}

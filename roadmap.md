@@ -1,5 +1,9 @@
 # DeFiFormal migration roadmap
 
+Full remaining-program OpenSpec plan (2026-09-08): [37 sprint units](openspec/changes/reusable-verification-platform-program/sprint-plan.md), [179-item planning checklist](openspec/changes/reusable-verification-platform-program/tasks.md), [dependencies](openspec/changes/reusable-verification-platform-program/design.md), and [accepted repair/adjudication](review/semantic-kernel/program-execution-20260908/PLAN-ACCEPTANCE.md). Native Grok4.6 authored the repairs; independent GPT-6 accepted the exact planning contract with recorded limits. The user resumed implementation. [P01 compatible recovery is delivered](review/semantic-kernel/program-execution-20260908/P01-ACCEPTANCE.md); P15 minimum contracts is active. Individual entry/acceptance gates and the rest of the program remain open.
+
+Current strategy (2026-09-08): prioritize a reusable verification platform and libraries. See the [refined plan](review/semantic-kernel/strategy-audit-20260908/PLAN.md), [authoritative current state](review/semantic-kernel/strategy-audit-20260908/CURRENT.json), and [five-review convergence](review/semantic-kernel/strategy-audit-20260908/CONVERGENCE.md). The user’s subsequent “begin implementing” instruction supersedes the audit-time dispatch hold. Historical progress and frozen planning checkboxes retain their original scope.
+
 Updated 2026-09-08 UTC: Sprints 7–10 and checked integer arithmetic are accepted, delivered and archived (Sprint 10 archive `ec8f163`; integer archive `6d73e6dc`). Sprint 11/M3 finite-participant causal composition is accepted with limitations at `94f70e50`, delivered at `3e736fb0`, and archived with remote verification at `681362d8`; all 35 tasks are complete. Corpus tooling, historical-tooling whole package, M4–M6 and the rest of the program remain open.
 Branch: `semantic-kernel-pivot`. Sprint 8 archive delivery: `9501f0a4`.
 
@@ -204,7 +208,7 @@ runtime labels, 1,459 imported theorems and 1,131 supplemental rows. Source/evid
 - [ ] Generalize the useful results in `Interface.lean` and `Nary.lean` into the operational model. Finite-participant Nary is proved at `94f70e50` (Sprint 11 delivery and archive verified). Sprint 10 Interface binding is already delivered. Participant-tree regrouping remains M4.
 - [ ] Prove behavioral associativity: regrouping compatible components preserves behavior.
 - [x] Prove assume-guarantee composition with initialization and causal or inductive premises, not circular assumptions. Proved for finite initialized/causal composition at `94f70e50`; delivery and archive verified. Does not close participant-tree regrouping or later milestones.
-- [x] Define observational equivalence and prove conservative extension: unrelated additions preserve existing behavior.
+- [x] Define observational equivalence and prove conservative extension for the accepted fixed-identity/configuration sequential contexts (Sprint 9). General active extension remains M5.
 - [ ] Establish capability provenance and component isolation where required, beyond the current trusted-store assumption.
 
 ## 3. Claims, liabilities, and asynchronous behavior

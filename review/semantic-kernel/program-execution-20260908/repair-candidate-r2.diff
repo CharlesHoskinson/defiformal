@@ -1,0 +1,701 @@
+--- r1/coverage.md
++++ r2/coverage.md
+@@ -16,7 +16,7 @@
+ | R08 | Async message lifecycle, finality, replay, timeout, challenge, compensation | P26 | this program; no accepted prior library change |
+ | R09 | Oracle, custody, legal, sequencing, finality assumptions | P26, P28 | this program |
+ | R10 | 75 identities from 72 rows | P09 | corpus 3.1 |
+-| R11 | 29 annotation disagreements | P09 | corpus 5.1–5.5 |
++| R11 | 29 annotation disagreements | P09, P10 | corpus 5.1–5.3 (P09); 5.5 split (P09 29 facets, P10 separate challenge) |
+ | R12 | Liquity V1 liquidation source challenge | P10 | corpus 5.4 |
+ | R13 | Splits, pins, dependencies, ambiguity/residue | P08, P09, P10 | corpus 2.3, 3.2–3.3, 4.1 |
+ | R14 | Recover or replace unresolved proposal references | P10 | corpus 2.1–2.2 |
+@@ -37,7 +37,7 @@
+ | R29 | External conditional claims | P28 | this program; pin not established |
+ | R30 | Pin implementations, versions, deployments, environments | P16, P32 | Uniswap pin known; other environments readiness-gated |
+ | R31 | Identical sequences against implementations and models | P16, P30 | token0 matrix then reusable harness |
+-| R32 | Characteristic mutations | P16, P30, P14 | including overflow and M09/F28 repair |
++| R32 | Characteristic mutations | P16, P21, P30, P14 | P16 overflow mutants and M09/F28 control-plan correction; P21 compiled M09 with repaired per-mutant controls |
+ | R33 | Selected implementation-to-model refinements | P30 | required before P37 closure |
+ | R34 | Runtime adapters; Moriarty, Compact, ZKIR, PCT | P31 | readiness plus implementation or `blocked_unavailable` |
+ | R35 | Reconcile Q/Σ, four primitives, minimality, Delta, lattice, exhaustive scope | P11, P12 | `historical-claim-reconciliation` 2.3–2.6 |
+@@ -56,7 +56,7 @@
+ 
+ M5 and M6 have no dedicated unchecked R-id because active extension was annotated inside a checked Sprint 9 box. CURRENT.json still lists those lanes open, including M6. They are `P03` and `P04`. Do not remove M6.
+ 
+-Complete original-task coverage is `legacy-task-disposition.json` (339 rows). Split rows carry `contributions` and `whole_task_closure=all_contributions`. Named library proofs are `proof-obligation-dependency-matrix.json`. Hash bindings are copied from CURRENT.json `candidate.sha256` fields. This revision is pending independent GPT-6 acceptance and does not set a review gate accepted.
++Complete original-task coverage is `legacy-task-disposition.json` (339 rows). Split rows carry `contributions` and `whole_task_closure=all_contributions`. Named library proofs are `proof-obligation-dependency-matrix.json`. Hash bindings are copied from CURRENT.json `candidate.sha256` fields. This revision is pending independent GPT-6 review and does not set a review gate accepted.
+ 
+ ## CURRENT.json lanes
+ 
+@@ -82,17 +82,17 @@
+ 
+ ## Spec requirement coverage
+ 
+-Counts are derived from `### Requirement:` and `#### Scenario:` headings in `specs/*/spec.md` after revision `planning-repair-20260908`.
++Counts are derived from `### Requirement:` and `#### Scenario:` headings in `specs/*/spec.md` after revision `planning-repair-r2-20260908`.
+ 
+ | Capability | Requirements | Scenarios |
+ | --- | --- | --- |
+ | reusable-platform-program | 12 | 19 |
+ | minimum-reusable-contracts | 7 | 12 |
+ | remaining-metatheory-lifecycle | 6 | 9 |
+-| corpus-historical-honest-reporting | 7 | 15 |
+-| source-bound-library-families | 13 | 22 |
++| corpus-historical-honest-reporting | 7 | 16 |
++| source-bound-library-families | 13 | 23 |
+ | certificates-adapters-evaluation-publication | 10 | 23 |
+-| **total** | **55** | **100** |
++| **total** | **55** | **102** |
+ 
+ Every sprint in `sprint-index.json` has `id`, `title`, `dependencies`, `legacy_mapping`, `change`, `path`, `entry`, and `exit`. Machine fields also distinguish `P17.platform_reuse` from `arithmetic_reuse`.
+ 
+@@ -105,12 +105,12 @@
+ | atomic-metatheory-transfer | `openspec/changes/atomic-metatheory-transfer/tasks.md` | P04 uses 1.1–5.7 after M4/M5 |
+ | capability-provenance-isolation | `openspec/changes/capability-provenance-isolation/tasks.md` | P05 uses 1.1–6.7 |
+ | claims-liability-lifecycle | `openspec/changes/claims-liability-lifecycle/tasks.md` | P06 inspects 4.x partials; P07 uses 2.1–5.8 |
+-| corpus-provenance-adjudication | `openspec/changes/corpus-provenance-adjudication/tasks.md` | P08: 1.x rebind and 2.3 repair. P09: 3.1–3.2, 5.1–5.3, 5.5, 6.1–6.3 with 6.1 named sub-delivery. P10: 2.1–2.2, 2.4 (after P09 6.1, original bounded collector), 3.3, 4.1–4.3, 5.4. Original 7.1–8.3 are P09+P10 contributions joined on P10 without a P09 hard edge. |
++| corpus-provenance-adjudication | `openspec/changes/corpus-provenance-adjudication/tasks.md` | P08: 1.x rebind and 2.3 repair. P09: 3.1–3.2, 5.1–5.3, P09 5.5 facet contribution, 6.1–6.3 with 6.1 named sub-delivery. P10: 2.1–2.2, 2.4 (after P09 6.1, original bounded collector), 3.3, 4.1–4.3, 5.4, P10 5.5 challenge contribution. Original 5.5 and 7.1–8.3 are P09+P10 contributions; 7.x/8.x join on P10 without a P09 hard edge and hold complete 169-item accounting. |
+ | historical-claim-reconciliation | `openspec/changes/historical-claim-reconciliation/tasks.md` | P11 repairs; P12 uses 2.1–5.6 as `mixed_behavior` (proof 3.1–3.7 plus data/CLI 2.x/4.x/5.x) |
+ | honest-gate-failure | `openspec/changes/honest-gate-failure/tasks.md` | 1.1–7.4 remain completed; P13 is new candidate plus R43/R44 |
+ | design-atlas-visualization | `openspec/changes/design-atlas-visualization/tasks.md` | Historical checked boxes are not current acceptance. P35 rebinds 2.2/7.5/7.6/sync and completes 7.4/8.2/8.3/8.4 on Flat/3D depth/family layouts. |
+ | serialized-kernel-certificates | sibling worktree, unaccepted | P19/P20 planning input |
+-| concentrated-liquidity-library | sibling worktree, unaccepted | P16/P21 planning input. P16: token0 next-price plus required sum-overflow. P21: TickMath, SwapMath, token1/delta, bitmap/liquidity/factory, 45-fixture/M01–M12, traversal. Mixed 4.1/6.x/7.x close only with every contribution. |
++| concentrated-liquidity-library | sibling worktree, unaccepted | P16/P21 planning input. P16: token0 next-price plus required sum-overflow, token0 production mutants, and M09/F28 control-plan correction. P21: TickMath, SwapMath, token1/delta, bitmap/liquidity/factory, 45-fixture/M01–M12 including compiled M09 with repaired controls, traversal. Original 1.2 closes only after both accepted planning-slice reviews. Mixed 4.1/6.x/7.x close only with every contribution. |
+ 
+ ## DAG consistency checks
+ 
+--- r1/design.md
++++ r2/design.md
+@@ -2,7 +2,7 @@
+ 
+ Accepted Sprints 1–11 and checked integer arithmetic already deliver the Lean kernel, sequential/parallel/interleaving/atomic operators, finite-participant causal composition, and machine-width arithmetic. CURRENT.json (strategy-audit-20260908) holds 17 lanes; broad implementation dispatch is held. Frozen OpenSpec packages for M4/M5/M6, capability, Claims, corpus, historical reconciliation, honest-gate, Atlas, and unaccepted certificate/liquidity candidates remain historical contracts.
+ 
+-This design sequences remaining work as 37 sprints `P01`–`P37`. It does not accept pending candidates or lift the dispatch hold by itself. Revision `planning-repair-20260908` is an authorized planning repair pending independent GPT-6 acceptance; it does not set a review gate accepted. User authorization to execute after that acceptance is recorded separately at `review/semantic-kernel/program-execution-20260908/STATE.json`; do not re-ask. Native Grok 4.6 authors; independent GPT-6 checks. No Foreman. Delivery, if later authorized, is parent-owned to `semantic-kernel-pivot` only. Frozen historical reviews are not rewritten.
++This design sequences remaining work as 37 sprints `P01`–`P37`. It does not accept pending candidates or lift the dispatch hold by itself. Revision `planning-repair-r2-20260908` is a bounded PR1–PR3 planning repair pending independent GPT-6 review; it does not set a review gate accepted. User authorization to execute after that acceptance is recorded separately at `review/semantic-kernel/program-execution-20260908/STATE.json`; do not re-ask. Native Grok 4.6 authors; independent GPT-6 checks. No Foreman. Delivery, if later authorized, is parent-owned to `semantic-kernel-pivot` only. Frozen historical reviews are not rewritten.
+ 
+ Candidate inputs reviewed as unaccepted: `/home/charl/defiformal-wt-certificates-grok-gpt6-20260908/openspec/changes/serialized-kernel-certificates/` and `/home/charl/defiformal-wt-liquidity-grok-gpt6-20260908/openspec/changes/concentrated-liquidity-library/`. Their details may be newer than primary-tree files; this program cites them as planning sources, not accepted gates.
+ 
+@@ -39,7 +39,7 @@
+ 
+ - `P01 → P02 → P03 → P04` (CURRENT.json includes M6; retain it)
+ - `P06 → P07`
+-- `P08 → P09` and `P08 → P10`; `P10` collect 2.4 additionally consumes the `P09` 6.1 development-manifest sub-delivery, not all of `P09`. Original 7.x/8.x join `P09` and `P10` outcomes without a `P09` hard edge, so there is no task-level cycle. `P16` has no corpus closeout barrier.
++- `P08 → P09` and `P08 → P10`; `P10` collect 2.4 additionally consumes the `P09` 6.1 development-manifest sub-delivery, not all of `P09`. Original 5.5 splits P09 29-facet records from the P10 challenge record without a `P09` hard edge. Original 7.x/8.x join `P09` and `P10` outcomes without a `P09` hard edge, so there is no task-level cycle. Complete 169-item accounting belongs at that join. `P16` has no corpus closeout barrier.
+ - `P11 → P12`
+ - `P15 → P16 → P17` for the reuse experiment; vault source-readiness records may start before `P16`
+ - `P16 → P18` for the early first-case increment; two-case reuse claim additionally requires `P17`. P18 does not wait on M4 remainder, certificates, or adapters.
+@@ -57,7 +57,7 @@
+ 
+ ### D3. First library case and contrasting vault
+ 
+-First executable library target is pinned Uniswap v3-core `e3589b192d0be27e100cd0daaf6c97204fdb1899` token0 next-price, including the required denominator-sum overflow branch. That branch cannot be excluded to close `P16`. Repair the Python oracle unbounded-add gap and the M09/F28 affected control before scoring. Execute Solidity under pinned compiler settings. Python remains a third diagnostic implementation. Liquidity archive SHA-256 is copied from CURRENT.json `liquidity.sha256`.
++First executable library target is pinned Uniswap v3-core `e3589b192d0be27e100cd0daaf6c97204fdb1899` token0 next-price, including the required denominator-sum overflow branch. That branch cannot be excluded to close `P16`. Repair the Python oracle unbounded-add gap and the M09/F28 control plan before scoring; compiled M09 SwapMath execution remains `P21` with the repaired per-mutant unaffected-control set. Execute Solidity under pinned compiler settings. Python remains a third diagnostic implementation. Liquidity archive SHA-256 is copied from CURRENT.json `liquidity.sha256`. Original 1.2 is independent planning review of the exact repaired P16 token0 slice and P21 residual slice; the unaccepted freeze is preserved input, not accepted evidence, and this revision is not 1.2 acceptance. P16 implementation does not wait on the P21 campaign.
+ 
+ The contrasting case is a stateful vault deposit/withdrawal. No reviewed executable vault pin exists at planning time. `P17` either binds an actual development pin or records `blocked_missing_source`. A second AMM formula is not an allowed substitute.
+ 
+@@ -104,7 +104,7 @@
+ 
+ - Vault pin never appears → two-case reuse stays open; wider families stay resource-gated; first-case increment can still publish under `P16`/`P18` without a reuse claim.
+ - M4 recovery fails review → bounded repair; M5/M6 stay blocked; independent lanes continue.
+-- Liquidity candidate defects (overflow oracle, M09/F28) are treated as required repairs, not as proof the Uniswap family is impossible.
++- Liquidity candidate defects (overflow oracle, M09/F28 control plan) are treated as required repairs, not as proof the Uniswap family is impossible. Compiled M09 execution stays with the P21 campaign.
+ - Adapter systems without verified interfaces remain blocked; that is an honest remainder, not a design hole to fill with invented APIs.
+ - 37 sprints are planning units, not a calendar. Throughput follows independent acceptance, not empty process slots.
+ - Unaccepted candidate plans may drift from primary-tree files; implementation must re-bind APIs at each sprint entry.
+--- r1/legacy-task-disposition.json
++++ r2/legacy-task-disposition.json
+@@ -1584,10 +1584,21 @@
+       "package": "corpus-provenance-adjudication",
+       "task_id": "5.5",
+       "historically_checked": false,
+-      "disposition": "remaining_work",
+-      "owner_sprint": "P09",
+-      "note": "P09 remaining_work: complete 29-facet dispositions with silence-not-refutation. Not whole-package 7.x/8.x closeout.",
+-      "path": "openspec/changes/corpus-provenance-adjudication/tasks.md"
++      "disposition": "split",
++      "owner_sprint": "P09+P10",
++      "note": "Split original corpus task. P09 contribution is the 29 facet adjudication records (32 label instances) with silence-not-refutation. P10 contribution is the separate challenge adjudication record using the same rule version. Whole-task closure requires every contribution. Completing P09's 29-facet work MUST NOT mark original 5.5 done. Whole 5.5 does not wait for original 2.4 or 7.x/8.x. Complete 169-item accounting belongs at the P10 7.x/8.x join.",
++      "path": "openspec/changes/corpus-provenance-adjudication/tasks.md",
++      "contributions": [
++        {
++          "sprint": "P09",
++          "scope": "Complete evidence adjudication records for all 29 disputed-label facet records (32 label instances) using evidence-adjudication/1; every case has exact review/rationale/applicability/interpretation evidence; reviewed unresolved cases remain explicitly semantically unresolved. Not the separate challenge record and not whole original 5.5."
++        },
++        {
++          "sprint": "P10",
++          "scope": "Complete the separate Liquity challenge adjudication record using the same reviewed rule version as the 29 facet records, with exact review/rationale/applicability/interpretation evidence. This contribution is not a wait on all of P10 and is not a P09 successful_exit prerequisite. A P09 facet-only contribution MUST NOT close original 5.5."
++        }
++      ],
++      "whole_task_closure": "all_contributions"
+     },
+     {
+       "package": "corpus-provenance-adjudication",
+@@ -1595,7 +1606,7 @@
+       "historically_checked": false,
+       "disposition": "remaining_work",
+       "owner_sprint": "P09",
+-      "note": "P09 named sub-delivery: monotonic development exposure/ancestry projection, including per-source publishers and substantively described products with exact locators and identity limits. All original 75 and design-inspected descendants remain development. This artifact is a prerequisite to P10 original task 2.4. P09 successful_exit includes 6.1–6.3 and does not wait for P10 or for original 7.x/8.x.",
++      "note": "P09 named sub-delivery: monotonic development exposure/ancestry projection, including per-source publishers and substantively described products with exact locators and identity limits. All original 75 and design-inspected descendants remain development. This artifact is a prerequisite to P10 original task 2.4. P09 successful_exit includes 6.1–6.3 and does not wait for P10, for original 7.x/8.x, or for P10's original-5.5 challenge contribution.",
+       "path": "openspec/changes/corpus-provenance-adjudication/tasks.md"
+     },
+     {
+@@ -1627,7 +1638,7 @@
+       "contributions": [
+         {
+           "sprint": "P09",
+-          "scope": "Identity/dispute/manifest overlay (3.1–3.2, 5.1–5.3, 5.5, 6.1–6.3) that 7.1 build/check must validate."
++          "scope": "Identity/dispute/manifest overlay (3.1–3.2, 5.1–5.3, P09 5.5 facet contribution, 6.1–6.3) that 7.1 build/check must validate. Complete 169-item accounting, including the P10 5.5 challenge contribution, belongs at this join, not at P09 successful_exit."
+         },
+         {
+           "sprint": "P10",
+@@ -1691,7 +1702,7 @@
+         },
+         {
+           "sprint": "P10",
+-          "scope": "Execute original 7.4 as the whole-package freeze/replay gate after P09 outcomes and P10 source/collector work exist."
++          "scope": "Execute original 7.4 as the whole-package freeze/replay gate after P09 outcomes and P10 source/collector work exist, including complete 169-item accounting (75 identities + 29 facet records + separate challenge + 62 citation occurrences + two attachment pointers). That 169-item claim is not P09 successful_exit."
+         }
+       ],
+       "whole_task_closure": "all_contributions"
+@@ -3135,17 +3146,17 @@
+       "historically_checked": false,
+       "disposition": "split",
+       "owner_sprint": "P16+P21",
+-      "note": "Split original concentrated-liquidity task. P16 contribution is the narrow token0 next-price slice plus required sum-overflow. P21 owns residual TickMath/SwapMath/token1-delta/bitmap/liquidity/factory/full fixture and mutation work. Whole-task closure requires every contribution. A P16 partial MUST NOT mark this original ID done. Unaccepted plan remains planning input.",
++      "note": "Split original concentrated-liquidity planning-review task. Whole original 1.2 closes only after both applicable independently accepted planning-slice outcomes exist. The original unaccepted concentrated-liquidity-library freeze is preserved input, not accepted evidence. Treating that freeze as input does not deliver 1.2. This program-plan revision is not original 1.2 acceptance. P16 implementation MUST NOT wait on the P21 residual planning review or the P21 implementation campaign.",
+       "path": "/home/charl/defiformal-wt-liquidity-grok-gpt6-20260908/openspec/changes/concentrated-liquidity-library/tasks.md",
+       "status": "unaccepted_candidate",
+       "contributions": [
+         {
+           "sprint": "P16",
+-          "scope": "Treat the unaccepted concentrated-liquidity-library planning freeze as input to the narrow token0 slice only. This program revision is not 1.2 acceptance of the original whole-library plan."
++          "scope": "Obtain independent GPT-6 planning review of the exact repaired P16 token0 planning slice (narrow next-price plus required sum-overflow, including original 1.3 and 2.2–2.3 substrate). Verify recorded verdict, requested/reported model identity, input hashes, and that gate accepted remains false until that review. The original unaccepted whole-library freeze is preserved input, not accepted evidence. This contribution is not whole original 1.2 and is not a wait on P21."
+         },
+         {
+           "sprint": "P21",
+-          "scope": "Treat that same unaccepted freeze as input to residual TickMath/SwapMath/bitmap/factory/traversal work. Do not mark 1.2 done from the token0 contribution."
++          "scope": "Obtain independent GPT-6 planning review of the exact repaired P21 residual planning slice (TickMath 3.1–3.3, SwapMath 4.2, residual 4.1 token1/delta, bitmap/liquidity/factory 5.1–5.3, original 45-fixture and M01–M12 campaigns, traversal, and original 7.4 remainders). Verify recorded verdict, requested/reported model identity, input hashes, and that gate accepted remains false until that review. The original unaccepted whole-library freeze is preserved input, not accepted evidence. This contribution is not whole original 1.2 and MUST NOT be a P16 implementation prerequisite."
+         }
+       ],
+       "whole_task_closure": "all_contributions"
+@@ -3361,17 +3372,17 @@
+       "historically_checked": false,
+       "disposition": "split",
+       "owner_sprint": "P16+P21",
+-      "note": "Split original concentrated-liquidity task. P16 contribution is the narrow token0 next-price slice plus required sum-overflow. P21 owns residual TickMath/SwapMath/token1-delta/bitmap/liquidity/factory/full fixture and mutation work. Whole-task closure requires every contribution. A P16 partial MUST NOT mark this original ID done. Unaccepted plan remains planning input.",
++      "note": "Split original concentrated-liquidity mutation task. P16 owns token0 production mutants plus diagnostic/control-plan correction of the M09/F28 issue. Actual compiled M09 SwapMath.computeSwapStep execution belongs to P21 with the original M01–M12 campaign. Whole-task closure requires every contribution. A P16 partial MUST NOT mark this original ID done. Preserve the failed original mutation plan as evidence.",
+       "path": "/home/charl/defiformal-wt-liquidity-grok-gpt6-20260908/openspec/changes/concentrated-liquidity-library/tasks.md",
+       "status": "unaccepted_candidate",
+       "contributions": [
+         {
+           "sprint": "P16",
+-          "scope": "Token0 overflow-fallback and repaired M09/F28 mutants with unaffected sibling. Not the original M01–M12 campaign."
++          "scope": "Token0 production mutants, including overflow-fallback, plus diagnostic/control-plan correction so M09 does not treat F28 as a protected control (amountIn 2→1 under the SwapMath direction flip); name a genuinely unaffected sibling and preserve the failed original plan. Not compiled M09 SwapMath execution and not the original M01–M12 campaign."
+         },
+         {
+           "sprint": "P21",
+-          "scope": "Original 6.3 planned mutants M01–M12 with designated false fixtures and global positives F01/F10/F28/F40; compile failures blocked."
++          "scope": "Original 6.3 planned mutants M01–M12 with designated false fixtures and the repaired per-mutant unaffected-control set. Global positives F01/F10/F28/F40 remain except M09 MUST exclude or replace F28 with the sibling named by the P16 control-plan correction. Actual compiled M09 SwapMath.computeSwapStep execution belongs here with the rest of M01–M12. Preserve the failed original plan as evidence. Compile failures blocked."
+         }
+       ],
+       "whole_task_closure": "all_contributions"
+--- r1/proof-obligation-dependency-matrix.json
++++ r2/proof-obligation-dependency-matrix.json
+@@ -14,7 +14,7 @@
+       "success_class": "Ordinary add/remove next-price, including planned `(2^96,1,1,true)` returns `2^95`.",
+       "exceptional_success_class": "Zero-amount identity: planned `(2^96,1,0,add=true or false)` returns `2^96`.",
+       "refusal_class": "Removal-denominator require: planned `(2^96,1,1,false)` fails because numerator1 and product both equal `2^96`, so `numerator1 > product` is false.",
+-      "characteristic_mutation": "Disable wrapped-sum fallback or flip add/remove direction (repaired M09/F28 control).",
++      "characteristic_mutation": "Disable wrapped-sum fallback (token0 production mutant). M09/F28 is diagnostic/control-plan correction only; compiled M09 SwapMath execution is P21.",
+       "source_independent_negative": "Constructed inputs where unbounded addition disagrees with wrapped-sum fallback.",
+       "required_branch_cannot_exclude": "denominator-sum overflow",
+       "dependencies": ["P15"],
+@@ -51,11 +51,11 @@
+       "sprint": "P21",
+       "proposed_module": "lean/DefiKernel/ConcentratedLiquidity/",
+       "pin_status": "extends_P16_pin",
+-      "conditional_property": "Tick-crossing liquidity and amount/fee accounting across declared multi-word traversal, plus residual token1/delta, TickMath, SwapMath, bitmap/liquidity/factory, and the original 45-fixture/M01–M12 campaigns.",
++      "conditional_property": "Tick-crossing liquidity and amount/fee accounting across declared multi-word traversal, plus residual token1/delta, TickMath, SwapMath, bitmap/liquidity/factory, and the original 45-fixture/M01–M12 campaigns using the repaired per-mutant unaffected-control set (M09 excludes or replaces F28).",
+       "success_class": "Traversal that crosses at least two initialized ticks with independently expected amounts and fees; residual token1 next-price and amount0/amount1 deltas from original task 4.1.",
+       "exceptional_success_class": "Exact-output cap in SwapMath.sol lines 87-89 is bounded success, not refusal.",
+       "refusal_class": "Pinned UniswapV3Pool.swap SPL guard, lines 608-613.",
+-      "characteristic_mutation": "Skip a tick cross or drop fee remainder.",
++      "characteristic_mutation": "Skip a tick cross or drop fee remainder. Original 6.3 M01–M12 compiled campaign uses the repaired per-mutant unaffected-control set; compiled M09 SwapMath execution excludes or replaces F28; failed original plan preserved.",
+       "source_independent_negative": "Liquidity delta applied without a corresponding tick cross.",
+       "cannot_exclude_to_close": ["R22", "P21", "whole_program"],
+       "dependencies": ["P16"],
+--- r1/proposal.md
++++ r2/proposal.md
+@@ -7,7 +7,7 @@
+ - Add a complete multi-sprint OpenSpec program (`P01`–`P37`) covering every remaining roadmap obligation, every CURRENT.json lane, and the strategy-audit sequencing rules.
+ - Keep original OpenSpec change bytes, task IDs, and candidate archives as historical contracts. This program links them; it does not relabel them delivered or rewrite their files.
+ - Introduce program-level requirements for sprint gates, evidence classes, two-case reuse, source-pin honesty, adapter readiness, evaluation-environment coverage, and whole-program definition of done.
+-- Require the first source-bound library case to be the pinned Uniswap V3 token0 next-price operation, including denominator-sum overflow and the M09/F28 control repair, then a contrasting stateful vault only after an actual source pin exists.
++- Require the first source-bound library case to be the pinned Uniswap V3 token0 next-price operation, including denominator-sum overflow, token0 production mutants, and the M09/F28 control-plan correction, then a contrasting stateful vault only after an actual source pin exists. Compiled M09 SwapMath execution remains with the residual library campaign.
+ - Separate model proof, bounded source execution, representation correspondence, and source refinement. Permit a bounded first increment with refinement open; require a selected refinement sprint before full-program closure.
+ - Leave Moriarty, Compact, ZKIR, and proof-carrying-transaction integration behind verified interface/source readiness. Named readiness and implementation tasks exist; unavailable tools stay blocked rather than complete-by-deferral.
+ - Cover evaluation environments named in the 2026-09-06 source plan: EVM, Solana, Cosmos, Move/Sui, sovereign cross-chain, and payment channels. That source is an agenda input, not verified external evidence.
+@@ -20,7 +20,7 @@
+ - `reusable-platform-program`: Whole-program definition of done, sprint-unit gates, evidence-class separation, independent acceptance versus author exit, delivery-only-to-`semantic-kernel-pivot`, and evidence-based cleanup.
+ - `minimum-reusable-contracts`: Shared kernel/operator, library amount/rounding, adapter observation, and evidence-packet contracts, plus the two-case reuse gate and obligation-class split.
+ - `remaining-metatheory-lifecycle`: Bounded M4 recovery closeout then remaining M4 contracts; official M5 after delivered M4; M6 after M4 and M5; capability provenance/isolation; Claims partial recovery then full lifecycle. Claims and capability are not blanket M4 dependents.
+-- `corpus-historical-honest-reporting`: Capture/classification/span repair; remaining 169-work / 75-identity / 29-dispute / Liquity-challenge / reference reconstruction; H02/H12 scope and like-for-like measurements; reporting-candidate acceptance and residual diagnostics/mutations.
++- `corpus-historical-honest-reporting`: Capture/classification/span repair; 75-identity / 29-facet-dispute / Liquity-challenge / reference reconstruction, with complete 169-item accounting at the joined 7.x/8.x closeout; H02/H12 scope and like-for-like measurements; reporting-candidate acceptance and residual diagnostics/mutations.
+ - `source-bound-library-families`: Pinned Uniswap token0 execution first; contrasting vault only after source readiness; then resource-gated concentrated-liquidity traversal, Curve, ordered redemption, Morpho loss allocation, Balancer vault/hooks, async workflows, margin, conditional claims, and a complete cross-domain workflow.
+ - `certificates-adapters-evaluation-publication`: Typed/sequential certificates and quantified representation correspondence; reusable differential execution and selected source refinement; runtime adapters with readiness gates; environment pins; kernel freeze and untouched evaluation; Atlas residuals and scientific refresh; paper and external developer package.
+ 
+@@ -32,4 +32,4 @@
+ 
+ Planning artifacts live only under `openspec/changes/reusable-verification-platform-program/`, including `legacy-task-disposition.json` and `proof-obligation-dependency-matrix.json`. Future implementation, if later authorized, would add new namespaces (`DefiKernel.Nary.Tree`, `Extension`, `AtomicNary`, `CapabilityProvenance`, `Claims`, `Certificates`, `ConcentratedLiquidity`, and later family namespaces), corpus overlay tooling, Atlas/viz residuals, and evidence under `review/semantic-kernel/`. Parent-owned root import, branch push, and archive remain later delivery tasks on `semantic-kernel-pivot` only.
+ 
+-This change does not edit `AGENTS.md`, `CURRENT.json`, `roadmap.md`, frozen OpenSpec packages, holdout payloads, or any worktree. Candidate certificate and liquidity plans in sibling worktrees remain unaccepted planning inputs. Native Grok 4.6 authors this plan; independent GPT-6 checks it. No Foreman. These files do not themselves dispatch implementation, commit, or push. Revision `planning-repair-20260908` is an authorized planning repair of the frozen 15-file package against `review/semantic-kernel/full-program-spec-review-20260908/ADJUDICATION.md`. Independent GPT-6 acceptance of this revision remains required before dependent sprint dispatch. User authorization to execute after that acceptance is recorded separately at `review/semantic-kernel/program-execution-20260908/STATE.json`; do not re-ask. This revision does not set a review gate accepted and does not rewrite frozen historical reviews.
++This change does not edit `AGENTS.md`, `CURRENT.json`, `roadmap.md`, frozen OpenSpec packages, holdout payloads, or any worktree. Candidate certificate and liquidity plans in sibling worktrees remain unaccepted planning inputs. Native Grok 4.6 authors this plan; independent GPT-6 checks it. No Foreman. These files do not themselves dispatch implementation, commit, or push. Revision `planning-repair-r2-20260908` is a bounded PR1–PR3 planning repair of the frozen r1 archive `f4162b193aa0ad2b0884c93652cc6bb4507f443ee96318d96c687199f13f35a2`. Independent GPT-6 review of this revision remains required before dependent sprint dispatch. User authorization to execute after that acceptance is recorded separately at `review/semantic-kernel/program-execution-20260908/STATE.json`; do not re-ask. This revision does not set a review gate accepted, does not rewrite the frozen r1 archive or historical reviews, and is not original liquidity 1.2 acceptance.
+--- r1/specs/corpus-historical-honest-reporting/spec.md
++++ r2/specs/corpus-historical-honest-reporting/spec.md
+@@ -16,9 +16,9 @@
+ - **WHEN** bonding funded-safe coordinates are attached as `space: body` on a 404 sibling instead of derived UTF-8 text on the successful capture
+ - **THEN** the overlay rebinds the span to the exact derived artifact and leaves the failed attempt separate
+ 
+-### Requirement: Remaining identities, disputes, and 169 work
++### Requirement: Remaining identities, 29 facet disputes, and manifests
+ 
+-`P09` SHALL complete organization, product, version, and deployment identities for the 75 development candidates, remaining product splits, and the 29 annotation disagreements (32 disputed label instances) using versioned rules, and SHALL complete original tasks 6.1–6.3. Original task 6.1 SHALL be exposed as a named sub-delivery (monotonic development exposure/ancestry projection) before `P10` original task 2.4. All 75 MUST remain development cases. Original 7.1–8.3 MUST NOT be `P09` successful_exit.
++`P09` SHALL complete organization, product, version, and deployment identities for the 75 development candidates, remaining product splits, and the 29 annotation disagreements (32 disputed label instances) using versioned rules, and SHALL complete original tasks 6.1–6.3. Original task 6.1 SHALL be exposed as a named sub-delivery (monotonic development exposure/ancestry projection) before `P10` original task 2.4. All 75 MUST remain development cases. Original 5.5 SHALL split: `P09` owns the 29 facet adjudication records; `P10` owns the separate challenge adjudication record using the same rule version; whole original 5.5 closes only after both contributions. Original 7.1–8.3 and complete 169-item accounting MUST NOT be `P09` successful_exit.
+ 
+ #### Scenario: Silence is not refutation
+ - **WHEN** a disputed facet has no accepted overlay head
+@@ -30,7 +30,7 @@
+ 
+ ### Requirement: Liquity challenge, bounded collector, and whole-package closeout
+ 
+-`P10` SHALL resolve the separate Liquity V1 liquidation source challenge, typed dependency assessments, ambiguity and residue records, and recover or replace unresolved supplied-proposal references. `P10` SHALL execute original corpus task 2.4 after the `P09` 6.1 sub-delivery, not after all of `P09`, with the original bounded collector behavior: exact three requested-target slots including failed guesses, two total attempts per target, five server redirects outside target slots, and 30-second attempt deadlines through a local HTTP fixture; reject role spoofing by actual manifest membership; preserve all attempts and remaining items; distinguish earlier research body limits from future collector URL limits; reject retrospective collector-budget claims while permitting a valid imported sibling. Invented collector runs remain forbidden. Original 7.1–8.3 SHALL join `P09` successful_exit and `P10` source/collector work as a whole-package gate executed on `P10` without a `P09` hard predecessor, so there is no task-level cycle. Completing corpus closeout MUST NOT be a global barrier on `P16`. Ordered-redemption library work remains `P23` and MUST NOT be treated as the liquidation-source decision.
++`P10` SHALL resolve the separate Liquity V1 liquidation source challenge, complete the original 5.5 separate-challenge adjudication record using the same reviewed rule version as the 29 facet records, typed dependency assessments, ambiguity and residue records, and recover or replace unresolved supplied-proposal references. Whole original 5.5 SHALL close only after the `P09` 29-facet contribution and this challenge contribution exist; it MUST NOT wait for original 2.4 or 7.x/8.x. `P10` SHALL execute original corpus task 2.4 after the `P09` 6.1 sub-delivery, not after all of `P09`, with the original bounded collector behavior: exact three requested-target slots including failed guesses, two total attempts per target, five server redirects outside target slots, and 30-second attempt deadlines through a local HTTP fixture; reject role spoofing by actual manifest membership; preserve all attempts and remaining items; distinguish earlier research body limits from future collector URL limits; reject retrospective collector-budget claims while permitting a valid imported sibling. Invented collector runs remain forbidden. Original 7.1–8.3 SHALL join `P09` successful_exit and `P10` source/collector work as a whole-package gate executed on `P10` without a `P09` hard predecessor, so there is no task-level cycle. Complete 169-item accounting (75 identities + 29 facet records + separate challenge + 62 citation occurrences + two attachment pointers) SHALL belong at that join, not at `P09` successful_exit. Completing corpus closeout MUST NOT be a global barrier on `P16`. Ordered-redemption library work remains `P23` and MUST NOT be treated as the liquidation-source decision.
+ 
+ #### Scenario: Liquidation challenge is not redemption
+ - **WHEN** the Liquity V1 liquidation source challenge is decided
+@@ -42,7 +42,11 @@
+ 
+ #### Scenario: Package closeout joins both workstreams
+ - **WHEN** original tasks 7.1–8.3 are closed
+-- **THEN** both `P09` identity/dispute/manifest outcomes and `P10` source/collector outcomes exist, `P09` successful_exit did not include those IDs, and no `P09`↔`P10` hard cycle was introduced
++- **THEN** both `P09` identity/29-facet/manifest outcomes and `P10` source/collector outcomes exist, complete 169-item accounting is recorded at this join, `P09` successful_exit did not include those IDs or that 169-item claim, and no `P09`↔`P10` hard cycle was introduced
++
++#### Scenario: Facet records do not close original 5.5
++- **WHEN** `P09` completes the 29 facet adjudication records
++- **THEN** original 5.5 remains open until the `P10` separate-challenge adjudication record also exists, and that whole-task closer MUST NOT wait for original 2.4 or 7.x/8.x
+ 
+ #### Scenario: P16 has no corpus closeout barrier
+ - **WHEN** `P16` token0 source-readiness or implementation is ready
+--- r1/specs/reusable-platform-program/spec.md
++++ r2/specs/reusable-platform-program/spec.md
+@@ -74,7 +74,7 @@
+ 
+ #### Scenario: Affected control invalidates the mutant
+ - **WHEN** M09 flips a direction predicate and protected F28 amountIn changes from 2 to 1
+-- **THEN** F28 is not an unaffected control and the mutation plan MUST be repaired before scoring
++- **THEN** F28 is not an unaffected control; `P16` MUST repair the mutation plan and name a genuinely unaffected sibling before scoring, preserving the failed original plan, and `P21` MUST execute compiled M09 SwapMath against that repaired per-mutant control set
+ 
+ ### Requirement: Proof inventory completeness
+ 
+@@ -114,11 +114,11 @@
+ 
+ #### Scenario: Token0 contribution does not close mixed liquidity tasks
+ - **WHEN** `P16` accepts the narrow token0 next-price slice
+-- **THEN** original concentrated-liquidity tasks 4.1, 6.x, and 7.x remain open until the `P21` contributions also exist
++- **THEN** original concentrated-liquidity tasks 4.1, 6.x, and 7.x remain open until the `P21` contributions also exist, and original 1.2 remains open until both applicable independently accepted planning-slice outcomes exist (P16 token0 slice and P21 residual slice) with exact reviewer/model/input-hash/verdict bindings; the original unaccepted freeze is preserved input, not accepted evidence; `P16` implementation MUST NOT wait on the P21 residual campaign
+ 
+ #### Scenario: Identity work does not close corpus archive
+-- **WHEN** `P09` accepts identities, disputes, and 6.1–6.3 manifests
+-- **THEN** original corpus tasks 7.1–8.3 remain open until the `P10` join contribution exists
++- **WHEN** `P09` accepts identities, 29 facet dispositions, and 6.1–6.3 manifests
++- **THEN** original corpus tasks 7.1–8.3 remain open until the `P10` join contribution exists, original 5.5 remains open until the `P10` separate-challenge adjudication record exists, and complete 169-item accounting remains at that final join
+ 
+ ### Requirement: Historical baseline is not redone
+ 
+--- r1/specs/source-bound-library-families/spec.md
++++ r2/specs/source-bound-library-families/spec.md
+@@ -6,7 +6,7 @@
+ 
+ ### Requirement: First pinned Uniswap token0 operation
+ 
+-`P16` SHALL execute the pinned Uniswap V3 token0 next-price helper `getNextSqrtPriceFromAmount0RoundingUp` from v3-core `e3589b192d0be27e100cd0daaf6c97204fdb1899` (`SqrtPriceMath.sol` lines 28–56) under pinned compiler settings and a declared EVM harness, or justify another actual source-semantics reference. The independent Python transcription MUST remain a diagnostic third implementation. Predeclared nonempty partitions SHALL cover ordinary add/remove, multiplication overflow, the required denominator-sum overflow branch, rounding-fallback, zero-amount identity success, and the actual removal-denominator `require`. That helper has no fee parameter. Zero amount MUST be treated as identity success (`if (amount == 0) return sqrtPX96`), not as a refusal. Rounding proofs MUST state the branch-specific 0.7.6 fallback equation and MUST NOT silently equate it to the exact mathematical rational formula. Standalone function admissibility MUST be distinguished from full-pool reachability. TickMath, SwapMath, token1 next-price, amount0/amount1 deltas, bitmap/liquidity/factory, the original 45-fixture campaign, and the original M01–M12 mutation campaign SHALL remain `P21`. A `P16` contribution MUST NOT close those original mixed task IDs.
++`P16` SHALL execute the pinned Uniswap V3 token0 next-price helper `getNextSqrtPriceFromAmount0RoundingUp` from v3-core `e3589b192d0be27e100cd0daaf6c97204fdb1899` (`SqrtPriceMath.sol` lines 28–56) under pinned compiler settings and a declared EVM harness, or justify another actual source-semantics reference. The independent Python transcription MUST remain a diagnostic third implementation. Predeclared nonempty partitions SHALL cover ordinary add/remove, multiplication overflow, the required denominator-sum overflow branch, rounding-fallback, zero-amount identity success, and the actual removal-denominator `require`. That helper has no fee parameter. Zero amount MUST be treated as identity success (`if (amount == 0) return sqrtPX96`), not as a refusal. Rounding proofs MUST state the branch-specific 0.7.6 fallback equation and MUST NOT silently equate it to the exact mathematical rational formula. Standalone function admissibility MUST be distinguished from full-pool reachability. TickMath, SwapMath, token1 next-price, amount0/amount1 deltas, bitmap/liquidity/factory, the original 45-fixture campaign, compiled M09 SwapMath execution, and the original M01–M12 mutation campaign SHALL remain `P21`. `P16` SHALL obtain independent GPT-6 planning review of the exact repaired token0 planning slice, with recorded verdict, requested/reported model identity, and input hashes, and MUST keep gate accepted false until that review; that slice review MUST NOT wait on `P21`. The original unaccepted whole-library freeze is preserved input, not accepted evidence, and this program-plan revision is not original 1.2 acceptance. A `P16` contribution MUST NOT close those original mixed task IDs.
+ 
+ #### Scenario: Sum-overflow mismatch is repaired
+ - **WHEN** sqrtP is MAX_SQRT_RATIO−1, liquidity is max uint128, amount causes numerator1+product uint256 overflow while the product fits
+@@ -14,7 +14,7 @@
+ 
+ #### Scenario: M09 does not protect F28
+ - **WHEN** the planned M09 mutant flips the direction predicate
+-- **THEN** F28 is removed or replaced as a protected control because amountIn changes from 2 to 1, and a genuinely unaffected sibling is named
++- **THEN** `P16` removes or replaces F28 as a protected control because amountIn changes from 2 to 1, names a genuinely unaffected sibling, and preserves the failed original plan; this is diagnostic/control-plan correction, not compiled M09 SwapMath execution
+ 
+ #### Scenario: Zero amount is identity success
+ - **WHEN** planned inputs `(sqrtPX96=2^96, liquidity=1, amount=0, add=true)` or the same with `add=false` are applied to the token0 helper
+@@ -50,7 +50,7 @@
+ 
+ ### Requirement: Full concentrated-liquidity traversal
+ 
+-`P21` SHALL own residual concentrated-liquidity work that `P16` does not: original TickMath tasks 3.1–3.3, SwapMath task 4.2, residual original-4.1 token1 next-price and amount0/amount1 deltas, bitmap/liquidity/factory tasks 5.1–5.3, the original 45-fixture campaign, the original M01–M12 mutation campaign, and tick traversal, including the named remainders `R-FULL-TRAVERSAL`, `G-FULLMATH-ASSEMBLY`, and `G-NO-SOLC-DIFFERENTIAL` from the unaccepted liquidity candidate. Exact-output capping in pinned `SwapMath.sol` lines 87–89 is a bounded success behavior, not a refusal. A declared pool admission failure for this scope SHALL use the pinned `UniswapV3Pool.swap` `SPL` guard (lines 608–613). Assembly FullMath identity, `Pool.swap` lock/callback/payment, and deployment fidelity MUST stay named gaps until separately discharged. Mixed original IDs SHALL close only when every recorded contribution exists.
++`P21` SHALL own residual concentrated-liquidity work that `P16` does not: original TickMath tasks 3.1–3.3, SwapMath task 4.2, residual original-4.1 token1 next-price and amount0/amount1 deltas, bitmap/liquidity/factory tasks 5.1–5.3, the original 45-fixture campaign, the original M01–M12 mutation campaign including actual compiled M09 SwapMath execution with the repaired per-mutant unaffected-control set (M09 MUST exclude or replace F28; preserve the failed original plan), and tick traversal, including the named remainders `R-FULL-TRAVERSAL`, `G-FULLMATH-ASSEMBLY`, and `G-NO-SOLC-DIFFERENTIAL` from the unaccepted liquidity candidate. `P21` SHALL obtain independent GPT-6 planning review of the exact repaired residual planning slice, with recorded verdict, requested/reported model identity, and input hashes, and MUST keep gate accepted false until that review; that residual-slice review MUST NOT be a `P16` implementation prerequisite. Exact-output capping in pinned `SwapMath.sol` lines 87–89 is a bounded success behavior, not a refusal. A declared pool admission failure for this scope SHALL use the pinned `UniswapV3Pool.swap` `SPL` guard (lines 608–613). Assembly FullMath identity, `Pool.swap` lock/callback/payment, and deployment fidelity MUST stay named gaps until separately discharged. Mixed original IDs SHALL close only when every recorded contribution exists. Original 1.2 SHALL close only after both applicable accepted planning-slice outcomes exist.
+ 
+ #### Scenario: One-word bitmap is not full traversal
+ - **WHEN** `nextInitializedTickWithinOneWord` proofs pass
+@@ -63,6 +63,10 @@
+ #### Scenario: Token1 and delta residual stay with P21
+ - **WHEN** `P16` accepts the narrow token0 next-price slice
+ - **THEN** original-4.1 residual amount0/amount1 deltas and token1 next-price remain `P21` obligations and MUST NOT be marked done or dropped
++
++#### Scenario: Compiled M09 uses the repaired control set
++- **WHEN** `P21` executes original 6.3 mutant M09 against compiled SwapMath
++- **THEN** the per-mutant unaffected-control set excludes or replaces F28 with the sibling named by the `P16` control-plan correction, the failed original plan is preserved as evidence, and this execution is not a `P16` token0 obligation
+ 
+ ### Requirement: Curve iteration and nonconvergence
+ 
+--- r1/sprint-index.json
++++ r2/sprint-index.json
+@@ -2,7 +2,7 @@
+   "schema": {
+     "name": "reusable-verification-platform-program-sprint-index",
+     "created": "2026-09-08",
+-    "description": "Stable program sprint index. P01–P37 are new identifiers. Historical Sprint12/M4, Sprint13/M5, Sprint14/M6 remain legacy labels only. dependencies are hard predecessors. conditional_dependencies are actual consumed-API conditions. resource_gate is spending policy, not a semantic edge, and is satisfied only by the named platform_reuse_predicate when present. successful_exit, partial_delivery, and terminal_disposition are distinct. This file is a planning index, not acceptance or a calendar. Candidate SHA-256 values are copied from CURRENT.json lane candidate.sha256 and must be compared to that file, not self-asserted. Revision planning-repair-20260908 is an authorized planning repair pending independent GPT-6 acceptance; it does not set a review gate accepted.",
++    "description": "Stable program sprint index. P01–P37 are new identifiers. Historical Sprint12/M4, Sprint13/M5, Sprint14/M6 remain legacy labels only. dependencies are hard predecessors. conditional_dependencies are actual consumed-API conditions. resource_gate is spending policy, not a semantic edge, and is satisfied only by the named platform_reuse_predicate when present. successful_exit, partial_delivery, and terminal_disposition are distinct. This file is a planning index, not acceptance or a calendar. Candidate SHA-256 values are copied from CURRENT.json lane candidate.sha256 and must be compared to that file, not self-asserted. Revision planning-repair-r2-20260908 is a bounded PR1–PR3 planning repair pending independent GPT-6 review; it does not set a review gate accepted.",
+     "fields": {
+       "id": "Stable sprint id (Pnn). Required.",
+       "title": "Human-readable title. Required.",
+@@ -30,13 +30,15 @@
+     },
+     "hard_versus_recommended": "dependencies are the DAG. recommended_order is a spending sequence. resource_gate is policy. conditional_dependencies are real when that branch is used. P18 depends only on P16. P37 successful_exit joins every required lane terminal.",
+     "revision": {
+-      "id": "planning-repair-20260908",
+-      "base_review": "review/semantic-kernel/full-program-spec-review-20260908/ADJUDICATION.md",
++      "id": "planning-repair-r2-20260908",
++      "base_review": "review/semantic-kernel/program-execution-20260908/plan-review/REVIEW.md",
++      "prior_revision": "planning-repair-20260908",
++      "prior_archive_sha256": "f4162b193aa0ad2b0884c93652cc6bb4507f443ee96318d96c687199f13f35a2",
+       "authorization_record": "review/semantic-kernel/program-execution-20260908/STATE.json",
+       "authorized_by": "begin implementing",
+-      "status": "pending_independent_gpt6_acceptance",
++      "status": "pending_independent_gpt6_review",
+       "sets_review_gate_accepted": false,
+-      "note": "This planning change still does not itself dispatch implementation. User authorization to execute after independent GPT-6 acceptance of this revision is recorded separately; do not re-ask. Frozen historical reviews are not rewritten."
++      "note": "Bounded r2 planning repair of independent findings PR1–PR3. This planning change still does not itself dispatch implementation. User authorization to execute after independent GPT-6 acceptance of this revision is recorded separately; do not re-ask. Frozen r1 archive and historical reviews are not rewritten. This revision is not original liquidity 1.2 acceptance."
+     }
+   },
+   "historical_completed_baseline": [
+@@ -594,12 +596,14 @@
+           "5.1",
+           "5.2",
+           "5.3",
+-          "5.5",
+           "6.1",
+           "6.2",
+           "6.3"
+         ],
+         "lane": "corpus",
++        "split_contributions": [
++          "5.5"
++        ],
+         "sub_delivery": {
+           "original_task": "6.1",
+           "artifact": "monotonic development exposure/ancestry projection for all original 75 and design-inspected descendants",
+@@ -623,9 +627,9 @@
+         "evidence_proposed": "review/semantic-kernel/corpus-adjudication/p09/"
+       },
+       "entry": "P08 repairs applied to any record this sprint would project. No global barrier on P16.",
+-      "exit": "Identities, 29 disagreements, remaining 169-work dispositions, and original 6.1–6.3 manifests independently accepted, with the 6.1 development manifest exposed as a named sub-delivery. Unresolved facts stay unresolved. Original 7.1–8.3 are not this sprint's successful_exit.",
+-      "stop_repair": "Counting review_pending as complete; promoting the 75 to holdouts; treating the 6.1 sub-delivery as whole-package acceptance; closing original 7.x/8.x from P09 identity work alone.",
+-      "claim_boundary": "Development overlay identities, disputes, and manifests. Not untouched evaluation, not P10 source/collector work, not whole-package 7.x/8.x closeout.",
++      "exit": "Identities for all 75 development candidates, 29 facet disagreement dispositions, and original 6.1–6.3 manifests independently accepted, with the 6.1 development manifest exposed as a named sub-delivery. Unresolved facts stay unresolved. Original 5.5 whole-task closure waits on P10's separate challenge adjudication record. Original 7.1–8.3 and complete 169-item accounting are not this sprint's successful_exit.",
++      "stop_repair": "Counting review_pending as complete; promoting the 75 to holdouts; treating the 6.1 sub-delivery as whole-package acceptance; closing original 7.x/8.x from P09 identity work alone; claiming remaining 169-work dispositions; closing original 5.5 from 29 facet records alone.",
++      "claim_boundary": "Development overlay identities, 29 facet disputes, and manifests. Not the original 5.5 separate-challenge record, not complete 169-item accounting, not untouched evaluation, not P10 source/collector work, not whole-package 7.x/8.x closeout.",
+       "roadmap_ids": [
+         "R10",
+         "R11",
+@@ -639,9 +643,9 @@
+       "hash_bindings": {
+         "corpus": "a119b4ae63c81bc59f1b8e0c509a3ff6ec53e1a112f838612c5a2c522407614c"
+       },
+-      "partial_delivery": "Original task 6.1 development manifest MAY be consumed by P10 collect 2.4 before the rest of P09 successful_exit. Original 7.x/8.x remain open as P09+P10 contributions.",
+-      "terminal_disposition": "Rejected, repair-required, or blocked attempts are recorded with missing-input identity; they do not deliver successful_exit.",
+-      "successful_exit": "Identities, 29 disagreements, remaining 169-work dispositions, and original 6.1–6.3 manifests independently accepted, with the 6.1 development manifest exposed as a named sub-delivery. Unresolved facts stay unresolved. Original 7.1–8.3 are not this sprint's successful_exit."
++      "partial_delivery": "Original task 6.1 development manifest MAY be consumed by P10 collect 2.4 before the rest of P09 successful_exit. Original 5.5 remains open as a P09+P10 split until the P10 challenge contribution exists. Original 7.x/8.x remain open as P09+P10 contributions.",
++      "terminal_disposition": "Rejected, repair-required, or blocked attempts are recorded with missing-input identity; they do not deliver successful_exit.",
++      "successful_exit": "Identities for all 75 development candidates, 29 facet disagreement dispositions, and original 6.1–6.3 manifests independently accepted, with the 6.1 development manifest exposed as a named sub-delivery. Unresolved facts stay unresolved. Original 5.5 whole-task closure waits on P10's separate challenge adjudication record. Original 7.1–8.3 and complete 169-item accounting are not this sprint's successful_exit."
+     },
+     {
+       "id": "P10",
+@@ -663,6 +667,9 @@
+           "5.4"
+         ],
+         "lane": "corpus",
++        "split_contributions": [
++          "5.5"
++        ],
+         "whole_package_join": [
+           "7.1",
+           "7.2",
+@@ -672,7 +679,7 @@
+           "8.2",
+           "8.3"
+         ],
+-        "note": "Source work including original bounded collector 2.4 after P09 6.1 sub-delivery. Whole-package 7.x/8.x join requires P09 successful_exit and this source work. Hard predecessor remains P08 only; no P09 hard edge, so no task-level cycle. P16 has no corpus closeout barrier."
++        "note": "Source work including original bounded collector 2.4 after P09 6.1 sub-delivery. Original 5.5 challenge-adjudication contribution uses the same rule version as P09's 29 facet records; whole 5.5 closes after both contributions and does not wait for 2.4 or 7.x/8.x. Whole-package 7.x/8.x join requires P09 successful_exit and this source work and is where complete 169-item accounting belongs. Hard predecessor remains P08 only; no P09 hard edge, so no task-level cycle. P16 has no corpus closeout barrier."
+       },
+       "change": "reusable-verification-platform-program",
+       "path": {
+@@ -680,10 +687,10 @@
+         "dispute_inventory": "openspec/changes/corpus-provenance-adjudication/dispute-inventory.json",
+         "evidence_proposed": "review/semantic-kernel/corpus-liquity-refs/p10/"
+       },
+-      "entry": "Separate liquidation challenge from redemption library P23. Use repaired captures. Original 2.4 waits on the P09 6.1 development-manifest sub-delivery, not on all of P09. Whole-package 7.x/8.x waits on P09 successful_exit plus this sprint's source/collector work.",
+-      "exit": "Challenge decision, dependency ledger, residue records, original-reference recovery or replacement, and original bounded collector 2.4 independently accepted. After P09 successful_exit, original 7.1–8.3 whole-package tooling/acceptance/archive independently accepted as the P09+P10 join.",
+-      "stop_repair": "Invented collector runs; closing historical disagreements with current-only support; running 2.4 before the 6.1 manifest; closing 7.x/8.x from P10 source work without P09 outcomes; adding a P09 hard edge that cycles with the join.",
+-      "claim_boundary": "Source-adjudication records, original bounded collect, and the joined package closeout. Not P23 ordered-redemption implementation. Not a global barrier on P16.",
++      "entry": "Separate liquidation challenge from redemption library P23. Use repaired captures. Original 2.4 waits on the P09 6.1 development-manifest sub-delivery, not on all of P09. Original 5.5 challenge adjudication does not wait for all of P09. Whole-package 7.x/8.x waits on P09 successful_exit plus this sprint's source/collector work.",
++      "exit": "Challenge decision, the original 5.5 separate-challenge adjudication record using the same rule version, dependency ledger, residue records, original-reference recovery or replacement, and original bounded collector 2.4 independently accepted. Whole original 5.5 closes only after the P09 29-facet contribution also exists. After P09 successful_exit, original 7.1–8.3 whole-package tooling/acceptance/archive independently accepted as the P09+P10 join, including complete 169-item accounting.",
++      "stop_repair": "Invented collector runs; closing historical disagreements with current-only support; running 2.4 before the 6.1 manifest; closing 7.x/8.x from P10 source work without P09 outcomes; adding a P09 hard edge that cycles with the join; closing original 5.5 from the challenge record without the P09 29-facet contribution.",
++      "claim_boundary": "Source-adjudication records including the original 5.5 challenge contribution, original bounded collect, and the joined package closeout with complete 169-item accounting. Not P23 ordered-redemption implementation. Not a global barrier on P16.",
+       "roadmap_ids": [
+         "R12",
+         "R13",
+@@ -704,9 +711,9 @@
+       "hash_bindings": {
+         "corpus": "a119b4ae63c81bc59f1b8e0c509a3ff6ec53e1a112f838612c5a2c522407614c"
+       },
+-      "partial_delivery": "Source/collector work 2.1–2.2, 2.4, 3.3, 4.1–4.3, 5.4 MAY be accepted while 7.x/8.x remain open waiting for P09 successful_exit. Neither partial closes those original 7.x/8.x IDs.",
+-      "terminal_disposition": "Rejected, repair-required, or blocked attempts are recorded with missing-input identity; they do not deliver successful_exit.",
+-      "successful_exit": "Challenge decision, dependency ledger, residue records, original-reference recovery or replacement, and original bounded collector 2.4 independently accepted. After P09 successful_exit, original 7.1–8.3 whole-package tooling/acceptance/archive independently accepted as the P09+P10 join."
++      "partial_delivery": "Source/collector work 2.1–2.2, 2.4, 3.3, 4.1–4.3, 5.4 and the original-5.5 challenge contribution MAY be accepted while 7.x/8.x remain open waiting for P09 successful_exit. Neither partial closes those original 7.x/8.x IDs. Whole original 5.5 may close before 7.x/8.x once both 5.5 contributions exist.",
++      "terminal_disposition": "Rejected, repair-required, or blocked attempts are recorded with missing-input identity; they do not deliver successful_exit.",
++      "successful_exit": "Challenge decision, the original 5.5 separate-challenge adjudication record using the same rule version, dependency ledger, residue records, original-reference recovery or replacement, and original bounded collector 2.4 independently accepted. Whole original 5.5 closes only after the P09 29-facet contribution also exists. After P09 successful_exit, original 7.1–8.3 whole-package tooling/acceptance/archive independently accepted as the P09+P10 join, including complete 169-item accounting."
+     },
+     {
+       "id": "P11",
+@@ -907,7 +914,7 @@
+     },
+     {
+       "id": "P16",
+-      "title": "Pinned Uniswap token0 execution, overflow-oracle repair, M09/F28 control repair",
++      "title": "Pinned Uniswap token0 execution, overflow-oracle repair, M09/F28 control-plan correction",
+       "dependencies": [
+         "P15"
+       ],
+@@ -918,7 +925,7 @@
+         "candidate_path": "/home/charl/defiformal-wt-liquidity-grok-gpt6-20260908/openspec/changes/concentrated-liquidity-library/",
+         "pin": "v3-core e3589b192d0be27e100cd0daaf6c97204fdb1899",
+         "archive_sha256": "e1cd08f9f8a843355f1b249a013c9de0d29e7e1ebf1d5a3e8716d6d7621baf77",
+-        "note": "Unaccepted liquidity planning candidate. Hash copied from CURRENT.json; compare mechanically to that file. P16 is the narrow token0 next-price experiment including required denominator-sum overflow. TickMath, SwapMath, bitmap/liquidity/factory, token1/delta residual, and the original 45-fixture/M01–M12 campaigns are P21. Split original IDs close only when every contribution exists.",
++        "note": "Unaccepted liquidity planning candidate. Hash copied from CURRENT.json; compare mechanically to that file. P16 is the narrow token0 next-price experiment including required denominator-sum overflow. Original 1.2 is independent planning review of the exact repaired P16 token0 slice; the unaccepted freeze is preserved input, not accepted evidence, and this program revision is not 1.2 acceptance. TickMath, SwapMath, bitmap/liquidity/factory, token1/delta residual, the original 45-fixture/M01–M12 campaigns, and compiled M09 SwapMath execution are P21. Split original IDs close only when every contribution exists. P16 implementation MUST NOT wait on the P21 campaign.",
+         "archive_sha256_source": "review/semantic-kernel/strategy-audit-20260908/CURRENT.json lanes[id=liquidity].candidate.sha256",
+         "tasks": {
+           "token0_narrow_and_sum_overflow": [
+@@ -963,10 +970,10 @@
+         "python_oracle_diagnostic": "review/semantic-kernel/concentrated-liquidity/planning/grok-gpt6-official-r1/cl_oracle.py",
+         "evidence_proposed": "review/semantic-kernel/uniswap-token0/p16/"
+       },
+-      "entry": "Verify pin closure and compiler settings. Repair unbounded denominator addition and M09/F28. Source readiness may start before P15 freeze completes, but implementation uses P15 contracts.",
+-      "exit": "Pinned Solidity/model agreement on standalone token0 next-price including required sum-overflow, zero-amount identity success, planned add (2^96,1,1,true)=2^95, and removal-denominator require failure (2^96,1,1,false). No fee parameter. Branch-specific 0.7.6 fallback equation. Overflow cannot be excluded. Typed wrapper optional for arithmetic-only P18. TickMath, SwapMath, token1/delta, bitmap/liquidity/factory, full 45-fixture and M01–M12 mutation campaigns remain P21. A P16 contribution MUST NOT close those original mixed task IDs.",
+-      "stop_repair": "Python-only mutation credit; compile failure scored as detection; unexplained source/model difference.",
+-      "claim_boundary": "Standalone token0 next-price arithmetic and bounded source comparison. Not TickMath, not SwapMath, not token1/delta, not bitmap/liquidity/factory, not the original 45-fixture campaign, not full pool security, not two-case reuse.",
++      "entry": "Obtain independent GPT-6 planning review of the exact repaired P16 token0 planning slice (verdict, requested/reported model identity, input hashes; gate accepted remains false until that review). The original unaccepted whole-library freeze is preserved input, not accepted evidence. This slice review is not a P21-campaign prerequisite and is not original 1.2 whole-task acceptance. Verify pin closure and compiler settings. Repair unbounded denominator addition and the M09/F28 control plan (not compiled M09 SwapMath execution). Source readiness may start before P15 freeze completes, but implementation uses P15 contracts.",
++      "exit": "Independent planning review of the exact repaired P16 token0 slice recorded. Pinned Solidity/model agreement on standalone token0 next-price including required sum-overflow, zero-amount identity success, planned add (2^96,1,1,true)=2^95, and removal-denominator require failure (2^96,1,1,false). No fee parameter. Branch-specific 0.7.6 fallback equation. Overflow cannot be excluded. Token0 production mutants compiled; M09/F28 control plan corrected, not compiled M09 SwapMath execution. Typed wrapper optional for arithmetic-only P18. TickMath, SwapMath, token1/delta, bitmap/liquidity/factory, full 45-fixture and M01–M12 mutation campaigns remain P21. A P16 contribution MUST NOT close those original mixed task IDs. Original 1.2 remains open until the P21 residual-slice planning review is also independently accepted.",
++      "stop_repair": "Python-only mutation credit; compile failure scored as detection; unexplained source/model difference; compiled M09 SwapMath execution claimed as P16; treating the unaccepted freeze as original 1.2 acceptance.",
++      "claim_boundary": "Standalone token0 next-price arithmetic and bounded source comparison. Not TickMath, not SwapMath, not token1/delta, not bitmap/liquidity/factory, not compiled M09 SwapMath execution, not the original 45-fixture campaign, not full pool security, not two-case reuse, not whole original 1.2.",
+       "roadmap_ids": [
+         "R22",
+         "R30",
+@@ -984,7 +991,7 @@
+       },
+       "partial_delivery": "None that closes original mixed concentrated-liquidity task IDs. Token0 acceptance is a contribution to those IDs, not whole-task closure.",
+       "terminal_disposition": "Rejected, repair-required, or blocked attempts are recorded with missing-input identity; they do not deliver successful_exit.",
+-      "successful_exit": "Pinned Solidity/model agreement on standalone token0 next-price including required sum-overflow, zero-amount identity success, planned add (2^96,1,1,true)=2^95, and removal-denominator require failure (2^96,1,1,false). No fee parameter. Branch-specific 0.7.6 fallback equation. Overflow cannot be excluded. Typed wrapper optional for arithmetic-only P18. TickMath, SwapMath, token1/delta, bitmap/liquidity/factory, full 45-fixture and M01–M12 mutation campaigns remain P21. A P16 contribution MUST NOT close those original mixed task IDs."
++      "successful_exit": "Independent planning review of the exact repaired P16 token0 slice recorded. Pinned Solidity/model agreement on standalone token0 next-price including required sum-overflow, zero-amount identity success, planned add (2^96,1,1,true)=2^95, and removal-denominator require failure (2^96,1,1,false). No fee parameter. Branch-specific 0.7.6 fallback equation. Overflow cannot be excluded. Token0 production mutants compiled; M09/F28 control plan corrected, not compiled M09 SwapMath execution. Typed wrapper optional for arithmetic-only P18. TickMath, SwapMath, token1/delta, bitmap/liquidity/factory, full 45-fixture and M01–M12 mutation campaigns remain P21. A P16 contribution MUST NOT close those original mixed task IDs. Original 1.2 remains open until the P21 residual-slice planning review is also independently accepted."
+     },
+     {
+       "id": "P17",
+@@ -1212,19 +1219,20 @@
+           ],
+           "residual_from_4.1": "token1 next-price and amount0/amount1 deltas"
+         },
+-        "note": "P21 owns residual library work that the original unaccepted candidate assigned alongside token0: TickMath, SwapMath, bitmap/liquidity/factory, token1/delta, the 45-fixture campaign, and M01–M12 mutations, plus multi-word tick traversal. Resource gate is P17.platform_reuse, not arithmetic-only reuse."
++        "note": "P21 owns residual library work that the original unaccepted candidate assigned alongside token0: TickMath, SwapMath, bitmap/liquidity/factory, token1/delta, the 45-fixture campaign, and M01–M12 mutations including compiled M09 SwapMath execution with the repaired per-mutant unaffected-control set (M09 excludes or replaces F28), plus multi-word tick traversal. Original 1.2 residual-slice planning review is this sprint's contribution and MUST NOT be a P16 implementation prerequisite. Resource gate is P17.platform_reuse, not arithmetic-only reuse."
+       },
+       "change": "reusable-verification-platform-program",
+       "path": {
+         "proposed_source": "lean/DefiKernel/ConcentratedLiquidity/",
+         "evidence_proposed": "review/semantic-kernel/concentrated-liquidity/p21/"
+       },
+-      "entry": "P16 token0 slice accepted as a contribution, not as closure of mixed original IDs. Resource gate: P17.platform_reuse (one harness engine, named shared financial lemma/contract, named shared executor result, token0 kernel bridge, both adapters, measured case-two inventory), not arithmetic-only reuse. Source-readiness inspection may precede the gate.",
+-      "exit": "TickMath, SwapMath, residual token1/delta from original 4.1, bitmap/liquidity/factory, original 45-fixture and M01–M12 campaigns, and declared multi-word tick traversal with amount/fee accounting independently accepted. Remainders G-FULLMATH-ASSEMBLY and G-NO-SOLC-DIFFERENTIAL stay named until discharged. Traversal cannot be excluded to close R22. Mixed original IDs close only after the P16 contributions also exist.",
+-      "stop_repair": "One-word bitmap claimed as full Pool.swap; assembly identity assumed; dropping token1/delta because P16 is narrow; marking original 4.1/6.x/7.x done from the P21 contribution alone.",
++      "entry": "Obtain independent GPT-6 planning review of the exact repaired P21 residual planning slice (verdict, requested/reported model identity, input hashes; gate accepted remains false until that review). The original unaccepted whole-library freeze is preserved input, not accepted evidence. This residual-slice review is not original 1.2 whole-task acceptance and MUST NOT be a P16 implementation prerequisite. P16 token0 slice accepted as a contribution, not as closure of mixed original IDs, is required before residual implementation. Resource gate: P17.platform_reuse (one harness engine, named shared financial lemma/contract, named shared executor result, token0 kernel bridge, both adapters, measured case-two inventory), not arithmetic-only reuse. Source-readiness inspection may precede the gate.",
++      "exit": "TickMath, SwapMath, residual token1/delta from original 4.1, bitmap/liquidity/factory, original 45-fixture and M01–M12 campaigns with the repaired per-mutant unaffected-control set (compiled M09 excludes or replaces F28; failed original plan preserved), and declared multi-word tick traversal with amount/fee accounting independently accepted. Remainders G-FULLMATH-ASSEMBLY and G-NO-SOLC-DIFFERENTIAL stay named until discharged. Traversal cannot be excluded to close R22. Mixed original IDs close only after the P16 contributions also exist. Original 1.2 closes only after both applicable accepted planning-slice outcomes exist.",
++      "stop_repair": "One-word bitmap claimed as full Pool.swap; assembly identity assumed; dropping token1/delta because P16 is narrow; marking original 4.1/6.x/7.x done from the P21 contribution alone; scoring compiled M09 against F28; treating the unaccepted freeze as original 1.2 acceptance.",
+       "claim_boundary": "Residual concentrated-liquidity library within declared scope, including token1/delta that P16 does not own, plus declared multi-word traversal. Not deployed pool security.",
+       "roadmap_ids": [
+-        "R22"
++        "R22",
++        "R32"
+       ],
+       "lane_ids": [
+         "liquidity",
+@@ -1241,7 +1249,7 @@
+       },
+       "partial_delivery": "None unless a coherent accepted subset is named; remainder stays open.",
+       "terminal_disposition": "Rejected, repair-required, or blocked attempts are recorded with missing-input identity; they do not deliver successful_exit.",
+-      "successful_exit": "TickMath, SwapMath, residual token1/delta from original 4.1, bitmap/liquidity/factory, original 45-fixture and M01–M12 campaigns, and declared multi-word tick traversal with amount/fee accounting independently accepted. Remainders G-FULLMATH-ASSEMBLY and G-NO-SOLC-DIFFERENTIAL stay named until discharged. Traversal cannot be excluded to close R22. Mixed original IDs close only after the P16 contributions also exist."
++      "successful_exit": "TickMath, SwapMath, residual token1/delta from original 4.1, bitmap/liquidity/factory, original 45-fixture and M01–M12 campaigns with the repaired per-mutant unaffected-control set (compiled M09 excludes or replaces F28; failed original plan preserved), and declared multi-word tick traversal with amount/fee accounting independently accepted. Remainders G-FULLMATH-ASSEMBLY and G-NO-SOLC-DIFFERENTIAL stay named until discharged. Traversal cannot be excluded to close R22. Mixed original IDs close only after the P16 contributions also exist. Original 1.2 closes only after both applicable accepted planning-slice outcomes exist."
+     },
+     {
+       "id": "P22",
+--- r1/sprint-plan.md
++++ r2/sprint-plan.md
+@@ -1,6 +1,6 @@
+ # Reusable verification platform — sprint plan
+ 
+-Planning only. Native Grok 4.6 author; independent GPT-6 checker. No Foreman. These files do not themselves execute sprints. Revision `planning-repair-20260908` is pending independent GPT-6 acceptance and does not set a review gate accepted. User authorization to execute after that acceptance is recorded separately at `review/semantic-kernel/program-execution-20260908/STATE.json`; do not re-ask.
++Planning only. Native Grok 4.6 author; independent GPT-6 checker. No Foreman. These files do not themselves execute sprints. Revision `planning-repair-r2-20260908` is pending independent GPT-6 review and does not set a review gate accepted. User authorization to execute after that acceptance is recorded separately at `review/semantic-kernel/program-execution-20260908/STATE.json`; do not re-ask. Frozen r1 archive `f4162b193aa0ad2b0884c93652cc6bb4507f443ee96318d96c687199f13f35a2` is not rewritten.
+ 
+ Canonical artifacts in this change: [design DAG](design.md), [tasks](tasks.md), [sprint-index](sprint-index.json), [coverage](coverage.md), [proof matrix](proof-obligation-dependency-matrix.json). Machine-readable fields live in `sprint-index.json`. Original OpenSpec task IDs remain the contracts for existing packages; `tasks.md` enumerates future work with `Pnn` in every task line.
+ 
+@@ -116,22 +116,22 @@
+ ## P09 — Identities, 29 disputes, development-manifest sub-delivery
+ 
+ - **Dependencies:** P08. No hard edge to P10.
+-- **Legacy:** corpus tasks 3.1–3.2, 5.1–5.3, 5.5, 6.1–6.3. Original 7.1–8.3 are P09+P10 contributions, not P09 successful_exit.
+-- **Outputs:** identity ledger, 29-disagreement overlay, development/evaluation manifests; named 6.1 sub-delivery for P10 collect 2.4; proposed `corpus/adjudicated/v1/generated/`.
+-- **Claim boundary:** development overlay identities, disputes, and manifests. All 75 remain development. Not whole-package 7.x/8.x closeout.
+-- **Checks:** silence is not refutation; promotion controls fail; 6.1 artifact exists before P10 2.4.
+-- **Stop:** counting `review_pending` as complete; closing 7.x/8.x from identity work alone.
++- **Legacy:** corpus tasks 3.1–3.2, 5.1–5.3, P09 contribution of 5.5 (29 facet records), 6.1–6.3. Original 5.5 whole-task and 7.1–8.3 are P09+P10 contributions, not P09 successful_exit.
++- **Outputs:** identity ledger, 29-facet overlay, development/evaluation manifests; named 6.1 sub-delivery for P10 collect 2.4; proposed `corpus/adjudicated/v1/generated/`.
++- **Claim boundary:** development overlay identities, 29 facet disputes, and manifests. All 75 remain development. Not the original 5.5 separate-challenge record, not complete 169-item accounting, not whole-package 7.x/8.x closeout.
++- **Checks:** silence is not refutation; promotion controls fail; 6.1 artifact exists before P10 2.4; 29 facet records do not close original 5.5.
++- **Stop:** counting `review_pending` as complete; closing 7.x/8.x from identity work alone; claiming remaining 169-work dispositions; closing original 5.5 from 29 facet records alone.
+ - **Acceptance/delivery:** independent review; unresolved facts stay unresolved. 6.1 MAY be consumed early as partial_delivery.
+ 
+ ## P10 — Liquity challenge, bounded collector, whole-package 7.x/8.x join
+ 
+ - **Dependencies:** P08 only. Conditional: 2.4 consumes P09 6.1; 7.x/8.x join consumes P09 successful_exit. No P09 hard edge, so no cycle.
+-- **Legacy:** corpus tasks 2.1–2.2, 2.4, 3.3, 4.1–4.3, 5.4; whole-package join 7.1–8.3.
+-- **Outputs:** liquidation-challenge decision; bounded collector 2.4 with original three-slot/two-attempt/five-redirect/30-second local HTTP fixture; `inputs/dependencies.json`; residue records; original-reference recovery or replacement; joined 7.x/8.x tooling/acceptance/archive.
+-- **Claim boundary:** source adjudication, original bounded collect, and joined package closeout. Not P23 redemption library. Not a global barrier on P16.
+-- **Checks:** separate liquidation versus redemption; reconstructed replacement does not claim recovered original; 2.4 does not run before 6.1; 7.x/8.x do not close from one workstream.
+-- **Stop:** invented collector runs; adding a P09 hard edge that cycles with the join.
+-- **Acceptance/delivery:** independent review. Source work MAY be partial_delivery while 7.x/8.x wait for P09.
++- **Legacy:** corpus tasks 2.1–2.2, 2.4, 3.3, 4.1–4.3, 5.4; P10 contribution of 5.5 (separate challenge adjudication record); whole-package join 7.1–8.3.
++- **Outputs:** liquidation-challenge decision and original-5.5 challenge adjudication record; bounded collector 2.4 with original three-slot/two-attempt/five-redirect/30-second local HTTP fixture; `inputs/dependencies.json`; residue records; original-reference recovery or replacement; joined 7.x/8.x tooling/acceptance/archive with complete 169-item accounting.
++- **Claim boundary:** source adjudication including the original 5.5 challenge contribution, original bounded collect, and joined package closeout. Not P23 redemption library. Not a global barrier on P16.
++- **Checks:** separate liquidation versus redemption; reconstructed replacement does not claim recovered original; 2.4 does not run before 6.1; 7.x/8.x do not close from one workstream; original 5.5 closes only after both contributions; 169-item accounting is at the join.
++- **Stop:** invented collector runs; adding a P09 hard edge that cycles with the join; closing original 5.5 from the challenge record without the P09 29-facet contribution.
++- **Acceptance/delivery:** independent review. Source work MAY be partial_delivery while 7.x/8.x wait for P09. Whole original 5.5 may close before 7.x/8.x once both contributions exist.
+ 
+ ## P11 — H02/H12 scope and like-for-like measurements
+ 
+@@ -181,15 +181,15 @@
+ - **Stop:** invented undeclared operator fields.
+ - **Acceptance/delivery:** independent review of the contract freeze.
+ 
+-## P16 — Pinned Uniswap token0, overflow-oracle repair, M09/F28 repair
++## P16 — Pinned Uniswap token0, overflow-oracle repair, M09/F28 control-plan correction
+ 
+ - **Dependencies:** P15 for implementation; source-readiness may start earlier.
+-- **Legacy:** unaccepted `concentrated-liquidity-library`; pin v3-core `e3589b192d0be27e100cd0daaf6c97204fdb1899`; archive `e1cd08f9f8a843355f1b249a013c9de0d29e7e1ebf1d5a3e8716d6d7621baf77`.
+-- **Outputs:** proposed `lean/DefiKernel/ConcentratedLiquidity/` token0 slice; pinned solc/EVM run; repaired oracle and mutant plan; proposed `review/semantic-kernel/uniswap-token0/p16/`.
+-- **Claim boundary:** standalone token0 next-price arithmetic and bounded source comparison. Required overflow branch cannot be excluded. Not TickMath, SwapMath, token1/delta, bitmap/liquidity/factory, or the original 45-fixture/M01–M12 campaigns (P21). Not full traversal (P21). Not source refinement (P30). Python oracle is diagnostic only. A P16 contribution does not close mixed original IDs.
+-- **Checks:** ordinary add/remove; required sum-overflow; zero-amount identity `(2^96,1,0,*)=2^96`; planned add `(2^96,1,1,true)=2^95`; removal-denominator require `(2^96,1,1,false)`. No fee parameter. Repaired F28 control.
+-- **Stop:** unexplained source/model difference; Python-only mutation credit; excluding the overflow branch to pass; marking original 4.1/6.x/7.x done from the token0 contribution.
+-- **Acceptance/delivery:** independent review; refinement remains open.
++- **Legacy:** unaccepted `concentrated-liquidity-library`; pin v3-core `e3589b192d0be27e100cd0daaf6c97204fdb1899`; archive `e1cd08f9f8a843355f1b249a013c9de0d29e7e1ebf1d5a3e8716d6d7621baf77`. Original 1.2 is independent planning review of the exact repaired P16 token0 slice; the unaccepted freeze is preserved input, not accepted evidence.
++- **Outputs:** proposed `lean/DefiKernel/ConcentratedLiquidity/` token0 slice; pinned solc/EVM run; repaired oracle and M09/F28 control plan; token0 production mutants; proposed `review/semantic-kernel/uniswap-token0/p16/`.
++- **Claim boundary:** standalone token0 next-price arithmetic and bounded source comparison. Required overflow branch cannot be excluded. Not TickMath, SwapMath, token1/delta, bitmap/liquidity/factory, compiled M09 SwapMath execution, or the original 45-fixture/M01–M12 campaigns (P21). Not full traversal (P21). Not source refinement (P30). Python oracle is diagnostic only. A P16 contribution does not close mixed original IDs. P16 implementation does not wait on the P21 campaign.
++- **Checks:** independent GPT-6 planning review of the exact repaired token0 slice with verdict/model/input hashes; ordinary add/remove; required sum-overflow; zero-amount identity `(2^96,1,0,*)=2^96`; planned add `(2^96,1,1,true)=2^95`; removal-denominator require `(2^96,1,1,false)`. No fee parameter. M09/F28 control-plan correction; token0 production mutants compiled.
++- **Stop:** unexplained source/model difference; Python-only mutation credit; excluding the overflow branch to pass; compiled M09 claimed as P16; marking original 4.1/6.x/7.x or whole 1.2 done from the token0 contribution.
++- **Acceptance/delivery:** independent review of the token0 slice; original 1.2 stays open until the P21 residual-slice planning review is also accepted; refinement remains open.
+ 
+ ## P17 — Vault source readiness and reuse gate
+ 
+@@ -231,10 +231,10 @@
+ ## P21 — Residual concentrated-liquidity library and tick traversal
+ 
+ - **Dependencies:** P16. Resource gate: `P17.platform_reuse`, not arithmetic-only reuse.
+-- **Outputs:** TickMath, SwapMath, residual token1/delta, bitmap/liquidity/factory, original 45-fixture and M01–M12 campaigns, traversal modules under proposed `lean/DefiKernel/ConcentratedLiquidity/`; remainders `R-FULL-TRAVERSAL`, `G-FULLMATH-ASSEMBLY`, `G-NO-SOLC-DIFFERENTIAL` named until discharged.
+-- **Claim boundary:** residual library including token1/delta that P16 does not own, plus declared multi-word traversal. Not deployed pool security. Naming a remainder does not close R22. Mixed original IDs close only after P16 contributions also exist.
+-- **Checks:** TickMath F10–F19; SwapMath and token1/delta; 45 fixtures; M01–M12; two-tick success; exact-output cap as bounded success (`SwapMath.sol` 87–89); `SPL` pool admission refusal (`UniswapV3Pool.sol` 608–613); liquidity-delta-without-cross negative.
+-- **Stop:** one-word bitmap claimed as `Pool.swap`; excluding traversal to pass; dropping token1/delta; marking original mixed IDs done from the P21 contribution alone.
++- **Outputs:** TickMath, SwapMath, residual token1/delta, bitmap/liquidity/factory, original 45-fixture and M01–M12 campaigns with repaired per-mutant controls, traversal modules under proposed `lean/DefiKernel/ConcentratedLiquidity/`; remainders `R-FULL-TRAVERSAL`, `G-FULLMATH-ASSEMBLY`, `G-NO-SOLC-DIFFERENTIAL` named until discharged.
++- **Claim boundary:** residual library including token1/delta that P16 does not own, plus declared multi-word traversal. Not deployed pool security. Naming a remainder does not close R22. Mixed original IDs close only after P16 contributions also exist. Original 1.2 residual-slice planning review is not a P16 prerequisite.
++- **Checks:** independent GPT-6 planning review of the exact repaired residual slice with verdict/model/input hashes; TickMath F10–F19; SwapMath and token1/delta; 45 fixtures; M01–M12 using the repaired per-mutant unaffected-control set (compiled M09 excludes or replaces F28; failed original plan preserved); two-tick success; exact-output cap as bounded success (`SwapMath.sol` 87–89); `SPL` pool admission refusal (`UniswapV3Pool.sol` 608–613); liquidity-delta-without-cross negative.
++- **Stop:** one-word bitmap claimed as `Pool.swap`; excluding traversal to pass; dropping token1/delta; scoring compiled M09 against F28; marking original mixed IDs done from the P21 contribution alone; treating the unaccepted freeze as original 1.2 acceptance.
+ 
+ ## P22 — Curve iteration, nonconvergence, refusal
+ 
+--- r1/tasks.md
++++ r2/tasks.md
+@@ -80,21 +80,21 @@
+ - [ ] 9.3 Encode the `P08` invariant that cited span maps to exact derived artifact, extraction record, and original successful response; verify challenge/404 captures remain retained with zero support.
+ - [ ] 9.4 Independently review the `P08` repairs without completing all 169 work items and without opening holdout payloads.
+ 
+-## 10. P09 corpus identities, 29 disputes, development-manifest sub-delivery
++## 10. P09 corpus identities, 29 facet disputes, development-manifest sub-delivery
+ 
+ - [ ] 10.1 After `P08`, execute `P09` original corpus tasks 3.1–3.2: organization/product/version/deployment identities for all 75 development candidates and additional split/residue records.
+-- [ ] 10.2 Execute `P09` original tasks 5.1–5.3 and 5.5: INTERSECTION_UNRESOLVED derivation, `evidence-adjudication/1` rules, append-only dispositions, and all 29 disagreements (32 label instances) with silence-not-refutation.
++- [ ] 10.2 Execute `P09` original tasks 5.1–5.3 and the `P09` contribution of original 5.5: INTERSECTION_UNRESOLVED derivation, `evidence-adjudication/1` rules, append-only dispositions, and all 29 facet disagreements (32 label instances) with silence-not-refutation. This contribution is not the separate challenge record and MUST NOT close whole original 5.5.
+ - [ ] 10.3 Execute `P09` original tasks 6.1–6.3: monotonic development exposure, separate evaluation manifest, and freeze-readiness validation; verify all 75 remain development.
+-- [ ] 10.4 Expose original task 6.1 as a named `P09` sub-delivery (monotonic development exposure/ancestry projection with exact locators and identity limits) before `P10` original task 2.4; verify this sub-delivery is not whole-package acceptance and does not close original 7.x/8.x. `P09` successful_exit does not include 7.1–8.3.
++- [ ] 10.4 Expose original task 6.1 as a named `P09` sub-delivery (monotonic development exposure/ancestry projection with exact locators and identity limits) before `P10` original task 2.4; verify this sub-delivery is not whole-package acceptance and does not close original 7.x/8.x. `P09` successful_exit is identities, 29 facet dispositions, and 6.1–6.3; it does not include 7.1–8.3, whole original 5.5, or complete 169-item accounting.
+ 
+ ## 11. P10 Liquity challenge, bounded collector, whole-package 7.x/8.x join
+ 
+-- [ ] 11.1 Execute `P10` original corpus task 5.4: separate Liquity V1 liquidation-source challenge with retained primary packets; do not treat this as `P23` ordered-redemption implementation.
++- [ ] 11.1 Execute `P10` original corpus task 5.4 and the `P10` contribution of original 5.5: separate Liquity V1 liquidation-source challenge with retained primary packets, plus the separate challenge adjudication record using the same reviewed rule version as the 29 facet records, with exact review/rationale/applicability/interpretation evidence. Do not treat this as `P23` ordered-redemption implementation. Whole original 5.5 closes only after the `P09` 29-facet contribution also exists; it does not wait for original 2.4 or 7.x/8.x.
+ - [ ] 11.2 Execute `P10` original tasks 3.3 and 4.1–4.3: typed dependencies, source pins, deployment records, and independent fidelity statuses; unknown evidence is never promoted by a URL.
+ - [ ] 11.3 Execute `P10` original tasks 2.1–2.2: original-recovery versus reconstructed-replacement for unresolved supplied-proposal references, including 72 rows, 62 citation occurrences, 45 token groups, and two attachment pointers.
+ - [ ] 11.4 After the `P09` original-task-6.1 development-manifest sub-delivery, and not after all of `P09`, execute original corpus task 2.4 with its original bounded behavior: explicit bounded `collect` accounting for the complete development work queue using validated existing inputs and recorded acquisition passes for remaining gaps; verify exact three requested-target slots including failed guesses, two total attempts per target, five server redirects outside target slots, and 30-second attempt deadlines through a local HTTP fixture; reject role spoofing by actual manifest membership; preserve all attempts and remaining items; distinguish earlier research body limits from future collector URL limits; reject retrospective collector-budget claims while permitting a valid imported sibling. Invented collector runs remain forbidden. Completing 2.4 is not a global barrier on `P16`.
+-- [ ] 11.5 After `P09` successful_exit (identities, disputes, 6.1–6.3) and `P10` source/collector work, execute original corpus tasks 7.1–8.3 as the whole-package tooling/acceptance/archive join; verify `review_pending` is excluded from complete-work exit 0. This join has no task-level cycle: `P09` does not wait on 7.x/8.x, and `P10` has no `P09` hard predecessor. A `P09` or `P10` partial MUST NOT mark those original IDs done.
+-- [ ] 11.6 Independently review `P10` decisions including 2.4 and the 7.x/8.x join; keep unresolved originals unresolved.
++- [ ] 11.5 After `P09` successful_exit (identities, 29 facet dispositions, 6.1–6.3) and `P10` source/collector work, execute original corpus tasks 7.1–8.3 as the whole-package tooling/acceptance/archive join, including complete 169-item accounting (75 identities + 29 facet records + separate challenge + 62 citation occurrences + two attachment pointers); verify `review_pending` is excluded from complete-work exit 0. This join has no task-level cycle: `P09` does not wait on 7.x/8.x, and `P10` has no `P09` hard predecessor. A `P09` or `P10` partial MUST NOT mark those original IDs done. Complete 169-item accounting is not `P09` successful_exit.
++- [ ] 11.6 Independently review `P10` decisions including 2.4, the original-5.5 challenge contribution, and the 7.x/8.x join; keep unresolved originals unresolved.
+ 
+ ## 12. P11 historical H02/H12 scope and like-for-like measurements
+ 
+@@ -130,14 +130,14 @@
+ - [ ] 16.4 Freeze `P15` common evidence-packet schema and obligation classes (model proof, bounded source execution, representation correspondence, source refinement, authenticity/environment assumption).
+ - [ ] 16.5 Independently review the `P15` freeze; verify certificates are not a prerequisite to `P16`.
+ 
+-## 17. P16 pinned Uniswap token0, overflow-oracle repair, M09/F28 repair
+-
+-- [ ] 17.1 Verify `P16` pin closure for Uniswap v3-core `e3589b192d0be27e100cd0daaf6c97204fdb1899` and compiler settings; compare liquidity archive SHA-256 to CURRENT.json `liquidity.sha256` (`e1cd08f9f8a843355f1b249a013c9de0d29e7e1ebf1d5a3e8716d6d7621baf77`) rather than self-asserting the value; treat the unaccepted liquidity candidate as planning input only.
++## 17. P16 pinned Uniswap token0, overflow-oracle repair, M09/F28 control-plan correction
++
++- [ ] 17.1 Verify `P16` pin closure for Uniswap v3-core `e3589b192d0be27e100cd0daaf6c97204fdb1899` and compiler settings; compare liquidity archive SHA-256 to CURRENT.json `liquidity.sha256` (`e1cd08f9f8a843355f1b249a013c9de0d29e7e1ebf1d5a3e8716d6d7621baf77`) rather than self-asserting the value. Obtain independent GPT-6 planning review of the exact repaired `P16` token0 planning slice (narrow next-price plus required sum-overflow, including original 1.3 and 2.2–2.3 substrate) and verify the recorded verdict, requested/reported model identity, input hashes, and that gate accepted remains false until that review. The original unaccepted concentrated-liquidity-library freeze is preserved input, not accepted evidence. This contribution is not whole original 1.2 and MUST NOT wait on the `P21` residual planning review or the `P21` implementation campaign. This program-plan revision is not original 1.2 acceptance.
+ - [ ] 17.2 Repair the `P16` Python diagnostic oracle so denominator-sum overflow uses the Solidity 0.7.6 wrapped-sum fallback; keep Python as a third implementation, not source execution.
+-- [ ] 17.3 Repair `P16` M09 so F28 is not a protected control (amountIn 2→1 under the direction flip) and name a genuinely unaffected sibling.
++- [ ] 17.3 Diagnose and correct the `P16` mutation control plan so M09 does not treat F28 as a protected control (amountIn 2→1 under the SwapMath direction flip) and name a genuinely unaffected sibling. Preserve the failed original plan as evidence. This is diagnostic/control-plan correction, not compiled M09 SwapMath execution.
+ - [ ] 17.4 Implement the `P16` token0 next-price library under proposed `lean/DefiKernel/ConcentratedLiquidity/` using `P15` contracts and delivered Arithmetic words.
+ - [ ] 17.5 Execute pinned Solidity under pinned compiler/EVM harness for `P16` on predeclared nonempty partitions including required denominator-sum overflow, planned identity success `(2^96,1,0,add)` returning `2^96`, planned add `(2^96,1,1,true)` returning `2^95`, and actual removal-denominator failure `(2^96,1,1,false)` from `SqrtPriceMath.sol` lines 28–56. The helper has no fee parameter. Overflow MUST NOT be excluded to close `P16`.
+-- [ ] 17.6 Prove the `P16` branch-specific 0.7.6 fallback equation, with zero-amount identity as a positive control, the removal `require` as the actual refusal, a source-independent overflow-disagreement negative, actual compiled mutants, and independent review. A Typed kernel wrapper remains optional for arithmetic-only `P18`. Leave TickMath, SwapMath, token1/delta, bitmap/liquidity/factory, the original 45-fixture and M01–M12 campaigns, and full traversal to `P21`, and source refinement to `P30`. A `P16` contribution MUST NOT close those original mixed task IDs.
++- [ ] 17.6 Prove the `P16` branch-specific 0.7.6 fallback equation, with zero-amount identity as a positive control, the removal `require` as the actual refusal, a source-independent overflow-disagreement negative, actual compiled token0 production mutants, and independent review. A Typed kernel wrapper remains optional for arithmetic-only `P18`. Leave TickMath, SwapMath, token1/delta, bitmap/liquidity/factory, the original 45-fixture and M01–M12 campaigns including compiled M09 SwapMath execution, and full traversal to `P21`, and source refinement to `P30`. A `P16` contribution MUST NOT close those original mixed task IDs.
+ 
+ ## 18. P17 contrasting vault source readiness and reuse gate
+ 
+@@ -171,14 +171,14 @@
+ 
+ ## 22. P21 residual concentrated-liquidity library and tick traversal
+ 
+-- [ ] 22.1 After `P16` token0 acceptance as a contribution and the `P17.platform_reuse` resource gate, implement `P21` residual library work under proposed `lean/DefiKernel/ConcentratedLiquidity/`. Arithmetic-only reuse MUST NOT open this gate. Naming `R-FULL-TRAVERSAL` MUST NOT close R22, `P21`, or the program.
++- [ ] 22.1 Obtain independent GPT-6 planning review of the exact repaired `P21` residual planning slice (TickMath 3.1–3.3, SwapMath 4.2, residual 4.1 token1/delta, bitmap/liquidity/factory 5.1–5.3, original 45-fixture and M01–M12 campaigns, traversal, and original 7.4 remainders) and verify the recorded verdict, requested/reported model identity, input hashes, and that gate accepted remains false until that review. The original unaccepted whole-library freeze is preserved input, not accepted evidence. This residual-slice review is not whole original 1.2 and MUST NOT be a `P16` implementation prerequisite. After `P16` token0 acceptance as a contribution and the `P17.platform_reuse` resource gate, implement `P21` residual library work under proposed `lean/DefiKernel/ConcentratedLiquidity/`. Arithmetic-only reuse MUST NOT open this gate. Naming `R-FULL-TRAVERSAL` MUST NOT close R22, `P21`, or the program.
+ - [ ] 22.2 Execute original TickMath tasks 3.1–3.3: `getSqrtRatioAtTick`, `getTickAtSqrtRatio`, bound refusals, forward monotonicity, and inverse choice, including F10–F19.
+ - [ ] 22.3 Execute original SwapMath task 4.2 and the residual original-4.1 contribution: `computeSwapStep` with exact-in remainder-as-fee, exact-out cap, `invalidFee` and `intOverflow`, plus amount0/amount1 deltas and token1 next-price `getNextSqrtPriceFromAmount1RoundingDown`. P21 MUST own this token1/delta residual; it MUST NOT be dropped because `P16` is narrow.
+ - [ ] 22.4 Execute original bitmap/liquidity/factory tasks 5.1–5.3: BitMath, floor compression, `nextInitializedTickWithinOneWord`, `addDelta`, and factory fee/spacing predicates, without claiming whole-pool traversal.
+-- [ ] 22.5 Execute the original 6.1 forty-five-fixture campaign (F01–F45) and original 6.3 M01–M12 mutation campaign, plus residual 6.2/6.4/6.5 contributions. A `P16` token0 fixture subset MUST NOT close those original IDs.
++- [ ] 22.5 Execute the original 6.1 forty-five-fixture campaign (F01–F45) and original 6.3 M01–M12 mutation campaign using the repaired per-mutant unaffected-control set (M09 MUST exclude or replace F28; preserve the failed original plan). Actual compiled M09 SwapMath.computeSwapStep execution belongs to this campaign with the rest of M01–M12. Plus residual 6.2/6.4/6.5 contributions. A `P16` token0 fixture subset or `P16` control-plan correction MUST NOT close those original IDs.
+ - [ ] 22.6 Keep `P21` remainders `G-FULLMATH-ASSEMBLY` and `G-NO-SOLC-DIFFERENTIAL` explicit until separately discharged; do not claim `Pool.swap` lock/callback/payment unless pinned and observed.
+ - [ ] 22.7 Prove tick-crossing liquidity and amount/fee accounting with a two-tick success, exact-output cap as bounded success (`SwapMath.sol` lines 87–89), the `UniswapV3Pool.swap` `SPL` guard as the declared pool admission refusal (lines 608–613), a source-independent liquidity-delta-without-cross negative, compiled mutants, and independent review.
+-- [ ] 22.8 Close mixed original IDs 1.1, 1.2, 2.1, 4.1, 4.3, 6.1–6.5, and 7.1–7.3 only after the corresponding `P16` contributions also exist; execute residual 7.1–7.3 review/build/preservation and original 7.4 remainder recording.
++- [ ] 22.8 Close mixed original IDs 1.1, 2.1, 4.1, 4.3, 6.1–6.5, and 7.1–7.3 only after the corresponding `P16` contributions also exist; close original 1.2 only after both applicable independently accepted planning-slice outcomes exist (`P16` token0 slice and `P21` residual slice) with exact reviewer/model/input-hash/verdict bindings; the original unaccepted freeze remains preserved input, not accepted evidence. Execute residual 7.1–7.3 review/build/preservation and original 7.4 remainder recording. A `P16` implementation MUST NOT wait on this closer.
+ 
+ ## 23. P22 Curve iteration, nonconvergence, refusal
+ 

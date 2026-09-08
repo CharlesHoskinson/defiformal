@@ -1,0 +1,20 @@
+# Full program planning acceptance after bounded repairs
+
+The 37-sprint program is accepted with limitations for execution under its individual entry and acceptance gates. Native Grok4.6 (`grok-4.6-build`) authored the repairs. Independent nonauthor GPT-6 (`gpt-6-astra`, stock harness; no separate provider telemetry exposed) accepted the exact r2 planning contract. Root adopts that decision. No Foreman was used.
+
+Candidate: `repair-candidate-r2.tar.gz`, SHA-256 `8f03081d362cd0630a1e56822826e45ce53c97baa96bb1da6beb194e8a740e33`. The15 files copied to the primary OpenSpec change match [the frozen manifest](repair-candidate-r2-manifest.json). The [final independent review](plan-r2-review/REVIEW.md) and [verdict](plan-r2-review/verdict.json) close PR1–PR3; the broader fixes are established by the retained [r1 review](plan-review/REVIEW.md). The original [dual-model changes-required adjudication](../full-program-spec-review-20260908/ADJUDICATION.md) and earlier historical acceptance remain unchanged.
+
+The plan contains37 sprints,179 unchecked planning tasks,55 requirements and102 scenarios. All339 original task/path/historical-checkbox tuples are preserved. Frozen unchecked tasks are a planning baseline; accepted execution outcomes are recorded in [STATE.json](STATE.json) and authoritative [CURRENT.json](../strategy-audit-20260908/CURRENT.json). P01 has separately been accepted and delivered. Its original candidate is historical input and must not be redispatched as unfinished merely because the plan is frozen.
+
+The repaired contract allocates narrow token0 work to P16 and the residual liquidity library/full campaigns to P21, with independent planning acceptance of both scoped slices before original1.2 closes. P16 fixes the M09/F28 control plan; actual SwapMath mutation execution remains P21. The corpus5.5 task closes only after both P09 facet records and the P10 challenge record; final whole-package acceptance joins identity/facet and source/collector work. P17's resource gate requires actual substantive two-case reuse through a common harness and shared financial/executor results. Arithmetic-only delivery does not open wider-family spending.
+
+Two nonblocking editorial interpretations from the accepted review apply without changing the15 frozen files:
+
+- The additional P10 reference in coverage R11 traces the mixed corpus5.5 task. P09 owns the29 facet disagreements; P10 owns the separate challenge under R12. It does not transfer facet ownership or authorize early closure.
+- P16 does not wait for P21's planning review or campaign. P21 residual implementation does consume accepted P16, as its hard dependency/tasks/specs require. The isolated inverted P16.entry sentence does not remove that dependency.
+
+Fresh independent strict OpenSpec validation and36 targeted checks pass. Root's retained broader checker remains16/17: its live-current candidate equality detects the subsequent P01 delivery transition. All nine original archive bindings match the original input snapshot; [the transition record](repair-r2-current-transition.json) preserves that distinction instead of forcing the old checker green. These checks validate planning structure/references, not implementation, proof truth or source fidelity.
+
+Native r2's capped25-turn attempt, evidence-only continuation, author checker exception and root archive-path setup error remain preserved with their actual outcomes. The final continuation ended normally with process0. Author report counts/model attribution are interpreted against measured headings and native telemetry; the prior164 baseline-task statement is incorrect (baseline169), and final model telemetry identifies `grok-4.6-build`.
+
+The user instruction “begin implementing” resumes authorized execution. P01 compatible recovery is delivered; P15 minimum contracts is the next active scope, followed by the independently accepted P16 token0 slice. Full M4/P02, P17 reuse, remaining libraries, metatheory, source fidelity, evaluation and publication remain open. This planning acceptance does not accept the original unreviewed liquidity plan, any future implementation or the whole program.

@@ -80,3 +80,32 @@ record authorized implementation transitions separately. Recover the active
 program from review/semantic-kernel/program-loop-20260908/WORKSTATE.json. The
 current Sprint11 goal is one milestone; completion must immediately continue
 into the remaining program agenda.
+
+## Strategy review and platform priority, 2026-09-08
+
+The user requested a code graph, five independent agenda audits, a converged
+iterated plan, and removal of false starts/dead code before further resource
+commitment. The selected outcome is a broadly reusable verification platform
+and libraries. The current decision record is
+`review/semantic-kernel/strategy-audit-20260908/PLAN.md`; authoritative lane state
+is `review/semantic-kernel/strategy-audit-20260908/CURRENT.json`. WORKSTATE files
+now route there; old copies are preserved as historical snapshots. Broad feature
+dispatch is held for this strategy decision. Do not resume a stale native brief
+from a historical state field. Preserve all historical proofs, negative results
+and unique unintegrated candidates. Cleanup requires actual consumer evidence;
+absence from the graph is not proof of dead code. Grok author / GPT-6 checker,
+no Foreman and semantic-kernel-pivot-only delivery remain unchanged.
+
+## Implementation resumption after program review, 2026-09-08
+
+The user instructed "begin implementing". This supersedes the audit-time dispatch
+hold. The repaired37-sprint OpenSpec contract is accepted with limitations;
+read `review/semantic-kernel/program-execution-20260908/PLAN-ACCEPTANCE.md`,
+including its two editorial interpretations. Native Grok4.6 authors; independent
+GPT-6 checks; no Foreman; publish accepted work only to semantic-kernel-pivot.
+P01 bounded compatible recovery is delivered at35a27c9, with metadata01490b5;
+full M4/P02 remains open. P15 minimum reusable contracts is the active next scope.
+Read CURRENT.json plus program-execution-20260908/STATE.json for live progress.
+Frozen planning checkboxes and original candidate hashes remain historical
+inputs, not instructions to redispatch accepted P01. Follow each remaining
+sprint's real entry/acceptance gates; P17 substantive reuse gates wider families.

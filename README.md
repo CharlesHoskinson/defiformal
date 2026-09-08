@@ -182,4 +182,5 @@ keep this evidence distinct. The [roadmap](roadmap.md) lists the remaining work.
 | [`scripts/`](scripts/) | Mutation runners, verification controls, and corpus tooling. |
 | [`openspec/`](openspec/) | Behavioral requirements and acceptance scenarios. |
 | [`corpus/normalized/`](corpus/normalized/) | Protocol identities, mechanism annotations, and source provenance. |
-| [`graphify-out/codebase/`](graphify-out/codebase/) | Source dependency graph. Open `graph.html` in a browser for the interactive map. |
+| [`graphify-out/strategy-audit-20260908/`](graphify-out/strategy-audit-20260908/) | Current source dependency map, including isolated candidates. Open `graph.html`; see the scope limits in `GRAPH_REPORT.md`. |
+| [`graphify-out/codebase/`](graphify-out/codebase/) | Historical source-graph snapshot. |
