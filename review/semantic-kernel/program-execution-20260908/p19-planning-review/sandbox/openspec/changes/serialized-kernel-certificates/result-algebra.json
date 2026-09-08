@@ -1,0 +1,97 @@
+{
+  "status": "planning_contract",
+  "modes": {
+    "codec": {
+      "type": "CodecResult",
+      "constructors": ["ok", "malformed", "blocked"],
+      "not_a_Report": true,
+      "equality": "constructor and payload equality"
+    },
+    "execution": {
+      "type": "Report",
+      "fields_14": [
+        "status",
+        "failure",
+        "judgments",
+        "world",
+        "receipt",
+        "outputs",
+        "events",
+        "nextIndex",
+        "cursorFailure",
+        "assumptions",
+        "outstanding",
+        "source_pin",
+        "audit_roots",
+        "unsupported"
+      ],
+      "status_values": ["accepted", "refused", "incomplete"],
+      "malformed_not_in_execution_status": "codec malformed/blocked never appear as Report.status"
+    },
+    "audit": {
+      "type": "AuditResult",
+      "constructors": ["passed", "failed", "blocked"],
+      "not_a_Report": true,
+      "empty_theorem_scope": "blocked"
+    }
+  },
+  "report_field_rules": {
+    "status": "always one of accepted|refused|incomplete",
+    "failure": {
+      "accepted": null,
+      "refused": "exact FailurePath object {class, ctor, payload}",
+      "incomplete": "incompleteObligation.{name} or null when only outstanding informational"
+    },
+    "judgments": "exactly the eight families, each with family, outcome, claimed, match",
+    "world": "always a complete 32-cell State plus full store; on refusal-prefix, the world retained by Sequence.advance / execute error (unchanged pre-world)",
+    "receipt": "null unless an invoke succeeded in this command; invoke success uses Evaluated fields; issue/revoke success uses {tag:issued|revoked, id}",
+    "outputs": "list, empty when no successful invoke snapshots",
+    "events": "list of sequential events; empty in typed-execute mode",
+    "nextIndex": "Nat; typed-execute uses 0; composition-run uses cursor.nextIndex",
+    "cursorFailure": "null or {index, step (null|Step), reason}; startCursor invalid catalog uses index 0, step null, reason configuration",
+    "assumptions": "object mapping all six classes to present|missing",
+    "outstanding": "list of informational families not discharged",
+    "source_pin": "object always present in execution reports",
+    "audit_roots": "list always present in execution reports",
+    "unsupported": "null or UnsupportedForm"
+  },
+  "failure_path": {
+    "class": ["kernel", "interface", "authority", "configuration", "internalReceipt", "staleSource", "observationMismatch", "incompleteObligation"],
+    "kernel_payload": "Typed.Refusal constructor plus EvalFailure when evaluation",
+    "interface_payload": "InterfaceFailure constructor plus EvalFailure when resolution",
+    "authority_payload": "AuthorityFailure constructor",
+    "configuration": "no extra payload",
+    "refused_prefix": "world/store/outputs/events/nextIndex equal the cursor immediately before the failing step; later steps inert and absent from events"
+  },
+  "judgment_outcome": {
+    "true": "recomputed predicate holds",
+    "false": "recomputed predicate fails at this family",
+    "not_reached": "short-circuit stopped before this family's entrypoint",
+    "not_applicable": "this command kind never runs that family (issue/revoke accounting; typed-execute compositionCompatible; codec-only)"
+  },
+  "short_circuit": {
+    "typed-execute": ["unknownOperation", "actorMismatch", "domainMismatch", "partyArity", "evaluation.Args.check", "unauthorizedInvoke", "evaluation.template.evaluate", "guard", "stateReadFootprint", "envReadFootprint", "crossDomain", "unauthorizedDebit", "unauthorizedSupply", "insufficientFunds", "accounting", "writeFootprint"],
+    "composition-step": ["configuration.validateCatalog", "prepareInvocation.lookup", "resolveInputs", "registry", "checkAccess", "then typed-execute order", "issue/revoke AuthorityFailure"],
+    "do_not_call_Args.check_before_unknownOperation": "F30 remains kernel.unknownOperation; typeCorrect outcome is not_reached"
+  },
+  "truth_table_complete_for_increment": {
+    "accepted": "decode ok, unsupported null, required reached families outcome true, six assumption classes present, source_pin matches delivered identity records, no observationMismatch",
+    "complete_refused": "decode ok, unsupported null, observed FailurePath equals entrypoint error, families before the failure true, failing family false or the failure is a prior class, later not_reached; this IS a complete checked report, not an accepted module",
+    "incomplete": "missing required assumption class, or require_library_discharge/require_invariant_discharge set without recorded compiler check, or missing source_pin/audit_roots fields",
+    "library_and_source_refinement": "informational outstanding by default; never outcome true without recorded compiler check; do not make complete_for_increment false merely by being listed",
+    "prop_invariants": "outstanding proof; not executable; not complete-by-that-field",
+    "claimed_next_state_mismatch": "refused observationMismatch, complete_refused",
+    "tags_evaluated_unknown_fields": "codec malformed, not Report"
+  },
+  "assumption_classes_6": [
+    "registry-trust",
+    "administrator-trust",
+    "context-authenticity",
+    "observation-truth",
+    "environment-authenticity",
+    "replay-prevention-outside-model"
+  ],
+  "environment_authenticity": "named sixth class; not subsumed by observation-truth. observation-truth is value correctness of delivered observations; environment-authenticity is that the environment map itself is the adapter-supplied function identity",
+  "reportEq": "execution Reports only; codec and audit use their own equality; mixed-mode comparison is a planning error",
+  "uniqueness_policy": "JSON/registry duplicate ids are decode uniqueness failures; catalog component-id duplicates decode successfully then validateCatalog is false (F08 configuration). Those are distinct boundaries."
+}
