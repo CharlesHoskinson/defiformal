@@ -1,0 +1,198 @@
+{
+  "app": "Pendle",
+  "category": "06-yield-vaults",
+  "source": "C:\\defiformal-work\\06-yield-vaults\\01-research.md",
+  "construction": [
+    "Py",
+    "Ix",
+    "Sh",
+    "Ft",
+    "Ep",
+    "Rd",
+    "Wq",
+    "Em",
+    "Fd",
+    "Gp",
+    "Up"
+  ],
+  "functionalObligations": [
+    {
+      "id": "F1",
+      "text": "a deposit of an external yield-bearing token (wstETH, sUSDe, aTokens, GLP) is wrapped into a uniform token whose redemption value tracks the source protocol's exchange rate",
+      "elements": [
+        "Ix"
+      ],
+      "evidence": "https://docs.pendle.finance/pendle-v2-dev/Contracts/StandardizedYield (accessed 2026-08-04)",
+      "note": "Ix names the accrual (SY.exchangeRate). It does not name the adapter role itself: an SY wrapper is bound at deployment to exactly one named external protocol and cannot be redirected. That binding is the reason Pendle has no allocation mandate, and it has no symbol."
+    },
+    {
+      "id": "F2",
+      "text": "the wrapped token is split, in accounting-asset units, into a principal claim and a yield claim that trade separately",
+      "elements": [
+        "Py"
+      ],
+      "evidence": "https://github.com/pendle-finance/pendle-core-v2-public/blob/e8c2cca4c9b329ba8a383a27d7318e5f8b35c843/contracts/core/YieldContracts/PendleYieldToken.sol#L243-L249 (accessed 2026-08-04)",
+      "note": ""
+    },
+    {
+      "id": "F3",
+      "text": "the principal claim is a zero-coupon claim on the accounting asset dated to a fixed maturity and pays nothing before it",
+      "elements": [
+        "Ft"
+      ],
+      "evidence": "https://docs.pendle.finance/pendle-v2/ProtocolMechanics/YieldTokenization/PT (accessed 2026-08-04)",
+      "note": "FORCED FIT, carried from the corpus marker and sharpened by stage 1. Ft is filed under Credit as fixed-term DEBT; a PT is not a debt, nobody owes anything, it is a stripped principal claim on a yield-bearing token. The maturity concept is right, the liability framing is wrong."
+    },
+    {
+      "id": "F4",
+      "text": "at maturity the principal claim redeems one-for-one for the accounting asset with no fee, and before maturity the principal and yield claims can be burned together back into the wrapper",
+      "elements": [
+        "Rd",
+        "Ep"
+      ],
+      "evidence": "https://github.com/pendle-finance/pendle-core-v2-public/blob/e8c2cca4c9b329ba8a383a27d7318e5f8b35c843/contracts/core/YieldContracts/PendleYieldToken.sol#L328-L368 (accessed 2026-08-04)",
+      "note": "Ep is used for the expiry boundary that switches PT from non-redeemable to redeemable. This satisfies L5 (Py to (Sh|Ix|Rb) + Ep + Rd)."
+    },
+    {
+      "id": "F5",
+      "text": "the yield claim accrues the wrapper's variable interest by a reciprocal-difference formula over a stored and a current index, and separately accrues each of the wrapper's external reward tokens by its own per-token index",
+      "elements": [
+        "Ix"
+      ],
+      "evidence": "https://github.com/pendle-finance/pendle-core-v2-public/blob/e8c2cca4c9b329ba8a383a27d7318e5f8b35c843/contracts/core/YieldContracts/InterestManagerYT.sol#L76 (accessed 2026-08-04)",
+      "note": "One symbol serves two structurally different accruals (an interest accumulator and a set of per-token reward accumulators). The vocabulary cannot distinguish them."
+    },
+    {
+      "id": "F6",
+      "text": "the accrual index is a monotonic high-water mark: if the source exchange rate falls the yield claim stops accruing entirely, and the drawdown is borne by the principal claim at redemption",
+      "elements": [],
+      "evidence": "https://github.com/pendle-finance/pendle-core-v2-public/blob/e8c2cca4c9b329ba8a383a27d7318e5f8b35c843/contracts/core/YieldContracts/PendleYieldToken.sol#L403-L413 (accessed 2026-08-04)",
+      "note": "RESIDUE. Ix permits an index to move in both directions; PMath.max(SY.exchangeRate(), _pyIndexStored) is a ratchet. Sl (socialized-loss allocation) was considered and rejected per stage 1: there is no loss event, only an accounting asymmetry that assigns every drawdown to one claim class. A loss-allocation rule disguised as an accounting choice has no symbol."
+    },
+    {
+      "id": "F7",
+      "text": "the yield claim's notional shrinks to zero by construction as the remaining accrual window closes",
+      "elements": [],
+      "evidence": "https://docs.pendle.finance/pendle-v2/ProtocolMechanics/YieldTokenization/YT (accessed 2026-08-04)",
+      "note": "RESIDUE. Every claim symbol in the vocabulary (Sh, Ix, Rb) describes a claim whose notional is preserved or grows. A decaying-notional claim has no symbol."
+    },
+    {
+      "id": "F8",
+      "text": "after maturity the yield claim's index freezes at a snapshot, only already-accrued interest remains claimable, and every reward token subsequently arriving on that expired claim is swept to the treasury",
+      "elements": [],
+      "evidence": "https://github.com/pendle-finance/pendle-core-v2-public/blob/e8c2cca4c9b329ba8a383a27d7318e5f8b35c843/contracts/core/YieldContracts/PendleYieldToken.sol#L435-L437 (accessed 2026-08-04)",
+      "note": "RESIDUE. Not a fee and not a redemption charge: an abandonment sweep of a live claimant's property to the protocol. Fd was considered and rejected — nothing is being distributed to a claimant class, the claimant is being escheated."
+    },
+    {
+      "id": "F9",
+      "text": "the principal claim is priced against the wrapper by a pool whose invariant is a logit curve in implied-rate space, whose stiffness parameter grows without bound and whose intercept decays as time-to-expiry shrinks, so identical pool state prices differently on a different day",
+      "elements": [],
+      "evidence": "https://github.com/pendle-finance/pendle-core-v2-public/blob/e8c2cca4c9b329ba8a383a27d7318e5f8b35c843/contracts/core/Market/MarketMathCore.sol#L335-L359 (accessed 2026-08-04)",
+      "note": "RESIDUE, the single clearest missing element in this lane. Cp, Wg, St, Cl and Pm are all static invariants. The contested symbol Tw is time-weighted AMM EXECUTION, a different mechanism, and stage 1 confirms the corpus was right to reject it. Note also that the corpus's phrasing (scalar and anchor both decay) has the sign of the stiffness term backwards: rateScalar = scalarRoot * 365d / timeToExpiry DIVERGES. Also unnamed: that the pool quotes an interest rate rather than a price ratio and persists lastLnImpliedRate as its state. Stage 1 did not characterise contracts/limit/ (PendleLimitRouter), so the limit-order execution path is deliberately not decomposed here rather than guessed at between Ob and Rf."
+    },
+    {
+      "id": "F10",
+      "text": "the curve's intercept is recomputed before every single trade so that the pre-trade implied rate equals the implied rate left by the previous trade",
+      "elements": [],
+      "evidence": "https://github.com/pendle-finance/pendle-core-v2-public/blob/e8c2cca4c9b329ba8a383a27d7318e5f8b35c843/contracts/core/Market/MarketMathCore.sol#L276-L312 (accessed 2026-08-04)",
+      "note": "RESIDUE. Not slippage, not a fee, not an oracle: the invariant rewriting its own parameters from its trade history to preserve a derived quantity. No AMM symbol covers a curve parameterised by its own past."
+    },
+    {
+      "id": "F11",
+      "text": "a liquidity provider deposits the wrapper and the principal claim and holds a transferable pro-rata claim on the pool and its fee income, with a minimum quantity permanently locked at initialisation",
+      "elements": [
+        "Sh"
+      ],
+      "evidence": "https://github.com/pendle-finance/pendle-core-v2-public/blob/e8c2cca4c9b329ba8a383a27d7318e5f8b35c843/contracts/core/Market/MarketMathCore.sol#L41-L46 (accessed 2026-08-04)",
+      "note": "DEPARTURE from the corpus, which omits Sh for Pendle. The market LP token is a pro-rata pool claim and one of the four sources of depositor return named in stage 1."
+    },
+    {
+      "id": "F12",
+      "text": "the swap fee is quoted as an interest-rate spread whose multiplier is exponential in years-to-expiry, so the same trade pays less notional the nearer maturity is",
+      "elements": [],
+      "evidence": "https://github.com/pendle-finance/pendle-core-v2-public/blob/e8c2cca4c9b329ba8a383a27d7318e5f8b35c843/contracts/core/Market/MarketMathCore.sol#L223 (accessed 2026-08-04)",
+      "note": "RESIDUE. There is no global swap-fee rate at all; lnFeeRateRoot is chosen per market by its creator under a cap. A fee that is a rate spread rather than a price spread has no symbol."
+    },
+    {
+      "id": "F13",
+      "text": "eighty per cent of every swap fee is diverted to the protocol treasury and twenty per cent is retained by liquidity providers",
+      "elements": [
+        "Fd"
+      ],
+      "evidence": "https://ethereum-rpc.publicnode.com (eth_call reserveFeePercent() = 80 on marketFactory 0x6d247b1c044fA1E22e6B04fA9F71Baf99EB29A9f, latest block, accessed 2026-08-04)",
+      "note": "CANDIDATE-REGISTER (Fd). Promoted from a corpus marker into the construction: the split of realised fees between a claimant class and the treasury is what Fd names. The corpus's justification for Fd — routing to vePENDLE lockers — is stale; the route is now treasury buybacks on 14-day epochs."
+    },
+    {
+      "id": "F14",
+      "text": "five per cent of all interest and all reward tokens accruing to yield claims is taken as a protocol fee, each leg capped in code at twenty per cent",
+      "elements": [
+        "Fd"
+      ],
+      "evidence": "https://github.com/pendle-finance/pendle-core-v2-public/blob/e8c2cca4c9b329ba8a383a27d7318e5f8b35c843/contracts/core/YieldContracts/PendleYieldContractFactoryUpg.sol#L73-L74 (accessed 2026-08-04)",
+      "note": "CANDIDATE-REGISTER (Fd), approximate. Fd names distribution of surplus; this is a take-rate levied on another claim's accrual before the claimant sees it. Live values read 2026-08-04: interestFeeRate = rewardFeeRate = 5e16 on 0x3E6EBa46AbC5ab18ED95F6667d8B2fd4020E4637."
+    },
+    {
+      "id": "F15",
+      "text": "anyone may create a new maturity, constrained only to a fixed 24-hour calendar grid, and anyone may create additional markets on an existing principal claim that differ only in curve parameters",
+      "elements": [],
+      "evidence": "https://github.com/pendle-finance/pendle-core-v2-public/blob/e8c2cca4c9b329ba8a383a27d7318e5f8b35c843/contracts/core/Market/PendleMarketFactoryV7Upg.sol#L70-L88 (accessed 2026-08-04)",
+      "note": "RESIDUE. Ft names one dated claim. Pendle's object is a permissionlessly populated GRID of maturities with a birth-and-death lifecycle, each carrying unlimited parallel markets keyed by (PT, scalarRoot, initialAnchor, lnFeeRateRoot). No symbol names a term structure as an object, nor the rollover at which a maturity dies and liquidity must migrate."
+    },
+    {
+      "id": "F16",
+      "text": "protocol tokens are issued to each market's gauge at a per-second rate and streamed to that market's liquidity providers",
+      "elements": [
+        "Em"
+      ],
+      "evidence": "https://raw.githubusercontent.com/pendle-finance/pendle-core-v2-public/e8c2cca4c9b329ba8a383a27d7318e5f8b35c843/deployments/1-core.json (accessed 2026-08-04)",
+      "note": ""
+    },
+    {
+      "id": "F17",
+      "text": "a protocol-token holder stakes one-for-one and exits by starting a cooldown and finalising it after a fixed duration",
+      "elements": [
+        "Wq"
+      ],
+      "evidence": "https://github.com/pendle-finance/pendle-core-v2-public/blob/e8c2cca4c9b329ba8a383a27d7318e5f8b35c843/contracts/LiquidityMining/sPendle/StakedPendle.sol#L41-L86 (accessed 2026-08-04)",
+      "note": "APPROXIMATE. Wq names an exit queue with an ordering; sPENDLE's cooldown is a per-user delay with no ordering and no shared capacity. MAJOR DEPARTURE from the corpus: the corpus emits Ve for Pendle on contested-register grounds. As of commit e8c2cca (2026-06-17) vePendle, votingController, feeDistributor and feeDistributorV2 all sit in the repo's own `deprecated` block of deployments/1-core.json, and the replacement sPENDLE contains no escrow, no lock-weighting and no gauge vote. Ve is not among the 58 in any case; a decomposition emitting it would be decomposing a retired subsystem."
+    },
+    {
+      "id": "F18",
+      "text": "a staker may instead exit immediately by paying a percentage of the staked amount, at a rate the owner may set up to one hundred per cent",
+      "elements": [],
+      "evidence": "https://github.com/pendle-finance/pendle-core-v2-public/blob/e8c2cca4c9b329ba8a383a27d7318e5f8b35c843/contracts/LiquidityMining/sPendle/StakedPendle.sol#L116-L127 (accessed 2026-08-04)",
+      "note": "RESIDUE. Wq has no room for a priced option to jump the queue. This cooldown-or-pay-to-skip pattern is new in the lane and it is what replaced a vote-escrow."
+    },
+    {
+      "id": "F19",
+      "text": "the yield claim accrues off-chain-attested, non-token reward streams from the source protocol, and the same five per cent protocol fee is levied on them",
+      "elements": [],
+      "evidence": "https://docs.pendle.finance/pendle-v2-dev/Integration/PointsTracking (accessed 2026-08-04)",
+      "note": "RESIDUE. Em requires a protocol-funded token emission. Nothing in the vocabulary names a claim on a third-party issuer's discretionary future distribution, still less a protocol taxing one."
+    },
+    {
+      "id": "F20",
+      "text": "the yield-contract factory, market factory and governance proxy sit behind upgradeable proxies whose administrators are multisigs, and a guardian role may pause an enumerated list of addresses",
+      "elements": [
+        "Up",
+        "Gp"
+      ],
+      "evidence": "https://github.com/pendle-finance/pendle-core-v2-public/blob/e8c2cca4c9b329ba8a383a27d7318e5f8b35c843/contracts/offchain-helpers/PendleGovernanceProxy.sol#L37-L40 (accessed 2026-08-04)",
+      "note": "Tg is deliberately NOT emitted: stage 1 found no timelock — getMinDelay(), delay() and MINIMUM_DELAY() all revert on the governance Safe, the governance proxy and the ProxyAdmin, and no timelock appears in the mainnet manifest. L15 (Up implies Tg or a bounded emergency process) is therefore carried only by the guardian pause. X9 does not arm: control is a 3-of-N Safe, not a single key. vePENDLE itself is not proxied (implementation slot zero) and is immutable."
+    },
+    {
+      "id": "F21",
+      "text": "execution authority over privileged functions is granted per (caller, function selector, target) triple rather than per role or per contract",
+      "elements": [],
+      "evidence": "https://github.com/pendle-finance/pendle-core-v2-public/blob/e8c2cca4c9b329ba8a383a27d7318e5f8b35c843/contracts/offchain-helpers/PendleGovernanceProxy.sol#L33-L35 (accessed 2026-08-04)",
+      "note": "RESIDUE. Au was considered and rejected: L17 requires bounded scope + revocation + expiry + nonce/domain separation, which describes a session key over the principal's own assets. hasScopedAccess[caller][selector][target] has no expiry and no nonce and operates over protocol contracts. Aw names a participation gate, not a per-selector authority lattice."
+    }
+  ],
+  "paper": {
+    "title": "Pendle",
+    "label": "cat:yld:pendle",
+    "blurb": "A depositor brings a yield-bearing token that already exists somewhere else and wraps it in a uniform interface over that source. The wrapper splits, in accounting-asset units, into a principal claim dated to a fixed maturity and a yield claim on everything the source pays until then. The yield is the source's own, and it reaches a holder by whichever leg was bought: the principal claim taken below par and redeemed at par, the yield claim taking the variable interest and the reward tokens, the pool claim taking swap fees, the emissions the gauge streams to that pool. Nobody chooses where a depositor's capital goes --- the wrapper is a passive adapter over one named upstream and the depositor picks the maturity and the market --- and the only discretion the design ever held directed emissions, exercised by an escrow that now sits in the protocol's own deprecated manifest beside its voting controller, replaced by a plain stake with no lock weighting. Exit before maturity is a sale into the pool or the order book, or burning both legs back into the wrapper; at maturity the principal claim redeems alone.",
+    "witnessReason": "The witness is exhibited rather than derived, and it adds terms the element-set decomposition omits, each carried by a mechanism in the source: a pro-rata claim on the market pool, whose minimum liquidity is locked permanently at initialisation; a queued exit on the staked governance token, which offers a cooldown or a priced jump ahead of it; and fee distribution, since every swap fee is split between the treasury and the liquidity providers and a further levy is taken from every yield claim including its non-token rewards. Nothing is dropped, and the contested-register vote-escrow marker is not carried at all: the escrow it names is deprecated in the protocol's own mainnet manifest alongside its voting controller and both fee distributors, and its replacement contains no lock-time weighting and no gauge vote, so a construction that emitted it would be decomposing a retired subsystem. Among the claim-accounting alternatives the separation term leaves open, the index is the one the code supports --- the wrapper's redemption value tracks a stored source rate rather than a rebasing balance --- and the pro-rata share is carried separately, for the pool claim rather than for the split. This is the only application in the corpus that carries the separation at all.",
+    "residueNote": "Pendle is the one member of this category whose residue is \\emph{mechanism} rather than discretion: every obligation left uncovered is an on-chain formula, and not one of them is a choice anybody makes. The pool-pricing symbols all name static invariants, so the same reserves imply the same price forever, and this market's do not --- its stiffness and its intercept are functions of the time remaining, and the intercept is rewritten before each trade so that the rate the previous trade left is the rate the next trade meets. The accounting symbols all describe a claim whose notional is preserved or grows, and one of the two claims here shrinks to nothing by design while the index that measures it ratchets upward and pushes every drawdown onto the other. So the gap is not that this venue was read carelessly; it is that the vocabulary cannot make a curve a function of a clock, nor a claim a function of what remains of its own life, nor a fee a spread in rate space rather than in price space. That the residue takes this shape is itself the result: at Pendle no agent chooses anything, and its uncovered obligations look nothing like those of the applications where one does."
+  }
+}
