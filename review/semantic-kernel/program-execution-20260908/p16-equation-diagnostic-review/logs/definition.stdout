@@ -1,0 +1,14 @@
+def DefiKernel.ConcentratedLiquidity.SqrtPriceMath.addPrimary : DefiKernel.ConcentratedLiquidity.U160 →
+  DefiKernel.ConcentratedLiquidity.U128 →
+    DefiKernel.ConcentratedLiquidity.U256 →
+      Except DefiKernel.ConcentratedLiquidity.Failure DefiKernel.ConcentratedLiquidity.U160 :=
+fun sqrtP L amount =>
+  match
+    DefiKernel.ConcentratedLiquidity.FullMath.mulDivRoundingUp
+      (DefiKernel.ConcentratedLiquidity.SqrtPriceMath.numerator1Word L)
+      (DefiKernel.ConcentratedLiquidity.SqrtPriceMath.widen160 sqrtP)
+      (DefiKernel.ConcentratedLiquidity.SqrtPriceMath.wrapWord
+        (DefiKernel.ConcentratedLiquidity.SqrtPriceMath.numerator1 L +
+          DefiKernel.ConcentratedLiquidity.SqrtPriceMath.product amount sqrtP)) with
+  | Except.ok q => Except.ok (DefiKernel.ConcentratedLiquidity.SqrtPriceMath.bareToUint160 q)
+  | Except.error e => Except.error e

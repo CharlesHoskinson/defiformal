@@ -1,0 +1,15 @@
+--- frozen/SqrtPriceMath.lean
++++ probe/SqrtPriceMath.lean
+@@ -6,10 +6,11 @@
+ open ConcentratedLiquidity
+ open FullMath
+ 
+-def numerator1 (liquidity : U128) : Nat := liquidity.value * Q96
++def numerator1 (liquidity : U128) : Nat := Q96 * liquidity.value
+ 
+ theorem numerator1_lt_u256 (L : U128) : numerator1 L < 2 ^ 256 := by
+   unfold numerator1 Q96
++  rw [Nat.mul_comm (2 ^ 96) L.value]
+   have hmul : L.value * 2 ^ 96 < 2 ^ 128 * 2 ^ 96 :=
+     Nat.mul_lt_mul_of_pos_right L.bound two_pow_pos_96
+   have heq : 2 ^ 128 * 2 ^ 96 = 2 ^ 224 := (Nat.pow_add 2 128 96).symm
