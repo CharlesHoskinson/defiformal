@@ -1,0 +1,101 @@
+{
+  "schema": "defiformal-p17-scope-precheck/v1",
+  "utc": "2026-09-09T19:57:11.497389+00:00",
+  "scope": "Current author draft before complete-candidate review; no P17 acceptance",
+  "source_files": [
+    {
+      "path": "scripts/platform_engine/__init__.py",
+      "sha256": "b397f73e62e77f4d2b147ddaf3e6170869bdb90f4001367aacb864446ad8d2d0"
+    },
+    {
+      "path": "scripts/platform_engine/abi.py",
+      "sha256": "6800fed26e467f9a8f9ec8cfb54160e0556e9951fd93719030f854fa34297889"
+    },
+    {
+      "path": "scripts/platform_engine/common.py",
+      "sha256": "7a8a866b8e3c79161a3cefa00a2c7ee7239779849802ef3ca5c727eed496691f"
+    },
+    {
+      "path": "scripts/platform_engine/compile.py",
+      "sha256": "4804b618e3ea70813f340321cf950d77248d6d9a0d6011f91d45386b7c80234d"
+    },
+    {
+      "path": "scripts/platform_engine/evm.py",
+      "sha256": "e4b561271421f80c9018e82cf9189ff3687906a7b811bc245e631de25d2136be"
+    },
+    {
+      "path": "scripts/platform_engine/keccak.py",
+      "sha256": "dbd5f151aa8797813022f03f3d0ab4b7f536387eff3e9ff9f00bb023e1ae8bf2"
+    },
+    {
+      "path": "scripts/platform_engine/prestate.py",
+      "sha256": "a5f15539085bdf7f99da67198babb8f948dbba4fa5aedb5a496c6a73c1073ce0"
+    },
+    {
+      "path": "scripts/platform_engine/score.py",
+      "sha256": "162513052f093329d77f5fd96db47c72a09302e8ee705dc205d910bca5693368"
+    },
+    {
+      "path": "scripts/platform_engine/token0_campaign.py",
+      "sha256": "0ecde0c33aaa7a21f608ba6a560bf9fcef6c4e7f78d4613551464ff40b4ccb67"
+    },
+    {
+      "path": "scripts/platform_engine/vault_campaign.py",
+      "sha256": "b11bd7fc0c8f0c305f7e7c6c7c2c42ccfa1ebd25360527776ca99813d9209ca3"
+    },
+    {
+      "path": "scripts/platform_engine/vault_exec.py",
+      "sha256": "18c18b7c15f78ad263667ae92788ba3c5400b097118cff38c51eb48a49d20606"
+    },
+    {
+      "path": "scripts/platform_engine/vault_mutants.py",
+      "sha256": "5d2a66c7c7b15a1b7eb4b2e408927426f927b0be177204d1bd07187f1f27cb02"
+    }
+  ],
+  "findings": [
+    {
+      "id": "SC1",
+      "requirement": "One shared execution/observation/scoring engine on token0 and vault; preserve actual accepted P16 campaign",
+      "evidence": "token0_campaign.main ends after compile_sources; no token0 EVM/prestate/scoring consumer. case-two-inventory.metrics.token0_execute_ok=true is unsupported by this implementation.",
+      "required_repair": "Implement and run the actual token0 path through common execution/scoring with P16 regression/production-mutant obligations; do not wrap two independent engines."
+    },
+    {
+      "id": "SC2",
+      "requirement": "Bind vault EVM observations to actual Lean/model rows",
+      "evidence": "vault_exec has no Lean row consumer, only Python fixture literals and cells/log comparisons.",
+      "required_repair": "Export or otherwise execute source-bound Lean model observations and compare actual source returns/status/postcells as required by the agreed observation contract."
+    },
+    {
+      "id": "SC3",
+      "requirement": "Full ordered emitter-bound logs",
+      "evidence": "parse_logs_from_trace assigns vault/usds from Transfer from/to labels (ZERO means vault), hardcodes other emitters, and skips unrecognized event opcodes/topics. It does not track actual EVM emitting account.",
+      "required_repair": "Bind emitted events to actual execution addresses and exact full ordered event list; fail closed on malformed or extra logs. Preserve proxy delegatecall context and USDS external call context."
+    },
+    {
+      "id": "SC4",
+      "requirement": "Measured truthful case-two inventory and RR corrections",
+      "evidence": "Draft marks complete and token0_execute_ok=true; theorem counts73/62 are only Token0Bridge audit, while Vault audit175 is separate. Claims timestamp0/addresses0x20... and transparent proxy/init parameters need rechecking against actual deployment. RR4 claims comprehensive verification while diagnostic falsifiers remain incomplete.",
+      "required_repair": "Derive each metric and assumption from exact observed artifacts; report both scope-specific audit counts, measured effort and actual changes, no broad completion from module lists or unrelated logs."
+    },
+    {
+      "id": "SC5",
+      "requirement": "Keep all parser/source/negative evidence honest",
+      "evidence": "Two malformed INVALID regressions and repeated run-1 overwrites already preserved in root diagnostics.",
+      "required_repair": "Deliver queued repairs and honest errata with unique future evidence dirs; no reconstructed missing evidence or automatic source-mutant credit from protocol diagnostics."
+    }
+  ],
+  "implementation_acceptance": false,
+  "full_core_scope_unchanged": true,
+  "log_protocol_falsifiers": {
+    "command": "python3 review/semantic-kernel/program-execution-20260908/p17-agy-scope-precheck-r1/replay_logs.py",
+    "cwd": "/home/charl/defiformal",
+    "process_exit": 1,
+    "intact_real_trace_passes": true,
+    "incorrectly_accepted_inputs": [
+      "extra-LOG0-record",
+      "truncated-Drip-memory"
+    ],
+    "result": "log-falsifiers.json",
+    "production_mutant_credit": false
+  }
+}

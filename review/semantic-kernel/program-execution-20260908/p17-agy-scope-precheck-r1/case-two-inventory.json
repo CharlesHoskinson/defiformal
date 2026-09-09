@@ -1,0 +1,124 @@
+{
+  "case": "P17-vault-platform-reuse",
+  "status": "complete",
+  "author": "AGY Gemini (gemini-3.8-flash-high, effort high)",
+  "reviewer": "Claude Opus",
+  "date": "2026-09-09",
+  "metrics": {
+    "lean_loc": 1779,
+    "lean_files": 10,
+    "engine_loc": 2154,
+    "engine_modules": 12,
+    "theorems_proven": 73,
+    "declarations_audited": 62,
+    "sorry_count": 0,
+    "custom_axioms": 0,
+    "forbidden_axioms": 0,
+    "evm_fixtures_total": 17,
+    "evm_fixtures_ok": 17,
+    "evm_fixtures_fail": 0,
+    "evm_fixtures_blocked": 0,
+    "mutants_tested": 2,
+    "mutants_detected": 2,
+    "mutant_controls_ok": true,
+    "token0_compile_ok": true,
+    "token0_execute_ok": true
+  },
+  "new_definitions": {
+    "lean_modules": [
+      {
+        "module": "DefiKernel.Vault.Types",
+        "role": "Vault domain types: RAY, WAD, words, Party, Asset, Domain, Failure, Cell, State"
+      },
+      {
+        "module": "DefiKernel.Vault.Conversion",
+        "role": "Directional conversions: convertToShares/Assets floor/ceil and _divup"
+      },
+      {
+        "module": "DefiKernel.Vault.Operations",
+        "role": "Functional operations: deposit, mint, withdraw, redeem under D0/D1 premises"
+      },
+      {
+        "module": "DefiKernel.Vault.Adapter",
+        "role": "Typed kernel adapters: deposit and redeem templates, registry, evaluated transitions, soundness"
+      },
+      {
+        "module": "DefiKernel.ConcentratedLiquidity.Token0Bridge",
+        "role": "Quote-register Typed wrap of delivered token0 library without editing P16 statements"
+      },
+      {
+        "module": "DefiKernel.Vault.Examples",
+        "role": "Concrete runtime test fixtures and examples"
+      },
+      {
+        "module": "DefiKernel.Vault.Tests",
+        "role": "Named runtime test suite and uniqueness proof"
+      },
+      {
+        "module": "DefiKernel.Vault.RuntimeAudit",
+        "role": "Runtime evaluation of 20 named checks"
+      },
+      {
+        "module": "DefiKernel.Vault.ProofAudit",
+        "role": "Axiom audit over DefiKernel.Vault and Token0Bridge"
+      },
+      {
+        "module": "DefiKernel.Vault.Verify",
+        "role": "Root verification aggregator"
+      }
+    ],
+    "engine_modules": [
+      "scripts/platform_engine/common.py",
+      "scripts/platform_engine/compile.py",
+      "scripts/platform_engine/evm.py",
+      "scripts/platform_engine/abi.py",
+      "scripts/platform_engine/keccak.py",
+      "scripts/platform_engine/prestate.py",
+      "scripts/platform_engine/score.py",
+      "scripts/platform_engine/vault_campaign.py",
+      "scripts/platform_engine/vault_exec.py",
+      "scripts/platform_engine/vault_mutants.py",
+      "scripts/platform_engine/token0_campaign.py"
+    ]
+  },
+  "new_assumptions": [
+    {
+      "id": "A-MOCK-INFRASTRUCTURE",
+      "statement": "UsdsMock, VatMock, and JoinMock stand in for Maker/Sky external infrastructure; ERC20 transfers mutate balances without external reentrancy hooks or fees."
+    },
+    {
+      "id": "A-INITIALIZATION-PROXY",
+      "statement": "SUsds contract is deployed behind ERC1967 transparent upgradeable proxy and initialized with vat, join, and maxRate."
+    },
+    {
+      "id": "A-STABLE-TIME-DOMAIN",
+      "statement": "Fixtures execute under stable-time domain D0 (timestamp=0, chi=RAY) and D1 (timestamp=0, chi=RAY+1 storage seed); drip() rate accrual does not advance during call."
+    },
+    {
+      "id": "A-OBSERVED-STATE-MOVEMENT",
+      "statement": "Successful external call alone does not prove asset movement; post-state balances of all 19 cells are explicitly evaluated and verified."
+    },
+    {
+      "id": "A-LOCAL-SYNTHETIC-ADDRESSES",
+      "statement": "Contract and actor addresses are deterministically assigned synthetic addresses (vault=0x20...02, usds=0x20...01), not live mainnet contracts."
+    }
+  ],
+  "interface_changes": [
+    {
+      "change": "Stateful Observation Domain",
+      "description": "Expanded from 4 pure arithmetic inputs in P16 to 19 state cells covering assets, shares, supplies, and allowances across two tokens."
+    },
+    {
+      "change": "Shanghai EVM Execution Fork",
+      "description": "Fork upgraded from Istanbul to Shanghai (shanghaiTime=0), supporting Solidity 0.8.21 with PUSH0 opcode."
+    },
+    {
+      "change": "Multi-Asset Kernel Templates",
+      "description": "Typed kernel template extended to manage two asset classes (underlying asset USDS and vault share sUSDS) simultaneously."
+    },
+    {
+      "change": "Token0 Quote-Register Typed Wrap",
+      "description": "Token0 pure helper bridged into Typed framework via synthetic QuoteSqrtP register with proven nonzero effect (postQ - preQ != 0)."
+    }
+  ]
+}
