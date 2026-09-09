@@ -136,3 +136,17 @@ root orchestrates, verifies, integrates and publishes accepted work only to
 `semantic-kernel-pivot`. No Foreman, no merge to main, Atlas stays parked.
 Recover from CURRENT.json and program-execution-20260908/STATE.json, not stale
 process handles or historical planning checkboxes.
+
+## Author change to AGY Gemini, 2026-09-09
+
+The user instructed: "switch grok to AGY Gemini 3.8 flash high". Native AGY
+`gemini-3.8-flash-high` with `--effort high` now implements the authorized core
+program; native Claude Opus remains the independent reviewer. This supersedes
+the Grok author assignment for future work and resolves that author-capacity
+block by an explicitly authorized provider change. Preserve Grok-authored
+source/evidence and prior reviews with their actual identities. Resume the
+existing P17 worktree and concrete repair brief; do not restart accepted
+planning or narrow the full core objective. No Foreman, no merge to main,
+Atlas stays parked, and root publishes only to `semantic-kernel-pivot`.
+Use new evidence directories for new AGY runs; frozen Grok evidence must not
+be overwritten. Recover current dispatch from CURRENT.json and STATE.json.
