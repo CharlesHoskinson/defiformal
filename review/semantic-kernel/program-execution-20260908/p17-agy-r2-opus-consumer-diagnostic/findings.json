@@ -1,0 +1,155 @@
+{
+  "schema": "p17-opus-consumer-diagnostic-findings/v1",
+  "reviewer": "native Claude Opus (claude-opus-5), independent",
+  "author_under_review": "AGY Gemini 3.8 Flash High",
+  "produced_utc": "2026-09-09",
+  "scope": "ONE bounded diagnostic of the actual P17 source-observation consumers. NOT P17 acceptance. Full frozen-candidate Opus review remains pending.",
+  "acceptance": false,
+  "verdict": "REPAIRS REQUIRED. All three scoped questions answered NO on the actual frozen code path.",
+  "inputs": {
+    "snapshot": "snapshot/ (24 files, all sha256 verified against inputs.json)",
+    "deployment": "p17-agy-r2-first-campaign-failure/execution.tar.gz sha256 f0d514656f2f16800a22bf43be20d6a49ae67c1bd067e9b6ed69856034d70390 == observation.json archive_sha256; addresses.json and create-proxy/genesis.json verified against per-file manifest.json before extraction",
+    "cross_check": "engine-after-failure/*.py hashes inside the archive equal the snapshot engine hashes, so the snapshot IS the engine that produced the observed r2 failure",
+    "consumer_under_test": "snapshot/scripts/platform_engine/vault_exec.py sha256 835667c2cee6da823600aa7bd20c6a540198a4b816088cbf649d92651ff15962",
+    "scorer_under_test": "snapshot/scripts/platform_engine/common.py score_rows sha256 7d3ce3088f9603ff81206c784e918b1d552e903747e85f00b3a9a9aa4a8c9539"
+  },
+  "invocations_used": 6,
+  "invocations_budget": 8,
+  "questions": {
+    "Q1_blocks_unavailable_lean_rows_with_exit3": "NO",
+    "Q2_compares_specific_lean_refusal_and_success_observations": "NO for refusals; PARTIAL for successes (scalar only); NO Lean poststate/Ledger comparison exists at all",
+    "Q3_parser_rejects_duplicate_malformed_missing_rows_and_nonzero_receipts": "NO"
+  },
+  "findings": [
+    {
+      "id": "F1",
+      "rank": 1,
+      "severity": "blocker",
+      "question": "Q3",
+      "title": "The Lean bindings process receipt is never consulted; a FAILED model run earns full source credit (exit 0)",
+      "location": "vault_exec.py:513-551 run_lean_vault_bindings; token0_campaign.py:298-341 has the identical defect",
+      "defect": "record_cmd() returns a receipt carrying exit, classification and valid. run_lean_vault_bindings reads only _wrapper.stdout_path and parses whatever text is there. receipt['exit'], receipt['classification'] and receipt['valid'] are never read, and the function's own summary['status'] is written to bindings-summary.json and then DISCARDED - only `parsed` is returned, so no caller can see it.",
+      "evidence": "work/attempts/A6-default-path-nonzero-exit: Lean bindings receipt exit=1 classification='nonzero'; consumer reported status='ok' exit=0, 3/3 gates ok; bindings-summary.json on disk recorded status='ok' count=17 alongside receipt.exit=1. work/attempts/A4-parser-probes/P3 and P4: nonzero (exit 1) and timeout_blocked (exit 124, valid=false) receipts both parsed and returned rows with no error.",
+      "direction": "FALSE PASS - unverified evidence scored as verified",
+      "actionable_repair": "Return the summary, not the bare dict. Make run_lean_vault_bindings return {'status','count','parsed','receipt'} (or raise SetupBlocked) and require receipt.get('valid') is True, receipt.get('exit') == 0, receipt.get('classification') == 'ok' and timeout falsey before any row is usable. common.record_cmd already computes valid/classification correctly - that improvement exists and is simply thrown away."
+    },
+    {
+      "id": "F2",
+      "rank": 2,
+      "severity": "blocker",
+      "question": "Q1",
+      "title": "Unavailable Lean evidence is scored as semantic fail exit 1, not blocked exit 3",
+      "location": "vault_exec.py:627-636 (bare `except Exception: lean_rows = {}`), :709-715 and :726-727 (success path), :759-761 (revert path)",
+      "defect": "A missing lean_row makes lean_model_ok False, which sets gate='fail'. score_rows then sees blocked=0 and reports status='fail' exit=1 'bound observation disagrees with independent expected'. The tool/setup failure is laundered into a claim that the source disagrees with the model. The bare except at :635 additionally discards the reason for the Lean failure entirely.",
+      "evidence": "work/attempts/A5-default-path-blocked-recorder (production default path, lean_rows omitted): Lean bindings blocked -> 3/3 gates 'fail', scored {status:'fail', exit:1, fail:3, blocked:0} while every row had semantic_ok=true and refusal_match=true - the EVM observation agreed in full. work/attempts/A2-partial-lean-rows: intact row P17-DEP-D0 stayed ok while two absent rows became 'fail' with semantic_ok=true, scored exit 1, blocked 0. This reproduces the field failure recorded in p17-agy-r2-first-campaign-failure/observation.json ('17/17 vault cases reported semantic fail while Lean bindings command could not find relative source path').",
+      "direction": "FALSE FAIL - blocked evidence reported as property false",
+      "actionable_repair": "Distinguish absent from disagreeing. When lean_row is None or the bindings run is not valid, emit comparison.gate='blocked' with reason='lean model row unavailable', which score_rows already maps to exit 3. Replace the bare `except Exception: lean_rows = {}` at :635-636 with a captured SetupBlocked carrying the exception text into the row reason. Per defi-footguns, a zero/absent denominator is blocked, never false."
+    },
+    {
+      "id": "F3",
+      "rank": 3,
+      "severity": "blocker",
+      "question": "Q2",
+      "title": "The revert path ignores the Lean refusal contents; ANY Lean error matches ANY source revert",
+      "location": "vault_exec.py:759 `lean_model_ok = (lean_row is not None and lean_row.get('status') == 'error')`",
+      "defect": "The frozen Lean export DOES emit the specific failure - generate_vault_bindings_lean at :462 prints `status=error failure={sourceLabel e}` and the parser stores it as row['failure'] - but run_fixtures never reads it. Only the scalar label 'error' is tested. refusal_match compares the EVM decoded_error against the fixture literal, so the Lean model is never held to the specific refusal reason. This is a REGRESSION against the sibling consumer: token0_campaign.py:622-625 already does `lean_row.get('error') == exp['error']`.",
+      "evidence": "work/attempts/A3-refusal-content: P17-DEP-BAD-RECV given Lean failure 'SUsds/insufficient-balance' where the source refuses 'SUsds/invalid-address' -> gate 'ok', lean_model_match true. P17-RED-BAL given an unrelated 'Panic(0x12)' (division by zero) against an insufficient-balance refusal -> gate 'ok'. In the SAME run P17-DEP-D0 with a wrong Lean value (424242) correctly gated 'fail', so the check is not always-on: the asymmetry is specific to refusals. Independently reconfirmed on the production default path in A6, where P17-RED-BAL carried failure='SUsds/invalid-address' and still gated ok.",
+      "direction": "FALSE PASS",
+      "actionable_repair": "Compare the Lean failure label against the expected refusal, as token0 already does. Note the label namespaces are NOT identical: Vault sourceLabel (Types.lean:77-84) emits SUsds/... and Panic(0x11)/Panic(0x12), while fixtures.json expects Usds/insufficient-balance and Usds/insufficient-allowance for the two mock-token reverts (P17-DEP-TF-BAL, P17-DEP-TF-ALLOW). A correct repair needs an explicit declared mapping from Failure to expected source error, not a raw string equality, and must gate blocked - not ok - on an unmapped label."
+    },
+    {
+      "id": "F4",
+      "rank": 4,
+      "severity": "major",
+      "question": "Q3",
+      "title": "Duplicate model rows silently last-wins and can overwrite a value while the count check still passes",
+      "location": "vault_exec.py:543 `parsed[fid] = row_data`",
+      "defect": "The parser accumulates into a dict with no duplicate detection. A repeated id overwrites the earlier row. Because the only integrity check is len(parsed)==17, a 17-row stream plus one duplicate still yields count 17 and summary status 'ok'.",
+      "evidence": "work/attempts/A4-parser-probes/P5-duplicate-row-last-wins: 18 stdout lines, the extra being a second P17-DEP-D0 with value=999. Parser returned 17 rows, summary status 'ok', count 17, and P17-DEP-D0.value became 999 instead of 1000000000000000000.",
+      "direction": "FALSE PASS / silent corruption",
+      "actionable_repair": "Refuse a duplicate id: `if fid in parsed: raise SetupBlocked('duplicate lean row', {'id': fid})`. score_rows already refuses duplicate ids for fixture rows (common.py:184-185); apply the same rule to model rows."
+    },
+    {
+      "id": "F5",
+      "rank": 5,
+      "severity": "major",
+      "question": "Q3",
+      "title": "Partial stdout and malformed rows are accepted or converted into semantic failure instead of blocking",
+      "location": "vault_exec.py:528-543 (silent skip of unparsed lines), :540 unguarded int(v), :533 `parts[0].startswith('P17-')`, :544-551 discarded summary",
+      "defect": "Three related weaknesses. (a) A truncated stream returns fewer rows with no signal to the caller. (b) `int(v)` on a malformed value raises an uncaught ValueError out of the parser, which the caller's bare except at :635 turns into lean_rows={} - one bad character makes ALL 17 rows unavailable and therefore, via F2, 17 semantic failures. (c) Row admission is `startswith('P17-')` rather than membership in common.VAULT_FIXTURE_IDS, so any P17-prefixed line on stdout is accepted as a model row; token0_campaign.py:318 already uses the stricter `parts[0] in REQUIRED_P16_IDS`.",
+      "evidence": "work/attempts/A4-parser-probes: P2-truncated-partial-stdout returned 9 rows (summary on disk said 'blocked', caller never sees it); P6-malformed-value raised ValueError(\"invalid literal for int() with base 10: 'NaN'\") from vault_exec.py:540; P7-foreign-P17-line accepted a non-formatRow P17-prefixed line as a row; P8-blocked-receipt-no-wrapper returned {} silently when record_cmd itself returned a blocked report.",
+      "direction": "both directions - silent shortfall and blocked-to-false",
+      "actionable_repair": "Admit only ids in VAULT_FIXTURE_IDS; wrap the int() in a try that raises SetupBlocked naming the offending line; require the parsed id set to equal VAULT_FIXTURE_IDS exactly; and surface that verdict through the return value (F1)."
+    },
+    {
+      "id": "F6",
+      "rank": 6,
+      "severity": "major",
+      "question": "Q2",
+      "title": "No Lean poststate/Ledger observation is compared, and none is exported",
+      "location": "vault_exec.py:459-462 generate_vault_bindings_lean formatRow: `| .ok (_, w) => s!\"{id} status=ok value={w.value}\"`",
+      "defect": "The Lean model returns Except Failure (Ledger x Word 256) but formatRow discards the Ledger with `_` and exports one scalar word. The consumer therefore CANNOT compare a Lean poststate even in principle. What is compared is (i) EVM poststate vs fixture literals via expected_cells/compare_cells and (ii) the Lean scalar vs the SAME fixture literal (:712, :714) - never Lean against the observation. The Lean model constrains exactly one integer per success fixture and one boolean per revert fixture.",
+      "evidence": "Direct reading of the frozen generator inside the frozen consumer file, plus every row emitted in A1/A5/A6 where comparison.lean_model contains only {id,status,value} or {id,status,failure}.",
+      "direction": "coverage gap - overstated strength of the Lean/source correspondence",
+      "actionable_repair": "Either (a) extend formatRow to emit the Ledger cells that correspond to OBSERVED_CELLS and compare them against the observed poststate, or (b) state the limitation explicitly in the P17 evidence: the Lean correspondence is scalar-valued and the poststate agreement is EVM-vs-fixture-literal only. Do not describe the current gate as a Lean/source state correspondence. Scoped to the D0/D1 plan; no broader accrual/mainnet refinement is being requested here."
+    },
+    {
+      "id": "F7",
+      "rank": 7,
+      "severity": "moderate",
+      "question": "Q2",
+      "title": "The revert path records pre_retained as a hardcoded literal without observing the poststate",
+      "location": "vault_exec.py:775-776 `\"pre_retained\": True, \"rollback_verification\": False`",
+      "defect": "The revert branch never calls observe() after the failing call. pre_retained: True is a constant written into the observation row, indistinguishable in the artifact from a measured fact. rollback_verification: False is at least honest about it, but the pair reads as evidence.",
+      "evidence": "Reading vault_exec.py:747-780 - no post_obs in the revert branch; confirmed in the A1/A3 revert rows, whose comparison objects carry pre_retained true with no post-observation cells.",
+      "direction": "unmeasured claim presented as an observation",
+      "actionable_repair": "Either observe the poststate after the revert and compare it cell-by-cell against the prestate, or delete pre_retained rather than asserting it. Per defi-footguns, a gate must not report on something it did not measure."
+    },
+    {
+      "id": "F8",
+      "rank": 8,
+      "severity": "moderate",
+      "question": "Q1",
+      "title": "The scorer validates the row ids against a set derived from the same filter, so a partial selection scores an unqualified ok",
+      "location": "vault_exec.py:789 `score_rows(rows, [fx['id'] for fx in fixtures])` where `fixtures` is already the fixture_ids-filtered list",
+      "defect": "score_rows' 'row ids are not the exact required set' check (common.py:186-194) is a genuine improvement, but it is fed required_ids computed from the same filtered list that produced the rows, so it can only catch an internal loop bug - never a short corpus. A caller passing fixture_ids gets status 'ok' exit 0 with no indication that the canonical 17 were not run.",
+      "evidence": "work/attempts/A1-intact-positive-control: fixture_ids of 3 -> scored {status:'ok', exit:0, denominator:3, reason:'nonempty unique fixtures; all independent comparisons hold'}. The reason line does not qualify the 3-of-17 selection. The production caller vault_campaign.py:108 passes no fixture_ids, so all 17 run there; this is a public-API defect, not a live campaign defect.",
+      "direction": "partial-corpus credit",
+      "actionable_repair": "Score against common.VAULT_FIXTURE_IDS when the run claims source credit, and mark any subset selection as a diagnostic that cannot earn credit. Print the denominator against the canonical total in the result line."
+    }
+  ],
+  "improvements_present_to_preserve": [
+    "common.score_rows (common.py:172-245) is a sound fail-closed grammar: empty selection -> blocked 3 with an explicit denominator; missing id, duplicate id, missing comparison.gate and unrecognized gate all -> blocked 3; any blocked row dominates any fail. Every finding above is about what is fed to it, not about the grammar.",
+    "common.record_cmd (common.py:260-339) pins the recorder by sha256, refuses a missing or drifted recorder, refuses a missing or malformed receipt, and correctly marks timeout and exit 124 as blocked and valid=False. The information needed to fix F1 is already computed here.",
+    "compare_cells (vault_exec.py:302-318) reads all 19 OBSERVED_CELLS by name, BLOCKS on a missing expected or observed cell rather than skipping it, and returns per-cell diffs. It reads the row as a row.",
+    "compare_logs (vault_exec.py:554-562) requires exact ordered equality of the full log sequence, and a log parse exception becomes gate fail rather than being swallowed.",
+    "run_fixtures blocks correctly on prestate mismatch, blocked pre-observation, blocked post-observation and unknown expected status.",
+    "vault_campaign.main (vault_campaign.py:55-114) maps a failed compile to exit 3 and refuses non-empty evidence directories.",
+    "token0_campaign.py:622-625 already compares the specific Lean error, and :318 already restricts row admission to the required id set. F3 and F5(c) are vault-side regressions against these existing behaviours, not new work."
+  ],
+  "controls": [
+    {"name": "A1-intact-positive-control", "purpose": "prove the gates are not always-red", "result": "3/3 ok, consumer exit 0, real pinned EVM (op, op-returndata, 17 view calls per fixture, all receipts classification ok)"},
+    {"name": "A3 P17-DEP-D0 arm", "purpose": "prove the Lean value check does fire, isolating F3 to refusals", "result": "wrong Lean value 424242 -> gate fail in the same run where two wrong refusal labels gated ok"},
+    {"name": "A2 P17-DEP-D0 arm", "purpose": "intact row against missing rows in one run", "result": "intact ok, two missing -> fail, isolating the effect to row availability"},
+    {"name": "A4 P1-intact-control", "purpose": "parser baseline", "result": "17 rows, summary ok"}
+  ],
+  "limits": [
+    "This is a consumer diagnostic, not P17 acceptance. No verdict is offered on the Lean proofs, the Solidity capture, the compile closure, or the candidate as a whole.",
+    "No Lean was compiled. Every Lean row used here is diagnostic input supplied through the public lean_rows argument or through a disclosed recorder stub. No fresh model execution is claimed.",
+    "A4 and A5/A6 substituted vault_exec.record_cmd with a private stub for the lean-vault-bindings subprocess only. The parser and consumer bodies under test were the unmodified frozen functions; EVM execution used the real frozen recorder and the pinned evm binary. No Solidity production-mutant credit and no fresh-model-execution credit is claimed from those attempts.",
+    "No Solidity mutant was executed, so the diagnostic cannot speak to whether the cell/log comparison would catch a real source defect. compare_cells and compare_logs were exercised only on the intact deployment.",
+    "Three of seventeen fixtures were exercised (P17-DEP-D0, P17-DEP-BAD-RECV, P17-RED-BAL) to stay inside the invocation budget. F1-F5 are properties of the shared code path and are not fixture-specific, but the remaining fourteen fixtures were not run.",
+    "Trace JSON and depth parser defects were explicitly out of scope and were not re-examined; parse_logs_from_trace was exercised only incidentally via the intact success fixture.",
+    "The deployment and prestate came from the frozen first-campaign-failure archive, not from a fresh compile+deploy.",
+    "6 of the 8 permitted invocations were used; the diagnostic stopped because all three scoped questions were answered, not because the budget ran out. One additional setup attempt failed before any probe ran (missing output directory) and is recorded as blocked setup, not as a result."
+  ],
+  "attempts": [
+    {"dir": "work/attempts/A1-intact-positive-control", "kind": "positive control", "lean_rows": "correct, supplied via public argument", "consumer_status": "ok", "consumer_exit": 0, "driver_exit": 0},
+    {"dir": "work/attempts/A2-partial-lean-rows", "kind": "falsifier Q1", "lean_rows": "1 of 3 present", "consumer_status": "fail", "consumer_exit": 1, "driver_exit": 0},
+    {"dir": "work/attempts/A3-refusal-content", "kind": "falsifier Q2", "lean_rows": "wrong value + wrong refusal labels", "consumer_status": "fail", "consumer_exit": 1, "note": "the fail came only from the wrong value; both wrong refusals gated ok", "driver_exit": 0},
+    {"dir": "work/attempts/A4-parser-probes", "kind": "falsifier Q3, 8 sub-probes", "lean_rows": "crafted stdout via disclosed recorder stub", "consumer_status": "n/a (parser-level)", "driver_exit": 0},
+    {"dir": "work/attempts/A5-default-path-blocked-recorder", "kind": "falsifier Q1 end-to-end on the production default path", "lean_rows": "omitted; bindings blocked", "consumer_status": "fail", "consumer_exit": 1, "driver_exit": 0},
+    {"dir": "work/attempts/A6-default-path-nonzero-exit", "kind": "falsifier Q1/Q3 end-to-end", "lean_rows": "omitted; bindings exit 1 with full stdout", "consumer_status": "ok", "consumer_exit": 0, "driver_exit": 0}
+  ],
+  "note_on_prior_root_diagnostics": "p17-agy-r2-first-campaign-failure/observation.json and the queued followup brief were read as context. F2 independently reproduces the failure mode they describe using the frozen functions rather than restating their conclusion; F1, F3, F4, F5, F6, F7 and F8 are not asserted by either document."
+}
