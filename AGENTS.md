@@ -124,3 +124,15 @@ source-entry and substantive reuse, P18 usable library release, and the remainin
 metatheory, claims, certificates and financial-library agenda. Native Grok 4.6
 authors; independent GPT-6 checks; no Foreman. Accepted core work continues to
 `semantic-kernel-pivot`, with no merge to main.
+## Autonomous loop and reviewer change, 2026-09-09
+
+The user instructed: "resume and arm a loop to continue the work have Grok 4.6
+implement and Opus review". Continue the authorized core program with native
+Grok 4.6 as author and native Claude Opus as independent reviewer. Request the
+`opus` alias and record the returned model identity. This supersedes older
+GPT-6/Fable reviewer roles for future candidates; preserve completed reviews
+with their actual original identities. The current Codex goal loop is active;
+root orchestrates, verifies, integrates and publishes accepted work only to
+`semantic-kernel-pivot`. No Foreman, no merge to main, Atlas stays parked.
+Recover from CURRENT.json and program-execution-20260908/STATE.json, not stale
+process handles or historical planning checkboxes.
