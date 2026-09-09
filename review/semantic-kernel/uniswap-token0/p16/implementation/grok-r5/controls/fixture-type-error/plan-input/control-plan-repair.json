@@ -1,0 +1,36 @@
+{
+  "original_plan": "review/semantic-kernel/uniswap-token0/p16/planning/grok-r1/original-planning-input/openspec/changes/concentrated-liquidity-library/planned-mutations.json",
+  "original_m09": {
+    "id": "M09",
+    "actual_source_change": "Flip zeroForOne to current < target",
+    "planned_anchor": "let zeroForOne := current.value ≥ target.value",
+    "designated_false": "F31",
+    "unaffected_positive": "F28",
+    "global_positives_included_F28": true
+  },
+  "diagnosis": {
+    "method": "repaired-oracle compute_swap_step versus flipped predicate; not compiled SwapMath",
+    "F28_inputs": {
+      "sqrtCurrent": "79228162514264337593543950336",
+      "sqrtTarget": "79228162514264337593543950335",
+      "liquidity": "79228162514264337593543950336",
+      "amountRemaining": "1000",
+      "feePips": "3000"
+    },
+    "F28_original": {"amountIn": "2", "amountOut": "1", "feeAmount": "1", "zeroForOne": true, "reachedTarget": true},
+    "F28_m09": {"amountIn": "1", "zeroForOne": false},
+    "conclusion": "F28 is not an unaffected control"
+  },
+  "repaired_plan": {
+    "compiled_M09": "P21",
+    "m09_target": "future Lean DefiKernel.ConcentratedLiquidity.SwapMath direction predicate with model invalidFee/intOverflow preguards",
+    "exclude_F28_as_protected": true,
+    "named_unaffected_sibling": "F32",
+    "sibling_scope": "model-side control for that planned Lean helper; captured Solidity computeSwapStep has no pre-predicate invalidFee guard, so F32 is not automatically a pinned Solidity control",
+    "sibling_reason": "on the diagnostic/model SwapMath, invalidFee is decided before the direction predicate; both polarities refuse invalidFee",
+    "additional_same_module_control": "F33",
+    "keep_designated_false": "F31",
+    "do_not_name_F29": "numeric fields can stay 0/0/1 but zeroForOne flips"
+  },
+  "preserved_failed_original": true
+}

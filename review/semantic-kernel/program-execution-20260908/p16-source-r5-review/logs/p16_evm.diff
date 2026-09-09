@@ -1,0 +1,184 @@
+--- r4/scripts/token0_p16/p16_evm.py
++++ r5/scripts/token0_p16/p16_evm.py
+@@ -23,6 +23,7 @@
+     decode_uint160,
+     encode_probe_calldata,
+     invocation_is_complete,
++    invocation_is_successful,
+     record_cmd,
+     sha256_file,
+     sha256_text,
+@@ -93,6 +94,9 @@
+ }
+ 
+ ABI_WORD = re.compile(r"^0x[0-9a-fA-F]{64}$")
++EMPTY_HEX = re.compile(r"^0x$", re.IGNORECASE)
++ERROR_REVERT = "error: execution reverted"
++ERROR_INVALID = "error: invalid opcode: invalid"
+ 
+ 
+ def _blocked(klass: str, reason: str, extra: dict | None = None) -> dict:
+@@ -157,20 +161,94 @@
+             "wrapper exit is not success for a semantic EVM observation",
+             {"wrapper_exit": wrapper_exit, "process_exit": process_exit},
+         )
+-
+-    lines = [ln.rstrip("\n") for ln in stdout.splitlines()]
+-    hex_line = ""
+-    err_line = None
+-    for ln in lines:
+-        stripped = ln.strip()
+-        if ABI_WORD.match(stripped) and not hex_line:
+-            hex_line = stripped.lower()
+-        elif stripped.lower() in ("0x",) and not hex_line:
+-            hex_line = "0x"
+-        if "error:" in stripped.lower():
+-            err_line = stripped
+-    emptyish = stdout.strip() in ("", "0x")
+-    if err_line is None and emptyish:
++    if rec and not invocation_is_successful(rec):
++        return _blocked(
++            "invalid_invocation",
++            rec.get("reason")
++            or "child/wrapper/classification are not a successful source execution",
++            {
++                "process_exit": process_exit,
++                "wrapper_exit": wrapper_exit,
++                "recorder_classification": classification,
++            },
++        )
++
++    nonempty = [ln.strip() for ln in stdout.splitlines() if ln.strip()]
++    abi_words = []
++    empty_hex = []
++    error_lines = []
++    extra = []
++    for stripped in nonempty:
++        lower = stripped.lower()
++        if ABI_WORD.match(stripped):
++            abi_words.append(lower)
++        elif EMPTY_HEX.match(stripped):
++            empty_hex.append("0x")
++        elif lower.startswith("error:"):
++            error_lines.append(stripped)
++        else:
++            extra.append(stripped)
++    if extra:
++        return _blocked(
++            "unknown_output",
++            "extra unmatched EVM protocol output is not a recognized token0 result",
++            {"stdout": stdout, "extra": extra, "process_exit": process_exit},
++        )
++    if len(abi_words) > 1:
++        return _blocked(
++            "unknown_output",
++            "duplicate EVM returndata lines are ambiguous protocol output",
++            {"returndata": abi_words, "process_exit": process_exit},
++        )
++    if len(error_lines) > 1:
++        return _blocked(
++            "unknown_output",
++            "duplicate EVM error lines are ambiguous protocol output",
++            {"errors": error_lines, "process_exit": process_exit},
++        )
++    if abi_words and empty_hex:
++        return _blocked(
++            "unknown_output",
++            "ABI word and empty 0x together are extra protocol output",
++            {"returndata": abi_words, "process_exit": process_exit},
++        )
++
++    if error_lines:
++        err_line = error_lines[0]
++        err_l = err_line.lower()
++        if err_l not in {ERROR_REVERT, ERROR_INVALID}:
++            return _blocked(
++                "unknown_output",
++                "unrecognized EVM error text is not a documented revert or INVALID opcode",
++                {"error": err_line, "stdout": stdout, "process_exit": process_exit},
++            )
++        if purpose == "genesis_stop":
++            return _blocked(
++                "unknown_output",
++                "genesis STOP smoke is not a revert or exceptional halt",
++                {"error": err_line},
++            )
++        payload = abi_words[0] if abi_words else "0x"
++        if err_l == ERROR_REVERT:
++            return {
++                "class": "evm_revert",
++                "status": "revert",
++                "returndata": payload,
++                "error": err_line,
++                "reason": "semantic EVM revert; process may still exit 0",
++                "process_exit": process_exit,
++            }
++        return {
++            "class": "evm_exception",
++            "status": "exception",
++            "returndata": payload,
++            "error": err_line,
++            "reason": "semantic EVM exceptional halt (not a host process crash)",
++            "process_exit": process_exit,
++        }
++
++    emptyish = not nonempty or nonempty == ["0x"]
++    if emptyish:
+         if purpose == "genesis_stop":
+             return {
+                 "class": "stop_smoke",
+@@ -184,7 +262,8 @@
+             "empty or STOP-like returndata is not a recognized token0 ABI uint160 result",
+             {"stdout": stdout, "process_exit": process_exit},
+         )
+-    if err_line is None and hex_line and ABI_WORD.match(hex_line):
++    if len(abi_words) == 1:
++        hex_line = abi_words[0]
+         if purpose == "genesis_stop":
+             return _blocked(
+                 "unknown_output",
+@@ -206,39 +285,11 @@
+             "reason": "ABI-encoded uint160 returndata, no EVM error line",
+             "process_exit": process_exit,
+         }
+-    if err_line is None:
+-        return _blocked(
+-            "unknown_output",
+-            "unrecognized EVM stdout is not a token0 success, revert, exception, or STOP smoke",
+-            {"stdout": stdout, "process_exit": process_exit},
+-        )
+-    err_l = err_line.lower()
+-    payload = hex_line if hex_line else "0x"
+-    if "execution reverted" in err_l:
+-        if purpose == "genesis_stop":
+-            return _blocked("unknown_output", "genesis STOP smoke reverted", {"error": err_line})
+-        return {
+-            "class": "evm_revert",
+-            "status": "revert",
+-            "returndata": payload,
+-            "error": err_line,
+-            "reason": "semantic EVM revert; process may still exit 0",
+-            "process_exit": process_exit,
+-        }
+-    if purpose == "genesis_stop":
+-        return _blocked(
+-            "unknown_output",
+-            "genesis STOP smoke is not an exceptional halt",
+-            {"error": err_line},
+-        )
+-    return {
+-        "class": "evm_exception",
+-        "status": "exception",
+-        "returndata": payload,
+-        "error": err_line,
+-        "reason": "semantic EVM exceptional halt (not a host process crash)",
+-        "process_exit": process_exit,
+-    }
++    return _blocked(
++        "unknown_output",
++        "unrecognized EVM stdout is not a token0 success, revert, exception, or STOP smoke",
++        {"stdout": stdout, "process_exit": process_exit},
++    )
+ 
+ 
+ def write_genesis(path: Path) -> dict:

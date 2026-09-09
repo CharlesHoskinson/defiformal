@@ -1,0 +1,208 @@
+{
+  "status": "PROPOSED_LITERAL_EXPECTATIONS_NOT_SOLC_NOT_LEAN",
+  "independent_expected": "RAY-scaled floor/ceil formulae in diagnose.py, not a vault oracle self-output",
+  "python_not_source_execution": true,
+  "solc_executed": false,
+  "evm_executed": false,
+  "lean_executed": false,
+  "constants": {
+    "RAY": "1000000000000000000000000000",
+    "WAD": "1000000000000000000",
+    "CHI_D0": "1000000000000000000000000000",
+    "CHI_D1": "1000000000000000000000000001",
+    "ASSETS_1": "1000000000000000000",
+    "MUL_OVF_ASSETS": "115792089237316195423570985008687907853269984665641"
+  },
+  "partitions": [
+    "ordinary_deposit_d0",
+    "ordinary_mint_d0",
+    "ordinary_redeem_d0",
+    "ordinary_withdraw_d0",
+    "directed_rounding_d1",
+    "zero_asset_success",
+    "invalid_address_refusal",
+    "transfer_refusal",
+    "authorization_refusal",
+    "checked_mul_overflow_refusal",
+    "source_independent_negative"
+  ],
+  "fixtures": [
+    {
+      "id": "P17-DEP-D0",
+      "partition": "ordinary_deposit_d0",
+      "operation": "deposit",
+      "domain": "D0",
+      "inputs": {"assets": "1000000000000000000", "receiver": "R", "msg.sender": "S"},
+      "pre": {"chi": "CHI_D0", "timestamp_eq_rho": true, "usds.S": "1000000000000000000", "usds.vault": "0", "shares.R": "0", "totalSupply": "0", "usds.allowance.S.vault": "max_or_assets"},
+      "expected": {"ok_shares": "1000000000000000000", "usds.S": "0", "usds.vault": "1000000000000000000", "shares.R": "1000000000000000000", "totalSupply": "1000000000000000000", "chi": "CHI_D0", "rho_unchanged": true},
+      "events": ["Drip(chi=RAY, diff=0)", "Deposit(S,R,assets,shares)", "Transfer(0,R,shares)"],
+      "independent": "floor(assets * RAY / RAY) = assets when chi = RAY",
+      "execution": {"solc": "not_run", "evm": "not_run", "lean": "not_run"}
+    },
+    {
+      "id": "P17-MINT-D0",
+      "partition": "ordinary_mint_d0",
+      "operation": "mint",
+      "domain": "D0",
+      "inputs": {"shares": "1000000000000000000", "receiver": "R", "msg.sender": "S"},
+      "expected": {"ok_assets": "1000000000000000000"},
+      "independent": "_divup(shares * RAY, RAY) = shares when chi = RAY",
+      "execution": {"solc": "not_run", "evm": "not_run", "lean": "not_run"}
+    },
+    {
+      "id": "P17-RED-D0",
+      "partition": "ordinary_redeem_d0",
+      "operation": "redeem",
+      "domain": "D0",
+      "inputs": {"shares": "1000000000000000000", "receiver": "R", "owner": "O", "msg.sender": "O"},
+      "pre": {"shares.O": "1000000000000000000", "usds.vault": "1000000000000000000", "totalSupply": "1000000000000000000"},
+      "expected": {"ok_assets": "1000000000000000000", "shares.O": "0", "usds.R": "1000000000000000000", "usds.vault": "0", "totalSupply": "0"},
+      "events": ["Drip(chi=RAY, diff=0)", "Transfer(O,0,shares)", "Withdraw(O,R,O,assets,shares)"],
+      "independent": "floor(shares * RAY / RAY) = shares; prestate fixture, not a token0-to-vault workflow",
+      "execution": {"solc": "not_run", "evm": "not_run", "lean": "not_run"}
+    },
+    {
+      "id": "P17-WD-D0",
+      "partition": "ordinary_withdraw_d0",
+      "operation": "withdraw",
+      "domain": "D0",
+      "inputs": {"assets": "1000000000000000000", "receiver": "R", "owner": "O", "msg.sender": "O"},
+      "expected": {"ok_shares": "1000000000000000000"},
+      "independent": "_divup(assets * RAY, RAY) = assets when chi = RAY",
+      "execution": {"solc": "not_run", "evm": "not_run", "lean": "not_run"}
+    },
+    {
+      "id": "P17-DEP-D1",
+      "partition": "directed_rounding_d1",
+      "operation": "deposit",
+      "domain": "D1",
+      "inputs": {"assets": "1000000000000000000", "receiver": "R"},
+      "pre": {"chi": "CHI_D1", "timestamp_eq_rho": true},
+      "expected": {"ok_shares": "999999999999999999"},
+      "independent": "floor(10^18 * 10^27 / (10^27+1)) = 10^18 - 1",
+      "execution": {"solc": "not_run", "evm": "not_run", "lean": "not_run"}
+    },
+    {
+      "id": "P17-MINT-D1",
+      "partition": "directed_rounding_d1",
+      "operation": "mint",
+      "domain": "D1",
+      "inputs": {"shares": "1000000000000000000", "receiver": "R"},
+      "pre": {"chi": "CHI_D1", "timestamp_eq_rho": true},
+      "expected": {"ok_assets": "1000000000000000001"},
+      "independent": "_divup(10^18 * (10^27+1), 10^27) = 10^18 + 1",
+      "execution": {"solc": "not_run", "evm": "not_run", "lean": "not_run"}
+    },
+    {
+      "id": "P17-RED-D1",
+      "partition": "directed_rounding_d1",
+      "operation": "redeem",
+      "domain": "D1",
+      "inputs": {"shares": "1000000000000000000", "receiver": "R", "owner": "O", "msg.sender": "O"},
+      "pre": {"chi": "CHI_D1", "timestamp_eq_rho": true, "shares.O": "1000000000000000000"},
+      "expected": {"ok_assets": "1000000000000000000"},
+      "independent": "floor(10^18 * (10^27+1) / 10^27) = 10^18",
+      "execution": {"solc": "not_run", "evm": "not_run", "lean": "not_run"}
+    },
+    {
+      "id": "P17-WD-D1",
+      "partition": "directed_rounding_d1",
+      "operation": "withdraw",
+      "domain": "D1",
+      "inputs": {"assets": "1000000000000000000", "receiver": "R", "owner": "O", "msg.sender": "O"},
+      "pre": {"chi": "CHI_D1", "timestamp_eq_rho": true},
+      "expected": {"ok_shares": "1000000000000000000"},
+      "independent": "_divup(10^18 * 10^27, 10^27+1) = 10^18 because remainder != 0",
+      "execution": {"solc": "not_run", "evm": "not_run", "lean": "not_run"}
+    },
+    {
+      "id": "P17-DEP-ZERO",
+      "partition": "zero_asset_success",
+      "operation": "deposit",
+      "domain": "D0",
+      "inputs": {"assets": "0", "receiver": "R"},
+      "expected": {"ok_shares": "0"},
+      "independent": "floor(0 * RAY / RAY) = 0; not a refusal",
+      "execution": {"solc": "not_run", "evm": "not_run", "lean": "not_run"}
+    },
+    {
+      "id": "P17-DEP-BAD-RECV",
+      "partition": "invalid_address_refusal",
+      "operation": "deposit",
+      "domain": "D0",
+      "inputs": {"assets": "1000000000000000000", "receiver": "0x0000000000000000000000000000000000000000"},
+      "expected": {"error": "SUsds/invalid-address", "transferFrom_called": false},
+      "independent": "_mint require runs before usds.transferFrom",
+      "execution": {"solc": "not_run", "evm": "not_run", "lean": "not_run"}
+    },
+    {
+      "id": "P17-DEP-SELF",
+      "partition": "invalid_address_refusal",
+      "operation": "deposit",
+      "domain": "D0",
+      "inputs": {"assets": "1000000000000000000", "receiver": "vault"},
+      "expected": {"error": "SUsds/invalid-address", "transferFrom_called": false},
+      "execution": {"solc": "not_run", "evm": "not_run", "lean": "not_run"}
+    },
+    {
+      "id": "P17-DEP-TF-BAL",
+      "partition": "transfer_refusal",
+      "operation": "deposit",
+      "domain": "D0",
+      "inputs": {"assets": "1000000000000000000", "receiver": "R", "msg.sender": "S"},
+      "pre": {"usds.S": "0", "receiver_valid": true},
+      "expected": {"error": "Usds/insufficient-balance", "shares_unchanged": true, "usds.vault_unchanged": true},
+      "note": "Actual transfer guard with captured UsdsMock. Mock identity is a harness assumption, not mainnet USDS.",
+      "execution": {"solc": "not_run", "evm": "not_run", "lean": "not_run"}
+    },
+    {
+      "id": "P17-DEP-TF-ALLOW",
+      "partition": "transfer_refusal",
+      "operation": "deposit",
+      "domain": "D0",
+      "inputs": {"assets": "1000000000000000000", "receiver": "R", "msg.sender": "S"},
+      "pre": {"usds.S": "1000000000000000000", "usds.allowance.S.vault": "0"},
+      "expected": {"error": "Usds/insufficient-allowance", "shares_unchanged": true, "usds.vault_unchanged": true},
+      "execution": {"solc": "not_run", "evm": "not_run", "lean": "not_run"}
+    },
+    {
+      "id": "P17-RED-BAL",
+      "partition": "authorization_refusal",
+      "operation": "redeem",
+      "domain": "D0",
+      "inputs": {"shares": "1", "receiver": "R", "owner": "O", "msg.sender": "O"},
+      "pre": {"shares.O": "0"},
+      "expected": {"error": "SUsds/insufficient-balance"},
+      "execution": {"solc": "not_run", "evm": "not_run", "lean": "not_run"}
+    },
+    {
+      "id": "P17-RED-ALLOW",
+      "partition": "authorization_refusal",
+      "operation": "redeem",
+      "domain": "D0",
+      "inputs": {"shares": "1000000000000000000", "receiver": "R", "owner": "O", "msg.sender": "P"},
+      "pre": {"shares.O": "1000000000000000000", "allowance.O.P": "0", "P_neq_O": true},
+      "expected": {"error": "SUsds/insufficient-allowance", "shares.O_unchanged": true, "usds.vault_unchanged": true},
+      "note": "Source-selected authorization guard on _burn",
+      "execution": {"solc": "not_run", "evm": "not_run", "lean": "not_run"}
+    },
+    {
+      "id": "P17-DEP-MUL-OVF",
+      "partition": "checked_mul_overflow_refusal",
+      "operation": "deposit",
+      "domain": "D0",
+      "inputs": {"assets": "115792089237316195423570985008687907853269984665641", "receiver": "R"},
+      "expected": {"error": "Panic(0x11)", "independent": "assets * RAY overflows uint256; 0.8.21 checked mul, not wrap and not Lean unbounded mulDiv"},
+      "execution": {"solc": "not_run", "evm": "not_run", "lean": "not_run"}
+    },
+    {
+      "id": "P17-NEG-MINT-NO-CREDIT",
+      "partition": "source_independent_negative",
+      "operation": "model_counterexample",
+      "domain": "not_a_source_fixture",
+      "description": "A Typed/world where sUSDS totalSupply and receiver shares increase by shares while vault USDS is unchanged. The vault deposit template is not Valid of that world. Not a pinned-source execution.",
+      "expected": {"model": "rejected", "source_execution": "not_applicable"},
+      "execution": {"solc": "not_run", "evm": "not_run", "lean": "not_run"}
+    }
+  ]
+}

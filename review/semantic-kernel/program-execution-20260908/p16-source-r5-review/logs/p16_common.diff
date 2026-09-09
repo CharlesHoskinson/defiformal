@@ -1,0 +1,75 @@
+--- r4/scripts/token0_p16/p16_common.py
++++ r5/scripts/token0_p16/p16_common.py
+@@ -42,7 +42,8 @@
+     "FixedPoint96.sol",
+     "SqrtPriceMath.sol",
+ ]
+-EVIDENCE = ROOT / "review/semantic-kernel/uniswap-token0/p16/implementation/grok-r4"
++EVIDENCE = ROOT / "review/semantic-kernel/uniswap-token0/p16/implementation/grok-r5"
++R4_EVIDENCE = ROOT / "review/semantic-kernel/uniswap-token0/p16/implementation/grok-r4"
+ R3_EVIDENCE = ROOT / "review/semantic-kernel/uniswap-token0/p16/implementation/grok-r3"
+ PLAN_DIR = ROOT / "openspec/changes/uniswap-token0-p16"
+ PYTHON = sys.executable
+@@ -326,6 +327,22 @@
+     return 3
+ 
+ 
++def expected_classification(timeout: bool, cancelled: bool, exit_code: int | None) -> str:
++    if timeout:
++        return "timeout_blocked"
++    if cancelled:
++        return "cancelled"
++    if exit_code is None or (isinstance(exit_code, int) and exit_code < 0):
++        return "crash"
++    if exit_code == 0:
++        return "ok"
++    if exit_code == 1:
++        return "failure"
++    if exit_code == 3:
++        return "blocked"
++    return "nonzero"
++
++
+ def _type_ok(value: Any, expected: type) -> bool:
+     if expected is bool:
+         return value is True or value is False
+@@ -459,6 +476,18 @@
+             "reason": "wrapper exit disagrees with receipt timeout/cancel/child status",
+             "extra": {**extra, "wrapper_exit": wrapper_exit, "expected_wrapper_exit": want_wrap, "child_exit": exit_code},
+         }
++    want_class = expected_classification(timeout, cancelled, exit_code)
++    if receipt["classification"] != want_class:
++        return {
++            "ok": False,
++            "reason": "receipt classification is inconsistent with timeout/cancel/child exit",
++            "extra": {
++                **extra,
++                "classification": receipt["classification"],
++                "expected_classification": want_class,
++                "child_exit": exit_code,
++            },
++        }
+     if timeout and receipt["classification"] != "timeout_blocked":
+         return {"ok": False, "reason": "timeout receipt classification is not timeout_blocked", "extra": extra}
+     if cancelled and receipt["classification"] != "cancelled":
+@@ -481,6 +510,20 @@
+         return False
+     wrapper = receipt.get("_wrapper") or {}
+     if wrapper.get("wrapper_exit") != expected_wrapper_exit(False, False, exit_code):
++        return False
++    return True
++
++
++def invocation_is_successful(receipt: dict) -> bool:
++    """Completed ordinary nonzero is not successful source/model execution."""
++    if not invocation_is_complete(receipt):
++        return False
++    if receipt.get("exit") != 0:
++        return False
++    wrapper = receipt.get("_wrapper") or {}
++    if wrapper.get("wrapper_exit") != 0:
++        return False
++    if receipt.get("classification") != "ok":
+         return False
+     return True
+ 

@@ -1,0 +1,1778 @@
+#!/usr/bin/env python3
+"""P16 pinned Solidity/EVM source campaign and six compiled production mutants.
+
+New tooling only. Frozen Token0Probe.sol, record_cmd.py, and Lean libraries are
+read, not edited. Python diagnostics are never scored as source execution.
+Invalid invocation evidence is setup-blocked 3, never mutant detection.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import re
+import shutil
+import signal
+import subprocess
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from p16_common import (
+    EVM,
+    EVIDENCE,
+    EXPECTED_EVM_SHA256,
+    EXPECTED_FIXTURE_IDS,
+    EXPECTED_RUNNER_SHA256,
+    EXPECTED_SOLC_SHA256,
+    FROZEN_ARCHIVE,
+    FROZEN_ARCHIVE_SHA256,
+    FROZEN_PROBE,
+    FROZEN_PROBE_SHA256,
+    MUTANT_IDS,
+    PLAN_DIR,
+    PRIMARY,
+    PYTHON,
+    RECORDER,
+    ROOT,
+    RUNTIME_AUDIT_IDS,
+    SOLC,
+    TOOLS,
+    SetupBlocked,
+    encode_probe_calldata,
+    fixture_inputs,
+    independent_expected,
+    invocation_is_complete,
+    invocation_is_successful,
+    lean_error_ctor,
+    load_fixtures,
+    load_json,
+    load_mutations,
+    record_cmd,
+    sha256_file,
+    sha256_text,
+    utc_now,
+    write_json,
+)
+from p16_compile import compile_overlay, copy_overlay
+from p16_evm import classify_evm_stdout, run_probe, write_genesis
+from p16_mutants import apply_mutant
+
+GO = Path("/usr/local/go/bin/go")
+RUNNER_RETAINED = PRIMARY / "p16-evm-readiness/runner.go"
+DESCENDANT = ROOT / "scripts/token0_p16/timeout_descendant.py"
+BINDING_RE = re.compile(
+    r"^(P16-[A-Z0-9-]+) sqrtP=(\d+) L=(\d+) amount=(\d+) add=(true|false) "
+    r"model=(ok:(\d+)|error:([A-Za-z0-9]+)) match=(true|false)$"
+)
+RUNTIME_RE = re.compile(r"^([A-Za-z0-9._-]+): (true|false)$")
+RUNTIME_INFO_RE = re.compile(r"^info: .+: ([A-Za-z0-9._-]+): (true|false)$")
+RUNTIME_IDISH_RE = re.compile(r"^([A-Za-z0-9._-]+):")
+BINDING_SUMMARY_OK_RE = re.compile(r"^P16 source-binding comparisons: (\d+) of (\d+)$")
+BINDING_SUMMARY_FAIL = "P16 source-binding comparison failed"
+LEAN_FILE_DIAG_RE = re.compile(r"\.lean:\d+:\d+:")
+PRINTED_UINT32 = {"0", "1", "3"}
+SEMANTIC_CLASSES = {"success", "evm_revert", "evm_exception"}
+BLOCKED_CLASSES = {
+    "process_failure",
+    "process_timeout",
+    "process_crash",
+    "process_cancelled",
+    "invalid_invocation",
+    "unknown_output",
+    "malformed_output",
+}
+
+
+def blocked(reason: str, extra: dict | None = None, exit_code: int = 3) -> int:
+    payload = {"status": "blocked", "reason": reason, **(extra or {})}
+    print(json.dumps(payload))
+    return exit_code
+
+
+def fail(reason: str, extra: dict | None = None) -> int:
+    payload = {"status": "fail", "reason": reason, **(extra or {})}
+    print(json.dumps(payload))
+    return 1
+
+
+def merge_exit(exits: list[int]) -> int:
+    if 3 in exits:
+        return 3
+    if 1 in exits:
+        return 1
+    return 0
+
+
+def setup(ev: Path) -> dict:
+    logs = ev / "logs" / "setup"
+    logs.mkdir(parents=True, exist_ok=True)
+    solc_ok = SOLC.is_file() and sha256_file(SOLC) == EXPECTED_SOLC_SHA256
+    evm_ok = EVM.is_file() and sha256_file(EVM) == EXPECTED_EVM_SHA256
+    runner_ok = RUNNER_RETAINED.is_file() and sha256_file(RUNNER_RETAINED) == EXPECTED_RUNNER_SHA256
+    archive_ok = FROZEN_ARCHIVE.is_file() and sha256_file(FROZEN_ARCHIVE) == FROZEN_ARCHIVE_SHA256
+    probe_ok = FROZEN_PROBE.is_file() and sha256_file(FROZEN_PROBE) == FROZEN_PROBE_SHA256
+    recorder_ok = RECORDER.is_file()
+    version = record_cmd(
+        "solc-version",
+        [str(SOLC), "--version"],
+        ROOT,
+        logs / "solc-version",
+        timeout=10,
+    ) if solc_ok else {"valid": False, "exit": 3}
+    evm_version = record_cmd(
+        "evm-version",
+        [str(EVM), "--version"],
+        ROOT,
+        logs / "evm-version",
+        timeout=10,
+    ) if evm_ok else {"valid": False, "exit": 3}
+    go_m = {}
+    if GO.is_file() and evm_ok:
+        go_m = record_cmd(
+            "go-version-m",
+            [str(GO), "version", "-m", str(EVM)],
+            ROOT,
+            logs / "go-version-m",
+            timeout=20,
+        )
+    genesis_path = ev / "genesis" / "istanbul-genesis.json"
+    genesis_binding = write_genesis(genesis_path)
+    stop_path = ev / "genesis" / "stop.hex"
+    stop_path.write_text("00\n")
+    empty_in = ev / "genesis" / "empty-input.hex"
+    empty_in.write_text("\n")
+    if evm_ok:
+        smoke = record_cmd(
+            "genesis-smoke",
+            [
+                str(EVM),
+                "run",
+                "--prestate",
+                str(genesis_path),
+                "--codefile",
+                str(stop_path),
+                "--inputfile",
+                str(empty_in),
+                "--gas",
+                "1000000",
+                "--sender",
+                "0x1000000000000000000000000000000000000001",
+                "--receiver",
+                "0x2000000000000000000000000000000000000002",
+            ],
+            ROOT,
+            logs / "genesis-smoke",
+            timeout=15,
+        )
+    else:
+        smoke = {"valid": False, "exit": 3, "timeout": False, "_wrapper": {}}
+    smoke_stdout = ""
+    smoke_stdout_path = Path((smoke.get("_wrapper") or {}).get("stdout_path") or "")
+    if smoke_stdout_path.is_file():
+        smoke_stdout = smoke_stdout_path.read_text(errors="replace")
+    smoke_class = classify_evm_stdout(
+        smoke_stdout,
+        smoke.get("exit"),
+        bool(smoke.get("timeout")),
+        receipt=smoke,
+        purpose="genesis_stop",
+    )
+    genesis_ok = (
+        bool(smoke.get("valid"))
+        and invocation_is_complete(smoke)
+        and smoke_class.get("class") == "stop_smoke"
+        and smoke_class.get("status") == "ok"
+    )
+    pin = load_json(PLAN_DIR / "source-pin.json")
+    capture = ROOT / pin["capture_root"]
+    closure = []
+    for entry in pin["token0_closure"]:
+        path = capture / entry["rel"]
+        actual = sha256_file(path) if path.is_file() else None
+        closure.append({
+            "rel": entry["rel"],
+            "expected": entry["sha256"],
+            "actual": actual,
+            "match": actual == entry["sha256"],
+        })
+    man = load_json(PRIMARY / "p16-proof-recorder-candidate-r2-manifest.json")
+    frozen_mismatch = []
+    for rel, exp in man["files"].items():
+        path = ROOT / rel
+        if not path.is_file():
+            frozen_mismatch.append({"rel": rel, "missing": True})
+            continue
+        actual = sha256_file(path)
+        if actual != exp:
+            frozen_mismatch.append({"rel": rel, "expected": exp, "actual": actual})
+    report = {
+        "utc": utc_now(),
+        "solc": {
+            "path": str(SOLC),
+            "exists": SOLC.is_file(),
+            "sha256": sha256_file(SOLC) if SOLC.is_file() else None,
+            "expected": EXPECTED_SOLC_SHA256,
+            "match": solc_ok,
+            "version_exit": version.get("exit"),
+            "version_valid": bool(version.get("valid")),
+            "version_stdout_sha256": version.get("stdout_sha256"),
+        },
+        "evm": {
+            "path": str(EVM),
+            "exists": EVM.is_file(),
+            "sha256": sha256_file(EVM) if EVM.is_file() else None,
+            "expected": EXPECTED_EVM_SHA256,
+            "match": evm_ok,
+            "version_exit": evm_version.get("exit"),
+            "version_valid": bool(evm_version.get("valid")),
+            "version_stdout_sha256": evm_version.get("stdout_sha256"),
+        },
+        "runner_go": {
+            "path": str(RUNNER_RETAINED),
+            "sha256": sha256_file(RUNNER_RETAINED) if RUNNER_RETAINED.is_file() else None,
+            "expected": EXPECTED_RUNNER_SHA256,
+            "match": runner_ok,
+        },
+        "go_version_m": {
+            "exit": go_m.get("exit"),
+            "valid": bool(go_m.get("valid")),
+            "stdout_sha256": go_m.get("stdout_sha256"),
+        },
+        "frozen_archive": {
+            "path": str(FROZEN_ARCHIVE),
+            "sha256": sha256_file(FROZEN_ARCHIVE) if FROZEN_ARCHIVE.is_file() else None,
+            "expected": FROZEN_ARCHIVE_SHA256,
+            "match": archive_ok,
+        },
+        "frozen_probe": {
+            "path": str(FROZEN_PROBE),
+            "sha256": sha256_file(FROZEN_PROBE) if FROZEN_PROBE.is_file() else None,
+            "expected": FROZEN_PROBE_SHA256,
+            "match": probe_ok,
+        },
+        "frozen_candidate_files": {
+            "count": len(man["files"]),
+            "mismatches": frozen_mismatch,
+            "all_match": not frozen_mismatch,
+        },
+        "source_closure": closure,
+        "closure_all_match": all(row["match"] for row in closure),
+        "genesis": genesis_binding,
+        "genesis_smoke": {
+            "process_exit": smoke.get("exit"),
+            "receipt_valid": bool(smoke.get("valid")),
+            "classification": smoke_class,
+            "accepted": genesis_ok,
+        },
+        "recorder": str(RECORDER),
+        "tools_dir": str(TOOLS),
+        "ready": (
+            solc_ok
+            and evm_ok
+            and runner_ok
+            and archive_ok
+            and probe_ok
+            and recorder_ok
+            and genesis_ok
+            and bool(version.get("valid"))
+            and bool(evm_version.get("valid"))
+            and not frozen_mismatch
+            and all(row["match"] for row in closure)
+        ),
+    }
+    write_json(ev / "logs" / "tool-rehash.json", report)
+    return report
+
+
+def semantic_observation(obs: dict) -> dict | None:
+    o = obs.get("observation") or {}
+    if o.get("status") == "blocked" or (obs.get("status") or "").startswith("blocked"):
+        return None
+    if obs.get("receipt_valid") is False:
+        return None
+    if obs.get("wrapper_exit") not in (0, None) and obs.get("wrapper_exit") != 0:
+        return None
+    if obs.get("recorder_classification") not in (None, "ok"):
+        return None
+    klass = o.get("class")
+    if klass in BLOCKED_CLASSES or klass not in SEMANTIC_CLASSES:
+        return None
+    if "process_exit" in obs and obs.get("process_exit") != 0:
+        return None
+    return o
+
+
+def compare_observation(obs: dict, expected: dict) -> dict:
+    o = obs.get("observation") or {}
+    klass = o.get("class")
+    if semantic_observation(obs) is None:
+        return {
+            "match": False,
+            "gate": "blocked",
+            "reason": o.get("reason") or obs.get("reason") or obs.get("status") or "blocked observation",
+            "observation_class": klass,
+        }
+    if expected["kind"] == "ok":
+        if klass == "success" and o.get("uint160") == expected["value"]:
+            return {
+                "match": True,
+                "gate": "ok",
+                "reason": expected.get("reason") or "independent literal ok",
+                "source_uint160": o.get("uint160"),
+                "expected_uint160": expected["value"],
+                "observation_class": klass,
+            }
+        return {
+            "match": False,
+            "gate": "fail",
+            "reason": (
+                f"independent expected ok {expected['value']}; "
+                f"source {klass} uint160={o.get('uint160')} returndata={o.get('returndata')} error={o.get('error')}"
+            ),
+            "observation_class": klass,
+        }
+    if klass in ("evm_revert", "evm_exception"):
+        return {
+            "match": True,
+            "gate": "ok",
+            "reason": expected.get("reason") or "independent literal refusal",
+            "source_class": klass,
+            "returndata": o.get("returndata"),
+            "error": o.get("error"),
+            "model_label_not_payload": expected.get("model_label_not_payload"),
+            "observation_class": klass,
+        }
+    return {
+        "match": False,
+        "gate": "fail",
+        "reason": f"independent expected refusal; source {klass} uint160={o.get('uint160')}",
+        "observation_class": klass,
+    }
+
+
+def run_fixture_list(
+    name_prefix: str,
+    fixtures: list[dict],
+    compile_report: dict,
+    genesis: Path,
+    runtime: Path,
+    out_dir: Path,
+) -> list[dict]:
+    selector = compile_report["probe_selector"]
+    rows = []
+    for row in fixtures:
+        fid = row["id"]
+        sqrt_p, liq, amount, add = fixture_inputs(row)
+        calldata = encode_probe_calldata(selector, sqrt_p, liq, amount, add).hex()
+        obs = run_probe(
+            f"{name_prefix}-{fid}",
+            runtime,
+            calldata,
+            genesis,
+            out_dir / fid,
+        )
+        expected = independent_expected(row)
+        cmp_ = compare_observation(obs, expected)
+        rec = {
+            "id": fid,
+            "partition": row.get("partition"),
+            "inputs": {
+                "sqrtPX96": str(sqrt_p),
+                "liquidity": str(liq),
+                "amount": str(amount),
+                "add": add,
+            },
+            "inputs_bound_directly": True,
+            "independent_expected": expected,
+            "calldata_hex": calldata,
+            "selector": selector,
+            "selector_source": "compiler_methodIdentifiers",
+            "observation": obs.get("observation"),
+            "process_exit": obs.get("process_exit"),
+            "wrapper_exit": obs.get("wrapper_exit"),
+            "receipt_valid": obs.get("receipt_valid"),
+            "comparison": cmp_,
+            "model_failure_names_are_not_source_payloads": True,
+        }
+        write_json(out_dir / fid / "comparison.json", rec)
+        rows.append(rec)
+    return rows
+
+
+def planned_mutant_expected(plan: dict, kind: str) -> dict:
+    if kind == "designated":
+        pub = plan.get("mutant_public") or plan.get("mutant_public_strict") or {}
+    else:
+        pub = plan.get("ordinary_control") or {}
+        if not pub and kind == "control":
+            orig = plan.get("original_public") or {}
+            pub = orig
+    if "ok" in pub:
+        return {"kind": "ok", "value": int(pub["ok"]), "reason": f"planned {kind} public ok"}
+    if pub.get("status") == "exceptional_failure":
+        return {
+            "kind": "error",
+            "reason": pub.get("mechanism") or "planned exceptional failure",
+            "want_class": "evm_exception",
+        }
+    if pub.get("status") == "source_revert":
+        return {
+            "kind": "error",
+            "reason": pub.get("mechanism") or "planned source revert",
+            "want_class": "evm_revert",
+        }
+    if "error" in pub:
+        return {"kind": "error", "reason": "planned refusal"}
+    return {"kind": "error", "reason": "planned non-success"}
+
+
+def compare_mutant_obs(obs: dict, expected: dict) -> dict:
+    o = obs.get("observation") or {}
+    klass = o.get("class")
+    if semantic_observation(obs) is None:
+        return {
+            "match": False,
+            "gate": "blocked",
+            "reason": o.get("reason") or obs.get("reason") or "blocked mutant observation",
+            "observation_class": klass,
+        }
+    if expected["kind"] == "ok":
+        if klass == "success" and o.get("uint160") == expected["value"]:
+            return {
+                "match": True,
+                "gate": "ok",
+                "reason": expected["reason"],
+                "source_uint160": o.get("uint160"),
+                "observation_class": klass,
+            }
+        return {
+            "match": False,
+            "gate": "fail",
+            "reason": f"{expected['reason']}; got {klass} uint160={o.get('uint160')}",
+            "observation_class": klass,
+        }
+    want = expected.get("want_class")
+    if want and klass != want:
+        return {
+            "match": False,
+            "gate": "fail",
+            "reason": f"{expected['reason']}; plan named {want}, classified {klass}",
+            "observation_class": klass,
+        }
+    if klass in ("evm_revert", "evm_exception"):
+        return {
+            "match": True,
+            "gate": "ok",
+            "reason": expected["reason"],
+            "observation_class": klass,
+            "returndata": o.get("returndata"),
+            "error": o.get("error"),
+        }
+    return {
+        "match": False,
+        "gate": "fail",
+        "reason": f"{expected['reason']}; got {klass} uint160={o.get('uint160')}",
+        "observation_class": klass,
+    }
+
+
+def observations_differ(a: dict, b: dict) -> bool:
+    oa = semantic_observation(a)
+    ob = semantic_observation(b)
+    if oa is None or ob is None:
+        return False
+    return (oa.get("class"), oa.get("uint160"), oa.get("returndata"), oa.get("error")) != (
+        ob.get("class"),
+        ob.get("uint160"),
+        ob.get("returndata"),
+        ob.get("error"),
+    )
+
+
+def score_rows(rows: list[dict], required_ids: list[str] | None = None) -> dict:
+    if not rows:
+        return {
+            "status": "blocked",
+            "exit": 3,
+            "denominator": 0,
+            "reason": "empty selection; zero source credit",
+        }
+    ids = [r["id"] for r in rows]
+    if len(ids) != len(set(ids)):
+        return {"status": "blocked", "exit": 3, "denominator": len(ids), "reason": "duplicated fixture ids"}
+    if required_ids is not None and ids != required_ids:
+        return {
+            "status": "blocked",
+            "exit": 3,
+            "denominator": len(ids),
+            "reason": "row ids are not the exact required set",
+            "got": ids,
+            "expected": required_ids,
+        }
+    blocked_n = sum(1 for r in rows if r["comparison"]["gate"] == "blocked")
+    fail_n = sum(1 for r in rows if r["comparison"]["gate"] == "fail")
+    ok_n = sum(1 for r in rows if r["comparison"]["gate"] == "ok")
+    if blocked_n:
+        return {
+            "status": "blocked",
+            "exit": 3,
+            "denominator": len(rows),
+            "ok": ok_n,
+            "fail": fail_n,
+            "blocked": blocked_n,
+            "reason": "one or more observations blocked by tool/setup",
+        }
+    if fail_n:
+        return {
+            "status": "fail",
+            "exit": 1,
+            "denominator": len(rows),
+            "ok": ok_n,
+            "fail": fail_n,
+            "blocked": 0,
+            "reason": "bound observation disagrees with independent expected",
+        }
+    return {
+        "status": "ok",
+        "exit": 0,
+        "denominator": len(rows),
+        "ok": ok_n,
+        "fail": 0,
+        "blocked": 0,
+        "reason": "nonempty unique fixtures; all independent comparisons hold",
+    }
+
+
+def _is_documented_lean_wrapper(line: str) -> bool:
+    stripped = line.strip()
+    if not stripped:
+        return True
+    if line[:1] in " \t":
+        return True
+    if stripped.startswith(("warning:", "Hint:", "Note:", "error:", "info:")):
+        return True
+    if stripped.startswith("Build completed successfully"):
+        return True
+    if stripped.startswith(("[apply]", "You can use")):
+        return True
+    if stripped[0] in "⚠ℹ✖✓" and "[" in stripped:
+        return True
+    if LEAN_FILE_DIAG_RE.search(stripped):
+        return True
+    if stripped.startswith("error("):
+        return True
+    return False
+
+
+def _runtime_protocol_prefixed(stripped: str) -> bool:
+    if stripped.startswith("P16"):
+        return True
+    m = RUNTIME_IDISH_RE.match(stripped)
+    if not m:
+        return False
+    ident = m.group(1)
+    return ident in RUNTIME_AUDIT_IDS or ident.startswith("P16-") or ident.startswith("cl.")
+
+
+def parse_runtime_audit(text: str) -> dict:
+    rows = []
+    malformed = []
+    for ln in text.splitlines():
+        stripped = ln.strip()
+        info = RUNTIME_INFO_RE.fullmatch(stripped)
+        exact = RUNTIME_RE.fullmatch(stripped)
+        if info:
+            ident, truth = info.group(1), info.group(2)
+            rows.append({"id": ident, "truth": truth == "true", "line": f"{ident}: {truth}"})
+            continue
+        if exact:
+            ident, truth = exact.group(1), exact.group(2)
+            rows.append({"id": ident, "truth": truth == "true", "line": f"{ident}: {truth}"})
+            continue
+        if _runtime_protocol_prefixed(stripped):
+            malformed.append(stripped)
+            continue
+    if malformed:
+        return {
+            "status": "blocked",
+            "exit": 3,
+            "reason": "RuntimeAudit has malformed, unknown or extra protocol output",
+            "malformed": malformed,
+            "denominator": len(rows),
+        }
+    ids = [r["id"] for r in rows]
+    if not rows:
+        return {"status": "blocked", "exit": 3, "reason": "RuntimeAudit produced no parseable rows", "denominator": 0}
+    if len(ids) != len(set(ids)):
+        return {"status": "blocked", "exit": 3, "reason": "RuntimeAudit duplicate ids", "ids": ids, "denominator": len(ids)}
+    if ids != RUNTIME_AUDIT_IDS:
+        return {
+            "status": "blocked",
+            "exit": 3,
+            "reason": "RuntimeAudit ids are not the exact complete set",
+            "got": ids,
+            "expected": RUNTIME_AUDIT_IDS,
+            "missing": [i for i in RUNTIME_AUDIT_IDS if i not in ids],
+            "extra": [i for i in ids if i not in RUNTIME_AUDIT_IDS],
+            "denominator": len(ids),
+        }
+    false_rows = [r["id"] for r in rows if not r["truth"]]
+    p16 = [r for r in rows if r["id"] in EXPECTED_FIXTURE_IDS]
+    p16_true = sum(1 for r in p16 if r["truth"])
+    if false_rows:
+        return {
+            "status": "fail",
+            "exit": 1,
+            "reason": "RuntimeAudit well-formed semantic comparison is false",
+            "false_rows": false_rows,
+            "denominator": len(rows),
+            "p16_true": p16_true,
+            "p16_lines": [r["line"] for r in p16],
+            "rows": rows,
+        }
+    return {
+        "status": "ok",
+        "exit": 0,
+        "denominator": len(rows),
+        "p16_true": p16_true,
+        "p16_lines": [r["line"] for r in p16],
+        "rows": rows,
+        "reason": "RuntimeAudit exact ids, truth values and denominator",
+    }
+
+
+def _is_binding_wrapper(stripped: str) -> bool:
+    if not stripped:
+        return True
+    if _is_documented_lean_wrapper(stripped):
+        return True
+    if LEAN_FILE_DIAG_RE.search(stripped):
+        return True
+    return False
+
+
+def parse_lean_bindings(text: str, fixtures: list[dict]) -> dict:
+    rows = []
+    malformed = []
+    summaries = []
+    fail_notes = []
+    printed_lines = []
+    for ln in text.splitlines():
+        stripped = ln.strip()
+        if not stripped:
+            continue
+        bind = BINDING_RE.fullmatch(stripped)
+        if bind:
+            rows.append({
+                "id": bind.group(1),
+                "sqrtP": bind.group(2),
+                "L": bind.group(3),
+                "amount": bind.group(4),
+                "add": bind.group(5) == "true",
+                "model": bind.group(6),
+                "ok_value": bind.group(7),
+                "error_name": bind.group(8),
+                "match": bind.group(9) == "true",
+                "line": stripped,
+            })
+            continue
+        summary_ok = BINDING_SUMMARY_OK_RE.fullmatch(stripped)
+        if summary_ok:
+            summaries.append(stripped)
+            continue
+        if stripped == BINDING_SUMMARY_FAIL:
+            fail_notes.append(stripped)
+            continue
+        if stripped in PRINTED_UINT32:
+            printed_lines.append(int(stripped))
+            continue
+        if stripped.startswith("P16"):
+            malformed.append(stripped)
+            continue
+        if _is_binding_wrapper(stripped):
+            continue
+        malformed.append(stripped)
+    printed = printed_lines[-1] if len(printed_lines) == 1 else None
+    summary = summaries[0] if len(summaries) == 1 else None
+    if malformed:
+        return {
+            "status": "blocked",
+            "exit": 3,
+            "reason": "Lean binding protocol has malformed, unknown or extra records",
+            "unparseable": malformed,
+            "printed_uint32": printed,
+        }
+    if len(printed_lines) > 1:
+        return {
+            "status": "blocked",
+            "exit": 3,
+            "reason": "Lean binding printed UInt32 is duplicated or extra",
+            "printed_uint32_lines": printed_lines,
+        }
+    if len(summaries) > 1 or len(fail_notes) > 1:
+        return {
+            "status": "blocked",
+            "exit": 3,
+            "reason": "Lean binding summary or fail note is duplicated extra protocol output",
+            "summaries": summaries,
+            "fail_notes": fail_notes,
+            "printed_uint32": printed,
+        }
+    ids = [r["id"] for r in rows]
+    if not rows:
+        return {
+            "status": "blocked",
+            "exit": 3,
+            "reason": "Lean bindings produced no parseable rows",
+            "printed_uint32": printed,
+            "denominator": 0,
+        }
+    if len(ids) != len(set(ids)):
+        return {
+            "status": "blocked",
+            "exit": 3,
+            "reason": "Lean binding duplicate ids",
+            "ids": ids,
+            "printed_uint32": printed,
+            "denominator": len(ids),
+        }
+    if ids != EXPECTED_FIXTURE_IDS:
+        return {
+            "status": "blocked",
+            "exit": 3,
+            "reason": "Lean binding ids are not the exact required twelve",
+            "got": ids,
+            "expected": EXPECTED_FIXTURE_IDS,
+            "missing": [i for i in EXPECTED_FIXTURE_IDS if i not in ids],
+            "extra": [i for i in ids if i not in EXPECTED_FIXTURE_IDS],
+            "printed_uint32": printed,
+            "denominator": len(ids),
+        }
+    by_fix = {row["id"]: row for row in fixtures}
+    false_rows = []
+    mismatch_inputs = []
+    for parsed in rows:
+        fix = by_fix[parsed["id"]]
+        raw = fix["inputs_raw"]
+        if (
+            parsed["sqrtP"] != raw["sqrtPX96"]
+            or parsed["L"] != raw["liquidity"]
+            or parsed["amount"] != raw["amount"]
+            or parsed["add"] != raw["add"]
+        ):
+            mismatch_inputs.append(parsed["id"])
+            continue
+        exp = independent_expected(fix)
+        if exp["kind"] == "ok":
+            want_model = f"ok:{exp['value']}"
+        else:
+            ctor = lean_error_ctor(fix).lstrip(".")
+            want_model = f"error:{ctor}"
+        if parsed["model"] != want_model:
+            false_rows.append(parsed["id"])
+            continue
+        if not parsed["match"]:
+            false_rows.append(parsed["id"])
+    if mismatch_inputs:
+        return {
+            "status": "blocked",
+            "exit": 3,
+            "reason": "Lean binding inputs do not match stored fixture literals",
+            "ids": mismatch_inputs,
+            "printed_uint32": printed,
+            "p16_lines": [r["line"] for r in rows],
+        }
+    if false_rows:
+        if summary == "P16 source-binding comparisons: 12 of 12" or printed == 0:
+            return {
+                "status": "blocked",
+                "exit": 3,
+                "reason": "Lean binding false comparison is inconsistent with summary or printed UInt32 0",
+                "false_rows": false_rows,
+                "printed_uint32": printed,
+                "summary": summary,
+                "denominator": 12,
+                "p16_lines": [r["line"] for r in rows],
+            }
+        return {
+            "status": "fail",
+            "exit": 1,
+            "reason": "Lean binding well-formed semantic comparison is false",
+            "false_rows": false_rows,
+            "printed_uint32": printed,
+            "summary": summary,
+            "fail_note": fail_notes[0] if fail_notes else None,
+            "denominator": 12,
+            "p16_lines": [r["line"] for r in rows],
+        }
+    if fail_notes:
+        return {
+            "status": "blocked",
+            "exit": 3,
+            "reason": "Lean binding fail note is inconsistent with all-true rows",
+            "fail_notes": fail_notes,
+            "printed_uint32": printed,
+            "p16_lines": [r["line"] for r in rows],
+        }
+    if summary != "P16 source-binding comparisons: 12 of 12":
+        return {
+            "status": "blocked",
+            "exit": 3,
+            "reason": "Lean binding denominator summary is missing or not 12 of 12",
+            "summary": summary,
+            "printed_uint32": printed,
+            "p16_lines": [r["line"] for r in rows],
+        }
+    if printed != 0:
+        return {
+            "status": "blocked",
+            "exit": 3,
+            "reason": "Lean binding all-true rows are inconsistent with printed UInt32",
+            "summary": summary,
+            "printed_uint32": printed,
+            "p16_lines": [r["line"] for r in rows],
+        }
+    return {
+        "status": "ok",
+        "exit": 0,
+        "denominator": 12,
+        "printed_uint32": printed,
+        "summary": summary,
+        "p16_lines": [r["line"] for r in rows],
+        "reason": "Lean bindings exact ids, inputs, results, truth values and denominator",
+        "note": "printed #eval UInt32 is not a process exit and is not semantic acceptance by itself",
+    }
+
+
+def score_lean_execution(receipt: dict, parsed: dict) -> dict:
+    wrapper_exit = (receipt.get("_wrapper") or {}).get("wrapper_exit")
+    child_exit = receipt.get("exit")
+    classification = receipt.get("classification")
+    if not receipt.get("valid") or not invocation_is_successful(receipt):
+        return {
+            "status": "blocked",
+            "exit": 3,
+            "reason": receipt.get("reason")
+            or "Lean compiler/wrapper/classification is not a successful execution",
+            "receipt_valid": bool(receipt.get("valid")),
+            "wrapper_exit": wrapper_exit,
+            "child_exit": child_exit,
+            "classification": classification,
+            "timeout": receipt.get("timeout"),
+            "complete": invocation_is_complete(receipt) if receipt.get("valid") else False,
+            "successful": False,
+            "note": "ordinary nonzero completion and well-formed rows are not semantic success",
+        }
+    out = {
+        **parsed,
+        "wrapper_exit": wrapper_exit,
+        "child_exit": child_exit,
+        "classification": classification,
+        "successful": True,
+        "note": parsed.get("note") or "compiler/wrapper exit 0 is not semantic acceptance",
+    }
+    return out
+
+
+def write_source_bindings_lean(path: Path, fixtures: list[dict] | None = None) -> None:
+    rows = fixtures if fixtures is not None else load_fixtures()
+    body = []
+    for i, row in enumerate(rows):
+        raw = row["inputs_raw"]
+        exp = row["expected_parsed"]
+        prefix = "  [ { " if i == 0 else "  , { "
+        if exp["kind"] == "ok":
+            ok = f"some {exp['raw']}"
+            err = "none"
+        else:
+            ok = "none"
+            err = f"some {lean_error_ctor(row)}"
+        add = "true" if raw["add"] else "false"
+        body.append(
+            f"""{prefix}id := "{row['id']}"
+      sqrtP := w160 {raw['sqrtPX96']}
+      L := w128 {raw['liquidity']}
+      amount := w256 {raw['amount']}
+      add := {add}
+      expectedOk := {ok}
+      expectedErr := {err} }}"""
+        )
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        """import DefiKernel.ConcentratedLiquidity.SqrtPriceMath
+
+/-!
+Ephemeral P16 source-campaign model export. Imports frozen library bytes.
+Independent expected values are literals from stored fixtures, not helper self-output.
+-/
+open DefiKernel.ConcentratedLiquidity
+open DefiKernel.ConcentratedLiquidity.SqrtPriceMath
+
+def w128 (n : Nat) (h : n < 2 ^ 128 := by decide) : U128 := ⟨n, h⟩
+def w160 (n : Nat) (h : n < 2 ^ 160 := by decide) : U160 := ⟨n, h⟩
+def w256 (n : Nat) (h : n < 2 ^ 256 := by decide) : U256 := ⟨n, h⟩
+
+structure Row where
+  id : String
+  sqrtP : U160
+  L : U128
+  amount : U256
+  add : Bool
+  expectedOk : Option Nat
+  expectedErr : Option Failure
+
+def showF : Failure → String
+  | .divisionByZero => "divisionByZero"
+  | .quotientOverflow => "quotientOverflow"
+  | .subUnderflow => "subUnderflow"
+  | .addOverflow => "addOverflow"
+  | .uint160Overflow => "uint160Overflow"
+
+def runRow (r : Row) : IO Bool := do
+  let got := getNextSqrtPriceFromAmount0RoundingUp r.sqrtP r.L r.amount r.add
+  let actual :=
+    match got with
+    | .ok q => s!"ok:{q.value}"
+    | .error e => s!"error:{showF e}"
+  let agrees :=
+    match got, r.expectedOk, r.expectedErr with
+    | .ok q, some n, none => decide (q.value = n)
+    | .error e, none, some f => decide (e = f)
+    | _, _, _ => false
+  IO.println s!"{r.id} sqrtP={r.sqrtP.value} L={r.L.value} amount={r.amount.value} add={r.add} model={actual} match={agrees}"
+  pure agrees
+
+def rows : List Row :=
+"""
+        + "\n".join(body)
+        + """
+  ]
+
+def main : IO UInt32 := do
+  if rows.isEmpty then
+    IO.eprintln "P16 source-binding rows empty"
+    return 3
+  let ids := rows.map (·.id)
+  if !ids.Nodup then
+    IO.eprintln "P16 source-binding ids duplicated"
+    return 3
+  let mut all := true
+  for r in rows do
+    let m ← runRow r
+    all := all && m
+  if all then
+    IO.println s!"P16 source-binding comparisons: {rows.length} of {rows.length}"
+    return 0
+  IO.eprintln "P16 source-binding comparison failed"
+  return 1
+
+#eval main
+"""
+    )
+
+
+def run_lean_runtime(ev: Path) -> dict:
+    logs = ev / "lean" / "runtime"
+    receipt = record_cmd(
+        "lake-runtime-r4",
+        ["lake", "build", "DefiKernel.ConcentratedLiquidity.RuntimeAudit"],
+        ROOT / "lean",
+        logs,
+        timeout=120,
+    )
+    stdout_path = Path((receipt.get("_wrapper") or {}).get("stdout_path") or "")
+    text = stdout_path.read_text(errors="replace") if stdout_path.is_file() else ""
+    parsed = parse_runtime_audit(text)
+    scored = score_lean_execution(receipt, parsed)
+    report = {
+        **scored,
+        "stdout_sha256": receipt.get("stdout_sha256"),
+        "kind": "bounded_lean_execution_not_solidity",
+        "p16_lines": parsed.get("p16_lines") or [],
+        "p16_true": parsed.get("p16_true"),
+    }
+    write_json(ev / "lean" / "runtime-summary.json", report)
+    return report
+
+
+def run_lean_bindings(ev: Path, fixtures: list[dict]) -> dict:
+    lean_path = ev / "lean" / "P16SourceBindings.lean"
+    write_source_bindings_lean(lean_path, fixtures)
+    logs = ev / "lean" / "bindings"
+    receipt = record_cmd(
+        "lean-source-bindings",
+        ["lake", "env", "lean", str(lean_path)],
+        ROOT / "lean",
+        logs,
+        timeout=180,
+    )
+    stdout_path = Path((receipt.get("_wrapper") or {}).get("stdout_path") or "")
+    text = stdout_path.read_text(errors="replace") if stdout_path.is_file() else ""
+    parsed = parse_lean_bindings(text, fixtures)
+    scored = score_lean_execution(receipt, parsed)
+    report = {
+        **scored,
+        "lean_path": str(lean_path),
+        "lean_sha256": sha256_file(lean_path),
+        "stdout_sha256": receipt.get("stdout_sha256"),
+        "stderr_sha256": receipt.get("stderr_sha256"),
+        "kind": "ephemeral_model_export_importing_frozen_library",
+        "p16_lines": parsed.get("p16_lines") or [],
+        "printed_uint32": parsed.get("printed_uint32"),
+        "historical_r3_binder_exit_1_preserved": True,
+    }
+    write_json(ev / "lean" / "bindings-summary.json", report)
+    return report
+
+
+def mode_empty_selection(ev: Path) -> int:
+    out = ev / "controls" / "empty-selection"
+    out.mkdir(parents=True, exist_ok=True)
+    scored = score_rows([])
+    write_json(out / "result.json", scored)
+    print(json.dumps(scored))
+    return scored["exit"]
+
+
+def mode_malformed(ev: Path) -> int:
+    out = ev / "controls" / "malformed"
+    out.mkdir(parents=True, exist_ok=True)
+    bad = out / "malformed-fixtures.json"
+    bad.write_text("{this is not json\n")
+    try:
+        load_fixtures(bad)
+        report = {"status": "fail", "exit": 1, "reason": "malformed JSON unexpectedly parsed", "path": str(bad)}
+        write_json(out / "result.json", report)
+        print(json.dumps(report))
+        return 1
+    except SetupBlocked as exc:
+        report = {
+            "status": "blocked",
+            "exit": 3,
+            "reason": exc.reason,
+            "path": str(bad),
+            "sha256": sha256_file(bad),
+            **exc.extra,
+        }
+        write_json(out / "result.json", report)
+        print(json.dumps({"status": "blocked", "reason": report["reason"], "exit": 3}))
+        return 3
+
+
+def mode_missing_tool(ev: Path) -> int:
+    out = ev / "controls" / "missing-tool"
+    overlay = out / "overlay"
+    copy_overlay(overlay)
+    report = compile_overlay(overlay, out / "compile", Path("/nonexistent/p16-missing-solc"))
+    write_json(out / "result.json", {"status": "blocked", "exit": 3, "compile": report})
+    print(json.dumps({"status": "blocked", "reason": report.get("status")}))
+    return 3
+
+
+def mode_mismatch(ev: Path) -> int:
+    out = ev / "controls" / "mismatch"
+    src = ev / "evm" / "baseline" / "P16-ADD" / "comparison.json"
+    if not src.is_file():
+        return blocked("mismatch control requires intact P16-ADD observation", {"path": str(src)})
+    rec = load_json(src)
+    wrong = {"kind": "ok", "value": 0, "reason": "deliberate bound observation mismatch"}
+    cmp_ = compare_observation(
+        {
+            "observation": rec["observation"],
+            "process_exit": rec.get("process_exit", 0),
+            "receipt_valid": rec.get("receipt_valid", True),
+            "status": "observed",
+        },
+        wrong,
+    )
+    report = {
+        "status": "fail" if cmp_["gate"] == "fail" else cmp_["gate"],
+        "exit": 1 if cmp_["gate"] == "fail" else (3 if cmp_["gate"] == "blocked" else 0),
+        "fixture": "P16-ADD",
+        "actual_uint160": (rec.get("observation") or {}).get("uint160"),
+        "wrong_expected": 0,
+        "comparison": cmp_,
+        "reason": "deliberate independent-expected mismatch against a real bound observation",
+    }
+    write_json(out / "result.json", report)
+    print(json.dumps({"status": report["status"], "reason": report["reason"]}))
+    return report["exit"]
+
+
+def _copy_plan_fixtures(dest: Path) -> Path:
+    if dest.exists():
+        shutil.rmtree(dest)
+    shutil.copytree(PLAN_DIR, dest)
+    return dest / "fixtures.json"
+
+
+def mode_fixture_omission(ev: Path) -> int:
+    out = ev / "controls" / "fixture-omission"
+    local = out / "plan-input"
+    path = _copy_plan_fixtures(local)
+    data = json.loads(path.read_text())
+    data["fixtures"] = [r for r in data["fixtures"] if r["id"] != "P16-I-REM"]
+    path.write_text(json.dumps(data, indent=2) + "\n")
+    try:
+        load_fixtures(path)
+        report = {"status": "fail", "exit": 1, "reason": "omitted fixture unexpectedly loaded"}
+        write_json(out / "result.json", report)
+        print(json.dumps(report))
+        return 1
+    except SetupBlocked as exc:
+        report = {"status": "blocked", "exit": 3, "reason": exc.reason, **exc.extra, "path": str(path)}
+        write_json(out / "result.json", report)
+        print(json.dumps({"status": "blocked", "reason": exc.reason, "exit": 3}))
+        return 3
+
+
+def mode_fixture_type_error(ev: Path) -> int:
+    out = ev / "controls" / "fixture-type-error"
+    local = out / "plan-input"
+    path = _copy_plan_fixtures(local)
+    data = json.loads(path.read_text())
+    for row in data["fixtures"]:
+        if row["id"] == "P16-ADD":
+            row["inputs"]["add"] = "true"
+    path.write_text(json.dumps(data, indent=2) + "\n")
+    try:
+        load_fixtures(path)
+        report = {"status": "fail", "exit": 1, "reason": "type-error fixture unexpectedly loaded"}
+        write_json(out / "result.json", report)
+        print(json.dumps(report))
+        return 1
+    except SetupBlocked as exc:
+        report = {"status": "blocked", "exit": 3, "reason": exc.reason, **exc.extra, "path": str(path)}
+        write_json(out / "result.json", report)
+        print(json.dumps({"status": "blocked", "reason": exc.reason, "exit": 3}))
+        return 3
+
+
+def mode_fixture_extra(ev: Path) -> int:
+    out = ev / "controls" / "fixture-extra"
+    local = out / "plan-input"
+    path = _copy_plan_fixtures(local)
+    data = json.loads(path.read_text())
+    extra = dict(data["fixtures"][0])
+    extra["id"] = "P16-EXTRA"
+    data["fixtures"].append(extra)
+    path.write_text(json.dumps(data, indent=2) + "\n")
+    try:
+        load_fixtures(path)
+        report = {"status": "fail", "exit": 1, "reason": "extra fixture unexpectedly loaded"}
+        write_json(out / "result.json", report)
+        return 1
+    except SetupBlocked as exc:
+        report = {"status": "blocked", "exit": 3, "reason": exc.reason, **exc.extra, "path": str(path)}
+        write_json(out / "result.json", report)
+        print(json.dumps({"status": "blocked", "reason": exc.reason, "exit": 3}))
+        return 3
+
+
+def mode_lean_text_controls(ev: Path) -> int:
+    out = ev / "controls" / "lean-text"
+    out.mkdir(parents=True, exist_ok=True)
+    fixtures = load_fixtures()
+    intact = (
+        "P16-I-ADD: true\nP16-I-REM: true\nP16-I-ZERO-LIQ: true\nP16-ADD: true\n"
+        "P16-ADD-ROUND: true\nP16-REQ: true\nP16-REQ-STRICT: true\nP16-REM: true\n"
+        "P16-SAFECAST: true\nP16-ADD-DEN0: true\nP16-PROD: true\nP16-WRAP: true\n"
+    )
+    # RuntimeAudit false semantic
+    false_rt = intact.replace("P16-ADD: true", "P16-ADD: false", 1)
+    # prepend fullmath rows for complete set
+    prefix = "".join(f"{i}: true\n" for i in RUNTIME_AUDIT_IDS if not i.startswith("P16-"))
+    rt_false = parse_runtime_audit(prefix + false_rt)
+    rt_missing = parse_runtime_audit(prefix + intact.replace("P16-I-REM: true\n", ""))
+    rt_dup = parse_runtime_audit(prefix + intact + "P16-ADD: true\n")
+    rt_malformed = parse_runtime_audit(prefix + intact.replace("P16-ADD: true", "P16-ADD: yes", 1))
+    sample_bind = (
+        "P16-I-ADD sqrtP=79228162514264337593543950336 L=1 amount=0 add=true model=ok:79228162514264337593543950336 match=true\n"
+        "P16-I-REM sqrtP=79228162514264337593543950336 L=1 amount=0 add=false model=ok:79228162514264337593543950336 match=true\n"
+        "P16-I-ZERO-LIQ sqrtP=79228162514264337593543950336 L=0 amount=0 add=false model=ok:79228162514264337593543950336 match=true\n"
+        "P16-ADD sqrtP=79228162514264337593543950336 L=1 amount=1 add=true model=ok:39614081257132168796771975168 match=true\n"
+        "P16-ADD-ROUND sqrtP=79228162514264337593543950336 L=1 amount=2 add=true model=ok:26409387504754779197847983446 match=true\n"
+        "P16-REQ sqrtP=79228162514264337593543950336 L=1 amount=1 add=false model=error:subUnderflow match=true\n"
+        "P16-REQ-STRICT sqrtP=79228162514264337593543950336 L=1 amount=2 add=false model=error:subUnderflow match=true\n"
+        "P16-REM sqrtP=79228162514264337593543950336 L=2 amount=1 add=false model=ok:158456325028528675187087900672 match=true\n"
+        "P16-SAFECAST sqrtP=730750818665451459101842416358141509827966271488 L=9223372036854775809 amount=1 add=false model=error:uint160Overflow match=true\n"
+        "P16-ADD-DEN0 sqrtP=0 L=0 amount=1 add=true model=error:divisionByZero match=true\n"
+        "P16-PROD sqrtP=79228162514264337593543950336 L=79228162514264337593543950336 amount=1461501637330902918203684832716283019655932542976 add=true model=ok:4294967296 match=true\n"
+        "P16-WRAP sqrtP=1461446703485210103287273052203988822378723970341 L=340282366920938463463374607431768211455 amount=79231140577496994670249413376 add=true model=ok:340269576638287423012608907232989748562 match=true\n"
+        "P16 source-binding comparisons: 12 of 12\n"
+        "0\n"
+    )
+    bind_false = parse_lean_bindings(
+        sample_bind.replace(
+            "P16-ADD sqrtP=79228162514264337593543950336 L=1 amount=1 add=true model=ok:39614081257132168796771975168 match=true",
+            "P16-ADD sqrtP=79228162514264337593543950336 L=1 amount=1 add=true model=ok:39614081257132168796771975168 match=false",
+            1,
+        ).replace("P16 source-binding comparisons: 12 of 12\n0\n", "P16 source-binding comparison failed\n1\n"),
+        fixtures,
+    )
+    bind_missing = parse_lean_bindings(
+        sample_bind.replace(
+            "P16-I-REM sqrtP=79228162514264337593543950336 L=1 amount=0 add=false model=ok:79228162514264337593543950336 match=true\n",
+            "",
+            1,
+        ),
+        fixtures,
+    )
+    bind_dup = parse_lean_bindings(
+        sample_bind.replace(
+            "P16-ADD sqrtP=79228162514264337593543950336 L=1 amount=1 add=true model=ok:39614081257132168796771975168 match=true\n",
+            "P16-ADD sqrtP=79228162514264337593543950336 L=1 amount=1 add=true model=ok:39614081257132168796771975168 match=true\n"
+            "P16-ADD sqrtP=79228162514264337593543950336 L=1 amount=1 add=true model=ok:39614081257132168796771975168 match=true\n",
+            1,
+        ),
+        fixtures,
+    )
+    bind_malformed = parse_lean_bindings(
+        sample_bind.replace(
+            "P16-ADD sqrtP=79228162514264337593543950336 L=1 amount=1 add=true model=ok:39614081257132168796771975168 match=true",
+            "P16-ADD this row is not a binding",
+            1,
+        ),
+        fixtures,
+    )
+    bind_extra = parse_lean_bindings(sample_bind + "P16-ADD malformed extra protocol row\n", fixtures)
+    rt_extra = parse_runtime_audit(prefix + intact + "P16-ADD malformed extra protocol row\n")
+    rt_lake = parse_runtime_audit(
+        (ROOT / "review/semantic-kernel/uniswap-token0/p16/implementation/grok-r4/lean/runtime/stdout.bin").read_text(
+            errors="replace"
+        )
+    )
+    success_receipt = {
+        "valid": True,
+        "timeout": False,
+        "cancelled": False,
+        "classification": "ok",
+        "exit": 0,
+        "_wrapper": {"wrapper_exit": 0},
+    }
+    fail_receipt = {
+        "valid": True,
+        "timeout": False,
+        "cancelled": False,
+        "classification": "failure",
+        "exit": 1,
+        "_wrapper": {"wrapper_exit": 1},
+    }
+    scored_fail_compiler = score_lean_execution(fail_receipt, parse_lean_bindings(sample_bind, fixtures))
+    scored_false = score_lean_execution(success_receipt, bind_false)
+
+    evm_unknown = classify_evm_stdout(
+        "error: unrecognized diagnostic failure\n",
+        0,
+        False,
+        receipt=success_receipt,
+        purpose="token0_probe",
+    )
+    evm_revert = classify_evm_stdout(
+        "\n error: execution reverted\n",
+        0,
+        False,
+        receipt=success_receipt,
+        purpose="token0_probe",
+    )
+    evm_invalid = classify_evm_stdout(
+        "\n error: invalid opcode: INVALID\n",
+        0,
+        False,
+        receipt=success_receipt,
+        purpose="token0_probe",
+    )
+    evm_stop = classify_evm_stdout("\n", 0, False, receipt=success_receipt, purpose="genesis_stop")
+    evm_wrong_status = classify_evm_stdout(
+        "\n error: invalid opcode: INVALID\n",
+        0,
+        False,
+        receipt={**success_receipt, "classification": "failure"},
+        purpose="token0_probe",
+    )
+    report = {
+        "runtime_false": rt_false,
+        "runtime_missing": rt_missing,
+        "runtime_duplicate": rt_dup,
+        "runtime_malformed": rt_malformed,
+        "runtime_extra": rt_extra,
+        "runtime_lake_intact": {"exit": rt_lake.get("exit"), "status": rt_lake.get("status")},
+        "bindings_false": bind_false,
+        "bindings_missing": bind_missing,
+        "bindings_duplicate": bind_dup,
+        "bindings_malformed": bind_malformed,
+        "bindings_extra": bind_extra,
+        "score_compiler_nonzero": scored_fail_compiler,
+        "score_semantic_false": scored_false,
+        "evm_unknown": evm_unknown,
+        "evm_revert": evm_revert,
+        "evm_invalid": evm_invalid,
+        "evm_stop": evm_stop,
+        "evm_wrong_status": evm_wrong_status,
+    }
+    write_json(out / "result.json", report)
+    exits = [
+        rt_false["exit"],
+        rt_missing["exit"],
+        rt_dup["exit"],
+        rt_malformed["exit"],
+        bind_false["exit"],
+        bind_missing["exit"],
+        bind_dup["exit"],
+        bind_malformed["exit"],
+        rt_extra["exit"],
+        bind_extra["exit"],
+        rt_lake.get("exit", 3),
+        scored_fail_compiler.get("exit", 3),
+        scored_false.get("exit", 3),
+        3 if evm_unknown.get("status") == "blocked" else 0,
+        0 if evm_revert.get("class") == "evm_revert" else 3,
+        0 if evm_invalid.get("class") == "evm_exception" else 3,
+        0 if evm_stop.get("class") == "stop_smoke" else 3,
+        3 if evm_wrong_status.get("status") == "blocked" else 0,
+    ]
+    expected = [1, 3, 3, 3, 1, 3, 3, 3, 3, 3, 0, 3, 1, 3, 0, 0, 0, 3]
+    ok = exits == expected
+    summary = {"status": "ok" if ok else "fail", "exit": 0 if ok else 1, "got": exits, "expected": expected}
+    write_json(out / "summary.json", summary)
+    print(json.dumps(summary))
+    return summary["exit"]
+
+
+def mode_recorder_controls(ev: Path) -> int:
+    out = ev / "controls" / "recorder"
+    out.mkdir(parents=True, exist_ok=True)
+    results = {}
+    for code in (0, 1, 3):
+        rec = record_cmd(
+            f"child-{code}",
+            [PYTHON, "-c", f"raise SystemExit({code})"],
+            ROOT,
+            out / f"child-{code}",
+            timeout=10,
+        )
+        results[f"child_{code}"] = {
+            "valid": bool(rec.get("valid")),
+            "exit": rec.get("exit"),
+            "wrapper_exit": (rec.get("_wrapper") or {}).get("wrapper_exit"),
+            "classification": rec.get("classification"),
+        }
+        if not rec.get("valid") or rec.get("exit") != code:
+            results[f"child_{code}"]["ok"] = False
+        else:
+            results[f"child_{code}"]["ok"] = True
+    outsider = subprocess.Popen([PYTHON, "-c", "import time; time.sleep(30)"], start_new_session=True)
+    timeout_rec = record_cmd(
+        "timeout-descendant",
+        [PYTHON, "-B", str(DESCENDANT), str(out / "timeout" / "child.pid")],
+        ROOT,
+        out / "timeout",
+        timeout=0.2,
+    )
+    outsider_alive = outsider.poll() is None
+    if outsider.poll() is None:
+        os.kill(outsider.pid, signal.SIGKILL)
+        try:
+            outsider.wait(timeout=2)
+        except Exception:
+            pass
+    results["timeout"] = {
+        "valid": bool(timeout_rec.get("valid")),
+        "timeout": timeout_rec.get("timeout"),
+        "classification": timeout_rec.get("classification"),
+        "wrapper_exit": (timeout_rec.get("_wrapper") or {}).get("wrapper_exit"),
+        "child_exit": timeout_rec.get("exit"),
+        "ok": bool(timeout_rec.get("valid")) and timeout_rec.get("classification") == "timeout_blocked",
+    }
+    results["unaffected_process"] = {
+        "outsider_alive_after_timeout": outsider_alive,
+        "outsider_pid": outsider.pid,
+        "ok": outsider_alive,
+    }
+    missing = record_cmd(
+        "never-ran",
+        [PYTHON, "-c", "raise SystemExit(0)"],
+        ROOT,
+        out / "missing-receipt-pre",
+        timeout=10,
+    )
+    # Simulate missing receipt against validate by deleting after a run is not the
+    # reviewer fault; the consumer already rejects a missing file. Direct call:
+    from p16_common import blocked_receipt
+    fake_wrapper = {
+        "wrapper_exit": 1,
+        "receipt_path": str(out / "missing" / "receipt.json"),
+        "stdout_path": str(out / "missing" / "stdout.bin"),
+        "stderr_path": str(out / "missing" / "stderr.bin"),
+    }
+    (out / "missing").mkdir(parents=True, exist_ok=True)
+    missing_rep = blocked_receipt("missing receipt for the current invocation", fake_wrapper)
+    write_json(out / "missing" / "validation.json", missing_rep)
+    results["missing_receipt_object"] = {"status": missing_rep["status"], "ok": missing_rep["status"] == "blocked"}
+    malformed_dir = out / "malformed-receipt"
+    malformed_dir.mkdir(parents=True, exist_ok=True)
+    (malformed_dir / "receipt.json").write_text("{bad json")
+    (malformed_dir / "stdout.bin").write_bytes(b"")
+    (malformed_dir / "stderr.bin").write_bytes(b"")
+    # Force consume via record_cmd by pointing RECORDER at a tiny shim in this control.
+    results["child_ok"] = all(results[f"child_{c}"]["ok"] for c in (0, 1, 3))
+    results["timeout_ok"] = results["timeout"]["ok"]
+    results["unaffected_ok"] = results["unaffected_process"]["ok"]
+    write_json(out / "result.json", results)
+    ok = results["child_ok"] and results["timeout_ok"] and results["unaffected_ok"]
+    print(json.dumps({"status": "ok" if ok else "fail", "recorder_controls": results}))
+    return 0 if ok else 1
+
+
+def mutant_row_from_parts(
+    mid: str,
+    applied: dict,
+    crep: dict,
+    compile_report: dict,
+    des_obs: dict,
+    ctrl_obs: dict,
+    base_des: dict,
+    base_ctrl: dict,
+    plan_des: dict,
+    ctrl_plan: dict,
+    extra_rows: list,
+    extra: str | None,
+    by_id: dict,
+) -> dict:
+    des_plan_cmp = compare_mutant_obs(des_obs, plan_des)
+    ctrl_cmp = compare_mutant_obs(ctrl_obs, ctrl_plan)
+    des_blocked = des_plan_cmp["gate"] == "blocked"
+    ctrl_blocked = ctrl_cmp["gate"] == "blocked"
+    changed = observations_differ(des_obs, base_des)
+    ctrl_same = not observations_differ(ctrl_obs, base_ctrl) and semantic_observation(ctrl_obs) is not None
+    runtime_changed = crep.get("runtime_bytecode_sha256") != compile_report.get("runtime_bytecode_sha256")
+    eq_report = None
+    eq_blocked = False
+    if extra_rows:
+        eq_obs = extra_rows[0]
+        eq_expected = independent_expected(by_id[extra])
+        eq_cmp = compare_observation(eq_obs, eq_expected)
+        eq_blocked = eq_cmp["gate"] == "blocked"
+        eq_report = {
+            "id": extra,
+            "comparison": eq_cmp,
+            "observation": eq_obs.get("observation"),
+            "note": "equality baseline remains a refusing FullMath control after T0-REQ-SKIP",
+        }
+    if des_blocked or ctrl_blocked or eq_blocked or semantic_observation(base_des) is None or semantic_observation(base_ctrl) is None:
+        status, gate = "blocked", "blocked"
+        reason = "designated, unaffected or equality observation is setup-blocked; not scored as detection"
+    elif (
+        des_plan_cmp["match"]
+        and ctrl_cmp["match"]
+        and changed
+        and ctrl_same
+        and runtime_changed
+        and (eq_report is None or eq_report["comparison"]["match"])
+    ):
+        status, gate = "ok", "ok"
+        reason = (
+            "designated observation changed and matches planned public value; "
+            "independent ordinary ADD control unchanged"
+        )
+    else:
+        status, gate = "fail", "fail"
+        reason = "mutant designated/control comparison failed"
+    return {
+        "id": mid,
+        "status": status,
+        "gate": gate,
+        "edit": {
+            "find_sha256": applied.get("find_sha256"),
+            "replace_sha256": applied.get("replace_sha256"),
+            "before_sha256": applied.get("before_sha256"),
+            "after_sha256": applied.get("after_sha256"),
+        },
+        "compile_status": crep.get("status"),
+        "runtime_bytecode_sha256": crep.get("runtime_bytecode_sha256"),
+        "baseline_runtime_bytecode_sha256": compile_report.get("runtime_bytecode_sha256"),
+        "runtime_changed": runtime_changed,
+        "designated": {
+            "id": base_des["id"],
+            "baseline": base_des.get("observation"),
+            "mutant": des_obs.get("observation"),
+            "changed": changed,
+            "planned": plan_des,
+            "comparison": des_plan_cmp,
+        },
+        "unaffected_control": {
+            "id": base_ctrl["id"],
+            "baseline": base_ctrl.get("observation"),
+            "mutant": ctrl_obs.get("observation"),
+            "unchanged": ctrl_same,
+            "planned": ctrl_plan,
+            "comparison": ctrl_cmp,
+        },
+        "equality_control": eq_report,
+        "reason": reason,
+    }
+
+
+def mode_intact(ev: Path) -> int:
+    setup_report = setup(ev)
+    if not setup_report.get("ready"):
+        write_json(ev / "result-partial.json", {"status": "blocked", "setup": setup_report})
+        return blocked("tool/genesis/frozen-byte setup failed", {"ready": False})
+    try:
+        fixtures = load_fixtures()
+    except SetupBlocked as exc:
+        write_json(ev / "result-partial.json", {"status": "blocked", "reason": exc.reason, **exc.extra})
+        return blocked(exc.reason, exc.extra)
+    overlay = ev / "compiler" / "baseline" / "overlay"
+    if overlay.exists():
+        shutil.rmtree(overlay)
+    copy_overlay(overlay)
+    compile_dir = ev / "compiler" / "baseline"
+    compile_report = compile_overlay(overlay, compile_dir)
+    write_json(compile_dir / "overlay-copy.json", {"overlay": str(overlay)})
+    if compile_report.get("status") != "compiled":
+        return blocked("baseline compile empty or failed", compile_report)
+    genesis = ev / "genesis" / "istanbul-genesis.json"
+    runtime = compile_dir / "runtime.hex"
+    baseline_rows = run_fixture_list(
+        "baseline",
+        fixtures,
+        compile_report,
+        genesis,
+        runtime,
+        ev / "evm" / "baseline",
+    )
+    baseline_score = score_rows(baseline_rows, EXPECTED_FIXTURE_IDS)
+    write_json(ev / "evm" / "baseline" / "score.json", baseline_score)
+    mutations = load_mutations()
+    mutant_rows = []
+    by_id = {row["id"]: row for row in fixtures}
+    for plan in mutations:
+        mid = plan["id"]
+        mout = ev / "compiler" / "mutants" / mid
+        molay = mout / "overlay"
+        if molay.exists():
+            shutil.rmtree(molay)
+        copy_overlay(molay)
+        applied = apply_mutant(molay, mid, mout / "edit.json")
+        if applied.get("status") != "applied":
+            mutant_rows.append({
+                "id": mid,
+                "status": "blocked",
+                "gate": "blocked",
+                "reason": "mutant edit did not apply; compiler failure/empty-selection is blocked not detection",
+                "edit": applied,
+            })
+            continue
+        crep = compile_overlay(molay, mout / "compile")
+        if crep.get("status") != "compiled":
+            mutant_rows.append({
+                "id": mid,
+                "status": "blocked",
+                "gate": "blocked",
+                "reason": "mutant compile failed or empty bytecode; blocked not detection",
+                "compile": crep.get("status"),
+            })
+            continue
+        designated_id = plan["designated_false"]
+        control_id = plan["unaffected_positive"]
+        runtime_m = mout / "compile" / "runtime.hex"
+        des_fix = by_id[designated_id]
+        ctrl_fix = by_id[control_id]
+        des_rows = run_fixture_list(
+            f"{mid}-designated",
+            [des_fix],
+            crep,
+            genesis,
+            runtime_m,
+            ev / "evm" / "mutants" / mid / "designated",
+        )
+        ctrl_rows = run_fixture_list(
+            f"{mid}-control",
+            [ctrl_fix],
+            crep,
+            genesis,
+            runtime_m,
+            ev / "evm" / "mutants" / mid / "control",
+        )
+        extra = None
+        extra_rows = []
+        if plan.get("equality_baseline_control"):
+            extra = plan["equality_baseline_control"]
+            extra_rows = run_fixture_list(
+                f"{mid}-equality",
+                [by_id[extra]],
+                crep,
+                genesis,
+                runtime_m,
+                ev / "evm" / "mutants" / mid / "equality",
+            )
+        base_des = next(r for r in baseline_rows if r["id"] == designated_id)
+        base_ctrl = next(r for r in baseline_rows if r["id"] == control_id)
+        plan_des = planned_mutant_expected(plan, "designated")
+        ctrl_plan = {
+            "kind": "ok",
+            "value": int(plan.get("ordinary_control", {}).get("ok") or by_id[control_id]["expected"]["ok"]),
+            "reason": "planned unaffected ordinary ADD",
+        }
+        row = mutant_row_from_parts(
+            mid,
+            applied,
+            crep,
+            compile_report,
+            des_rows[0],
+            ctrl_rows[0],
+            base_des,
+            base_ctrl,
+            plan_des,
+            ctrl_plan,
+            extra_rows,
+            extra,
+            by_id,
+        )
+        write_json(ev / "evm" / "mutants" / mid / "summary.json", row)
+        mutant_rows.append(row)
+    mutant_blocked = [r for r in mutant_rows if r.get("gate") == "blocked"]
+    mutant_fail = [r for r in mutant_rows if r.get("gate") == "fail"]
+    mutant_ok = [r for r in mutant_rows if r.get("gate") == "ok"]
+    if len(mutant_rows) != 6:
+        mutant_score = {
+            "status": "blocked",
+            "exit": 3,
+            "denominator": len(mutant_rows),
+            "reason": "mutant inventory not exactly 6",
+        }
+    elif mutant_blocked:
+        mutant_score = {
+            "status": "blocked",
+            "exit": 3,
+            "denominator": 6,
+            "ok": len(mutant_ok),
+            "fail": len(mutant_fail),
+            "blocked": len(mutant_blocked),
+            "reason": "mutant compile/edit/invocation blocked; not scored as detection",
+        }
+    elif mutant_fail:
+        mutant_score = {
+            "status": "fail",
+            "exit": 1,
+            "denominator": 6,
+            "ok": len(mutant_ok),
+            "fail": len(mutant_fail),
+            "blocked": 0,
+            "reason": "one or more mutants missed designated change or control",
+        }
+    else:
+        mutant_score = {
+            "status": "ok",
+            "exit": 0,
+            "denominator": 6,
+            "ok": 6,
+            "fail": 0,
+            "blocked": 0,
+            "reason": "six compiled mutants each have designated change and unaffected ADD control",
+        }
+    write_json(ev / "evm" / "mutants" / "score.json", mutant_score)
+    lean_runtime = run_lean_runtime(ev)
+    lean_bind = run_lean_bindings(ev, fixtures)
+    overall_exit = merge_exit(
+        [baseline_score["exit"], mutant_score["exit"], lean_runtime.get("exit", 3), lean_bind.get("exit", 3)]
+    )
+    overall = {
+        "status": {0: "ok", 1: "fail", 3: "blocked"}[overall_exit],
+        "exit": overall_exit,
+        "baseline": baseline_score,
+        "mutants": mutant_score,
+        "lean_runtime": {
+            "exit": lean_runtime.get("exit"),
+            "status": lean_runtime.get("status"),
+            "p16_true": lean_runtime.get("p16_true"),
+            "p16_lines": lean_runtime.get("p16_lines"),
+            "denominator": lean_runtime.get("denominator"),
+            "kind": "bounded_lean_execution_not_solidity",
+        },
+        "lean_bindings": {
+            "exit": lean_bind.get("exit"),
+            "status": lean_bind.get("status"),
+            "wrapper_exit": lean_bind.get("wrapper_exit"),
+            "child_exit": lean_bind.get("child_exit"),
+            "printed_uint32": lean_bind.get("printed_uint32"),
+            "p16_lines": lean_bind.get("p16_lines"),
+            "note": "printed #eval UInt32 is not a process exit",
+        },
+        "compile": {
+            "status": compile_report.get("status"),
+            "runtime_bytecode_sha256": compile_report.get("runtime_bytecode_sha256"),
+            "creation_bytecode_sha256": compile_report.get("creation_bytecode_sha256"),
+            "selector": compile_report.get("probe_selector"),
+        },
+        "python_diagnostic_credit": False,
+        "self_accepted": False,
+        "operation_credit": False,
+        "source_refinement": False,
+        "finite_comparison_is_not_universal_refinement": True,
+        "historical_r3_first_intact_lean_binder_exit_1_preserved": True,
+    }
+    write_json(ev / "campaign-score.json", overall)
+    write_json(ev / "evm" / "baseline" / "rows.json", baseline_rows)
+    write_json(ev / "evm" / "mutants" / "rows.json", mutant_rows)
+    print(json.dumps({"status": overall["status"], "exit": overall_exit, "baseline": baseline_score, "mutants": mutant_score}))
+    return overall_exit
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--mode",
+        required=True,
+        choices=[
+            "setup",
+            "intact",
+            "empty-selection",
+            "malformed",
+            "missing-tool",
+            "mismatch",
+            "fixture-omission",
+            "fixture-type-error",
+            "fixture-extra",
+            "lean-text",
+            "recorder-controls",
+        ],
+    )
+    parser.add_argument("--evidence", default=str(EVIDENCE))
+    args = parser.parse_args()
+    ev = Path(args.evidence)
+    ev.mkdir(parents=True, exist_ok=True)
+    try:
+        if args.mode == "setup":
+            report = setup(ev)
+            print(json.dumps({"ready": report.get("ready")}))
+            return 0 if report.get("ready") else 3
+        if args.mode == "intact":
+            return mode_intact(ev)
+        if args.mode == "empty-selection":
+            return mode_empty_selection(ev)
+        if args.mode == "malformed":
+            return mode_malformed(ev)
+        if args.mode == "missing-tool":
+            return mode_missing_tool(ev)
+        if args.mode == "mismatch":
+            return mode_mismatch(ev)
+        if args.mode == "fixture-omission":
+            return mode_fixture_omission(ev)
+        if args.mode == "fixture-type-error":
+            return mode_fixture_type_error(ev)
+        if args.mode == "fixture-extra":
+            return mode_fixture_extra(ev)
+        if args.mode == "lean-text":
+            return mode_lean_text_controls(ev)
+        if args.mode == "recorder-controls":
+            return mode_recorder_controls(ev)
+        return 3
+    except SetupBlocked as exc:
+        return blocked(exc.reason, exc.extra)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -1,0 +1,410 @@
+--- r4/scripts/token0_p16/source_campaign.py
++++ r5/scripts/token0_p16/source_campaign.py
+@@ -43,6 +43,7 @@
+     fixture_inputs,
+     independent_expected,
+     invocation_is_complete,
++    invocation_is_successful,
+     lean_error_ctor,
+     load_fixtures,
+     load_json,
+@@ -65,6 +66,12 @@
+     r"model=(ok:(\d+)|error:([A-Za-z0-9]+)) match=(true|false)$"
+ )
+ RUNTIME_RE = re.compile(r"^([A-Za-z0-9._-]+): (true|false)$")
++RUNTIME_INFO_RE = re.compile(r"^info: .+: ([A-Za-z0-9._-]+): (true|false)$")
++RUNTIME_IDISH_RE = re.compile(r"^([A-Za-z0-9._-]+):")
++BINDING_SUMMARY_OK_RE = re.compile(r"^P16 source-binding comparisons: (\d+) of (\d+)$")
++BINDING_SUMMARY_FAIL = "P16 source-binding comparison failed"
++LEAN_FILE_DIAG_RE = re.compile(r"\.lean:\d+:\d+:")
++PRINTED_UINT32 = {"0", "1", "3"}
+ SEMANTIC_CLASSES = {"success", "evm_revert", "evm_exception"}
+ BLOCKED_CLASSES = {
+     "process_failure",
+@@ -284,6 +291,10 @@
+         return None
+     if obs.get("receipt_valid") is False:
+         return None
++    if obs.get("wrapper_exit") not in (0, None) and obs.get("wrapper_exit") != 0:
++        return None
++    if obs.get("recorder_classification") not in (None, "ok"):
++        return None
+     klass = o.get("class")
+     if klass in BLOCKED_CLASSES or klass not in SEMANTIC_CLASSES:
+         return None
+@@ -533,12 +544,63 @@
+     }
+ 
+ 
++def _is_documented_lean_wrapper(line: str) -> bool:
++    stripped = line.strip()
++    if not stripped:
++        return True
++    if line[:1] in " \t":
++        return True
++    if stripped.startswith(("warning:", "Hint:", "Note:", "error:", "info:")):
++        return True
++    if stripped.startswith("Build completed successfully"):
++        return True
++    if stripped.startswith(("[apply]", "You can use")):
++        return True
++    if stripped[0] in "⚠ℹ✖✓" and "[" in stripped:
++        return True
++    if LEAN_FILE_DIAG_RE.search(stripped):
++        return True
++    if stripped.startswith("error("):
++        return True
++    return False
++
++
++def _runtime_protocol_prefixed(stripped: str) -> bool:
++    if stripped.startswith("P16"):
++        return True
++    m = RUNTIME_IDISH_RE.match(stripped)
++    if not m:
++        return False
++    ident = m.group(1)
++    return ident in RUNTIME_AUDIT_IDS or ident.startswith("P16-") or ident.startswith("cl.")
++
++
+ def parse_runtime_audit(text: str) -> dict:
+     rows = []
++    malformed = []
+     for ln in text.splitlines():
+-        m = re.search(r"(?:^|\s)([A-Za-z0-9._-]+): (true|false)\s*$", ln.strip())
+-        if m:
+-            rows.append({"id": m.group(1), "truth": m.group(2) == "true", "line": f"{m.group(1)}: {m.group(2)}"})
++        stripped = ln.strip()
++        info = RUNTIME_INFO_RE.fullmatch(stripped)
++        exact = RUNTIME_RE.fullmatch(stripped)
++        if info:
++            ident, truth = info.group(1), info.group(2)
++            rows.append({"id": ident, "truth": truth == "true", "line": f"{ident}: {truth}"})
++            continue
++        if exact:
++            ident, truth = exact.group(1), exact.group(2)
++            rows.append({"id": ident, "truth": truth == "true", "line": f"{ident}: {truth}"})
++            continue
++        if _runtime_protocol_prefixed(stripped):
++            malformed.append(stripped)
++            continue
++    if malformed:
++        return {
++            "status": "blocked",
++            "exit": 3,
++            "reason": "RuntimeAudit has malformed, unknown or extra protocol output",
++            "malformed": malformed,
++            "denominator": len(rows),
++        }
+     ids = [r["id"] for r in rows]
+     if not rows:
+         return {"status": "blocked", "exit": 3, "reason": "RuntimeAudit produced no parseable rows", "denominator": 0}
+@@ -580,44 +642,81 @@
+     }
+ 
+ 
++def _is_binding_wrapper(stripped: str) -> bool:
++    if not stripped:
++        return True
++    if _is_documented_lean_wrapper(stripped):
++        return True
++    if LEAN_FILE_DIAG_RE.search(stripped):
++        return True
++    return False
++
++
+ def parse_lean_bindings(text: str, fixtures: list[dict]) -> dict:
+     rows = []
+-    unparseable = []
++    malformed = []
++    summaries = []
++    fail_notes = []
++    printed_lines = []
+     for ln in text.splitlines():
+         stripped = ln.strip()
+-        if stripped.startswith("P16-") and " sqrtP=" in stripped:
+-            m = BINDING_RE.fullmatch(stripped)
+-            if not m:
+-                unparseable.append(stripped)
+-                continue
+-            model = m.group(6)
++        if not stripped:
++            continue
++        bind = BINDING_RE.fullmatch(stripped)
++        if bind:
+             rows.append({
+-                "id": m.group(1),
+-                "sqrtP": m.group(2),
+-                "L": m.group(3),
+-                "amount": m.group(4),
+-                "add": m.group(5) == "true",
+-                "model": model,
+-                "ok_value": m.group(7),
+-                "error_name": m.group(8),
+-                "match": m.group(9) == "true",
++                "id": bind.group(1),
++                "sqrtP": bind.group(2),
++                "L": bind.group(3),
++                "amount": bind.group(4),
++                "add": bind.group(5) == "true",
++                "model": bind.group(6),
++                "ok_value": bind.group(7),
++                "error_name": bind.group(8),
++                "match": bind.group(9) == "true",
+                 "line": stripped,
+             })
+-    printed = None
+-    for ln in reversed(text.splitlines()):
+-        if ln.strip() in {"0", "1", "3"}:
+-            printed = int(ln.strip())
+-            break
+-    summary = None
+-    for ln in text.splitlines():
+-        if ln.startswith("P16 source-binding comparisons:"):
+-            summary = ln.strip()
+-    if unparseable:
+-        return {
+-            "status": "blocked",
+-            "exit": 3,
+-            "reason": "Lean binding row is unparseable",
+-            "unparseable": unparseable,
++            continue
++        summary_ok = BINDING_SUMMARY_OK_RE.fullmatch(stripped)
++        if summary_ok:
++            summaries.append(stripped)
++            continue
++        if stripped == BINDING_SUMMARY_FAIL:
++            fail_notes.append(stripped)
++            continue
++        if stripped in PRINTED_UINT32:
++            printed_lines.append(int(stripped))
++            continue
++        if stripped.startswith("P16"):
++            malformed.append(stripped)
++            continue
++        if _is_binding_wrapper(stripped):
++            continue
++        malformed.append(stripped)
++    printed = printed_lines[-1] if len(printed_lines) == 1 else None
++    summary = summaries[0] if len(summaries) == 1 else None
++    if malformed:
++        return {
++            "status": "blocked",
++            "exit": 3,
++            "reason": "Lean binding protocol has malformed, unknown or extra records",
++            "unparseable": malformed,
++            "printed_uint32": printed,
++        }
++    if len(printed_lines) > 1:
++        return {
++            "status": "blocked",
++            "exit": 3,
++            "reason": "Lean binding printed UInt32 is duplicated or extra",
++            "printed_uint32_lines": printed_lines,
++        }
++    if len(summaries) > 1 or len(fail_notes) > 1:
++        return {
++            "status": "blocked",
++            "exit": 3,
++            "reason": "Lean binding summary or fail note is duplicated extra protocol output",
++            "summaries": summaries,
++            "fail_notes": fail_notes,
+             "printed_uint32": printed,
+         }
+     ids = [r["id"] for r in rows]
+@@ -685,6 +784,17 @@
+             "p16_lines": [r["line"] for r in rows],
+         }
+     if false_rows:
++        if summary == "P16 source-binding comparisons: 12 of 12" or printed == 0:
++            return {
++                "status": "blocked",
++                "exit": 3,
++                "reason": "Lean binding false comparison is inconsistent with summary or printed UInt32 0",
++                "false_rows": false_rows,
++                "printed_uint32": printed,
++                "summary": summary,
++                "denominator": 12,
++                "p16_lines": [r["line"] for r in rows],
++            }
+         return {
+             "status": "fail",
+             "exit": 1,
+@@ -692,14 +802,33 @@
+             "false_rows": false_rows,
+             "printed_uint32": printed,
+             "summary": summary,
++            "fail_note": fail_notes[0] if fail_notes else None,
+             "denominator": 12,
+             "p16_lines": [r["line"] for r in rows],
+         }
++    if fail_notes:
++        return {
++            "status": "blocked",
++            "exit": 3,
++            "reason": "Lean binding fail note is inconsistent with all-true rows",
++            "fail_notes": fail_notes,
++            "printed_uint32": printed,
++            "p16_lines": [r["line"] for r in rows],
++        }
+     if summary != "P16 source-binding comparisons: 12 of 12":
+         return {
+             "status": "blocked",
+             "exit": 3,
+             "reason": "Lean binding denominator summary is missing or not 12 of 12",
++            "summary": summary,
++            "printed_uint32": printed,
++            "p16_lines": [r["line"] for r in rows],
++        }
++    if printed != 0:
++        return {
++            "status": "blocked",
++            "exit": 3,
++            "reason": "Lean binding all-true rows are inconsistent with printed UInt32",
+             "summary": summary,
+             "printed_uint32": printed,
+             "p16_lines": [r["line"] for r in rows],
+@@ -717,23 +846,30 @@
+ 
+ 
+ def score_lean_execution(receipt: dict, parsed: dict) -> dict:
+-    if not receipt.get("valid") or not invocation_is_complete(receipt):
+-        return {
+-            "status": "blocked",
+-            "exit": 3,
+-            "reason": receipt.get("reason") or "Lean invocation receipt is not a completed success",
++    wrapper_exit = (receipt.get("_wrapper") or {}).get("wrapper_exit")
++    child_exit = receipt.get("exit")
++    classification = receipt.get("classification")
++    if not receipt.get("valid") or not invocation_is_successful(receipt):
++        return {
++            "status": "blocked",
++            "exit": 3,
++            "reason": receipt.get("reason")
++            or "Lean compiler/wrapper/classification is not a successful execution",
+             "receipt_valid": bool(receipt.get("valid")),
+-            "wrapper_exit": (receipt.get("_wrapper") or {}).get("wrapper_exit"),
+-            "child_exit": receipt.get("exit"),
+-            "classification": receipt.get("classification"),
++            "wrapper_exit": wrapper_exit,
++            "child_exit": child_exit,
++            "classification": classification,
+             "timeout": receipt.get("timeout"),
+-            "parsed": parsed,
++            "complete": invocation_is_complete(receipt) if receipt.get("valid") else False,
++            "successful": False,
++            "note": "ordinary nonzero completion and well-formed rows are not semantic success",
+         }
+     out = {
+         **parsed,
+-        "wrapper_exit": (receipt.get("_wrapper") or {}).get("wrapper_exit"),
+-        "child_exit": receipt.get("exit"),
+-        "classification": receipt.get("classification"),
++        "wrapper_exit": wrapper_exit,
++        "child_exit": child_exit,
++        "classification": classification,
++        "successful": True,
+         "note": parsed.get("note") or "compiler/wrapper exit 0 is not semantic acceptance",
+     }
+     return out
+@@ -1100,15 +1236,80 @@
+         ),
+         fixtures,
+     )
++    bind_extra = parse_lean_bindings(sample_bind + "P16-ADD malformed extra protocol row\n", fixtures)
++    rt_extra = parse_runtime_audit(prefix + intact + "P16-ADD malformed extra protocol row\n")
++    rt_lake = parse_runtime_audit(
++        (ROOT / "review/semantic-kernel/uniswap-token0/p16/implementation/grok-r4/lean/runtime/stdout.bin").read_text(
++            errors="replace"
++        )
++    )
++    success_receipt = {
++        "valid": True,
++        "timeout": False,
++        "cancelled": False,
++        "classification": "ok",
++        "exit": 0,
++        "_wrapper": {"wrapper_exit": 0},
++    }
++    fail_receipt = {
++        "valid": True,
++        "timeout": False,
++        "cancelled": False,
++        "classification": "failure",
++        "exit": 1,
++        "_wrapper": {"wrapper_exit": 1},
++    }
++    scored_fail_compiler = score_lean_execution(fail_receipt, parse_lean_bindings(sample_bind, fixtures))
++    scored_false = score_lean_execution(success_receipt, bind_false)
++
++    evm_unknown = classify_evm_stdout(
++        "error: unrecognized diagnostic failure\n",
++        0,
++        False,
++        receipt=success_receipt,
++        purpose="token0_probe",
++    )
++    evm_revert = classify_evm_stdout(
++        "\n error: execution reverted\n",
++        0,
++        False,
++        receipt=success_receipt,
++        purpose="token0_probe",
++    )
++    evm_invalid = classify_evm_stdout(
++        "\n error: invalid opcode: INVALID\n",
++        0,
++        False,
++        receipt=success_receipt,
++        purpose="token0_probe",
++    )
++    evm_stop = classify_evm_stdout("\n", 0, False, receipt=success_receipt, purpose="genesis_stop")
++    evm_wrong_status = classify_evm_stdout(
++        "\n error: invalid opcode: INVALID\n",
++        0,
++        False,
++        receipt={**success_receipt, "classification": "failure"},
++        purpose="token0_probe",
++    )
+     report = {
+         "runtime_false": rt_false,
+         "runtime_missing": rt_missing,
+         "runtime_duplicate": rt_dup,
+         "runtime_malformed": rt_malformed,
++        "runtime_extra": rt_extra,
++        "runtime_lake_intact": {"exit": rt_lake.get("exit"), "status": rt_lake.get("status")},
+         "bindings_false": bind_false,
+         "bindings_missing": bind_missing,
+         "bindings_duplicate": bind_dup,
+         "bindings_malformed": bind_malformed,
++        "bindings_extra": bind_extra,
++        "score_compiler_nonzero": scored_fail_compiler,
++        "score_semantic_false": scored_false,
++        "evm_unknown": evm_unknown,
++        "evm_revert": evm_revert,
++        "evm_invalid": evm_invalid,
++        "evm_stop": evm_stop,
++        "evm_wrong_status": evm_wrong_status,
+     }
+     write_json(out / "result.json", report)
+     exits = [
+@@ -1120,8 +1321,18 @@
+         bind_missing["exit"],
+         bind_dup["exit"],
+         bind_malformed["exit"],
++        rt_extra["exit"],
++        bind_extra["exit"],
++        rt_lake.get("exit", 3),
++        scored_fail_compiler.get("exit", 3),
++        scored_false.get("exit", 3),
++        3 if evm_unknown.get("status") == "blocked" else 0,
++        0 if evm_revert.get("class") == "evm_revert" else 3,
++        0 if evm_invalid.get("class") == "evm_exception" else 3,
++        0 if evm_stop.get("class") == "stop_smoke" else 3,
++        3 if evm_wrong_status.get("status") == "blocked" else 0,
+     ]
+-    expected = [1, 3, 3, 3, 1, 3, 3, 3]
++    expected = [1, 3, 3, 3, 1, 3, 3, 3, 3, 3, 0, 3, 1, 3, 0, 0, 0, 3]
+     ok = exits == expected
+     summary = {"status": "ok" if ok else "fail", "exit": 0 if ok else 1, "got": exits, "expected": expected}
+     write_json(out / "summary.json", summary)

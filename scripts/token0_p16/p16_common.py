@@ -1,0 +1,700 @@
+#!/usr/bin/env python3
+"""Shared P16 source-campaign paths, hashes, fixtures, and recorder invocation.
+
+Does not edit frozen Token0Probe.sol / record_cmd.py / Lean sources.
+"""
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+import re
+import subprocess
+import sys
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from typing import Any
+
+ROOT = Path("/home/charl/defiformal-wt-p16-token0-grok-gpt6-20260908")
+PRIMARY = Path("/home/charl/defiformal/review/semantic-kernel/program-execution-20260908")
+TOOLS = Path("/home/charl/.cache/defiformal-program/program-execution-20260908/p16-tools")
+SOLC = TOOLS / "solc-linux-amd64-v0.7.6+commit.7338295f"
+EVM = TOOLS / "evm"
+EXPECTED_SOLC_SHA256 = "bd69ea85427bf2f4da74cb426ad951dd78db9dfdd01d791208eccc2d4958a6bb"
+EXPECTED_EVM_SHA256 = "d298ce2c811de089d650ed4f9535c0c58efc72e7adee9b61a40b6c10cc26fb5c"
+EXPECTED_RUNNER_SHA256 = "f50fda86bd030cdd4f49f8521d3f7f8e56619123f2a61d9f3cc94d47480fadac"
+FROZEN_ARCHIVE = PRIMARY / "p16-proof-recorder-candidate-r2.tar.gz"
+FROZEN_ARCHIVE_SHA256 = "62a2b86a3148a38cc9db59658a6843723a81454d8732eae8b23344f2309a1ec8"
+FROZEN_PROBE = ROOT / "scripts/token0_p16/Token0Probe.sol"
+FROZEN_PROBE_SHA256 = "cc12001912e34069e54042ed62be5ecd0c1e57bca7e1c3685fce404e21cb069c"
+FROZEN_RECORDER_SHA256 = "31057e00d0ec5e4f5edcfcfe7594d29a86a985ff8c863d5fb9c3bd5d52baaed1"
+RECORDER = ROOT / "scripts/token0_p16/record_cmd.py"
+CAPTURE_ROOT = (
+    ROOT
+    / "review/semantic-kernel/program-loop-20260908"
+    / "concentrated-liquidity-source-readiness-gpt6-evidence/upstream"
+)
+LIB_NAMES = [
+    "FullMath.sol",
+    "UnsafeMath.sol",
+    "LowGasSafeMath.sol",
+    "SafeCast.sol",
+    "FixedPoint96.sol",
+    "SqrtPriceMath.sol",
+]
+EVIDENCE = ROOT / "review/semantic-kernel/uniswap-token0/p16/implementation/grok-r5"
+R4_EVIDENCE = ROOT / "review/semantic-kernel/uniswap-token0/p16/implementation/grok-r4"
+R3_EVIDENCE = ROOT / "review/semantic-kernel/uniswap-token0/p16/implementation/grok-r3"
+PLAN_DIR = ROOT / "openspec/changes/uniswap-token0-p16"
+PYTHON = sys.executable
+PROBE_SIGNATURE = "probe(uint160,uint128,uint256,bool)"
+SENDER = "0x1000000000000000000000000000000000000001"
+RECEIVER = "0x2000000000000000000000000000000000000002"
+GAS_LIMIT = 10_000_000_000
+SELECTED_FORK = "istanbul"
+COMPILER_TIMEOUT_SEC = 60.0
+SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
+DEC_RE = re.compile(r"^(0|[1-9][0-9]*)$")
+ISO_SKEW = timedelta(seconds=1)
+RECEIPT_CLASSIFICATIONS = {
+    "ok",
+    "failure",
+    "blocked",
+    "timeout_blocked",
+    "cancelled",
+    "crash",
+    "nonzero",
+}
+
+MUTANT_IDS = [
+    "T0-ID-SKIP",
+    "T0-WRAP-SKIP",
+    "T0-PROD-SKIP",
+    "T0-REQ-SKIP",
+    "T0-FLOOR",
+    "T0-CHECKED-ADD",
+]
+
+EXPECTED_FIXTURE_IDS = [
+    "P16-I-ADD",
+    "P16-I-REM",
+    "P16-I-ZERO-LIQ",
+    "P16-ADD",
+    "P16-ADD-ROUND",
+    "P16-REQ",
+    "P16-REQ-STRICT",
+    "P16-REM",
+    "P16-SAFECAST",
+    "P16-ADD-DEN0",
+    "P16-PROD",
+    "P16-WRAP",
+]
+
+RUNTIME_AUDIT_IDS = [
+    "cl.fullmath.f01",
+    "cl.fullmath.f02",
+    "cl.fullmath.f03-down",
+    "cl.fullmath.f03-up",
+    "cl.fullmath.f04",
+    "cl.fullmath.f05",
+    "cl.fullmath.f06",
+    "cl.fullmath.f07",
+    "cl.fullmath.f08",
+    "cl.fullmath.f09",
+    *EXPECTED_FIXTURE_IDS,
+]
+
+LEAN_FAILURE_CTOR = {
+    "subUnderflow": ".subUnderflow",
+    "uint160Overflow": ".uint160Overflow",
+    "divisionByZero": ".divisionByZero",
+    "quotientOverflow": ".quotientOverflow",
+    "addOverflow": ".addOverflow",
+    "require": ".subUnderflow",
+}
+
+
+class SetupBlocked(Exception):
+    """Campaign setup could not run; never a semantic 0/1."""
+
+    def __init__(self, reason: str, extra: dict | None = None) -> None:
+        super().__init__(reason)
+        self.reason = reason
+        self.extra = extra or {}
+        self.exit = 3
+
+
+def utc_now() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def parse_iso(value: Any) -> datetime | None:
+    if not isinstance(value, str) or not value:
+        return None
+    try:
+        dt = datetime.fromisoformat(value)
+    except ValueError:
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt
+
+
+def sha256_bytes(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
+def sha256_file(path: Path) -> str:
+    h = hashlib.sha256()
+    with path.open("rb") as f:
+        for chunk in iter(lambda: f.read(1024 * 1024), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def sha256_text(text: str) -> str:
+    return sha256_bytes(text.encode("utf-8"))
+
+
+def write_json(path: Path, obj: Any) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(obj, indent=2) + "\n")
+
+
+def load_json(path: Path) -> Any:
+    return json.loads(path.read_text())
+
+
+def parse_decimal_int(value: Any, *, width: int, field: str) -> tuple[int, str]:
+    if isinstance(value, bool) or value is None:
+        raise SetupBlocked(f"blocked: {field} is not a decimal integer", {"field": field, "value": value})
+    if isinstance(value, int):
+        raw = str(value)
+        n = value
+    elif isinstance(value, str):
+        if not DEC_RE.fullmatch(value):
+            raise SetupBlocked(
+                f"blocked: {field} is not an unambiguous decimal integer",
+                {"field": field, "value": value},
+            )
+        raw = value
+        n = int(value)
+    else:
+        raise SetupBlocked(f"blocked: {field} has non-integer type", {"field": field, "type": type(value).__name__})
+    if n < 0 or n >= 2**width:
+        raise SetupBlocked(
+            f"blocked: {field} is outside uint{width}",
+            {"field": field, "value": n, "width": width},
+        )
+    return n, raw
+
+
+def parse_strict_bool(value: Any, field: str) -> bool:
+    if value is True or value is False:
+        return value
+    raise SetupBlocked(
+        f"blocked: {field} is not a JSON boolean",
+        {"field": field, "value": value, "type": type(value).__name__},
+    )
+
+
+def parse_expected(row: dict, fid: str) -> dict:
+    exp = row.get("expected")
+    if not isinstance(exp, dict) or not exp:
+        raise SetupBlocked(f"blocked: fixture {fid} expected result is missing or not an object")
+    has_ok = "ok" in exp
+    has_error = "error" in exp
+    if has_ok and has_error:
+        raise SetupBlocked(f"blocked: fixture {fid} expected result names both ok and error")
+    if has_ok:
+        n, raw = parse_decimal_int(exp["ok"], width=160, field=f"{fid}.expected.ok")
+        return {"kind": "ok", "value": n, "raw": raw, "reason": row.get("independent") or "literal ok"}
+    if has_error:
+        err = exp["error"]
+        if not isinstance(err, str) or not err.strip():
+            raise SetupBlocked(f"blocked: fixture {fid} expected.error is not a nonempty string")
+        label = exp.get("model_label")
+        if label is not None and (not isinstance(label, str) or not label.strip()):
+            raise SetupBlocked(f"blocked: fixture {fid} model_label is not a nonempty string")
+        return {
+            "kind": "error",
+            "error": err,
+            "source_note": exp.get("source"),
+            "model_label_not_payload": label,
+            "reason": exp.get("source") or row.get("independent") or "literal refusal",
+        }
+    raise SetupBlocked(f"blocked: fixture {fid} expected result omits both ok and error")
+
+
+def load_fixtures(path: Path | None = None) -> list[dict]:
+    loc = path or (PLAN_DIR / "fixtures.json")
+    if not loc.is_file():
+        raise SetupBlocked("blocked: fixtures.json missing", {"path": str(loc)})
+    try:
+        data = load_json(loc)
+    except json.JSONDecodeError as exc:
+        raise SetupBlocked(
+            "blocked: fixtures.json is malformed JSON",
+            {"path": str(loc), "error": str(exc)},
+        ) from exc
+    if not isinstance(data, dict) or "fixtures" not in data:
+        raise SetupBlocked("blocked: fixtures.json missing fixtures array", {"path": str(loc)})
+    fixtures = data["fixtures"]
+    if not isinstance(fixtures, list):
+        raise SetupBlocked("blocked: fixtures is not an array", {"path": str(loc)})
+    if not fixtures:
+        raise SetupBlocked("blocked: empty fixtures.json", {"path": str(loc), "denominator": 0})
+    ids: list[str] = []
+    normalized: list[dict] = []
+    for idx, row in enumerate(fixtures):
+        if not isinstance(row, dict):
+            raise SetupBlocked(f"blocked: fixture row {idx} is not an object")
+        fid = row.get("id")
+        if not isinstance(fid, str) or not fid:
+            raise SetupBlocked(f"blocked: fixture row {idx} missing id")
+        ids.append(fid)
+        inp = row.get("inputs")
+        if not isinstance(inp, dict):
+            raise SetupBlocked(f"blocked: fixture {fid} inputs missing")
+        for key in ("sqrtPX96", "liquidity", "amount", "add"):
+            if key not in inp:
+                raise SetupBlocked(f"blocked: fixture {fid} missing input {key}")
+        sqrt_p, sqrt_raw = parse_decimal_int(inp["sqrtPX96"], width=160, field=f"{fid}.sqrtPX96")
+        liq, liq_raw = parse_decimal_int(inp["liquidity"], width=128, field=f"{fid}.liquidity")
+        amount, amount_raw = parse_decimal_int(inp["amount"], width=256, field=f"{fid}.amount")
+        add = parse_strict_bool(inp["add"], f"{fid}.add")
+        expected = parse_expected(row, fid)
+        normalized.append(
+            {
+                **row,
+                "id": fid,
+                "inputs": {
+                    "sqrtPX96": sqrt_p,
+                    "liquidity": liq,
+                    "amount": amount,
+                    "add": add,
+                },
+                "inputs_raw": {
+                    "sqrtPX96": sqrt_raw,
+                    "liquidity": liq_raw,
+                    "amount": amount_raw,
+                    "add": add,
+                },
+                "expected_parsed": expected,
+            }
+        )
+    if len(ids) != len(set(ids)):
+        raise SetupBlocked("blocked: duplicated fixture ids", {"ids": ids})
+    if ids != EXPECTED_FIXTURE_IDS:
+        raise SetupBlocked(
+            "blocked: fixture ids are not the exact required twelve",
+            {
+                "got": ids,
+                "expected": EXPECTED_FIXTURE_IDS,
+                "missing": [i for i in EXPECTED_FIXTURE_IDS if i not in ids],
+                "extra": [i for i in ids if i not in EXPECTED_FIXTURE_IDS],
+                "denominator": len(ids),
+            },
+        )
+    return normalized
+
+
+def load_mutations() -> list[dict]:
+    data = load_json(PLAN_DIR / "planned-mutations.json")
+    rows = data["token0_production_mutants"]
+    got = [row["id"] for row in rows]
+    if got != MUTANT_IDS:
+        raise SetupBlocked(f"blocked: mutant id mismatch {got}", {"got": got, "expected": MUTANT_IDS})
+    return rows
+
+
+def python_env(extra: dict[str, str] | None = None) -> dict[str, str]:
+    env = os.environ.copy()
+    env["PYTHONDONTWRITEBYTECODE"] = "1"
+    env["PYTHONHASHSEED"] = "0"
+    if extra:
+        env.update(extra)
+    return env
+
+
+def expected_wrapper_exit(timeout: bool, cancelled: bool, exit_code: int | None) -> int:
+    if timeout or cancelled:
+        return 3
+    if exit_code is None or (isinstance(exit_code, int) and exit_code < 0):
+        return 3
+    if isinstance(exit_code, int):
+        return exit_code
+    return 3
+
+
+def expected_classification(timeout: bool, cancelled: bool, exit_code: int | None) -> str:
+    if timeout:
+        return "timeout_blocked"
+    if cancelled:
+        return "cancelled"
+    if exit_code is None or (isinstance(exit_code, int) and exit_code < 0):
+        return "crash"
+    if exit_code == 0:
+        return "ok"
+    if exit_code == 1:
+        return "failure"
+    if exit_code == 3:
+        return "blocked"
+    return "nonzero"
+
+
+def _type_ok(value: Any, expected: type) -> bool:
+    if expected is bool:
+        return value is True or value is False
+    if expected is int:
+        return isinstance(value, int) and not isinstance(value, bool)
+    if expected is list:
+        return isinstance(value, list)
+    return isinstance(value, expected)
+
+
+def blocked_receipt(reason: str, wrapper: dict, extra: dict | None = None) -> dict:
+    report = {
+        "valid": False,
+        "status": "blocked",
+        "reason": reason,
+        "classification": "invalid_receipt",
+        "exit": None,
+        "timeout": False,
+        "cancelled": False,
+        "_wrapper": wrapper,
+        **(extra or {}),
+    }
+    return report
+
+
+def validate_receipt(
+    receipt: dict,
+    *,
+    name: str,
+    cmd: list[str],
+    cwd: Path,
+    stdout_path: Path,
+    stderr_path: Path,
+    started_utc: str,
+    wrapper_exit: int,
+) -> dict:
+    extra: dict[str, Any] = {"receipt_name": receipt.get("name"), "wrapper_exit": wrapper_exit}
+    required = {
+        "name": str,
+        "argv": list,
+        "cwd": str,
+        "start_utc": str,
+        "end_utc": str,
+        "timeout": bool,
+        "cancelled": bool,
+        "classification": str,
+        "stdout_path": str,
+        "stderr_path": str,
+        "stdout_sha256": str,
+        "stderr_sha256": str,
+        "stdout_bytes": int,
+        "stderr_bytes": int,
+    }
+    for field, typ in required.items():
+        if field not in receipt:
+            return {"ok": False, "reason": f"receipt missing field {field}", "extra": extra}
+        if not _type_ok(receipt[field], typ):
+            return {
+                "ok": False,
+                "reason": f"receipt field {field} has the wrong type",
+                "extra": {**extra, "type": type(receipt[field]).__name__},
+            }
+    if receipt["name"] != name:
+        return {"ok": False, "reason": "receipt name is not the current invocation", "extra": extra}
+    if receipt["argv"] != cmd:
+        return {
+            "ok": False,
+            "reason": "receipt argv is not the current invocation",
+            "extra": {**extra, "got": receipt["argv"], "expected": cmd},
+        }
+    try:
+        rec_cwd = Path(receipt["cwd"]).resolve()
+    except OSError:
+        rec_cwd = Path(receipt["cwd"])
+    if rec_cwd != cwd.resolve():
+        return {
+            "ok": False,
+            "reason": "receipt cwd is not the current invocation",
+            "extra": {**extra, "got": receipt["cwd"], "expected": str(cwd.resolve())},
+        }
+    if receipt["stdout_path"] != str(stdout_path):
+        return {"ok": False, "reason": "receipt stdout_path is not the current output file", "extra": extra}
+    if receipt["stderr_path"] != str(stderr_path):
+        return {"ok": False, "reason": "receipt stderr_path is not the current output file", "extra": extra}
+    if not SHA256_RE.fullmatch(receipt["stdout_sha256"]) or not SHA256_RE.fullmatch(receipt["stderr_sha256"]):
+        return {"ok": False, "reason": "receipt output hashes are not sha256 hex", "extra": extra}
+    if receipt["classification"] not in RECEIPT_CLASSIFICATIONS:
+        return {
+            "ok": False,
+            "reason": "receipt classification is not recognized",
+            "extra": {**extra, "classification": receipt["classification"]},
+        }
+    exit_code = receipt.get("exit")
+    if exit_code is not None and not (isinstance(exit_code, int) and not isinstance(exit_code, bool)):
+        return {"ok": False, "reason": "receipt exit is not an integer or null", "extra": extra}
+    if not stdout_path.is_file() or not stderr_path.is_file():
+        return {"ok": False, "reason": "current stdout/stderr files are missing", "extra": extra}
+    stdout = stdout_path.read_bytes()
+    stderr = stderr_path.read_bytes()
+    if sha256_bytes(stdout) != receipt["stdout_sha256"] or sha256_bytes(stderr) != receipt["stderr_sha256"]:
+        return {"ok": False, "reason": "receipt output hashes do not match current files", "extra": extra}
+    if receipt["stdout_bytes"] != len(stdout) or receipt["stderr_bytes"] != len(stderr):
+        return {"ok": False, "reason": "receipt output byte counts do not match current files", "extra": extra}
+    started = parse_iso(started_utc)
+    rec_start = parse_iso(receipt["start_utc"])
+    rec_end = parse_iso(receipt["end_utc"])
+    if started is None or rec_start is None or rec_end is None:
+        return {"ok": False, "reason": "receipt timestamps are not ISO-8601", "extra": extra}
+    if rec_start < started - ISO_SKEW:
+        return {
+            "ok": False,
+            "reason": "receipt start_utc is stale relative to the current invocation",
+            "extra": {**extra, "started_utc": started_utc, "receipt_start_utc": receipt["start_utc"]},
+        }
+    if rec_end < rec_start:
+        return {"ok": False, "reason": "receipt end_utc precedes start_utc", "extra": extra}
+    frozen = ROOT / "scripts/token0_p16/record_cmd.py"
+    rec_hash = receipt.get("record_cmd_sha256")
+    if rec_hash != FROZEN_RECORDER_SHA256 or (frozen.is_file() and sha256_file(frozen) != FROZEN_RECORDER_SHA256):
+        return {
+            "ok": False,
+            "reason": "receipt recorder hash is not the frozen record_cmd.py",
+            "extra": {**extra, "got": rec_hash, "expected": FROZEN_RECORDER_SHA256},
+        }
+    timeout = receipt["timeout"]
+    cancelled = receipt["cancelled"]
+    want_wrap = expected_wrapper_exit(timeout, cancelled, exit_code)
+    if wrapper_exit != want_wrap:
+        return {
+            "ok": False,
+            "reason": "wrapper exit disagrees with receipt timeout/cancel/child status",
+            "extra": {**extra, "wrapper_exit": wrapper_exit, "expected_wrapper_exit": want_wrap, "child_exit": exit_code},
+        }
+    want_class = expected_classification(timeout, cancelled, exit_code)
+    if receipt["classification"] != want_class:
+        return {
+            "ok": False,
+            "reason": "receipt classification is inconsistent with timeout/cancel/child exit",
+            "extra": {
+                **extra,
+                "classification": receipt["classification"],
+                "expected_classification": want_class,
+                "child_exit": exit_code,
+            },
+        }
+    if timeout and receipt["classification"] != "timeout_blocked":
+        return {"ok": False, "reason": "timeout receipt classification is not timeout_blocked", "extra": extra}
+    if cancelled and receipt["classification"] != "cancelled":
+        return {"ok": False, "reason": "cancelled receipt classification is not cancelled", "extra": extra}
+    if (exit_code is None or (isinstance(exit_code, int) and exit_code < 0)) and not timeout and not cancelled:
+        if receipt["classification"] != "crash":
+            return {"ok": False, "reason": "crash receipt classification is not crash", "extra": extra}
+    return {"ok": True, "reason": "current invocation receipt validated"}
+
+
+def invocation_is_complete(receipt: dict) -> bool:
+    if not receipt.get("valid"):
+        return False
+    if receipt.get("timeout") or receipt.get("cancelled"):
+        return False
+    if receipt.get("classification") in {"timeout_blocked", "cancelled", "crash", "invalid_receipt"}:
+        return False
+    exit_code = receipt.get("exit")
+    if exit_code is None or (isinstance(exit_code, int) and exit_code < 0):
+        return False
+    wrapper = receipt.get("_wrapper") or {}
+    if wrapper.get("wrapper_exit") != expected_wrapper_exit(False, False, exit_code):
+        return False
+    return True
+
+
+def invocation_is_successful(receipt: dict) -> bool:
+    """Completed ordinary nonzero is not successful source/model execution."""
+    if not invocation_is_complete(receipt):
+        return False
+    if receipt.get("exit") != 0:
+        return False
+    wrapper = receipt.get("_wrapper") or {}
+    if wrapper.get("wrapper_exit") != 0:
+        return False
+    if receipt.get("classification") != "ok":
+        return False
+    return True
+
+
+def record_cmd(
+    name: str,
+    cmd: list[str],
+    cwd: Path,
+    out_dir: Path,
+    timeout: float | None = None,
+    env_pairs: list[str] | None = None,
+) -> dict:
+    """Invoke frozen record_cmd.py. Invalid evidence is blocked, never an empty success."""
+    out_dir.mkdir(parents=True, exist_ok=True)
+    receipt_path = out_dir / "receipt.json"
+    stdout_path = out_dir / "stdout.bin"
+    stderr_path = out_dir / "stderr.bin"
+    argv = [
+        PYTHON,
+        "-B",
+        str(RECORDER),
+        "--name",
+        name,
+        "--cwd",
+        str(cwd),
+        "--out",
+        str(receipt_path),
+        "--stdout-path",
+        str(stdout_path),
+        "--stderr-path",
+        str(stderr_path),
+        "--env",
+        "PYTHONDONTWRITEBYTECODE=1",
+    ]
+    if timeout is not None:
+        argv.extend(["--timeout", str(timeout)])
+    for pair in env_pairs or []:
+        argv.extend(["--env", pair])
+    argv.append("--")
+    argv.extend(cmd)
+    started_utc = utc_now()
+    proc = subprocess.run(argv, cwd=str(ROOT), env=python_env(), check=False)
+    wrapper = {
+        "wrapper_exit": proc.returncode,
+        "receipt_path": str(receipt_path),
+        "stdout_path": str(stdout_path),
+        "stderr_path": str(stderr_path),
+        "recorder_argv": argv,
+        "recorder_sha256": sha256_file(Path(RECORDER)) if Path(RECORDER).is_file() else None,
+        "frozen_recorder_sha256": FROZEN_RECORDER_SHA256,
+        "started_utc": started_utc,
+        "ended_utc": utc_now(),
+        "requested_name": name,
+        "requested_cmd": cmd,
+        "requested_cwd": str(cwd.resolve()),
+        "timeout_arg": timeout,
+    }
+    write_json(out_dir / "wrapper.json", wrapper)
+    if not receipt_path.is_file():
+        report = blocked_receipt(
+            "missing receipt for the current invocation",
+            wrapper,
+            {"stdout_present": stdout_path.is_file(), "stderr_present": stderr_path.is_file()},
+        )
+        write_json(out_dir / "validation.json", report)
+        return report
+    try:
+        loaded = load_json(receipt_path)
+    except json.JSONDecodeError as exc:
+        report = blocked_receipt(
+            "malformed receipt JSON",
+            wrapper,
+            {"error": str(exc)},
+        )
+        write_json(out_dir / "validation.json", report)
+        return report
+    if not isinstance(loaded, dict):
+        report = blocked_receipt("receipt JSON is not an object", wrapper)
+        write_json(out_dir / "validation.json", report)
+        return report
+    checked = validate_receipt(
+        loaded,
+        name=name,
+        cmd=cmd,
+        cwd=cwd,
+        stdout_path=stdout_path,
+        stderr_path=stderr_path,
+        started_utc=started_utc,
+        wrapper_exit=proc.returncode,
+    )
+    if not checked["ok"]:
+        report = blocked_receipt(checked["reason"], wrapper, checked.get("extra"))
+        write_json(out_dir / "validation.json", report)
+        return report
+    loaded["valid"] = True
+    loaded["status"] = "ok"
+    loaded["_wrapper"] = wrapper
+    write_json(out_dir / "validation.json", {"valid": True, "reason": checked["reason"]})
+    return loaded
+
+
+def encode_word(value: int) -> bytes:
+    if value < 0 or value >= 2**256:
+        raise ValueError(f"ABI word not representable: {value}")
+    return value.to_bytes(32, "big")
+
+
+def encode_probe_calldata(selector_hex: str, sqrt_p: int, liquidity: int, amount: int, add: bool) -> bytes:
+    sel = selector_hex.lower().removeprefix("0x")
+    if len(sel) != 8 or any(c not in "0123456789abcdef" for c in sel):
+        raise ValueError(f"selector is not 4 bytes hex: {selector_hex}")
+    if sqrt_p < 0 or sqrt_p >= 2**160:
+        raise ValueError(f"sqrtPX96 not uint160: {sqrt_p}")
+    if liquidity < 0 or liquidity >= 2**128:
+        raise ValueError(f"liquidity not uint128: {liquidity}")
+    if amount < 0 or amount >= 2**256:
+        raise ValueError(f"amount not uint256: {amount}")
+    return (
+        bytes.fromhex(sel)
+        + encode_word(sqrt_p)
+        + encode_word(liquidity)
+        + encode_word(amount)
+        + encode_word(1 if add else 0)
+    )
+
+
+def decode_uint160(returndata_hex: str) -> int | None:
+    h = returndata_hex.lower().removeprefix("0x")
+    if len(h) != 64:
+        return None
+    if any(c not in "0123456789abcdef" for c in h):
+        return None
+    n = int(h, 16)
+    if n >= 2**160:
+        return None
+    return n
+
+
+def fixture_inputs(row: dict) -> tuple[int, int, int, bool]:
+    inp = row["inputs"]
+    return (int(inp["sqrtPX96"]), int(inp["liquidity"]), int(inp["amount"]), bool(inp["add"]))
+
+
+def independent_expected(row: dict) -> dict:
+    if "expected_parsed" in row:
+        exp = row["expected_parsed"]
+        return {
+            "kind": exp["kind"],
+            "value": exp.get("value"),
+            "source_note": exp.get("source_note"),
+            "model_label_not_payload": exp.get("model_label_not_payload"),
+            "reason": exp.get("reason") or "literal",
+            "error": exp.get("error"),
+        }
+    exp = row["expected"]
+    if "ok" in exp:
+        return {"kind": "ok", "value": int(exp["ok"]), "reason": row.get("independent", "literal ok")}
+    return {
+        "kind": "error",
+        "source_note": exp.get("source"),
+        "model_label_not_payload": exp.get("model_label"),
+        "reason": exp.get("source") or row.get("independent") or "literal refusal",
+    }
+
+
+def lean_error_ctor(row: dict) -> str:
+    exp = row.get("expected_parsed") or parse_expected(row, row["id"])
+    if exp["kind"] != "error":
+        raise SetupBlocked(f"blocked: fixture {row['id']} has no error constructor")
+    key = exp.get("model_label_not_payload") or exp.get("error") or "require"
+    ctor = LEAN_FAILURE_CTOR.get(key)
+    if ctor is None:
+        raise SetupBlocked(f"blocked: fixture {row['id']} error {key} has no Lean Failure constructor")
+    return ctor

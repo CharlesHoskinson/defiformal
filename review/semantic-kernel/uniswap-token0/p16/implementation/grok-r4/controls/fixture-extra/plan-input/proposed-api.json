@@ -1,0 +1,67 @@
+{
+  "status": "PROPOSED_DESIGN_CONTRACT_NOT_COMPILED",
+  "namespace": "DefiKernel.ConcentratedLiquidity",
+  "reuses": {
+    "DefiKernel.Arithmetic.Word": {
+      "path": "lean/DefiKernel/Arithmetic/Word.lean",
+      "sha256": "5c0f467384bc3fe320ab363b7124f1c94b9ea688293c61cac7c5e08af8cb879b",
+      "role": "unsigned words 128/160/256"
+    },
+    "DefiKernel.Arithmetic.Rounding.mulDiv": {
+      "path": "lean/DefiKernel/Arithmetic/Rounding.lean",
+      "sha256": "0bd0c65af77bc809f4ff3b8cb5d98ab7eca5be0e0e7216e9e88263e4e02649f0",
+      "role": "FullMath documented floor/ceil at w=256; not assembly identity"
+    },
+    "DefiKernel.Arithmetic.Operations.add": {
+      "path": "lean/DefiKernel/Arithmetic/Operations.lean",
+      "sha256": "081c4d29809a33b6377ab1746ae93f2f2a429f5fa307983331c4cb5fbc460485",
+      "role": "MUST NOT encode the token0 denominator sum; that sum wraps then falls back"
+    }
+  },
+  "constants": {
+    "Q96": "79228162514264337593543950336",
+    "MAX_SQRT_RATIO": "1461446703485210103287273052203988822378723970342"
+  },
+  "functions": [
+    {
+      "name": "FullMath.mulDiv",
+      "args": ["a: Word 256", "b: Word 256", "d: Word 256"],
+      "returns": "Except Failure (Word 256)",
+      "original_id": "2.2",
+      "failures": ["divisionByZero", "quotientOverflow"]
+    },
+    {
+      "name": "FullMath.mulDivRoundingUp",
+      "args": ["a: Word 256", "b: Word 256", "d: Word 256"],
+      "returns": "Except Failure (Word 256)",
+      "original_id": "2.2",
+      "failures": ["divisionByZero", "quotientOverflow"]
+    },
+    {
+      "name": "SqrtPriceMath.getNextSqrtPriceFromAmount0RoundingUp",
+      "args": ["sqrtPX96: Word 160", "liquidity: Word 128", "amount: Word 256", "add: Bool"],
+      "returns": "Except Failure (Word 160)",
+      "fee_parameter": false,
+      "add_success_cast": "source bare uint160. No observed reachable add-path truncation mismatch. Future local bound: successful add result ≤ input sqrt, justifying Word 160 without inventing a source refusal.",
+      "remove_success_cast": "SafeCast.toUint160 after FullMath"
+    }
+  ],
+  "types_in_p16": {
+    "Failure": "constructors needed by token0 and FullMath substrate",
+    "U128_U160_U256": "Word aliases",
+    "Q96": "2^96",
+    "Signed": "not in P16; original 2.1 signed/tick/fee/F45 residual stays P21"
+  },
+  "not_in_p16": [
+    "Signed / I24 / I128 / I256",
+    "TickMath",
+    "SwapMath.computeSwapStep",
+    "getNextSqrtPriceFromAmount1RoundingDown",
+    "getAmount0Delta",
+    "getAmount1Delta",
+    "TickBitmap",
+    "LiquidityMath",
+    "Typed.execute wrapper"
+  ],
+  "typed_wrap": "optional for arithmetic-only P16/P18; required for P17.platform_reuse"
+}

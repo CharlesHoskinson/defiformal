@@ -1,0 +1,104 @@
+{
+  "status": "PLANNED_NOT_PROVED",
+  "public_function": "SqrtPriceMath.getNextSqrtPriceFromAmount0RoundingUp",
+  "no_sorry": true,
+  "no_custom_axioms": true,
+  "no_native_decide": true,
+  "typed_wrap_optional": true,
+  "overflow_partitions_not_excluded": true,
+  "source_assembly_refinement": "open_P30",
+  "ordered_except": [
+    "amount == 0 → identity success",
+    "add path: product-fit test; if fit, wrapped-sum test then FullMath then source bare uint160; else fallback LowGasSafeMath.add then UnsafeMath.divRoundingUp then source bare uint160",
+    "remove path: require product-fit and numerator1 > product; then FullMath; then SafeCast.toUint160"
+  ],
+  "obligations": [
+    {
+      "id": "P16-TH-FULLMATH-FLOOR",
+      "original": "2.3",
+      "statement": "FullMath.mulDiv at width 256 matches Rounding.mulDiv .down success/refusal (divisionByZero precedes quotientOverflow).",
+      "premises": ["d.value = 0 or d.value > 0"],
+      "not": "assembly mulmod/CRT identity"
+    },
+    {
+      "id": "P16-TH-FULLMATH-CEIL",
+      "original": "2.3",
+      "statement": "FullMath.mulDivRoundingUp at width 256 matches Rounding.mulDiv .up.",
+      "premises": ["same as floor plus remainder increment that may quotientOverflow"]
+    },
+    {
+      "id": "P16-TH-IDENTITY",
+      "statement": "On the public helper, amount = 0 returns ok sqrtPX96 for both add values, including zero liquidity.",
+      "premises": ["amount.value = 0"],
+      "positive_control": "P16-I-ADD / P16-I-REM / P16-I-ZERO-LIQ"
+    },
+    {
+      "id": "P16-TH-PRIMARY-ADD",
+      "statement": "On the public helper: add, amount ≠ 0, product fits, numerator1 + product < 2^256. The public result is FullMath.mulDivRoundingUp(numerator1, sqrtPX96, numerator1+product) composed with the source bare uint160 cast. If FullMath refuses (including denominator 0), the public result is that refusal. Success additionally requires FullMath success. Local model bound (future): a successful add result is ≤ input sqrt, which justifies representing the source cast as Word 160 without inventing a source refusal.",
+      "premises": ["add", "amount ≠ 0", "amount * sqrtPX96 < 2^256", "numerator1 + product < 2^256"],
+      "success_additionally": ["FullMath succeeds"],
+      "witness_success": "P16-ADD",
+      "witness_fullmath_error": "P16-ADD-DEN0"
+    },
+    {
+      "id": "P16-TH-WRAP-FALLBACK",
+      "statement": "On the public helper: add, amount ≠ 0, product fits, numerator1 + product ≥ 2^256, LowGasSafeMath.add succeeds on (numerator1 / sqrtPX96, amount). Then result is source bare uint160 of UnsafeMath.divRoundingUp(numerator1, inner). Future local bound: that inner add is a positive denominator and sqrtPX96 > 0. Not a restatement of an arbitrary helper, and not unbounded liquidity * sqrtP / (liquidity + amount * sqrtP).",
+      "premises": [
+        "add = true",
+        "amount ≠ 0",
+        "amount * sqrtPX96 < 2^256",
+        "numerator1 + amount * sqrtPX96 ≥ 2^256",
+        "LowGasSafeMath.add succeeds on (numerator1 / sqrtPX96, amount)"
+      ],
+      "future_local_bounds": [
+        "successful inner add implies positive fallback denominator",
+        "wrap-fallback selection with product fitting excludes sqrtPX96 = 0"
+      ],
+      "not": "unbounded liquidity * sqrtP / (liquidity + amount * sqrtP)",
+      "not2": "a restatement of an arbitrary helper without those premises",
+      "witness": "P16-WRAP",
+      "required": true
+    },
+    {
+      "id": "P16-TH-PROD-FALLBACK",
+      "statement": "On the public helper: add, amount ≠ 0, product does not fit → same fallback composition (LowGasSafeMath.add then UnsafeMath.divRoundingUp then source bare uint160). Product overflow with amount ≠ 0 excludes sqrtPX96 = 0.",
+      "premises": ["add", "amount ≠ 0", "amount * sqrtPX96 ≥ 2^256"],
+      "witness": "P16-PROD"
+    },
+    {
+      "id": "P16-TH-REMOVE-REQUIRE",
+      "statement": "On the public helper: ¬add, amount ≠ 0, and (product does not fit ∨ numerator1 ≤ product) → the source require refuses. Model label is not the empty 0.7.6 revert payload. amount = 0 is identity, not this refusal.",
+      "premises": ["add = false", "amount ≠ 0", "product does not fit or numerator1 ≤ product"],
+      "witness_equality": "P16-REQ",
+      "witness_strict": "P16-REQ-STRICT"
+    },
+    {
+      "id": "P16-TH-REMOVE-PRIMARY",
+      "statement": "On the public helper: ¬add, amount ≠ 0, product fits, numerator1 > product. Public result is SafeCast.toUint160 composed after FullMath.mulDivRoundingUp(numerator1, sqrtPX96, numerator1-product). Success requires both callees succeed, in that order. FullMath success then SafeCast refusal is a public refusal.",
+      "premises": ["add = false", "amount ≠ 0", "product fits", "numerator1 > product"],
+      "success_additionally": ["FullMath succeeds", "SafeCast.toUint160 succeeds"],
+      "witness_success": "P16-REM",
+      "witness_safecast": "P16-SAFECAST"
+    },
+    {
+      "id": "P16-TH-ADD-RESULT-BOUND",
+      "status": "future_proof_obligation_not_proved_now",
+      "statement": "A successful public add result is ≤ the input sqrt price. This local model bound/reachability obligation may justify a checked Word 160 representation of the source bare uint160 cast. It does not invent an observable source add-path truncation refusal and MUST NOT exclude overflow partitions.",
+      "premises": ["public helper succeeds on add"]
+    },
+    {
+      "id": "P16-TH-FALLBACK-POSITIVE-DENOM",
+      "status": "future_proof_obligation_not_proved_now",
+      "statement": "Reaching fallback with a successful checked inner add gives a positive denominator. amount>0 and floor(numerator1/sqrtP)+amount ≥ floor(numerator1/sqrtP)+1, and fallback selection excludes sqrtP=0. Distinct from the source UnsafeMath comment that y==0 is unspecified.",
+      "premises": ["public helper takes the UnsafeMath fallback", "LowGasSafeMath.add succeeds"]
+    }
+  ],
+  "inventory_checks": [
+    "Verify.lean imports every P16 module",
+    "ProofAudit lists each P16-TH-* with full type",
+    "#audit_axioms DefiKernel.ConcentratedLiquidity nonempty theorem set",
+    "zero sorry/custom axiom/native_decide",
+    "no Signed type in P16 Types.lean"
+  ],
+  "axiom_policy": "standard Lean/mathlib axioms only; record exact axiom names from the audit"
+}

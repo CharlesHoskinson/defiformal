@@ -1,0 +1,84 @@
+{
+  "status": "PROPOSED_DESIGN_CONTRACT_NOT_COMPILED",
+  "namespace": "DefiKernel.Vault",
+  "token0_bridge_namespace": "DefiKernel.ConcentratedLiquidity (new Token0Bridge module; do not edit accepted token0 theorem statements)",
+  "reuses": {
+    "DefiKernel.Arithmetic.Word": {
+      "path": "lean/DefiKernel/Arithmetic/Word.lean",
+      "sha256": "5c0f467384bc3fe320ab363b7124f1c94b9ea688293c61cac7c5e08af8cb879b",
+      "role": "unsigned words 64/192/256 for rho/chi/amounts"
+    },
+    "DefiKernel.Arithmetic.Rounding.divideNat": {
+      "path": "lean/DefiKernel/Arithmetic/Rounding.lean",
+      "sha256": "0bd0c65af77bc809f4ff3b8cb5d98ab7eca5be0e0e7216e9e88263e4e02649f0",
+      "role": "shared floor/ceil lemma for token0 FullMath and vault conversion under overflow premises"
+    },
+    "DefiKernel.Arithmetic.Operations.mul": {
+      "path": "lean/DefiKernel/Arithmetic/Operations.lean",
+      "sha256": "081c4d29809a33b6377ab1746ae93f2f2a429f5fa307983331c4cb5fbc460485",
+      "role": "checked 0.8.21 assets*RAY overflow; MUST NOT encode token0 0.7.6 wrap"
+    },
+    "DefiKernel.Arithmetic.Quantity.toQuantity": {
+      "path": "lean/DefiKernel/Arithmetic/Quantity.lean",
+      "sha256": "df223e39db3d3de1070deba403075331bb801805cd95f02ccb8eeafed0ae569e",
+      "role": "token0 Word 160 lift into Typed.Quantity"
+    },
+    "DefiKernel.Typed.execute_ok_iff": {
+      "path": "lean/DefiKernel/Typed/Transition.lean",
+      "sha256": "73f264636236219e45720a531209f8c7ed8f5ee3f615fa34d58bc5596c4499d2",
+      "line": 219,
+      "role": "named shared executor theorem instantiated by both adapters"
+    },
+    "DefiKernel.Typed.applyEvaluated_accounting": {
+      "path": "lean/DefiKernel/Typed/Transition.lean",
+      "line": 248,
+      "role": "conservation: party effects sum to supply change"
+    },
+    "DefiKernel.Arithmetic.Reference.observeExecution": {
+      "path": "lean/DefiKernel/Arithmetic/Reference.lean",
+      "sha256": "6bfa5e3e0a31947d3fea3078106df6e43311254cabbc291d004463d0a617325d",
+      "lines": "67-71",
+      "role": "retain pre-state beside Except; refusal has no post-world"
+    }
+  },
+  "constants": {
+    "RAY": "1000000000000000000000000000"
+  },
+  "functions": [
+    {
+      "name": "convertToShares",
+      "args": ["assets: Word 256", "chi: Word 192"],
+      "returns": "Except Failure (Word 256)",
+      "rounding": "down"
+    },
+    {
+      "name": "convertToAssets",
+      "args": ["shares: Word 256", "chi: Word 192"],
+      "returns": "Except Failure (Word 256)",
+      "rounding": "down"
+    },
+    {
+      "name": "divUp",
+      "args": ["x: Nat", "y: Nat"],
+      "returns": "Except Failure Nat",
+      "rounding": "up; _divup(0,0)=0 is source-specific and excluded by chi>0"
+    },
+    {
+      "name": "deposit",
+      "args": ["pre-state", "assets", "receiver", "sender"],
+      "returns": "Except VaultFailure (post-state × shares)"
+    }
+  ],
+  "not_in_p17": [
+    "accrual/_rpow proofs",
+    "UUPS",
+    "permit/IERC1271",
+    "referral overloads",
+    "L2 SUsds",
+    "Composition sequential token0-then-vault",
+    "P30 source refinement",
+    "deployed address/block/codehash"
+  ],
+  "unchanged_kernel_fields": true,
+  "new_kernel_fields_invented": false
+}
