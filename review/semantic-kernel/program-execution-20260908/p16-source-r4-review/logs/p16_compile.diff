@@ -1,0 +1,180 @@
+--- r3/scripts/token0_p16/p16_compile.py
++++ r4/scripts/token0_p16/p16_compile.py
+@@ -8,7 +8,9 @@
+ 
+ import argparse
+ import json
++import os
+ import shutil
++import signal
+ import subprocess
+ import sys
+ from pathlib import Path
+@@ -16,6 +18,7 @@
+ sys.path.insert(0, str(Path(__file__).resolve().parent))
+ from p16_common import (
+     CAPTURE_ROOT,
++    COMPILER_TIMEOUT_SEC,
+     EXPECTED_SOLC_SHA256,
+     FROZEN_PROBE,
+     FROZEN_PROBE_SHA256,
+@@ -79,7 +82,30 @@
+     }
+ 
+ 
+-def compile_overlay(overlay: Path, out_dir: Path, solc: Path = SOLC) -> dict:
++def _kill_group(proc: subprocess.Popen) -> None:
++    try:
++        pgid = os.getpgid(proc.pid)
++    except ProcessLookupError:
++        pgid = proc.pid
++    if pgid and pgid > 1:
++        for sig in (signal.SIGTERM, signal.SIGKILL):
++            try:
++                os.killpg(pgid, sig)
++            except (ProcessLookupError, PermissionError):
++                break
++    else:
++        try:
++            proc.kill()
++        except OSError:
++            pass
++
++
++def compile_overlay(
++    overlay: Path,
++    out_dir: Path,
++    solc: Path = SOLC,
++    timeout: float = COMPILER_TIMEOUT_SEC,
++) -> dict:
+     out_dir.mkdir(parents=True, exist_ok=True)
+     if not solc.is_file():
+         report = {
+@@ -108,44 +134,97 @@
+     write_json(out_dir / "source-hashes.json", source_hashes)
+     argv = [str(solc), "--standard-json"]
+     start = utc_now()
+-    proc = subprocess.run(
++    proc = subprocess.Popen(
+         argv,
+-        input=input_bytes,
+         cwd=str(overlay),
+         env=python_env(),
+-        capture_output=True,
+-        check=False,
++        stdin=subprocess.PIPE,
++        stdout=subprocess.PIPE,
++        stderr=subprocess.PIPE,
++        start_new_session=True,
+     )
++    timed_out = False
++    try:
++        stdout, stderr = proc.communicate(input=input_bytes, timeout=timeout)
++    except subprocess.TimeoutExpired:
++        timed_out = True
++        _kill_group(proc)
++        try:
++            stdout, stderr = proc.communicate(timeout=1)
++        except Exception:
++            stdout, stderr = b"", b""
++            try:
++                proc.kill()
++            except OSError:
++                pass
+     end = utc_now()
+-    (out_dir / "solc.stdout.bin").write_bytes(proc.stdout)
+-    (out_dir / "solc.stderr.bin").write_bytes(proc.stderr)
+-    if proc.returncode != 0 or not proc.stdout.strip():
+-        report = {
+-            "status": "blocked_compile_empty_or_nonzero",
+-            "exit": proc.returncode,
+-            "stdout_bytes": len(proc.stdout),
+-            "stderr_bytes": len(proc.stderr),
+-            "stdout_sha256": sha256_bytes(proc.stdout),
+-            "stderr_sha256": sha256_bytes(proc.stderr),
++    stdout = stdout or b""
++    stderr = stderr or b""
++    (out_dir / "solc.stdout.bin").write_bytes(stdout)
++    (out_dir / "solc.stderr.bin").write_bytes(stderr)
++    receipt = {
++        "name": "solc-standard-json",
++        "argv": argv,
++        "cwd": str(overlay),
++        "start_utc": start,
++        "end_utc": end,
++        "timeout": timed_out,
++        "exit": None if timed_out else proc.returncode,
++        "stdout_path": str(out_dir / "solc.stdout.bin"),
++        "stderr_path": str(out_dir / "solc.stderr.bin"),
++        "stdout_sha256": sha256_bytes(stdout),
++        "stderr_sha256": sha256_bytes(stderr),
++        "stdout_bytes": len(stdout),
++        "stderr_bytes": len(stderr),
++        "solc_sha256": solc_sha,
++        "timeout_sec": timeout,
++    }
++    write_json(out_dir / "solc-receipt.json", receipt)
++    if timed_out:
++        report = {
++            "status": "blocked_compile_timeout",
++            "exit": None,
++            "timeout": True,
++            "stdout_bytes": len(stdout),
++            "stderr_bytes": len(stderr),
++            "stdout_sha256": sha256_bytes(stdout),
++            "stderr_sha256": sha256_bytes(stderr),
+             "solc_sha256": solc_sha,
+             "argv": argv,
+             "start_utc": start,
+             "end_utc": end,
++            "receipt": str(out_dir / "solc-receipt.json"),
++        }
++        write_json(out_dir / "compile.json", report)
++        return report
++    if proc.returncode != 0 or not stdout.strip():
++        report = {
++            "status": "blocked_compile_empty_or_nonzero",
++            "exit": proc.returncode,
++            "timeout": False,
++            "stdout_bytes": len(stdout),
++            "stderr_bytes": len(stderr),
++            "stdout_sha256": sha256_bytes(stdout),
++            "stderr_sha256": sha256_bytes(stderr),
++            "solc_sha256": solc_sha,
++            "argv": argv,
++            "start_utc": start,
++            "end_utc": end,
+         }
+         write_json(out_dir / "compile.json", report)
+         return report
+     try:
+-        output = json.loads(proc.stdout.decode("utf-8"))
++        output = json.loads(stdout.decode("utf-8"))
+     except json.JSONDecodeError as exc:
+         report = {
+             "status": "blocked_compile_malformed_json",
+             "error": str(exc),
+-            "stdout_sha256": sha256_bytes(proc.stdout),
++            "stdout_sha256": sha256_bytes(stdout),
+             "solc_sha256": solc_sha,
+         }
+         write_json(out_dir / "compile.json", report)
+         return report
+-    (out_dir / "standard-json-output.json").write_bytes(proc.stdout)
++    (out_dir / "standard-json-output.json").write_bytes(stdout)
+     errors = output.get("errors") or []
+     severe = [e for e in errors if e.get("severity") in ("error", "Error")]
+     contracts = (output.get("contracts") or {}).get("Token0Probe.sol") or {}
+@@ -199,8 +278,10 @@
+         "abi": abi,
+         "errors_nonfatal": [e for e in errors if e not in severe],
+         "standard_json_input_sha256": sha256_bytes(input_bytes),
+-        "standard_json_output_sha256": sha256_bytes(proc.stdout),
+-        "stderr_sha256": sha256_bytes(proc.stderr),
++        "standard_json_output_sha256": sha256_bytes(stdout),
++        "stderr_sha256": sha256_bytes(stderr),
++        "timeout": False,
++        "receipt": str(out_dir / "solc-receipt.json"),
+         "note": "creation bytecode and deployed runtime bytecode are distinct hashes",
+     }
+     write_json(out_dir / "compile.json", report)

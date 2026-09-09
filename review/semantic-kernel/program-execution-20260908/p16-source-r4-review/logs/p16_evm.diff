@@ -1,0 +1,266 @@
+--- r3/scripts/token0_p16/p16_evm.py
++++ r4/scripts/token0_p16/p16_evm.py
+@@ -3,11 +3,13 @@
+ 
+ Process failure is distinct from a semantic EVM revert or exception. go-ethereum
+ evm run prints returndata and an error line but still exits 0 on revert.
++Invalid invocation evidence is never classified as a semantic result.
+ """
+ from __future__ import annotations
+ 
+ import argparse
+ import json
++import re
+ import sys
+ from pathlib import Path
+ 
+@@ -20,6 +22,7 @@
+     SENDER,
+     decode_uint160,
+     encode_probe_calldata,
++    invocation_is_complete,
+     record_cmd,
+     sha256_file,
+     sha256_text,
+@@ -89,43 +92,131 @@
+     "note": "istanbulBlock=0 with later forks omitted is the bound execution fork. Compiler evmVersion is a separate compile setting.",
+ }
+ 
+-
+-def classify_evm_stdout(stdout: str, process_exit: int | None, timeout: bool) -> dict:
+-    if timeout:
+-        return {
+-            "class": "process_timeout",
+-            "status": "blocked",
+-            "reason": "evm process timeout is setup/blocked, not a semantic mutant detection",
+-        }
+-    if process_exit not in (0, None) and "0x" not in stdout:
+-        return {
+-            "class": "process_failure",
+-            "status": "blocked",
+-            "process_exit": process_exit,
+-            "reason": "evm process failed before a classified semantic observation",
+-            "stdout": stdout,
+-        }
++ABI_WORD = re.compile(r"^0x[0-9a-fA-F]{64}$")
++
++
++def _blocked(klass: str, reason: str, extra: dict | None = None) -> dict:
++    return {"class": klass, "status": "blocked", "reason": reason, **(extra or {})}
++
++
++def classify_evm_stdout(
++    stdout: str,
++    process_exit: int | None,
++    timeout: bool,
++    *,
++    receipt: dict | None = None,
++    purpose: str = "token0_probe",
++) -> dict:
++    rec = receipt or {}
++    wrapper_exit = (rec.get("_wrapper") or {}).get("wrapper_exit")
++    cancelled = bool(rec.get("cancelled"))
++    classification = rec.get("classification")
++    if rec and rec.get("valid") is False:
++        return _blocked(
++            "invalid_invocation",
++            rec.get("reason") or "current invocation receipt is not valid",
++            {"wrapper_exit": wrapper_exit, "recorder_classification": classification},
++        )
++    if timeout or classification == "timeout_blocked":
++        return _blocked(
++            "process_timeout",
++            "evm process timeout is setup/blocked, not a semantic mutant detection",
++            {"process_exit": process_exit, "wrapper_exit": wrapper_exit},
++        )
++    if cancelled or classification == "cancelled":
++        return _blocked(
++            "process_cancelled",
++            "evm process cancellation is setup/blocked, not a semantic observation",
++            {"process_exit": process_exit, "wrapper_exit": wrapper_exit},
++        )
++    if classification == "crash" or (isinstance(process_exit, int) and process_exit < 0) or process_exit is None:
++        return _blocked(
++            "process_crash",
++            "crash or unknown child exit is setup/blocked; partial stdout is not a semantic revert",
++            {
++                "process_exit": process_exit,
++                "wrapper_exit": wrapper_exit,
++                "stdout_bytes": len(stdout.encode("utf-8", "replace")),
++            },
++        )
++    if rec and not invocation_is_complete(rec):
++        return _blocked(
++            "invalid_invocation",
++            rec.get("reason") or "invocation is not a completed pinned EVM run",
++            {"process_exit": process_exit, "wrapper_exit": wrapper_exit},
++        )
++    if process_exit != 0:
++        return _blocked(
++            "process_failure",
++            "evm process failed before a classified semantic observation",
++            {"process_exit": process_exit, "wrapper_exit": wrapper_exit, "stdout": stdout},
++        )
++    if wrapper_exit not in (0, None) and wrapper_exit != 0:
++        return _blocked(
++            "invalid_invocation",
++            "wrapper exit is not success for a semantic EVM observation",
++            {"wrapper_exit": wrapper_exit, "process_exit": process_exit},
++        )
++
+     lines = [ln.rstrip("\n") for ln in stdout.splitlines()]
+     hex_line = ""
+     err_line = None
+     for ln in lines:
+         stripped = ln.strip()
+-        if stripped.startswith("0x") and not hex_line:
+-            hex_line = stripped
+-        if "error:" in stripped.lower() or stripped.lower().startswith("error:"):
++        if ABI_WORD.match(stripped) and not hex_line:
++            hex_line = stripped.lower()
++        elif stripped.lower() in ("0x",) and not hex_line:
++            hex_line = "0x"
++        if "error:" in stripped.lower():
+             err_line = stripped
+-    payload = hex_line.lower() if hex_line else "0x"
+-    if err_line is None and process_exit in (0, None) and hex_line:
+-        value = decode_uint160(payload)
++    emptyish = stdout.strip() in ("", "0x")
++    if err_line is None and emptyish:
++        if purpose == "genesis_stop":
++            return {
++                "class": "stop_smoke",
++                "status": "ok",
++                "returndata": "0x",
++                "reason": "STOP smoke: empty returndata, no error, process exit 0",
++                "process_exit": process_exit,
++            }
++        return _blocked(
++            "unknown_output",
++            "empty or STOP-like returndata is not a recognized token0 ABI uint160 result",
++            {"stdout": stdout, "process_exit": process_exit},
++        )
++    if err_line is None and hex_line and ABI_WORD.match(hex_line):
++        if purpose == "genesis_stop":
++            return _blocked(
++                "unknown_output",
++                "genesis STOP smoke produced a 32-byte word, not empty STOP output",
++                {"returndata": hex_line},
++            )
++        value = decode_uint160(hex_line)
++        if value is None:
++            return _blocked(
++                "malformed_output",
++                "returndata is 32 bytes but is not a valid ABI uint160 word",
++                {"returndata": hex_line, "process_exit": process_exit},
++            )
+         return {
+             "class": "success",
+             "status": "ok",
+-            "returndata": payload,
++            "returndata": hex_line,
+             "uint160": value,
+             "reason": "ABI-encoded uint160 returndata, no EVM error line",
++            "process_exit": process_exit,
+         }
+-    err_l = (err_line or stdout).lower()
+-    if "execution reverted" in err_l or "evm: execution reverted" in err_l:
++    if err_line is None:
++        return _blocked(
++            "unknown_output",
++            "unrecognized EVM stdout is not a token0 success, revert, exception, or STOP smoke",
++            {"stdout": stdout, "process_exit": process_exit},
++        )
++    err_l = err_line.lower()
++    payload = hex_line if hex_line else "0x"
++    if "execution reverted" in err_l:
++        if purpose == "genesis_stop":
++            return _blocked("unknown_output", "genesis STOP smoke reverted", {"error": err_line})
+         return {
+             "class": "evm_revert",
+             "status": "revert",
+@@ -134,15 +225,12 @@
+             "reason": "semantic EVM revert; process may still exit 0",
+             "process_exit": process_exit,
+         }
+-    if process_exit not in (0, None) and not hex_line:
+-        return {
+-            "class": "process_failure",
+-            "status": "blocked",
+-            "process_exit": process_exit,
+-            "error": err_line,
+-            "stdout": stdout,
+-            "reason": "evm process failure without semantic returndata",
+-        }
++    if purpose == "genesis_stop":
++        return _blocked(
++            "unknown_output",
++            "genesis STOP smoke is not an exceptional halt",
++            {"error": err_line},
++        )
+     return {
+         "class": "evm_exception",
+         "status": "exception",
+@@ -176,10 +264,11 @@
+     out_dir: Path,
+     evm: Path = EVM,
+     timeout: float = 30.0,
++    purpose: str = "token0_probe",
+ ) -> dict:
+     out_dir.mkdir(parents=True, exist_ok=True)
+     if not evm.is_file():
+-        report = {"status": "blocked_missing_evm", "evm": str(evm)}
++        report = {"status": "blocked_missing_evm", "evm": str(evm), "observation": _blocked("invalid_invocation", "missing evm")}
+         write_json(out_dir / "observation.json", report)
+         return report
+     evm_sha = sha256_file(evm)
+@@ -188,6 +277,7 @@
+             "status": "blocked_evm_hash_mismatch",
+             "sha256": evm_sha,
+             "expected": EXPECTED_EVM_SHA256,
++            "observation": _blocked("invalid_invocation", "evm hash mismatch"),
+         }
+         write_json(out_dir / "observation.json", report)
+         return report
+@@ -210,12 +300,16 @@
+         RECEIVER,
+     ]
+     receipt = record_cmd(name, argv, cwd=out_dir, out_dir=out_dir / "record", timeout=timeout)
+-    stdout = Path(receipt["_wrapper"]["stdout_path"]).read_text(errors="replace") if Path(receipt["_wrapper"]["stdout_path"]).is_file() else ""
++    stdout_path = Path((receipt.get("_wrapper") or {}).get("stdout_path") or "")
++    stdout = stdout_path.read_text(errors="replace") if stdout_path.is_file() else ""
+     classification = classify_evm_stdout(
+         stdout,
+         receipt.get("exit"),
+         bool(receipt.get("timeout")),
++        receipt=receipt,
++        purpose=purpose,
+     )
++    status = "blocked" if classification.get("status") == "blocked" else "observed"
+     report = {
+         "name": name,
+         "argv": argv,
+@@ -232,15 +326,20 @@
+         "sender": SENDER,
+         "receiver": RECEIVER,
+         "process_exit": receipt.get("exit"),
+-        "wrapper_exit": receipt["_wrapper"]["wrapper_exit"],
++        "wrapper_exit": (receipt.get("_wrapper") or {}).get("wrapper_exit"),
+         "timeout": receipt.get("timeout"),
++        "cancelled": receipt.get("cancelled"),
++        "receipt_valid": bool(receipt.get("valid")),
++        "receipt_reason": receipt.get("reason"),
+         "recorder_classification": receipt.get("classification"),
++        "status": status,
+         "observation": classification,
+-        "stdout_sha256": receipt.get("stdout_sha256"),
+-        "stderr_sha256": receipt.get("stderr_sha256"),
++        "stdout_sha256": receipt.get("stdout_sha256") if receipt.get("valid") else (sha256_text(stdout) if stdout_path.is_file() else None),
++        "stderr_sha256": receipt.get("stderr_sha256") if receipt.get("valid") else None,
+         "start_utc": receipt.get("start_utc"),
+         "end_utc": receipt.get("end_utc"),
+         "model_failure_names_are_not_source_payloads": True,
++        "purpose": purpose,
+     }
+     write_json(out_dir / "observation.json", report)
+     return report
