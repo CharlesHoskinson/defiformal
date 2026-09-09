@@ -5,9 +5,10 @@ Authorization: user approved saving and executing the assessed plan on 2026-09-0
 Implementation: GPT-6 / stock Codex harness. Review: native Grok and Fable CLIs.
 Foreman is not used.
 
-Current user assignment (2026-09-09) for remaining program work: native AGY
-Gemini 3.8 Flash High (`gemini-3.8-flash-high`, high effort) authors; native Claude
-Opus independently reviews; Codex orchestrates; no Foreman. Historical sprint
+Current user assignment (2026-09-09) for remaining program work: native Grok
+4.6 (`grok-4.6`, high reasoning effort) authors; native Claude Opus independently
+reviews; Codex orchestrates; no Foreman. This restores Grok after AGY R1-R4;
+AGY-authored candidates and evidence retain their original identity. Historical sprint
 sections below retain original model identities. This ledger does not relabel
 completed GPT, Grok, Fable or Opus reviews.
 

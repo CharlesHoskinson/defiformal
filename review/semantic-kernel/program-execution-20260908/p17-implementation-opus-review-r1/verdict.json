@@ -1,0 +1,164 @@
+{
+  "schema": "p17-opus-implementation-review-verdict/v1",
+  "review": "independent native Claude Opus full-scope P17 implementation review, round 1",
+  "reviewer_requested_model": "opus",
+  "reviewer_reported_model": "recorded by root in the native process receipt, not self-asserted here",
+  "author_under_review": "native AGY gemini-3.8-flash-high (effort high), candidate agy-r4",
+  "candidate_archive": "review/semantic-kernel/program-execution-20260908/p17-implementation-agy-r4-candidate.tar.gz",
+  "candidate_archive_sha256_before_review": "47ad3d6787affbbe8e96d402c74f307fb377360a4fee5847bab83eb18b6bed6f",
+  "candidate_archive_sha256_after_review": "47ad3d6787affbbe8e96d402c74f307fb377360a4fee5847bab83eb18b6bed6f",
+  "candidate_files_verified_present": 16735,
+  "frozen_planning_files_byte_identical": 67,
+  "baseline_lean_files_unchanged": 180,
+  "new_lean_files": 10,
+
+  "verdict": "CHANGES_REQUIRED",
+  "acceptance": false,
+  "implementation_accepted": false,
+
+  "summary": "The substantive P17 obligations are genuinely implemented and independently reproduced: a fresh 4.33.0-rc2 build of the ten new Lean modules (995/995, 0 sorry, 0 custom axioms, 0 native_decide, axiom audits 175/175 and 73/73 theorems, forbidden=0), a 17/17 vault source campaign with 19-cell model-versus-EVM comparison and complete emitter-bound logs, a 12/12 token0 campaign preserving the accepted P16 r6 fail-closed grammar, 2 vault and 6 token0 genuinely compiled production mutants with intact controls, and both adapters instantiating the unchanged Typed.execute_ok_iff with proved e.Valid premises. This is not a scalar-only, wrapper-only or arithmetic-only delivery. Five concrete defects remain, one of which (R-2) is the accepted contract's own gate condition for P17.platform_reuse.",
+
+  "independently_reproduced": {
+    "lean_build_exit": 0,
+    "lean_jobs": "995/995",
+    "vault_axiom_audit": {"theorems": "175/175", "declarations": "184/184", "forbidden": 0},
+    "token0bridge_axiom_audit": {"theorems": "73/73", "declarations": "62/62", "forbidden": 0},
+    "vault_runtime_denominator": 20,
+    "vault_source_campaign": {"denominator": 17, "ok": 17, "fail": 0, "blocked": 0, "exit": 0},
+    "token0_source_campaign": {"denominator": 12, "ok": 12, "fail": 0, "blocked": 0, "exit": 0},
+    "vault_production_mutants": {"tested": 2, "detected": 2, "controls_ok": true},
+    "token0_production_mutants": {"tested": 6, "detected": 6, "controls_ok": true},
+    "retargeted_model_consumer_boundary": {"checks": 10, "matched": 10},
+    "protocol_controls": {"parser": "30/30", "extended_logs": "6/6"},
+    "reviewer_discrimination_controls": {"checks": 7, "matched": 6, "failed": ["c6-model-ok-where-source-reverts"]}
+  },
+
+  "required_repairs": [
+    {
+      "id": "R-1",
+      "severity": "moderate",
+      "binds": ["task 4.1", "P17-TH-TOKEN0-BRIDGE", "scenario: Quote-register is model-only", "scenario: Ordinary token0 add is a nonzero quote-register effect"],
+      "title": "The token0 quote-register wrap is not built via Quantity.toQuantity from the library result, and the pre-register binding is never stated",
+      "location": "lean/DefiKernel/ConcentratedLiquidity/Token0Bridge.lean:38 (lift), :172 (lift_scale_one), :175-176 (preQ, postQ)",
+      "trigger": "grep -n 'preQ\\|postQ\\|lift' lean/DefiKernel/ConcentratedLiquidity/Token0Bridge.lean : `lift` and `lift_scale_one` are defined and never used; preQ and postQ are bare rational literals; no theorem relates them to sqrtP_Q96 or postWord.",
+      "soundness": "Not unsound. Reviewer diagnostic C2 proves preQ = (lift sqrtP_Q96).amount and postQ = (lift postWord).amount, each in one line, exit 0.",
+      "repair": "Define preQ := (lift sqrtP_Q96).amount and postQ := (lift postWord).amount (or state the two equalities as theorems and rewrite with them in evaluated_Valid / ordinary_effect_nonzero), so the template quantities are the scale-1 lift of the actual library input and the actual library Word 160 result.",
+      "why_it_matters": "The obligation names Quantity.toQuantity as the lift and requires the pre-register to equal the input sqrtPX96. A helper that exists but is never called earns no credit, and this is the token0 half of the two-case reuse witness."
+    },
+    {
+      "id": "R-2",
+      "severity": "blocking for P17.platform_reuse",
+      "binds": ["task 4.4", "scenario: Missing inventory keeps the gate open"],
+      "title": "The case-two inventory measures new definitions only; new assumptions, interface changes and effort are absent",
+      "location": "review/.../agy-r4/case-two-inventory.json and CASE-TWO-INVENTORY.md",
+      "trigger": "case-two-inventory.json top-level keys are [case,status,candidate,execution_path,author,reviewer,date,metrics,deployment_and_prestate_reconciliation,new_definitions]; new_definitions has only [lean_modules, engine_modules]. grep -in 'assumption|interface change|effort' over both artifacts returns no inventory content.",
+      "repair": "Add measured case-two entries for (a) new assumptions introduced by case two -- Usds/Vat/Join mocks as harness, storage-seeded chi for D1, the stable-time D0/D1 domain, G-UNCHECKED-SUPPLY-WRAP, G-MULDIV-UNBOUNDED-PRODUCT, no deployment identity; (b) interface changes the shared engine required to admit case two -- run_fixtures signature, validate_model_receipt, 19-cell observation schema, VAULT_ERROR_CONTEXT_MAP, compile settings parameterization; (c) an effort measure.",
+      "why_it_matters": "The accepted spec's THEN clause is that P17.platform_reuse remains false when these are not measured. That clause is currently active, so the reuse gate cannot be opened regardless of the campaign results."
+    },
+    {
+      "id": "R-3",
+      "severity": "moderate",
+      "binds": ["P16 r6 fail-closed grammar (1 vs 3)", "task 5.1/5.2 mutation sensitivity"],
+      "title": "A well-formed model row that claims success where the source refuses is scored blocked (3) instead of demonstrated semantic false (1)",
+      "location": "scripts/platform_engine/vault_exec.py, revert branch: `if lean_status != \"error\" or not lean_failure: gate = \"blocked\" if not lean_failure else \"fail\"`",
+      "trigger": "Reviewer control c6 in work/checks/r4-opus-falsifiers/results.json: supply an intact-shaped Lean row with status=ok for P17-DEP-BAD-RECV, whose source genuinely reverts. Expected fail/exit 1; observed blocked/exit 3. The mirror case c7 (model claims refusal where the source succeeds) correctly yields fail/exit 1.",
+      "repair": "When the model row is present, well-formed and complete but its success/refusal disposition disagrees with the observed source disposition, set gate='fail'. Reserve gate='blocked' for absent, malformed or unmapped rows -- the unmapped-label path (control c5) is already correct.",
+      "why_it_matters": "vault_mutants.py counts detection only when the designated gate is 'fail', so any future mutant whose designated falsification lands on a refusal fixture would be recorded as not detected."
+    },
+    {
+      "id": "R-4",
+      "severity": "moderate",
+      "binds": ["task 5.1", "task 5.2", "mutation sensitivity cannot pass empty or omit unavailable members"],
+      "title": "The token0 mutation-detection predicate never compares the mutant against the intact expectation",
+      "location": "scripts/platform_engine/token0_campaign.py:459-461",
+      "trigger": "`detected = (des_status == 'ok' and des_ret_uint == des_planned['value'])` -- detection is defined as the mutant reproducing its own pre-registered mutated prediction. Nothing asserts planned_designated differs from P16_FIXTURES[designated]['expected'].",
+      "status_today": "All six planned mutated outputs do in fact differ from their intact expectations (reviewer-verified table in REVIEW.md), so this run's 6/6 detection is substantively real.",
+      "repair": "Assert planned_designated != the intact fixture expectation (blocked otherwise), and/or define detection as the scored comparison against the intact expectation failing, matching vault_mutants.py's `gate == 'fail'`.",
+      "why_it_matters": "As written the check cannot fail for a non-detecting mutant, which is exactly the empty-check pattern the gate register forbids."
+    },
+    {
+      "id": "R-5",
+      "severity": "moderate",
+      "binds": ["P17-TH-NEGATIVE", "scenario: No-credit candidate is not Valid failure", "RR-4"],
+      "title": "RR-COMPLIANCE.md asserts the negative theorem is an Evaluated.Valid failure, which the accepted obligation forbids and the candidate's own Lean disproves",
+      "location": "review/.../agy-r4/RR-COMPLIANCE.md, RR-4 bullet: \"`no_credit_mismatch` proves credit perturbations fail `Evaluated.Valid`\"",
+      "trigger": "Adapter.no_credit_is_observation proves `(evaluated wadQ sharesQ).Valid store ctx req (fundedState ...) AND NOT (forall c, noCreditCandidate.balance c = pre.balance c + effect c)`. Valid HOLDS; only the execute_ok_iff post equality fails. P17-TH-NEGATIVE records not_predicate = Evaluated.Valid.",
+      "repair": "Restate the RR-4 bullet as an execute_ok_iff observation-correspondence mismatch under a Valid that holds, matching Adapter.no_credit_is_observation. The Lean is correct; only the prose needs correcting.",
+      "why_it_matters": "A stated claim is a claim; this is precisely the confusion the scenario exists to exclude."
+    },
+    {
+      "id": "R-6",
+      "severity": "low",
+      "binds": ["task 6.1"],
+      "title": "scenario-map.json marks all 34 scenarios ok, but six citations do not support their scenario",
+      "location": "review/.../agy-r4/scenario-map.json entries 2, 27, 30, 31, 32, 33, 34",
+      "trigger": "Entry 2 (Locator branch is not the pin) cites evm/execute/fixtures/score.json, which says nothing about the git ref. Entries 30/31/32 cite the same 17/17 score.json for the planning diagnose.py --empty-corpus / --wrong-literal / --unavailable modes. Entry 33 cites the intact campaign's P17-RED-D0 observation rather than mutants/V-TF-SKIP/result.json. Entry 27 cites the artifact that fails its own scenario (R-2). Entry 34 cites CASE-TWO-INVENTORY.md, which does not mention gates.",
+      "repair": "Cite the artifact that actually demonstrates each scenario, and mark planning-gate scenarios as inherited from the accepted planning acceptance rather than re-claimed from implementation evidence."
+    },
+    {
+      "id": "R-7",
+      "severity": "low",
+      "binds": ["task 6.3", "scenario: Wider families remain gated", "planning-acceptance errata requirement"],
+      "title": "No current record supersedes the now-stale frozen remaining-gates.json, and the L2-token remainder is not named",
+      "location": "openspec/changes/vault-platform-reuse-p17/remaining-gates.json (correctly frozen and unchanged)",
+      "trigger": "The frozen file still records bounded_source_execution 'open_zero_campaign_runs', model_bridge 'designed_not_implemented' and G-EVM-DUMP-ROUNDTRIP 'chained evm run --dump not verified as next prestate' -- all three are now done. named_gaps has no L2-token entry, which task 6.3 requires.",
+      "repair": "Publish an implementation-era gates/errata record (not an edit to the frozen planning bytes) naming accrual/_rpow, UUPS, permit/IERC1271, L2 token, deployed identity, P21 and P30, and stating exactly which frozen statuses it supersedes."
+    },
+    {
+      "id": "R-8",
+      "severity": "low",
+      "binds": ["author reproduction instructions", "evidence binding"],
+      "title": "The claimed 10/10 model-consumer precheck ships no artifact and its published reproduction command does not test R4",
+      "location": "AGY R4 final response and CANDIDATE-SUMMARY.md command 7",
+      "trigger": "p17-agy-r3-model-consumer-precheck/replay.py sets ENGINE = p17-agy-r3-final-protocol-precheck/engine and common.ROOT = /home/charl/defiformal, so it exercises the frozen R3 engine; its own saved results.json records matched 4 of 10. The candidate contains only a single-fixture scratch-consumer/intact run.",
+      "reviewer_finding": "The underlying claim is nonetheless TRUE: the reviewer retargeted the same ten checks at the R4 engine with fresh deployment, genesis and Lean rows and obtained 10/10 (C6).",
+      "repair": "Ship the retargeted harness and its results inside the candidate and correct the reproduction command so it imports scripts/platform_engine from the candidate."
+    },
+    {
+      "id": "R-9",
+      "severity": "low",
+      "binds": ["scenario: Deposit full log includes USDS Transfer", "scenario: D0 deposit is exact", "observation-contract.json"],
+      "title": "The emitter-filtered vault projection is declared in the observation contract but never computed or compared",
+      "location": "scripts/platform_engine/ (no occurrence of 'projection'); observation-contract.json log_mode 'full_evm_logs_and_vault_emitter_projection', vault_projection_filter 'emitter == vault'",
+      "trigger": "grep -rn projection scripts/platform_engine/ returns nothing; rows carry only observed_logs and log_cmp against expected.full_logs.",
+      "note": "The requirement body says the projection MAY be recorded, so this is scenario completeness rather than a hard violation; the full-log half is fully met.",
+      "repair": "Compute and record the emitter == vault projection beside observed_logs, or narrow the observation contract and the two scenario clauses."
+    }
+  ],
+
+  "advisories_no_repair_required": [
+    "score_rows' required_ids on the vault path is derived from the already-filtered fixture list (residue of diagnostic F8, which root declined to treat as blocking). The public campaign does run all 17 and token0 already passes the canonical 12-id list. Consider passing common.VAULT_FIXTURE_IDS on full runs and tagging subset scope explicitly.",
+    "Task 2.5's `blocked_missing_compiler` class label is not emitted; behaviour is correct (blocked, exit 3, never scored as agreement) via pin_tool/SetupBlocked.",
+    "Compile evidence records full creation and runtime bytecode but no bytecode-hash field. The reviewer computed SUsds creation sha256 9f8138560a97e23c4070e75d7b73011908b4da82c8c6be540a87884b362d1bd0 and confirmed it differs from the recorded IPFS smoke-only hash 8277f71a7ddddb5821d04026c6cec449bacb9cda057ab56e97b61b7b731bf425.",
+    "case-two-inventory.json describes DefiKernel.Vault.Adapter as containing 'deposit and redeem templates'; only a deposit template exists.",
+    "The author's headline reports the axiom audit as 73/73 theorems and 62/62 declarations; that is the Token0Bridge line only. The DefiKernel.Vault audit is 175/175 and 184/184. Under-reported, not incorrect.",
+    "Task 2.3 has no separate unscored dump-roundtrip smoke artifact, though the production path round-trips the evm --dump alloc into the post genesis and re-observes it on every success fixture.",
+    "Root's first in-progress inspection point is resolved: Examples.runtimeChecks no longer contains literal-true placeholder rows for P17-POS-DEPOSIT-CREDIT, P17-NEG-MINT-NO-CREDIT or P17-TOKEN0-BRIDGE; all three now evaluate real comparisons with a falsifying perturbation, and the file carries an explicit erratum naming the historical placeholders.",
+    "Root's second in-progress inspection point is resolved: Adapter.library_convert binds librarySharesWord to the actual convertToShares output, so the deposit template quantities are library-derived rather than a wadQ/wadQ specialization."
+  ],
+
+  "scope_limitations": [
+    "This review covers the frozen P17 candidate only. It is not a whole-DeFiFormal completion review and claims none.",
+    "No mainnet, deployed-address, block, bytecode-identity or codehash claim is made or accepted. Usds/Vat/Join mocks remain harness assumptions.",
+    "Accrual with timestamp > rho, _rpow, vat.suck, usdsJoin.exit, permit/IERC1271, UUPS upgrade and the L2 token remain out of scope and unverified.",
+    "The quote register is a model-only synthetic register: not Uniswap pool storage, not cash settlement, not a source observation.",
+    "P21 widening and P30 source refinement remain closed. No composition or sequential token0-to-vault workflow is claimed.",
+    "D0/D1 is a stable-time domain (timestamp == rho); D1 chi is a storage seed that is explicitly not protocol-reachable.",
+    "Bounded EVM execution and Lean #eval runtime rows are finite witnesses, not proofs; the Lean theorems are the mathematical authority.",
+    "Reviewer diagnostics (work/checks/*, lean/review_opus_diag/) are review-authored artifacts, separately identified, with intact controls. They are not candidate source and grant the candidate no credit.",
+    "The reviewer did not read or write the author worktree at any point."
+  ],
+
+  "scoped_gate_recommendation": {
+    "lean_proof_scope": "PASS - independently rebuilt from source on the pinned toolchain with clean axiom audits",
+    "vault_bounded_source_execution": "PASS on evidence (17/17, denominator 17), conditional on R-3",
+    "token0_p16_preservation": "PASS (12/12, r6 fail-closed grammar preserved and control-verified)",
+    "vault_production_mutation": "PASS (2/2 detected, controls intact)",
+    "token0_production_mutation": "PASS on data (6/6, runtime_changed true), predicate requires R-4",
+    "platform_reuse": "DO NOT SET - blocked by R-2, which is the accepted contract's own gate condition; R-1 additionally weakens the token0 half of the two-case reuse witness",
+    "implementation_accepted": "false pending R-1 through R-5; R-6 through R-9 are lower priority but should accompany the same repair round",
+    "wider_family_gate": "remains closed"
+  },
+
+  "recommendation": "Return to the author for a targeted repair round on R-1 through R-5, carrying R-6 through R-9 in the same pass. No re-planning, no re-execution of the accepted planning gate, and no rollback experiment is required. The campaigns, proofs and mutants do not need to be redone from scratch: R-1 and R-5 are edits to two files, R-3 and R-4 are localized predicate corrections in the shared engine that require re-running the two mutant campaigns and the boundary suite, and R-2 and R-6 through R-9 are evidence and record corrections. Root adopts or rejects this recommendation and handles integration; the reviewer publishes no acceptance."
+}

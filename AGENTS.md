@@ -150,3 +150,16 @@ planning or narrow the full core objective. No Foreman, no merge to main,
 Atlas stays parked, and root publishes only to `semantic-kernel-pivot`.
 Use new evidence directories for new AGY runs; frozen Grok evidence must not
 be overwritten. Recover current dispatch from CURRENT.json and STATE.json.
+
+## Author restored to Grok, 2026-09-09
+
+The user instructed: "grok is back up, use grok 4.6 instead of Gemini".
+Native Grok `grok-4.6` with high reasoning effort now implements future core
+work; native Claude Opus remains the independent reviewer. This supersedes
+the AGY author assignment for upcoming dispatches. Preserve AGY R1-R4 source
+and evidence with their original authorship. Continue the current P17 candidate
+from the completed Opus implementation review and root-adjudicated repair brief;
+do not revert to the earlier Grok partial or restart accepted planning.
+No Foreman, no main merge, no extra windows, Atlas stays parked. Root publishes
+accepted work only to semantic-kernel-pivot. Use new grok-r5 attempt directories
+and recover current dispatch from CURRENT.json and STATE.json.

@@ -1,0 +1,890 @@
+{
+  "schema": "p17-opus-implementation-review-scenario-verdicts/v1",
+  "candidate_archive_sha256": "47ad3d6787affbbe8e96d402c74f307fb377360a4fee5847bab83eb18b6bed6f",
+  "legend": {
+    "met": "requirement discharged by evidence the reviewer independently produced or verified",
+    "met_with_gap": "core requirement discharged; a named sub-clause of the accepted obligation is unstated",
+    "met_with_advisory": "requirement discharged; a non-blocking observation is attached",
+    "met_inherited": "discharged at the already-accepted planning gate; substance re-verified against the current engine",
+    "partial": "materially advanced but an accepted sub-requirement is open",
+    "not_met": "an accepted requirement is unresolved; earns CHANGES_REQUIRED"
+  },
+  "counts": {
+    "scenarios": {
+      "met": 25,
+      "met_with_gap": 2,
+      "not_met": 1,
+      "partial": 2,
+      "met_inherited": 4,
+      "total": 34
+    },
+    "proof_obligations": {
+      "met": 9,
+      "not_met": 1,
+      "total": 10
+    },
+    "tasks": {
+      "met": 16,
+      "met_with_advisory": 2,
+      "not_met": 2,
+      "met_with_defect": 1,
+      "partial": 2,
+      "total": 23
+    },
+    "binding_review_corrections": {
+      "met": 4,
+      "partial": 1,
+      "total": 5
+    }
+  },
+  "scenarios": [
+    {
+      "spec_file": "openspec/changes/vault-platform-reuse-p17/specs/platform-reuse-experiment/spec.md",
+      "line": 11,
+      "requirement": "One engine executes token0 and vault",
+      "scenario": "Wrapper of two campaigns is not one engine",
+      "clauses": [
+        "- **WHEN** a candidate shells out to a token0 campaign and a vault campaign behind a common function name",
+        "- **THEN** `P17.platform_reuse` remains false"
+      ],
+      "status": "met",
+      "evidence_class": "reviewer-executed",
+      "evidence": [
+        "C3",
+        "C5",
+        "scripts/platform_engine/{common,compile,evm,score,prestate,abi,keccak}.py"
+      ],
+      "reviewer_note": "Both campaigns drive the same parameterized compile/prestate/observe/score modules; token0 and vault differ only in solc pin, fork, calldata and observation schema. Not a wrapper over two campaigns."
+    },
+    {
+      "spec_file": "openspec/changes/vault-platform-reuse-p17/specs/platform-reuse-experiment/spec.md",
+      "line": 19,
+      "requirement": "Shared lemma and execute_ok_iff are instantiated by both adapters",
+      "scenario": "Ordinary token0 add is a nonzero quote-register effect",
+      "clauses": [
+        "- **WHEN** the token0 Typed adapter is instantiated on `(2^96, 1, 1, true)`",
+        "- **THEN** `execute_ok_iff` is applied to a QuoteSqrtP debit/supply decrease of `2^95` and MUST NOT use an empty-delta template as the reuse witness"
+      ],
+      "status": "met_with_gap",
+      "evidence_class": "proof+reviewer-executed",
+      "evidence": [
+        "C1",
+        "C5",
+        "Token0Bridge.library_ordinary_add",
+        "Token0Bridge.ordinary_add_nonzero_debit"
+      ],
+      "reviewer_note": "execute_ok_iff is instantiated on a QuoteSqrtP effect of postQ-preQ = 2^95-2^96 (nonzero, a debit/supply decrease), not an empty-delta template, and the EVM probe returns 2^95. GAP R-1: the effect quantities are bare rationals, not the Quantity.toQuantity lift of the library word."
+    },
+    {
+      "spec_file": "openspec/changes/vault-platform-reuse-p17/specs/platform-reuse-experiment/spec.md",
+      "line": 23,
+      "requirement": "Shared lemma and execute_ok_iff are instantiated by both adapters",
+      "scenario": "Vault deposit accounting is proved from deltas",
+      "clauses": [
+        "- **WHEN** the vault deposit adapter is instantiated on `P17-DEP-D0`",
+        "- **THEN** USDS party effects sum to 0 and sUSDS effects equal supply, derived from the template deltas rather than assumed as the post-state hypothesis"
+      ],
+      "status": "met",
+      "evidence_class": "proof",
+      "evidence": [
+        "C1",
+        "Adapter.evaluated_accountingOK",
+        "Adapter.template_evaluate",
+        "Adapter.evaluated_supply_susds"
+      ],
+      "reviewer_note": "accountingOK/supply are derived from the template deltas via template_evaluate (rfl) and proved, not assumed as a post-state hypothesis."
+    },
+    {
+      "spec_file": "openspec/changes/vault-platform-reuse-p17/specs/platform-reuse-experiment/spec.md",
+      "line": 31,
+      "requirement": "Token0 bridge does not invent source ledger history",
+      "scenario": "Pure helper observation omits ledger fields",
+      "clauses": [
+        "- **WHEN** a token0 source observation is recorded",
+        "- **THEN** it contains only the four inputs and the uint160 result or revert, even if a separate Typed wrap exists"
+      ],
+      "status": "met",
+      "evidence_class": "reviewer-executed",
+      "evidence": [
+        "C5",
+        "work/campaigns/token0-r1/opus-review-1/evm/token0-execute/rows.json"
+      ],
+      "reviewer_note": "All 12 token0 rows carry only the four inputs, returndata uint or revert status, and the scalar model row. No ledger cells."
+    },
+    {
+      "spec_file": "openspec/changes/vault-platform-reuse-p17/specs/platform-reuse-experiment/spec.md",
+      "line": 35,
+      "requirement": "Token0 bridge does not invent source ledger history",
+      "scenario": "Quote-register is model-only",
+      "clauses": [
+        "- **WHEN** the token0 Typed wrap is described",
+        "- **THEN** `model_only` is true, `pool_storage` is false, `cash_settlement` is false, the pre-register equals input sqrtPX96, and scale 1 means raw Q96 units"
+      ],
+      "status": "met_with_gap",
+      "evidence_class": "proof",
+      "evidence": [
+        "C1",
+        "Token0Bridge.lean scope comment",
+        "Token0Bridge.scale1"
+      ],
+      "reviewer_note": "Distinct Party/Asset/Domain namespace, scale 1, explicit not-pool-storage / not-cash-settlement scope note. GAP R-1: 'pre-register equals input sqrtPX96' is true by literal but is never stated as a theorem binding preQ to sqrtP_Q96."
+    },
+    {
+      "spec_file": "openspec/changes/vault-platform-reuse-p17/specs/platform-reuse-experiment/spec.md",
+      "line": 43,
+      "requirement": "Composition is unclaimed; inventory is required",
+      "scenario": "No fabricated sequential workflow",
+      "clauses": [
+        "- **WHEN** token0 next-price and vault deposit are reported",
+        "- **THEN** the reuse report records library/interface/executor reuse only and does not add a fake two-operation workflow"
+      ],
+      "status": "met",
+      "evidence_class": "reviewer-inspected",
+      "evidence": [
+        "C1",
+        "C3",
+        "C5"
+      ],
+      "reviewer_note": "No token0->vault sequencing exists in the Lean modules or the engine; the two cases share infrastructure only."
+    },
+    {
+      "spec_file": "openspec/changes/vault-platform-reuse-p17/specs/platform-reuse-experiment/spec.md",
+      "line": 47,
+      "requirement": "Composition is unclaimed; inventory is required",
+      "scenario": "Missing inventory keeps the gate open",
+      "clauses": [
+        "- **WHEN** adapters exist but case-two additions/assumptions/interfaces/effort are not measured",
+        "- **THEN** `P17.platform_reuse` remains false"
+      ],
+      "status": "not_met",
+      "evidence_class": "reviewer-inspected",
+      "evidence": [
+        "case-two-inventory.json",
+        "CASE-TWO-INVENTORY.md"
+      ],
+      "reviewer_note": "DEFECT R-2. The inventory measures new definitions only. No new assumptions, no interface changes, no effort. This scenario's THEN clause is that P17.platform_reuse remains false; that clause is therefore active."
+    },
+    {
+      "spec_file": "openspec/changes/vault-platform-reuse-p17/specs/vault-conversion-observation/spec.md",
+      "line": 11,
+      "requirement": "Public converters use drip then floor or ceil then mint or burn",
+      "scenario": "D0 deposit is exact",
+      "clauses": [
+        "- **WHEN** initialized `chi = RAY`, `timestamp = rho`, finite `USDS.allowance[S][vault] = 10^18`, and `deposit(10^18, R)` succeeds with observed USDS credit",
+        "- **THEN** shares minted equal `10^18`, finite USDS allowance is consumed to 0, full logs are `vault.Drip`, `usds.Transfer(S,vault,10^18)`, `vault.Deposit`, `vault.Transfer(0,R,shares)`, and the vault projection is the same list without the USDS Transfer"
+      ],
+      "status": "met",
+      "evidence_class": "reviewer-executed",
+      "evidence": [
+        "C3",
+        "work/campaigns/vault-r1/opus-review-1/evm/execute/fixtures/P17-DEP-D0/observation.json"
+      ],
+      "reviewer_note": "shares=10^18; usds.allowance.S.vault post = 0 (finite allowance consumed); full logs exactly [vault.Drip, usds.Transfer(S,vault,10^18), vault.Deposit, vault.Transfer(0,R,10^18)]; all 19 cells compared against the Lean model row. Projection half: see R-9."
+    },
+    {
+      "spec_file": "openspec/changes/vault-platform-reuse-p17/specs/vault-conversion-observation/spec.md",
+      "line": 15,
+      "requirement": "Public converters use drip then floor or ceil then mint or burn",
+      "scenario": "D1 deposit floors",
+      "clauses": [
+        "- **WHEN** stored `chi = RAY+1`, `timestamp = rho`, and `deposit(10^18, R)` is applied",
+        "- **THEN** shares equal `10^18 - 1` and MUST NOT be reported as the ceiling `10^18`"
+      ],
+      "status": "met",
+      "evidence_class": "reviewer-executed+proof",
+      "evidence": [
+        "C3",
+        "C1",
+        "Operations.deposit_floor_shares"
+      ],
+      "reviewer_note": "ok_shares = 999999999999999999 = floor(10^18*RAY/(RAY+1)), independently recomputed by the reviewer; EVM, Lean model and fixture literal all agree; not the ceiling."
+    },
+    {
+      "spec_file": "openspec/changes/vault-platform-reuse-p17/specs/vault-conversion-observation/spec.md",
+      "line": 23,
+      "requirement": "Mint and withdraw use _divup, including the zero-numerator clause",
+      "scenario": "D1 mint ceils",
+      "clauses": [
+        "- **WHEN** stored `chi = RAY+1` by harness storage seed, `timestamp = rho`, sender USDS and finite allowance are `10^18+1`, and `mint(10^18, R)` is applied",
+        "- **THEN** assets equal `10^18 + 1` and the fixture MUST NOT reuse a `10^18` USDS balance"
+      ],
+      "status": "met",
+      "evidence_class": "reviewer-executed+proof",
+      "evidence": [
+        "C3",
+        "C1",
+        "Operations.mint_ceil_assets"
+      ],
+      "reviewer_note": "ok_assets = 10^18+1 = divup(10^18*(RAY+1),RAY), independently recomputed; fixture funds usds.balance.S and allowance at 10^18+1, not 10^18."
+    },
+    {
+      "spec_file": "openspec/changes/vault-platform-reuse-p17/specs/vault-conversion-observation/spec.md",
+      "line": 31,
+      "requirement": "Scored source fixtures are complete deterministic witnesses",
+      "scenario": "D1 chi is a storage seed",
+      "clauses": [
+        "- **WHEN** a D1 fixture is constructed",
+        "- **THEN** `chi_setup` is `storage_seed_chi_after_initialize`, `chi_setup_protocol_reachable` is false, and initialize-only `chi = RAY` is not treated as D1"
+      ],
+      "status": "met",
+      "evidence_class": "reviewer-inspected",
+      "evidence": [
+        "fixtures.json P17-*-D1 pre"
+      ],
+      "reviewer_note": "chi_setup=storage_seed_chi_after_initialize, chi_setup_protocol_reachable=false, chi_setup_is_harness_assumption=true on all four D1 fixtures; D0 keeps initialize_sets_chi_RAY."
+    },
+    {
+      "spec_file": "openspec/changes/vault-platform-reuse-p17/specs/vault-conversion-observation/spec.md",
+      "line": 35,
+      "requirement": "Scored source fixtures are complete deterministic witnesses",
+      "scenario": "Redeem controls are independently funded",
+      "clauses": [
+        "- **WHEN** mutant V-TF-SKIP or V-DEP-CEIL is planned",
+        "- **THEN** P17-RED-D0, P17-RED-D1 and P17-RED-ALLOW already contain shares, totalSupply and vault USDS in prestate, not produced by the mutated deposit"
+      ],
+      "status": "met",
+      "evidence_class": "reviewer-inspected+executed",
+      "evidence": [
+        "C3",
+        "C4",
+        "fixtures.json P17-RED-D0/D1/ALLOW pre"
+      ],
+      "reviewer_note": "Each redeem fixture's prestate directly declares susds.balance.O, susds.totalSupply and usds.balance.vault; materialize_pre seeds storage. No control is produced by a (possibly mutated) deposit."
+    },
+    {
+      "spec_file": "openspec/changes/vault-platform-reuse-p17/specs/vault-conversion-observation/spec.md",
+      "line": 43,
+      "requirement": "_mint refuses invalid receiver before transferFrom",
+      "scenario": "Zero receiver reverts without transfer",
+      "clauses": [
+        "- **WHEN** `deposit(10^18, address(0))` is applied",
+        "- **THEN** the revert is `SUsds/invalid-address` and `transferFrom` is not required to have been called"
+      ],
+      "status": "met",
+      "evidence_class": "reviewer-executed+proof",
+      "evidence": [
+        "C3",
+        "C1",
+        "Operations.deposit_invalid_zero",
+        "Operations.deposit_invalid_self"
+      ],
+      "reviewer_note": "EVM reverts SUsds/invalid-address; the Lean model refuses at guardReceiver, which precedes mintAfterGuard, proved even under the hypothesis that conversion succeeded."
+    },
+    {
+      "spec_file": "openspec/changes/vault-platform-reuse-p17/specs/vault-conversion-observation/spec.md",
+      "line": 47,
+      "requirement": "_mint refuses invalid receiver before transferFrom",
+      "scenario": "Zero deposit is success",
+      "clauses": [
+        "- **WHEN** `deposit(0, R)` is applied with a valid receiver",
+        "- **THEN** shares equal 0 and the case is not classified as a refusal"
+      ],
+      "status": "met",
+      "evidence_class": "reviewer-executed",
+      "evidence": [
+        "C3",
+        "work/campaigns/vault-r1/opus-review-1/evm/execute/fixtures/P17-DEP-ZERO/observation.json"
+      ],
+      "reviewer_note": "gate ok, evm_status ok, shares 0; classified as success, not refusal."
+    },
+    {
+      "spec_file": "openspec/changes/vault-platform-reuse-p17/specs/vault-conversion-observation/spec.md",
+      "line": 55,
+      "requirement": "Transfer and authorization guards are taken from source",
+      "scenario": "Empty USDS balance is transfer refusal",
+      "clauses": [
+        "- **WHEN** a valid receiver is used and the sender has 0 USDS",
+        "- **THEN** deposit refuses via the USDS token (`Usds/insufficient-balance` under the captured mock assumption) and sUSDS supply is unchanged"
+      ],
+      "status": "met",
+      "evidence_class": "reviewer-executed",
+      "evidence": [
+        "C3",
+        "P17-DEP-TF-BAL"
+      ],
+      "reviewer_note": "Refusal decoded as Usds/insufficient-balance under the captured mock assumption and mapped from the Lean SUsds/insufficient-balance label by the declared (operation,label) origin map; sUSDS supply unchanged."
+    },
+    {
+      "spec_file": "openspec/changes/vault-platform-reuse-p17/specs/vault-conversion-observation/spec.md",
+      "line": 59,
+      "requirement": "Transfer and authorization guards are taken from source",
+      "scenario": "Spender without allowance cannot redeem",
+      "clauses": [
+        "- **WHEN** `redeem` is called by `P \u2260 owner` with `allowance[owner][P] = 0`",
+        "- **THEN** the revert is `SUsds/insufficient-allowance` and owner shares and vault USDS are unchanged"
+      ],
+      "status": "met",
+      "evidence_class": "reviewer-executed+proof",
+      "evidence": [
+        "C3",
+        "C1",
+        "P17-RED-ALLOW",
+        "Operations.burnShares_insufficientAllowance"
+      ],
+      "reviewer_note": "Revert SUsds/insufficient-allowance; owner shares and vault USDS retained in the supplied prestate."
+    },
+    {
+      "spec_file": "openspec/changes/vault-platform-reuse-p17/specs/vault-conversion-observation/spec.md",
+      "line": 67,
+      "requirement": "Overflow protection uses premises, not desired accounting",
+      "scenario": "Huge deposit product overflows checked mul",
+      "clauses": [
+        "- **WHEN** `assets = 2^256/RAY + 1` and `chi = RAY`",
+        "- **THEN** deposit refuses before `_mint` and Lean MUST NOT treat `Rounding.mulDiv` unbounded product as that source observation"
+      ],
+      "status": "met",
+      "evidence_class": "reviewer-executed+proof",
+      "evidence": [
+        "C3",
+        "C1",
+        "P17-DEP-MUL-OVF",
+        "Operations.deposit_mulOverflow",
+        "Conversion.convertToShares_mulOverflow"
+      ],
+      "reviewer_note": "assets = 2^256/RAY + 1 exactly (reviewer-recomputed); EVM Panic(0x11); Lean refuses via Operations.mul at width 256 under the premise 2^256 <= assets*RAY. Rounding.mulDiv unbounded product is NOT equated to the source refusal."
+    },
+    {
+      "spec_file": "openspec/changes/vault-platform-reuse-p17/specs/vault-conversion-observation/spec.md",
+      "line": 75,
+      "requirement": "No-credit negative is execute_ok_iff observation correspondence",
+      "scenario": "No-credit candidate is not Valid failure",
+      "clauses": [
+        "- **WHEN** the honest deposit template with `assets = 10^18` is instantiated",
+        "- **THEN** `P17-NEG-MINT-NO-CREDIT` rejects `candidate.USDS.vault = pre.USDS.vault` against `execute_ok_iff` post equality, `not_predicate` is `Evaluated.Valid`, and `P17-POS-DEPOSIT-CREDIT` is the matching positive"
+      ],
+      "status": "met",
+      "evidence_class": "proof",
+      "evidence": [
+        "C1",
+        "Adapter.no_credit_is_observation",
+        "Adapter.no_credit_mismatch",
+        "Adapter.positive_credit"
+      ],
+      "reviewer_note": "Valid HOLDS on the pre-state (wad_Valid) and the rejected candidate fails only the execute_ok_iff post equality; the matching positive P17-POS-DEPOSIT-CREDIT derives post.USDS.vault = pre + wadQ under the same premises. NOTE R-5: RR-COMPLIANCE.md prose asserts the opposite of this proof."
+    },
+    {
+      "spec_file": "openspec/changes/vault-platform-reuse-p17/specs/vault-conversion-observation/spec.md",
+      "line": 83,
+      "requirement": "Full logs and vault projection are both bound",
+      "scenario": "Deposit full log includes USDS Transfer",
+      "clauses": [
+        "- **WHEN** P17-DEP-D0 succeeds",
+        "- **THEN** the second full-log entry is `usds.Transfer(S, vault, 10^18)` and the vault projection omits that entry because its emitter is not the vault"
+      ],
+      "status": "partial",
+      "evidence_class": "reviewer-executed",
+      "evidence": [
+        "C3",
+        "P17-DEP-D0 observed_logs"
+      ],
+      "reviewer_note": "First conjunct met: the second full-log entry is usds.Transfer(S,vault,10^18) with emitter bound. Second conjunct (the emitter-filtered vault projection omitting it) is not computed anywhere; see R-9."
+    },
+    {
+      "spec_file": "openspec/changes/vault-platform-reuse-p17/specs/vault-harness-assumptions/spec.md",
+      "line": 11,
+      "requirement": "Import closure does not implement token movement",
+      "scenario": "Mock transfer still needs balance observation",
+      "clauses": [
+        "- **WHEN** a deposit fixture uses `UsdsMock.transferFrom`",
+        "- **THEN** the observation records pre/post USDS balances and MUST NOT treat a non-reverting call as asset credit by itself"
+      ],
+      "status": "met",
+      "evidence_class": "reviewer-executed",
+      "evidence": [
+        "C3",
+        "P17-DEP-D0 pre-obs/post-obs"
+      ],
+      "reviewer_note": "Pre and post USDS balances are observed by actual view calls on both sides; a non-reverting transferFrom is never treated as credit by itself."
+    },
+    {
+      "spec_file": "openspec/changes/vault-platform-reuse-p17/specs/vault-harness-assumptions/spec.md",
+      "line": 19,
+      "requirement": "Stable-time domain is explicit and bounded",
+      "scenario": "D0 drip does not suck",
+      "clauses": [
+        "- **WHEN** a D0 deposit is specified",
+        "- **THEN** the package records `timestamp == rho`, `diff = 0`, and no Vat yield realization as an observation of that fixture"
+      ],
+      "status": "met",
+      "evidence_class": "reviewer-executed+proof",
+      "evidence": [
+        "C3",
+        "C1",
+        "Operations.dripChi_stable"
+      ],
+      "reviewer_note": "Genesis timestamp = rho = 1700000000; Drip log carries diff=0; chi unchanged; dripChi is proved to return st.chi only when timestamp = rho and chi > 0. No Vat yield realization."
+    },
+    {
+      "spec_file": "openspec/changes/vault-platform-reuse-p17/specs/vault-harness-assumptions/spec.md",
+      "line": 27,
+      "requirement": "Proxy initialize is harness, not deployment identity",
+      "scenario": "Implementation-only deposit is excluded",
+      "clauses": [
+        "- **WHEN** the uninitialized implementation has `chi = 0`",
+        "- **THEN** that path is a named remainder, not a D0/D1 success fixture"
+      ],
+      "status": "met",
+      "evidence_class": "proof+inspection",
+      "evidence": [
+        "C1",
+        "Operations.dripChi",
+        "remaining-gates.json"
+      ],
+      "reviewer_note": "chi = 0 makes dripChi error divisionByZero, so no uninitialized-implementation path can be a D0/D1 success fixture; the harness always targets the initialized proxy."
+    },
+    {
+      "spec_file": "openspec/changes/vault-platform-reuse-p17/specs/vault-planning-evidence/spec.md",
+      "line": 11,
+      "requirement": "Gate accepted stays false until independent GPT-6 review",
+      "scenario": "Author freeze is not self-acceptance",
+      "clauses": [
+        "- **WHEN** this planning package is completed",
+        "- **THEN** result.json status is `pending_independent_gpt6_review` and no frozen program task checkbox is ticked"
+      ],
+      "status": "met",
+      "evidence_class": "reviewer-inspected",
+      "evidence": [
+        "openspec/changes/vault-platform-reuse-p17/tasks.md"
+      ],
+      "reviewer_note": "0 of 23 task checkboxes ticked; the candidate claims delivery, not acceptance; this independent review is the gate."
+    },
+    {
+      "spec_file": "openspec/changes/vault-platform-reuse-p17/specs/vault-planning-evidence/spec.md",
+      "line": 19,
+      "requirement": "P16 observations and fail-closed behavior are preserved",
+      "scenario": "P16 source gate remains independent",
+      "clauses": [
+        "- **WHEN** this P17 planning slice is accepted",
+        "- **THEN** P16 source-consumer R1/R2 repairs remain their own gate and P17.platform_reuse stays false until the reuse experiment is implemented and independently accepted"
+      ],
+      "status": "met",
+      "evidence_class": "reviewer-executed",
+      "evidence": [
+        "C5",
+        "C10"
+      ],
+      "reviewer_note": "Token0/P16 scores on its own canonical 12-id required set with the P16 r6 fail-closed grammar preserved verbatim; P17.platform_reuse is not set (see R-2)."
+    },
+    {
+      "spec_file": "openspec/changes/vault-platform-reuse-p17/specs/vault-planning-evidence/spec.md",
+      "line": 27,
+      "requirement": "Inventories are nonempty and class-separated",
+      "scenario": "Empty fixture inventory is blocked",
+      "clauses": [
+        "- **WHEN** diagnose.py is run with `--empty-corpus`",
+        "- **THEN** the process exits 3 and production_mutation_credit remains 0"
+      ],
+      "status": "met_inherited",
+      "evidence_class": "reviewer-executed",
+      "evidence": [
+        "C10",
+        "planning/grok-r2/diagnose.py"
+      ],
+      "reviewer_note": "The scenario's diagnose.py --empty-corpus mode belongs to the accepted planning gate. Substance re-verified on the current engine: score_rows([]) -> blocked, exit 3, denominator 0, zero credit. Citation defect R-6."
+    },
+    {
+      "spec_file": "openspec/changes/vault-platform-reuse-p17/specs/vault-planning-evidence/spec.md",
+      "line": 31,
+      "requirement": "Inventories are nonempty and class-separated",
+      "scenario": "Wrong D1 literal is a property failure",
+      "clauses": [
+        "- **WHEN** diagnose.py is run with `--wrong-literal`",
+        "- **THEN** the process exits 1 because the mutated D1 deposit expected shares disagree with the independent floor formula"
+      ],
+      "status": "met_inherited",
+      "evidence_class": "reviewer-executed",
+      "evidence": [
+        "C7 (c3)",
+        "planning/grok-r2/diagnose.py"
+      ],
+      "reviewer_note": "Planning-gate mode. Substance re-verified: perturbing the D1 return literal in the model row yields fail/exit 1, and the reviewer independently recomputed the floor formula. Citation defect R-6."
+    },
+    {
+      "spec_file": "openspec/changes/vault-platform-reuse-p17/specs/vault-planning-evidence/spec.md",
+      "line": 35,
+      "requirement": "Inventories are nonempty and class-separated",
+      "scenario": "Unavailable Lean predicate source is blocked",
+      "clauses": [
+        "- **WHEN** diagnose.py is run with `--unavailable`",
+        "- **THEN** the process exits 3 because `Evaluated.Valid` cannot be lifted"
+      ],
+      "status": "met_inherited",
+      "evidence_class": "reviewer-executed",
+      "evidence": [
+        "C6 (missing-model-row, blocked receipts)",
+        "planning/grok-r2/diagnose.py"
+      ],
+      "reviewer_note": "Planning-gate mode. Substance re-verified: unavailable Lean rows/receipts block with exit 3 on both consumers. Citation defect R-6."
+    },
+    {
+      "spec_file": "openspec/changes/vault-platform-reuse-p17/specs/vault-planning-evidence/spec.md",
+      "line": 39,
+      "requirement": "Inventories are nonempty and class-separated",
+      "scenario": "Characteristic mutant has an unaffected control",
+      "clauses": [
+        "- **WHEN** mutant V-TF-SKIP is planned",
+        "- **THEN** designated false is P17-DEP-D0 and P17-RED-D0 plus P17-DEP-BAD-RECV remain independent unaffected controls"
+      ],
+      "status": "met",
+      "evidence_class": "reviewer-executed",
+      "evidence": [
+        "C4",
+        "work/campaigns/vault-r1/opus-review-1/mutants/V-TF-SKIP/result.json"
+      ],
+      "reviewer_note": "V-TF-SKIP designated false P17-DEP-D0 gate=fail; P17-RED-D0 and P17-DEP-BAD-RECV (plus P17-RED-ALLOW) gate=ok on the mutant deployment. Citation defect R-6 (map cites the intact campaign row)."
+    },
+    {
+      "spec_file": "openspec/changes/vault-platform-reuse-p17/specs/vault-planning-evidence/spec.md",
+      "line": 47,
+      "requirement": "P21 and P30 stay closed for this increment",
+      "scenario": "Wider families remain gated",
+      "clauses": [
+        "- **WHEN** this planning package is frozen",
+        "- **THEN** remaining-gates.json records P21 resource-gated by unimplemented `P17.platform_reuse` and P30 source refinement open"
+      ],
+      "status": "partial",
+      "evidence_class": "reviewer-inspected",
+      "evidence": [
+        "remaining-gates.json (frozen planning)",
+        "CASE-TWO-INVENTORY.md"
+      ],
+      "reviewer_note": "Frozen remaining-gates.json does record P21 in must_not_claim and P30 as open source_refinement. But it is stale on three statuses the implementation has since changed, omits the L2-token remainder required by task 6.3, and the cited CASE-TWO-INVENTORY.md does not mention gates at all. See R-7."
+    },
+    {
+      "spec_file": "openspec/changes/vault-platform-reuse-p17/specs/vault-source-readiness/spec.md",
+      "line": 11,
+      "requirement": "Main SUsds is the vault pin, not L2",
+      "scenario": "L2 file is a different contract",
+      "clauses": [
+        "- **WHEN** captured `src/SUsds.sol` and `src/l2/SUsds.sol` are hashed",
+        "- **THEN** the digests differ, L2 lacks `deposit`/`chi`/`drip`, and the selected pin is the main file"
+      ],
+      "status": "met",
+      "evidence_class": "reviewer-inspected",
+      "evidence": [
+        "capture/src/SUsds.sol",
+        "capture/src/l2/SUsds.sol"
+      ],
+      "reviewer_note": "Reviewer-computed digests differ (9fe0c713... vs bcf6dfab...); the L2 file's only 'chi' match is the string 'mrchico' in a copyright line and it has no deposit/drip; the compiled pin is the main file."
+    },
+    {
+      "spec_file": "openspec/changes/vault-platform-reuse-p17/specs/vault-source-readiness/spec.md",
+      "line": 15,
+      "requirement": "Main SUsds is the vault pin, not L2",
+      "scenario": "Locator branch is not the pin",
+      "clauses": [
+        "- **WHEN** the package records the Git identity",
+        "- **THEN** the commit is `dfc7f41cb7599afcb0f0eb1ddaadbf9dd4015dce` and `refs/heads/susds` is labelled locator-only"
+      ],
+      "status": "met_inherited",
+      "evidence_class": "planning-artifact",
+      "evidence": [
+        "source-pin.json (frozen planning)"
+      ],
+      "reviewer_note": "Commit/locator identity is a frozen planning record accepted at the planning gate. Citation defect R-6: the map cites fixtures/score.json, which says nothing about the git ref."
+    },
+    {
+      "spec_file": "openspec/changes/vault-platform-reuse-p17/specs/vault-source-readiness/spec.md",
+      "line": 23,
+      "requirement": "Ten-key import closure matches captured bytes",
+      "scenario": "Closure count is ten",
+      "clauses": [
+        "- **WHEN** captured compiler-source keys are re-hashed",
+        "- **THEN** they match `source-pin.json` and `compile-source-closure.json` for exactly those ten keys"
+      ],
+      "status": "met",
+      "evidence_class": "reviewer-inspected+executed",
+      "evidence": [
+        "C3",
+        "compile-source-closure/"
+      ],
+      "reviewer_note": "Exactly ten .sol keys in the compiled closure (1 src/SUsds.sol + 9 OpenZeppelin); the three mocks are separately labelled generated_mock_not_captured_source."
+    },
+    {
+      "spec_file": "openspec/changes/vault-platform-reuse-p17/specs/vault-source-readiness/spec.md",
+      "line": 31,
+      "requirement": "Campaign compiler settings are distinct from smoke artifacts",
+      "scenario": "Smoke hashes are not campaign identities",
+      "clauses": [
+        "- **WHEN** compile-smoke.json records IPFS metadata bytecode",
+        "- **THEN** the planning package records those hashes as administrative feasibility only and freezes campaign `bytecodeHash none`"
+      ],
+      "status": "met",
+      "evidence_class": "reviewer-executed",
+      "evidence": [
+        "C3",
+        "compiler-harness-plan.json administrative_smoke"
+      ],
+      "reviewer_note": "Campaign settings freeze bytecodeHash none; reviewer-computed campaign SUsds creation sha256 9f813856... differs from the recorded IPFS smoke-only hash 8277f71a...."
+    },
+    {
+      "spec_file": "openspec/changes/vault-platform-reuse-p17/specs/vault-source-readiness/spec.md",
+      "line": 39,
+      "requirement": "Vault EVM fork is pinned separately from token0",
+      "scenario": "Istanbul genesis is not the vault fork",
+      "clauses": [
+        "- **WHEN** a vault source score is planned",
+        "- **THEN** the package names a separate Shanghai prestate and does not reuse P16 Istanbul genesis as vault state"
+      ],
+      "status": "met",
+      "evidence_class": "reviewer-executed",
+      "evidence": [
+        "C3",
+        "C5"
+      ],
+      "reviewer_note": "Vault genesis carries shanghaiTime 0; token0 genesis has no shanghaiTime (Istanbul); the two genesis files are distinct by hash."
+    }
+  ],
+  "proof_obligations": [
+    {
+      "id": "P17-TH-FLOOR-SHARES",
+      "statement": "Under chi > 0 and assets * RAY < 2^256, convertToShares and deposit (stable-time nChi = chi) equal Rounding.divideNat .down (assets * RAY) chi, equivalently mulDiv .down under that product premise.",
+      "status": "met",
+      "reviewer_note": "Conversion.convertToShares_floor + Operations.deposit_floor_shares under chi>0 and assets*RAY<2^256; witnesses P17-DEP-D0/D1 in C1 runtime rows and C3 EVM rows."
+    },
+    {
+      "id": "P17-TH-CEIL-ASSETS",
+      "statement": "Under chi > 0 and shares * chi < 2^256, mint/previewMint assets equal _divup(shares * chi, RAY), i.e. Rounding.divideNat .up.",
+      "status": "met",
+      "reviewer_note": "Conversion.previewMint_ok + Operations.mint_ceil_assets under shares*chi<2^256; witnesses P17-MINT-D0/D1."
+    },
+    {
+      "id": "P17-TH-FLOOR-ASSETS",
+      "statement": "Redeem assets equal floor(shares * chi / RAY) under the same product premise.",
+      "status": "met",
+      "reviewer_note": "Conversion.convertToAssets_ok + Operations.redeem_floor_assets; witnesses P17-RED-D0/D1."
+    },
+    {
+      "id": "P17-TH-CEIL-SHARES",
+      "statement": "Withdraw shares equal _divup(assets * RAY, chi) under the product premise.",
+      "status": "met",
+      "reviewer_note": "Conversion.previewWithdraw_ok + Operations.withdraw_ceil_shares; witnesses P17-WD-D0/D1."
+    },
+    {
+      "id": "P17-TH-MINT-ORDER",
+      "statement": "Public deposit/mint success is drip then conversion then _mint in that order. invalid-address refuses before transferFrom. transferFrom is required before share/supply updates.",
+      "status": "met",
+      "reviewer_note": "depositImpl orders dripChi >>= convertToShares >>= guardReceiver >>= mintAfterGuard; deposit_invalid_zero/self prove address refusal even when conversion succeeds; deposit_transfer_error and mintAfterGuard_success prove transferFrom precedes share/supply updates. mintShares_success carries the real totalSupply and balanceOf overflow premises rather than the source comment. Witnesses P17-DEP-D0, P17-DEP-BAD-RECV, P17-DEP-TF-BAL."
+    },
+    {
+      "id": "P17-TH-BURN-AUTH",
+      "statement": "Public redeem/withdraw success is drip then conversion then _burn. insufficient-balance and insufficient-allowance (owner != sender, finite allowance) are source refusals. usds.transfer is after share burn; its success is not asset-credit proof without observing USDS balances.",
+      "status": "met",
+      "reviewer_note": "burnShares_insufficientBalance / burnShares_insufficientAllowance are source refusals; burnShares_success_self and burnShares_success_delegated give complete post-states including the finite allowance decrement; usdsTransfer follows the burn in withdraw/redeem and asset credit is only claimed from observed USDS cells. Witnesses P17-RED-BAL, P17-RED-ALLOW, P17-RED-D0, P17-RED-DELEGATED."
+    },
+    {
+      "id": "P17-TH-CHECKED-MUL",
+      "statement": "On deposit, if assets * RAY >= 2^256 then the 0.8.21 checked multiplication refuses (Panic 0x11). Lean Operations.mul at width 256 refuses mulOverflow. Rounding.mulDiv unbounded product MUST NOT be equated to that source refusal.",
+      "status": "met",
+      "reviewer_note": "convertToShares_mulOverflow and deposit_mulOverflow refuse under 2^256 <= assets*RAY via Operations.mul at width 256. The unbounded Rounding.mulDiv is never equated to the source refusal; the named gap G-MULDIV-UNBOUNDED-PRODUCT is preserved. Witness P17-DEP-MUL-OVF observed as Panic(0x11)."
+    },
+    {
+      "id": "P17-TH-ADAPTER-DEPOSIT",
+      "statement": "The honest deposit template is library-derived: USDS sender -assets, vault +assets, supply 0; sUSDS receiver +shares, supply +shares. Instantiating execute_ok_iff uses e.Valid on the pre-state and those effects as preconditions. The post equality post.balance = pre.balance + e.effect is a separate conjunct. Implementation MUST NOT assume the desired post-state as a Valid hypothesis.",
+      "status": "met",
+      "reviewer_note": "librarySharesWord is bound to the actual conversion output by Adapter.library_convert, and wadQ/sharesQ are Quantity.toQuantity images at positive scale (library_derivation). execute_ok_iff_deposit specializes the unchanged Typed.execute_ok_iff; e.Valid is proved (wad_Valid), not assumed, and the post equality is a separate conjunct. This closes root's open question about Adapter binding shares to a conversion result."
+    },
+    {
+      "id": "P17-TH-TOKEN0-BRIDGE",
+      "statement": "Token0 quote-register template is built from the actual successful library Word 160. The pre-register QuoteSqrtP balance equals the input sqrtPX96. Scale is 1, meaning raw Q96 units, not an unscaled economic price. Ordinary add (2^96,1,1,true) is a nonzero debit/supply decrease of 2^95. The register is synthetic model-only: not Uniswap pool storage, not cash settlement, not a source observation. Source token0 observations remain four inputs plus uint160|revert.",
+      "status": "not_met",
+      "reviewer_note": "DEFECT R-1. library_ordinary_add proves the library returns 2^95 and execute_ok_iff_quote specializes the unchanged Typed.execute_ok_iff on a nonzero QuoteSqrtP debit, with model_only/pool_storage/cash_settlement scope stated and token0 source observations left at four inputs plus uint160|revert. But the obligation's named mechanism -- Quantity.toQuantity lift and the pre-register binding to the input sqrtPX96 -- is not implemented: `lift`/`lift_scale_one` are defined and never used, and preQ/postQ are bare rational literals with no binding theorem. Reviewer diagnostic C2 proves both bindings hold in one line, so this is unstated, not unsound."
+    },
+    {
+      "id": "P17-TH-NEGATIVE",
+      "statement": "For the honest deposit template with assets > 0, execute_ok_iff derives post.USDS.vault = pre.USDS.vault + assets. The candidate observation candidate.USDS.vault = pre.USDS.vault cannot equal that result. Evaluated.Valid has no post-state argument and remains a precondition on store, context, request, pre-state and effects. This is rejection of an incorrect proposed observation, not an executor refusal, and not a generic cross-asset-backing claim. The matching positive is P17-POS-DEPOSIT-CREDIT under the same premises.",
+      "status": "met",
+      "reviewer_note": "Adapter.no_credit_is_observation proves Valid HOLDS and the candidate observation fails the derived post equality; not_predicate is correctly NOT Evaluated.Valid; assets>0 via wad_pos; matching positive Adapter.positive_credit under the same premises; no cross-asset backing claim. See R-5 for the candidate prose that contradicts this proof."
+    }
+  ],
+  "tasks": [
+    {
+      "n": 1,
+      "line": 7,
+      "requirement": "1.1 Obtain independent GPT-6 review of this exact `vault-platform-reuse-p17` candidate, record verdict, requested/reported model identity, and input hashes, and verify `gate_accepted` remains false until that review.",
+      "status": "met",
+      "reviewer_note": "This independent native Opus review is that gate; requested/reported model and input hashes are recorded by root. gate_accepted remains false; 0/23 checkboxes ticked."
+    },
+    {
+      "n": 2,
+      "line": 8,
+      "requirement": "1.2 Re-hash the captured ten-key closure, main versus L2 `SUsds.sol`, foundry.toml, compiler binary, and compile-smoke receipt, and verify they still match `source-pin.json` and `compiler-harness-plan.json`.",
+      "status": "met",
+      "reviewer_note": "Reviewer re-hashed the ten-key closure, main vs L2 SUsds, the pinned solc binary and the campaign settings; all match. Advisory: the executed evidence records full creation/runtime bytecode but no bytecode-hash field; the reviewer computed it and confirmed it differs from the IPFS smoke hash."
+    },
+    {
+      "n": 3,
+      "line": 9,
+      "requirement": "1.3 After acceptance only, run `cd lean && lake build DefiKernel.Arithmetic.Verify` on the repo toolchain pin `leanprover/lean4:v4.33.0-rc2`, and verify exit 0 with saved argv/cwd/UTC/logs before adding Vault modules.",
+      "status": "met",
+      "reviewer_note": "Fresh C1 build on leanprover/lean4:v4.33.0-rc2 with saved argv/cwd/UTC/logs, exit 0, 995/995. No cached olean existed for any of the 10 new modules."
+    },
+    {
+      "n": 4,
+      "line": 13,
+      "requirement": "2.1 Extract `scripts/platform_engine/` from delivered `scripts/token0_p16/record_cmd.py` plus compile/prestate/score, with portable path/settings, and verify token0 and vault campaigns call that engine rather than wrapping two campaigns.",
+      "status": "met",
+      "reviewer_note": "scripts/platform_engine/ exists and both campaigns call it (C3, C5). Confirmed not two wrapped campaigns: shared compile/prestate/evm/score/recorder with per-case parameters."
+    },
+    {
+      "n": 5,
+      "line": 14,
+      "requirement": "2.2 Compile captured `src/SUsds.sol` plus the ten-key closure with solc `0.8.21+commit.d9974bed` SHA-256 `f2857a898be15c69e8de5598dcd3f3e169e94964a0ce9a0bbb1b111f145a81df`, optimizer 200, shanghai, `bytecodeHash none`, without editing captured bytes, and verify bytecode hashes are recorded and are not the IPFS smoke hashes.",
+      "status": "met",
+      "reviewer_note": "C3 compiled captured SUsds.sol plus the ten-key closure with the hash-validated solc 0.8.21+commit.d9974bed, optimizer 200, shanghai, bytecodeHash none, captured bytes unedited."
+    },
+    {
+      "n": 6,
+      "line": 15,
+      "requirement": "2.3 Bind a Shanghai-enabled genesis JSON (not P16 Istanbul), verify `evm run --dump` roundtrip with an unscored smoke, and verify missing/unusable dump is `blocked_missing_evm` exit 3.",
+      "status": "met_with_advisory",
+      "reviewer_note": "Shanghai genesis bound and distinct from the token0 Istanbul genesis; the evm run --dump alloc is round-tripped into the post genesis and re-observed on every success fixture; blocked_missing_evm exit 3 is implemented in evm.py and prestate.py. Advisory: no separate unscored dump smoke artifact is shipped."
+    },
+    {
+      "n": 7,
+      "line": 16,
+      "requirement": "2.4 Deploy VatMock, UsdsMock, UsdsJoinMock, SUsds implementation, and ERC1967 proxy; call `initialize`; and verify mocks remain labelled harness assumptions and no address/block/codehash identity is claimed.",
+      "status": "met",
+      "reviewer_note": "C3 deployed VatMock, UsdsMock, UsdsJoinMock, the SUsds implementation and ERC1967Proxy, then called initialize() (selector 0x8129fc1c). Mocks are labelled generated_mock_not_captured_source; no address/block/codehash identity is claimed."
+    },
+    {
+      "n": 8,
+      "line": 17,
+      "requirement": "2.5 If solc or evm cannot be bound, record `blocked_missing_compiler` or `blocked_missing_evm` with the missing identity, and verify that status is not scored as source agreement.",
+      "status": "met_with_advisory",
+      "reviewer_note": "compile.py returns blocked/exit 3 with the missing identity via pin_tool/SetupBlocked and never scores it as agreement. Advisory: the specific class label `blocked_missing_compiler` is not emitted (only `blocked_missing_evm` is)."
+    },
+    {
+      "n": 9,
+      "line": 21,
+      "requirement": "3.1 Create `lean/DefiKernel/Vault/Types.lean` and `Conversion.lean` using `Rounding.divideNat` / premised `mulDiv` and `Operations.mul` for 0.8.21 product overflow, and verify `_divup` matches source including the zero-numerator clause with `chi > 0`.",
+      "status": "met",
+      "reviewer_note": "Vault/Types.lean and Vault/Conversion.lean use Rounding.divideNat and premised mulDiv with Operations.mul for the 0.8.21 product overflow; divUp is Rounding.divideNat .up with divUp_zero giving the zero-numerator clause under chi > 0."
+    },
+    {
+      "n": 10,
+      "line": 22,
+      "requirement": "3.2 Implement deposit/mint/withdraw/redeem under D0/D1 premises with ordered drip/_mint/_burn, and verify invalid-address runs before transferFrom and that successful transferFrom is not treated as USDS credit without observed balances.",
+      "status": "met",
+      "reviewer_note": "Operations.lean implements deposit/mint/withdraw/redeem with ordered drip/_mint/_burn; deposit_invalid_zero/self prove invalid-address precedes transferFrom; asset credit is only asserted from observed USDS cells, never from a non-reverting transferFrom."
+    },
+    {
+      "n": 11,
+      "line": 23,
+      "requirement": "3.3 Evaluate scored source fixtures P17-DEP-D0, P17-MINT-D0, P17-RED-D0, P17-WD-D0, P17-DEP-D1, P17-MINT-D1, P17-RED-D1, P17-WD-D1, P17-DEP-ZERO, P17-DEP-BAD-RECV, P17-DEP-SELF, P17-DEP-TF-BAL, P17-DEP-TF-ALLOW, P17-RED-BAL, P17-RED-ALLOW, and P17-DEP-MUL-OVF against the independent literals and complete prestates in `fixtures.json`, including D1 mint USDS `10^18+1`, independently funded redeem controls, finite USDS allowance consumption, and full logs with USDS Transfer, and verify every comparison is true with nonempty unique IDs.",
+      "status": "met",
+      "reviewer_note": "C3 evaluated all 16 frozen fixtures plus P17-RED-DELEGATED against fixtures.json literals and complete 19-cell prestates: D1 mint funded at 10^18+1, redeem controls funded from prestate, finite USDS allowance consumed to 0, full logs including the underlying USDS Transfer. Every comparison true, 17 unique nonempty ids."
+    },
+    {
+      "n": 12,
+      "line": 24,
+      "requirement": "3.4 Prove conversion bounds and authorized supply changes under `proof-obligations.json` using overflow premises rather than the source overflow-comment conclusion, and verify P17-NEG-MINT-NO-CREDIT is an execute_ok_iff observation mismatch with matching positive P17-POS-DEPOSIT-CREDIT, not an Evaluated.Valid failure.",
+      "status": "met",
+      "reviewer_note": "Proof obligations discharged per the obligations table; the overflow premises are used rather than the source overflow comment; P17-NEG-MINT-NO-CREDIT is an execute_ok_iff observation mismatch with the matching positive, not an Evaluated.Valid failure."
+    },
+    {
+      "n": 13,
+      "line": 28,
+      "requirement": "4.1 Implement the token0 quote-register Typed wrap via `Quantity.toQuantity` from the actual library result, with pre-register equal to input sqrtPX96 and scale 1 raw Q96, without editing accepted token0 theorem statements and without adding ledger fields to token0 source observations, and verify ordinary add `(2^96,1,1,true)` is a nonzero QuoteSqrtP effect and is not claimed as pool storage or cash settlement.",
+      "status": "not_met",
+      "reviewer_note": "DEFECT R-1. The token0 Typed wrap is not implemented via Quantity.toQuantity from the actual library result; the pre-register binding to the input sqrtPX96 is not stated. The rest of the task holds: no accepted token0 theorem statement changed, no ledger fields added to token0 source observations, ordinary add (2^96,1,1,true) is a nonzero QuoteSqrtP effect of 2^95 and is not claimed as pool storage or cash settlement."
+    },
+    {
+      "n": 14,
+      "line": 29,
+      "requirement": "4.2 Instantiate `Typed.execute_ok_iff` for the token0 quote-register adapter and the vault deposit adapter with real `e.Valid` premises, and verify neither adapter assumes the desired post-state as a hypothesis.",
+      "status": "met",
+      "reviewer_note": "Both Adapter.execute_ok_iff_deposit and Token0Bridge.execute_ok_iff_quote specialize the unchanged Typed.execute_ok_iff with real, separately proved e.Valid premises; neither assumes the desired post-state as a hypothesis."
+    },
+    {
+      "n": 15,
+      "line": 30,
+      "requirement": "4.3 Run the common engine on both token0 (preserving accepted P16 observations and fail-closed scoring) and vault fixtures, and verify one engine, not two wrapped campaigns.",
+      "status": "met",
+      "reviewer_note": "C3 and C5 ran the same engine on both cases; P16 observations and the r6 fail-closed grammar survive extraction (C10)."
+    },
+    {
+      "n": 16,
+      "line": 31,
+      "requirement": "4.4 Record measured case-two new definitions, new assumptions, interface changes, and effort, and verify `P17.platform_reuse` stays false without that inventory.",
+      "status": "not_met",
+      "reviewer_note": "DEFECT R-2. New definitions are measured; new assumptions, interface changes and effort are not. Under this task and its scenario, P17.platform_reuse stays false."
+    },
+    {
+      "n": 17,
+      "line": 32,
+      "requirement": "4.5 Leave composition integration unclaimed, and verify no token0-to-vault sequential workflow is added.",
+      "status": "met",
+      "reviewer_note": "No token0-to-vault sequential workflow exists in the kernel or the engine."
+    },
+    {
+      "n": 18,
+      "line": 36,
+      "requirement": "5.1 Implement compiled production mutants V-TF-SKIP and V-DEP-CEIL from `planned-mutations.json` as the named single Solidity edits, and verify V-TF-SKIP designated false is P17-DEP-D0 (shares mint, USDS vault unchanged) while P17-RED-D0 and P17-DEP-BAD-RECV remain unaffected, and V-DEP-CEIL designated false is P17-DEP-D1 while P17-DEP-D0 and P17-RED-D1 remain unaffected.",
+      "status": "met",
+      "reviewer_note": "C4 compiled both named single-edit Solidity mutants with the pinned solc and executed them. V-TF-SKIP designated false P17-DEP-D0 gate=fail with P17-RED-D0 and P17-DEP-BAD-RECV preserved; V-DEP-CEIL designated false P17-DEP-D1 gate=fail with P17-DEP-D0 and P17-RED-D1 preserved. Six token0 production mutants likewise detected with controls preserved -- but see R-4 on the token0 detection predicate."
+    },
+    {
+      "n": 19,
+      "line": 37,
+      "requirement": "5.2 Classify compile failures as blocked, not detection, and verify Python-only edits and planning-validation controls are present only as diagnostic non-credit rows.",
+      "status": "met_with_defect",
+      "reviewer_note": "vault_mutants.py treats compile failure as blocked and counts detection only when the designated gate is `fail`; no Python-only or simulated mutation is given production credit. DEFECT R-4: the token0 detection predicate checks only that the mutant reproduces its pre-registered mutated value and never asserts that value differs from the intact expectation."
+    },
+    {
+      "n": 20,
+      "line": 38,
+      "requirement": "5.3 Create Vault RuntimeAudit/ProofAudit/Verify with nonempty theorem scope and `#audit_axioms`, and verify no `sorry`, custom axioms, or `native_decide`.",
+      "status": "met",
+      "reviewer_note": "Vault RuntimeAudit (denominator 20, all real comparisons, duplicate-name proof, empty-list guard), ProofAudit with #audit_axioms over DefiKernel.Vault and Token0Bridge, and Verify built clean; 0 sorry, 0 custom axioms, 0 native_decide, forbidden=0 (C1)."
+    },
+    {
+      "n": 21,
+      "line": 42,
+      "requirement": "6.1 Reconcile every spec scenario to proof, finite, mutation, diagnostic, or assumption evidence, and verify source-execution and mutation denominators are nonzero before complete operation credit.",
+      "status": "partial",
+      "reviewer_note": "32 of 34 scenarios reconcile to real evidence with nonzero source-execution (17 and 12) and mutation (2 and 6) denominators. One scenario is not met (R-2) and one is half-met (R-9); several citations are wrong (R-6)."
+    },
+    {
+      "n": 22,
+      "line": 43,
+      "requirement": "6.2 Submit the implementation candidate to independent GPT-6, and verify no self-acceptance and that frozen program tasks remain unticked in this planning package.",
+      "status": "met",
+      "reviewer_note": "Submitted to this independent native Opus review; no self-acceptance; frozen program task checkboxes remain unticked."
+    },
+    {
+      "n": 23,
+      "line": 44,
+      "requirement": "6.3 Leave accrual/`_rpow`, UUPS, permit/IERC1271, L2 token, deployed identity, P21, and P30 named in `remaining-gates.json`, and verify `P17.platform_reuse` is not set from arithmetic-only reuse.",
+      "status": "partial",
+      "reviewer_note": "accrual/_rpow, UUPS, permit/IERC1271, deployed identity, P21 and P30 are named in the frozen remaining-gates.json, and P17.platform_reuse is not set from arithmetic-only reuse. But the L2 token remainder is not named there and three frozen statuses are now stale with no superseding current record. See R-7."
+    }
+  ],
+  "binding_review_corrections": [
+    {
+      "id": "RR-1",
+      "status": "met",
+      "reviewer_note": "RR-COMPLIANCE.md 1.1 names the exact superseded sentence in grok-r2/failed-attempts/README.md, records the initial run's exit 1 on mutant_V-DEP-CEIL_unaffected_not_from_deposit, states plainly that the failing JSON was overwritten and not preserved, and manufactures no replacement. Sections 1.2-1.3 add the AGY r1/r2 overwrite and task-1738 deletion errata. The frozen planning bytes are correctly left unchanged (67/67 identical)."
+    },
+    {
+      "id": "RR-2",
+      "status": "met",
+      "reviewer_note": "All 19 observed cells are compared on every fixture: expected_cells builds post from the complete prestate plus declared changes, and compare_cells blocks on any missing expected or observed cell. The Lean model exports all 19 cells per success row and the parser blocks a success row that omits any of them (verified by C6 missing-one-cell -> exit 3)."
+    },
+    {
+      "id": "RR-3",
+      "status": "met",
+      "reviewer_note": "RR-COMPLIANCE.md RR-3 supersedes the old 'self-path skips allowance' wording with the correct account: from != msg.sender so the finite branch is entered, allowed = 0 >= value = 0 passes and zero allowance is consumed; confirmed on-chain by P17-DEP-ZERO in C3."
+    },
+    {
+      "id": "RR-4",
+      "status": "partial",
+      "reviewer_note": "Real falsifying evidence now exists and discriminates: 2 vault + 6 token0 compiled production mutants with intact controls (C4, C5), 30 parser + 6 log falsifiers (C8, C9), 10 boundary checks (C6), and the reviewer's own 7 controls (C7). Not covered as named falsifying modes with recorded exits: the prestate merge rule, finite-allowance consumption, D1 seed classification and the control-funding label. Also R-5: the RR-4 prose misstates the negative theorem."
+    },
+    {
+      "id": "RR-5",
+      "status": "met",
+      "reviewer_note": "P17-RED-DELEGATED is implemented and passes in C3: owner O, msg.sender P, finite susds.allowance.O.P = 10^18 decremented to 0 in the observed post-state, shares burned O->0, assets transferred vault->R, with the full ordered emitter-bound log list. Its prestate is funded directly, independently of any deposit. Lean side: burnShares_success_delegated plus the P17-RED-DELEGATED runtime row."
+    }
+  ]
+}

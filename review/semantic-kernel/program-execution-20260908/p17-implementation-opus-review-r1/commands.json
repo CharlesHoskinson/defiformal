@@ -1,0 +1,110 @@
+{
+  "schema": "p17-opus-implementation-review-commands/v1",
+  "reviewer": "native Claude Opus (requested alias `opus`); root records the actual returned model/process",
+  "cwd_note": "Lean commands run in the private sandbox lean/ dir; campaigns run from the sandbox root with PYTHONPATH=scripts/platform_engine.",
+  "sandbox": "/home/charl/.cache/defiformal-program/program-execution-20260908/p17-opus-review-sandbox",
+  "toolchain_selected": "leanprover/lean4:v4.33.0-rc2 (explicit `elan run`, root sentinel and lean/lean-toolchain both pin this)",
+  "commands": [
+    {
+      "id": "C1-lean-build-verify",
+      "argv": ["elan","run","leanprover/lean4:v4.33.0-rc2","lake","build","DefiKernel.Vault.Verify"],
+      "cwd": "<sandbox>/lean",
+      "exit": 0,
+      "counts": {"lake_jobs": "995/995", "vault_axiom_audit_theorems": "175/175", "vault_axiom_audit_decls": "184/184", "token0bridge_axiom_audit_theorems": "73/73", "token0bridge_axiom_audit_decls": "62/62", "forbidden_axioms": 0, "runtime_denominator": 20, "runtime_true_rows": 20},
+      "evidence": ["work/lean/build-verify.stdout","work/lean/build-verify.stderr","work/lean/build-verify.meta"],
+      "note": "No cached .olean existed for DefiKernel/Vault/* or ConcentratedLiquidity/Token0Bridge; all 10 new modules compiled from source in this run."
+    },
+    {
+      "id": "C2-token0-lift-binding-diagnostic",
+      "argv": ["elan","run","leanprover/lean4:v4.33.0-rc2","lake","env","lean","review_opus_diag/Token0LiftBinding.lean"],
+      "cwd": "<sandbox>/lean",
+      "exit": 0,
+      "kind": "reviewer diagnostic file, NOT candidate source; frozen candidate unmodified",
+      "result": "preQ = (lift sqrtP_Q96).amount and postQ = (lift postWord).amount are both provable in one line; the frozen candidate states neither.",
+      "evidence": ["work/lean/diag-token0-lift.stdout","work/lean/diag-token0-lift.meta"]
+    },
+    {
+      "id": "C3-vault-source-campaign",
+      "argv": ["python3","scripts/platform_engine/vault_campaign.py"],
+      "cwd": "<sandbox>",
+      "env": {"DEFIFORMAL_EVIDENCE_DIR": "<review>/work/campaigns/vault-r1", "DEFIFORMAL_RUN_DIR": "opus-review-1", "PYTHONPATH": "<sandbox>/scripts/platform_engine"},
+      "exit": 0,
+      "counts": {"denominator": 17, "ok": 17, "fail": 0, "blocked": 0, "compiled_contracts": 8},
+      "evidence": ["work/logs/vault-campaign.stdout","work/campaigns/vault-r1/opus-review-1/evm/execute/fixtures/score.json","work/campaigns/vault-r1/opus-review-1/evm/execute/fixtures/rows.json"]
+    },
+    {
+      "id": "C4-vault-production-mutants",
+      "argv": ["python3","scripts/platform_engine/vault_mutants.py"],
+      "cwd": "<sandbox>",
+      "env": {"DEFIFORMAL_EVIDENCE_DIR": "<review>/work/campaigns/vault-r1", "DEFIFORMAL_RUN_DIR": "opus-review-1"},
+      "exit": 0,
+      "counts": {"mutants": 2, "detected": 2, "controls_ok": true},
+      "detail": {"V-TF-SKIP": {"designated_false": "P17-DEP-D0", "gate": "fail", "controls": ["P17-RED-D0","P17-DEP-BAD-RECV","P17-RED-ALLOW"]}, "V-DEP-CEIL": {"designated_false": "P17-DEP-D1", "gate": "fail", "controls": ["P17-DEP-D0","P17-RED-D1"]}},
+      "evidence": ["work/logs/vault-mutants.stdout","work/campaigns/vault-r1/opus-review-1/mutants/summary.json"]
+    },
+    {
+      "id": "C5-token0-campaign-and-mutants",
+      "argv": ["python3","scripts/platform_engine/token0_campaign.py"],
+      "cwd": "<sandbox>",
+      "env": {"DEFIFORMAL_EVIDENCE_DIR": "<review>/work/campaigns/token0-r1", "DEFIFORMAL_RUN_DIR": "opus-review-1"},
+      "exit": 0,
+      "counts": {"baseline_denominator": 12, "baseline_ok": 12, "mutants": 6, "detected": 6, "controls_ok": true, "ordinary_add_probe_matches_2^95": true},
+      "evidence": ["work/logs/token0-campaign.stdout","work/campaigns/token0-r1/opus-review-1/evm/token0-execute/score.json","work/campaigns/token0-r1/opus-review-1/evm/token0-mutants/summary.json"]
+    },
+    {
+      "id": "C6-retargeted-model-consumer-boundary",
+      "argv": ["python3","work/checks/replay_r4_model_consumer.py"],
+      "cwd": "/home/charl/defiformal",
+      "exit": 0,
+      "counts": {"checks": 10, "matched": 10, "failed": 0},
+      "kind": "reviewer-authored retarget of p17-agy-r3-model-consumer-precheck/replay.py onto the R4 engine, using the reviewer's own fresh deployment, genesis and Lean model rows",
+      "note": "The author's published reproduction command runs the FROZEN R3 engine (p17-agy-r3-final-protocol-precheck/engine) against root paths and therefore does not test R4; its own saved result is 4/10.",
+      "evidence": ["work/checks/replay_r4_model_consumer.py","work/checks/r4-model-consumer/results.json","work/logs/r4-model-consumer.stdout"]
+    },
+    {
+      "id": "C7-reviewer-discrimination-controls",
+      "argv": ["python3","work/checks/replay_r4_opus_falsifiers.py"],
+      "cwd": "/home/charl/defiformal",
+      "exit": 0,
+      "counts": {"checks": 7, "matched": 6, "failed": 1, "failed_ids": ["c6-model-ok-where-source-reverts"]},
+      "kind": "reviewer-authored falsifying controls with an intact control (c1) that stays green",
+      "result": "c1 ok/0, c2 fail/1, c3 fail/1, c4 fail/1, c5 blocked/3, c6 EXPECTED fail/1 but GOT blocked/3 (defect R-3), c7 fail/1",
+      "evidence": ["work/checks/replay_r4_opus_falsifiers.py","work/checks/r4-opus-falsifiers/results.json"]
+    },
+    {
+      "id": "C8-protocol-parser-controls-retargeted",
+      "argv": ["python3","replay_parser_opus.py"],
+      "cwd": "<review>/work/checks/r4-protocol-retarget",
+      "exit": 0,
+      "counts": {"real_refusal_rows": 7, "grammar_controls": 23, "total": 30, "matched": 30},
+      "kind": "root's R4 protocol precheck script, engine import repointed at the reviewer sandbox candidate engine (byte-identical to root's engine/ copy)",
+      "first_attempt": {"exit": 1, "reason": "FileNotFoundError: inputs/expected-refusals.json not copied", "preserved": "work/logs/r4-parser-retarget.attempt1-FAILED.stderr"},
+      "evidence": ["work/logs/r4-parser-retarget.stdout"]
+    },
+    {
+      "id": "C9-extended-log-falsifiers-retargeted",
+      "argv": ["python3","replay_logs_extended_opus.py"],
+      "cwd": "<review>/work/checks/r4-protocol-retarget",
+      "exit": 0,
+      "counts": {"checks": 6, "matched": 6, "failed": 0},
+      "evidence": ["work/logs/r4-logs-retarget.stdout"]
+    },
+    {
+      "id": "C10-scoring-grammar-controls",
+      "argv": ["python3","-c","<inline: common.score_rows boundary probes>"],
+      "cwd": "/home/charl/defiformal",
+      "exit": 0,
+      "counts": {"probes": 7, "all_expected": true},
+      "result": "empty->blocked/3, missing id->blocked/3, duplicate ids->blocked/3, wrong required set->blocked/3, no comparison.gate->blocked/3, unrecognized gate->blocked/3, blocked dominates fail->blocked/3",
+      "evidence": ["work/checks/empty-and-schema-controls.txt"]
+    },
+    {
+      "id": "C11-identity-and-freeze-checks",
+      "argv": ["sha256sum / manifest comparison"],
+      "cwd": "/home/charl/defiformal",
+      "exit": 0,
+      "counts": {"archive_sha256_before_and_after": "47ad3d6787affbbe8e96d402c74f307fb377360a4fee5847bab83eb18b6bed6f", "manifest_files_present": 16735, "frozen_planning_files_identical_to_primary": 67, "baseline_lean_files_unchanged": 180, "new_lean_files": 10, "reviewed_files_bound_to_manifest": 23, "pinned_binaries_hash_validated": 3},
+      "evidence": ["work/checks/reviewed-file-hashes.json"]
+    }
+  ]
+}
