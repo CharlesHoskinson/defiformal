@@ -1,0 +1,86 @@
+/* ===== the packed table ===============================================
+   Five depth rows, each a run of labelled family blocks. Nothing is drawn
+   that does not exist, so there are no empty cells to explain away.
+   ===================================================================== */
+
+.depth { display: flex; flex-direction: column; gap: 2px; position: relative; }
+
+.band {
+  display: grid;
+  grid-template-columns: 12.5rem minmax(0, 1fr);
+  gap: 18px;
+  padding: 16px 0 18px;
+  border-top: 1px solid var(--line);
+}
+.band:first-child { border-top: none; }
+
+.band-lab {
+  display: flex; flex-direction: column; gap: 3px;
+  position: sticky; top: 8px; align-self: start;
+}
+.band-s {
+  font-size: 26px; font-weight: 800; letter-spacing: -0.03em; line-height: 1;
+}
+.band-nm { font-size: 12.5px; font-weight: 600; color: var(--ink); }
+.band-d { font-size: 11.5px; line-height: 1.4; color: var(--ink-3); }
+.band-n {
+  font-size: 10px; color: var(--ink-3); font-variant-numeric: tabular-nums;
+  margin-top: 4px; border-top: 1px solid var(--line); padding-top: 4px;
+}
+.band-n::after { content: " elements"; }
+
+.band-body { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; }
+
+/* a family block: the run of substitutes */
+.fam {
+  border: 1px solid var(--line);
+  padding: 7px 8px 8px;
+  background: color-mix(in srgb, var(--panel) 55%, transparent);
+}
+.fam-h { display: flex; align-items: baseline; gap: 6px; margin-bottom: 6px; }
+.fam-id { font-size: 9.5px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.fam-nm { font-size: 11.5px; font-weight: 700; letter-spacing: -0.01em; }
+.fam-n {
+  font-size: 9.5px; color: var(--ink-3); margin-left: auto;
+  font-variant-numeric: tabular-nums;
+  border: 1px solid var(--line); padding: 0 4px;
+}
+.fam-row { display: flex; flex-wrap: wrap; gap: 3px; }
+
+.reading-order {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+.reading-order .tile { pointer-events: auto; }
+.tile-slot {
+  width: 8.2rem;
+  min-height: 6.6rem;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* by-family view */
+.families { display: grid; grid-template-columns: repeat(auto-fill, minmax(23rem, 1fr)); gap: 12px; position: relative; }
+.families > .reading-order, .depth > .reading-order { grid-column: 1 / -1; }
+.fam.wide { padding: 12px 13px 13px; }
+.fam-q { font-size: 12px; line-height: 1.45; color: var(--ink-3); margin: 0 0 9px; }
+
+/* tiles are now readable, because the layout stopped wasting the space */
+.depth .tile, .families .tile, .contested .tile {
+  width: 8.2rem;
+  min-height: 6.6rem;
+}
+.depth .t-sym, .families .t-sym { font-size: 1.25rem; }
+.depth .t-nm, .families .t-nm { font-size: 0.7rem; -webkit-line-clamp: 2; }
+
+@media (max-width: 900px) {
+  .band { grid-template-columns: 1fr; gap: 10px; }
+  .band-lab { position: static; flex-direction: row; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .band-d { display: none; }
+  .band-n { border-top: none; padding-top: 0; margin-top: 0; }
+  .depth .tile, .families .tile, .tile-slot { width: 7.4rem; min-height: 6.2rem; }
+}
