@@ -1,0 +1,62 @@
+{
+  "token0_pure": {
+    "in": ["sqrtPX96", "liquidity", "amount", "add"],
+    "pre": [],
+    "out": "uint160 | source_revert",
+    "post": [],
+    "history": "omitted"
+  },
+  "token0_typed_wrap": {
+    "kind": "model_bridge",
+    "model_only": true,
+    "pool_storage": false,
+    "cash_settlement": false,
+    "library_derived_template": true,
+    "pre_register_binding": "quoteHolder QuoteSqrtP balance equals input sqrtPX96",
+    "scale": "1",
+    "scale_meaning": "raw Q96 units, not an unscaled economic price",
+    "in": "Request / Invocation derived from the four inputs and the actual library Word 160",
+    "pre": "State × CapabilityStore × Boundary including QuoteSqrtP cell bound to input sqrtPX96",
+    "out": "Except Refusal ExecutionResult",
+    "post": "ExecutionResult on success, pre retained on refusal",
+    "not_a_source_observation": true
+  },
+  "vault_stateful": {
+    "log_mode": "full_evm_logs_and_vault_emitter_projection",
+    "in": ["operation", "assets_or_shares", "receiver", "owner_if_exit", "msg.sender"],
+    "pre": [
+      "sUSDS balanceOf/totalSupply/allowance[owner][msg.sender]",
+      "USDS balances",
+      "USDS.allowance[sender][vault] for entry operations that call transferFrom",
+      "chi",
+      "rho",
+      "ssr",
+      "timestamp",
+      "initialized"
+    ],
+    "out": "uint256 | source_revert",
+    "post": "same cells on success; omitted on refusal",
+    "full_logs_success_deposit_or_mint": [
+      "vault.Drip",
+      "usds.Transfer(sender, vault, assets)",
+      "vault.Deposit",
+      "vault.Transfer(0, receiver, shares)"
+    ],
+    "full_logs_success_redeem_or_withdraw": [
+      "vault.Drip",
+      "usds.Transfer(vault, receiver, assets)",
+      "vault.Transfer(owner, 0, shares)",
+      "vault.Withdraw"
+    ],
+    "vault_projection_filter": "emitter == vault",
+    "vault_projection_is_not_full_log": true,
+    "unrelated_logs": "retained; MUST NOT be equated to vault events",
+    "usds_transfer_in_full_logs": true,
+    "usds_allowance_observed": true,
+    "finite_usds_allowance_consumed_on_success_entry": true,
+    "successful_external_call_is_not_asset_credit": true,
+    "refusal_retains_supplied_prestate": true,
+    "retaining_prestate_is_rollback_verification": false,
+    "history": "omitted; composition not claimed"
+  }
+}

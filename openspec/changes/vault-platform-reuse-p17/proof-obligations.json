@@ -1,0 +1,109 @@
+{
+  "status": "PLANNED_NOT_PROVED",
+  "public_functions": [
+    "SUsds.deposit(uint256,address)",
+    "SUsds.mint(uint256,address)",
+    "SUsds.withdraw(uint256,address,address)",
+    "SUsds.redeem(uint256,address,address)"
+  ],
+  "no_sorry": true,
+  "no_custom_axioms": true,
+  "no_native_decide": true,
+  "source_assembly_refinement": "open_P30",
+  "typed_wrap_required_for_platform_reuse": true,
+  "composition_integration_claimed": false,
+  "ordered_except": [
+    "drip: if timestamp > rho then rpow/suck/exit/write chi,rho else nChi = chi; always emit Drip (remainder when timestamp > rho)",
+    "deposit: shares = floor(assets * RAY / nChi) then _mint",
+    "_mint: invalid-address require; usds.transferFrom; unchecked share/supply under overflow premises; Deposit then Transfer",
+    "mint: assets = _divup(shares * nChi, RAY) then _mint",
+    "withdraw: shares = _divup(assets * RAY, nChi) then _burn",
+    "redeem: assets = floor(shares * nChi / RAY) then _burn",
+    "_burn: insufficient-balance; allowance if owner != sender; unchecked share/supply decrease; usds.transfer; Transfer then Withdraw"
+  ],
+  "obligations": [
+    {
+      "id": "P17-TH-FLOOR-SHARES",
+      "statement": "Under chi > 0 and assets * RAY < 2^256, convertToShares and deposit (stable-time nChi = chi) equal Rounding.divideNat .down (assets * RAY) chi, equivalently mulDiv .down under that product premise.",
+      "premises": ["chi > 0", "assets * RAY < 2^256", "timestamp == rho → nChi = chi"],
+      "not": "unbounded mulDiv as source semantics when assets * RAY overflows",
+      "witness": "P17-DEP-D0 / P17-DEP-D1"
+    },
+    {
+      "id": "P17-TH-CEIL-ASSETS",
+      "statement": "Under chi > 0 and shares * chi < 2^256, mint/previewMint assets equal _divup(shares * chi, RAY), i.e. Rounding.divideNat .up.",
+      "premises": ["chi > 0", "shares * chi < 2^256", "timestamp == rho"],
+      "witness": "P17-MINT-D0 / P17-MINT-D1"
+    },
+    {
+      "id": "P17-TH-FLOOR-ASSETS",
+      "statement": "Redeem assets equal floor(shares * chi / RAY) under the same product premise.",
+      "witness": "P17-RED-D0 / P17-RED-D1"
+    },
+    {
+      "id": "P17-TH-CEIL-SHARES",
+      "statement": "Withdraw shares equal _divup(assets * RAY, chi) under the product premise.",
+      "witness": "P17-WD-D0 / P17-WD-D1"
+    },
+    {
+      "id": "P17-TH-MINT-ORDER",
+      "statement": "Public deposit/mint success is drip then conversion then _mint in that order. invalid-address refuses before transferFrom. transferFrom is required before share/supply updates.",
+      "premises": ["receiver valid", "observed USDS movement of assets", "totalSupply + shares < 2^256", "balanceOf[receiver] + shares < 2^256"],
+      "not": "source comment 'shares totalSupply will always be <= usds totalSupply' as a proved invariant",
+      "witness_success": "P17-DEP-D0",
+      "witness_address": "P17-DEP-BAD-RECV",
+      "witness_transfer": "P17-DEP-TF-BAL"
+    },
+    {
+      "id": "P17-TH-BURN-AUTH",
+      "statement": "Public redeem/withdraw success is drip then conversion then _burn. insufficient-balance and insufficient-allowance (owner != sender, finite allowance) are source refusals. usds.transfer is after share burn; its success is not asset-credit proof without observing USDS balances.",
+      "witness_balance": "P17-RED-BAL",
+      "witness_allowance": "P17-RED-ALLOW",
+      "witness_success": "P17-RED-D0"
+    },
+    {
+      "id": "P17-TH-CHECKED-MUL",
+      "statement": "On deposit, if assets * RAY >= 2^256 then the 0.8.21 checked multiplication refuses (Panic 0x11). Lean Operations.mul at width 256 refuses mulOverflow. Rounding.mulDiv unbounded product MUST NOT be equated to that source refusal.",
+      "witness": "P17-DEP-MUL-OVF"
+    },
+    {
+      "id": "P17-TH-ADAPTER-DEPOSIT",
+      "statement": "The honest deposit template is library-derived: USDS sender -assets, vault +assets, supply 0; sUSDS receiver +shares, supply +shares. Instantiating execute_ok_iff uses e.Valid on the pre-state and those effects as preconditions. The post equality post.balance = pre.balance + e.effect is a separate conjunct. Implementation MUST NOT assume the desired post-state as a Valid hypothesis.",
+      "shared_theorem": "DefiKernel.Typed.execute_ok_iff",
+      "witness": "P17-DEP-D0",
+      "positive_model_witness": "P17-POS-DEPOSIT-CREDIT",
+      "circular_valid_output": false
+    },
+    {
+      "id": "P17-TH-TOKEN0-BRIDGE",
+      "statement": "Token0 quote-register template is built from the actual successful library Word 160. The pre-register QuoteSqrtP balance equals the input sqrtPX96. Scale is 1, meaning raw Q96 units, not an unscaled economic price. Ordinary add (2^96,1,1,true) is a nonzero debit/supply decrease of 2^95. The register is synthetic model-only: not Uniswap pool storage, not cash settlement, not a source observation. Source token0 observations remain four inputs plus uint160|revert.",
+      "shared_theorem": "DefiKernel.Typed.execute_ok_iff",
+      "library": "delivered token0 Except Failure (Word 160)",
+      "lift": "Quantity.toQuantity",
+      "pre_register_binding": "quoteHolder QuoteSqrtP balance equals input sqrtPX96",
+      "scale": "1",
+      "scale_meaning": "raw Q96 units",
+      "model_only": true,
+      "pool_storage": false,
+      "cash_settlement": false
+    },
+    {
+      "id": "P17-TH-NEGATIVE",
+      "statement": "For the honest deposit template with assets > 0, execute_ok_iff derives post.USDS.vault = pre.USDS.vault + assets. The candidate observation candidate.USDS.vault = pre.USDS.vault cannot equal that result. Evaluated.Valid has no post-state argument and remains a precondition on store, context, request, pre-state and effects. This is rejection of an incorrect proposed observation, not an executor refusal, and not a generic cross-asset-backing claim. The matching positive is P17-POS-DEPOSIT-CREDIT under the same premises.",
+      "predicate": "observation_correspondence",
+      "not_predicate": "Evaluated.Valid",
+      "shared_theorem": "DefiKernel.Typed.execute_ok_iff",
+      "assets_positive": true,
+      "honest_template": "deposit_template",
+      "derived_post": "post.USDS.vault = pre.USDS.vault + assets",
+      "rejected_candidate": "candidate.USDS.vault = pre.USDS.vault",
+      "executor_refusal": false,
+      "incorrect_observation": true,
+      "generic_cross_asset_backing": false,
+      "positive_witness": "P17-POS-DEPOSIT-CREDIT",
+      "negative_witness": "P17-NEG-MINT-NO-CREDIT",
+      "same_premises": true,
+      "desired_postcondition_assumed": false
+    }
+  ]
+}

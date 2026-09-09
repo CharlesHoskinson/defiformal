@@ -1,0 +1,98 @@
+{
+  "status": "DESIGNED_NOT_EXECUTED",
+  "p17_platform_reuse": false,
+  "arithmetic_reuse": false,
+  "arithmetic_only_opens_platform_gate": false,
+  "composition_integration_claimed": false,
+  "p30_dependency": false,
+  "common_harness_engine": {
+    "name": "platform_engine",
+    "proposed_path": "scripts/platform_engine/",
+    "executes_token0": true,
+    "executes_vault": true,
+    "wrapper_around_separate_engines": false,
+    "cloned_dispatcher": false,
+    "shared_child_recording_alone_insufficient": true,
+    "extracts_from": ["scripts/token0_p16/record_cmd.py"],
+    "parameterizes": ["solc identity/settings", "evm binary", "prestate/fork", "observation adapter", "Lean protocol"],
+    "preserves_p16_fail_closed": true,
+    "still_required_for_platform_reuse": true
+  },
+  "shared_financial_lemma": {
+    "names": [
+      "DefiKernel.Arithmetic.Rounding.divideNat_down_ok_iff",
+      "DefiKernel.Arithmetic.Rounding.divideNat_up_ok_iff",
+      "DefiKernel.Arithmetic.Rounding.mulDiv_down_rational_error",
+      "DefiKernel.Arithmetic.Rounding.mulDiv_up_rational_error"
+    ],
+    "path": "lean/DefiKernel/Arithmetic/Rounding.lean",
+    "sha256": "0bd0c65af77bc809f4ff3b8cb5d98ab7eca5be0e0e7216e9e88263e4e02649f0",
+    "used_by_token0": "FullMath wrap of Rounding.mulDiv at width 256",
+    "used_by_vault": "convertToShares/deposit floor and mint/withdraw _divup after checked or premised product",
+    "not": "token0 wrap-fallback or 0.8.21 checked-mul overflow or vault external asset movement"
+  },
+  "shared_executor_theorem": {
+    "name": "DefiKernel.Typed.execute_ok_iff",
+    "path": "lean/DefiKernel/Typed/Transition.lean",
+    "line": 219,
+    "sha256": "73f264636236219e45720a531209f8c7ed8f5ee3f615fa34d58bc5596c4499d2",
+    "supporting": "applyEvaluated_accounting",
+    "observation": "DefiKernel.Arithmetic.Reference.observeExecution",
+    "unchanged_delivered_instances_required": true,
+    "vault_only_theorem_counts": false,
+    "circular_desired_postcondition": false,
+    "circular_valid_output": false,
+    "token0_instantiation": "library-derived quote-register template; pre-register equals input sqrtPX96; scale=1 raw Q96; ordinary add is nonzero debit/supply decrease of QuoteSqrtP",
+    "vault_instantiation": "library-derived USDS transfer conservation plus sUSDS mint supply; post equality from execute_ok_iff, not assumed Valid"
+  },
+  "token0_library_to_kernel_bridge": {
+    "library": "Except Arithmetic.Failure (Word 160)",
+    "pure_source_observation": "{sqrtPX96, liquidity, amount, add} -> uint160 | revert",
+    "invented_uniswap_ledger": false,
+    "library_derived_template": true,
+    "pre_register_binding": "quoteHolder QuoteSqrtP balance equals input sqrtPX96",
+    "scale": "1",
+    "scale_meaning": "raw Q96 units, not an unscaled economic price",
+    "lift": "Quantity.toQuantity",
+    "model_cell": "QuoteSqrtP unique holder quoteHolder, supply equals the quoted price",
+    "financial_meaning": "synthetic quoted next sqrt-price register; not Uniswap reserves, not pool storage, not cash settlement",
+    "source_model_boundary": "model_bridge, not bounded_source_execution, not source_refinement",
+    "model_only": true,
+    "pool_storage": false,
+    "cash_settlement": false,
+    "vacuous_zero_effect_ordinary_add": false,
+    "identity_zero_effect_amount_0": true,
+    "hardcoded_unrelated_quote_insufficient": true
+  },
+  "unchanged_interface_criteria": {
+    "new_global_induction": false,
+    "cloned_dispatcher": false,
+    "case_specific_checker_exemption": false,
+    "typed_execute_signature_unchanged": true,
+    "protocol_adapters_allowed": true,
+    "new_assumptions_counted": true
+  },
+  "case_two_inventory_design": {
+    "measured_in_this_increment": false,
+    "missing_inventory_leaves_platform_reuse_open": true,
+    "categories": ["new_definitions", "new_assumptions", "interface_changes", "effort"],
+    "planned_new_definitions": ["DefiKernel.Vault.*", "Token0Bridge", "platform_engine"],
+    "planned_new_assumptions": ["Usds/Vat/Join mocks", "initialize/proxy", "D0/D1 time", "D1 chi storage seed", "overflow premises", "no deployed identity"],
+    "planned_interface_changes": ["stateful observation fields", "shanghai prestate", "two-asset template", "token0 Typed wrap"],
+    "effort_metrics_at_implementation": ["wall_clock", "new_lean_loc", "new_assumption_count", "new_engine_modules"]
+  },
+  "rejected": [
+    "wrapper around separate engines",
+    "cloned dispatcher",
+    "vault-only theorem as shared executor result",
+    "vacuous zero-effect token0 wrap",
+    "circular desired-postcondition premise",
+    "circular Valid/output premises",
+    "generic accounting as cross-asset backing",
+    "fabricated token0-to-vault sequential workflow",
+    "arithmetic-only opening of P17.platform_reuse",
+    "quote-register as Uniswap pool storage or cash settlement",
+    "weakening P17.platform_reuse if the quote-register is rejected",
+    "new P30 prerequisite"
+  ]
+}

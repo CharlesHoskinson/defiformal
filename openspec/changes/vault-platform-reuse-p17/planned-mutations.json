@@ -1,0 +1,60 @@
+{
+  "status": "PROPOSED_RUNTIME_TARGETS_NOT_RUN",
+  "python_only_no_credit": true,
+  "compiled_production": false,
+  "planning_validation_is_not_production_mutation_credit": true,
+  "compile_failure_is": "BLOCKED_not_detection",
+  "source_execution_failure_is_not_tool_setup_failure": true,
+  "each_mutant_has_one_solidity_edit": true,
+  "vault_production_mutants": [
+    {
+      "id": "V-TF-SKIP",
+      "class": "asset_credit",
+      "language": "Solidity",
+      "file": "src/SUsds.sol",
+      "edit_site": "_mint usds.transferFrom",
+      "actual_source_change": "Delete the single statement `usds.transferFrom(msg.sender, address(this), assets);` from `_mint`. Keep the invalid-address require and the unchecked share/supply updates.",
+      "not_the_same_mutation": "Deleting a Python/Lean transfer step, or editing UsdsMock to no-op, is not this mutant.",
+      "designated_false": "P17-DEP-D0",
+      "mutant_public_on_designated": {
+        "shares.R": "1000000000000000000",
+        "usds.vault": "0",
+        "note": "shares minted without observed USDS credit"
+      },
+      "unaffected_positive": "P17-RED-D0",
+      "unaffected_refusal": "P17-DEP-BAD-RECV",
+      "additional_unaffected_authorization": "P17-RED-ALLOW",
+      "required_false": ["P17-DEP-D0"],
+      "sibling_check": "P17-RED-D0",
+      "controls_independently_funded": true,
+      "control_funding_must_not_use_mutated_deposit": true,
+      "source_status": "PLANNED_NOT_COMPILED"
+    },
+    {
+      "id": "V-DEP-CEIL",
+      "class": "rounding",
+      "language": "Solidity",
+      "file": "src/SUsds.sol",
+      "edit_site": "deposit shares = assets * RAY / drip()",
+      "actual_source_change": "Replace `shares = assets * RAY / drip();` with `shares = _divup(assets * RAY, drip());` in `deposit(uint256,address)` only.",
+      "designated_false": "P17-DEP-D1",
+      "original_public": {"ok_shares": "999999999999999999"},
+      "mutant_public": {"ok_shares": "1000000000000000000"},
+      "unaffected_positive": "P17-DEP-D0",
+      "additional_unaffected": "P17-RED-D1",
+      "required_false": ["P17-DEP-D1"],
+      "sibling_check": "P17-DEP-D0",
+      "note": "D0 chi=RAY is exact, so floor and ceil coincide; D1 discriminates. P17-RED-D1 uses redeem floor, not deposit, and is independently funded so a mutated deposit cannot initialize it.",
+      "controls_independently_funded": true,
+      "control_funding_must_not_use_mutated_deposit": true,
+      "source_status": "PLANNED_NOT_COMPILED"
+    }
+  ],
+  "python_or_model_only_no_credit": [
+    {
+      "id": "P17-NEG-MINT-NO-CREDIT",
+      "class": "source_independent_negative",
+      "note": "Incorrect proposed observation under execute_ok_iff post equality, paired with P17-POS-DEPOSIT-CREDIT. Not Evaluated.Valid, not an executor refusal, not a compiled mutant, not production credit."
+    }
+  ]
+}
