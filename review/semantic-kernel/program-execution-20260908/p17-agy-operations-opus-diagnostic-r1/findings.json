@@ -1,0 +1,240 @@
+{
+  "schema": "defiformal-native-diagnostic-findings/v1",
+  "utc": "2026-09-09T19:53:12.226508+00:00",
+  "reviewer": "native Claude Opus (adviser)",
+  "author_of_record": "native AGY gemini-3.8-flash-high, effort high",
+  "scope": "single proof bug: withdraw_success_shares / redeem_success_assets",
+  "implementation_acceptance": false,
+  "p17_scope_unchanged": true,
+  "acceptance_scope": false,
+  "frozen_snapshot": {
+    "dir": "/home/charl/defiformal/review/semantic-kernel/program-execution-20260908/p17-agy-operations-opus-diagnostic-r1/snapshot",
+    "sha256": {
+      "Adapter.lean": "38ee9b9d3f2a82003b293b86b307bb1278bdea8341369e95c27a78474fe548fb",
+      "Conversion.lean": "7cfd54d4e19260246612c29f6d7d1477c144180f65b46aca1526c5b56ba1996f",
+      "Examples.lean": "8d00e032b7fd90982b083b1a8451d29003de0a5d47d0e1c645a0b99cf06aab8b",
+      "Operations.lean": "73b7cc49762423072d6aa252dd2ea0324b5dce22861300736c8fe5aab81b549a",
+      "ProofAudit.lean": "0b949d21663544668617af4606cd8d4aaeaa13e9f86a7724782458e2c8dc5c13",
+      "RuntimeAudit.lean": "9d6d7ddf1d59342bad03a027f06df3ba5a165702aceb741826727cf9f4e7746e",
+      "Tests.lean": "7b495f9a6b614861c8d63a8be5dfad3d1e0cd9dba827759c8b854a410436a283",
+      "Types.lean": "2aaf7e2dc031013562c4ec70045a95091f862b81c471d4eeb5c3e81f7f2a3b2f",
+      "Verify.lean": "f5e038b57117fbe1fa015ba1d47ecd5cfd4913c3710f4d73a17d76df31a1c4a4"
+    },
+    "reverified_after_runs_identical": {
+      "Adapter.lean": true,
+      "Conversion.lean": true,
+      "Examples.lean": true,
+      "Operations.lean": true,
+      "ProofAudit.lean": true,
+      "RuntimeAudit.lean": true,
+      "Tests.lean": true,
+      "Types.lean": true,
+      "Verify.lean": true
+    }
+  },
+  "author_worktree_observation": {
+    "note": "read-only; no verification claimed; author actively editing",
+    "operations_lean_live_sha256_before_runs": "0be2aaa759d3d9dec26d32677cc36fc589b5fb406a3dde3fd0365c98af0c6a8f",
+    "operations_lean_live_sha256_after_runs": "0be2aaa759d3d9dec26d32677cc36fc589b5fb406a3dde3fd0365c98af0c6a8f",
+    "operations_lean_frozen_sha256": "73b7cc49762423072d6aa252dd2ea0324b5dce22861300736c8fe5aab81b549a",
+    "live_had_already_moved_past_frozen": true,
+    "conversion_lean_live_matches_snapshot": true,
+    "types_lean_live_matches_snapshot": true
+  },
+  "imports_bound": {
+    "imported_module": "DefiKernel.Vault.Conversion (+ transitive closure)",
+    "conversion_olean_sha256_before": "6d4a3fab014ff845b668dbe481c5b3d79447f41c659f989df52fa2aaf766a9e2",
+    "conversion_olean_sha256_after": "6d4a3fab014ff845b668dbe481c5b3d79447f41c659f989df52fa2aaf766a9e2",
+    "types_olean_sha256_before": "9992daa774eb47a0e16d1912279068385bc006a0498ef7fe59b41c48b4a69fe2",
+    "types_olean_sha256_after": "9992daa774eb47a0e16d1912279068385bc006a0498ef7fe59b41c48b4a69fe2",
+    "operations_olean_imported": false,
+    "evidence_status": "debugging context only; NOT independent final proof evidence",
+    "lean_path_file": "/home/charl/defiformal/review/semantic-kernel/program-execution-20260908/p17-agy-operations-opus-diagnostic-r1/env/LEAN_PATH.txt"
+  },
+  "toolchain": {
+    "pinned": "leanprover/lean4:v4.33.0-rc2",
+    "binary_used": "/home/charl/.elan/toolchains/leanprover--lean4---v4.33.0-rc2/bin/lean",
+    "lean_on_PATH": "4.33.1 (NOT used; would fail on olean version)",
+    "flags": "-j1 -M4096 -DmaxHeartbeats=10000 --profile",
+    "wrapper": "timeout --kill-after=5s 45s",
+    "lake_build_run": false,
+    "author_lake_written": false
+  },
+  "root_cause": {
+    "layer": "elaborator, not kernel",
+    "statement": "rw [hchi] at h leaves the outer bind stuck as (Except.ok chi >>= fun chi => ...); rw does not iota-reduce it, so previewWithdraw assets chi / convertToAssets shares chi occur only under a shadowing do-block binder and every subsequent rw misses",
+    "frozen_failure_sites": [
+      "snapshot/Operations.lean:352 rw [hc] at hred (redeem, error branch)",
+      "snapshot/Operations.lean:355 rw [hc] at hred (redeem, ok branch)",
+      "snapshot/Operations.lean:387 rw [hp] at hwd (withdraw, error branch)",
+      "snapshot/Operations.lean:390 rw [hp] at hwd (withdraw, ok branch)"
+    ],
+    "kernel_deep_recursion_reproduced": false,
+    "kernel_deep_recursion_note": "(kernel) deep recursion detected at Operations.lean:386:8 in task-379/task-446 belongs to an OLDER revision that used dsimp only [bind, Except.bind]; the frozen snapshot fails before the kernel is reached. No claim is made that the deep-recursion site is absent from the author's live file.",
+    "dilemma": "leaving binds un-stepped => rw cannot find the scrutinee; dsimp only [bind, Except.bind] => binds become matchers over unevaluated Operations.mul / Rounding.divideNat / Word.checked / uint256Bound, re-arming the prior kernel bomb"
+  },
+  "attempts": [
+    {
+      "n": 1,
+      "file": "work/attempt1/Repair.lean",
+      "sha256": "72e74f0370ee08e10d9a56ef27e430519c6394c6ce1bf2fad4f8fd1480ba7e8e",
+      "exit": 1,
+      "wall_s": 1.2,
+      "max_rss_kib": 1722184,
+      "kernel_type_checking_ms": 8.6,
+      "elaboration_ms": 39.7,
+      "purpose": "full proposed repair",
+      "errors": [
+        "Repair.lean:96:31 Application type mismatch: Except.noConfusion h' (metavariables unassigned)"
+      ],
+      "outcome": "one elaboration error in bind_eq_ok error branch; all other declarations compiled; no kernel blowup"
+    },
+    {
+      "n": 2,
+      "file": "work/attempt2/Repair.lean",
+      "sha256": "d6de65ab12bf45363a570a9af37cfbb17c55fee470ac68aecf8b5bdb345f148e",
+      "exit": 0,
+      "wall_s": 1.3,
+      "max_rss_kib": 1722096,
+      "kernel_type_checking_ms": 9.55,
+      "elaboration_ms": 38.4,
+      "purpose": "attempt 1 with exact Except.noConfusion h' -> contradiction (one-line change)",
+      "errors": [],
+      "outcome": "clean; #print axioms captured for all eight declarations; no sorryAx"
+    },
+    {
+      "n": 3,
+      "file": "work/attempt3/Frozen.lean",
+      "sha256": "88df3c059a28d85e6cc348c89f0bd4f4a44941b8b3f909abdebe77d0f0349553",
+      "exit": 1,
+      "wall_s": 1.0,
+      "max_rss_kib": 1717456,
+      "kernel_type_checking_ms": 4.38,
+      "elaboration_ms": 16.1,
+      "purpose": "reproduce the frozen snapshot scripts byte-for-byte (verified identical to snapshot L344-369 and L379-404 by diff)",
+      "errors": [
+        "Frozen.lean:97:8 rewrite failed: Did not find an occurrence of the pattern convertToAssets shares chi",
+        "Frozen.lean:100:8 rewrite failed: Did not find an occurrence of the pattern convertToAssets shares chi",
+        "Frozen.lean:124:8 rewrite failed: Did not find an occurrence of the pattern previewWithdraw assets chi",
+        "Frozen.lean:127:8 rewrite failed: Did not find an occurrence of the pattern previewWithdraw assets chi"
+      ],
+      "outcome": "frozen failure reproduced exactly; purely elaborator-side"
+    }
+  ],
+  "attempts_used": 3,
+  "attempt_budget": 3,
+  "artifacts_overwritten": false,
+  "claims_checked": [
+    {
+      "name": "bind_eq_ok",
+      "kind": "new generic lemma",
+      "status": "proved",
+      "axioms": [],
+      "note": "fully abstract {\u03b5 \u03b1 \u03b2}, variable scrutinee; no such lemma in pinned core/Batteries/Mathlib (grep)"
+    },
+    {
+      "name": "bind_eq_error",
+      "kind": "new generic lemma",
+      "status": "proved",
+      "axioms": []
+    },
+    {
+      "name": "withdraw_after_drip",
+      "kind": "new continuation lemma",
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "redeem_after_drip",
+      "kind": "new continuation lemma",
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "withdraw_success_shares",
+      "kind": "frozen statement, new proof script",
+      "status": "proved",
+      "statement_byte_identical_to_frozen": true,
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "redeem_success_assets",
+      "kind": "frozen statement, new proof script",
+      "status": "proved",
+      "statement_byte_identical_to_frozen": true,
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "withdraw_ceil_shares",
+      "kind": "frozen statement, frozen proof script, unchanged",
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "redeem_floor_assets",
+      "kind": "frozen statement, frozen proof script, unchanged",
+      "status": "proved",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    }
+  ],
+  "preservation": {
+    "statements_preserved": true,
+    "premises_unweakened": true,
+    "arithmetic_and_source_ordering_unchanged": true,
+    "sorry_used": false,
+    "axiom_added": false,
+    "native_decide_used": false,
+    "limits_raised": false,
+    "definitions_changed": false
+  },
+  "not_checked": [
+    "whole-module build of DefiKernel/Vault/Operations.lean (no lake build, no module build run)",
+    "the author's live Operations.lean 0be2aaa7... (already moved past the frozen snapshot before this diagnostic began); \u00a74 names and line numbers refer to frozen 73b7cc49...",
+    "mint_success_assets (snapshot L306-334): uses dsimp [bind, Except.bind] at L317 and L324; probably safe because rw [hp] puts previewMint into .ok form first, but NOT run; mint's trailing raw match on mintAfterGuard is not covered by bind_eq_ok",
+    "Adapter.lean, Examples.lean and the rest of the snapshot",
+    "the author's newly added generic output-to-conversion / supply / burn lemmas: not present in the frozen snapshot, so not inspected",
+    "(kernel) deep recursion detected: not reproduced",
+    "#print axioms in the author's own namespace inside the real module"
+  ],
+  "recommendations": [
+    "R1 add generic bind_eq_ok / bind_eq_error at abstract {\u03b5 \u03b1 \u03b2}; use contradiction, not exact Except.noConfusion h'",
+    "R2 add withdraw_after_drip / redeem_after_drip mirroring the working deposit_after_drip (unfold; rw [hchi]; exact bind_ok chi _)",
+    "R3 rewrite the two projection proofs as three obtain \u27e8_, _, h\u27e9 := bind_eq_ok h steps plus an explicit Except.ok hfin coercion; withdraw_ceil_shares and redeem_floor_assets need no change",
+    "R4 standing rule: never unfold bind/Except.bind while a scrutinee is an unevaluated conversion or Word.checked call; prefer bind_eq_ok over cases/change/contradiction for success inversion (deposit_success_shares could be made uniform too)",
+    "R5 do not raise maxRecDepth or maxHeartbeats and do not reach for opaque; the frozen failure is not a recursion-depth failure at all"
+  ],
+  "reviewer_conduct": {
+    "wrote_only_to": "/home/charl/defiformal/review/semantic-kernel/program-execution-20260908/p17-agy-operations-opus-diagnostic-r1",
+    "author_files_written": false,
+    "author_lake_written": false,
+    "commits": false,
+    "push": false,
+    "subagents": false,
+    "foreman": false,
+    "production_changes": false
+  }
+}
