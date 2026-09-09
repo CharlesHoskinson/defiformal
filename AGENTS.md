@@ -111,3 +111,16 @@ Read CURRENT.json plus program-execution-20260908/STATE.json for live progress.
 Frozen planning checkboxes and original candidate hashes remain historical
 inputs, not instructions to redispatch accepted P01. Follow each remaining
 sprint's real entry/acceptance gates; P17 substantive reuse gates wider families.
+
+## Core DeFi priority; Atlas parked, 2026-09-09
+
+The user instructed: "Put it in a feature branch and resume doing DeFi".
+Atlas visualization work is parked on `feature/atlas`; do not dispatch further
+P35/P36 UI implementation or reviews unless the user explicitly resumes Atlas.
+Its unaccepted code and sealed review are preserved there. This supersedes any
+older Atlas repair queue or candidate integration instruction. Continue core
+DeFi verification: P16 source gate repair and independent acceptance, P17 vault
+source-entry and substantive reuse, P18 usable library release, and the remaining
+metatheory, claims, certificates and financial-library agenda. Native Grok 4.6
+authors; independent GPT-6 checks; no Foreman. Accepted core work continues to
+`semantic-kernel-pivot`, with no merge to main.
