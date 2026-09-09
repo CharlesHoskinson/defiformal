@@ -1,0 +1,224 @@
+{
+  "schema_id": "reusable-verification-platform.p15.evidence-packet",
+  "schema_version": "0.1.0",
+  "packet_id": "p15.example.token0-unexecuted",
+  "packet_status": "incomplete",
+  "credit_eligible": false,
+  "credit_eligible_reason": "P16 is not implemented. Required partitions are named with zero executions. Unexecuted solc/EVM path cannot succeed.",
+  "operation": {
+    "id": "uniswap.v3.token0.next-price",
+    "kind": "pure_function",
+    "name": "SqrtPriceMath.getNextSqrtPriceFromAmount0RoundingUp",
+    "pin_status": "captured_not_executed"
+  },
+  "identities": {
+    "source": {
+      "status": "captured_not_executed",
+      "kind": "solidity-library-function",
+      "path": "/home/charl/defiformal/review/semantic-kernel/program-loop-20260908/concentrated-liquidity-source-readiness-gpt6-evidence/upstream/contracts/libraries/SqrtPriceMath.sol",
+      "revision": "e3589b192d0be27e100cd0daaf6c97204fdb1899",
+      "sha256": "ddd62e3a94346248677f30f1ab009ef015e71e4b8696dcca890eeabc9dc6c149",
+      "bytes": 10774,
+      "compiler": "solidity 0.7.6 declared in hardhat.config.ts, binary not verified",
+      "compiler_settings": "optimizer enabled, runs 800, metadata.bytecodeHash none"
+    },
+    "model": {
+      "status": "not_established",
+      "kind": "lean-library",
+      "path": "lean/DefiKernel/ConcentratedLiquidity/",
+      "revision": null,
+      "sha256": null,
+      "bytes": null,
+      "notes": "Proposed P16 path. Not present in this freeze."
+    },
+    "tools": [
+      {
+        "name": "solc",
+        "status": "not_established",
+        "path": null,
+        "version": null,
+        "sha256": null
+      },
+      {
+        "name": "python-oracle",
+        "status": "not_executed",
+        "path": "/home/charl/defiformal-wt-liquidity-grok-gpt6-20260908/review/semantic-kernel/concentrated-liquidity/planning/grok-gpt6-official-r1/cl_oracle.py",
+        "version": "diagnostic third implementation with unbounded-sum defect",
+        "sha256": "4ecd60394ab4deff50387f578a9ac85f981946d17b9ff36d0724ccbd3921e0cd"
+      }
+    ]
+  },
+  "observation_relation": {
+    "id": "token0.pure.next-price",
+    "kind": "pure_function",
+    "inputs": ["sqrtPX96:uint160", "liquidity:uint128", "amount:uint256", "add:bool"],
+    "pre_state": [],
+    "outputs": ["uint160"],
+    "post_state": [],
+    "refusals": [
+      "remove-path require product-fit and numerator1 > product",
+      "FullMath zero denominator or quotient overflow",
+      "LowGasSafeMath.add overflow on fallback",
+      "SafeCast.toUint160 on remove path"
+    ],
+    "includes_ledger_history": false,
+    "notes": "Pure function. No ledger or capability fields. Zero amount is identity success, not a refusal. Helper has no fee parameter."
+  },
+  "obligation_classes": [
+    {
+      "class": "model_proof",
+      "status": "open",
+      "claim_boundary": "P16 branch-specific 0.7.6 fallback equation is not proved in this freeze."
+    },
+    {
+      "class": "bounded_source_execution",
+      "status": "open",
+      "claim_boundary": "No solc/EVM run. Python oracle is diagnostic only and currently misses wrapped-sum fallback."
+    },
+    {
+      "class": "representation_correspondence",
+      "status": "open",
+      "claim_boundary": "Certificates are not a P16 prerequisite. No certificate claim is made."
+    },
+    {
+      "class": "source_refinement",
+      "status": "open",
+      "claim_boundary": "P30 remains open even if later bounded comparisons pass."
+    },
+    {
+      "class": "authenticity_environment_assumption",
+      "status": "open",
+      "claim_boundary": "Compiler/runtime correctness, EVM semantics, and observation truth remain assumptions until separately discharged."
+    }
+  ],
+  "theorem_evidence": {
+    "theorems": [
+      {
+        "name": "token0.fallback-equation",
+        "status": "not_yet_proved"
+      }
+    ],
+    "premises": [],
+    "axioms": [],
+    "inventory_ref": null
+  },
+  "executions": {
+    "partitions": [
+      {
+        "id": "ordinary-add",
+        "description": "Product and denominator sum both fit uint256.",
+        "nonempty": false,
+        "count": 0,
+        "cases": []
+      },
+      {
+        "id": "ordinary-remove",
+        "description": "numerator1 > product.",
+        "nonempty": false,
+        "count": 0,
+        "cases": []
+      },
+      {
+        "id": "multiplication-overflow",
+        "description": "amount * sqrtPX96 wraps. Add path fallback.",
+        "nonempty": false,
+        "count": 0,
+        "cases": []
+      },
+      {
+        "id": "denominator-sum-overflow",
+        "description": "Product fits. numerator1 + product wraps. Required P16 branch.",
+        "nonempty": false,
+        "count": 0,
+        "cases": []
+      },
+      {
+        "id": "zero-amount-identity",
+        "description": "(2^96,1,0,*) returns 2^96.",
+        "nonempty": false,
+        "count": 0,
+        "cases": []
+      },
+      {
+        "id": "planned-add-2-96-1-1",
+        "description": "(2^96,1,1,true) returns 2^95.",
+        "nonempty": false,
+        "count": 0,
+        "cases": []
+      },
+      {
+        "id": "removal-require",
+        "description": "(2^96,1,1,false) require failure.",
+        "nonempty": false,
+        "count": 0,
+        "cases": []
+      }
+    ],
+    "source_runs": [
+      {
+        "id": "solc-evm",
+        "status": "not_run",
+        "tool": "solc/EVM harness",
+        "exit_code": null,
+        "log_sha256": null,
+        "notes": "Harness not established. P15 does not run P16."
+      }
+    ],
+    "model_runs": [
+      {
+        "id": "lean-token0",
+        "status": "not_run",
+        "tool": "lake env lean",
+        "exit_code": null,
+        "log_sha256": null,
+        "notes": "No ConcentratedLiquidity module in this freeze."
+      }
+    ]
+  },
+  "mutations": {
+    "production": [],
+    "unaffected_controls": [],
+    "python_only": [
+      {
+        "id": "python-oracle-not-production",
+        "status": "python_only_no_credit",
+        "designated_observation": null,
+        "unaffected_sibling": null,
+        "notes": "Python-only edits earn no production mutation credit."
+      }
+    ]
+  },
+  "independent_verdict": {
+    "reviewer_role": "independent GPT-6 for the P15 contract freeze, not for P16 token0",
+    "requested_model": null,
+    "reported_model": null,
+    "verdict": "pending",
+    "input_sha256": null,
+    "review_path": null,
+    "notes": "This example is incomplete P16 shape. It is not a token0 acceptance record."
+  },
+  "remaining_obligations": [
+    "Independent GPT-6 review of this P15 freeze.",
+    "P16 pin-closure verification and solc/EVM harness declaration.",
+    "Repair Python oracle wrapped-sum defect without treating Python as source.",
+    "Implement token0 library under delivered Arithmetic words and this observation relation.",
+    "Execute nonempty partitions including denominator-sum overflow.",
+    "Prove branch-specific 0.7.6 fallback equation.",
+    "Compiled token0 production mutants with unaffected controls.",
+    "Leave TickMath, SwapMath, token1/delta, bitmap, factory, M09 SwapMath execution, and P30 refinement open."
+  ],
+  "denominators": {
+    "partitions": { "declared": 7, "nonempty": 0, "empty": 7 },
+    "executions": { "planned": 2, "actually_run": 0, "unexecuted": 2 },
+    "mutations": {
+      "planned": 1,
+      "compiled_production": 0,
+      "python_only": 1,
+      "unaffected_controls": 0,
+      "unexecuted": 0
+    },
+    "theorems": { "named": 1, "not_yet_proved": 1 },
+    "independent_reviews": { "required": 1, "completed": 0 }
+  },
+  "notes": "Named required partitions with empty counts. This is incomplete, not a pass."
+}
