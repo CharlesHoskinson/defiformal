@@ -1,0 +1,179 @@
+{
+  "schema": "p17-opus-repair-review-repair-verdicts/v1",
+  "reviewer": "native Claude Opus (claude-opus-5)",
+  "candidate_sha256": "df5521cca52a53ff38858611befb82044cb676d64f50c8dea29d0291a4ede74c",
+  "adopted_repairs_reviewed": 9,
+  "additional_contract_obligations_reviewed": 5,
+  "total": 14,
+  "closed": 13,
+  "changes_required": [
+    "ROOT-RR4"
+  ],
+  "consolidated_applicable_repair_list": [
+    {
+      "id": "RR4-NEG-FALSIFIER",
+      "severity": "moderate",
+      "summary": "The negative-theorem-predicate falsifier is vacuous: it never calls the validator it claims to falsify.",
+      "detail": "main.fail_negative writes a file containing the string 'fail `Evaluated.Valid`' and then runs its own inline `if \"fail `Evaluated.Valid`\" in text` over that same string. It does not call check_negative_predicate. Its exit 1 is a tautology - a test that writes its own expected input and then asserts it contains itself - so it demonstrates nothing about the validator, and the shipped 10/10 overstates coverage as 5 falsified modes when only 4 are falsified. Secondarily, check_negative_predicate itself is a source-text grep over Adapter.lean and RR-COMPLIANCE.md, which is the method ROOT-RR4 excludes. I confirmed both points mechanically: shipped_falsifier_calls_validator = false.",
+      "not_a_substantive_failure": "The underlying claim is independently sound. I compiled Adapter.lean in my own build and inspected no_credit_is_observation directly: Valid holds and only the post equality fails, with axioms [propext, Classical.choice, Quot.sound]. I also showed the validator IS falsifiable when actually invoked - two reviewer-built trees (prose inverted to claim a Valid failure; no_credit_is_observation renamed away) each drove check_negative_predicate to exit 1 with a named failure. So this is a defective diagnostic, not a false claim.",
+      "repair": "Have fail-negative-theorem-predicate call check_negative_predicate against a redirected ROOT containing the inverted prose (or an Adapter with the theorem removed), exactly as work/bin/rr4_negpred_probe.py does, and assert exit 1 from the validator. Preferably also bind the negative-predicate check to the compiled Lean fact rather than to text matching - for example by scoring the P17-NEG-MINT-NO-CREDIT runtime row, which already evaluates a real falsifying perturbation, instead of grepping the source."
+    }
+  ],
+  "repairs": [
+    {
+      "id": "R-1",
+      "requirement": "token0 library Word lifted through Quantity.toQuantity into the template; pre-register bound to input sqrtPX96; traced into execute_ok_iff witness and e.Valid premises",
+      "reviewer_verdict": "closed",
+      "reviewer_evidence": [
+        "work/10-lean/build.stdout (995/995, exit 0; Token0Bridge audit 78/78 theorems, 62/62 decls, forbidden=0)",
+        "work/cmd/lean-diag-r2/ (reviewer premise diagnostics, exit 0)",
+        "work/30-reviewer-diagnostics/Token0LiftPremises.attempt1-FAILED.lean (preserved)"
+      ],
+      "note": "preQ := (lift sqrtP_Q96).amount and postQ := (lift postWord).amount are DEFINITIONS, not new unused lemmas, and lift is Quantity.toQuantity at scale1. library_ordinary_add proves libraryWord sqrtP_Q96 L1 amt1 true = .ok postWord, so postWord is the actual successful library Word rather than a coincidental literal. My reviewer theorem diag_postQ_is_lift_of_actual_library_result proves postQ = (lift w).amount for ANY w the library actually returns. preRegister_binds_library_input binds the register cell to (lift sqrtP_Q96).amount, and that exact preRegister preQ preQ_nonneg is the state in execute_ok_iff_quote and in evaluated_Valid; evaluated_nonneg actually rewrites through postQ_eq_lift_library_result and lift_scale_one, so the lift is a real premise. My diag_execute_forces_lifted_library_post routes a successful execute through execute_ok_iff_quote to the lifted library result with a nonzero effect. Preserved: ordinary_effect_nonzero (nonzero add), scale1 = 1 raw Q96 (diag_preQ_is_raw_q96), model-only register (module docstring and scope comment), old P16 statements (0 baseline Lean files modified), and no assumed desired poststate (the post equality is a derived conjunct of execute_ok_iff_quote, never a hypothesis). Axioms are [propext, Classical.choice, Quot.sound] only; no sorryAx."
+    },
+    {
+      "id": "R-2",
+      "requirement": "measured case-two definitions, new vs inherited assumptions, interfaces and effort with baseline, units and evidence",
+      "reviewer_verdict": "closed",
+      "reviewer_evidence": [
+        "candidate case-two-inventory.json + CASE-TWO-INVENTORY.md",
+        "reviewer module-count check against actual code"
+      ],
+      "note": "New definitions (10 Lean modules, 17 engine modules) match the actual tree exactly - I enumerated both. New assumptions are separated from inherited ones (inherited: Typed.execute_ok_iff statement, P16 token0 library, frozen 67-file planning package). Interface changes are named. Effort uses native record_cmd UTC intervals with an explicit baseline (agy-r4 definitions-only inventory), states 'not person-hours', does not sum cumulative native usage, and explicitly excludes AGY r1-r4 authoring from the row. Failed attempts appear in the receipts with exit 1. The agy-r4 'deposit and redeem templates' overstatement is corrected by an erratum; I confirmed Adapter.lean has only depositTemplate."
+    },
+    {
+      "id": "R-3",
+      "requirement": "both model/source success-refusal disagreement directions reproduced against the final public consumers; valid complete disagreement is fail/1, missing/malformed/unmapped stays blocked/3, intact control ok/0",
+      "reviewer_verdict": "closed",
+      "reviewer_evidence": [
+        "work/cmd/replay_discrimination/ (7/7; consumer exits c1=0 c2=1 c3=1 c4=1 c5=3 c6=1 c7=1)",
+        "work/cmd/r3-direction-probe/ + work/30-reviewer-diagnostics/r3-directions/result.json (reviewer-authored, 7/7)",
+        "work/cmd/r3-direction-probe.attempt1-FAILED/ (preserved)"
+      ],
+      "note": "The R1 defect is repaired in the real consumer: in the refusal branch of vault_exec.run_fixtures, lean_status == 'ok' now yields gate 'fail' instead of 'blocked'. I did not rely on the candidate harness. My own probe drove vault_exec.run_fixtures directly: model-says-success against a source refusal is fail/1, model-says-refusal against a source success is fail/1, and missing row / error-without-failure / unmapped label / malformed status all remain blocked/3 with the intact control at ok/0. Root's caution is satisfied: the driver exit is no longer the only signal - per-check consumer exits are recorded, and c6 now genuinely reports 1."
+    },
+    {
+      "id": "R-4",
+      "requirement": "token0 detector exercised against the intact expectation including a non-distinguishing witness; detection means actual semantic disagreement",
+      "reviewer_verdict": "closed",
+      "reviewer_evidence": [
+        "work/cmd/token0-campaign/ (6/6 detected)",
+        "work/cmd/token0_detector_controls/ (4/4)",
+        "work/20-campaigns/opus-r2/evm/token0-mutants/summary.json"
+      ],
+      "note": "score_designated_detection now defines detection as disagreement with intact_expected, and records agrees_with_intact and planned_matches_intact per mutant. A planned witness equal to the intact expectation is classified blocked with no detection credit, and unavailable or malformed designated execution is blocked with no credit; compile failure returns blocked before any detection computation. My run reproduced all six real production mutants as detected with detection_reason 'semantic disagreement with intact expectation', runtime_changed true, and both unaffected and equality controls preserved. The six previously observed detections are confirmed substantively real, not relabelled false."
+    },
+    {
+      "id": "R-5",
+      "requirement": "every current negative-theorem claim says Valid holds and the no-credit candidate fails execute_ok_iff observation/post equality; correct Lean theorem preserved",
+      "reviewer_verdict": "closed",
+      "reviewer_evidence": [
+        "lean/DefiKernel/Vault/Adapter.lean:388-392",
+        "grok-r5/RR-COMPLIANCE.md",
+        "work/10-lean/build.stdout"
+      ],
+      "note": "The Lean is unchanged and correct: no_credit_is_observation = (evaluated wadQ sharesQ).Valid ... AND NOT (post equality). RR-COMPLIANCE.md now states 'Evaluated.Valid holds. The no-credit candidate violates execute_ok_iff observation/post equality, not Valid', and notes the frozen planning not_predicate is inherited rather than rewritten. The only remaining occurrence of the old inverted sentence is grok-r5/attempt-1/rr4-metadata-diagnostics-2/false-rr-prose.md, which is a deliberately false fixture written by the RR-4 diagnostic, not a claim."
+    },
+    {
+      "id": "R-6",
+      "requirement": "each scenario reconciled to its actual supporting artifact and evidence class, including inherited planning controls",
+      "reviewer_verdict": "closed",
+      "reviewer_evidence": [
+        "grok-r5/scenario-map.json",
+        "inventory-mapping.json (this delivery)"
+      ],
+      "note": "34 scenarios: 30 ok and 4 inherited_planning. All 34 cited artifacts exist in the frozen candidate - I checked every path. The six R1 citation defects are repaired: the locator branch now cites the source-acquisition capture rather than fixtures/score.json; the three diagnose modes are labelled inherited_planning rather than citing the 17/17 campaign score; the mutant scenario cites mutants/V-TF-SKIP/result.json rather than the intact P17-RED-D0 row; the missing-inventory scenario cites case-two-inventory.json; and the wider-families scenario cites remaining-gates.json, which does name the gates. No scenario cites a full source score for a git pin or for a different diagnostic mode. No clause is left open."
+    },
+    {
+      "id": "R-7",
+      "requirement": "current gates/errata record names the remainders, identifies superseded frozen statuses, and distinguishes execution from independent acceptance; original planning bytes unchanged",
+      "reviewer_verdict": "closed",
+      "reviewer_evidence": [
+        "grok-r5/remaining-gates.json",
+        "work/00-identity/frozen-planning-verification.json (67/67 identical)"
+      ],
+      "note": "The new record names all seven remainders: accrual/_rpow (with vat.suck and usdsJoin.exit), UUPS, permit/IERC1271, L2 token, deployment identity, P21 and P30. It supersedes three stale frozen statuses (bounded_source_execution, model_bridge, G-EVM-DUMP-ROUNDTRIP) by naming them, each carrying independently_accepted: false, plus an executed_not_accepted list and root_acceptance: false. It does not edit frozen bytes: I verified all 67 frozen planning files are byte-identical to primary."
+    },
+    {
+      "id": "R-8",
+      "requirement": "shipped candidate-local regression commands run on the current engine with current model/deployment inputs; portable settings; real driver exits; preserved authorship of reused root/Opus tests",
+      "reviewer_verdict": "closed",
+      "reviewer_evidence": [
+        "work/cmd/replay_parser/ (30/30)",
+        "work/cmd/replay_logs_and_projection/ (10/10)",
+        "work/cmd/replay_discrimination/ (7/7)",
+        "work/cmd/replay_model_consumer/ (10/10)"
+      ],
+      "note": "Four candidate-local harnesses now ship in grok-r5/harnesses/. Each resolves its worktree by searching for scripts/platform_engine + lean rather than hard-coding a root, imports the CURRENT candidate engine, and reads DEFIFORMAL_EVIDENCE_DIR / DEFIFORMAL_RUN_DIR. I ran all four against MY campaign run in MY evidence directory and each reported my sandbox engine path and my vault_run path - so they bound to current model and deployment inputs, not frozen R3 paths. Each records real per-check consumer exits, and each preserves the reviewer authorship of the tests it retargets (docstring provenance plus a review_authorship field naming claude-opus-5 session a1e40b81-7427-45e5-8b00-b2492cd46156). The frozen primary R3 commands are explicitly labelled historical and are no longer offered as current validation."
+    },
+    {
+      "id": "R-9",
+      "requirement": "complete ordered emitter-bound full logs plus the computed/recorded/scored emitter==vault projection; emitter/content/order controls",
+      "reviewer_verdict": "closed",
+      "reviewer_evidence": [
+        "work/20-campaigns/opus-r2/evm/execute/fixtures/P17-DEP-D0/observation.json",
+        "work/cmd/replay_logs_and_projection/ (10/10)"
+      ],
+      "note": "vault_emitter_projection now exists in vault_exec.py and is computed, recorded AND scored: a projection mismatch sets the row gate to fail, and a usds event leaking into the vault projection sets fail. On my actual P17-DEP-D0 the full log list retains all four ordered emitter-bound events including usds.Transfer(S,vault,10^18), while vault_projection holds only the three vault events; the row records usds_in_full_logs (1 entry) and usds_in_vault_projection (empty). The full-log clause is NOT narrowed - compare_logs still requires the complete ordered list against fx.expected.full_logs. Emitter, content and order falsifiers all fire (10/10)."
+    },
+    {
+      "id": "ROOT-T2.2",
+      "requirement": "creation/runtime bytecode hashes bind actual compiler outputs, source/settings and an explicit hash encoding; current metadata-none compilation distinguished from historical IPFS smoke",
+      "reviewer_verdict": "closed",
+      "reviewer_evidence": [
+        "work/20-campaigns/opus-r2/evm/compile/compile.json",
+        "grok-r5/BYTECODE-BINDINGS.md"
+      ],
+      "note": "compile.py records bytecode_sha256.{creation,runtime} for every compiled contract (8 in my run) in the same report as the solc pin (path + sha256), the settings (evmVersion shanghai, optimizer 200, metadata.bytecodeHash none), 13 source_hashes and source_roles. BYTECODE-BINDINGS.md states the encoding explicitly (SHA256 of the UTF-8 hex-text object string) and also gives the raw-bytes hashes. I recompiled independently and reproduced all four SUsds values exactly: creation hex-text b04a0230..., creation raw 9f813856..., runtime hex-text e0f712bd..., runtime raw 16f3e78d.... The document explains that the difference from the historical IPFS smoke hashes is bytecodeHash none vs ipfs on the same source pin. Nothing was mutated: all 48 p17-source-acquisition files are byte-identical to primary and the captured SUsds.sol still matches its pin."
+    },
+    {
+      "id": "ROOT-T2.3",
+      "requirement": "separate unscored evm --dump roundtrip smoke and missing/unusable-dump controls with blocked_missing_evm/exit 3",
+      "reviewer_verdict": "closed",
+      "reviewer_evidence": [
+        "work/cmd/dump_smoke/",
+        "work/20-campaigns/opus-r2/dump-smoke/result.json"
+      ],
+      "note": "dump_smoke.py is a separate named deliverable, not a production roundtrip. It performs a real create with dump=True and parses the result (2 accounts, state root 30f504913ec644be17d9cfb74c889769b30090205d5d2521162a3794a7bb3a40), and it is unscored - it never enters score_rows and grants no source agreement. The missing/unusable-dump control drives the real parse_dump consumer with empty output and yields blocked / exit 3 with class blocked_missing_evm and missing_identity evm-dump. In my run it bound to my own compile.json, not to frozen R4 bytes."
+    },
+    {
+      "id": "ROOT-T2.5",
+      "requirement": "exact blocked_missing_compiler/blocked_missing_evm labels and missing tool identity on real setup failures, exit 3, no source-agreement or detection credit, intact controls",
+      "reviewer_verdict": "closed",
+      "reviewer_evidence": [
+        "work/cmd/setup_controls/",
+        "work/20-campaigns/opus-r2/setup-controls/result.json"
+      ],
+      "note": "5/5. Intact solc and evm pins resolve with their real hashes. Real missing-tool failures (nonexistent paths) raise SetupBlocked and render as exit 3 with exactly class blocked_missing_compiler / blocked_missing_evm and missing_identity solc / evm. The fifth check is a real public consumer, not copied logic: compile_sources is called with a missing compiler and returns status blocked, exit 3, class blocked_missing_compiler, missing_identity solc - so no source agreement and no detection credit can follow."
+    },
+    {
+      "id": "ROOT-FULL-COVERAGE",
+      "requirement": "full vault campaign requires the canonical 17 IDs independently of its loaded/filtered fixture list; missing full members block/3; named subsets remain legitimate and labelled; token0 canonical 12 preserved",
+      "reviewer_verdict": "closed",
+      "reviewer_evidence": [
+        "work/cmd/full-coverage-probe/",
+        "work/30-reviewer-diagnostics/full-coverage/result.json",
+        "work/20-campaigns/opus-r2/evm/execute/fixtures/score.json"
+      ],
+      "note": "In run_fixtures, when no fixture_ids are supplied the required list is VAULT_FIXTURE_IDS (17), independently of what the fixture file loaded; any canonical member absent from the loaded rows is appended as gate blocked with reason 'missing full-campaign member'. I falsified this rather than reading it: with a reviewer-reduced fixture file missing P17-DEP-MUL-OVF, the default campaign still reported denominator 17 with that member blocked and the campaign blocked / exit 3 - not a smaller successful full campaign. The intact default campaign is denominator 17, ok 17, exit 0, and a named two-fixture subset still scores ok / exit 0 at denominator 2, so the previously rejected blanket subset ban is not reinstated. Token0 keeps its canonical 12 required IDs (12/12 in my run)."
+    },
+    {
+      "id": "ROOT-RR4",
+      "requirement": "named falsifying modes covering the prestate merge rule, finite allowance consumption, D1 seed classification, control-funding label and negative-theorem predicate fields, with actual exits and named failures plus intact controls, using real validators/consumers rather than copied logic or source greps",
+      "reviewer_verdict": "changes_required",
+      "reviewer_evidence": [
+        "work/cmd/rr4_metadata_diagnostics/ (10/10 as shipped)",
+        "work/30-reviewer-diagnostics/rr4-negpred-probe.json (reviewer-authored)"
+      ],
+      "note": "Four of the five required modes are genuine: check_merge, check_finite_allowance, check_d1_seed and check_funding_label are each invoked by their intact control (exit 0) AND by a falsifier that mutates a deep copy of the real fixtures.json and re-invokes the SAME validator, producing exit 1 with a named failure. The merge validator is not copied production logic - the production consumer reads fx['pre'] directly and never applies the construction rule, so this is the only place the declared rule is enforced. Full-log falsifiers remain valid (6/6). Metadata diagnostics are labelled metadata_diagnostic / metadata_diagnostic_not_compiled_mutation, kept distinct from the compiled production mutations. The fifth mode is not sound: see the residual repair.",
+      "residual_repair": {
+        "id": "RR4-NEG-FALSIFIER",
+        "severity": "moderate",
+        "summary": "The negative-theorem-predicate falsifier is vacuous: it never calls the validator it claims to falsify.",
+        "detail": "main.fail_negative writes a file containing the string 'fail `Evaluated.Valid`' and then runs its own inline `if \"fail `Evaluated.Valid`\" in text` over that same string. It does not call check_negative_predicate. Its exit 1 is a tautology - a test that writes its own expected input and then asserts it contains itself - so it demonstrates nothing about the validator, and the shipped 10/10 overstates coverage as 5 falsified modes when only 4 are falsified. Secondarily, check_negative_predicate itself is a source-text grep over Adapter.lean and RR-COMPLIANCE.md, which is the method ROOT-RR4 excludes. I confirmed both points mechanically: shipped_falsifier_calls_validator = false.",
+        "not_a_substantive_failure": "The underlying claim is independently sound. I compiled Adapter.lean in my own build and inspected no_credit_is_observation directly: Valid holds and only the post equality fails, with axioms [propext, Classical.choice, Quot.sound]. I also showed the validator IS falsifiable when actually invoked - two reviewer-built trees (prose inverted to claim a Valid failure; no_credit_is_observation renamed away) each drove check_negative_predicate to exit 1 with a named failure. So this is a defective diagnostic, not a false claim.",
+        "repair": "Have fail-negative-theorem-predicate call check_negative_predicate against a redirected ROOT containing the inverted prose (or an Adapter with the theorem removed), exactly as work/bin/rr4_negpred_probe.py does, and assert exit 1 from the validator. Preferably also bind the negative-predicate check to the compiled Lean fact rather than to text matching - for example by scoring the P17-NEG-MINT-NO-CREDIT runtime row, which already evaluates a real falsifying perturbation, instead of grepping the source."
+      }
+    }
+  ]
+}

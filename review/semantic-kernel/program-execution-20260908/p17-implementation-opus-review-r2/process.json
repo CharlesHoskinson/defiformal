@@ -1,0 +1,109 @@
+{
+  "schema": "p17-full-native-opus-review-process/v1",
+  "started_utc": "2026-09-09T21:55:20.678312+00:00",
+  "finished_utc": "2026-09-09T22:20:32.465693+00:00",
+  "process_exit": 0,
+  "requested_model": "opus",
+  "reported_models": [
+    "claude-opus-5"
+  ],
+  "session_id": "c13fcc98-dbac-4dbc-ba38-825f902f6fe8",
+  "native_result": {
+    "duration_api_ms": 1211555,
+    "stop_reason": "end_turn",
+    "session_id": "c13fcc98-dbac-4dbc-ba38-825f902f6fe8",
+    "total_cost_usd": 11.4322005,
+    "usage": {
+      "input_tokens": 224,
+      "cache_creation_input_tokens": 223263,
+      "cache_read_input_tokens": 13550551,
+      "output_tokens": 96927,
+      "output_tokens_details": {
+        "thinking_tokens": 23186
+      },
+      "server_tool_use": {
+        "web_search_requests": 0,
+        "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 223263,
+        "ephemeral_5m_input_tokens": 0
+      },
+      "inference_geo": "not_available",
+      "iterations": [
+        {
+          "input_tokens": 2,
+          "output_tokens": 1455,
+          "cache_read_input_tokens": 229345,
+          "cache_creation_input_tokens": 973,
+          "cache_creation": {
+            "ephemeral_5m_input_tokens": 0,
+            "ephemeral_1h_input_tokens": 973
+          },
+          "type": "message"
+        }
+      ],
+      "speed": "standard"
+    },
+    "modelUsage": {
+      "claude-opus-5": {
+        "inputTokens": 224,
+        "outputTokens": 96927,
+        "cacheReadInputTokens": 13550551,
+        "cacheCreationInputTokens": 223263,
+        "webSearchRequests": 0,
+        "costUSD": 11.4322005,
+        "contextWindow": 1000000,
+        "maxOutputTokens": 64000,
+        "thinkingTokens": 23186,
+        "canonicalModel": "claude-opus-5",
+        "provider": "firstParty",
+        "costBasis": "list"
+      }
+    },
+    "permission_denials": [],
+    "terminal_reason": "completed",
+    "fast_mode_state": "off",
+    "fast_mode_disabled_reason": "sdk_opt_in_required",
+    "subagent_stats": {
+      "spawned": 0,
+      "requested": {
+        "background": 0,
+        "foreground": 0,
+        "unset": 0
+      },
+      "started_in_background": 0,
+      "max_depth": 0,
+      "spawned_by_subagents": 0,
+      "completed": 0,
+      "failed": 0,
+      "killed": {
+        "parent": 0,
+        "user": 0,
+        "system": 0
+      },
+      "refused": {
+        "depth_limit": 0,
+        "concurrency_limit": 0,
+        "budget": 0
+      },
+      "by_type": {}
+    },
+    "is_error": false,
+    "num_turns": 125,
+    "subtype": "success",
+    "api_error_status": null,
+    "result": "Review complete. All deliverables are in `p17-implementation-opus-review-r2`.\n\n## Verdict: CHANGES_REQUIRED \u2014 13 of 14 repairs closed\n\nCandidate hash `df5521cc\u2026` **unchanged** before and after; 22632/22632 overlay files verified byte-identical both times. I modified no candidate source and never read the author worktree.\n\n**Closed (13):** R-1 \u2026 R-9, ROOT-T2.2, ROOT-T2.3, ROOT-T2.5, ROOT-FULL-COVERAGE.\n\nHighlights where I went past the author's summary:\n\n- **R-1** \u2014 I checked premises, not build success. `preQ`/`postQ` are now *definitions* equal to `Quantity.toQuantity` lifts. I proved in my own diagnostic that `postQ = (lift w).amount` for **any** `w` the library actually returns, and that a successful `execute` routes through `execute_ok_iff_quote` to that lifted result. The lift is load-bearing in `evaluated_nonneg`, not decorative.\n- **R-3** \u2014 I did not trust the shipped harness. Driving `vault_exec.run_fixtures` directly with my own perturbed Lean rows: both disagreement directions \u2192 `fail`/1, all four missing/malformed/unmapped cases \u2192 `blocked`/3, intact \u2192 `ok`/0. `c6` now genuinely exits 1.\n- **ROOT-FULL-COVERAGE** \u2014 falsified rather than read: with a reduced fixture file the default campaign still reported denominator **17** with the missing member blocked and the campaign `blocked`/3, while named subsets still pass.\n- **ROOT-T2.2** \u2014 I recompiled and reproduced all four SUsds bytecode hashes exactly.\n\nIndependent execution: Lean 4.33.0-rc2, 995/995 build, audits 175/175 + 78/78 forbidden 0, runtime 20/20, vault 17/17, token0 12/12, mutants 2/2 and 6/6.\n\n**The one open item \u2014 `RR4-NEG-FALSIFIER` (moderate).** Four of ROOT-RR4's five falsifying modes re-invoke their real validator on mutated data. The fifth does not: `fail_negative` writes a string and then asserts that string contains itself, never calling `check_negative_predicate`. Its exit 1 is a tautology, so the shipped 10/10 overstates coverage \u2014 4 modes are falsified, not 5. Secondarily that validator is a source-text grep, the method ROOT-RR4 excludes.\n\nI was explicit that this is a **defective diagnostic, not a false claim**: I compiled `no_credit_is_observation` myself (Valid holds, only post equality fails, standard axioms), and showed the validator *is* falsifiable when actually invoked \u2014 two reviewer-built trees each drove it to exit 1.\n\nTwo failed attempts are preserved with full argv/cwd/UTC/exit; **both were mine, not the candidate's** (a Lean auto-implicit binding, and passing a subset out of canonical order into an order-sensitive `score_rows`).\n\nI also flagged two minor non-repair observations, and honored every reporting qualification \u2014 the 19-cell comparisons cover exactly the ten successful rows (my run produced 10 with post-observations, 7 without), D1 chi carries no reachability claim, declaration counts include generated declarations, and the quote register is model-only. Integrity checks: 67/67 frozen planning and 48/48 source-acquisition files identical to primary, 184 baseline Lean files with 0 modified. No Foreman, subagents, commits, pushes, main, or Atlas; the R1 evidence directory is untouched.\n\nThis is evidence for root adjudication, not acceptance \u2014 I set no fields, and the core program remains open beyond this scoped review.",
+    "ttft_ms": 1636,
+    "type": "result",
+    "duration_ms": 1508920,
+    "uuid": "02ce3c26-1ba7-4e46-8d99-a952fafb0598",
+    "ttft_stream_ms": 1175,
+    "time_to_request_ms": 39,
+    "first_content_frame_ms": 1175,
+    "queued_turn_count": 0
+  },
+  "log_sha256": "ce6804c563a7dfcb67e0684e24a7fac67635c85853f9a121bd5ff9653dbe8df5",
+  "acceptance": false
+}
