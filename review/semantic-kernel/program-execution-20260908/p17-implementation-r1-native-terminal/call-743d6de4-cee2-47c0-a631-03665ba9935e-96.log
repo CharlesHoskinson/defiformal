@@ -1,0 +1,217 @@
+NAME:
+   evm - the evm command line interface
+
+USAGE:
+   evm [global options] command [command options]
+
+VERSION:
+   1.15.11-stable
+
+COMMANDS:
+   run                  Run arbitrary evm binary
+   blocktest            Executes the given blockchain tests
+   statetest            Executes the given state tests. Filenames can be fed via standard input (batch mode) or as an argument (one-off execution).
+   transition, t8n      Executes a full state transition
+   transaction, t9n     Performs transaction validation
+   block-builder, b11r  Builds a block
+   eofparse, eof        Parses hex eof container and returns validation errors (if any)
+   eofdump              Parses hex eof container and prints out human-readable representation of the container.
+   help, h              Shows a list of commands or help for one command
+
+GLOBAL OPTIONS:
+   LOGGING AND DEBUGGING
+
+   
+    --go-execution-trace value                                            
+          Write Go execution trace to the given file
+   
+    --log.compress                      (default: false)                  
+          Compress the log files
+   
+    --log.file value                                                      
+          Write logs to a file
+   
+    --log.format value                                                    
+          Log format to use (json|logfmt|terminal)
+   
+    --log.maxage value                  (default: 30)                     
+          Maximum number of days to retain a log file
+   
+    --log.maxbackups value              (default: 10)                     
+          Maximum number of log files to retain
+   
+    --log.maxsize value                 (default: 100)                    
+          Maximum size in MBs of a single log file
+   
+    --log.rotate                        (default: false)                  
+          Enables log file rotation
+   
+    --log.vmodule value                                                   
+          Per-module verbosity: comma-separated list of <pattern>=<level> (e.g.
+          eth/*=5,p2p=4)
+   
+    --pprof                             (default: false)                  
+          Enable the pprof HTTP server
+   
+    --pprof.addr value                  (default: "127.0.0.1")            
+          pprof HTTP server listening interface
+   
+    --pprof.blockprofilerate value      (default: 0)                      
+          Turn on block profiling with the given rate
+==== t8n ====
+NAME:
+   evm transition - Executes a full state transition
+
+USAGE:
+   evm transition [command options]
+
+OPTIONS:
+   
+          --trace                             (default: false)                  
+                Configures the use of the JSON opcode tracer. This tracer emits traces to files
+                as trace-<txIndex>-<txHash>.jsonl
+   
+          --trace.tracer value                                                  
+                Configures the use of a custom tracer, e.g native or js tracers. Examples are
+                callTracer and 4byteTracer. These tracers emit results into files as
+                trace-<txIndex>-<txHash>.json
+   
+          --trace.jsonconfig value                                              
+                The configurations for the custom tracer specified by --trace.tracer. If
+                provided, must be in JSON format
+   
+          --trace.memory                      (default: false)                  
+                Enable full memory dump in traces
+   
+          --trace.nostack                     (default: false)                  
+                Disable stack output in traces
+   
+          --trace.returndata                  (default: false)                  
+                Enable return data output in traces
+   
+          --trace.callframes                  (default: false)                  
+                Enable call frames output in traces
+   
+          --output.basedir value                                                
+                Specifies where output files are placed. Will be created if it does not exist.
+   
+          --output.alloc value                (default: "alloc.json")           
+                Determines where to put the `alloc` of the post-state.
+                  `stdout` - into the
+                stdout output
+                  `stderr` - into the stderr output
+                  <file> - into the file <file>
+   
+          --output.result value               (default: "result.json")          
+                Determines where to put the `result` (stateroot, txroot etc) of the
+                post-state.
+                  `stdout` - into the stdout output
+                  `stderr` - into the stderr
+                output
+                  <file> - into the file <file>
+   
+          --output.body value                                                   
+                If set, the RLP of the transactions (block body) will be written to this file.
+   
+          --input.alloc value                 (default: "alloc.json")           
+                `stdin` or file name of where to find the prestate alloc to use.
+   
+          --input.env value                   (default: "env.json")             
+                `stdin` or file name of where to find the prestate env to use.
+   
+          --input.txs value                   (default: "txs.json")             
+                `stdin` or file name of where to find the transactions to apply. If the file
+                extension is '.rlp', then the data is interpreted as an RLP list of signed
+                transactions.The '.rlp' format is identical to the output.body format.
+   
+          --state.fork value                  (default: "GrayGlacier")          
+                Name of ruleset to use.
+                  Available forknames:
+                      ArrowGlacier
+                     
+                ArrowGlacierToParisAtDiffC0000
+                      Berlin
+                      BerlinToLondonAt5
+                     
+                Byzantium
+                      ByzantiumToConstantinopleAt5
+                     
+                ByzantiumToConstantinopleFixAt5
+                      Cancun
+                      CancunToPragueAtTime15k
+==== json dump smoke ====
+EXIT:0
+--- stdout head ---
+{
+    "root": "500040f5e0d2daaacc863101e6b8468baf96c4281b7ad0a9b3bc0c83b7dda242",
+    "accounts": {
+        "0x2000000000000000000000000000000000000002": {
+            "balance": "0",
+            "nonce": 0,
+            "root": "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+            "codeHash": "0xbc36789e7a1e281436464229828f817d6612f7b477d66591ff96a9e064bcc98a",
+            "code": "0x00",
+            "address": "0x2000000000000000000000000000000000000002",
+            "key": "0x25baa1f53460dfe937af66419cef1b8dd5251c7daa1faf4061b53f21a5cd51e0"
+        }
+    }
+}
+
+
+--- stderr ---
+INFO [09-09|11:26:49.098] Trie dumping started                     root=500040..dda242
+INFO [09-09|11:26:49.098] Trie dumping complete                    accounts=1 elapsed="52.867µs"
+--- json flag ---
+JSON_EXIT:0
+Incorrect Usage: flag provided but not defined: -json
+
+NAME:
+   evm - the evm command line interface
+
+USAGE:
+   evm [global options] command [command options]
+
+VERSION:
+   1.15.11-stable
+
+COMMANDS:
+   run                  Run arbitrary evm binary
+   blocktest            Executes the given blockchain tests
+   statetest            Executes the given state tests. Filenames can be fed via standard input (batch mode) or as an argument (one-off execution).
+   transition, t8n      Executes a full state transition
+   transaction, t9n     Performs transaction validation
+   block-builder, b11r  Builds a block
+   eofparse, eof        Parses hex eof container and returns validation errors (if any)
+   eofdump              Parses hex eof container and prints out human-readable representation of the container.
+   help, h              Shows a list of commands or help for one command
+
+GLOBAL OPTIONS:
+   LOGGING AND DEBUGGING
+
+   
+    --go-execution-trace value                                            
+          Write Go execution trace to the given file
+   
+    --log.compress                      (default: false)                  
+          Compress the log files
+   
+    --log.file value                                                      
+          Write logs to a file
+   
+    --log.format value                                                    
+          Log format to use (json|logfmt|terminal)
+   
+    --log.maxage value                  (default: 30)                     
+          Maxi
+--- json stderr ---
+flag provided but not defined: -json
+
+total 24
+drwx------  2 charl charl  160 Sep  9 11:26 .
+drwxrwxrwt 18 root  root  1220 Sep  9 11:26 ..
+-rw-r--r--  1 charl charl  185 Sep  9 11:26 dump.err
+-rw-r--r--  1 charl charl  596 Sep  9 11:26 dump.out
+-rw-r--r--  1 charl charl  653 Sep  9 11:26 genesis.json
+-rw-r--r--  1 charl charl   37 Sep  9 11:26 json.err
+-rw-r--r--  1 charl charl 3292 Sep  9 11:26 json.out
+-rw-r--r--  1 charl charl    3 Sep  9 11:26 stop.hex
