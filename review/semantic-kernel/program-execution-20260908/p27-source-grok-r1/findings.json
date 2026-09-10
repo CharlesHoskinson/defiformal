@@ -1,0 +1,137 @@
+{
+  "schema": "defiformal-independent-source-audit-findings/v1",
+  "attempt": "p27-source-grok-r1",
+  "verdict": "usable",
+  "P27_accepted": false,
+  "task_28_1_accepted": false,
+  "task_28_2_accepted": false,
+  "task_28_3_accepted": false,
+  "findings": [
+    {
+      "id": "F01",
+      "severity": "required_observation_mapping",
+      "blocks_source_preparation": false,
+      "title": "Liquidation health includes signed PnL; collateral sufficiency does not credit positive PnL",
+      "evidence": [
+        "source/contracts/position/PositionUtils.sol:414-421 remainingCollateralUsd = collateralUsd + positionPnlUsd + priceImpactUsd - collateralCostUsd",
+        "source/contracts/position/PositionUtils.sol:441-446 nonpositive remaining equity and min-collateral-for-leverage are liquidation conditions",
+        "source/contracts/position/PositionUtils.sol:403-404 liquidation-health fee calculation sets isLiquidation false so liquidation fees are not included",
+        "source/contracts/position/PositionUtils.sol:488-503 willPositionCollateralBeSufficient deducts negative realizedPnlUsd and explicitly does not factor positive PnL"
+      ],
+      "statement": "These are distinct observations. Unsettled PnL is counted in liquidation health and is not spendable collateral or withdrawable cash. A later PnL-as-cash mutant must target the wrong observation, not erase PnL from the health equation and call that source fidelity."
+    },
+    {
+      "id": "F02",
+      "severity": "required_observation_mapping",
+      "blocks_source_preparation": false,
+      "title": "Funding is an unsigned fee plus separate long/short claimables with opposing rounding",
+      "evidence": [
+        "source/contracts/pricing/PositionPricingUtils.sol:488-507 fundingFeeAmount uses getFundingAmount(..., true); claimable long/short use getFundingAmount(..., false)",
+        "source/contracts/market/MarketUtils.sol:1982-2006 unsigned fundingDiffFactor times size via Precision.mulDiv; comments require fee round-up and claimable round-down",
+        "source/contracts/market/MarketUtils.sol:606-654 claimableFundingAmountKey(market, token, account) increment and claimFundingFees transferOut"
+      ],
+      "statement": "Do not collapse funding into one signed cash balance. Fee liability, long claimable tokens, and short claimable tokens have different rounding and storage keys. Claim is a separate transfer path, not automatic settlement into position collateral."
+    },
+    {
+      "id": "F03",
+      "severity": "required_observation_mapping",
+      "blocks_source_preparation": false,
+      "title": "Actual refusals and allowed insolvent close are different source paths",
+      "evidence": [
+        "source/contracts/position/DecreasePositionUtils.sol:220-238 liquidation orders revert Errors.PositionShouldNotBeLiquidated when isPositionLiquidatable is false",
+        "source/contracts/position/DecreasePositionCollateralUtils.sol:80-85 isInsolventCloseAllowed requires full sizeDeltaUsd and liquidation or secondary ADL",
+        "source/contracts/position/DecreasePositionCollateralUtils.sol:637-661 handleEarlyReturn reverts InsufficientFundsToPayForCosts when insolvent close is disallowed; otherwise emitInsolventClose and return empty fees",
+        "source/contracts/position/PositionUtils.sol:306-313 validatePosition reverts LiquidatablePosition; DecreasePositionUtils.sol:316-335 applies that only when remaining size is nonzero",
+        "source/contracts/position/DecreasePositionUtils.sol:152-157 UnableToWithdrawCollateral when sizeDeltaUsd==0 and collateral would be insufficient",
+        "source/contracts/position/DecreasePositionCollateralUtils.sol:256-260 EmptyHoldingAddress when secondary-token funding payment has no holding address",
+        "source/contracts/liquidation/LiquidationUtils.sol:28-105 createLiquidationOrder does not itself test isPositionLiquidatable"
+      ],
+      "statement": "Task 28.1 must select an actual source guard. Do not invent a refusal, and do not treat allowed full liquidation or secondary-ADL insolvency as executor failure. PositionShouldNotBeLiquidated refuses liquidation of a healthy position. InsufficientFundsToPayForCosts refuses ordinary unpaid costs. LiquidatablePosition refuses leaving a remaining non-zero position in a liquidatable state on ordinary paths. createLiquidationOrder is not that admission check."
+    },
+    {
+      "id": "F04",
+      "severity": "required_observation_mapping",
+      "blocks_source_preparation": false,
+      "title": "Funding shortfall and insolvent residual events are not insurance payouts",
+      "evidence": [
+        "source/contracts/position/DecreasePositionCollateralUtils.sol:275-287 emitInsufficientFundingFeePayment; comments mention pool top-up, insurance fund, or similar and do not execute them",
+        "source/contracts/position/DecreasePositionCollateralUtils.sol:652-661 emitInsolventClose records remainingCostUsd and payment step then returns empty fees",
+        "source/contracts/liquidation/LiquidationUtils.sol:54-59 comments about protocol-fund refund of price impact are not executable compensation in this library"
+      ],
+      "statement": "Shortfall events do not imply residual coverage. Later Margin accounting must keep remainingCostUsd as an explicit residual, not as a proved insurance claim or automatic top-up."
+    },
+    {
+      "id": "F05",
+      "severity": "required_observation_mapping",
+      "blocks_source_preparation": false,
+      "title": "Secondary cost conversion uses integer division; remainingCostUsd is source-rounded",
+      "evidence": [
+        "source/contracts/position/DecreasePositionCollateralUtils.sol:579 Calc.roundUpDivision(costUsd, collateralTokenPrice.min)",
+        "source/contracts/position/DecreasePositionCollateralUtils.sol:611 remainingCostInOutputToken * collateralTokenPrice.min / secondaryOutputTokenPrice.min",
+        "source/contracts/position/DecreasePositionCollateralUtils.sol:625 remainingCostUsd = remainingCostInSecondaryOutputToken * secondaryOutputTokenPrice.min",
+        "source/contracts/position/DecreasePositionCollateralUtils.sol:548-558 withdrawal capped to remainingCollateralAmount token units"
+      ],
+      "statement": "Do not silently equate source remainingCostUsd with exact rational unpaid debt. Primary cost is rounded up in collateral-token units. Secondary conversion truncates. Withdrawal is capped in remaining token units, not unrealized equity."
+    },
+    {
+      "id": "F06",
+      "severity": "remaining_obligation",
+      "blocks_source_preparation": false,
+      "title": "Oracle, custody, caller role, holding address, and handlers remain explicit assumptions",
+      "evidence": [
+        "selected oracle files are IOracle.sol and OracleUtils.sol only; no Oracle.sol implementation in this slice",
+        "source/contracts/bank/Bank.sol:34-38 transferOut is onlyController",
+        "source/contracts/role/RoleModule.sol:139-140 onlyLiquidationKeeper exists; no LiquidationHandler or AdlHandler file in the 89 captured sources",
+        "source/contracts/role/Role.sol:94-97 LIQUIDATION_KEEPER key is declared",
+        "source/test/exchange/LiquidationOrder.ts:51 grants LIQUIDATION_KEEPER; that test was not executed"
+      ],
+      "statement": "Prices, token custody, keeper authorization, and holding-address configuration are not proved by this packet. Task 28.1 may freeze them as assumptions. Absence of the handler from the selected slice is coverage for later entry, not an identity mismatch in the captured files."
+    },
+    {
+      "id": "F07",
+      "severity": "coverage_note",
+      "blocks_source_preparation": false,
+      "title": "Ten nonempty creation objects retain unresolved library links",
+      "evidence": [
+        "independent parse of stdout.json.gz: 91 contracts, 72 nonempty creation objects, 10 with linkReferences or __$ placeholders",
+        "CallbackUtils, FeeUtils, LiquidationUtils, MarketUtils, DecreasePositionCollateralUtils, DecreasePositionUtils, IncreasePositionUtils, PositionUtils, ReferralUtils, SwapUtils"
+      ],
+      "statement": "The selected standard-JSON compile is not deployable-ready bytecode, not a full Hardhat build, and not EVM or test execution. Root compiler evidence is prior recorded work, not this audit's execution."
+    },
+    {
+      "id": "F08",
+      "severity": "remaining_obligation",
+      "blocks_source_preparation": false,
+      "title": "Source and compile hashes do not close P27 or tasks 28.1-28.3",
+      "evidence": [
+        "openspec tasks.md 28.1 freeze signed funding/equity observations and select the actual source rejection guard",
+        "28.2 Lean Margin signed reconciliation with explicit bankruptcy residual",
+        "28.3 funding success, allowed liquidation/bankruptcy exceptional success, frozen refusal, PnL-as-cash mutant, source-independent equity-equation negative"
+      ],
+      "statement": "This verdict is usable for source preparation only. No narrowed substitute for full P27 acceptance."
+    },
+    {
+      "id": "F09",
+      "severity": "coverage_note",
+      "blocks_source_preparation": false,
+      "title": "Failed 100MiB archive capture is preserved and is not a complete archive",
+      "evidence": [
+        "p27-gmx-source-preparation/failure.json complete_archive false, extracted 0, partial_archive_bytes 104857600",
+        "partial archive bytes are not in the sandbox packet; live cache path was not followed",
+        "successful attempt2 fetched individual raw files and bound Git blobs"
+      ],
+      "statement": "The failed capture remains negative evidence. It does not supply source bytes."
+    },
+    {
+      "id": "F10",
+      "severity": "coverage_note",
+      "blocks_source_preparation": false,
+      "title": "Lexical import graph is not a runtime or AST proof; reference tests were not executed",
+      "evidence": [
+        "independent source-only graph 213 local edges and 22 external occurrences; closed selected graph 243 edges and 0 unresolved",
+        "three TypeScript files retained as unexecuted_reference_test including LiquidationOrder.ts"
+      ],
+      "statement": "Import-string closure supports selected compile identity. It does not prove runtime reachability, AST correctness, or test behavior. LiquidationOrder.ts names PositionShouldNotBeLiquidated at one price and a later successful executeLiquidation at another; that file was not run."
+    }
+  ]
+}
