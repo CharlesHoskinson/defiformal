@@ -1,0 +1,179 @@
+{
+  "utc": "2026-09-10T20:24:26.520364+00:00",
+  "anchors": [
+    {
+      "id": "receive-proof",
+      "path": "source/modules/core/04-channel/keeper/packet.go",
+      "sha256": "188bff21bc47df452af40b8c6e55ea5470017691e74d3788a2933c3e16074ab4",
+      "needle": "k.connectionKeeper.VerifyPacketCommitment(",
+      "matching_lines": [
+        154
+      ],
+      "static_observation": "Receive verifies the remote packet commitment before applying replay protection; a valid packet proof is an explicit environmental input.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "stale-lifecycle-replay",
+      "path": "source/modules/core/04-channel/keeper/packet.go",
+      "sha256": "188bff21bc47df452af40b8c6e55ea5470017691e74d3788a2933c3e16074ab4",
+      "needle": "packet already processed in previous channel upgrade",
+      "matching_lines": [
+        191,
+        288
+      ],
+      "static_observation": "A packet sequence below recvStartSequence returns ErrPacketReceived. The same guard also protects acknowledgement writing.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "ordinary-replay",
+      "path": "source/modules/core/04-channel/keeper/packet.go",
+      "sha256": "188bff21bc47df452af40b8c6e55ea5470017691e74d3788a2933c3e16074ab4",
+      "needle": "return types.ErrNoOpMsg",
+      "matching_lines": [
+        205,
+        229
+      ],
+      "static_observation": "Ordinary unordered duplicate receipts and older ordered receive sequences yield ErrNoOpMsg; this is distinct from stale-lifecycle and out-of-order errors.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "receive-noop-api",
+      "path": "source/modules/core/keeper/msg_server.go",
+      "sha256": "3087d19be849334adbb77d54842e3ba97536ce03d52f45b1e5d1b233c9d036fa",
+      "needle": "return &channeltypes.MsgRecvPacketResponse{Result: channeltypes.NOOP}, nil",
+      "matching_lines": [
+        441
+      ],
+      "static_observation": "The top-level receive handler maps ErrNoOpMsg to NOOP with nil error and returns before the application callback.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "ack-noop-api",
+      "path": "source/modules/core/keeper/msg_server.go",
+      "sha256": "3087d19be849334adbb77d54842e3ba97536ce03d52f45b1e5d1b233c9d036fa",
+      "needle": "return &channeltypes.MsgAcknowledgementResponse{Result: channeltypes.NOOP}, nil",
+      "matching_lines": [
+        605
+      ],
+      "static_observation": "Acknowledgement relay no-op is also a successful API result, not transaction failure.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "timeout-noop-api",
+      "path": "source/modules/core/keeper/msg_server.go",
+      "sha256": "3087d19be849334adbb77d54842e3ba97536ce03d52f45b1e5d1b233c9d036fa",
+      "needle": "return &channeltypes.MsgTimeoutResponse{Result: channeltypes.NOOP}, nil",
+      "matching_lines": [
+        505
+      ],
+      "static_observation": "Timeout relay no-op returns before the refund callback; required verification precedes this classification.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "timeout-maturity",
+      "path": "source/modules/core/04-channel/keeper/timeout.go",
+      "sha256": "82416c98d927d48ab80c54f4ba70348c005a99ea87233128882509787d1b1383",
+      "needle": "packet timeout not reached",
+      "matching_lines": [
+        70
+      ],
+      "static_observation": "Timeout requires maturity at the supplied proof height/timestamp. Missing local commitment alone is not the entire timeout guard.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "timeout-nonreceipt",
+      "path": "source/modules/core/04-channel/keeper/timeout.go",
+      "sha256": "82416c98d927d48ab80c54f4ba70348c005a99ea87233128882509787d1b1383",
+      "needle": "k.connectionKeeper.VerifyPacketReceiptAbsence(",
+      "matching_lines": [
+        107,
+        246
+      ],
+      "static_observation": "Unordered timeout needs a verified absence of the remote receive receipt. Ordered timeout instead checks next receive sequence and its proof.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "ack-consumes-commitment",
+      "path": "source/modules/core/04-channel/keeper/packet.go",
+      "sha256": "188bff21bc47df452af40b8c6e55ea5470017691e74d3788a2933c3e16074ab4",
+      "needle": "k.deletePacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())",
+      "matching_lines": [
+        437
+      ],
+      "static_observation": "Successful acknowledgement deletes the source packet commitment before the caller performs its application acknowledgement callback.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "timeout-consumes-commitment",
+      "path": "source/modules/core/04-channel/keeper/timeout.go",
+      "sha256": "82416c98d927d48ab80c54f4ba70348c005a99ea87233128882509787d1b1383",
+      "needle": "k.deletePacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())",
+      "matching_lines": [
+        135
+      ],
+      "static_observation": "timeoutExecuted deletes the commitment and closes an ordered channel. Local Cosmos transaction semantics remain an external runtime obligation.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "refund-callback",
+      "path": "source/modules/apps/transfer/keeper/relay.go",
+      "sha256": "198646bb57220f642f77cfd9caf9aa192930a473bb46b62ca691a14477a429b0",
+      "needle": "return k.refundPacketTokens(ctx, sourcePort, sourceChannel, data)",
+      "matching_lines": [
+        242
+      ],
+      "static_observation": "Timeout invokes token refund. Error acknowledgement also refunds; successful acknowledgement returns without token movement on the sending chain.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "refund-authority-guard",
+      "path": "source/modules/apps/transfer/keeper/relay.go",
+      "sha256": "198646bb57220f642f77cfd9caf9aa192930a473bb46b62ca691a14477a429b0",
+      "needle": "if k.IsBlockedAddr(sender) {",
+      "matching_lines": [
+        63,
+        261
+      ],
+      "static_observation": "Refund can reject a blocked sender. Refund success is conditional; it must not be asserted from timeout maturity alone.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "refund-asset-origin",
+      "path": "source/modules/apps/transfer/keeper/relay.go",
+      "sha256": "198646bb57220f642f77cfd9caf9aa192930a473bb46b62ca691a14477a429b0",
+      "needle": "if token.Denom.HasPrefix(sourcePort, sourceChannel) {",
+      "matching_lines": [
+        82,
+        156,
+        277
+      ],
+      "static_observation": "Refund remints previously burned vouchers for a prefixed denomination; otherwise it unescrows. These are different accounting branches.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "verified-misbehaviour",
+      "path": "source/modules/core/02-client/keeper/client.go",
+      "sha256": "2c98f70f08868aa4a67425b75f47680b7b1f6ee5e2a906b81878363f7e54e808",
+      "needle": "clientModule.UpdateStateOnMisbehaviour(ctx, clientID, clientMsg)",
+      "matching_lines": [
+        66
+      ],
+      "static_observation": "UpdateClient verifies the client message, checks misbehaviour, updates/freeze state and returns nil on detected misbehaviour; it does not directly refund pending transfers.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "freeze-state",
+      "path": "source/modules/light-clients/07-tendermint/update.go",
+      "sha256": "b1503bf8290f41c5d4b621a65914ca67b7d82e3e135668c1fe35206e4f537038",
+      "needle": "cs.FrozenHeight = FrozenHeight",
+      "matching_lines": [
+        214
+      ],
+      "static_observation": "Tendermint UpdateStateOnMisbehaviour sets FrozenHeight; the caller must have verified and detected misbehaviour.",
+      "proof_or_execution": false
+    }
+  ],
+  "anchor_count": 15,
+  "scope": "Static source navigation. No Go compilation, runtime test, formal proof, dependency closure, complete workflow contract or acceptance.",
+  "acceptance": false
+}
