@@ -1,0 +1,120 @@
+{
+  "schema": "defiformal-resource-depth-findings/v1",
+  "mark": "RESOURCE_DEPTH_AND_COMPONENT_REVIEW_ONLY_FULL_P19_OPEN",
+  "acceptance": false,
+  "verdict": "CHANGES_REQUIRED",
+  "session": "01a08aa4-090a-7693-b4e0-e7e187956ca6",
+  "fresh_session": false,
+  "evidence_classes": {
+    "compiler_proved": "Kernel theorems imported from the private rebuild; #print axioms on all 113 named source theorems with child_compiler_exit 0.",
+    "successful_execution": "Child compiler exit 0 and no Lean error: line. Only ProbeR9 (corrected) and ProbeAxioms (corrected).",
+    "source_inspection": "Read of frozen Encode/CanonicalJson/Decode/Correspondence/Schema/grammar/REPORT/source-manifest.",
+    "failed_probe": "Nonzero child compiler exit or Lean error: line. Zero runtime credit even if some #eval lines printed.",
+    "author_captured": "Inspected R9 evidence folder files and author commands.json; not re-run.",
+    "unverified": "Not executed in this review."
+  },
+  "findings": [
+    {
+      "id": "R9-DEPTH-INCOMPLETE",
+      "severity": "blocker",
+      "class": "guessed_ast_cap_not_json_depth",
+      "evidence_class": "source_inspection+successful_execution",
+      "source": "Correspondence.lean ExprDepthBounded/TemplateDepthBounded Encode.lean encodeExpr Decode.lean scanLexical CanonicalJson.lean parseStep",
+      "issue": "ExprDepthBounded is exprDepth e ≤ 55. TemplateDepthBounded checks only t.guard and omits deltas.amount and supplyDeltas.amount. encodeExpr adds constructor objects; typed-execute guard sits at JSON depth 7 and delta amount at 9. Source AST 55 is not a proof of JSON depth ≤ 64. Scanner increments then depth>64; parser refuses stack.length≥64 before push. Both admit 64 containers and refuse the 65th. Corrected ProbeR9 (child_compiler_exit 0): wrapNow 55 (AST 56) guard encodes nest 62, decodeBytes ok-eq, Nat.ble 55 false. wrapNow 57 (AST 58) nest 64, decodeBytes ok-eq. wrapNow 58 (AST 59) nest 65, resourceLimit maxDepth. wrapNow 63 as delta amount, guard .now: guard depth 1, amount 64, nest 72, scan/parse/decode all maxDepth. TemplateDepthBounded would hold on the guard by predicate text. No kernel SupportedIR proof (Decidable ExprDepthBounded was not synthesised). Predicate text plus production outcomes remain separate. Do not shrink grammar to make the theorem true.",
+      "probe": "../logs/probe-r9.stdout",
+      "actual": {
+        "guard56_depth": 56,
+        "guard56_le55": false,
+        "guard56_nest": 62,
+        "guard56_decode": "ok-eq",
+        "guard58_depth": 58,
+        "guard58_nest": 64,
+        "guard58_decode": "ok-eq",
+        "guard59_depth": 59,
+        "guard59_nest": 65,
+        "guard59_decode": "resourceLimit maxDepth",
+        "delta64_guard_depth": 1,
+        "delta64_amount_depth": 64,
+        "delta64_nest": 72,
+        "delta64_scan_parse_decode": "resourceLimit maxDepth"
+      }
+    },
+    {
+      "id": "R9-COLLECTION-INCOMPLETE",
+      "severity": "blocker",
+      "class": "omitted_nested_arrays",
+      "evidence_class": "source_inspection+successful_execution",
+      "source": "Correspondence.lean EnvelopeLengthBounds/StepPayloadLengthBounds/RunPayloadLengthBounds Schema.lean ComponentEnc/OperationInterfaceEnc Decode.lean scanLexical/feedValue/decodeBytes",
+      "issue": "config.catalog.length ≤ 4096 does not bound component privateCells/exports/imports/operations or operation inputs/outputs. EnvelopeLengthBounds omits claimed_next_state.capabilities.entries. That is a missing sufficient-bound in the proof domain, not a public acceptance of oversized arrays. Parser feedValue refuses acc.size≥4096. Scanner comma-count throws when cnt+1>4096, so 4097 elements pass the scanner only. Public decodeBytes still refuses: parseCanonicalJson resourceLimit max_array_length is remapped to notJsonObject. ProbeR9: catalog length 1, privateCells 4097, encode 200173 bytes, scan ok, parse max_array_length, decode notJsonObject. Same for 4097 operation inputs (130564 bytes) and 4097 claimed_next_state capabilities (369468 bytes). Whole decoder enforces 4096. Scanner/parser staged-check mismatch is not an extra required scanner refactor. No kernel SupportedIR proof. Exact byte-length SerializedByteBound is not this defect.",
+      "probe": "../logs/probe-r9.stdout",
+      "actual": {
+        "priv4097_catalog": 1,
+        "priv4097_len": 4097,
+        "priv4097_bytes": 200173,
+        "priv4097_scan": "ok",
+        "priv4097_parse": "resourceLimit max_array_length",
+        "priv4097_decode": "notJsonObject",
+        "ops4097_inputs": 4097,
+        "ops4097_bytes": 130564,
+        "claimed4097_len": 4097,
+        "claimed4097_bytes": 369468,
+        "public_decoder_still_refuses_4097": true,
+        "scanner_refactor_required": false
+      }
+    },
+    {
+      "id": "R9-UNIVERSAL-OPEN",
+      "severity": "blocker",
+      "class": "helper_lemmas_not_full_ir",
+      "evidence_class": "compiler_proved+source_inspection",
+      "source": "Correspondence.lean EncodeDecodeRoundtripStatement and *ToJson lemmas",
+      "issue": "EncodeDecodeRoundtripStatement remains def Prop. 24 new lemmas invert *ToJson Lean.Json helpers through decode*/decodeExprFuel, not encodeModule/encodeExpr. No exprToJson_decode_lit. packedValueToJson bool is Json.bool, not the production {unit,value} object. Step lemmas assume decodeExprFuel fuel (exprToJson child)=ok child; there is no ∀ e, decodeExprFuel 64 (exprToJson e)=ok e. decodePackedValue_scalar_val is Nat. decodeStateCell_canonical is nonnegative main/alice/usd only. Production decodeExpr uses fuel 64, independent of ExprDepthBounded 55. decode_encode_roundtrip_of_decode and decode_encode_canonical_bytes assume prior decodeBytes=ok. Corrected ProbeAxioms child_compiler_exit 0 printed 113 named theorems, standard axioms only. Do not conflate helper progress with the full IR theorem. P20 labelling does not move assigned P19 work.",
+      "probe": "../logs/probe-axioms.stdout"
+    },
+    {
+      "id": "R9-REPORT-IDENTITY",
+      "severity": "blocker",
+      "class": "report_identity",
+      "evidence_class": "source_inspection+author_captured",
+      "source": "review/semantic-kernel/certificates/p19/implementation/agy-r9-proof/REPORT.md source-manifest.json commands.json",
+      "issue": "REPORT hashes for Encode (611ba5b6…, 24660 B), Correspondence (15e4a4dd…, 71852 B), CanonicalJson (ecb58097…), and run_certificate_fixtures.py (03f39a0f…) disagree with frozen files and source-manifest (66debd7d 24650 B / 1eb36ba7 72029 B / a814687b / bd0eda3d). Header auditor grok-4.6-high is not an observed R9 review. REPORT claims DynamicKeyProbe and a scratch suite; R9 evidence folder has 8 files; author commands.json has six lake/python entries and no key probe. Captured fixture-results.json records 54/54 plus 54 controls; this review did not rerun fixtures or mutants. Known F13 null/overlay/host defects remain separate."
+    },
+    {
+      "id": "R9-KEY-VALUE-PROGRESS",
+      "severity": "note",
+      "class": "encoder_keys_and_values_roundtrip",
+      "evidence_class": "successful_execution+source_inspection",
+      "source": "Encode.lean jsonObj",
+      "issue": "jsonObj now concatenates escapeJsonString k with the value. This is the R8 key-escape repair, not an R8 bug on R9 source. Corrected ProbeR9 production encodeModule/decodeBytes ok-eq for quote/backslash/NUL/LF/tab/U+03BB/U+1F680 on source_map keys and checker_candidate values. jsonObj of key a\"b is {\"a\\\"b\":1}. Duplicate source_map keys decode as duplicateKey. Extra space after mode colon is noncanonicalWhitespace. Encoder emits lexicographic source_map keys (encoded prefix :{\"a\":\"1\",\"b\":\"2\"}); decoding an IR whose in-memory map was unsorted yields ok-neq because the decoded map is the sorted emission. Unsorted JSON bytes remain a canonical refusal. Author DynamicKeyProbe prose is not credited.",
+      "probe": "../logs/probe-r9.stdout",
+      "actual": {
+        "jsonObj_quoted": "{\"a\\\"b\":1}",
+        "quoted_key_decode": "ok-eq",
+        "bs_key_decode": "ok-eq",
+        "nul_key_decode": "ok-eq",
+        "lf_key_decode": "ok-eq",
+        "tab_key_decode": "ok-eq",
+        "lambda_key_decode": "ok-eq",
+        "rocket_key_decode": "ok-eq",
+        "values": "ok-eq",
+        "dup_keys": "duplicateKey a",
+        "space_after_colon": "noncanonicalWhitespace",
+        "unsorted_ir_decode": "ok-neq",
+        "encoded_source_map_prefix": ":{\"a\":\"1\",\"b\":\"2\"}"
+      }
+    },
+    {
+      "id": "R9-BYTE-BOUND-PROGRESS",
+      "severity": "note",
+      "class": "exact_encode_size_predicate",
+      "evidence_class": "source_inspection+compiler_proved",
+      "source": "Correspondence.lean SerializedByteBound serialized_byte_bound_exceeded_not_supported",
+      "issue": "R8 4096-character and 1e18 caps and guessed cost estimators are absent from R9 SupportedIR. SerializedByteBound is (encodeModule ir).size ≤ 1048576. serialized_byte_bound_exceeded_not_supported transports that predicate. Witness encode size 3427. This is a legitimate resource restriction and not the old estimator defect. It does not prove JSON depth or nested array bounds."
+    }
+  ],
+  "failed_probes_zero_credit": [
+    "../logs/probe-axioms-attempt1.stdout",
+    "../logs/probe-r9-attempt1.stdout",
+    "../logs/probe-r9-attempt2.stdout"
+  ]
+}
