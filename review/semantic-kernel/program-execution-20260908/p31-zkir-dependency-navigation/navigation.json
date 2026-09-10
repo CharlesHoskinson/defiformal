@@ -1,0 +1,209 @@
+{
+  "schema": "defiformal-zkir-dependency-navigation/v1",
+  "utc": "2026-09-10T18:41:48.946284+00:00",
+  "dependency_seal_sha256": "5d7af9c6b84c482619bed3ac752116e2a738892996fa823abb4785c37adcdd77",
+  "lock_sha256": "2c1c83d43ad654de176ff1e4f195987a01b2d587f38f3e668897dddd239cb51a",
+  "sources": {
+    "ir": {
+      "path": "review/semantic-kernel/program-execution-20260908/p31-zkir-source-preparation/crate/midnight-zkir-2.1.0/src/ir.rs",
+      "sha256": "1b6a5e126b2031329c9ec7882256eb00d91d67e122f2f2d8edad13ea81a81abd"
+    },
+    "vm": {
+      "path": "review/semantic-kernel/program-execution-20260908/p31-zkir-source-preparation/crate/midnight-zkir-2.1.0/src/ir_vm.rs",
+      "sha256": "0f3a927b9f2973ec16c5dbfdb191d69054ebea9d8f6fe10e2c0b61cbaaccedbd"
+    },
+    "hash": {
+      "path": "review/semantic-kernel/program-execution-20260908/p31-zkir-dependency-source-preparation/midnight-transient-crypto-2.0.0/source/midnight-transient-crypto-2.0.0/src/hash.rs",
+      "sha256": "e370c508a869d1b8af9d00891d27579723732264a5ec94eee33ee6e00057c01b"
+    },
+    "repr": {
+      "path": "review/semantic-kernel/program-execution-20260908/p31-zkir-dependency-source-preparation/midnight-transient-crypto-2.0.0/source/midnight-transient-crypto-2.0.0/src/repr.rs",
+      "sha256": "5b603e2a8543dd2f5a4e250dfc6383d108ed3addf9fa2fd7443a26b6a6dfe68f"
+    },
+    "curve": {
+      "path": "review/semantic-kernel/program-execution-20260908/p31-zkir-dependency-source-preparation/midnight-transient-crypto-2.0.0/source/midnight-transient-crypto-2.0.0/src/curve.rs",
+      "sha256": "966d789356dcf1770553ca5fb635b6c30fd808c95b4a68c4d3f0aa7647659f63"
+    },
+    "stdlib": {
+      "path": "review/semantic-kernel/program-execution-20260908/p31-zkir-dependency-source-preparation/midnight-zk-stdlib-1.0.0/source/midnight-zk-stdlib-1.0.0/src/lib.rs",
+      "sha256": "ea82661fb59304a0800876bc76fdca147a02e4015004952cec734cc9f8c0183f"
+    },
+    "poseidon_cpu": {
+      "path": "review/semantic-kernel/program-execution-20260908/p31-zkir-dependency-source-preparation/midnight-circuits-6.0.0/source/midnight-circuits-6.0.0/src/hash/poseidon/poseidon_cpu.rs",
+      "sha256": "1be003748788c7bc11c14ecdf70dbb062a694b5f7f619c83c26d14e8e68d395c"
+    },
+    "poseidon_chip": {
+      "path": "review/semantic-kernel/program-execution-20260908/p31-zkir-dependency-source-preparation/midnight-circuits-6.0.0/source/midnight-circuits-6.0.0/src/hash/poseidon/poseidon_chip.rs",
+      "sha256": "886242129e2600d3879f9728fd35a7c2d7f3a0098c446cf0dfff35be93a06a38"
+    },
+    "fq": {
+      "path": "review/semantic-kernel/program-execution-20260908/p31-zkir-dependency-source-preparation/midnight-curves-0.2.0/source/midnight-curves-0.2.0/src/bls12_381/fq.rs",
+      "sha256": "f12967e1d672175304ca4cac302a19e1e50d13d030759bd4a81003660174e874"
+    }
+  },
+  "anchors": [
+    {
+      "id": "commitment_preprocess",
+      "path": "review/semantic-kernel/program-execution-20260908/p31-zkir-source-preparation/crate/midnight-zkir-2.1.0/src/ir_vm.rs",
+      "source_sha256": "0f3a927b9f2973ec16c5dbfdb191d69054ebea9d8f6fe10e2c0b61cbaaccedbd",
+      "start_line": 484,
+      "end_line": 499,
+      "excerpt": "        if self.do_communications_commitment {\n            let comm_comm = preimage\n                .communications_commitment\n                .ok_or(anyhow!(\"Expected communications randomness\"))?;\n            let mut comm_comm_inputs: Vec<Fr> = Vec::new();\n            comm_comm_inputs.extend(preimage.inputs.iter());\n            comm_comm_inputs.extend(outputs.iter());\n            if comm_comm.0 != transient_commit(&comm_comm_inputs[..], comm_comm.1) {\n                error!(\n                    ?comm_comm,\n                    ?comm_comm_inputs,\n                    \"Communications commitment mismatch\"\n                );\n                bail!(\"Communications commitment mismatch\");\n            }\n        }\n",
+      "excerpt_sha256": "b449c2a1e387e08b0afe68d4921f0e9c3c59f064c9166656a05602056725aa52",
+      "classification": "static_source_navigation_not_execution_or_proof"
+    },
+    {
+      "id": "commitment_circuit",
+      "path": "review/semantic-kernel/program-execution-20260908/p31-zkir-source-preparation/crate/midnight-zkir-2.1.0/src/ir_vm.rs",
+      "source_sha256": "0f3a927b9f2973ec16c5dbfdb191d69054ebea9d8f6fe10e2c0b61cbaaccedbd",
+      "start_line": 765,
+      "end_line": 789,
+      "excerpt": "                }\n            }\n        }\n        if self.do_communications_commitment {\n            let comm_comm_rand_value = comm_comm_value.map(|c| {\n                c.ok_or_else(|| {\n                    error!(\"Communication commitment not present despite preproc. This is a bug.\");\n                    Error::Synthesis(\"Communication commitment not present despite preproc.\".into())\n                })\n                .unwrap()\n                .1\n            });\n            let comm_comm_rand = std.assign(layouter, comm_comm_rand_value)?;\n\n            let mut preimage = vec![comm_comm_rand];\n            preimage.extend(inputs.iter().cloned());\n            preimage.extend(outputs.iter().cloned());\n            let comm_comm = std.poseidon(layouter, &preimage)?;\n            // Nb. The communications commitment is the second public input\n            // by convention\n            std.assert_equal(layouter, &comm_comm, &public_inputs[1])?;\n        }\n\n        public_inputs\n            .iter()\n",
+      "excerpt_sha256": "f1b7e026a4a813cc35859548f3bdeb86c83b6f92c170c366e0b7783c585173e3",
+      "classification": "static_source_navigation_not_execution_or_proof"
+    },
+    {
+      "id": "transient_hash_and_commit",
+      "path": "review/semantic-kernel/program-execution-20260908/p31-zkir-dependency-source-preparation/midnight-transient-crypto-2.0.0/source/midnight-transient-crypto-2.0.0/src/hash.rs",
+      "source_sha256": "e370c508a869d1b8af9d00891d27579723732264a5ec94eee33ee6e00057c01b",
+      "start_line": 75,
+      "end_line": 89,
+      "excerpt": "/// An efficient hash function that may be changed on hard-forks.\npub fn transient_hash(elems: &[Fr]) -> Fr {\n    let h = <PoseidonChip<outer::Scalar> as HashCPU<outer::Scalar, outer::Scalar>>::hash(\n        &elems.iter().map(|x| x.0).collect::<Vec<_>>(),\n    );\n    Fr(h)\n}\n\n/// Commits to a value using `transient_hash`.\npub fn transient_commit<T: FieldRepr + ?Sized>(value: &T, opening: Fr) -> Fr {\n    let mut preimage = vec![opening];\n    value.field_repr(&mut preimage);\n    transient_hash(&preimage)\n}\n\n",
+      "excerpt_sha256": "ab575557835049d0cbf78190a066218f5f6195d6b7345974fae645e168231cd9",
+      "classification": "static_source_navigation_not_execution_or_proof"
+    },
+    {
+      "id": "field_slice_representation",
+      "path": "review/semantic-kernel/program-execution-20260908/p31-zkir-dependency-source-preparation/midnight-transient-crypto-2.0.0/source/midnight-transient-crypto-2.0.0/src/repr.rs",
+      "source_sha256": "5b603e2a8543dd2f5a4e250dfc6383d108ed3addf9fa2fd7443a26b6a6dfe68f",
+      "start_line": 282,
+      "end_line": 289,
+      "excerpt": "impl FieldRepr for [Fr] {\n    fn field_repr<W: MemWrite<Fr>>(&self, writer: &mut W) {\n        writer.write(self);\n    }\n    fn field_size(&self) -> usize {\n        self.len()\n    }\n}\n",
+      "excerpt_sha256": "aa6e91731e65ba991bac8d15a0d0330fd903da1a72ef1d3e3aee592716d25e7d",
+      "classification": "static_source_navigation_not_execution_or_proof"
+    },
+    {
+      "id": "outer_and_embedded_aliases",
+      "path": "review/semantic-kernel/program-execution-20260908/p31-zkir-dependency-source-preparation/midnight-transient-crypto-2.0.0/source/midnight-transient-crypto-2.0.0/src/curve.rs",
+      "source_sha256": "966d789356dcf1770553ca5fb635b6c30fd808c95b4a68c4d3f0aa7647659f63",
+      "start_line": 51,
+      "end_line": 73,
+      "excerpt": "pub mod outer {\n    /// The base prime field, used to represent curve points\n    pub type Base = midnight_curves::Fp;\n    /// The scalar prime field, used in circuit\n    pub type Scalar = midnight_curves::Fq;\n    /// The affine representation of a curve point\n    pub type Affine = midnight_curves::G1Affine;\n    /// The size of the outer curve point in bytes\n    pub const POINT_BYTES: usize = Affine::compressed_size();\n}\n\n/// The embedded / cycle curve, used in-circuit mainly\npub mod embedded {\n    /// The base prime field, used to represent curve points; the scalar of [`outer`](super::outer)\n    pub type Base = midnight_curves::Fq;\n    /// The scalar prime field, used in embedded proofs\n    pub type Scalar = midnight_curves::Fr;\n    /// The affine representation of a curve point over the extended curve\n    /// (which contains the relevant cryptographic subgroup).\n    pub type AffineExtended = midnight_curves::JubjubExtended;\n    /// The affine representation of a curve point of the relevant cryptographic subgroup.\n    pub type Affine = midnight_curves::JubjubSubgroup;\n}\n",
+      "excerpt_sha256": "aafdb0555a0726e038441836c61f09198476a1e47f03811fd368ad4d10db1850",
+      "classification": "static_source_navigation_not_execution_or_proof"
+    },
+    {
+      "id": "outer_fr_wrapper",
+      "path": "review/semantic-kernel/program-execution-20260908/p31-zkir-dependency-source-preparation/midnight-transient-crypto-2.0.0/source/midnight-transient-crypto-2.0.0/src/curve.rs",
+      "source_sha256": "966d789356dcf1770553ca5fb635b6c30fd808c95b4a68c4d3f0aa7647659f63",
+      "start_line": 145,
+      "end_line": 159,
+      "excerpt": "        }\n\n        impl Deserializable for $name {\n            fn deserialize(reader: &mut impl Read, recursion_depth: u32) -> io::Result<Self> {\n                <$name>::try_from(ScaleBigInt::deserialize(reader, recursion_depth)?)\n            }\n        }\n    };\n}\n\n/// An element of our primary prime field.\n#[derive(Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Storable)]\n#[storable(base)]\npub struct Fr(pub outer::Scalar);\nwrap_field_arith!(Fr);\n",
+      "excerpt_sha256": "407cc05452ed0d55756f64a2189037986122c9a0297b477a6438e84bb76f4776",
+      "classification": "static_source_navigation_not_execution_or_proof"
+    },
+    {
+      "id": "stdlib_field",
+      "path": "review/semantic-kernel/program-execution-20260908/p31-zkir-dependency-source-preparation/midnight-zk-stdlib-1.0.0/source/midnight-zk-stdlib-1.0.0/src/lib.rs",
+      "source_sha256": "ea82661fb59304a0800876bc76fdca147a02e4015004952cec734cc9f8c0183f",
+      "start_line": 98,
+      "end_line": 103,
+      "excerpt": "\nuse crate::utils::plonk_api::BlstPLONK;\n\ntype C = midnight_curves::JubjubExtended;\ntype F = midnight_curves::Fq;\n\n",
+      "excerpt_sha256": "fdf4db5ed83386d652d46b155507c1295d482df4c03f331f785f8154a12f758c",
+      "classification": "static_source_navigation_not_execution_or_proof"
+    },
+    {
+      "id": "stdlib_poseidon_call",
+      "path": "review/semantic-kernel/program-execution-20260908/p31-zkir-dependency-source-preparation/midnight-zk-stdlib-1.0.0/source/midnight-zk-stdlib-1.0.0/src/lib.rs",
+      "source_sha256": "ea82661fb59304a0800876bc76fdca147a02e4015004952cec734cc9f8c0183f",
+      "start_line": 691,
+      "end_line": 701,
+      "excerpt": "    pub fn poseidon(\n        &self,\n        layouter: &mut impl Layouter<F>,\n        input: &[AssignedNative<F>],\n    ) -> Result<AssignedNative<F>, Error> {\n        self.poseidon_gadget\n            .as_ref()\n            .unwrap_or_else(|| panic!(\"ZkStdLibArch must enable poseidon\"))\n            .hash(layouter, input)\n    }\n\n",
+      "excerpt_sha256": "8f5d3a1f9d288aee90c1d4a8ae0eed76335f92f50675e221e4ea03ed26ee4a36",
+      "classification": "static_source_navigation_not_execution_or_proof"
+    },
+    {
+      "id": "poseidon_cpu_hash",
+      "path": "review/semantic-kernel/program-execution-20260908/p31-zkir-dependency-source-preparation/midnight-circuits-6.0.0/source/midnight-circuits-6.0.0/src/hash/poseidon/poseidon_cpu.rs",
+      "source_sha256": "1be003748788c7bc11c14ecdf70dbb062a694b5f7f619c83c26d14e8e68d395c",
+      "start_line": 252,
+      "end_line": 259,
+      "excerpt": "impl<F: PoseidonField> HashCPU<F, F> for PoseidonChip<F> {\n    fn hash(inputs: &[F]) -> F {\n        let mut state = <Self as SpongeCPU<F, F>>::init(Some(inputs.len()));\n        <Self as SpongeCPU<F, F>>::absorb(&mut state, inputs);\n        <Self as SpongeCPU<F, F>>::squeeze(&mut state)\n    }\n}\n\n",
+      "excerpt_sha256": "19d90130e8c1fef872cbf984b4cdc6bddd337fa8da69b79dc234dd3975851419",
+      "classification": "static_source_navigation_not_execution_or_proof"
+    },
+    {
+      "id": "poseidon_circuit_hash",
+      "path": "review/semantic-kernel/program-execution-20260908/p31-zkir-dependency-source-preparation/midnight-circuits-6.0.0/source/midnight-circuits-6.0.0/src/hash/poseidon/poseidon_chip.rs",
+      "source_sha256": "886242129e2600d3879f9728fd35a7c2d7f3a0098c446cf0dfff35be93a06a38",
+      "start_line": 550,
+      "end_line": 563,
+      "excerpt": "impl<F: PoseidonField> HashInstructions<F, AssignedNative<F>, AssignedNative<F>>\n    for PoseidonChip<F>\n{\n    fn hash(\n        &self,\n        layouter: &mut impl Layouter<F>,\n        inputs: &[AssignedNative<F>],\n    ) -> Result<AssignedNative<F>, Error> {\n        let mut state = self.init(layouter, Some(inputs.len()))?;\n        self.absorb(layouter, &mut state, inputs)?;\n        self.squeeze(layouter, &mut state)\n    }\n}\n\n",
+      "excerpt_sha256": "53f8f0b6f9723a1ef29267a9d2c914957207acd01eb5aabe2dbd22108e098ad3",
+      "classification": "static_source_navigation_not_execution_or_proof"
+    },
+    {
+      "id": "fq_modulus_limbs",
+      "path": "review/semantic-kernel/program-execution-20260908/p31-zkir-dependency-source-preparation/midnight-curves-0.2.0/source/midnight-curves-0.2.0/src/bls12_381/fq.rs",
+      "source_sha256": "f12967e1d672175304ca4cac302a19e1e50d13d030759bd4a81003660174e874",
+      "start_line": 42,
+      "end_line": 48,
+      "excerpt": "// Little-endian non-Montgomery form not reduced mod p.\nconst MODULUS: [u64; 4] = [\n    0xffff_ffff_0000_0001,\n    0x53bd_a402_fffe_5bfe,\n    0x3339_d808_09a1_d805,\n    0x73ed_a753_299d_7d48,\n];\n",
+      "excerpt_sha256": "bb6bcda486a712babb8f0afed359a7743004db1ee0d54bd9c2afcbbae200ce46",
+      "classification": "static_source_navigation_not_execution_or_proof"
+    },
+    {
+      "id": "fq_modulus_hex",
+      "path": "review/semantic-kernel/program-execution-20260908/p31-zkir-dependency-source-preparation/midnight-curves-0.2.0/source/midnight-curves-0.2.0/src/bls12_381/fq.rs",
+      "source_sha256": "f12967e1d672175304ca4cac302a19e1e50d13d030759bd4a81003660174e874",
+      "start_line": 501,
+      "end_line": 504,
+      "excerpt": "    /// Constant representing the modulus\n    const MODULUS: &'static str =\n        \"0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001\";\n\n",
+      "excerpt_sha256": "a7c9cb62d919dca4d099565c07b7781cc1a997dd8e66f918c2709747dad29a1d",
+      "classification": "static_source_navigation_not_execution_or_proof"
+    },
+    {
+      "id": "pi_skip_preprocess",
+      "path": "review/semantic-kernel/program-execution-20260908/p31-zkir-source-preparation/crate/midnight-zkir-2.1.0/src/ir_vm.rs",
+      "source_sha256": "0f3a927b9f2973ec16c5dbfdb191d69054ebea9d8f6fe10e2c0b61cbaaccedbd",
+      "start_line": 421,
+      "end_line": 445,
+      "excerpt": "                I::PiSkip { guard, count } => match guard {\n                    Some(guard) if !idx_bool(&memory, *guard)? => {\n                        pi_skips.push(Some(*count as usize));\n                        public_transcript_inputs_idx -= *count as usize;\n                    }\n                    _ => {\n                        pi_skips.push(None);\n                        for i in 0..(*count as usize) {\n                            let idx = public_transcript_inputs_idx - *count as usize + i;\n                            let expected = preimage.public_transcript_inputs.get(idx).copied();\n                            let computed = Some(pis[pis.len() - *count as usize + i]);\n                            if expected != computed {\n                                error!(\n                                    ?idx,\n                                    ?expected,\n                                    ?computed,\n                                    ?memory,\n                                    ?pis,\n                                    \"Public transcript input mismatch\"\n                                );\n                                bail!(\n                                    \"Public transcript input mismatch for input {idx}; expected: {expected:?}, computed: {computed:?}\"\n                                );\n                            }\n                        }\n",
+      "excerpt_sha256": "4148bc416cd2806d96e277304485e3e9d2dd1e7e5f374f7e0a03a8a2faeaa8bf",
+      "classification": "static_source_navigation_not_execution_or_proof"
+    },
+    {
+      "id": "pi_skip_circuit",
+      "path": "review/semantic-kernel/program-execution-20260908/p31-zkir-source-preparation/crate/midnight-zkir-2.1.0/src/ir_vm.rs",
+      "source_sha256": "0f3a927b9f2973ec16c5dbfdb191d69054ebea9d8f6fe10e2c0b61cbaaccedbd",
+      "start_line": 624,
+      "end_line": 632,
+      "excerpt": "                }\n                I::Copy { var } => mem_push(idx(&memory, *var)?.clone(), &mut memory)?,\n                I::DeclarePubInput { var } => {\n                    pi_push(idx(&memory, *var)?.clone(), &mut public_inputs)?\n                }\n                I::PiSkip { .. } => {}\n                I::LoadImm { imm } => mem_push(std.assign_fixed(layouter, imm.0)?, &mut memory)?,\n                I::Output { var } => outputs.push(idx(&memory, *var)?.clone()),\n                I::TransientHash { inputs } => mem_push(\n",
+      "excerpt_sha256": "28fa141301c0442f85dc9f0a557c8adac7cab49587cefe6e2623285083781e0b",
+      "classification": "static_source_navigation_not_execution_or_proof"
+    }
+  ],
+  "field_modulus": {
+    "hex": "0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001",
+    "decimal": "52435875175126190479447740508185965837690552500527637822603658699938581184513",
+    "bit_length": 255,
+    "little_endian_limbs_agree": true,
+    "method": "Python integer parsing of two constants in captured Fq source; no downloaded Rust execution."
+  },
+  "specific_external_boundary": [
+    {
+      "name": "blst",
+      "version": "0.3.16",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "dcdb4c7013139a150f9fc55d123186dbfaba0d912817466282c73ac49e71fb45",
+      "dependencies": [
+        "cc",
+        "glob",
+        "threadpool",
+        "zeroize"
+      ]
+    }
+  ],
+  "acceptance": false,
+  "semantic_contract_accepted": false
+}
