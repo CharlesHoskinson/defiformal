@@ -1,0 +1,186 @@
+{
+  "utc": "2026-09-10T21:02:54.631322+00:00",
+  "anchors": [
+    {
+      "id": "liquidation-equity",
+      "path": "source/contracts/position/PositionUtils.sol",
+      "sha256": "38d1f1e4900b5c4fdb01476ab592adda8d58fa6188865b78423eb0a311d3cd06",
+      "needle": "info.remainingCollateralUsd =",
+      "matching_lines": [
+        417
+      ],
+      "static_observation": "Liquidation valuation adds signed position PnL and price impact to collateral USD and subtracts token-denominated costs converted at collateral price.min. This is a health valuation, not an available token balance.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "nonpositive-liquidation",
+      "path": "source/contracts/position/PositionUtils.sol",
+      "sha256": "38d1f1e4900b5c4fdb01476ab592adda8d58fa6188865b78423eb0a311d3cd06",
+      "needle": "if (info.remainingCollateralUsd <= 0) {",
+      "matching_lines": [
+        441
+      ],
+      "static_observation": "Nonpositive remaining equity is a liquidation condition, alongside minimum collateral and leverage thresholds.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "collateral-no-positive-pnl",
+      "path": "source/contracts/position/PositionUtils.sol",
+      "sha256": "38d1f1e4900b5c4fdb01476ab592adda8d58fa6188865b78423eb0a311d3cd06",
+      "needle": "if (values.realizedPnlUsd < 0) {",
+      "matching_lines": [
+        490
+      ],
+      "static_observation": "Collateral-sufficiency calculation deducts negative realized PnL but does not credit positive PnL; keep this check distinct from liquidation equity.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "liquidatable-position-guard",
+      "path": "source/contracts/position/PositionUtils.sol",
+      "sha256": "38d1f1e4900b5c4fdb01476ab592adda8d58fa6188865b78423eb0a311d3cd06",
+      "needle": "revert Errors.LiquidatablePosition(",
+      "matching_lines": [
+        307
+      ],
+      "static_observation": "validatePosition can reject a liquidatable position. This guard is not the same as executing a permitted liquidation order.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "insolvent-close-admission",
+      "path": "source/contracts/position/DecreasePositionCollateralUtils.sol",
+      "sha256": "32b23e4edd9a52e79cfae0ab600b2e448af09d2c57a512e6b8ef7ada7b04423b",
+      "needle": "collateralCache.isInsolventCloseAllowed =",
+      "matching_lines": [
+        80
+      ],
+      "static_observation": "Insolvent early close requires a full size reduction and either liquidation order or secondary ADL classification. Later caller checks and transaction success are separate.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "cost-refusal",
+      "path": "source/contracts/position/DecreasePositionCollateralUtils.sol",
+      "sha256": "32b23e4edd9a52e79cfae0ab600b2e448af09d2c57a512e6b8ef7ada7b04423b",
+      "needle": "revert Errors.InsufficientFundsToPayForCosts(",
+      "matching_lines": [
+        638
+      ],
+      "static_observation": "handleEarlyReturn rejects unpaid costs when the insolvent-close condition is false. This is a concrete source refusal candidate.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "insolvent-residual-event",
+      "path": "source/contracts/position/DecreasePositionCollateralUtils.sol",
+      "sha256": "32b23e4edd9a52e79cfae0ab600b2e448af09d2c57a512e6b8ef7ada7b04423b",
+      "needle": "PositionEventUtils.emitInsolventClose(",
+      "matching_lines": [
+        652
+      ],
+      "static_observation": "Allowed insolvent early return emits the remainingCostUsd and payment step, then returns empty fee values; this event is not a self-executing insurance payout or a proven debt ledger.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "funding-shortfall-event",
+      "path": "source/contracts/position/DecreasePositionCollateralUtils.sol",
+      "sha256": "32b23e4edd9a52e79cfae0ab600b2e448af09d2c57a512e6b8ef7ada7b04423b",
+      "needle": "PositionEventUtils.emitInsufficientFundingFeePayment(",
+      "matching_lines": [
+        280
+      ],
+      "static_observation": "Insufficient collateral-token funding payment emits expected/paid primary and paid secondary amounts. Comments proposing pool top-up/insurance are not an executed automatic top-up.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "holding-address-refusal",
+      "path": "source/contracts/position/DecreasePositionCollateralUtils.sol",
+      "sha256": "32b23e4edd9a52e79cfae0ab600b2e448af09d2c57a512e6b8ef7ada7b04423b",
+      "needle": "revert Errors.EmptyHoldingAddress();",
+      "matching_lines": [
+        259
+      ],
+      "static_observation": "Funding paid in secondary output tokens requires a nonzero configured holding address before recording claimable collateral for that address.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "primary-payment-rounding",
+      "path": "source/contracts/position/DecreasePositionCollateralUtils.sol",
+      "sha256": "32b23e4edd9a52e79cfae0ab600b2e448af09d2c57a512e6b8ef7ada7b04423b",
+      "needle": "Calc.roundUpDivision(costUsd, collateralTokenPrice.min)",
+      "matching_lines": [
+        579
+      ],
+      "static_observation": "payForCost first rounds cost upward in collateral-token units, then consumes output collateral tokens and remaining position collateral.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "secondary-payment-rounding",
+      "path": "source/contracts/position/DecreasePositionCollateralUtils.sol",
+      "sha256": "32b23e4edd9a52e79cfae0ab600b2e448af09d2c57a512e6b8ef7ada7b04423b",
+      "needle": "remainingCostInOutputToken * collateralTokenPrice.min / secondaryOutputTokenPrice.min",
+      "matching_lines": [
+        611
+      ],
+      "static_observation": "Secondary token conversion uses integer division. Explicit accounting must distinguish source-rounded remainingCostUsd from an exact rational residual and preserve dust/valuation assumptions.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "withdrawal-token-cap",
+      "path": "source/contracts/position/DecreasePositionCollateralUtils.sol",
+      "sha256": "32b23e4edd9a52e79cfae0ab600b2e448af09d2c57a512e6b8ef7ada7b04423b",
+      "needle": "if (params.order.initialCollateralDeltaAmount() > values.remainingCollateralAmount) {",
+      "matching_lines": [
+        549
+      ],
+      "static_observation": "Requested collateral withdrawal is capped by remainingCollateralAmount at this stage; unrealized equity must not be silently substituted for these token units.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "funding-fee-versus-claimables",
+      "path": "source/contracts/pricing/PositionPricingUtils.sol",
+      "sha256": "59661f2ab60aa09924e34418357f15064ce7136e7440449c5f31ca3ce8fa050d",
+      "needle": "fundingFees.fundingFeeAmount = MarketUtils.getFundingAmount(",
+      "matching_lines": [
+        488
+      ],
+      "static_observation": "Funding has separate unsigned fee and long/short claimable token amounts; fee calculation rounds up, claimable calculations round down. Signed net reconciliation must retain asset/unit identity.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "funding-cumulative-difference",
+      "path": "source/contracts/market/MarketUtils.sol",
+      "sha256": "8dfd271e4fc8e18d6a114b674dc1f520f38f6acd1f9c9a58b4b7509fe86e748f",
+      "needle": "uint256 fundingDiffFactor = (latestFundingAmountPerSize - positionFundingAmountPerSize);",
+      "matching_lines": [
+        1988
+      ],
+      "static_observation": "Funding is derived from a checked unsigned cumulative-factor difference and size via scaled mulDiv; this is not an unconstrained signed cash increment.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "claimable-account-key",
+      "path": "source/contracts/market/MarketUtils.sol",
+      "sha256": "8dfd271e4fc8e18d6a114b674dc1f520f38f6acd1f9c9a58b4b7509fe86e748f",
+      "needle": "Keys.claimableFundingAmountKey(market, token, account)",
+      "matching_lines": [
+        607,
+        642
+      ],
+      "static_observation": "Claimable funding is keyed by market/token/account; accrual and claim logic operate on these records separately from position collateral.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "claim-transfer",
+      "path": "source/contracts/market/MarketUtils.sol",
+      "sha256": "8dfd271e4fc8e18d6a114b674dc1f520f38f6acd1f9c9a58b4b7509fe86e748f",
+      "needle": "MarketToken(payable(market)).transferOut(",
+      "matching_lines": [
+        652,
+        751
+      ],
+      "static_observation": "claimFundingFees clears claimable records and transfers the selected token before balance validation. Other functions share transferOut calls; the claim path is bounded by its function body.",
+      "proof_or_execution": false
+    }
+  ],
+  "anchor_count": 16,
+  "scope": "Static source navigation only; no compiler, contract execution, Lean proof, deployment identity or accepted observation contract.",
+  "P27_accepted": false
+}
