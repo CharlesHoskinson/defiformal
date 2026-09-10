@@ -1,0 +1,124 @@
+{
+  "schema": "defiformal-container-codec-findings/v1",
+  "mark": "CONTAINER_CODEC_COMPONENT_REVIEW_ONLY_FULL_P19_OPEN",
+  "acceptance": false,
+  "verdict": "CHANGES_REQUIRED",
+  "fresh_session": true,
+  "evidence_classes": {
+    "compiler_proved": "Kernel theorems imported from the private rebuild; #print axioms on all 167 named source theorems with child_compiler_exit 0.",
+    "successful_execution": "Child compiler exit 0 and no Lean error: line. ProbeAxioms and ProbeR11 attempt 2 only.",
+    "source_inspection": "Read of frozen Schema/Encode/Decode/CanonicalJson/Correspondence/Check/Tests/grammar/R11 REPORT/results/theorems/source-manifest/root precheck/restoration.json/runner.",
+    "failed_probe": "Nonzero child compiler exit or Lean error: line. ProbeR11 attempt 1 (unknown identifier). check-axioms-inline without lake env (unknown module prefix).",
+    "author_captured": "Inspected R11 evidence folder files and author commands.json; fixtures/scenarios not re-run.",
+    "unverified": "Not executed in this review."
+  },
+  "findings": [
+    {
+      "id": "R11-UNIVERSAL-OPEN",
+      "severity": "blocker",
+      "class": "helper_inversions_not_encodeModule_decodeBytes",
+      "evidence_class": "compiler_proved+source_inspection",
+      "source": "Correspondence.lean EncodeDecodeRoundtripStatement and 17 *ToJson inverses; Encode.lean encodeModuleCanonical/encodeSourcePin/encodeLibraryRef",
+      "issue": "EncodeDecodeRoundtripStatement remains def Prop quantifying StructurallyAdmissibleIR ir → decodeBytes (encodeModule ir) = .ok ir. The 17 new lemmas invert Correspondence helper *ToJson Lean.Json trees, not production encodeModule strings. decodeLibraryRef_libraryRefToJson uses libraryRefToJson: none is Json.str; production encodeLibraryRef none is {\"theorem\":…}. decodeNat_natToJson is an inline JsonNumber.mantissa.toNat match. decodeStore_storeToJson has no uniqueness hypothesis because decodeStore does not check Nodup. decodeConfig_configToJson requires only RegistryCanonical. decodeStep_stepToJson uses contradiction on .unsupported rather than inverting it. Duplicate-key refusal lives in the parser (feedValue), not in these helper theorems. Two serializers exist. Do not credit helper inversion as the whole byte/IR theorem.",
+      "actual": {
+        "EncodeDecodeRoundtripStatement": "def Prop",
+        "new17_compile": true,
+        "libraryRef_helper_none": "STR",
+        "libraryRef_prod_none": "{\"theorem\":\"T\"}"
+      }
+    },
+    {
+      "id": "R11-DEPTH-SCALAR-OFF-BY-ONE",
+      "severity": "blocker",
+      "class": "jsonDepth_counts_scalars_excludes_decode_admitted_ir",
+      "evidence_class": "source_inspection+successful_execution",
+      "source": "Correspondence.lean jsonDepthFuel/WholeDocumentDepthBounded; Decode.lean scanLexical/parseStep; Encode.lean encodeModule",
+      "issue": "jsonDepthFuel assigns 1 to every non-array non-object, including scalars. WholeDocumentDepthBounded is jsonDepth (decodedIRToJson ir) ≤ 64. ProbeR11: jsonDepth str/num/null/bool = 1; nestJson 63 = 64 (≤64 true); nestJson 64 = 65 (≤64 false). Guard AST 58 (wrapNow 57): encode nest 64, decodeBytes ok-eq, helper jsonDepth 65, ≤64 false. Production parseCanonicalJson of those bytes also reports depth=65 arr=32. Witness helper depth 7 versus encode nest 6. Parser/scanner admit 64 container levels whose jsonDepth is 65. SupportedIR therefore excludes a decode-admitted guard. Author REPORT claimed DEPTH-FIDELITY-REPAIR RESOLVED. The 52/55 conjuncts are gone; the replacement metric is not a faithful container-only production connection.",
+      "probe": "logs/probe-r11.stdout",
+      "actual": {
+        "scalar_jsonDepth": 1,
+        "nestJson64_jsonDepth": 65,
+        "nestJson64_le64": false,
+        "guard58_ast": 58,
+        "guard58_encode_nest": 64,
+        "guard58_decode": "ok-eq",
+        "guard58_helper_jsonDepth": 65,
+        "guard58_helper_le64": false,
+        "guard58_prod_parse_depth": 65,
+        "witness_helper_jsonDepth": 7,
+        "witness_encode_nest": 6
+      }
+    },
+    {
+      "id": "R11-JSON-CONNECTION",
+      "severity": "blocker",
+      "class": "sourcePin_helper_omits_production_keys",
+      "evidence_class": "source_inspection+successful_execution",
+      "source": "Correspondence.lean sourcePinToJson/decodeSourcePin_sourcePinToJson/decodedIRToJson; Encode.lean encodeSourcePin; Decode.lean decodeSourcePin; SupportedIR audit/codec False",
+      "issue": "sourcePinToJson emits git/lean_toolchain/mathlib_rev/checker_candidate only. decodeSourcePin_sourcePinToJson requires compiler_record = none and audit_record = none. ProbeR11: helper keys are the same four even when those fields are some; decode of that helper returns none/none. Production encodeSourcePin always emits compiler_record and audit_record (null or string). checkObjectKeys allows the omitted keys (missing is not exact-key failure). SupportedIR is False on .audit and .codec; decodedIRToJson maps those modes to Json.null. Null helpers for excluded modes alone are not a scoped-execution defect. Full production envelope/sourcePin and byte serializer connection remains open.",
+      "probe": "logs/probe-r11.stdout",
+      "actual": {
+        "helper_keys_none": "checker_candidate,git,lean_toolchain,mathlib_rev",
+        "helper_keys_some": "checker_candidate,git,lean_toolchain,mathlib_rev",
+        "prod_none": "{\"git\":\"g\",\"lean_toolchain\":\"t\",\"mathlib_rev\":\"m\",\"checker_candidate\":\"c\",\"compiler_record\":null,\"audit_record\":null}",
+        "prod_some_has_records": true,
+        "decode_helper_some": "ok cr=none ar=none"
+      }
+    },
+    {
+      "id": "R11-RESOURCE-PROPAGATION",
+      "severity": "note_progress_with_remaining_limits",
+      "class": "decodeBytes_preserves_parser_resourceLimit",
+      "evidence_class": "source_inspection+successful_execution",
+      "source": "Decode.lean decodeBytes; CanonicalJson.lean feedValue/parseStep; Tests.lean checkArrayLengthBoundaryRegression/checkDepthBoundaryRegression",
+      "issue": "R11 decodeBytes now throws parseCanonicalJson .resourceLimit rather than mapping every parser error to .notJsonObject. ProbeR11 independently: arr4097 scan ok, parse/decode resourceLimit max_array_length, check blocked:max_array_length. nest65 scan/parse/decode resourceLimit maxDepth, check blocked:maxDepth. This is valid public-classification progress versus frozen R10. Remaining: scanner comma-count still admits 4097-element arrays; in-limit 4095/4096 and nest 63/64 decode/check as malformed schemaVersion, not explicit parser success; maxBytes remains scanLexical 1048576; Tests.runtimeChecks were not treated as a proof. No full codec acceptance.",
+      "probe": "logs/probe-r11.stdout",
+      "actual": {
+        "arr4095_check": "malformed:schemaVersion",
+        "arr4096_check": "malformed:schemaVersion",
+        "arr4097_scan": "ok",
+        "arr4097_decode": "resourceLimit max_array_length",
+        "arr4097_check": "blocked:max_array_length",
+        "nest64_parse": "ok depth=65",
+        "nest64_check": "malformed:schemaVersion",
+        "nest65_decode": "resourceLimit maxDepth",
+        "nest65_check": "blocked:maxDepth"
+      }
+    },
+    {
+      "id": "R11-REPORT-IDENTITY",
+      "severity": "blocker",
+      "class": "report_fuel_and_catalogue_mismatch",
+      "evidence_class": "source_inspection+compiler_proved",
+      "source": "Correspondence.lean jsonDepth/jsonMaxArrayLength; agy-r11-proof/REPORT.md/theorems.json",
+      "issue": "Source jsonDepth := jsonDepthFuel 100 and jsonMaxArrayLength := jsonMaxArrayLengthFuel 100. Author REPORT displays 256 and 65536. Author theorems.json count 165. Independent declaration scan and #print axioms: 15 CanonicalJson + 152 Correspondence = 167. Missing from catalog: decodeParty_encodeParty, decodeRat_fromRat (same two names as R10). Source hashes match the author source-manifest. Do not treat catalog 165 as the theorem set.",
+      "actual": {
+        "jsonDepth_fuel": 100,
+        "jsonMaxArrayLength_fuel": 100,
+        "author_catalogue": 165,
+        "source_theorems": 167,
+        "in_source_not_json": ["decodeParty_encodeParty", "decodeRat_fromRat"]
+      }
+    },
+    {
+      "id": "R11-EVIDENCE-INTEGRITY",
+      "severity": "blocker",
+      "class": "runner_default_out_still_agy_r5",
+      "evidence_class": "source_inspection",
+      "source": "scripts/run_certificate_fixtures.py argparse --out/--overlay defaults; root restoration.json; author commands.json CMD-05",
+      "issue": "Fixture runner default --out is still review/semantic-kernel/certificates/p19/implementation/agy-r5 and default overlay is the R5 canonical-order overlay. main() does out_dir.mkdir(parents=True, exist_ok=True) with no sealed/history path rejection. Author R11 campaign used explicit --out agy-r11-proof. Root recorded overwrite of three R5 files, preserved new bytes, and restored originals before freeze. This review did not mutate historical evidence and did not rerun the campaign. R11 fresh 54/99 output is not a universal roundtrip proof. Known F13 expectedIR-null/host/overlay obligations remain outside this bounded review and open.",
+      "actual": {
+        "default_out": "review/semantic-kernel/certificates/p19/implementation/agy-r5",
+        "default_overlay": "review/semantic-kernel/certificates/p19/implementation/agy-r5/fixture-canonical-order-overlay.json",
+        "author_cmd05_explicit_out": "review/semantic-kernel/certificates/p19/implementation/agy-r11-proof",
+        "campaign_rerun": false
+      }
+    }
+  ],
+  "valid_progress": [
+    "167 named CanonicalJson+Correspondence theorems compile; #print axioms standard-only; 0 sorry in those files",
+    "17 container/payload helper inverses are real component lemmas under stated hypotheses",
+    "decodeBytes preserves parser resourceLimit; public 4097/65 classifications are blocked not malformed",
+    "Whole-document predicates replaced the R10 52/55 expression caps"
+  ]
+}
