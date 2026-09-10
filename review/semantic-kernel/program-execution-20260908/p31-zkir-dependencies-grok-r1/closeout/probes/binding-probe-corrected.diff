@@ -1,0 +1,205 @@
+--- /home/charl/defiformal/review/semantic-kernel/program-execution-20260908/p31-zkir-dependencies-grok-r1/probes/binding-probe.py	2026-09-10 13:10:49.101929872 -0600
++++ /home/charl/defiformal/review/semantic-kernel/program-execution-20260908/p31-zkir-dependencies-grok-r1/closeout/probes/binding-probe-corrected.py	2026-09-10 13:16:59.657840313 -0600
+@@ -1,8 +1,18 @@
+ #!/usr/bin/env python3
+-"""Offline binding probe for frozen P31 ZKIR dependency-source evidence.
++"""Corrected closeout copy of the parent offline binding probe.
++
++Parent probe path:
++  review/semantic-kernel/program-execution-20260908/p31-zkir-dependencies-grok-r1/probes/binding-probe.py
++Parent SHA-256:
++  6ccafe133f2058d1e2c413ca09427a86d24a82330c202b5a59fab196e330a3fe
++This copy is not a second independent audit. It repairs two probe defects:
++1. Midnight extracted-member paths are relative to the dependency-source-
++   preparation root, not each package directory. blst paths stay packet-relative.
++2. Four static-claim byte checks used the wrong 0-based line offsets.
+ 
+ Does not write into the sandbox. Does not fetch network. Does not execute
+ Rust, C, build scripts, compilers, proofs, or capture.py.
++Exit 0 only if every asserted relevant boolean is true.
+ """
+ from __future__ import annotations
+ 
+@@ -31,7 +41,7 @@
+ BLST = BASE / "p31-zkir-blst-source-preparation"
+ NAV = BASE / "p31-zkir-dependency-navigation"
+ ZKIR = BASE / "p31-zkir-source-preparation"
+-OUT = REVIEW / "probes/binding-probe.json"
++OUT = REVIEW / "closeout/probes/binding-probe-corrected.json"
+ 
+ 
+ def sha256_bytes(data: bytes) -> str:
+@@ -149,6 +159,7 @@
+     registry_path: Path,
+     lock_pkg: dict | None,
+     source_prefix: Path,
++    extracted_root: Path,
+ ) -> dict:
+     receipt = json.loads(receipt_path.read_text())
+     registry = json.loads(registry_path.read_text())
+@@ -189,7 +200,7 @@
+             extracted_sha = None
+             extracted_bytes = None
+             if rec is not None:
+-                extracted = packet / rec["path"]
++                extracted = extracted_root / rec["path"]
+                 if extracted.is_file():
+                     extracted_sha = sha256_path(extracted)
+                     extracted_bytes = extracted.stat().st_size
+@@ -316,6 +327,7 @@
+             packet / "registry.json",
+             lock_pkg,
+             source_prefix,
++            DEP,
+         )
+     )
+ 
+@@ -335,6 +347,7 @@
+     BLST / "registry.json",
+     lock_dep["by_key"].get(("blst", "0.3.16")),
+     BLST / "source/blst-0.3.16",
++    BLST,
+ )
+ 
+ # --- seals ---
+@@ -534,19 +547,21 @@
+         "file": "midnight-zkir-2.1.0/src/ir_vm.rs",
+         "lines": [489, 490],
+         "texts": ir_vm[488:491],
+-        "byte_check": "comm_comm_inputs.extend(preimage.inputs.iter());" in ir_vm[489]
+-        and "comm_comm_inputs.extend(outputs.iter());" in ir_vm[490]
+-        and not any("opening" in ir_vm[i] for i in range(488, 492)),
++        "byte_check": "comm_comm_inputs.extend(preimage.inputs.iter());" in ir_vm[488]
++        and "comm_comm_inputs.extend(outputs.iter());" in ir_vm[489]
++        and not any("opening" in ir_vm[i] for i in range(488, 491)),
++        "index_note": "1-based lines 489-490 are ir_vm[488] and ir_vm[489]",
+     },
+     "circuit_opening_then_inputs_then_outputs_assert_pi1": {
+         "file": "midnight-zkir-2.1.0/src/ir_vm.rs",
+         "lines": [779, 780, 781, 782, 785],
+-        "texts": ir_vm[778:786],
++        "texts": ir_vm[778:785],
+         "byte_check": ir_vm[778] == "            let mut preimage = vec![comm_comm_rand];"
+         and "preimage.extend(inputs.iter().cloned());" in ir_vm[779]
+         and "preimage.extend(outputs.iter().cloned());" in ir_vm[780]
+         and "std.poseidon(layouter, &preimage)" in ir_vm[781]
+-        and "std.assert_equal(layouter, &comm_comm, &public_inputs[1])" in ir_vm[785],
++        and "std.assert_equal(layouter, &comm_comm, &public_inputs[1])" in ir_vm[784],
++        "index_note": "1-based line 785 is ir_vm[784]; parent probe used ir_vm[785] which is the closing brace",
+     },
+     "poseidon_cpu_init_inputs_len": {
+         "file": "midnight-circuits-6.0.0/src/hash/poseidon/poseidon_cpu.rs",
+@@ -556,9 +571,10 @@
+     },
+     "poseidon_chip_init_inputs_len": {
+         "file": "midnight-circuits-6.0.0/src/hash/poseidon/poseidon_chip.rs",
+-        "lines": [559],
+-        "texts": poseidon_chip[557:562],
+-        "byte_check": "self.init(layouter, Some(inputs.len()))" in poseidon_chip[558],
++        "lines": [558],
++        "texts": poseidon_chip[557:560],
++        "byte_check": "self.init(layouter, Some(inputs.len()))" in poseidon_chip[557],
++        "index_note": "1-based line 558 is poseidon_chip[557]; parent listed 559 and checked [558] (absorb)",
+     },
+     "wrapper_fr_is_outer_scalar_fq": {
+         "file": "midnight-transient-crypto-2.0.0/src/curve.rs",
+@@ -622,9 +638,10 @@
+         "texts": consts[27:31],
+         "byte_check": "const vec256 BLS12_381_r =" in consts[27]
+         and "0xffffffff00000001" in consts[28]
+-        and "0x53bda402fffe5bfe" in consts[29]
+-        and "0x3339d80809a1d805" in consts[29] + consts[30]
+-        and "0x73eda753299d7d48" in consts[30],
++        and "0x53bda402fffe5bfe" in consts[28]
++        and "0x3339d80809a1d805" in consts[29]
++        and "0x73eda753299d7d48" in consts[29],
++        "index_note": "consts.c writes two TO_LIMB_T values per line; parent looked for the second limb on the next line",
+     },
+     "blst_fr_mul_export_binds_mont": {
+         "file": "blst-0.3.16/blst/src/exports.c",
+@@ -842,13 +859,67 @@
+ }
+ result["lock"] = lock_public
+ 
++asserted = {
++    "identity_all_match": result["identity"]["all_match"],
++    "three_lock_files_byte_identical": lock_public["three_lock_files_byte_identical"],
++    "lock_package_count_347": lock_public["lock_package_count"] == 347,
++    "midnight_excluding_zkir_count_12": lock_public["midnight_excluding_zkir_count"] == 12,
++    "selected_packet_keys_equal_lock_keys": lock_public["selected_packet_keys_equal_lock_keys"],
++    "zkir_excluded_from_midnight_packets": lock_public["zkir_excluded_from_midnight_packets"],
++    "midnight_archive_match_lock_and_registry": result["midnight_summary"]["all_archive_match_lock_and_registry"],
++    "midnight_source_members_464": result["midnight_summary"]["source_members"] == 464,
++    "midnight_members_safe": result["midnight_summary"]["all_members_safe"],
++    "midnight_members_match": result["midnight_summary"]["all_members_match"],
++    "midnight_http_bind": result["midnight_summary"]["all_http_bind"],
++    "midnight_vcs_agree": result["midnight_summary"]["all_vcs_agree"],
++    "blst_archive_match": blst_packet["archive_matches_lock"]
++    and blst_packet["archive_matches_registry"]
++    and blst_packet["size_matches_registry"],
++    "blst_members_159": blst_packet["receipt_source_files"] == 159
++    and blst_packet["tar_file_members"] == 159,
++    "blst_members_match": blst_packet["all_members_match"],
++    "blst_http_bind": blst_packet["http_all_bind"],
++    "dep_seal_532": dep_seal_check["sealed_files"] == 532
++    and dep_seal_check["all_seal_hashes_match"],
++    "blst_seal_167": blst_seal_check["sealed_files"] == 167
++    and blst_seal_check["all_seal_hashes_match"],
++    "nav_9_sources": result["navigation"]["source_count"] == 9
++    and result["navigation"]["all_sources_match"],
++    "nav_14_anchors": result["navigation"]["anchor_count"] == 14
++    and result["navigation"]["all_anchors_match"],
++    "fq_limbs_agree_hex": result["navigation"]["field_modulus_recomputed"]["limbs_agree_hex"],
++    "jubjub_distinct_from_fq": result["navigation"]["jubjub_fr_modulus"]["distinct_from_fq"],
++    "attempt1_unanchored_not_unique": result["blst_matcher"]["unanchored_would_fail_uniqueness"],
++    "attempt2_static_unique": result["blst_matcher"]["attempt2_static_anchors_unique"],
++    "static_claims_all_byte_true": result["static_claims_all_byte_true"],
++    "complete_cargo_build_closure_false": lock_public["complete_cargo_build_closure"] is False,
++}
++failed_assertions = [k for k, v in asserted.items() if v is not True]
++exit_code = 0 if not failed_assertions else 1
++result["asserted"] = asserted
++result["failed_assertions"] = failed_assertions
++result["exit_code"] = exit_code
++result["parent_probe_zero_credit_flags"] = {
++    "midnight_all_members_match_was_false": True,
++    "four_static_claims_were_false": [
++        "zkir_preprocess_inputs_then_outputs",
++        "circuit_opening_then_inputs_then_outputs_assert_pi1",
++        "poseidon_chip_init_inputs_len",
++        "blst_r_limbs_match_fq",
++    ],
++    "parent_unconditional_exit_0": True,
++    "credit_for_those_parent_flags": False,
++    "reason": "Parent extracted Midnight members from packet/rec[path] and used 0-based offsets that missed the claimed 1-based lines. Those false flags are probe defects, not crate defects.",
++}
++FINISHED = datetime.datetime.now(datetime.timezone.utc).isoformat()
++result["finished_utc"] = FINISHED
+ OUT.write_text(json.dumps(result, indent=2) + "\n")
+ summary = {
+     "started_utc": STARTED,
+     "finished_utc": FINISHED,
+     "cwd": CWD,
+     "argv": ARGV,
+-    "exit": 0,
++    "exit": exit_code,
+     "identity_match": result["identity"]["all_match"],
+     "declared": len(declared),
+     "sha256_match": sha_match,
+@@ -856,12 +927,15 @@
+     "missing": missing,
+     "midnight_packets": len(midnight_packets),
+     "midnight_members": result["midnight_summary"]["source_members"],
++    "midnight_members_match": result["midnight_summary"]["all_members_match"],
+     "blst_members": blst_packet["receipt_source_files"],
++    "blst_members_match": blst_packet["all_members_match"],
+     "anchors_match": result["navigation"]["all_anchors_match"],
+     "sources_match": result["navigation"]["all_sources_match"],
+     "static_claims_all_byte_true": result["static_claims_all_byte_true"],
++    "failed_assertions": failed_assertions,
+     "attempt1_zero_credit": result["blst_matcher"]["attempt1_zero_credit"],
+     "output": str(OUT),
+ }
+ print(json.dumps(summary, indent=2))
+-sys.exit(0)
++sys.exit(exit_code)
