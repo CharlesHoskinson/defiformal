@@ -1,0 +1,19 @@
+DefiKernel.Certificates.lexString_escapeJsonString (s : String) (rest : List Char) :
+  DefiKernel.Certificates.lexString [] (DefiKernel.Certificates.escapeChars s.toList ++ '\"' :: rest) =
+    Except.ok (s, rest)
+DefiKernel.Certificates.string_fromUTF8?_toUTF8 (s : String) : String.fromUTF8? s.toUTF8 = some s
+DefiKernel.Certificates.escapeTreeString_eq (s : String) :
+  (DefiKernel.Certificates.escapeTreeString s).toList = '\"' :: (DefiKernel.Certificates.escapeChars s.toList ++ ['\"'])
+DefiKernel.Certificates.encode_obj_toList (kvs : List (String × DefiKernel.Certificates.TreeJson)) (rest : List Char) :
+  (DefiKernel.Certificates.TreeJson.obj kvs).encode.toList ++ rest =
+    '{' :: ((DefiKernel.Certificates.TreeJson.encodeObj kvs).toList ++ '}' :: rest)
+DefiKernel.Certificates.encodeObj_cons_cons_toList (k : String) (v : DefiKernel.Certificates.TreeJson)
+  (f2 : String × DefiKernel.Certificates.TreeJson) (kvs' : List (String × DefiKernel.Certificates.TreeJson))
+  (rest : List Char) :
+  (DefiKernel.Certificates.TreeJson.encodeObj ((k, v) :: f2 :: kvs')).toList ++ rest =
+    (DefiKernel.Certificates.escapeTreeString k).toList ++
+      ':' :: (v.encode.toList ++ ',' :: ((DefiKernel.Certificates.TreeJson.encodeObj (f2 :: kvs')).toList ++ rest))
+DefiKernel.Certificates.toString_int_length_ge_one (i : ℤ) : 1 ≤ (toString i).toList.length
+DefiKernel.Certificates.TreeJson.valid_of_mem_validObj (k : String) (v : DefiKernel.Certificates.TreeJson)
+  (kvs : List (String × DefiKernel.Certificates.TreeJson)) (h_vo : DefiKernel.Certificates.TreeJson.ValidObj kvs)
+  (h_in : (k, v) ∈ kvs) : v.Valid
