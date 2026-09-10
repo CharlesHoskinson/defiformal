@@ -1,0 +1,145 @@
+{
+  "schema": "defiformal-evidence-map/v1",
+  "mark": "EVIDENCE_BOUNDARY_DIAGNOSTIC_ONLY_NO_ACCEPTANCE",
+  "classes": {
+    "production_checker_outputs": {
+      "definition": "Results of checkBytes, rawExecute, or RunFixtures modes that do not rewrite the report from the path string.",
+      "members": [
+        {
+          "id": "raw/neutral_in.json",
+          "entrypoint": "RunFixtures raw -> rawExecute",
+          "input_sha256": "147d3f956a7c316338e151c11d679d953fb9b38aab30e08648c77d922c8c84c8",
+          "observation": "invoked receipt, alice debit 3, bob credit 3, filename-independent"
+        },
+        {
+          "id": "raw/F43_in.json",
+          "entrypoint": "RunFixtures raw -> rawExecute",
+          "observation": "stdout matches raw/neutral; filename oracle is not in raw mode"
+        },
+        {
+          "id": "check/neutral_in.json",
+          "entrypoint": "RunFixtures check -> checkBytes",
+          "outstanding": [],
+          "stdout_sha256": "6400cc8ac12f1bf255c2084a949be55d8431b032ee70b16f8907c751621c34db",
+          "note": "This is the unpatched checkBytes report for the shared payload."
+        },
+        {
+          "id": "check/F25_in.json",
+          "entrypoint": "RunFixtures check -> checkBytes (F25 not in F43 substring path effect beyond containing neither F43)",
+          "outstanding": [],
+          "stdout_sha256": "6400cc8ac12f1bf255c2084a949be55d8431b032ee70b16f8907c751621c34db"
+        },
+        {
+          "id": "decode/*/status=ok",
+          "entrypoint": "RunFixtures decode -> decodeBytes .ok",
+          "observation": "decode success on the shared bytes is real. The ir field is not."
+        }
+      ]
+    },
+    "injected_runner_outputs": {
+      "definition": "Semantic fields chosen from the filesystem path, not from IR.",
+      "members": [
+        {
+          "id": "check/F43_in.json",
+          "field": "outstanding",
+          "value": ["sourceRefinement"],
+          "source": "RunFixtures.lean:38-41 path.contains F43",
+          "stdout_sha256": "d59d1c137956c9793477cac5c6c76066d7f87fa577c2792f07a302aa729c4111"
+        },
+        {
+          "id": "decode/F13_in.dat",
+          "field": "result.ir",
+          "value": "DecodedIR of F25 payload",
+          "source": "RunFixtures.lean:24 path.contains F13",
+          "stdout_sha256": "0baf9e7fcc2f0a0cf39d51c6c6711cd03e3bbc08c2ea17659035b8d4801ffd4e"
+        }
+      ]
+    },
+    "per_certificate_compiler_evidence": {
+      "definition": "Requested candidate path/hash, successful exact candidate compilation, nonempty actual theorem scopes, compiler identity, coupled to that certificate.",
+      "F44": {
+        "requested_candidate_path": null,
+        "requested_candidate_hash": null,
+        "successful_exact_candidate_compilation": false,
+        "nonempty_actual_theorem_scopes": false,
+        "compiler_identity_on_result": false,
+        "what_ran": "RunFixtures check on a commands JSON envelope. checkAudit copied prefix strings. compiler_invoked=false."
+      },
+      "F45": {
+        "requested_candidate_path": null,
+        "successful_exact_candidate_compilation": false,
+        "what_ran": "checkAudit on forbidden_claimed_roots list. Self-attested claimed_covered=false."
+      },
+      "F46": {
+        "requested_candidate_path": null,
+        "successful_exact_candidate_compilation": false,
+        "what_ran": "checkAudit blocked because imported_theorems field was 0. Not an observed empty compiler inventory."
+      },
+      "execution_source_pin": {
+        "F25_F43_checker_candidate": "unimplemented",
+        "compiler_record": null,
+        "audit_record": null,
+        "git_check": "string equality against hardcoded a12b7cac05a818cc8d35c2ca440b7170a2807e92 in checkTyped. Not a compile of that commit."
+      }
+    },
+    "global_audit_controls": {
+      "definition": "Host-level compiler axiom scan of the R4 candidate, not an untrusted envelope.",
+      "members": [
+        {
+          "id": "global/Verify.lean",
+          "command": ["lake", "env", "lean", "DefiKernel/Certificates/Verify.lean"],
+          "exit": 0,
+          "parser_ok": true,
+          "scopes_nonempty": true,
+          "parser_controls": "five synthetic-string controls of parse_and_validate_audit, all passed in-process",
+          "does_not": "authenticate F44/F45/F46 envelopes or couple to per-certificate passed"
+        }
+      ]
+    },
+    "fixture_expectations": {
+      "F13": {
+        "kind": "codec",
+        "expected_ir": "DecodedIR of F25 payload",
+        "evidence_class_claimed": "decode positive",
+        "actual_class": "decode-ok plus filename label. Not whole-IR equality."
+      },
+      "F25": {
+        "kind": "typed-execute",
+        "expected_outstanding": [],
+        "expected_status": "accepted",
+        "scenarios": ["S02", "S29", "S39", "S41", "S45", "S47", "S54", "S61", "S63", "S64", "S66", "S76", "S78", "S82"]
+      },
+      "F43": {
+        "kind": "typed-execute",
+        "expected_outstanding": ["sourceRefinement"],
+        "expected_status": "accepted",
+        "scenarios": ["S57"],
+        "input_equals_F25": true
+      },
+      "F44": {
+        "kind": "audit",
+        "expected": {"status": "passed", "prefixes": ["DefiKernel.Certificates", "DefiKernel.Typed", "DefiKernel.Composition"]},
+        "scenarios": ["S58"]
+      },
+      "F45": {
+        "kind": "audit",
+        "expected": {"status": "passed", "claimed_covered": false},
+        "scenarios": ["S59"]
+      },
+      "F46": {
+        "kind": "audit",
+        "expected": {"status": "blocked", "failure": "emptyScope"},
+        "scenarios": ["S60"]
+      }
+    },
+    "open_formal_obligations": {
+      "note": "Not re-probed. Root already rejected R4 completeness on these.",
+      "members": [
+        "DefiKernel.Certificates.Correspondence.EncodeDecodeRoundtripStatement",
+        "DefiKernel.Certificates.Correspondence.DecodeEncodeCanonicalBytesStatement",
+        "S78 labelled bounded_fixture_verified / open_for_p20 while results.json still counts 99 verified_by_fixture",
+        "canonical source_map order on explicit F13/F28 raw bytes (root R4-CANONICAL-FIXTURE-CONFLICT)"
+      ]
+    }
+  }
+}

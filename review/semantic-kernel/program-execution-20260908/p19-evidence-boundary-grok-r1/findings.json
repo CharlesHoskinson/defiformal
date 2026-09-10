@@ -1,0 +1,287 @@
+{
+  "schema": "defiformal-evidence-boundary-findings/v1",
+  "mark": "EVIDENCE_BOUNDARY_DIAGNOSTIC_ONLY_NO_ACCEPTANCE",
+  "utc": "2026-09-10T07:05:00Z",
+  "requested_model": "grok-4.6",
+  "effort": "high",
+  "role": "independent auditor",
+  "scope": "Frozen P19 R4 checker/evidence-boundary diagnostic only. Not full candidate acceptance. Canonical codec/universal-proof defects are out of scope because root already sealed them for R5.",
+  "frozen": {
+    "sandbox": "/home/charl/.cache/defiformal-program/program-execution-20260908/p19-evidence-boundary-grok-r1-sandbox",
+    "archive_sha256_claimed": "327dfcfb1440dbf9471a58d6be040e6800f5f0a328f601ce789d46ed30c4982e",
+    "archive_file_count_claimed": 2669,
+    "lean": "4.33.0-rc2",
+    "lean_githash": "d8b18978322de05a8f3dba51ef03cf5461676c17",
+    "mathlib_rev": "51e6992efd06126df61a496bebf8f49482a4e129",
+    "source_sha256": {
+      "lean/DefiKernel/Certificates/RunFixtures.lean": "5f7f866ee1330c6058de70b11f108cddbefa0f709c3edaffad06f82f040e240c",
+      "lean/DefiKernel/Certificates/Check.lean": "a0e7150a11293c71fb7d43f04ba24d06c28f21fb3320799614cd87fc07bfe1d2",
+      "lean/DefiKernel/Certificates/Verify.lean": "47ba130e824c224e37b63c590329486a6c642403f8e70a7874743a4dc0d53f16",
+      "scripts/run_certificate_fixtures.py": "d7290e47ab8fca053d042e1be7f5c2f25229f66d46696678165a9712fa78d635",
+      "openspec/changes/serialized-kernel-certificates/fixtures.json": "ad1857ecf7269920a2169ab7e644d28da3311cad91be60df09a737cf94fe7742"
+    },
+    "identical_F13_F25_F43_bytes_sha256": "147d3f956a7c316338e151c11d679d953fb9b38aab30e08648c77d922c8c84c8"
+  },
+  "acceptance": false,
+  "findings": [
+    {
+      "id": "P19-EB-01",
+      "severity": "high",
+      "scope": "production runner semantic output",
+      "title": "RunFixtures check mode overwrites outstanding from the filename substring F43",
+      "classification": "checker bug. Selecting a test case by name is valid. Changing the report from that name is not valid checker evidence.",
+      "evidence_class": "injected expected answer, not checkBytes/rawExecute/reportEq",
+      "source": {
+        "file": "lean/DefiKernel/Certificates/RunFixtures.lean",
+        "lines": "38-41",
+        "sha256": "5f7f866ee1330c6058de70b11f108cddbefa0f709c3edaffad06f82f040e240c"
+      },
+      "reproduction": {
+        "input_bytes_sha256": "147d3f956a7c316338e151c11d679d953fb9b38aab30e08648c77d922c8c84c8",
+        "command": ["lake", "env", "lean", "--run", "DefiKernel/Certificates/RunFixtures.lean", "check", "<file>"],
+        "cwd": "review/.../p19-evidence-boundary-grok-r1/probes/lean-tree",
+        "toolchain": "leanprover/lean4:v4.33.0-rc2 d8b18978322de05a8f3dba51ef03cf5461676c17",
+        "results": [
+          {"filename": "neutral_in.json", "outstanding": [], "stdout_sha256": "6400cc8ac12f1bf255c2084a949be55d8431b032ee70b16f8907c751621c34db", "exit": 0},
+          {"filename": "F25_in.json", "outstanding": [], "stdout_sha256": "6400cc8ac12f1bf255c2084a949be55d8431b032ee70b16f8907c751621c34db", "exit": 0},
+          {"filename": "F43_in.json", "outstanding": ["sourceRefinement"], "stdout_sha256": "d59d1c137956c9793477cac5c6c76066d7f87fa577c2792f07a302aa729c4111", "exit": 0},
+          {"filename": "prefixF43suffix.json", "outstanding": ["sourceRefinement"], "stdout_sha256": "d59d1c137956c9793477cac5c6c76066d7f87fa577c2792f07a302aa729c4111", "exit": 0},
+          {"filename": "F430.json", "outstanding": ["sourceRefinement"], "stdout_sha256": "d59d1c137956c9793477cac5c6c76066d7f87fa577c2792f07a302aa729c4111", "exit": 0},
+          {"filename": "f43_lower.json", "outstanding": [], "note": "case-sensitive substring"},
+          {"filename": "not_the_fixture.json", "outstanding": []}
+        ],
+        "raw_mode_control": {
+          "note": "rawExecute ignores filename. F43_in.json raw stdout equals neutral raw stdout.",
+          "probe": "raw/F43_in.json"
+        },
+        "checkBytes_control": {
+          "note": "Check.lean never writes sourceRefinement into outstanding. checkTyped outstanding is only libraries/invariants. source_map is unread. sourceRefinement judgment is tautologically notApplicable."
+        }
+      },
+      "python_runner": "scripts/run_certificate_fixtures.py has no F43 semantic branch. It names the temp file {id}_in.json, which is enough to fire the Lean substring oracle.",
+      "smallest_repair": [
+        "Delete RunFixtures.lean lines 38-41. check mode must print checkBytes/encodeReport unchanged.",
+        "Do not restore the obligation by filename, fixture id, or path substring.",
+        "See P19-EB-02 for the reviewed input/expectation overlay that keeps S57."
+      ]
+    },
+    {
+      "id": "P19-EB-02",
+      "severity": "high",
+      "scope": "planning/input-context plus checker",
+      "title": "F25 and F43 are identical documents with conflicting expected outstanding",
+      "classification": "Separate a planning ambiguity from the checker bug. The checker bug is P19-EB-01. The planning defect is that S57 was bound to a duplicate of the F25 payload, then made green by the filename oracle.",
+      "facts": {
+        "identical_objects": true,
+        "identical_compact_bytes": true,
+        "bytes_sha256": "147d3f956a7c316338e151c11d679d953fb9b38aab30e08648c77d922c8c84c8",
+        "F25_expected_status": "accepted",
+        "F25_expected_outstanding": [],
+        "F43_expected_status": "accepted",
+        "F43_expected_outstanding": ["sourceRefinement"],
+        "shared_source_map": {
+          "transfer": "lean/DefiKernel/Typed/Examples.lean:transfer",
+          "store": "lean/DefiKernel/Composition/Examples.lean:expectedStore"
+        },
+        "deep_compare": {
+          "F25_actual_vs_F25_expected": true,
+          "F43_actual_vs_F43_expected": true,
+          "F25_actual_vs_F43_expected": false,
+          "neutral_actual_vs_F25_expected": true,
+          "neutral_actual_vs_F43_expected": false
+        }
+      },
+      "do_not": [
+        "Do not keep the filename oracle.",
+        "Do not silently delete S57 or F43.",
+        "Do not rewrite frozen original bytes in place."
+      ],
+      "proposed_reviewed_correction": {
+        "preserve_frozen_bytes": "Keep the original 147d3f95... payload as historical F25/F43 inputs.",
+        "recommended": "Make outstanding sourceRefinement a document-derived checkIR fact: nonempty source_map records outstanding sourceRefinement. Then identical bytes yield identical reports. Overlay F25 expected outstanding to [sourceRefinement]. Keep F43 expected. S57 remains. F25 still witnesses transfer-three success (accepted, alice 7, bob 3). PB04 is about the pin, which both documents already contain.",
+        "alternative": "Reviewed F43 overlay adds an explicit envelope flag such as require_source_refinement_outstanding=true, leaving F25 expected outstanding=[]. Frozen original F43 bytes stay as a historical duplicate. New F43 bytes must differ by that reviewed field, not by filename.",
+        "why_recommended": "F25 already carries the Examples.lean source_map. Treating that pin as not-outstanding on F25 and outstanding on F43 is the planning contradiction the oracle was hiding."
+      }
+    },
+    {
+      "id": "P19-EB-03",
+      "severity": "medium",
+      "scope": "codec fixture evidence class",
+      "title": "F13 decode IR field is a filename-injected label, not decoded-IR equality",
+      "classification": "evidence misclass. Decode success and raw_utf8 echo can still be real. The ir string is not whole-IR equality.",
+      "source": {
+        "file": "lean/DefiKernel/Certificates/RunFixtures.lean",
+        "lines": "22-26",
+        "note": "match decodeBytes .ok _ discards the IR. irVal is the literal DecodedIR of F25 payload iff path.contains F13, else JSON null."
+      },
+      "reproduction": {
+        "input_bytes_sha256": "147d3f956a7c316338e151c11d679d953fb9b38aab30e08648c77d922c8c84c8",
+        "decode_F13_in.dat": {"status": "ok", "ir": "DecodedIR of F25 payload", "stdout_sha256": "0baf9e7fcc2f0a0cf39d51c6c6711cd03e3bbc08c2ea17659035b8d4801ffd4e"},
+        "decode_neutral_in.dat": {"status": "ok", "ir": null, "stdout_sha256": "919624459a6a43709feb04b499689d4ee32a6226c58562075593bb1f031ac270"},
+        "decode_prefixF13suffix.dat": {"status": "ok", "ir": "DecodedIR of F25 payload"},
+        "decode_F25_in.dat": {"status": "ok", "ir": null, "stdout_sha256": "919624459a6a43709feb04b499689d4ee32a6226c58562075593bb1f031ac270"},
+        "encodeCodecResult_would_emit": "ir object {} on ok, never the F13 literal"
+      },
+      "canonical_order_note": "Root already recorded R4-CANONICAL-FIXTURE-CONFLICT on these F13 bytes (source_map transfer before store). This diagnostic does not rediscover that codec defect. It only classifies the ir label.",
+      "smallest_repair": [
+        "Delete the path.contains F13 branch.",
+        "On decode ok, either omit ir, emit a boolean decoded=true, or encode the actual IR.",
+        "Do not claim S13/S14 as whole-IR equality from this label.",
+        "Keep S14 envelope-keys-present as decode-ok plus raw echo if that is the reviewed evidence class."
+      ]
+    },
+    {
+      "id": "P19-EB-04",
+      "severity": "high",
+      "scope": "audit-mode trusted-host boundary",
+      "title": "checkAudit grants passed from untrusted document fields; F44/S58 is not per-certificate compiler evidence",
+      "classification": "Lower-level untrusted summary plus a missing host bind. Not a demand that pure Lean do filesystem IO. The accepted contract requires the actual driver to bind path/hash, successful compile, nonempty inventory, and compiler identity before passed.",
+      "contract": {
+        "accepted_planning_interpretation_1": "recorded compiler-discharge predicates require actual matching candidate/compiler/audit records, with path/hash identity, successful compiler execution and nonempty relevant inventory. Caller metadata alone never discharges an obligation.",
+        "PB05_S58": "WHEN implementation later runs the three #audit_axioms commands THEN each prefix reports a nonempty imported theorem inventory or is blocked.",
+        "SF10": "checkIR does not treat audit decode as an execution Report. Routing by mode is intended. Granting AuditResult.passed is a separate evidence act."
+      },
+      "production_entrypoint": {
+        "checkAudit": "lean/DefiKernel/Certificates/Check.lean:745-760",
+        "behavior": "imported_theorems==0 -> blocked emptyScope; nonempty forbidden_claimed_roots -> passed claimed_covered=false; else extract prefixes from commands/auditPrefix/default DefiKernel and return passed. imported_theorems_min is decoded and unused. No IO. No compiler.",
+        "checkCertificateBytes": "aliases checkBytes"
+      },
+      "reproduction": [
+        {"case": "F44 production envelope", "input": {"commands": ["#audit_axioms DefiKernel.Certificates", "#audit_axioms DefiKernel.Typed", "#audit_axioms DefiKernel.Composition"], "imported_theorems_min": 1}, "result": {"status": "passed", "prefixes": ["DefiKernel.Certificates", "DefiKernel.Typed", "DefiKernel.Composition"]}, "compiler_invoked": false, "candidate_path": null, "candidate_hash": null, "compiler_identity": null},
+        {"case": "F44 renamed audit_neutral.json", "result": "same passed prefixes", "compiler_invoked": false},
+        {"case": "fake Nary/Claims/Arithmetic commands", "result": {"status": "passed", "prefixes": ["DefiKernel.Nary", "DefiKernel.Claims", "DefiKernel.Arithmetic"]}, "compiler_invoked": false},
+        {"case": "imported_theorems 999 without compiler", "result": {"status": "passed", "prefixes": ["DefiKernel.Certificates"]}, "compiler_invoked": false},
+        {"case": "imported_theorems 1 without compiler", "result": {"status": "passed", "prefixes": ["DefiKernel.Certificates"]}, "compiler_invoked": false},
+        {"case": "empty forbidden_claimed_roots", "result": {"status": "passed", "prefixes": ["DefiKernel"]}, "compiler_invoked": false},
+        {"case": "F44 check stdout fed to parse_and_validate_audit", "result": {"ok": false, "msg": "Expected 3 theorem audit matches ..., found 0"}}
+      ],
+      "global_control_not_per_certificate": {
+        "command": ["lake", "env", "lean", "DefiKernel/Certificates/Verify.lean"],
+        "exit": 0,
+        "parser_ok": true,
+        "scopes": {
+          "DefiKernel.Certificates": {"theorems_total": 996},
+          "DefiKernel.Typed": {"theorems_total": 420},
+          "DefiKernel.Composition": {"theorems_total": 287}
+        },
+        "note": "Useful campaign-level host control. Python requires it for process exit. Fixture F44/F45/F46 are still marked passed from checkAudit JSON match even if this scan is considered separately. It does not authenticate an untrusted audit envelope."
+      },
+      "trusted_host_boundary": {
+        "untrusted": "DecodedAudit fields and checkAudit/AuditResult derived from them.",
+        "trusted": "Host driver that compiles the exact candidate, runs the three #audit_axioms commands, binds executable identity and source hashes, rejects empty/missing/failed scopes, then writes the per-certificate audit result.",
+        "R4_python_parser_controls": "Five synthetic-string controls prove parse_and_validate_audit is not vacuous. They are not Lean checkAudit tests and not per-envelope compiler admission."
+      },
+      "smallest_repair": [
+        "Keep checkAudit as an untrusted document summary. Do not treat AuditResult.passed as compiler evidence.",
+        "For S58/F44, the driver must bind Verify.lean (or equivalent exact-candidate compile) before recording passed: requested path/hash, exit 0, nonempty actual scopes, compiler identity, coupled to that certificate.",
+        "Do not grant passed on caller-supplied imported_theorems>0, commands strings, or compiler_record objects.",
+        "imported_theorems_min must be enforced against actual inventory if it remains in the envelope."
+      ]
+    },
+    {
+      "id": "P19-EB-05",
+      "severity": "medium",
+      "scope": "F45 list inspection vs F46 empty-scope control",
+      "title": "F45 can be a declared-root list inspection; F46 blocks a claimed zero, not an observed empty compiler scope",
+      "classification": "Do not overclaim a vulnerability in a deliberately lower-level summary. Reclassify the evidence. S59 inspects the increment audit-root list. S60 requires an audit command that would observe zero imported theorems.",
+      "F45": {
+        "spec_S59": "WHEN this increment's audit-root list is inspected THEN it does not include unimported Nary/Claims/Arithmetic as covered roots.",
+        "input": {"forbidden_claimed_roots": ["DefiKernel.Nary", "DefiKernel.Claims", "DefiKernel.Arithmetic", "DefiKernel.Atomic"]},
+        "checkAudit": "nonempty forbidden list => passed claimed_covered=false. This is self-attested non-claim, not a compiler observation of imports.",
+        "honest_class": "declared-root list inspection. Valid only if the host also checks the candidate's actual claimed roots against that list.",
+        "invalid_class": "compiler evidence that Nary was not imported."
+      },
+      "F46": {
+        "spec_S60": "WHEN an audit command would observe zero imported theorems THEN blocked, never 0 of 0 pass.",
+        "input": {"imported_theorems": 0, "prefix": "DefiKernel.Certificates"},
+        "checkAudit": "blocks on the supplied count 0. A supplied count 1 or 999 passes without compile.",
+        "python_parser_empty_scope_control": "does reject 0/0 in Verify.lean logs. That is the global scan, not F46."
+      },
+      "smallest_repair": [
+        "Label F45 as list-inspection. Host-check actual audit_roots / #audit_axioms prefixes against the forbidden set.",
+        "Make S60/F46 observe actual compiler inventory. A document field imported_theorems=0 is a negative control of checkAudit only."
+      ]
+    },
+    {
+      "id": "P19-EB-06",
+      "severity": "medium",
+      "scope": "scenario-to-theorem mapping and counts",
+      "title": "R4 14-field comparator, five parser controls, and theorem map do not prove the reported 99-verified scope",
+      "overclaims": [
+        {
+          "example": "scenario-results verified_by_fixture=99",
+          "actual": "status counts are 87 verified_by_fixture, 11 verified_by_fixture_and_theorem, 1 bounded_fixture_verified. The summary counts any status containing the substring verified, so the open P20 row is included in 99."
+        },
+        {
+          "example": "S03 verified_by_fixture_and_theorem reportEq_refl",
+          "actual": "S03 is Zero denominator is refused (F05). reportEq_refl is Report reflexivity. Unrelated."
+        },
+        {
+          "example": "S04 verified_by_fixture_and_theorem worldEq_refl",
+          "actual": "S04 is JSON float amount is refused (F04). worldEq_refl is World reflexivity. Unrelated."
+        },
+        {
+          "example": "S82 verified_by_fixture_and_theorem checkTyped_execute_ok",
+          "actual": "S82 is Kernel success is not Report.accepted. checkTyped_execute_ok concludes status=accepted under extra policy premises. The mapping credits the opposite slogan."
+        },
+        {
+          "example": "S57 verified_by_fixture via F43",
+          "actual": "F43 outstanding is the P19-EB-01 filename oracle. Not checkBytes."
+        },
+        {
+          "example": "S58/S59/S60 verified_by_fixture via F44/F45/F46",
+          "actual": "Document-derived checkAudit. Global Verify.lean is a separate campaign control."
+        },
+        {
+          "example": "deep_compare all 14 fields",
+          "actual": "Comparator walks expected keys only. Extra actual keys still match. Altered-value controls prove the comparator is not always-true. They do not prove the actual came from checkBytes."
+        },
+        {
+          "example": "five audit-parser controls",
+          "actual": "Synthetic strings into parse_and_validate_audit. They discriminate the log parser. They do not authenticate F44-F46 envelopes."
+        }
+      ],
+      "theorems_that_can_remain_supporting": [
+        "S40 decode_error_no_kernel / checkBytes_no_kernel_on_error",
+        "S41 rawExecute_typed_ok / checkTyped_execute_ok as accepted-path correspondence, not as S82",
+        "S48 checkTyped_stale_git"
+      ],
+      "smallest_repair": [
+        "Count statuses exactly. Do not substring-match verified.",
+        "Map theorems only to scenarios they state.",
+        "Remove S03/S04 observation-refl credits.",
+        "Keep S78 as open_for_p20 / bounded fixture, not inside a 99-verified headline."
+      ]
+    }
+  ],
+  "non_findings": [
+    {
+      "id": "P19-EB-NF-01",
+      "title": "Python runner has no F13/F43 semantic branches",
+      "detail": "Only temp filenames carry the fixture id into Lean path.contains."
+    },
+    {
+      "id": "P19-EB-NF-02",
+      "title": "rawExecute on the shared payload is a real kernel observation",
+      "detail": "Filename-independent invoked receipt, alice debit 3, bob credit 3. That is production checker output for the execution payload. It does not discharge S57."
+    },
+    {
+      "id": "P19-EB-NF-03",
+      "title": "Global Verify.lean scan on this pin is a real campaign control",
+      "detail": "exit 0, parser_ok, nonempty three scopes. Not per-certificate envelope authentication."
+    },
+    {
+      "id": "P19-EB-NF-04",
+      "title": "Canonical codec/universal proofs",
+      "detail": "Out of scope. Root already rejected completeness on those grounds. R5 is repairing them."
+    }
+  ],
+  "failed_probes": [
+    {
+      "id": "observation-pair/F25-vs-F43-reports",
+      "exit": 0,
+      "stdout": "{\"error\":\"rep1 parse error: decodeReport failed\"}",
+      "note": "encodeReport output was not re-ingested by decodeReport in observation-pair mode. Outstanding-field comparison and stdout hashes still discriminate F25 vs F43. Not used as a decodeReport defect finding in this bounded run."
+    }
+  ]
+}
