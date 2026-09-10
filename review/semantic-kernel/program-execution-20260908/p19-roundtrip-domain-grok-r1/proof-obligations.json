@@ -1,0 +1,120 @@
+{
+  "schema": "defiformal-roundtrip-proof-obligations/v1",
+  "mark": "ROUNDTRIP_DOMAIN_DIAGNOSTIC_ONLY_NO_ACCEPTANCE",
+  "closes_any_task": false,
+  "forbidden_weakenings": [
+    "encoder-image domain: SupportedIR ir := decodeBytes (encodeModule ir) = .ok ir",
+    "circular CanonicalIR that assumes encodeModule ir = raw or decode (encode ir) = ok ir",
+    "shrinking the quantified domain to one fixture, empty cells, or empty types",
+    "deferring EncodeDecodeRoundtripStatement and DecodeEncodeCanonicalBytesStatement entirely to P20",
+    "treating finite F25/F27/F28 or Tests.lean encode-decode equality as RC01",
+    "treating checkIR_execute_ok routing rfl as task 5.1"
+  ],
+  "retain": {
+    "universe": "declared 2 domains x 4 parties x 4 assets = 32 cells in declaration order",
+    "store_frame_for_fixtures": "12 capability entries where the accepted fixtures use them; not a reason to make the universal domain a single store",
+    "supported_forms": "typed-execute, composition-step, composition-run; step tags invoke|issue|revoke only",
+    "unsupported_honest": "treeJoin, naryAdvance, Claims, codec/audit not in SupportedIR"
+  },
+  "p20_independent": [
+    "T-raw-typed/step/run quantified over a repaired supported domain",
+    "T-checkIR-stale/typed/step/run and T-report-policy-accepted / T-observation-mismatch",
+    "library instantiation, Claims/Tree/Nary/Quint remainder L01-L12 as named later"
+  ],
+  "admissibility": {
+    "byte_canonicality_cannot_live_only_on_DecodedIR": "CanonicalIR(ir) cannot see raw key order or whitespace. F13 decoded IR is already lex-sorted and CanonicalIR-true, but raw ≠ encodeModule ir. T-canonical-bytes requires the decoder to refuse non-canonical bytes (grammar canonical_decoder_match), or the statement stays false.",
+    "SupportedIR_structural": [
+      "types.parties/assets/domains nonempty and equal to [alice,bob,vault,pool] / [usd,share,collateral,debt] / [main,other] in that declaration order",
+      "state cells length = types.domains.length * types.parties.length * types.assets.length",
+      "unique (domain,party,asset) covering the product; nested loop order domains, parties, assets",
+      "each state amount den > 0 and num ≥ 0",
+      "registry ids Nodup; decode-time uniqueness.registry",
+      "no StepEnc.unsupported; tags invoke|issue|revoke",
+      "PackedValueEnc normal form: bool → valRat = 0; numeric → valBool = false",
+      "explicit registry/store/ctx/env or config/boundary; no ambient defaults"
+    ],
+    "CanonicalIR_on_values": [
+      "every RatEnc anywhere (state, claimed_next_state.world.state, any receipt/evaluated amounts if those enter DecodedIR) has den > 0 and gcd(num.natAbs, den) = 1",
+      "source_map keys already lexicographic UTF-8 in the Lean list, no duplicate keys",
+      "PackedValueEnc already in normal form",
+      "do not use state-cell gcd as a proxy for nested ℚ / claimed_next_state RatEnc"
+    ],
+    "decoder_byte_rules_to_implement_or_the_byte_theorem_stays_open": [
+      "scanLexical already refuses extra whitespace; keep that",
+      "refuse unknown envelope fields (already)",
+      "refuse unreduced rationals at every decodeRat site (already for visited RatEnc)",
+      "require exact constructor key sets, not union allow-lists",
+      "require canonical_nested_key_order on every object, including Envelope",
+      "require source_map keys in lex order in the raw object (do not rely on RBNode sort)",
+      "require envelope keys invariants/libraries/source_map/claimed_judgments/claimed_next_state/require_* present",
+      "require request.claimedActor present (null allowed)",
+      "require source_pin.compiler_record/audit_record present (null allowed)",
+      "do not invent omitted keys on encode without refusing their absence on decode"
+    ]
+  },
+  "lemma_decomposition_for_agy": [
+    {
+      "id": "L-rat-all-sites",
+      "goal": "decodeRational / encodeRat roundtrip for every RatEnc field, not only payload.state.cells",
+      "uses": "existing rational_decode_canonical / rational_roundtrip",
+      "must_cover": ["state cells", "claimed_next_state cells", "any other RatEnc"]
+    },
+    {
+      "id": "L-packed-normal-form",
+      "goal": "PackedValueEnc bool has valRat=0; numeric has valBool=false; encodePackedValue then decodePackedValue recovers",
+      "blocks": "P19-RT-CEX-BOOL-PACKED-UNUSED"
+    },
+    {
+      "id": "L-source-map-lex",
+      "goal": "encodeSourceMap sorts; decoder refuses non-lex present-key order; decoded list is lex",
+      "blocks": "P19-RT-CEX-SOURCE-MAP-ORDER and P19-BYTES-F13-F25-SOURCE-MAP"
+    },
+    {
+      "id": "L-object-exact-keys-and-order",
+      "goal": "per-constructor key list from grammar.json; extra variant keys refused; order checked",
+      "blocks": "P19-BYTES-DECODER-PERMISSIVE extra_caller_index extra_unit_quote reorder_envelope"
+    },
+    {
+      "id": "L-envelope-required-fields",
+      "goal": "missing invariants/libraries/source_map/claimed_*/require_*/claimedActor/compiler_record is missingField, not a default",
+      "blocks": "omit_invariants omit_claimedActor"
+    },
+    {
+      "id": "L-state-table",
+      "goal": "complete unique declaration-order product; missingField.stateCell / uniqueness.stateCell",
+      "blocks": "P19-RT-PREDICATE-ALLOWS-INCOMPLETE-UNIVERSE"
+    },
+    {
+      "id": "L-registry-uniqueness-decode",
+      "goal": "duplicate registry ids are DecodeFailure.uniqueness.registry as grammar",
+      "note": "SupportedIR Nodup remains; decode must match grammar"
+    },
+    {
+      "id": "L-expr-template-registry-store-env-step-world",
+      "goal": "structural encode/decode lemmas per constructor, then envelope/payload, then DecodedIR",
+      "note": "compose; do not jump to the universal theorem from rational_roundtrip alone"
+    },
+    {
+      "id": "T-roundtrip",
+      "statement": "∀ ir, SupportedIR ir → CanonicalIR ir → decodeBytes (encodeModule ir) = .ok ir",
+      "task": "2.4",
+      "status": "open; current predicates make the statement false under bounded evaluation"
+    },
+    {
+      "id": "T-canonical-bytes",
+      "statement": "∀ raw ir, decodeBytes raw = .ok ir → CanonicalIR ir → encodeModule ir = raw",
+      "task": "2.4",
+      "status": "open; false on accepted F13/F25/F27/F28 bytes until decoder refuses non-lex/non-exact documents"
+    },
+    {
+      "id": "T-checkIR-execute-ok-error",
+      "tasks": ["5.1", "5.2"],
+      "status": "open as required statements; routing rfl lemmas do not discharge them"
+    },
+    {
+      "id": "T-run-correspondence",
+      "task": "4.3",
+      "status": "open as required sequential run correspondence; rawExecute_run_cursor / checkRun_cursor_* are partial"
+    }
+  ]
+}

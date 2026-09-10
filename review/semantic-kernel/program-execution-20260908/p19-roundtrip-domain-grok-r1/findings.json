@@ -1,0 +1,216 @@
+{
+  "schema": "defiformal-roundtrip-domain-diagnostic/v1",
+  "mark": "ROUNDTRIP_DOMAIN_DIAGNOSTIC_ONLY_NO_ACCEPTANCE",
+  "acceptance": false,
+  "closes_any_task": false,
+  "full_P19_accepted": false,
+  "requested_model": "grok-4.6",
+  "returned_model": null,
+  "returned_model_note": "Root records actual terminal modelUsage. This diagnostic does not invent a returned model name.",
+  "frozen_archive_sha256_declared": "86935796922a00aa463927678531b874e8846863f2ffa27286a49f59355304b3",
+  "frozen_archive_files_declared": 1523,
+  "archive_on_disk_in_sandbox": false,
+  "source_hash_mismatch_count": 0,
+  "compiler": {
+    "pinned_toolchain": "leanprover/lean4:v4.33.0-rc2",
+    "lean_githash": "d8b18978322de05a8f3dba51ef03cf5461676c17",
+    "lean_version_string": "Lean (version 4.33.0-rc2, x86_64-unknown-linux-gnu, commit d8b18978322de05a8f3dba51ef03cf5461676c17, Release)",
+    "lean_bin_sha256": "e8baaa71855a616dc351028f3ad2200051b0671f423a1696a100e809302d5550",
+    "lake_bin_sha256": "60330ab6f07dce20f3fa9ebb08e8b984ea9549eac172afeb15d9d2227060e2b3",
+    "libleanshared_so_sha256": "0e2ffc1639d133cfccf1552c0d59772b77ed56e3e0c5a00e33d8c7c324a9470f",
+    "host_default_elan_not_used": "leanprover/lean4:v4.33.1 commit 819816b2e0a3bf405af45ae5c7af2491d8f5bee6"
+  },
+  "rebuild": {
+    "cwd": "/home/charl/defiformal/review/semantic-kernel/program-execution-20260908/p19-roundtrip-domain-grok-r1/private-lean",
+    "command": "lake build +DefiKernel.Certificates.Correspondence +DefiKernel.Certificates.Decode +DefiKernel.Certificates.Tests",
+    "exit": 0,
+    "jobs": 932,
+    "stale_sandbox_oleans_used": false,
+    "log": "logs/lake-build-correspondence.log"
+  },
+  "verdict": "Current nonempty SupportedIR/CanonicalIR and the actual encoder/decoder cannot sustain required P19 universal roundtrip/canonical-bytes obligations. Statements are unproved and have bounded counterexamples.",
+  "not_rediscovered": [
+    "R3-SCENARIO-OVERCLAIM",
+    "R3-AUDIT-EXIT-GATE",
+    "missing REPORT.md / 38-task closeout",
+    "incomplete M07-M16 mutation campaign"
+  ],
+  "findings": [
+    {
+      "id": "P19-RT-DECLARED-NOT-PROVED",
+      "severity": "blocker",
+      "class": "source_statement_only_declared",
+      "evidence_class": "source_identity",
+      "source": "lean/DefiKernel/Certificates/Correspondence.lean:57-62",
+      "issue": "EncodeDecodeRoundtripStatement and DecodeEncodeCanonicalBytesStatement are def Prop, not theorems. Module comment still labels them P20 deferrals. Task 2.4 / RC01 require the universal statements in this increment.",
+      "reproduction": "grep -n 'def EncodeDecodeRoundtripStatement\\|theorem encode_decode' lean/DefiKernel/Certificates/Correspondence.lean"
+    },
+    {
+      "id": "P19-RT-CANONICALIR-STATE-ONLY",
+      "severity": "blocker",
+      "class": "predicate_too_weak",
+      "evidence_class": "source_identity",
+      "source": "lean/DefiKernel/Certificates/Correspondence.lean:20-53",
+      "issue": "SupportedIR is mode + length 32 + nonnegative den>0 + registry Nodup + no unsupported step. CanonicalIR is only state-cell gcd/den. Nested terms, env, store, registry templates, catalog, step, claimed_next_state, envelope, source_map, PackedValue unused fields, and byte key-order/whitespace are unconstrained.",
+      "reproduction": "read Correspondence.lean SupportedIR CanonicalIR"
+    },
+    {
+      "id": "P19-RT-CEX-BOOL-PACKED-UNUSED",
+      "severity": "blocker",
+      "class": "encoder_drops_ir_and_predicate_too_weak",
+      "evidence_class": "bounded_execution",
+      "source": "lean/DefiKernel/Certificates/Encode.lean:56-59 lean/DefiKernel/Certificates/Decode.lean:257-271 Schema PackedValueEnc",
+      "issue": "Constructed typed IR with 32 nonnegative canonical cells, unique registry id 0, SupportedIR=true CanonicalIR=true, template guard lit bool valRat=5 valBool=true. encodeModule then decodeBytes = ok, but recovered guard has valRat=0. Bounded counterexample to EncodeDecodeRoundtripStatement. Encoder emits only the boolean.",
+      "probe": "logs/probe-roundtrip-r2.log dirtyBoolGuard",
+      "actual": {
+        "supportedIRB": true,
+        "canonicalIRB": true,
+        "decode_encode": "ok",
+        "ir_equal": false,
+        "guard1": "lit { unit := bool, valRat := 5, valBool := true }",
+        "guard2": "lit { unit := bool, valRat := 0, valBool := true }"
+      }
+    },
+    {
+      "id": "P19-RT-CEX-SOURCE-MAP-ORDER",
+      "severity": "blocker",
+      "class": "encoder_normalizes_and_predicate_too_weak",
+      "evidence_class": "bounded_execution",
+      "source": "lean/DefiKernel/Certificates/Encode.lean:287-290",
+      "issue": "Constructed SupportedIR/CanonicalIR IR with source_map [z,a]. encode sorts to [a,z]; decode recovers sorted list; IR inequality. Bounded counterexample to EncodeDecodeRoundtripStatement. Sorting is intended grammar lex normalization of the Lean list, but the quantified statement is over arbitrary DecodedIR lists.",
+      "probe": "logs/probe-roundtrip-r2.log unsortedSourceMap",
+      "actual": {
+        "supportedIRB": true,
+        "canonicalIRB": true,
+        "ir_source_map": ["z", "a"],
+        "ir2_source_map": ["a", "z"],
+        "ir_equal": false
+      }
+    },
+    {
+      "id": "P19-RT-CEX-CLAIMED-NEXT-NONCANONICAL-RAT",
+      "severity": "blocker",
+      "class": "predicate_too_weak_and_encoder_emits_undecodable_ratenc",
+      "evidence_class": "bounded_execution",
+      "source": "Correspondence.lean CanonicalIR; Encode.lean encodeWorld; Decode.lean decodeRat",
+      "issue": "SupportedIR/CanonicalIR ignore claimed_next_state. IR with payload state canonical and claimed_next_state cell 2/4 encodes to JSON containing 2/4; decodeBytes fails illegalRational.noncanonical. Bounded counterexample to EncodeDecodeRoundtripStatement. Not an outside-domain input: both predicates hold.",
+      "probe": "logs/probe-roundtrip-r2.log claimedNoncanonicalRat",
+      "actual": {
+        "supportedIRB": true,
+        "canonicalIRB": true,
+        "claimed_next_state": true,
+        "decode_encode": "error:illegalRational.noncanonical"
+      }
+    },
+    {
+      "id": "P19-RT-PREDICATE-ALLOWS-INCOMPLETE-UNIVERSE",
+      "severity": "blocker",
+      "class": "predicate_too_weak",
+      "evidence_class": "bounded_execution",
+      "issue": "duplicate32Cells, shuffledCells, and emptyTypes all have supportedIRB=true canonicalIRB=true and encode-decode IR equality. Current predicates do not express the complete unique declaration-order 32-cell universe or nonempty types enumerations. These are not roundtrip counterexamples; they show the domain is not the accepted universe.",
+      "probe": "logs/probe-roundtrip-r2.log duplicate32Cells shuffledCells emptyTypes",
+      "actual": {
+        "duplicate32Cells_roundtrip_ir_eq": true,
+        "shuffledCells_roundtrip_ir_eq": true,
+        "emptyTypes_roundtrip_ir_eq": true
+      }
+    },
+    {
+      "id": "P19-BYTES-F13-F25-SOURCE-MAP",
+      "severity": "blocker",
+      "class": "canonical_bytes_fails_on_accepted_fixture",
+      "evidence_class": "bounded_execution",
+      "issue": "F13 raw_utf8 is bit-identical to compact F25 inputs (9699 bytes, sha256 147d3f956a7c316338e151c11d679d953fb9b38aab30e08648c77d922c8c84c8). decodeBytes ok; supportedIRB true; canonicalIRB true; 32 cells; store 12; registry [0,4,5,6]. encodeModule size 9699 but unequal at byte 705: encoder source_map store-then-transfer vs fixture transfer-then-store. decode(encode)==decoded IR. Bounded counterexample to DecodeEncodeCanonicalBytesStatement on actual accepted execution-document bytes. Encoder lex sort matches grammar source_map rule; decoder accepted non-lex bytes, violating grammar canonical_decoder_match. F13.mut.reorder_source_map (already lex) has encode_vs_raw EQUAL.",
+      "probe": "logs/probe-roundtrip-r2.log F13_F25_raw F13.mut.reorder_source_map",
+      "fixture_files": [
+        "probes/fixtures/F13.raw.json",
+        "probes/fixtures/F25.python-compact.json"
+      ],
+      "actual": {
+        "decode": "ok",
+        "supportedIRB": true,
+        "canonicalIRB": true,
+        "cells": 32,
+        "store": 12,
+        "encode_vs_raw": "UNEQUAL firstDiff@705",
+        "counterexample_DecodeEncodeCanonicalBytesStatement_bounded": true,
+        "counterexample_EncodeDecodeRoundtripStatement_bounded": false,
+        "normalization_vs_defect": "intended source_map lex normalization plus decoder too permissive on key order"
+      }
+    },
+    {
+      "id": "P19-BYTES-F27-F28",
+      "severity": "blocker",
+      "class": "canonical_bytes_fails_on_accepted_fixture",
+      "evidence_class": "bounded_execution",
+      "issue": "Same source_map order mismatch on F27 composition-step compact (10664 bytes, 32 cells, store 12) and F28 1/2 argument document (9699 bytes).",
+      "probe": "logs/probe-roundtrip-r2.log F27_python_compact F28_raw"
+    },
+    {
+      "id": "P19-BYTES-DECODER-PERMISSIVE",
+      "severity": "blocker",
+      "class": "decoder_accepts_noncanonical_bytes",
+      "evidence_class": "bounded_execution",
+      "source": "Decode.lean checkObjectKeys, decodeEnvelope, scanLexical, decodePartyRef, decodeNumericUnit",
+      "issue": "Decoder accepts reordered envelope keys, omitted invariants, omitted claimedActor, extra caller index, extra amount quote. In each successful case CanonicalIR holds on the decoded IR and encodeModule differs from raw. Unknown extra envelope field, unreduced rationals, unknown party, and extra whitespace are refused. checkObjectKeys is a key-union, not exact constructor keys, and does not check order.",
+      "probe": "logs/probe-roundtrip-r2.log F13.mut.*",
+      "table": [
+        {"mut": "reorder_envelope", "decode": "ok", "bytes_eq": false, "canonical_bytes_cex": true},
+        {"mut": "space_after_colon", "decode": "error:noncanonicalWhitespace", "bytes_eq": null, "canonical_bytes_cex": false},
+        {"mut": "omit_invariants", "decode": "ok", "bytes_eq": false, "canonical_bytes_cex": true},
+        {"mut": "extra_caller_index", "decode": "ok", "bytes_eq": false, "canonical_bytes_cex": true},
+        {"mut": "unknown_envelope_field", "decode": "error:unknownExecutableField:extra", "bytes_eq": null, "canonical_bytes_cex": false},
+        {"mut": "unreduced_arg", "decode": "error:illegalRational.noncanonical", "note": "outside decoded domain; not a statement counterexample"},
+        {"mut": "unreduced_state", "decode": "error:illegalRational.noncanonical", "note": "outside decoded domain; not a statement counterexample"},
+        {"mut": "reorder_source_map", "decode": "ok", "bytes_eq": true, "canonical_bytes_cex": false},
+        {"mut": "omit_claimedActor", "decode": "ok", "bytes_eq": false, "canonical_bytes_cex": true},
+        {"mut": "newline_after_brace", "decode": "error:noncanonicalWhitespace", "bytes_eq": null, "canonical_bytes_cex": false},
+        {"mut": "extra_unit_quote", "decode": "ok", "bytes_eq": false, "canonical_bytes_cex": true},
+        {"mut": "unknown_party", "decode": "error:unknownIdentifier:mallory", "bytes_eq": null, "canonical_bytes_cex": false}
+      ]
+    },
+    {
+      "id": "P19-RT-POSITIVE-BOUNDED-FIXTURE-IR",
+      "severity": "note",
+      "class": "bounded_positive_does_not_discharge_RC01",
+      "evidence_class": "bounded_execution",
+      "issue": "Tests.lean default typed and step IRs (32 cells, store 12, registry [0,4,6]) satisfy predicates and encode-decode recover equal IR. F13 decoded IR also encode-decode recovers itself. Finite success does not discharge universal RC01.",
+      "probe": "logs/probe-roundtrip-r2.log testsTyped_F25like testsStep_F27like F13_F25_raw"
+    },
+    {
+      "id": "P19-DECODE-STATE-REGISTRY-GAPS",
+      "severity": "high",
+      "class": "decoder_vs_grammar",
+      "evidence_class": "source_identity",
+      "source": "Decode.lean decodeState decodeRegistry; grammar.json state_table and registry_entries_duplicate_ids",
+      "issue": "decodeState does not implement missing/duplicate stateCell failures. decodeRegistry does not implement uniqueness.registry. Duplicate 32-cell IR is currently SupportedIR.",
+      "not_a_roundtrip_cex_unless_predicates_hold": true
+    },
+    {
+      "id": "P19-51-52-43-ROUTING-NOT-CORRESPONDENCE",
+      "severity": "high",
+      "class": "named_theorem_does_not_match_required_statement",
+      "evidence_class": "source_identity",
+      "source": "lean/DefiKernel/Certificates/Soundness.lean:298-318",
+      "issue": "checkIR_execute_ok/error and checkIR_executeStep_ok/error and checkIR_run are rfl routing equalities. They do not prove required 5.1/5.2/4.3 supported-domain correspondence. Adjacent checkTyped_execute_* / rawExecute_* / checkRun_cursor_* lemmas are real but weaker/narrower than the correspondence-theorems.json statements. Cannot defer all of 2.4+4.3+5.1+5.2 into P20.",
+      "note": "Not expanded as a reporting-gate rediscovery; recorded because the repair prefix forbids deferring these proofs."
+    }
+  ],
+  "failed_attempts": [
+    {
+      "id": "probe-r1-compile",
+      "log": "logs/probe-roundtrip.log",
+      "exit": 1,
+      "error": "ProbeRoundtrip.lean:65:20 unexpected identifier; expected '_' — Decode.lean macro `.unsupportedForm hole` intercepted `.unsupportedForm r`. Not a semantic counterexample."
+    }
+  ],
+  "unverified": [
+    "escapeJsonString vs grammar U+0000–U+001F \\uXXXX besides n/r/t",
+    "duplicate JSON key scanLexical path on a fixture",
+    "resourceLimit maxBytes/maxDepth/max_array_length",
+    "decodeExpr cond/thenExpr/elseExpr alias extra keys",
+    "audit/codec encodeModule paths (outside SupportedIR)",
+    "kernel proof of negation of the two statements",
+    "full 54-fixture / 99-scenario / 16-mutant campaigns (out of this diagnostic scope)"
+  ]
+}
