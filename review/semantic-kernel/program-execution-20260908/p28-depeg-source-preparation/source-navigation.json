@@ -1,0 +1,184 @@
+{
+  "utc": "2026-09-10T21:34:38.959962+00:00",
+  "anchors": [
+    {
+      "id": "protected-wallet-authority",
+      "path": "source/contracts/DepegProduct.sol",
+      "sha256": "26656030f606bb54627145e3e093ca68c6761a2332f5e103dea34e64b114b7e6",
+      "needle": "msg.sender == getProtectedWallet(processId)",
+      "matching_lines": [
+        116
+      ],
+      "static_observation": "Claim creation uses onlyProtectedWallet and onlyMatchingPolicy; source caller identity is protected wallet, not necessarily policy holder.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "attestation-entry",
+      "path": "source/contracts/DepegProduct.sol",
+      "sha256": "26656030f606bb54627145e3e093ca68c6761a2332f5e103dea34e64b114b7e6",
+      "needle": "function addDepegBalances(",
+      "matching_lines": [
+        377
+      ],
+      "static_observation": "This function is onlyOwner. It accepts owner-supplied historical wallet balance and a block number matching the configured depeg block. It does not verify a historical account proof or real-world truth.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "invalid-attestation-batch-item",
+      "path": "source/contracts/DepegProduct.sol",
+      "sha256": "26656030f606bb54627145e3e093ca68c6761a2332f5e103dea34e64b114b7e6",
+      "needle": "emit LogDepegDepegBalanceError(",
+      "matching_lines": [
+        405
+      ],
+      "static_observation": "A malformed individual wallet/block entry is skipped and emits an error event, while valid entries can be stored. This is not a whole-batch executor refusal.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "attestation-overwrite",
+      "path": "source/contracts/DepegProduct.sol",
+      "sha256": "26656030f606bb54627145e3e093ca68c6761a2332f5e103dea34e64b114b7e6",
+      "needle": "_depegBalance[depegBalance.wallet] = depegBalance;",
+      "matching_lines": [
+        395
+      ],
+      "static_observation": "Owner can overwrite a stored balance at this point; a frozen/final attestation assumption is not automatically enforced by this assignment.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "claim-admission",
+      "path": "source/contracts/DepegProduct.sol",
+      "sha256": "26656030f606bb54627145e3e093ca68c6761a2332f5e103dea34e64b114b7e6",
+      "needle": "require(this.policyIsAllowedToClaim(processId)",
+      "matching_lines": [
+        496
+      ],
+      "static_observation": "Claim creation requires depegged product state, policy unexpired at depeg, within grace, and no prior claim, via policyIsAllowedToClaim; failure reverts DP-030.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "claim-not-terminal",
+      "path": "source/contracts/DepegProduct.sol",
+      "sha256": "26656030f606bb54627145e3e093ca68c6761a2332f5e103dea34e64b114b7e6",
+      "needle": "_policiesWithOpenClaims.add(processId);",
+      "matching_lines": [
+        510
+      ],
+      "static_observation": "Creation records a claim and expires the policy, then queues processing. Claim creation/expiry is not payment or disappearance of the obligation.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "public-process",
+      "path": "source/contracts/DepegProduct.sol",
+      "sha256": "26656030f606bb54627145e3e093ca68c6761a2332f5e103dea34e64b114b7e6",
+      "needle": "function processPolicy(bytes32 processId)",
+      "matching_lines": [
+        585
+      ],
+      "static_observation": "Processing is public and state-gated, not onlyOwner; authority enters through claim creation, owner balance entry and underlying GIF services.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "process-set-refusal",
+      "path": "source/contracts/DepegProduct.sol",
+      "sha256": "26656030f606bb54627145e3e093ca68c6761a2332f5e103dea34e64b114b7e6",
+      "needle": "ERROR:DP-042:NOT_IN_PROCESS_SET",
+      "matching_lines": [
+        588
+      ],
+      "static_observation": "An unqueued/already-removed processId is rejected before processing. Formal at-most-once success requires transaction/call-path assumptions and source state semantics.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "missing-attestation-refusal",
+      "path": "source/contracts/DepegProduct.sol",
+      "sha256": "26656030f606bb54627145e3e093ca68c6761a2332f5e103dea34e64b114b7e6",
+      "needle": "ERROR:DP-043:DEPEG_BALANCE_MISSING",
+      "matching_lines": [
+        595
+      ],
+      "static_observation": "A queued claim with no stored depeg block for its protected wallet reverts. This is a concrete missing-attestation refusal candidate.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "zero-attestation-refusal",
+      "path": "source/contracts/DepegProduct.sol",
+      "sha256": "26656030f606bb54627145e3e093ca68c6761a2332f5e103dea34e64b114b7e6",
+      "needle": "ERROR:DP-044:DEPEG_BALANCE_ZERO",
+      "matching_lines": [
+        596
+      ],
+      "static_observation": "A zero attested balance is a separate explicit refusal; it is not successful zero payout.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "aggregate-coverage-budget",
+      "path": "source/contracts/DepegProduct.sol",
+      "sha256": "26656030f606bb54627145e3e093ca68c6761a2332f5e103dea34e64b114b7e6",
+      "needle": "uint256 amountLeftToProcess = depegBalance - _processedBalance[protectedWallet];",
+      "matching_lines": [
+        613
+      ],
+      "static_observation": "Across-policy processed balance is subtracted from attested wallet balance, then caps protected amount. If owner later lowers balance below processed balance, Solidity checked subtraction can revert before the explicit exhausted-balance guard.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "processed-budget-update",
+      "path": "source/contracts/DepegProduct.sol",
+      "sha256": "26656030f606bb54627145e3e093ca68c6761a2332f5e103dea34e64b114b7e6",
+      "needle": "_processedBalance[protectedWallet] += protectedAmount;",
+      "matching_lines": [
+        622
+      ],
+      "static_observation": "Processing consumes protected token amount across policies, distinct from payout-currency amount. Operation order matters when coverage is oversubscribed.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "lifecycle-payout",
+      "path": "source/contracts/DepegProduct.sol",
+      "sha256": "26656030f606bb54627145e3e093ca68c6761a2332f5e103dea34e64b114b7e6",
+      "needle": "_processPayout(processId, payoutId);",
+      "matching_lines": [
+        640
+      ],
+      "static_observation": "The path confirms claim, creates payout, calls GIF payout processing, and closes policy; actual GIF service/controller/treasury semantics and custody are required to establish discharge, not merely these call names.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "integer-payoff",
+      "path": "source/contracts/DepegProduct.sol",
+      "sha256": "26656030f606bb54627145e3e093ca68c6761a2332f5e103dea34e64b114b7e6",
+      "needle": "claimAmount = (tokenAmount * (targetPrice - depegPrice)) / targetPrice;",
+      "matching_lines": [
+        696
+      ],
+      "static_observation": "Claim formula uses integer truncation and a source-defined protected minimum depeg price. Preserve token units, price scale, coverage cap, arithmetic bounds and remaining residue.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "manual-block-authority",
+      "path": "source/contracts/UsdcPriceDataProvider.sol",
+      "sha256": "cb5ff90b8887e1b6df5f0afbfc15025b3be670861842680b10ec4de9e4c914ca",
+      "needle": "function setDepeggedBlockNumber(",
+      "matching_lines": [
+        177
+      ],
+      "static_observation": "Owner sets a historical block number after recorded depeg. The require only establishes depeg state; supplied block correctness is an external data assumption.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "test-feed-authority",
+      "path": "source/contracts/AggregatorDataProvider.sol",
+      "sha256": "d0bf7bc51e20f5d007ee2fcd021ea23fee6a6bce8834c52f4f1abf1da392fadd",
+      "needle": "function setRoundData (",
+      "matching_lines": [
+        101
+      ],
+      "static_observation": "Test data setter is onlyOwner and onlyTestnet. Mainnet/goerli branch forwards configured aggregator data; local injected observations are not live feed execution.",
+      "proof_or_execution": false
+    }
+  ],
+  "anchor_count": 16,
+  "scope": "Static source navigation. No compiler, contract execution, Lean proof, deployed identity or source-entry acceptance.",
+  "P28_accepted": false
+}

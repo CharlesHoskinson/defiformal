@@ -1,0 +1,162 @@
+{
+  "utc": "2026-09-10T21:40:06.624021+00:00",
+  "anchors": [
+    {
+      "id": "service-authorization",
+      "source_path_from_program_root": "p28-depeg-dependency-preparation/source/gif-contracts/contracts/services/ProductService.sol",
+      "sha256": "ca214d7e4d7d9f34a54fd3586c7873280797674207c7cd57581db0e7a314d5ab",
+      "needle": "require(isAuthorized,",
+      "matching_lines": [
+        24
+      ],
+      "static_observation": "Fallback obtains license status and nonzero configured policy flow, then delegatecalls. Runtime registry, license, component and policy flow identities must be bound.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "active-component-license",
+      "source_path_from_program_root": "p28-depeg-license-source/LicenseController.sol",
+      "sha256": "c2911d7a30247aad18b05da5708dd30d547836e06a3296ed553d472c8be279aa",
+      "needle": "_component.getComponentState(productId) == IComponent.ComponentState.Active",
+      "matching_lines": [
+        35
+      ],
+      "static_observation": "License requires an active registered component. Its getPolicyFlow call separately invokes ComponentController product-type guard; do not infer product type solely from _isValidCall.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "product-flow-type",
+      "source_path_from_program_root": "p28-depeg-dependency-preparation/source/gif-contracts/contracts/modules/ComponentController.sol",
+      "sha256": "1f45260a3ae1982d054b28fcf74d52b6040db32e2c66786e857edaf61bf50bde",
+      "needle": "ERROR:CCR-011:UNKNOWN_PRODUCT_ID",
+      "matching_lines": [
+        255
+      ],
+      "static_observation": "getPolicyFlow requires isProduct(productId), completing the source authorization/type chain together with registered-component and active-state checks.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "responsible-product",
+      "source_path_from_program_root": "p28-depeg-dependency-preparation/source/gif-contracts/contracts/flows/PolicyDefaultFlow.sol",
+      "sha256": "f1c857f72bd4feb7a9c09ee408a4e8544682b297b42fc2de54b6416f8e262835",
+      "needle": "ERROR:PFD-004:PROCESSID_PRODUCT_MISMATCH",
+      "matching_lines": [
+        53
+      ],
+      "static_observation": "Policy flow checks the process metadata productId against the registered calling product. This is state/identity authorization, not oracle truth.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "controller-service-authority",
+      "source_path_from_program_root": "p28-depeg-dependency-preparation/source/gif-contracts/contracts/shared/CoreController.sol",
+      "sha256": "e6a0ca7233a1c5ffa0ccc906e0fe86a9329ebaf1aa6859971840fbdfc049bd75",
+      "needle": "ERROR:CRC-003:NOT_PRODUCT_SERVICE",
+      "matching_lines": [
+        38
+      ],
+      "static_observation": "Controller mutation requires registered storage address and registered ProductService caller. Source-bound proof must model delegated context and trusted registry state.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "expected-payout",
+      "source_path_from_program_root": "p28-depeg-dependency-preparation/source/gif-contracts/contracts/modules/TreasuryModule.sol",
+      "sha256": "c5f828b12c265a99893c68f66d43bed72c05a530403ecd1df6b596798833032e",
+      "needle": "ERROR:TRS-040:PAYOUT_ALREADY_PROCESSED",
+      "matching_lines": [
+        319
+      ],
+      "static_observation": "Treasury requires Expected payout state before token movement.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "cash-custody-balance",
+      "source_path_from_program_root": "p28-depeg-dependency-preparation/source/gif-contracts/contracts/modules/TreasuryModule.sol",
+      "sha256": "c5f828b12c265a99893c68f66d43bed72c05a530403ecd1df6b596798833032e",
+      "needle": "ERROR:TRS-042:RISKPOOL_WALLET_BALANCE_TOO_SMALL",
+      "matching_lines": [
+        328
+      ],
+      "static_observation": "Treasury checks actual selected token balance of riskpool wallet. Authorized claim alone does not guarantee funded payout.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "cash-custody-allowance",
+      "source_path_from_program_root": "p28-depeg-dependency-preparation/source/gif-contracts/contracts/modules/TreasuryModule.sol",
+      "sha256": "c5f828b12c265a99893c68f66d43bed72c05a530403ecd1df6b596798833032e",
+      "needle": "ERROR:TRS-043:PAYOUT_ALLOWANCE_TOO_SMALL",
+      "matching_lines": [
+        332
+      ],
+      "static_observation": "Treasury also checks wallet allowance, distinct from accounting solvency and legal enforceability.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "payout-recipient",
+      "source_path_from_program_root": "p28-depeg-dependency-preparation/source/gif-contracts/contracts/modules/TreasuryModule.sol",
+      "sha256": "c5f828b12c265a99893c68f66d43bed72c05a530403ecd1df6b596798833032e",
+      "needle": "TransferHelper.unifiedTransferFrom(token, riskpoolWalletAddress, metadata.owner, payout.amount)",
+      "matching_lines": [
+        336
+      ],
+      "static_observation": "Token transfer targets policy metadata.owner. Depeg protectedWallet and claim caller can differ from payout recipient.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "token-call-contract",
+      "source_path_from_program_root": "p28-depeg-dependency-preparation/source/gif-contracts/contracts/shared/TransferHelper.sol",
+      "sha256": "8ac5b248063828d7de66fa7502cc74650d3a94db0a43484c681f8a975afd7e78",
+      "needle": "data.length == 0",
+      "matching_lines": [
+        53
+      ],
+      "static_observation": "Transfer helper accepts successful low-level transferFrom with no return data, or exactly32bytes decoding true. It does not independently measure recipient balance delta; token behavior assumptions remain.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "positive-confirmed-payout",
+      "source_path_from_program_root": "p28-depeg-dependency-preparation/source/gif-contracts/contracts/modules/PolicyController.sol",
+      "sha256": "9380430351730d352044e2849b4d8f1daa9e25d385184ac9af3f0e2fa25c901b",
+      "needle": "ERROR:POC-083:PAYOUT_AMOUNT_ZERO_INVALID",
+      "matching_lines": [
+        405
+      ],
+      "static_observation": "createPayout requires a confirmed existing claim, strictly positive amount and paidAmount+payoutAmount<=claimAmount. Zero calculated payout is a downstream refusal, not automatic successful closure.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "paid-state-transition",
+      "source_path_from_program_root": "p28-depeg-dependency-preparation/source/gif-contracts/contracts/modules/PolicyController.sol",
+      "sha256": "9380430351730d352044e2849b4d8f1daa9e25d385184ac9af3f0e2fa25c901b",
+      "needle": "payout.state = IPolicy.PayoutState.PaidOut;",
+      "matching_lines": [
+        443
+      ],
+      "static_observation": "Controller moves Expected payout to PaidOut, increments claim.paidAmount, and closes claim only on exact full payment. Payout states and openClaimsCount must be preserved.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "exact-discharge",
+      "source_path_from_program_root": "p28-depeg-dependency-preparation/source/gif-contracts/contracts/modules/PolicyController.sol",
+      "sha256": "9380430351730d352044e2849b4d8f1daa9e25d385184ac9af3f0e2fa25c901b",
+      "needle": "if (claim.claimAmount == claim.paidAmount) {",
+      "matching_lines": [
+        453
+      ],
+      "static_observation": "Claim closes only when paid amount equals confirmed claim amount. Creating/confirming claim or producing an event alone is not discharge.",
+      "proof_or_execution": false
+    },
+    {
+      "id": "flow-cash-before-accounting",
+      "source_path_from_program_root": "p28-depeg-dependency-preparation/source/gif-contracts/contracts/flows/PolicyDefaultFlow.sol",
+      "sha256": "f1c857f72bd4feb7a9c09ee408a4e8544682b297b42fc2de54b6416f8e262835",
+      "needle": "(feeAmount, netPayoutAmount) = treasury.processPayout(processId, payoutId);",
+      "matching_lines": [
+        268
+      ],
+      "static_observation": "Flow processes treasury transfer before policy and pool accounting. Atomic transaction behavior and failure rollback remain runtime obligations.",
+      "proof_or_execution": false
+    }
+  ],
+  "count": 14,
+  "scope": "Static source observations plus separately captured compiler ABI evidence. No EVM or Lean execution.",
+  "P28_accepted": false
+}
