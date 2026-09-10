@@ -1,0 +1,112 @@
+{
+  "schema": "defiformal-p19-module-validity-r24-review-findings/v1",
+  "mark": "P19_R24_MODULE_VALIDITY_CHANGES_REQUIRED",
+  "status": "complete",
+  "verdict": "CHANGES_REQUIRED",
+  "acceptance": false,
+  "full_P19_accepted": false,
+  "scoped_module_validity": "USABLE",
+  "scoped_new_28": "USABLE",
+  "false_raw_tree_permutation_premise": false,
+  "findings": [
+    {
+      "id": "F1-full-p19-unproved",
+      "severity": "blocker",
+      "status": "open",
+      "file": "lean/DefiKernel/Certificates/Roundtrip.lean:1668",
+      "summary": "R24 does not prove EncodeDecodeRoundtripStatement. Full P19 remains CHANGES_REQUIRED.",
+      "detail": "Strongest theorem decodeBytes_encodeModule_of_depth still assumes h_depth, h_dec, and h_lex. moduleToTreeJson_valid discharges only h_valid. EncodeDecodeRoundtripStatement remains a def Prop. Decoder/scanner-image premises are not accepted as the required roundtrip. Independent compile exit 0 and 578-name probe 520 std / 58 none / 0 forbidden do not close that statement.",
+      "classification": "full_P19 CHANGES_REQUIRED"
+    },
+    {
+      "id": "F2-h-depth-not-admission-treejson",
+      "severity": "high",
+      "status": "open",
+      "file": "lean/DefiKernel/Certificates/Correspondence.lean:640",
+      "summary": "Admission depth bound is jsonDepth decodedIRToJson, not TreeJson.depth moduleToTreeJson.",
+      "detail": "SupportedIR includes WholeDocumentDepthBounded ir := jsonDepth (decodedIRToJson ir) ≤ 64. decodeBytes_encodeModule_of_depth requires TreeJson.depth (moduleToTreeJson ir) ≤ 64. Those are different functions on different representations. Discharging one from the other needs a metric correspondence, not Json RB-tree structural equality.",
+      "classification": "missing_bridge"
+    },
+    {
+      "id": "F3-h-dec-image-premise",
+      "severity": "high",
+      "status": "open",
+      "file": "lean/DefiKernel/Certificates/Roundtrip.lean:1671",
+      "summary": "h_dec is a decoder-success image premise on (moduleToTreeJson ir).toJson.",
+      "detail": "Correspondence already has decodeDecodedIR on decodedIRToJson. Using it here needs semantic agreement of (moduleToTreeJson ir).toJson with decodedIRToJson without claiming structural equality of arbitrary-order Raw/Json trees. Root libraryRef counterexample: declaration-order TreeJson.toJson root key theorem vs mapped libraryRefToJson root key module, BEq true, = false.",
+      "classification": "full_P19 CHANGES_REQUIRED"
+    },
+    {
+      "id": "F4-author-manifest-stale-commands",
+      "severity": "medium",
+      "status": "open",
+      "file": "review/semantic-kernel/certificates/p19/implementation/agy-r24-proof/MANIFEST.json",
+      "summary": "Author MANIFEST lists 10 files; 9 match; commands.json hash is stale. Raw streams and probes omitted.",
+      "detail": "Claimed commands.json sha256 0ffcf5a880f5248afaab0a01638eeabd9f598e3541c00da9a184507bfffbe716 (305428 bytes). Actual frozen file 2152b907fba03c407cc782b1d6e7ec2e87d6d1be98bdc2ef43107980a294f5e2 (316782 bytes). Remaining 9 listed files match. auditor field grok-4.6 is requested future identity, not this approval.",
+      "classification": "evidence_hygiene"
+    },
+    {
+      "id": "F5-campaigns-not-closed",
+      "severity": "medium",
+      "status": "open",
+      "file": "review/semantic-kernel/certificates/p19/implementation/agy-r24-proof/",
+      "summary": "No 99-scenario / 16-mutant closure from status mapping or 54 fixtures.",
+      "detail": "Existing overlay/hash/schema/independent expectedIR/host executor concerns remain. Unchanged fixtures were not re-run in this review.",
+      "classification": "full_P19 CHANGES_REQUIRED"
+    },
+    {
+      "id": "F6-author-origin-labels",
+      "severity": "medium",
+      "status": "open",
+      "file": "root-context/p19-r24-root-scope-attempt3/scope.json",
+      "summary": "All 62 recorded author commands are AGY runs. Two root_preflight labels are false actor credit.",
+      "detail": "Root scope attempt3 already recorded this. Labels 60 native + 2 root are inaccurate actor classification. Controls 0/7. Only successful final-source-bound gates support the final candidate. This review does not relabel those as root execution.",
+      "classification": "evidence_hygiene"
+    },
+    {
+      "id": "N1-module-validity-usable",
+      "severity": "note",
+      "status": "closed",
+      "file": "lean/DefiKernel/Certificates/Roundtrip.lean:1609",
+      "summary": "moduleToTreeJson_valid is scoped usable: admission to TreeJson.Valid for typed/step/run envelopes.",
+      "detail": "TreeJson.Valid is recursive trees, distinct keys, array 4096. Not sorted object fields. Envelope, source-map Nodup from SourceMapSorted, arrays, 32-cell omega, config/registry/template/interface/invocation/step/typed/run, optional claimed_next_state are in the compiled proof. Independent Roundtrip build exit 0; probe class standard (propext, Classical.choice, Quot.sound).",
+      "classification": "scoped_usable"
+    },
+    {
+      "id": "N2-new-28-usable",
+      "severity": "note",
+      "status": "closed",
+      "file": "lean/DefiKernel/Certificates/Roundtrip.lean",
+      "summary": "All 28 new lemmas compiled and are in the 578-name probe: 25 standard, 3 none, 0 forbidden.",
+      "detail": "none: validObj_str_map, inputSourceToTreeJson_valid, outputObservationToTreeJson_valid. Scoped usable after source, independent build, and probe. They do not close EncodeDecodeRoundtripStatement.",
+      "classification": "scoped_usable"
+    },
+    {
+      "id": "N3-decodeWorld-component-vs-composition",
+      "severity": "note",
+      "status": "open",
+      "file": "lean/DefiKernel/Certificates/Roundtrip.lean:1329",
+      "summary": "decodeWorld extra canonical hypotheses are not a defect of the component lemma.",
+      "detail": "h_st_valid and h_st_unique are the local assumptions of decodeState/decodeStore. Admitted 32-cell worlds already carry reduced non-negative rationals and unique standard32CellKeys in SupportedIR/CanonicalIR. The lemma is a proved component. Missing is the composition derivation from StructurallyAdmissibleIR to a module-level world decode. Not a false permutation bridge.",
+      "classification": "component_lemma_not_composition"
+    },
+    {
+      "id": "N4-libraryref-decode-not-permutation-bridge",
+      "severity": "note",
+      "status": "closed",
+      "file": "lean/DefiKernel/Certificates/Roundtrip.lean:1364",
+      "summary": "decodeLibraryRef_libraryRefToTreeJson uses toJson/mkObj/name lookup, not TreeJson structural permutation.",
+      "detail": "checkObjectKeys is allowed-key containment. getField is name lookup. Root object diagnostic remains: encodedOrder root theorem, mappedOrder root module, BEq true, structural = false. Source as compiled does not claim those Json values are =.",
+      "classification": "preserve_counterexample"
+    },
+    {
+      "id": "N5-source-manifest-13",
+      "severity": "note",
+      "status": "closed",
+      "file": "review/semantic-kernel/certificates/p19/implementation/agy-r24-proof/source-manifest.json",
+      "summary": "Frozen author source-manifest lists 13 sources; all 13 match. Do not copy a prior 15 count.",
+      "detail": "Independent hash of the actual frozen file. Root will adjudicate the exact binding count against any historical 15-binding claim.",
+      "classification": "evidence_hygiene"
+    }
+  ]
+}
