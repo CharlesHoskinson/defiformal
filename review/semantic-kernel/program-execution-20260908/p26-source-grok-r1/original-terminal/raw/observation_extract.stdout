@@ -1,0 +1,1479 @@
+{
+  "probe": "p26-source-observation-extract",
+  "excerpt_count": 30,
+  "failure_count": 0,
+  "failures": [],
+  "excerpts": [
+    {
+      "id": "recv_packet_timeout_elapsed",
+      "path": "source/modules/core/04-channel/keeper/packet.go",
+      "start_line": 147,
+      "end_line": 149,
+      "lines": [
+        {
+          "n": 147,
+          "text": "\tif timeout.Elapsed(selfHeight, selfTimestamp) {"
+        },
+        {
+          "n": 148,
+          "text": "\t\treturn \"\", errorsmod.Wrap(timeout.ErrTimeoutElapsed(selfHeight, selfTimestamp), \"packet timeout elapsed\")"
+        },
+        {
+          "n": 149,
+          "text": "\t}"
+        }
+      ]
+    },
+    {
+      "id": "recv_proof_then_replay",
+      "path": "source/modules/core/04-channel/keeper/packet.go",
+      "start_line": 154,
+      "end_line": 164,
+      "lines": [
+        {
+          "n": 154,
+          "text": "\tif err := k.connectionKeeper.VerifyPacketCommitment("
+        },
+        {
+          "n": 155,
+          "text": "\t\tctx, connectionEnd, proofHeight, proof,"
+        },
+        {
+          "n": 156,
+          "text": "\t\tpacket.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence(),"
+        },
+        {
+          "n": 157,
+          "text": "\t\tcommitment,"
+        },
+        {
+          "n": 158,
+          "text": "\t); err != nil {"
+        },
+        {
+          "n": 159,
+          "text": "\t\treturn \"\", errorsmod.Wrap(err, \"couldn't verify counterparty packet commitment\")"
+        },
+        {
+          "n": 160,
+          "text": "\t}"
+        },
+        {
+          "n": 161,
+          "text": ""
+        },
+        {
+          "n": 162,
+          "text": "\tif err := k.applyReplayProtection(ctx, packet, channel); err != nil {"
+        },
+        {
+          "n": 163,
+          "text": "\t\treturn \"\", err"
+        },
+        {
+          "n": 164,
+          "text": "\t}"
+        }
+      ]
+    },
+    {
+      "id": "recv_start_sequence_error",
+      "path": "source/modules/core/04-channel/keeper/packet.go",
+      "start_line": 189,
+      "end_line": 192,
+      "lines": [
+        {
+          "n": 189,
+          "text": "\trecvStartSequence, _ := k.GetRecvStartSequence(ctx, packet.GetDestPort(), packet.GetDestChannel())"
+        },
+        {
+          "n": 190,
+          "text": "\tif packet.GetSequence() < recvStartSequence {"
+        },
+        {
+          "n": 191,
+          "text": "\t\treturn errorsmod.Wrap(types.ErrPacketReceived, \"packet already processed in previous channel upgrade\")"
+        },
+        {
+          "n": 192,
+          "text": "\t}"
+        }
+      ]
+    },
+    {
+      "id": "unordered_duplicate_noop",
+      "path": "source/modules/core/04-channel/keeper/packet.go",
+      "start_line": 199,
+      "end_line": 206,
+      "lines": [
+        {
+          "n": 199,
+          "text": "\t\t_, found := k.GetPacketReceipt(ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())"
+        },
+        {
+          "n": 200,
+          "text": "\t\tif found {"
+        },
+        {
+          "n": 201,
+          "text": "\t\t\temitRecvPacketEvent(ctx, packet, channel)"
+        },
+        {
+          "n": 202,
+          "text": "\t\t\t// This error indicates that the packet has already been relayed. Core IBC will"
+        },
+        {
+          "n": 203,
+          "text": "\t\t\t// treat this error as a no-op in order to prevent an entire relay transaction"
+        },
+        {
+          "n": 204,
+          "text": "\t\t\t// from failing and consuming unnecessary fees."
+        },
+        {
+          "n": 205,
+          "text": "\t\t\treturn types.ErrNoOpMsg"
+        },
+        {
+          "n": 206,
+          "text": "\t\t}"
+        }
+      ]
+    },
+    {
+      "id": "ordered_old_sequence_noop",
+      "path": "source/modules/core/04-channel/keeper/packet.go",
+      "start_line": 224,
+      "end_line": 230,
+      "lines": [
+        {
+          "n": 224,
+          "text": "\t\tif packet.GetSequence() < nextSequenceRecv {"
+        },
+        {
+          "n": 225,
+          "text": "\t\t\temitRecvPacketEvent(ctx, packet, channel)"
+        },
+        {
+          "n": 226,
+          "text": "\t\t\t// This error indicates that the packet has already been relayed. Core IBC will"
+        },
+        {
+          "n": 227,
+          "text": "\t\t\t// treat this error as a no-op in order to prevent an entire relay transaction"
+        },
+        {
+          "n": 228,
+          "text": "\t\t\t// from failing and consuming unnecessary fees."
+        },
+        {
+          "n": 229,
+          "text": "\t\t\treturn types.ErrNoOpMsg"
+        },
+        {
+          "n": 230,
+          "text": "\t\t}"
+        }
+      ]
+    },
+    {
+      "id": "ordered_future_sequence_error",
+      "path": "source/modules/core/04-channel/keeper/packet.go",
+      "start_line": 232,
+      "end_line": 238,
+      "lines": [
+        {
+          "n": 232,
+          "text": "\t\t// REPLAY PROTECTION: Ordered channels require packets to be received in a strict order."
+        },
+        {
+          "n": 233,
+          "text": "\t\t// Any out of order or previously received packets are rejected."
+        },
+        {
+          "n": 234,
+          "text": "\t\tif packet.GetSequence() != nextSequenceRecv {"
+        },
+        {
+          "n": 235,
+          "text": "\t\t\treturn errorsmod.Wrapf("
+        },
+        {
+          "n": 236,
+          "text": "\t\t\t\ttypes.ErrPacketSequenceOutOfOrder,"
+        },
+        {
+          "n": 237,
+          "text": "\t\t\t\t\"packet sequence \u2260 next receive sequence (%d \u2260 %d)\", packet.GetSequence(), nextSequenceRecv,"
+        },
+        {
+          "n": 238,
+          "text": "\t\t\t)"
+        }
+      ]
+    },
+    {
+      "id": "ack_empty_commitment_noop",
+      "path": "source/modules/core/04-channel/keeper/packet.go",
+      "start_line": 377,
+      "end_line": 386,
+      "lines": [
+        {
+          "n": 377,
+          "text": "\tcommitment := k.GetPacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())"
+        },
+        {
+          "n": 378,
+          "text": ""
+        },
+        {
+          "n": 379,
+          "text": "\tif len(commitment) == 0 {"
+        },
+        {
+          "n": 380,
+          "text": "\t\temitAcknowledgePacketEvent(ctx, packet, channel)"
+        },
+        {
+          "n": 381,
+          "text": "\t\t// This error indicates that the acknowledgement has already been relayed"
+        },
+        {
+          "n": 382,
+          "text": "\t\t// or there is a misconfigured relayer attempting to prove an acknowledgement"
+        },
+        {
+          "n": 383,
+          "text": "\t\t// for a packet never sent. Core IBC will treat this error as a no-op in order to"
+        },
+        {
+          "n": 384,
+          "text": "\t\t// prevent an entire relay transaction from failing and consuming unnecessary fees."
+        },
+        {
+          "n": 385,
+          "text": "\t\treturn \"\", types.ErrNoOpMsg"
+        },
+        {
+          "n": 386,
+          "text": "\t}"
+        }
+      ]
+    },
+    {
+      "id": "ack_delete_commitment",
+      "path": "source/modules/core/04-channel/keeper/packet.go",
+      "start_line": 436,
+      "end_line": 438,
+      "lines": [
+        {
+          "n": 436,
+          "text": "\t// Delete packet commitment, since the packet has been acknowledged, the commitment is no longer necessary"
+        },
+        {
+          "n": 437,
+          "text": "\tk.deletePacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())"
+        },
+        {
+          "n": 438,
+          "text": ""
+        }
+      ]
+    },
+    {
+      "id": "timeout_maturity",
+      "path": "source/modules/core/04-channel/keeper/timeout.go",
+      "start_line": 68,
+      "end_line": 71,
+      "lines": [
+        {
+          "n": 68,
+          "text": "\ttimeout := types.NewTimeout(packet.GetTimeoutHeight().(clienttypes.Height), packet.GetTimeoutTimestamp())"
+        },
+        {
+          "n": 69,
+          "text": "\tif !timeout.Elapsed(proofHeight.(clienttypes.Height), proofTimestamp) {"
+        },
+        {
+          "n": 70,
+          "text": "\t\treturn \"\", errorsmod.Wrap(timeout.ErrTimeoutNotReached(proofHeight.(clienttypes.Height), proofTimestamp), \"packet timeout not reached\")"
+        },
+        {
+          "n": 71,
+          "text": "\t}"
+        }
+      ]
+    },
+    {
+      "id": "timeout_empty_commitment_noop",
+      "path": "source/modules/core/04-channel/keeper/timeout.go",
+      "start_line": 75,
+      "end_line": 82,
+      "lines": [
+        {
+          "n": 75,
+          "text": "\tif len(commitment) == 0 {"
+        },
+        {
+          "n": 76,
+          "text": "\t\temitTimeoutPacketEvent(ctx, packet, channel)"
+        },
+        {
+          "n": 77,
+          "text": "\t\t// This error indicates that the timeout has already been relayed"
+        },
+        {
+          "n": 78,
+          "text": "\t\t// or there is a misconfigured relayer attempting to prove a timeout"
+        },
+        {
+          "n": 79,
+          "text": "\t\t// for a packet never sent. Core IBC will treat this error as a no-op in order to"
+        },
+        {
+          "n": 80,
+          "text": "\t\t// prevent an entire relay transaction from failing and consuming unnecessary fees."
+        },
+        {
+          "n": 81,
+          "text": "\t\treturn \"\", types.ErrNoOpMsg"
+        },
+        {
+          "n": 82,
+          "text": "\t}"
+        }
+      ]
+    },
+    {
+      "id": "timeout_nonreceipt_branches",
+      "path": "source/modules/core/04-channel/keeper/timeout.go",
+      "start_line": 91,
+      "end_line": 113,
+      "lines": [
+        {
+          "n": 91,
+          "text": "\tswitch channel.Ordering {"
+        },
+        {
+          "n": 92,
+          "text": "\tcase types.ORDERED:"
+        },
+        {
+          "n": 93,
+          "text": "\t\t// check that packet has not been received"
+        },
+        {
+          "n": 94,
+          "text": "\t\tif nextSequenceRecv > packet.GetSequence() {"
+        },
+        {
+          "n": 95,
+          "text": "\t\t\treturn \"\", errorsmod.Wrapf("
+        },
+        {
+          "n": 96,
+          "text": "\t\t\t\ttypes.ErrPacketReceived,"
+        },
+        {
+          "n": 97,
+          "text": "\t\t\t\t\"packet already received, next sequence receive > packet sequence (%d > %d)\", nextSequenceRecv, packet.GetSequence(),"
+        },
+        {
+          "n": 98,
+          "text": "\t\t\t)"
+        },
+        {
+          "n": 99,
+          "text": "\t\t}"
+        },
+        {
+          "n": 100,
+          "text": ""
+        },
+        {
+          "n": 101,
+          "text": "\t\t// check that the recv sequence is as claimed"
+        },
+        {
+          "n": 102,
+          "text": "\t\terr = k.connectionKeeper.VerifyNextSequenceRecv("
+        },
+        {
+          "n": 103,
+          "text": "\t\t\tctx, connectionEnd, proofHeight, proof,"
+        },
+        {
+          "n": 104,
+          "text": "\t\t\tpacket.GetDestPort(), packet.GetDestChannel(), nextSequenceRecv,"
+        },
+        {
+          "n": 105,
+          "text": "\t\t)"
+        },
+        {
+          "n": 106,
+          "text": "\tcase types.UNORDERED:"
+        },
+        {
+          "n": 107,
+          "text": "\t\terr = k.connectionKeeper.VerifyPacketReceiptAbsence("
+        },
+        {
+          "n": 108,
+          "text": "\t\t\tctx, connectionEnd, proofHeight, proof,"
+        },
+        {
+          "n": 109,
+          "text": "\t\t\tpacket.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(),"
+        },
+        {
+          "n": 110,
+          "text": "\t\t)"
+        },
+        {
+          "n": 111,
+          "text": "\tdefault:"
+        },
+        {
+          "n": 112,
+          "text": "\t\tpanic(errorsmod.Wrap(types.ErrInvalidChannelOrdering, channel.Ordering.String()))"
+        },
+        {
+          "n": 113,
+          "text": "\t}"
+        }
+      ]
+    },
+    {
+      "id": "timeout_executed_delete",
+      "path": "source/modules/core/04-channel/keeper/timeout.go",
+      "start_line": 130,
+      "end_line": 142,
+      "lines": [
+        {
+          "n": 130,
+          "text": "func (k *Keeper) timeoutExecuted("
+        },
+        {
+          "n": 131,
+          "text": "\tctx sdk.Context,"
+        },
+        {
+          "n": 132,
+          "text": "\tchannel types.Channel,"
+        },
+        {
+          "n": 133,
+          "text": "\tpacket types.Packet,"
+        },
+        {
+          "n": 134,
+          "text": ") error {"
+        },
+        {
+          "n": 135,
+          "text": "\tk.deletePacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())"
+        },
+        {
+          "n": 136,
+          "text": ""
+        },
+        {
+          "n": 137,
+          "text": "\tif channel.Ordering == types.ORDERED {"
+        },
+        {
+          "n": 138,
+          "text": "\t\t// Close the channel since the packet timed-out and the channel is ORDERED"
+        },
+        {
+          "n": 139,
+          "text": "\t\tchannel.State = types.CLOSED"
+        },
+        {
+          "n": 140,
+          "text": "\t\tk.SetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), channel)"
+        },
+        {
+          "n": 141,
+          "text": "\t\temitChannelClosedEvent(ctx, packet, channel)"
+        },
+        {
+          "n": 142,
+          "text": "\t}"
+        }
+      ]
+    },
+    {
+      "id": "timeout_on_close_noop",
+      "path": "source/modules/core/04-channel/keeper/timeout.go",
+      "start_line": 196,
+      "end_line": 203,
+      "lines": [
+        {
+          "n": 196,
+          "text": "\tif len(commitment) == 0 {"
+        },
+        {
+          "n": 197,
+          "text": "\t\temitTimeoutPacketEvent(ctx, packet, channel)"
+        },
+        {
+          "n": 198,
+          "text": "\t\t// This error indicates that the timeout has already been relayed"
+        },
+        {
+          "n": 199,
+          "text": "\t\t// or there is a misconfigured relayer attempting to prove a timeout"
+        },
+        {
+          "n": 200,
+          "text": "\t\t// for a packet never sent. Core IBC will treat this error as a no-op in order to"
+        },
+        {
+          "n": 201,
+          "text": "\t\t// prevent an entire relay transaction from failing and consuming unnecessary fees."
+        },
+        {
+          "n": 202,
+          "text": "\t\treturn \"\", types.ErrNoOpMsg"
+        },
+        {
+          "n": 203,
+          "text": "\t}"
+        }
+      ]
+    },
+    {
+      "id": "msg_recv_noop_before_callback",
+      "path": "source/modules/core/keeper/msg_server.go",
+      "start_line": 433,
+      "end_line": 445,
+      "lines": [
+        {
+          "n": 433,
+          "text": "\tcacheCtx, writeFn := ctx.CacheContext()"
+        },
+        {
+          "n": 434,
+          "text": "\tchannelVersion, err := k.ChannelKeeper.RecvPacket(cacheCtx, msg.Packet, msg.ProofCommitment, msg.ProofHeight)"
+        },
+        {
+          "n": 435,
+          "text": ""
+        },
+        {
+          "n": 436,
+          "text": "\tswitch {"
+        },
+        {
+          "n": 437,
+          "text": "\tcase err == nil:"
+        },
+        {
+          "n": 438,
+          "text": "\t\twriteFn()"
+        },
+        {
+          "n": 439,
+          "text": "\tcase errors.Is(err, channeltypes.ErrNoOpMsg):"
+        },
+        {
+          "n": 440,
+          "text": "\t\tctx.Logger().Debug(\"no-op on redundant relay\", \"port-id\", msg.Packet.SourcePort, \"channel-id\", msg.Packet.SourceChannel)"
+        },
+        {
+          "n": 441,
+          "text": "\t\treturn &channeltypes.MsgRecvPacketResponse{Result: channeltypes.NOOP}, nil"
+        },
+        {
+          "n": 442,
+          "text": "\tdefault:"
+        },
+        {
+          "n": 443,
+          "text": "\t\tctx.Logger().Error(\"receive packet failed\", \"port-id\", msg.Packet.SourcePort, \"channel-id\", msg.Packet.SourceChannel, \"error\", errorsmod.Wrap(err, \"receive packet verification failed\"))"
+        },
+        {
+          "n": 444,
+          "text": "\t\treturn nil, errorsmod.Wrap(err, \"receive packet verification failed\")"
+        },
+        {
+          "n": 445,
+          "text": "\t}"
+        }
+      ]
+    },
+    {
+      "id": "msg_timeout_noop_before_callback",
+      "path": "source/modules/core/keeper/msg_server.go",
+      "start_line": 497,
+      "end_line": 516,
+      "lines": [
+        {
+          "n": 497,
+          "text": "\tcacheCtx, writeFn := ctx.CacheContext()"
+        },
+        {
+          "n": 498,
+          "text": "\tchannelVersion, err := k.ChannelKeeper.TimeoutPacket(cacheCtx, msg.Packet, msg.ProofUnreceived, msg.ProofHeight, msg.NextSequenceRecv)"
+        },
+        {
+          "n": 499,
+          "text": ""
+        },
+        {
+          "n": 500,
+          "text": "\tswitch {"
+        },
+        {
+          "n": 501,
+          "text": "\tcase err == nil:"
+        },
+        {
+          "n": 502,
+          "text": "\t\twriteFn()"
+        },
+        {
+          "n": 503,
+          "text": "\tcase errors.Is(err, channeltypes.ErrNoOpMsg):"
+        },
+        {
+          "n": 504,
+          "text": "\t\tctx.Logger().Debug(\"no-op on redundant relay\", \"port-id\", msg.Packet.SourcePort, \"channel-id\", msg.Packet.SourceChannel)"
+        },
+        {
+          "n": 505,
+          "text": "\t\treturn &channeltypes.MsgTimeoutResponse{Result: channeltypes.NOOP}, nil"
+        },
+        {
+          "n": 506,
+          "text": "\tdefault:"
+        },
+        {
+          "n": 507,
+          "text": "\t\tctx.Logger().Error(\"timeout failed\", \"port-id\", msg.Packet.SourcePort, \"channel-id\", msg.Packet.SourceChannel, \"error\", errorsmod.Wrap(err, \"timeout packet verification failed\"))"
+        },
+        {
+          "n": 508,
+          "text": "\t\treturn nil, errorsmod.Wrap(err, \"timeout packet verification failed\")"
+        },
+        {
+          "n": 509,
+          "text": "\t}"
+        },
+        {
+          "n": 510,
+          "text": ""
+        },
+        {
+          "n": 511,
+          "text": "\t// Perform application logic callback"
+        },
+        {
+          "n": 512,
+          "text": "\terr = cbs.OnTimeoutPacket(ctx, channelVersion, msg.Packet, relayer)"
+        },
+        {
+          "n": 513,
+          "text": "\tif err != nil {"
+        },
+        {
+          "n": 514,
+          "text": "\t\tctx.Logger().Error(\"timeout failed\", \"port-id\", msg.Packet.SourcePort, \"channel-id\", msg.Packet.SourceChannel, \"error\", errorsmod.Wrap(err, \"timeout packet callback failed\"))"
+        },
+        {
+          "n": 515,
+          "text": "\t\treturn nil, errorsmod.Wrap(err, \"timeout packet callback failed\")"
+        },
+        {
+          "n": 516,
+          "text": "\t}"
+        }
+      ]
+    },
+    {
+      "id": "msg_timeout_on_close_noop",
+      "path": "source/modules/core/keeper/msg_server.go",
+      "start_line": 549,
+      "end_line": 557,
+      "lines": [
+        {
+          "n": 549,
+          "text": "\tcase err == nil:"
+        },
+        {
+          "n": 550,
+          "text": "\t\twriteFn()"
+        },
+        {
+          "n": 551,
+          "text": "\tcase errors.Is(err, channeltypes.ErrNoOpMsg):"
+        },
+        {
+          "n": 552,
+          "text": "\t\tctx.Logger().Debug(\"no-op on redundant relay\", \"port-id\", msg.Packet.SourcePort, \"channel-id\", msg.Packet.SourceChannel)"
+        },
+        {
+          "n": 553,
+          "text": "\t\treturn &channeltypes.MsgTimeoutOnCloseResponse{Result: channeltypes.NOOP}, nil"
+        },
+        {
+          "n": 554,
+          "text": "\tdefault:"
+        },
+        {
+          "n": 555,
+          "text": "\t\tctx.Logger().Error(\"timeout on close failed\", \"port-id\", msg.Packet.SourcePort, \"channel-id\", msg.Packet.SourceChannel, \"error\", errorsmod.Wrap(err, \"timeout on close packet verification failed\"))"
+        },
+        {
+          "n": 556,
+          "text": "\t\treturn nil, errorsmod.Wrap(err, \"timeout on close packet verification failed\")"
+        },
+        {
+          "n": 557,
+          "text": "\t}"
+        }
+      ]
+    },
+    {
+      "id": "msg_ack_noop_before_callback",
+      "path": "source/modules/core/keeper/msg_server.go",
+      "start_line": 597,
+      "end_line": 616,
+      "lines": [
+        {
+          "n": 597,
+          "text": "\tcacheCtx, writeFn := ctx.CacheContext()"
+        },
+        {
+          "n": 598,
+          "text": "\tchannelVersion, err := k.ChannelKeeper.AcknowledgePacket(cacheCtx, msg.Packet, msg.Acknowledgement, msg.ProofAcked, msg.ProofHeight)"
+        },
+        {
+          "n": 599,
+          "text": ""
+        },
+        {
+          "n": 600,
+          "text": "\tswitch {"
+        },
+        {
+          "n": 601,
+          "text": "\tcase err == nil:"
+        },
+        {
+          "n": 602,
+          "text": "\t\twriteFn()"
+        },
+        {
+          "n": 603,
+          "text": "\tcase errors.Is(err, channeltypes.ErrNoOpMsg):"
+        },
+        {
+          "n": 604,
+          "text": "\t\tctx.Logger().Debug(\"no-op on redundant relay\", \"port-id\", msg.Packet.SourcePort, \"channel-id\", msg.Packet.SourceChannel)"
+        },
+        {
+          "n": 605,
+          "text": "\t\treturn &channeltypes.MsgAcknowledgementResponse{Result: channeltypes.NOOP}, nil"
+        },
+        {
+          "n": 606,
+          "text": "\tdefault:"
+        },
+        {
+          "n": 607,
+          "text": "\t\tctx.Logger().Error(\"acknowledgement failed\", \"port-id\", msg.Packet.SourcePort, \"channel-id\", msg.Packet.SourceChannel, \"error\", errorsmod.Wrap(err, \"acknowledge packet verification failed\"))"
+        },
+        {
+          "n": 608,
+          "text": "\t\treturn nil, errorsmod.Wrap(err, \"acknowledge packet verification failed\")"
+        },
+        {
+          "n": 609,
+          "text": "\t}"
+        },
+        {
+          "n": 610,
+          "text": ""
+        },
+        {
+          "n": 611,
+          "text": "\t// Perform application logic callback"
+        },
+        {
+          "n": 612,
+          "text": "\terr = cbs.OnAcknowledgementPacket(ctx, channelVersion, msg.Packet, msg.Acknowledgement, relayer)"
+        },
+        {
+          "n": 613,
+          "text": "\tif err != nil {"
+        },
+        {
+          "n": 614,
+          "text": "\t\tctx.Logger().Error(\"acknowledgement failed\", \"port-id\", msg.Packet.SourcePort, \"channel-id\", msg.Packet.SourceChannel, \"error\", errorsmod.Wrap(err, \"acknowledge packet callback failed\"))"
+        },
+        {
+          "n": 615,
+          "text": "\t\treturn nil, errorsmod.Wrap(err, \"acknowledge packet callback failed\")"
+        },
+        {
+          "n": 616,
+          "text": "\t}"
+        }
+      ]
+    },
+    {
+      "id": "ics20_send_blocked_sender",
+      "path": "source/modules/apps/transfer/keeper/relay.go",
+      "start_line": 63,
+      "end_line": 65,
+      "lines": [
+        {
+          "n": 63,
+          "text": "\tif k.IsBlockedAddr(sender) {"
+        },
+        {
+          "n": 64,
+          "text": "\t\treturn errorsmod.Wrapf(ibcerrors.ErrUnauthorized, \"%s is not allowed to send funds\", sender)"
+        },
+        {
+          "n": 65,
+          "text": "\t}"
+        }
+      ]
+    },
+    {
+      "id": "ics20_recv_blocked_receiver",
+      "path": "source/modules/apps/transfer/keeper/relay.go",
+      "start_line": 137,
+      "end_line": 139,
+      "lines": [
+        {
+          "n": 137,
+          "text": "\tif k.IsBlockedAddr(receiver) {"
+        },
+        {
+          "n": 138,
+          "text": "\t\treturn errorsmod.Wrapf(ibcerrors.ErrUnauthorized, \"%s is not allowed to receive funds\", data.Receiver)"
+        },
+        {
+          "n": 139,
+          "text": "\t}"
+        }
+      ]
+    },
+    {
+      "id": "ics20_success_ack_no_refund",
+      "path": "source/modules/apps/transfer/keeper/relay.go",
+      "start_line": 220,
+      "end_line": 228,
+      "lines": [
+        {
+          "n": 220,
+          "text": "\tswitch ack.Response.(type) {"
+        },
+        {
+          "n": 221,
+          "text": "\tcase *channeltypes.Acknowledgement_Result:"
+        },
+        {
+          "n": 222,
+          "text": "\t\t// the acknowledgement succeeded on the receiving chain so nothing"
+        },
+        {
+          "n": 223,
+          "text": "\t\t// needs to be executed and no error needs to be returned"
+        },
+        {
+          "n": 224,
+          "text": "\t\treturn nil"
+        },
+        {
+          "n": 225,
+          "text": "\tcase *channeltypes.Acknowledgement_Error:"
+        },
+        {
+          "n": 226,
+          "text": "\t\tif err := k.refundPacketTokens(ctx, sourcePort, sourceChannel, data); err != nil {"
+        },
+        {
+          "n": 227,
+          "text": "\t\t\treturn err"
+        },
+        {
+          "n": 228,
+          "text": "\t\t}"
+        }
+      ]
+    },
+    {
+      "id": "ics20_timeout_refund",
+      "path": "source/modules/apps/transfer/keeper/relay.go",
+      "start_line": 235,
+      "end_line": 243,
+      "lines": [
+        {
+          "n": 235,
+          "text": "// OnTimeoutPacket processes a transfer packet timeout by refunding the tokens to the sender"
+        },
+        {
+          "n": 236,
+          "text": "func (k *Keeper) OnTimeoutPacket("
+        },
+        {
+          "n": 237,
+          "text": "\tctx sdk.Context,"
+        },
+        {
+          "n": 238,
+          "text": "\tsourcePort string,"
+        },
+        {
+          "n": 239,
+          "text": "\tsourceChannel string,"
+        },
+        {
+          "n": 240,
+          "text": "\tdata types.InternalTransferRepresentation,"
+        },
+        {
+          "n": 241,
+          "text": ") error {"
+        },
+        {
+          "n": 242,
+          "text": "\treturn k.refundPacketTokens(ctx, sourcePort, sourceChannel, data)"
+        },
+        {
+          "n": 243,
+          "text": "}"
+        }
+      ]
+    },
+    {
+      "id": "ics20_refund_blocked_sender",
+      "path": "source/modules/apps/transfer/keeper/relay.go",
+      "start_line": 257,
+      "end_line": 263,
+      "lines": [
+        {
+          "n": 257,
+          "text": "\tsender, err := k.addressCodec.StringToBytes(data.Sender)"
+        },
+        {
+          "n": 258,
+          "text": "\tif err != nil {"
+        },
+        {
+          "n": 259,
+          "text": "\t\treturn err"
+        },
+        {
+          "n": 260,
+          "text": "\t}"
+        },
+        {
+          "n": 261,
+          "text": "\tif k.IsBlockedAddr(sender) {"
+        },
+        {
+          "n": 262,
+          "text": "\t\treturn errorsmod.Wrapf(ibcerrors.ErrUnauthorized, \"%s is not allowed to receive funds\", data.Sender)"
+        },
+        {
+          "n": 263,
+          "text": "\t}"
+        }
+      ]
+    },
+    {
+      "id": "ics20_refund_origin_branches",
+      "path": "source/modules/apps/transfer/keeper/relay.go",
+      "start_line": 275,
+      "end_line": 292,
+      "lines": [
+        {
+          "n": 275,
+          "text": "\t// if the token we must refund is prefixed by the source port and channel"
+        },
+        {
+          "n": 276,
+          "text": "\t// then the tokens were burnt when the packet was sent and we must mint new tokens"
+        },
+        {
+          "n": 277,
+          "text": "\tif token.Denom.HasPrefix(sourcePort, sourceChannel) {"
+        },
+        {
+          "n": 278,
+          "text": "\t\t// mint vouchers back to sender"
+        },
+        {
+          "n": 279,
+          "text": "\t\tif err := k.BankKeeper.MintCoins("
+        },
+        {
+          "n": 280,
+          "text": "\t\t\tctx, types.ModuleName, sdk.NewCoins(coin),"
+        },
+        {
+          "n": 281,
+          "text": "\t\t); err != nil {"
+        },
+        {
+          "n": 282,
+          "text": "\t\t\treturn err"
+        },
+        {
+          "n": 283,
+          "text": "\t\t}"
+        },
+        {
+          "n": 284,
+          "text": ""
+        },
+        {
+          "n": 285,
+          "text": "\t\tif err := k.BankKeeper.SendCoins(ctx, moduleAccountAddr, sender, sdk.NewCoins(coin)); err != nil {"
+        },
+        {
+          "n": 286,
+          "text": "\t\t\tpanic(fmt.Errorf(\"unable to send coins from module to account despite previously minting coins to module account: %w\", err))"
+        },
+        {
+          "n": 287,
+          "text": "\t\t}"
+        },
+        {
+          "n": 288,
+          "text": "\t} else {"
+        },
+        {
+          "n": 289,
+          "text": "\t\tif err := k.UnescrowCoin(ctx, escrowAddress, sender, coin); err != nil {"
+        },
+        {
+          "n": 290,
+          "text": "\t\t\treturn err"
+        },
+        {
+          "n": 291,
+          "text": "\t\t}"
+        },
+        {
+          "n": 292,
+          "text": "\t}"
+        }
+      ]
+    },
+    {
+      "id": "ics20_unescrow_can_fail",
+      "path": "source/modules/apps/transfer/keeper/relay.go",
+      "start_line": 315,
+      "end_line": 322,
+      "lines": [
+        {
+          "n": 315,
+          "text": "func (k *Keeper) UnescrowCoin(ctx sdk.Context, escrowAddress, receiver sdk.AccAddress, coin sdk.Coin) error {"
+        },
+        {
+          "n": 316,
+          "text": "\tif err := k.BankKeeper.SendCoins(ctx, escrowAddress, receiver, sdk.NewCoins(coin)); err != nil {"
+        },
+        {
+          "n": 317,
+          "text": "\t\t// NOTE: this error is only expected to occur given an unexpected bug or a malicious"
+        },
+        {
+          "n": 318,
+          "text": "\t\t// counterparty module. The bug may occur in bank or any part of the code that allows"
+        },
+        {
+          "n": 319,
+          "text": "\t\t// the escrow address to be drained. A malicious counterparty module could drain the"
+        },
+        {
+          "n": 320,
+          "text": "\t\t// escrow address by allowing more tokens to be sent back then were escrowed."
+        },
+        {
+          "n": 321,
+          "text": "\t\treturn errorsmod.Wrap(err, \"unable to unescrow tokens, this may be caused by a malicious counterparty module or a bug: please open an issue on counterparty module\")"
+        },
+        {
+          "n": 322,
+          "text": "\t}"
+        }
+      ]
+    },
+    {
+      "id": "update_client_verify_then_freeze",
+      "path": "source/modules/core/02-client/keeper/client.go",
+      "start_line": 56,
+      "end_line": 75,
+      "lines": [
+        {
+          "n": 56,
+          "text": "\tif status := clientModule.Status(ctx, clientID); status != exported.Active {"
+        },
+        {
+          "n": 57,
+          "text": "\t\treturn errorsmod.Wrapf(types.ErrClientNotActive, \"cannot update client (%s) with status %s\", clientID, status)"
+        },
+        {
+          "n": 58,
+          "text": "\t}"
+        },
+        {
+          "n": 59,
+          "text": ""
+        },
+        {
+          "n": 60,
+          "text": "\tif err := clientModule.VerifyClientMessage(ctx, clientID, clientMsg); err != nil {"
+        },
+        {
+          "n": 61,
+          "text": "\t\treturn err"
+        },
+        {
+          "n": 62,
+          "text": "\t}"
+        },
+        {
+          "n": 63,
+          "text": ""
+        },
+        {
+          "n": 64,
+          "text": "\tfoundMisbehaviour := clientModule.CheckForMisbehaviour(ctx, clientID, clientMsg)"
+        },
+        {
+          "n": 65,
+          "text": "\tif foundMisbehaviour {"
+        },
+        {
+          "n": 66,
+          "text": "\t\tclientModule.UpdateStateOnMisbehaviour(ctx, clientID, clientMsg)"
+        },
+        {
+          "n": 67,
+          "text": ""
+        },
+        {
+          "n": 68,
+          "text": "\t\tk.Logger(ctx).Info(\"client frozen due to misbehaviour\", \"client-id\", clientID)"
+        },
+        {
+          "n": 69,
+          "text": ""
+        },
+        {
+          "n": 70,
+          "text": "\t\tclientType := types.MustParseClientIdentifier(clientID)"
+        },
+        {
+          "n": 71,
+          "text": "\t\tdefer telemetry.ReportUpdateClient(foundMisbehaviour, clientType, clientID)"
+        },
+        {
+          "n": 72,
+          "text": "\t\temitSubmitMisbehaviourEvent(ctx, clientID, clientType)"
+        },
+        {
+          "n": 73,
+          "text": ""
+        },
+        {
+          "n": 74,
+          "text": "\t\treturn nil"
+        },
+        {
+          "n": 75,
+          "text": "\t}"
+        }
+      ]
+    },
+    {
+      "id": "recover_client",
+      "path": "source/modules/core/02-client/keeper/client.go",
+      "start_line": 118,
+      "end_line": 145,
+      "lines": [
+        {
+          "n": 118,
+          "text": "// RecoverClient will invoke the light client module associated with the subject clientID requesting it to"
+        },
+        {
+          "n": 119,
+          "text": "// recover the subject client given a substitute client identifier. The light client implementation"
+        },
+        {
+          "n": 120,
+          "text": "// is responsible for validating the parameters of the substitute (ensuring they match the subject's parameters)"
+        },
+        {
+          "n": 121,
+          "text": "// as well as copying the necessary consensus states from the substitute to the subject client store."
+        },
+        {
+          "n": 122,
+          "text": "// The substitute must be Active and the subject must not be Active."
+        },
+        {
+          "n": 123,
+          "text": "func (k *Keeper) RecoverClient(ctx sdk.Context, subjectClientID, substituteClientID string) error {"
+        },
+        {
+          "n": 124,
+          "text": "\tclientModule, err := k.Route(ctx, subjectClientID)"
+        },
+        {
+          "n": 125,
+          "text": "\tif err != nil {"
+        },
+        {
+          "n": 126,
+          "text": "\t\treturn errorsmod.Wrap(types.ErrRouteNotFound, subjectClientID)"
+        },
+        {
+          "n": 127,
+          "text": "\t}"
+        },
+        {
+          "n": 128,
+          "text": ""
+        },
+        {
+          "n": 129,
+          "text": "\tif status := clientModule.Status(ctx, subjectClientID); status == exported.Active {"
+        },
+        {
+          "n": 130,
+          "text": "\t\treturn errorsmod.Wrapf(types.ErrInvalidRecoveryClient, \"cannot recover subject client (%s) with status %s\", subjectClientID, status)"
+        },
+        {
+          "n": 131,
+          "text": "\t}"
+        },
+        {
+          "n": 132,
+          "text": ""
+        },
+        {
+          "n": 133,
+          "text": "\tif status := clientModule.Status(ctx, substituteClientID); status != exported.Active {"
+        },
+        {
+          "n": 134,
+          "text": "\t\treturn errorsmod.Wrapf(types.ErrClientNotActive, \"cannot recover client using substitute client (%s) with status %s\", substituteClientID, status)"
+        },
+        {
+          "n": 135,
+          "text": "\t}"
+        },
+        {
+          "n": 136,
+          "text": ""
+        },
+        {
+          "n": 137,
+          "text": "\tsubjectLatestHeight := clientModule.LatestHeight(ctx, subjectClientID)"
+        },
+        {
+          "n": 138,
+          "text": "\tsubstituteLatestHeight := clientModule.LatestHeight(ctx, substituteClientID)"
+        },
+        {
+          "n": 139,
+          "text": "\tif subjectLatestHeight.GTE(substituteLatestHeight) {"
+        },
+        {
+          "n": 140,
+          "text": "\t\treturn errorsmod.Wrapf(types.ErrInvalidHeight, \"subject client state latest height is greater or equal to substitute client state latest height (%s >= %s)\", subjectLatestHeight, substituteLatestHeight)"
+        },
+        {
+          "n": 141,
+          "text": "\t}"
+        },
+        {
+          "n": 142,
+          "text": ""
+        },
+        {
+          "n": 143,
+          "text": "\tif err := clientModule.RecoverClient(ctx, subjectClientID, substituteClientID); err != nil {"
+        },
+        {
+          "n": 144,
+          "text": "\t\treturn err"
+        },
+        {
+          "n": 145,
+          "text": "\t}"
+        }
+      ]
+    },
+    {
+      "id": "verify_membership_requires_active",
+      "path": "source/modules/core/02-client/keeper/keeper.go",
+      "start_line": 336,
+      "end_line": 347,
+      "lines": [
+        {
+          "n": 336,
+          "text": "// VerifyMembership retrieves the light client module for the clientID and verifies the proof of the existence of a key-value pair at a specified height."
+        },
+        {
+          "n": 337,
+          "text": "func (k *Keeper) VerifyMembership(ctx sdk.Context, clientID string, height exported.Height, delayTimePeriod uint64, delayBlockPeriod uint64, proof []byte, path exported.Path, value []byte) error {"
+        },
+        {
+          "n": 338,
+          "text": "\tclientModule, err := k.Route(ctx, clientID)"
+        },
+        {
+          "n": 339,
+          "text": "\tif err != nil {"
+        },
+        {
+          "n": 340,
+          "text": "\t\treturn err"
+        },
+        {
+          "n": 341,
+          "text": "\t}"
+        },
+        {
+          "n": 342,
+          "text": ""
+        },
+        {
+          "n": 343,
+          "text": "\tif status := clientModule.Status(ctx, clientID); status != exported.Active {"
+        },
+        {
+          "n": 344,
+          "text": "\t\treturn errorsmod.Wrapf(types.ErrClientNotActive, \"cannot call verify membership on client (%s) with status %s\", clientID, status)"
+        },
+        {
+          "n": 345,
+          "text": "\t}"
+        },
+        {
+          "n": 346,
+          "text": ""
+        },
+        {
+          "n": 347,
+          "text": "\treturn clientModule.VerifyMembership(ctx, clientID, height, delayTimePeriod, delayBlockPeriod, proof, path, value)"
+        }
+      ]
+    },
+    {
+      "id": "frozen_status",
+      "path": "source/modules/light-clients/07-tendermint/client_state.go",
+      "start_line": 81,
+      "end_line": 88,
+      "lines": [
+        {
+          "n": 81,
+          "text": "func (cs ClientState) status("
+        },
+        {
+          "n": 82,
+          "text": "\tctx sdk.Context,"
+        },
+        {
+          "n": 83,
+          "text": "\tclientStore storetypes.KVStore,"
+        },
+        {
+          "n": 84,
+          "text": "\tcdc codec.BinaryCodec,"
+        },
+        {
+          "n": 85,
+          "text": ") exported.Status {"
+        },
+        {
+          "n": 86,
+          "text": "\tif !cs.FrozenHeight.IsZero() {"
+        },
+        {
+          "n": 87,
+          "text": "\t\treturn exported.Frozen"
+        },
+        {
+          "n": 88,
+          "text": "\t}"
+        }
+      ]
+    },
+    {
+      "id": "freeze_height_assign",
+      "path": "source/modules/light-clients/07-tendermint/update.go",
+      "start_line": 211,
+      "end_line": 217,
+      "lines": [
+        {
+          "n": 211,
+          "text": "// UpdateStateOnMisbehaviour updates state upon misbehaviour, freezing the ClientState. This method should only be called when misbehaviour is detected"
+        },
+        {
+          "n": 212,
+          "text": "// as it does not perform any misbehaviour checks."
+        },
+        {
+          "n": 213,
+          "text": "func (cs *ClientState) UpdateStateOnMisbehaviour(ctx sdk.Context, cdc codec.BinaryCodec, clientStore storetypes.KVStore, _ exported.ClientMessage) {"
+        },
+        {
+          "n": 214,
+          "text": "\tcs.FrozenHeight = FrozenHeight"
+        },
+        {
+          "n": 215,
+          "text": ""
+        },
+        {
+          "n": 216,
+          "text": "\tclientStore.Set(host.ClientStateKey(), clienttypes.MustMarshalClientState(cdc, cs))"
+        },
+        {
+          "n": 217,
+          "text": "}"
+        }
+      ]
+    },
+    {
+      "id": "send_packet_requires_active",
+      "path": "source/modules/core/04-channel/keeper/packet.go",
+      "start_line": 60,
+      "end_line": 63,
+      "lines": [
+        {
+          "n": 60,
+          "text": "\t// prevent accidental sends with clients that cannot be updated"
+        },
+        {
+          "n": 61,
+          "text": "\tif status := k.clientKeeper.GetClientStatus(ctx, connectionEnd.ClientId); status != exported.Active {"
+        },
+        {
+          "n": 62,
+          "text": "\t\treturn 0, errorsmod.Wrapf(clienttypes.ErrClientNotActive, \"cannot send packet using client (%s) with status %s\", connectionEnd.ClientId, status)"
+        },
+        {
+          "n": 63,
+          "text": "\t}"
+        }
+      ]
+    }
+  ],
+  "source_execution": false,
+  "proof_or_execution": false,
+  "empty_check_blocked": false
+}

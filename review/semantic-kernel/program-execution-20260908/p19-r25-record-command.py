@@ -1,4 +1,4 @@
-"""Record real R24 compiler/probe results even when the native UI returns before completion."""
+"""Record real R25 compiler/probe results even when the native UI returns before completion."""
 from pathlib import Path
 import argparse
 import datetime
@@ -11,7 +11,7 @@ import signal
 import subprocess
 
 WORK = Path('/home/charl/defiformal-wt-p19-certificates-grok-opus-20260909')
-EVIDENCE = WORK / 'review/semantic-kernel/certificates/p19/implementation/agy-r24-proof'
+EVIDENCE = WORK / 'review/semantic-kernel/certificates/p19/implementation/agy-r25-proof'
 TOOL = Path('/home/charl/.elan/toolchains/leanprover--lean4---v4.33.0-rc2/bin')
 
 
@@ -42,7 +42,7 @@ def main():
         parser.error('supply a command and timeout from 1 through 900 seconds')
     cwd = Path(args.cwd).resolve()
     if not cwd.is_relative_to(WORK):
-        parser.error('cwd must stay in the R24 author working copy')
+        parser.error('cwd must stay in the R25 author working copy')
     out = EVIDENCE / 'logs' / args.id
     out.mkdir(parents=True, exist_ok=False)
     sources = {str(p.relative_to(WORK)): sha(p)
@@ -54,7 +54,7 @@ def main():
                 'source_sha256_before': sources, 'probe_inputs': probe_inputs,
                 'lean_sha256': sha(TOOL / 'lean'), 'lake_sha256': sha(TOOL / 'lake'),
                 'recorder_sha256': sha(Path(__file__).resolve()),
-                'scope': 'Actual subprocess execution by the R24 recording wrapper.',
+                'scope': 'Actual subprocess execution by the R25 recording wrapper.',
                 'P19_accepted': False}
     write(out / 'started.json', metadata)
     timed_out = False
