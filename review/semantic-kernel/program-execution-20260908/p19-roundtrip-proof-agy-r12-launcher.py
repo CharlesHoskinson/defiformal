@@ -1,0 +1,42 @@
+from pathlib import Path
+import json,hashlib,subprocess,datetime
+r=Path('/home/charl/defiformal');b=r/'review/semantic-kernel/program-execution-20260908';cache=Path('/home/charl/.cache/defiformal-program/program-execution-20260908');w=Path('/home/charl/defiformal-wt-p19-certificates-grok-opus-20260909');name='p19-roundtrip-proof-agy-r12';h=lambda p:hashlib.sha256(p.read_bytes()).hexdigest();now=lambda:datetime.datetime.now(datetime.timezone.utc).isoformat();write=lambda p,d:p.write_text(json.dumps(d,indent=2)+'\n')
+m=json.loads((b/'p19-roundtrip-proof-agy-r11-terminal-manifest.json').read_text());assert not Path('/proc/1433973').exists();assert json.loads((b/'p19-roundtrip-proof-agy-r11-process.json').read_text())['process_exit']==0
+for f in m['files']:assert h(w/f['path'])==f['sha256'],f['path']
+live=[]
+for p in Path('/proc').iterdir():
+ if not p.name.isdigit():continue
+ try:cwd=(p/'cwd').resolve();comm=(p/'comm').read_text().strip()
+ except (OSError,RuntimeError):continue
+ if (str(cwd).startswith(str(w)) or str(cwd).startswith('/tmp/p19-mirror')) and comm in ['lean','lake','agy','python','python3','node']:live.append((p.name,comm,str(cwd)))
+assert not live,live
+prefix=f"""You are the sole native AGY gemini-3.8-flash-high high author for the full DeFiFormal core roadmap. Resume frozen R11 in {w}, base {m['base_commit']}, archive {m['sha256']}; all {m['file_count']} files verified. Worktree is now DETACHED by explicit user single-branch instruction. Do not create branches, commit, push, or change Git HEAD. Root integrates accepted results into sole semantic-kernel-pivot. One author and one fresh Grok auditor; no subagents/Foreman/extra windows/Atlas. Grok audits frozen R11 elsewhere; never read its live output or use its build cache.
+
+USER EXPLICITLY REAFFIRMED cameronfreer/lean4-skills. Read and APPLY /home/charl/.codex/plugins/cache/lean4-skills/lean4/4.8.7/skills/lean4/SKILL.md and relevant references. Use absolute /home/charl/.codex/plugins/cache/lean4-skills/lean4/4.8.7/bin helpers; preflight --codex is the correct absolute-wrapper mode. Search mathlib before proving, use live Lean LSP goal/diagnostics if available in your native harness; otherwise use incremental lake builds and helper search. Record the actual available profile. Pinned Lean4.33.0-rc2/mathlib51e6992, no toolchain update. No sorry/custom axioms/native_decide. Existing accepted statements remain intact. The already authorized resource-domain repair may correct the unaccepted R11 implementation/domain helpers to faithfully express the accepted grammar; do not weaken the target proof or add its conclusion as a premise.
+
+Read root {r/'AGENTS.md'} latest instructions, {b/'p19-roundtrip-proof-agy-r11-root-precheck.json'}, and accepted resource/parser designs appended below. R11 added general container/payload inversions, but full EncodeDecodeRoundtripStatement remains a def Prop. Keep that universal production byte/token/parser/IR theorem as the main deliverable. No decoder-image domain, prior decoder success, desired-result equality, empty-only examples, or disconnected alternate codec.
+
+First repair actual runner scripts/run_certificate_fixtures.py: --out defaults to frozen agy-r5 and R11 overwrote three historical artifacts. Root preserved the new bytes and restored originals before freeze. Require an explicit fresh output directory and fail BEFORE execution if it would overwrite existing historical evidence. Add a meaningful regression showing the old overwrite path is refused without mutation and a fresh path works. Use ONLY review/semantic-kernel/certificates/p19/implementation/agy-r12-proof/ for new report/evidence, and fresh uniquely named child directories for any runner. Never overwrite any previous attempt. Read-only reuse of prior overlays is fine; no need to ban reading historical evidence.
+
+Then fix whole-document container depth. R11 jsonDepth scalar=1 misclassifies a valid guard AST58 JSON document: root actual decodeBytes(encodeModule ir)=ok-eq but computed depth65 violates <=64. Scalars must add zero container nesting, with a proved faithful production connection. Actual jsonDepth/jsonMaxArrayLength fuels are100, despite R11 REPORT256/65536; prove sufficient bounded fuel or refactor genuinely, do not invent arbitrary caps. Resource propagation was repaired in R11; preserve it and strengthen focused boundary checks only as needed. Accepted grammar is 1MiB bytes,64 container levels,4096 elements, exceeded resource blocked.
+
+Complete sourcePin compiler_record/audit_record fields in the real JSON representation and general inverses (R11 helper omits both and restricts none). Supported typed/step/run scope may explicitly exclude audit/codec forms; their helper null placeholders are not by themselves a new bug. Compose all actual catalog/config/world/boundary/request/invocation/step/run/payload/envelope inverses with production serialization and total canonical parser. You may refactor real encoder/parser for proof tractability under the approved plan, preserving canonical language, security/refusal behavior, and actual callers. Reduce the universal obligation through general reusable lemmas; avoid accumulating disconnected closed examples. Do not defer this target to P20.
+
+R11 actual source inventory167 =15CanonicalJson+152Correspondence; author catalog165 missed names. Generate inventories from exact actual source, rebuild changed imports BEFORE axiom audits, and record actual command/exit/compiler/source hashes. Full54fixture/99scenario/16mutation reruns remain deferred until general proof closes; do targeted checks for current edits. Host trust, F13 independent expectedIR, overlay provenance and other final P19 gates remain open and separate. No full P19 acceptance from this run alone.
+
+Work autonomously through these connected repairs and general proof steps. End this bounded run with children collected and a precise new REPORT, command evidence, source hashes, actual theorem statements/axioms, and the exact next mathematical obligation if partial. No claimed completion for a mere Prop declaration. Preserve the entire roadmap and historical evidence.
+"""
+brief=prefix+(r/'docs/superpowers/specs/2026-09-10-p19-resource-domain-interpretation.md').read_text()+'\n\n'+(r/'docs/superpowers/specs/2026-09-10-p19-total-canonical-parser-design.md').read_text();bp=b/(name+'-brief.txt');assert not bp.exists();bp.write_text(brief);log=cache/(name+'.jsonl');err=cache/(name+'.stderr');start=now();cmd=['agy','--print',brief,'--model','gemini-3.8-flash-high','--effort','high','--mode','accept-edits','--dangerously-skip-permissions','--output-format','stream-json','--print-timeout','45m','--add-dir',str(w)]
+with log.open('x') as f,err.open('x') as e:
+ p=subprocess.Popen(cmd,cwd=w,stdout=f,stderr=e);d={'schema':'defiformal-native-dispatch/v3','started_utc':start,'role':'author','scope':'Universal supported-canonical IR encode/decode theorem; full roadmap unchanged','pid':p.pid,'requested_model':'gemini-3.8-flash-high','effort':'high','fresh_session':True,'resumed_conversation':None,'worktree':str(w),'brief':str(bp),'brief_sha256':h(bp),'log':str(log),'status':'running','prior_terminal_manifest':'p19-roundtrip-proof-agy-r11-terminal-manifest.json','root_completeness':'p19-roundtrip-proof-agy-r11-root-precheck.json','acceptance':False};write(b/(name+'-dispatch.json'),d);print(json.dumps(d),flush=True);code=p.wait()
+terminal=[];models=set();sessions=set()
+for line in log.read_text().splitlines():
+ try:d=json.loads(line)
+ except:continue
+ if d.get('event') in ['result','error','end']:terminal.append(d)
+ init=d.get('init',{})
+ if init.get('model'):models.add(init['model'])
+ for x in [d,init,d.get('step_update',{})]:
+  for k in ['conversation_id','session_id']:
+   if x.get(k):sessions.add(x[k])
+rec={'schema':'defiformal-native-process/v3','started_utc':start,'finished_utc':now(),'requested_model':'gemini-3.8-flash-high','reported_models':sorted(models),'sessions':sorted(sessions),'effort':'high','fresh_session':True,'resumed_conversation':None,'brief_sha256':h(bp),'log_sha256':h(log),'process_exit':code,'terminal_events':terminal,'acceptance':False,'note':'CLI terminal status is not target proof completion. Inspect actual theorem, domain, source/evidence and child processes before freeze or continuation.'};write(b/(name+'-process.json'),rec);print(json.dumps({k:v for k,v in rec.items() if k!='terminal_events'}),flush=True)
