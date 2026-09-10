@@ -1,0 +1,187 @@
+{
+  "schema": "defiformal-rational-inverse-findings/v1",
+  "mark": "RATIONAL_INVERSE_R17_PARTIAL_PROOF_UNIVERSAL_OPEN_FULL_P19_OPEN",
+  "acceptance": false,
+  "verdict": "CHANGES_REQUIRED",
+  "fresh_session": true,
+  "lean4_review_output": {
+    "version": "2.0",
+    "error": null,
+    "summary": {
+      "total_suggestions": 5,
+      "by_severity": {
+        "error": 2,
+        "warning": 2,
+        "advisory": 1,
+        "hint": 0,
+        "style": 0
+      }
+    },
+    "suggestions": [
+      {
+        "file": "lean/DefiKernel/Certificates/Correspondence.lean",
+        "line": 1061,
+        "column": 0,
+        "severity": "error",
+        "category": "axiom",
+        "rule_id": "unproved-roundtrip-prop",
+        "message": "EncodeDecodeRoundtripStatement remains a def Prop. Whole P19 acceptance is blocked.",
+        "fix": null
+      },
+      {
+        "file": "lean/DefiKernel/Certificates/Correspondence.lean",
+        "line": 3594,
+        "column": 0,
+        "severity": "error",
+        "category": "axiom",
+        "rule_id": "unproved-success-premises",
+        "message": "decodeBytes_encodeModule_of_lex_and_parse still assumes h_lex and h_parse.",
+        "fix": null
+      },
+      {
+        "file": "lean/DefiKernel/Certificates/CanonicalJson.lean",
+        "line": 568,
+        "column": 0,
+        "severity": "warning",
+        "category": "api",
+        "rule_id": "child-success-hypothesis",
+        "message": "parse_obj_field_step and parse_arr_feed_elem still assume child foldlM success. Not nested-document inverse.",
+        "fix": null
+      },
+      {
+        "file": "lean/DefiKernel/Certificates/Decode.lean",
+        "line": 1,
+        "column": 0,
+        "severity": "warning",
+        "category": "api",
+        "rule_id": "error-precedence-open",
+        "message": "Decode bytes unchanged from R16. Mixed-error precedence regression remains. Not replayed; R18 scope.",
+        "fix": null
+      },
+      {
+        "file": "review/semantic-kernel/certificates/p19/implementation/agy-r17-proof/commands.json",
+        "line": 27,
+        "column": 0,
+        "severity": "advisory",
+        "category": "metadata",
+        "rule_id": "author-evidence-flaws",
+        "message": "Author commands omit timestamps/raw streams; CMD-03 false error-precedence claim; Verify 287/408 is Composition only; exprDepth_pos listed as new theorem.",
+        "fix": null
+      }
+    ]
+  },
+  "evidence_classes": {
+    "compiler_proved": "Private Correspondence rebuild child_compiler_exit 0. Independent probe-axioms299 exit 0 printed 299 names, 287 standard, 12 none, 0 forbidden.",
+    "successful_execution": "Child compiler exit 0 and no Lean error line: lean-version, preflight, project-context, sorry-analyzers, lake-rebuild-correspondence, probe-axioms299.",
+    "source_inspection": "Read of frozen Encode/Decode/CanonicalJson/Correspondence/Schema/Verify, R17 REPORT/results/commands, root precheck/scope, R16 adjudication, error-precedence finding, ordering correction.",
+    "failed_probe": "None in this review.",
+    "author_captured": "Inspected frozen agy-r17-proof evidence. Verify prefixes from compiler-axiom-audit.log. 54/99/16 and Tests.lean 21 not re-run.",
+    "unverified": "Verify.lean not re-run. Mixed-error scanner not replayed. 7/21 not re-run."
+  },
+  "findings": [
+    {
+      "id": "R17-UNIVERSAL-OPEN",
+      "severity": "blocker",
+      "class": "EncodeDecodeRoundtripStatement_still_Prop",
+      "evidence_class": "source_inspection+compiler_proved",
+      "source": "lean/DefiKernel/Certificates/Correspondence.lean:1061 EncodeDecodeRoundtripStatement",
+      "issue": "EncodeDecodeRoundtripStatement remains a def Prop quantifying every StructurallyAdmissibleIR ir to decodeBytes (encodeModule ir) = .ok ir. R17 does not prove that proposition. Full P19 acceptance stays false.",
+      "actual": {"kind": "def Prop", "is_theorem": false, "in_named_299": false}
+    },
+    {
+      "id": "R17-CONDITIONAL-NOT-UNIVERSAL",
+      "severity": "blocker",
+      "class": "h_lex_h_parse_unproved_success_premises",
+      "evidence_class": "source_inspection+compiler_proved",
+      "source": "Correspondence.lean:3594 decodeBytes_encodeModule_of_lex_and_parse",
+      "issue": "decodeBytes_encodeModule_of_lex_and_parse still assumes h_lex and h_parse. Object-decoder success is discharged. Lexical and parser success are not. The theorem compiles with standard axioms; that is not a proof of the premises.",
+      "actual": {
+        "object_decoder_premise": false,
+        "h_lex": "unproved success premise",
+        "h_parse": "unproved success premise",
+        "axioms": ["propext", "Classical.choice", "Quot.sound"]
+      }
+    },
+    {
+      "id": "R17-RATIONAL-INVERSE-PROGRESS",
+      "severity": "progress",
+      "class": "general_decimal_and_rational_inverse",
+      "evidence_class": "source_inspection+compiler_proved",
+      "source": "CanonicalJson.lean tokenizeFuel_nat/int, parseTokens_rat; Correspondence.lean parseCanonicalJson_encodeRat, rat_end_to_end_universal",
+      "issue": "Genuine general component: arbitrary Nat/Int tokenization with non-digit suffix, universal parseCanonicalJson_encodeRat for all RatEnc, and rat_end_to_end_universal under den≠0 and gcd=1. Cannot certify arbitrary nested payload/list/object/envelope bytes.",
+      "actual": {
+        "parseCanonicalJson_encodeRat_hypotheses": [],
+        "rat_end_to_end_universal_hypotheses": ["r.den ≠ 0", "Int.gcd r.num.natAbs r.den = 1"],
+        "nested_document_inverse": false
+      }
+    },
+    {
+      "id": "R17-CHILD-SUCCESS-HYPOTHESES",
+      "severity": "blocker_for_nested_inverse",
+      "class": "assumed_child_foldlM_success",
+      "evidence_class": "source_inspection",
+      "source": "CanonicalJson.lean:556 parse_arr_feed_elem, :568 parse_obj_field_step, :612 parseCanonicalJson_of_tokenize_parseTokens",
+      "issue": "Nested object/array step facts still take child foldlM success (h_val/h_feed) or tokenizer/parser success (h_tok/h_parse). tokenizeFuel_nat binds suffix tokenizeFuel; encodeRat discharges that suffix. Arbitrary nested constructors do not.",
+      "actual": {
+        "parse_obj_field_step_h_val": "hypothesis",
+        "parse_arr_feed_elem_h_feed": "hypothesis",
+        "tokenizeFuel_digit_step_h_lex": "discharged by tokenizeFuel_nat"
+      }
+    },
+    {
+      "id": "R17-AXIOM-GATE-SUCCESS",
+      "severity": "progress",
+      "class": "exact299_print_axioms_on_private_rebuild",
+      "evidence_class": "successful_execution",
+      "source": "probes/axioms299; logs/probe-axioms299",
+      "issue": "Independent #print axioms of exact 299 named declarations on the private rebuild succeeded. Includes lemma exprDepth_pos. 287 standard, 12 none, 0 forbidden. Name/axiom pairs equal root author-import probe. Not whole-P19 acceptance.",
+      "actual": {
+        "exit": 0,
+        "named": 299,
+        "standard": 287,
+        "none": 12,
+        "forbidden": 0,
+        "stdout_sha256": "a7d8e909d7997b67e6b9b8e2e05a83028034fc1d70603adb19ce07a01cf31df6",
+        "credit": true
+      }
+    },
+    {
+      "id": "R17-DECODE-UNCHANGED-PRECEDENCE-OPEN",
+      "severity": "required_repair_not_this_audit",
+      "class": "mixed_error_precedence_still_open",
+      "evidence_class": "source_inspection",
+      "source": "Decode.lean sha256 bd38b66b42f6b2a7fb312258ee0abfba0e24f316e085e3768eaa92d95fa1328d; p19-r16-root-error-precedence-finding.json",
+      "issue": "Decode bytes unchanged from R16. Root already confirmed four mixed-error final failures changed to notJsonObject. Not an admissible-domain counterexample. Not replayed. R18 has the repair brief.",
+      "actual": {
+        "decode_unchanged": true,
+        "replayed": false,
+        "live_r18_inspected": false
+      }
+    },
+    {
+      "id": "R17-AUTHOR-EVIDENCE-FLAWS",
+      "severity": "report_correction",
+      "class": "author_commands_and_verify_scope",
+      "evidence_class": "author_captured",
+      "source": "agy-r17-proof/commands.json, REPORT.md, compiler-axiom-audit.log, results.json",
+      "issue": "Author commands omit timestamps/raw streams. CMD-03 false error-precedence preservation. REPORT 287/408 is Composition only; frozen log shows Certificates 1486/2539, Typed 420/677, Composition 287/408. exprDepth_pos listed as a new R17 theorem; it is the pre-existing lemma. Historical reports unmodified.",
+      "actual": {
+        "author_verify_log_sha256": "be93330d19ace1acd74f349fbadc17e32d98272a809f0fb4b767a667c901f328",
+        "new_theorems_actual": 29,
+        "exprDepth_pos_new": false
+      }
+    },
+    {
+      "id": "R17-PREVIOUS-269-PRESERVED",
+      "severity": "progress",
+      "class": "historical_named_set_preserved",
+      "evidence_class": "source_inspection",
+      "source": "probes/axioms299/inventory.json versus R16 inventory",
+      "issue": "All 269 previous R16 theorem names are present. CanonicalJson 48→62 (+14). Correspondence 221 theorems remain; +15 theorems and the existing lemma give 237 named.",
+      "actual": {
+        "missing_previous_theorems": [],
+        "new_theorem_count": 29
+      }
+    }
+  ]
+}
