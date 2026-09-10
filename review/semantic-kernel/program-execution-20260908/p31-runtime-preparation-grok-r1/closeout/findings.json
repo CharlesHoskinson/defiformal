@@ -1,0 +1,118 @@
+{
+  "schema": "defiformal-p31-runtime-preparation-review-findings/v1",
+  "utc": "2026-09-10T15:03:00.000000+00:00",
+  "decision": "usable",
+  "changes_required": false,
+  "readiness_accepted": false,
+  "adapter_implemented": false,
+  "P31_accepted": false,
+  "whole_program_complete": false,
+  "acceptance": false,
+  "source_pin": "7307349d0275af6fcb4144e1661d8b59d6b2663a",
+  "files_inspected": [
+    "p31-source-closure/README.md",
+    "p31-source-closure/manifest.json",
+    "p31-source-closure/example-inputs.json",
+    "p31-source-closure/simulation-receipt.json",
+    "p31-source-closure/simulation.stdout.json",
+    "p31-source-closure/root-observations.json",
+    "p31-source-closure/scan-imports.cjs",
+    "p31-source-closure/capture.py",
+    "p31-source-closure/scanner-install.json",
+    "p31-source-closure/scanner-package-lock.json",
+    "p31-source-closure/attempt1/failure.json",
+    "p31-source-closure/attempt1/scan-imports.cjs",
+    "p31-compact-add-diagnostic/README.md",
+    "p31-compact-add-diagnostic/compile-receipt.json",
+    "p31-compact-add-diagnostic/runtime-receipt.json",
+    "p31-compact-add-diagnostic/compiled-manifest.json",
+    "p31-compact-add-diagnostic/tool-inputs.json",
+    "p31-compact-add-diagnostic/execve.log",
+    "p31-compact-add-diagnostic/probe.mjs",
+    "p31-compact-add-diagnostic/runtime.stdout.json",
+    "p31-compact-add-diagnostic/compiled/contract/index.js",
+    "p31-compact-add-diagnostic/compiled/compiler/contract-info.json",
+    "prior-readiness-review/REVIEW.md",
+    "prior-readiness-review/verdict.json",
+    "prior-readiness-review/root-adjudication.json"
+  ],
+  "findings": [
+    {
+      "id": "P31-SUP-IDENTS",
+      "severity": "info",
+      "status": "confirmed",
+      "title": "Frozen SHA-256 and Git blob identities hold",
+      "detail": "73/73 inputs.json files match frozen sandbox SHA-256. No extra sandbox files. All 20 static-closure files match manifest SHA-256, byte length, and Git blob SHA-1 recomputed as sha1(blob SP len NUL bytes). The three example files match example-inputs.json the same way. Original-13 hashes are unchanged from the prior 13-file pin. LICENSE is Apache-2.0. Both supplement acceptance fields are false. Live Moriarty git show was not repeated."
+    },
+    {
+      "id": "P31-SUP-CLOSURE",
+      "severity": "info",
+      "status": "confirmed",
+      "title": "20-file AST closure from original 13 roots has 40 edges and no unresolved target",
+      "detail": "Roots are the prior 13 files. Added files are frontend.ts, registered-bounds.ts, parser.ts, checker.ts, validate.ts, diagnostics.ts, and spec/bounds.json. Edges: 37 pinned_relative, 3 node_builtin_host_dependency (node:fs, node:crypto, node:util). Every pinned_relative target exists in the pin. Scanner scope is static import/export, literal dynamic import/require, and new URL. simulate.mjs is outside that walk and is bound separately by example-inputs.json together with loan.mori and swap.mori."
+    },
+    {
+      "id": "P31-SUP-ATTEMPT1",
+      "severity": "info",
+      "status": "confirmed",
+      "title": "First scanner attempt is preserved at zero credit",
+      "detail": "attempt1/failure.json records process_exit 1, MODULE_NOT_FOUND on global TypeScript lib/typescript.js, TypeScript 7.0.2 lacking the legacy 5.x AST path, semantic_execution false, and closure_complete false. Partial source is LICENSE and types.ts only. attempt1/scan-imports.cjs still requires the global path. No execution or proof credit is taken from this failure."
+    },
+    {
+      "id": "P31-SUP-SCANNER",
+      "severity": "info",
+      "status": "confirmed",
+      "title": "Isolated TypeScript 5.9.3 scanner does not modify the global compiler",
+      "detail": "Successful scan-imports.cjs requires the isolated library under p31-import-scanner-tool. scanner-package-lock.json pins typescript 5.9.3. scanner-install.json records npm install --ignore-scripts --no-audit --no-fund. Isolated typescript.js SHA-256 3ae902c92cc44dace175c0e69e13a4b0899f6983c6121d76b9ab8dd5795e7675 matches manifest.scanner.typescript_sha256. capture.py was not rerun because source.mkdir(exist_ok=False) requires fresh output."
+    },
+    {
+      "id": "P31-SUP-SIM",
+      "severity": "info",
+      "status": "confirmed",
+      "title": "Pinned loan/swap example replayed four Simulation steps with adverse and missing-backend refusals",
+      "detail": "Unchanged frozen simulate.mjs ran under absolute Node v24.18.1. loan accrue/settle and swap/close each returned kind Simulation. Adverse codes EXACT_PLAN_MISMATCH, EXACT_PLAN_MISMATCH, GUARD_FAILED, PRINCIPAL_BINDING. All four evaluate calls without a backend returned PROOF_INVALID. Replay stdout SHA-256 6cc901fb87248a40d1331ae7b9307a18bbe530b381726563789daff183aa887d matches the captured file exactly. root-observations.json matches those four rows."
+    },
+    {
+      "id": "P31-SUP-SETTLE-OUTSTANDING",
+      "severity": "info",
+      "status": "confirmed",
+      "title": "Loan settle closes the episode and leaves agreement Outstanding",
+      "detail": "Captured and replayed loan settle after-state: episodeStatus Closed, agreementStatus Outstanding, kind Simulation. The supplement does not relabel this as settled ledger or accepted proof. Swap close is Closed / NoOutstanding. This remains local simulation."
+    },
+    {
+      "id": "P31-SUP-COMPACT-ADD",
+      "severity": "info",
+      "status": "confirmed",
+      "title": "Generated checkedAdd rejects sums above 2^128-1 at this compiler pin",
+      "detail": "Source SHA-256 b2969d0bc346fa93d88546578c9f9d29f1b74d7bc3f88f2e04709fa0932d9415 compiled under compiler 0.31.1 / language 0.23.0 / runtime 0.16.0 --skip-zk. execve.log binds compactc.bin. Generated _checkedAdd_0 adds then throws CompactError if the sum is greater than 340282366920938463463374607431768211455n. Private copy of compiled/ and probe.mjs byte-matched. node_modules symlink targeted the stated read-only runtime tree. Unchanged probe: 0+0, max+0, (max-1)+1 exact; max+1 and max+max CompactError cast refusals. Replay stdout SHA-256 2ef2229921535d031ea72a77d934ddaae6fc1284f85dd94de885b4f66867ae9c matches. No new compile."
+    },
+    {
+      "id": "P31-SUP-NO-ZKIR",
+      "severity": "info",
+      "status": "confirmed",
+      "title": "Pure-circuit compile produced no ZKIR, key, or proof artifacts",
+      "detail": "compiled/ contains only compiler/contract-info.json and contract/index.js, index.d.ts, index.js.map. contract-info.json marks checkedAdd, checkedSub, checkedMul, and checkedDiv pure true and proof false. compiled-manifest.json keys_generated, proofs_generated, and zkir_artifacts_present are false. Generated JS contains partialProofData scaffolding objects, not prover/verifier files. This source exported pure circuits."
+    },
+    {
+      "id": "P31-SUP-PRIOR-GAPS",
+      "severity": "info",
+      "status": "confirmed",
+      "title": "The two named prior gaps are resolved for the stated bounded scope",
+      "detail": "Prior source-readiness finding P31-UNPINNED-COMPILE (frontend.ts and registered-bounds.ts outside the 13-file pin) is closed for these examples by the 20-file AST pin plus the enumerated simulate/loan/swap inputs. Prior finding P31-COMPACT-ADD-CAST (checkedAdd as Uint<128> unobserved) is closed for five direct pureCircuits.checkedAdd calls at this compiler/runtime pin. Neither finding is closed as accepted readiness, adapter implementation, or a correspondence theorem."
+    },
+    {
+      "id": "P31-SUP-STDERR-ENV",
+      "severity": "info",
+      "status": "observed",
+      "title": "Simulation replay stderr differs by a harness Node color warning",
+      "detail": "Captured simulation.stderr.log is empty SHA-256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855. Replay stderr is 166 bytes SHA-256 f66ea8eaa6527b1fd6cc3cbfca78b2235896b28ba712e6de9c4d84ac4a629d46: Node warning that NO_COLOR is ignored because FORCE_COLOR is set. Stdout is byte-identical. Compact probe stderr remained empty. This is harness environment, not a source or result change. Evidence preserved under replay/source-closure/simulation.stderr.log."
+    },
+    {
+      "id": "P31-SUP-SCOPE",
+      "severity": "limitation",
+      "status": "in-scope",
+      "title": "Supplements do not accept readiness, adapters, P31, or remaining pipeline",
+      "detail": "Both records set acceptance false. They do not claim DeFiKernel adapters, Lean correspondence, universal Compact arithmetic, ZKIR soundness, accepted P20 certificate consumption, or whole-program completion. Static closure does not prove all runtime filesystem access is closed. numeric-profile.json remains proposed-not-frozen. K remains a two-balance projection. Those limits are already stated. This audit does not invent extra gates for them."
+    }
+  ]
+}
