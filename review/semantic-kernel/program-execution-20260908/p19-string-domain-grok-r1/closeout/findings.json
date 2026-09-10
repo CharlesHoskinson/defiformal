@@ -1,0 +1,98 @@
+{
+  "schema": "defiformal-string-domain-findings/v1",
+  "mark": "STRING_CODEC_AND_DOMAIN_REVIEW_ONLY_FULL_P19_OPEN",
+  "acceptance": false,
+  "verdict": "CHANGES_REQUIRED",
+  "evidence_classes": {
+    "compiler_proved": "Kernel theorems imported from the private rebuild; #print axioms on a named subset.",
+    "successful_execution": "Command exit 0 with captured stdout. Only ProbeTheorems (attempt1) and ProbeFocus2 (closeout).",
+    "source_inspection": "Read of frozen Encode/CanonicalJson/Correspondence/grammar/REPORT.",
+    "failed_probe": "Nonzero compiler/process exit. Zero runtime credit even if some #eval lines printed.",
+    "unverified": "Not executed in this review."
+  },
+  "findings": [
+    {
+      "id": "R8-DYNAMIC-KEY",
+      "severity": "blocker",
+      "class": "encoder_keys_unescaped",
+      "evidence_class": "source_inspection+successful_execution",
+      "source": "lean/DefiKernel/Certificates/Encode.lean:15-16,277-280",
+      "issue": "jsonObj interpolates keys as raw UTF-8 between quotes. encodeSourceMap escapes values only. ProbeFocus2: jsonObj of key a\"b is {\"a\"b\":1}; encodeModule of a singleton source_map with that key is not valid JSON (parse false) and decodeBytes is notJsonObject. Plain key roundtrips ok-eq. Backslash key parses as JSON (backslash is an escape) then fails noncanonicalWhitespace. NUL/LF keys are notJsonObject. R7 membership theorem was not re-proved on R8 StructurallyAdmissibleIR; EnvelopeStringBounds is a length cap, not a character-set restriction. Do not cite the R7 arbitrary-key proof as an R8 proof.",
+      "probe": "closeout/logs/probe-focus2.stdout",
+      "actual": {
+        "jsonObj_quoted": "{\"a\"b\":1}",
+        "quoted_key_jsonparse": false,
+        "quoted_key_decode": "notJsonObject",
+        "plain_key_decode": "ok-eq",
+        "bs_key_jsonparse": true,
+        "bs_key_decode": "noncanonicalWhitespace",
+        "nul_key_decode": "notJsonObject",
+        "lf_key_decode": "notJsonObject"
+      }
+    },
+    {
+      "id": "R8-DOMAIN-NARROWING",
+      "severity": "blocker",
+      "class": "predicate_shrinks_grammar_domain",
+      "evidence_class": "source_inspection+successful_execution+compiler_proved",
+      "source": "Correspondence.lean SourcePinStringBounds EnvelopeStringBounds StateCellsBounded",
+      "issue": "4096-character per-string caps and 1e18 numerator/denominator caps are not accepted grammar limits (1MiB/depth64/array4096 are). ProbeFocus2: checker_candidate of 4097 x has length 4097, encode size 7524, decodeBytes ok-eq. Author large_string_not_in_envelope_string_bounds excludes that pin from SourcePinStringBounds. StateCellsBounded 1e18 is source-only; no numeral probe. Domain shrinking is not a resource repair.",
+      "probe": "closeout/logs/probe-focus2.stdout",
+      "actual": {
+        "checker4097_length": 4097,
+        "checker4097_bytes": 7524,
+        "checker4097_decode": "ok-eq",
+        "maxBytes": 1048576
+      }
+    },
+    {
+      "id": "R8-COST-UNSOUND",
+      "severity": "blocker",
+      "class": "estimator_not_actual_size",
+      "evidence_class": "source_inspection+successful_execution",
+      "source": "Correspondence.lean sourcePinByteCost envelopeByteCost irStructuralByteCost",
+      "issue": "Estimator omits libraries, claimed_next_state, compiler_record, audit_record; uses 8192/16384 for entire step/run payloads; typed entries are fixed per-slot. ProbeFocus2: one 4097-char library keeps cost equal to witness 6454 while encode size is 7538; compiler_record same cost, encode 7522. No theorem StructurallyAdmissibleIR ir → (encodeModule ir).size ≤ 1048576. structural_byte_cost_exceeded_not_supported only refers to the estimator. A supported-domain IR with actual size > 1MiB was not constructed; the sufficient-bound proof is absent. Catalog and nested collections are unbounded in Step/Run payload length predicates. ExprCanonical depth 64 is not whole-JSON depth.",
+      "probe": "closeout/logs/probe-focus2.stdout",
+      "actual": {
+        "witness_cost": 6454,
+        "onelib_cost_eq_witness": true,
+        "onelib_bytes": 7538,
+        "compiler_cost_eq_witness": true,
+        "compiler_bytes": 7522
+      }
+    },
+    {
+      "id": "R8-UNIVERSAL-OPEN",
+      "severity": "blocker",
+      "class": "source_statement_only_declared",
+      "evidence_class": "compiler_proved",
+      "source": "Correspondence.lean:402-414 CanonicalJson.lean:381-394",
+      "issue": "EncodeDecodeRoundtripStatement is a def Prop quantifying StructurallyAdmissibleIR. It is not a theorem. string_roundtrip inverts helper escapeChars/lexString and String.toUTF8, not encodeModule. decode_encode_roundtrip_of_decode and decode_encode_canonical_bytes assume decodeBytes = .ok. decodePackedValue_scalar_val/amount_val and decodeRat_mkObj are Lean.Json helper inverses. decodeSourcePin_roundtrip forces optional records to none. P20 labelling does not defer assigned P19 work. #print axioms covered 16 named declarations, not the author 90 aggregate.",
+      "probe": "../logs/probe-theorems.stdout"
+    },
+    {
+      "id": "R8-REPORT-OVERCLAIMS",
+      "severity": "blocker",
+      "class": "report_identity",
+      "evidence_class": "source_inspection",
+      "source": "review/semantic-kernel/certificates/p19/implementation/agy-r8-proof/REPORT.md CanonicalJson.lean",
+      "issue": "REPORT says all six R7 findings thoroughly resolved and designates the universal proof P20. CanonicalJson/Encode hashes in REPORT do not match frozen files (source-manifest does). escapeChar is in CanonicalJson, not Encode. jsonType invalid-escape strings named in REPORT are absent from CanonicalJson; actual lexer errors are notJsonObject (ProbeFocus2). Fixture 54/54 not re-run; F13 null/overlay/host limitations remain as previously recorded."
+    },
+    {
+      "id": "R8-VALUE-C0-PROGRESS",
+      "severity": "note",
+      "class": "encoder_values_repaired",
+      "evidence_class": "successful_execution",
+      "issue": "Value escaping for C0/quote/backslash is implemented and roundtrips in checker_candidate (NUL/LF/quote/backslash ok-eq; all 32 C0 escapeChar spellings canonical). Helper lexString rejects literal controls and unknown/truncated escapes as notJsonObject. This does not repair keys and does not prove the universal theorem.",
+      "probe": "closeout/logs/probe-focus2.stdout"
+    },
+    {
+      "id": "R8-HELPER-NONCANONICAL-LEX",
+      "severity": "note",
+      "class": "helper_accepts_noncanonical_spelling",
+      "evidence_class": "successful_execution",
+      "issue": "lexString accepts short \\n and uppercase \\u000A. Production decodeBytes may still refuse those spellings via the re-encode check. Do not treat helper acceptance as grammar acceptance. Inversion lemmas invert escapeChars output, not those spellings.",
+      "probe": "closeout/logs/probe-focus2.stdout"
+    }
+  ]
+}

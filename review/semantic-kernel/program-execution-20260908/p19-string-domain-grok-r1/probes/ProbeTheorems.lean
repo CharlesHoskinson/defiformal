@@ -1,0 +1,24 @@
+import DefiKernel.Certificates.Correspondence
+import DefiKernel.Certificates.CanonicalJson
+open DefiKernel.Certificates
+
+#print axioms hexVal_hexDigit
+#print axioms lexString_escapeChars
+#print axioms lexString_escapeJsonString
+#print axioms string_fromUTF8?_toUTF8
+#print axioms string_roundtrip
+#print axioms decodeBytes_encode_canonical
+#print axioms decode_encode_roundtrip_of_decode
+#print axioms decode_encode_canonical_bytes
+#print axioms EncodeDecodeRoundtripStatement
+#print axioms structurallyAdmissible_nonempty
+#print axioms large_string_not_in_envelope_string_bounds
+#print axioms structural_byte_cost_exceeded_not_supported
+#print axioms decodeRat_mkObj
+#print axioms decodePackedValue_scalar_val
+#print axioms decodePackedValue_amount_val
+#print axioms decodeSourcePin_roundtrip
+#check EncodeDecodeRoundtripStatement
+#check DecodeEncodeCanonicalBytesStatement
+#check string_roundtrip
+#check decode_encode_roundtrip_of_decode
