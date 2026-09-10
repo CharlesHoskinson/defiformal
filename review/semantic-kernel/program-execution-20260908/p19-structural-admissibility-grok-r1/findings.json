@@ -1,0 +1,130 @@
+{
+  "schema": "defiformal-structural-admissibility-findings/v1",
+  "mark": "STRUCTURAL_ADMISSIBILITY_COMPONENT_REVIEW_ONLY_FULL_P19_OPEN",
+  "acceptance": false,
+  "verdict": "CHANGES_REQUIRED",
+  "fresh_session": true,
+  "evidence_classes": {
+    "compiler_proved": "Kernel theorems imported from the private Correspondence rebuild; #print axioms on all 217 named source theorems with child_compiler_exit 0.",
+    "successful_execution": "Child compiler exit 0 and no Lean error: line. ProbeAxioms and ProbeR14 only.",
+    "source_inspection": "Read of frozen Schema/Encode/Decode/CanonicalJson/Correspondence/Check/Tests/R14 REPORT/results/theorems/source-manifest/root precheck/runner.",
+    "failed_probe": "Nonzero child compiler exit or Lean error: line, or a parser that did not recover the 217 names. Failed parse attempts and check-axioms-inline lake-env miss have zero 217 credit.",
+    "author_captured": "Inspected R14 evidence folder files and author commands.json; 54/99/16 and Tests.lean 21 not re-run here.",
+    "unverified": "Not executed in this review."
+  },
+  "findings": [
+    {
+      "id": "R14-UNIVERSAL-OPEN",
+      "severity": "blocker",
+      "class": "helper_inversions_not_encodeModule_decodeBytes",
+      "evidence_class": "compiler_proved+source_inspection+successful_execution",
+      "source": "Correspondence.lean EncodeDecodeRoundtripStatement; ProbeR14 #print",
+      "issue": "EncodeDecodeRoundtripStatement remains def Prop quantifying StructurallyAdmissibleIR ir → decodeBytes (encodeModule ir) = .ok ir. R14 object-decoder and fuel-stability theorems do not close the recursive whole-document parser/UTF8/byte bridge. Do not credit a partial object inverse as the universal roundtrip.",
+      "actual": {
+        "EncodeDecodeRoundtripStatement": "def Prop",
+        "print_axioms_217": true,
+        "probe_r14_exit": 0
+      }
+    },
+    {
+      "id": "R14-OBJECT-DECODER-NOT-BYTES",
+      "severity": "blocker",
+      "class": "actual_decodeDecodedIR_not_decodeBytes",
+      "evidence_class": "compiler_proved+source_inspection+successful_execution",
+      "source": "Correspondence.lean decodeDecodedIR_of_structurallyAdmissible; Decode.lean decodeDecodedIR/decodeBytes",
+      "issue": "decodeDecodedIR_of_structurallyAdmissible proves decodeDecodedIR (decodedIRToJson ir) raw = .ok ir for every StructurallyAdmissibleIR ir. That is the production object decoder, not a lookalike do-block. raw is unused on execution modes. decodeBytes still requires scanLexical, UTF8, parseCanonicalJson, then encodeModule ir = bytes. ProbeR14: canonicalWitnessIR object decode ok typed; decodeBytes(encodeModule witness) also ok on that one witness. Bounded witness execution is not the universal byte theorem.",
+      "probe": "logs/probe-r14.stdout",
+      "actual": {
+        "theorem_mentions_decodeDecodedIR": true,
+        "theorem_mentions_decodeBytes": false,
+        "witness_decodeDecodedIR_helper": "ok typed mode=typed-execute sm=0",
+        "witness_decodeBytes_encode": "ok typed mode=typed-execute sm=0"
+      }
+    },
+    {
+      "id": "R14-SOURCEMAP-GENERIC-INVERSE",
+      "severity": "note_progress_with_remaining_limits",
+      "class": "SourceMapSorted_inverse_no_decoder_success_hyp",
+      "evidence_class": "compiler_proved+source_inspection+successful_execution",
+      "source": "Correspondence.lean decodeSourceMap_sourceMapToJson, ofList_toList_eq, decodeEnvelope_sortedFields; Decode.lean decodeSourceMap; Encode.lean encodeSourceMap/jsonObj",
+      "issue": "decodeSourceMap_sourceMapToJson takes SourceMapSorted sm and proves decodeSourceMap (Json.mkObj (sm.map str pairs)) = .ok sm. Envelope and decodeDecodedIR_fields_* now take SourceMapSorted, not h_sm : decodeSourceMap = .ok. ofList_toList_eq reconstructs TreeMap.Raw.ofList on pairwise compare=.lt keys. No assumed subdecoder-success hypothesis remains on those statements. The inverse is the Lean.Json.mkObj/object path. Production encodeSourceMap qsorts then jsonObj. ProbeR14: mkObj AB and BA both decode to [(a,1),(b,2)] and both .compress equal {\"a\":\"1\",\"b\":\"2\"}; production encodeSourceMap AB and BA emit the same sorted object string. .compress inequality alone is not a defect.",
+      "probe": "logs/probe-r14.stdout",
+      "actual": {
+        "h_sm_decoder_success_removed": true,
+        "sm_two_ab": "ok:[(a, 1), (b, 2)]",
+        "sm_two_ba_mkObj": "ok:[(a, 1), (b, 2)]",
+        "two_ab_compress": "{\"a\":\"1\",\"b\":\"2\"}",
+        "two_ba_compress": "{\"a\":\"1\",\"b\":\"2\"}",
+        "prod_sm_ab": "{\"a\":\"1\",\"b\":\"2\"}",
+        "prod_sm_ba": "{\"a\":\"1\",\"b\":\"2\"}"
+      }
+    },
+    {
+      "id": "R14-SUPPORTED-IR-AUDIT-CODEC",
+      "severity": "note_progress_with_remaining_limits",
+      "class": "explicit_domain_not_hidden_restriction",
+      "evidence_class": "source_inspection+compiler_proved",
+      "source": "Correspondence.lean SupportedIR, CanonicalIR, decodeDecodedIR_of_structurallyAdmissible; Decode.lean decodeDecodedIR",
+      "issue": "SupportedIR and CanonicalIR set .audit _ and .codec _ to False. decodeDecodedIR_of_structurallyAdmissible covers typed-execute, composition-step, and composition-run, then contradicts on audit/codec. Step/run also reject .unsupported constructors. That is the declared 32-cell execution universe, not an accidental extra hypothesis. decodeDecodedIR still has audit and codec branches, including a schema_version-absent audit object shape; those IR values are outside StructurallyAdmissibleIR.",
+      "actual": {
+        "supported_execution_modes": ["typed-execute", "composition-step", "composition-run"],
+        "audit": false,
+        "codec": false,
+        "assumed_subdecoder_success": false,
+        "admitted_axiom": false
+      }
+    },
+    {
+      "id": "R14-FUEL-STABILITY-NOT-PARSER",
+      "severity": "note_progress_with_remaining_limits",
+      "class": "fuel_induction_not_parser_state_agreement",
+      "evidence_class": "compiler_proved+source_inspection+successful_execution",
+      "source": "Correspondence.lean jsonDepthFuel_stable, jsonMaxArrayLengthFuel_stable, parser_max_depth_bound, parser_max_array_bound, jsonMaxArrayLengthFuel_adequate",
+      "issue": "jsonDepthFuel_stable and jsonMaxArrayLengthFuel_stable are induction on fuel for arrays and objects under jsonDepthFuel f j < f. ProbeR14: nestArr 2 fuel0=0, fuel1=1, fuel2=2, fuel3=2, fuel100=2; nestObj 2 same; array length 5 is 0 at fuel 0 and 5 at fuel 1/2. At exhaustion the computed value equals fuel or 0, so the strict hypothesis fails and no stability is claimed. Corollaries jsonDepth_stable_of_le64 / jsonMaxArrayLength_stable_of_le64 use fuel 100 under depth ≤ 64. parser_max_depth_bound and parser_max_array_bound print as fun ir h => h. jsonMaxArrayLengthFuel_adequate still proves only jsonDepth j < 100. These are not parser-state agreement and not the byte bridge.",
+      "probe": "logs/probe-r14.stdout",
+      "actual": {
+        "arr2_fuel0": 0,
+        "arr2_fuel1": 1,
+        "arr2_fuel2": 2,
+        "arr2_fuel3": 2,
+        "obj2_fuel0": 0,
+        "obj2_fuel2": 2,
+        "obj2_fuel3": 2,
+        "arr5_max_fuel0": 0,
+        "arr5_max_fuel1": 5,
+        "parser_max_depth_bound": "fun ir h => h",
+        "jsonMaxArrayLengthFuel_adequate": "jsonDepth j < 100"
+      }
+    },
+    {
+      "id": "R14-LIVE-RELATIVE-SYMLINK",
+      "severity": "note_progress_with_remaining_limits",
+      "class": "runner_live_relative_link_refused",
+      "evidence_class": "successful_execution+source_inspection",
+      "source": "scripts/test_certificate_fixture_runner.py test_relative_symlink_refused; scripts/run_certificate_fixtures.py lexical is_symlink check",
+      "issue": "The R14 regression constructs symlink_to(\"real_rel_dir\"), asserts os.readlink == \"real_rel_dir\", resolve equality, live exists(), and sentinel readability, then refuses relative and absolute --out arguments with exit 2 and leaves the sentinel untouched. Independent private copy ran the six sentinel tests from the frozen test module; all passed. test_fresh_path_accepted/F01 was not run. results.json finding 4 text says existing targets are non-empty directories; the runner and REPORT.md body require an existing path to be an empty directory. That is a report typo, not a code failure.",
+      "probe": "probes/runner-sentinel-results.json",
+      "actual": {
+        "sentinel_tests_pass": 6,
+        "sentinel_tests_fail": 0,
+        "skipped_f01": true,
+        "report_typo_nonempty": "results.json finding 4 detail",
+        "runner_requires_empty_if_exists": true
+      }
+    },
+    {
+      "id": "R14-REPORT-IDENTITY-AND-1296",
+      "severity": "advisory",
+      "class": "report_label_not_native_review_identity",
+      "evidence_class": "author_captured+source_inspection",
+      "source": "agy-r14-proof/results.json auditor_model; REPORT.md Auditor line; Verify.lean #audit_axioms",
+      "issue": "Author results.json auditor_model grok-4.6-high and REPORT Auditor grok-4.6-high are a requested future role label, not a completed native review identity. This session requested grok-4.6 / high; root records the actual returned model. Verify.lean is unchanged (hash 47ba130e...) and its aggregate 1296 is a Certificates/Typed/Composition environment walk. Exact 217 named CanonicalJson+Correspondence theorems are the new proof evidence. Author compiler-axiom-audit.log does mention the new Correspondence names; the 1296 total is still not the 217 inventory.",
+      "actual": {
+        "author_auditor_model": "grok-4.6-high",
+        "this_request": "grok-4.6/high",
+        "verify_lean_sha256": "47ba130e824c224e37b63c590329486a6c642403f8e70a7874743a4dc0d53f16",
+        "independent_217": true
+      }
+    }
+  ]
+}

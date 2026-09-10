@@ -1,0 +1,450 @@
+DefiKernel.Certificates.decodeDecodedIR_of_structurallyAdmissible (ir : DecodedIR) (h_adm : StructurallyAdmissibleIR ir)
+  (raw : String) : decodeDecodedIR (decodedIRToJson ir) raw = Except.ok ir
+DefiKernel.Certificates.decodeSourceMap_sourceMapToJson (sm : List (String × String)) (h_sort : SourceMapSorted sm) :
+  decodeSourceMap
+      (Json.mkObj
+        (List.map
+          (fun x =>
+            match x with
+            | (k, v) => (k, Json.str v))
+          sm)) =
+    Except.ok sm
+DefiKernel.Certificates.ofList_toList_eq.{u_1} {β : Type u_1} (l : List (String × β))
+  (h_sort : List.Pairwise (fun a b => compare a.1 b.1 = Ordering.lt) l) : (Std.TreeMap.Raw.ofList l compare).toList = l
+DefiKernel.Certificates.jsonDepthFuel_stable (f : ℕ) (j : Json) (h : jsonDepthFuel f j < f) (g : ℕ) :
+  g ≥ f → jsonDepthFuel g j = jsonDepthFuel f j
+DefiKernel.Certificates.jsonMaxArrayLengthFuel_stable (f : ℕ) (j : Json) (h : jsonDepthFuel f j < f) (g : ℕ) :
+  g ≥ f → jsonMaxArrayLengthFuel g j = jsonMaxArrayLengthFuel f j
+DefiKernel.Certificates.jsonDepth_stable_of_le64 (j : Json) (h : jsonDepth j ≤ 64) (g : ℕ) :
+  g ≥ 100 → jsonDepthFuel g j = jsonDepth j
+DefiKernel.Certificates.jsonMaxArrayLength_stable_of_le64 (j : Json) (h : jsonDepth j ≤ 64) (g : ℕ) :
+  g ≥ 100 → jsonMaxArrayLengthFuel g j = jsonMaxArrayLength j
+DefiKernel.Certificates.parser_max_depth_bound (ir : DecodedIR) (h : WholeDocumentDepthBounded ir) :
+  jsonDepth (decodedIRToJson ir) ≤ 64
+DefiKernel.Certificates.parser_max_array_bound (ir : DecodedIR) (h : WholeDocumentArrayBounded ir) :
+  jsonMaxArrayLength (decodedIRToJson ir) ≤ 4096
+DefiKernel.Certificates.jsonMaxArrayLengthFuel_adequate (j : Json) (h : jsonDepth j ≤ 64) : jsonDepth j < 100
+DefiKernel.Certificates.EncodeDecodeRoundtripStatement : Prop
+def DefiKernel.Certificates.EncodeDecodeRoundtripStatement : Prop :=
+∀ (ir : DecodedIR), StructurallyAdmissibleIR ir → decodeBytes (encodeModule ir) = Except.ok ir
+theorem DefiKernel.Certificates.decodeDecodedIR_of_structurallyAdmissible : ∀ (ir : DecodedIR),
+  StructurallyAdmissibleIR ir → ∀ (raw : String), decodeDecodedIR (decodedIRToJson ir) raw = Except.ok ir :=
+fun ir h_adm raw =>
+  DecodedIR.casesOn (motive := fun x =>
+    StructurallyAdmissibleIR x → decodeDecodedIR (decodedIRToJson x) raw = Except.ok x) ir
+    (fun exec h_adm =>
+      DecodedExecution.casesOn (motive := fun x =>
+        StructurallyAdmissibleIR (DecodedIR.execution x) →
+          decodeDecodedIR (decodedIRToJson (DecodedIR.execution x)) raw = Except.ok (DecodedIR.execution x))
+        exec
+        (fun env payload h_adm =>
+          And.casesOn h_adm fun h_sup h_can =>
+            And.casesOn h_sup fun left right =>
+              And.casesOn right fun left right =>
+                And.casesOn right fun left right =>
+                  And.casesOn right fun h_ver right =>
+                    And.casesOn right fun h_mode right =>
+                      And.casesOn right fun left right =>
+                        And.casesOn right fun h_len right =>
+                          And.casesOn right fun h_map right =>
+                            And.casesOn right fun h_all_pos right =>
+                              And.casesOn right fun left right =>
+                                And.casesOn right fun h_nodup right =>
+                                  And.casesOn h_can fun h_sm right =>
+                                    And.casesOn right fun h_cns right =>
+                                      And.casesOn right fun h_all_gcd right =>
+                                        And.casesOn right fun h_tmpl right =>
+                                          And.casesOn right fun h_req h_env =>
+                                            have h_reg := ⟨h_nodup, h_tmpl⟩;
+                                            have h_st_valid := fun c hc =>
+                                              have h1 :=
+                                                all_mem_of_all_eq_true
+                                                  (fun c => decide (c.amount.den > 0 ∧ c.amount.num ≥ 0))
+                                                  payload.state.cells h_all_pos c hc;
+                                              have h2 :=
+                                                all_mem_of_all_eq_true
+                                                  (fun c => decide ((↑c.amount.num.natAbs).gcd ↑c.amount.den = 1))
+                                                  payload.state.cells h_all_gcd c hc;
+                                              ⟨fun a =>
+                                                decodeDecodedIR_of_structurallyAdmissible._proof_1_1 env payload c
+                                                  (Eq.mp decide_eq_true_eq h1) a,
+                                                ⟨Eq.mp decide_eq_true_eq h2,
+                                                  Decidable.byContradiction fun a =>
+                                                    decodeDecodedIR_of_structurallyAdmissible._proof_1_2 env payload c
+                                                      (Eq.mp decide_eq_true_eq h1) a⟩⟩;
+                                            have h_st_unique :=
+                                              Eq.mpr
+                                                (id
+                                                  (congrArg (fun _a => _a.eraseDups.length = payload.state.cells.length)
+                                                    h_map))
+                                                (Eq.mpr
+                                                  (id
+                                                    (congrArg (fun _a => _a = payload.state.cells.length)
+                                                      standard32CellKeys_eraseDups_len))
+                                                  (Eq.mpr (id (congrArg (fun _a => 32 = _a) h_len)) (Eq.refl 32)));
+                                            id
+                                              (decodeDecodedIR_fields_typed env payload h_ver h_mode h_sm h_cns h_reg
+                                                h_env h_req h_st_valid h_st_unique raw))
+        (fun env payload h_adm =>
+          And.casesOn h_adm fun h_sup h_can =>
+            And.casesOn h_sup fun left right =>
+              And.casesOn right fun left right =>
+                And.casesOn right fun left right =>
+                  And.casesOn right fun h_ver right =>
+                    And.casesOn right fun h_mode right =>
+                      And.casesOn right fun left right =>
+                        And.casesOn right fun left right =>
+                          And.casesOn right fun h_len right =>
+                            And.casesOn right fun h_map right =>
+                              And.casesOn right fun h_all_pos right =>
+                                And.casesOn right fun left right =>
+                                  And.casesOn right fun h_nodup right =>
+                                    And.casesOn h_can fun h_sm right =>
+                                      And.casesOn right fun h_cns right =>
+                                        And.casesOn right fun h_all_gcd right =>
+                                          And.casesOn right fun h_step right =>
+                                            And.casesOn right fun h_tmpl right =>
+                                              And.casesOn right fun h_hist h_bnd =>
+                                                have h_cfg := ⟨h_nodup, h_tmpl⟩;
+                                                have h_pre_valid := fun c hc =>
+                                                  have h1 :=
+                                                    all_mem_of_all_eq_true
+                                                      (fun c => decide (c.amount.den > 0 ∧ c.amount.num ≥ 0))
+                                                      payload.pre.state.cells h_all_pos c hc;
+                                                  have h2 :=
+                                                    all_mem_of_all_eq_true
+                                                      (fun c => decide ((↑c.amount.num.natAbs).gcd ↑c.amount.den = 1))
+                                                      payload.pre.state.cells h_all_gcd c hc;
+                                                  ⟨fun a =>
+                                                    decodeDecodedIR_of_structurallyAdmissible._proof_1_3 env payload c ⋯
+                                                      a,
+                                                    ⟨Eq.mp decide_eq_true_eq h2, Decidable.byContradiction ⋯⟩⟩;
+                                                have h_pre_unique :=
+                                                  Eq.mpr
+                                                    (id
+                                                      (congrArg
+                                                        (fun _a => _a.eraseDups.length = payload.pre.state.cells.length)
+                                                        h_map))
+                                                    (Eq.mpr
+                                                      (id
+                                                        (congrArg (fun _a => _a = payload.pre.state.cells.length)
+                                                          standard32CellKeys_eraseDups_len))
+                                                      (Eq.mpr (id (congrArg (fun _a => 32 = _a) h_len)) (Eq.refl 32)));
+                                                id
+                                                  (decodeDecodedIR_fields_step env payload h_ver h_mode h_sm h_cns h_cfg
+                                                    h_bnd h_hist h_step h_pre_valid h_pre_unique raw))
+        (fun env payload h_adm =>
+          And.casesOn h_adm fun h_sup h_can =>
+            And.casesOn h_sup fun left right =>
+              And.casesOn right fun left right =>
+                And.casesOn right fun left right =>
+                  And.casesOn right fun h_ver right =>
+                    And.casesOn right fun h_mode right =>
+                      And.casesOn right fun left right =>
+                        And.casesOn right fun left right =>
+                          And.casesOn right fun h_len right =>
+                            And.casesOn right fun h_map right =>
+                              And.casesOn right fun h_all_pos right =>
+                                And.casesOn right fun left right =>
+                                  And.casesOn right fun h_nodup right =>
+                                    And.casesOn h_can fun h_sm right =>
+                                      And.casesOn right fun h_cns right =>
+                                        And.casesOn right fun h_all_gcd right =>
+                                          And.casesOn right fun h_steps right =>
+                                            And.casesOn right fun h_tmpl h_bnds =>
+                                              have h_cfg := ⟨h_nodup, h_tmpl⟩;
+                                              have h_w_valid := fun c hc =>
+                                                have h1 :=
+                                                  all_mem_of_all_eq_true
+                                                    (fun c => decide (c.amount.den > 0 ∧ c.amount.num ≥ 0))
+                                                    payload.world.state.cells h_all_pos c hc;
+                                                have h2 :=
+                                                  all_mem_of_all_eq_true
+                                                    (fun c => decide ((↑c.amount.num.natAbs).gcd ↑c.amount.den = 1))
+                                                    payload.world.state.cells h_all_gcd c hc;
+                                                ⟨fun a =>
+                                                  decodeDecodedIR_of_structurallyAdmissible._proof_1_5 env payload c
+                                                    (Eq.mp decide_eq_true_eq h1) a,
+                                                  ⟨Eq.mp decide_eq_true_eq h2,
+                                                    Decidable.byContradiction fun a =>
+                                                      decodeDecodedIR_of_structurallyAdmissible._proof_1_6 env payload c
+                                                        ⋯ a⟩⟩;
+                                              have h_w_unique :=
+                                                Eq.mpr
+                                                  (id
+                                                    (congrArg
+                                                      (fun _a => _a.eraseDups.length = payload.world.state.cells.length)
+                                                      h_map))
+                                                  (Eq.mpr
+                                                    (id
+                                                      (congrArg (fun _a => _a = payload.world.state.cells.length)
+                                                        standard32CellKeys_eraseDups_len))
+                                                    (Eq.mpr (id (congrArg (fun _a => 32 = _a) h_len)) (Eq.refl 32)));
+                                              id
+                                                (decodeDecodedIR_fields_run env payload h_ver h_mode h_sm h_cns h_cfg
+                                                  h_bnds h_steps h_w_valid h_w_unique raw))
+        h_adm)
+    (fun audit_val h_adm =>
+      And.casesOn h_adm fun h_sup right =>
+        And.casesOn h_sup fun left right_1 =>
+          And.casesOn right_1 fun left right_2 =>
+            And.casesOn right_2 fun left h_f => False.elim (False.casesOn (fun x => False) right))
+    (fun codec_val h_adm =>
+      And.casesOn h_adm fun h_sup right =>
+        And.casesOn h_sup fun left right_1 =>
+          And.casesOn right_1 fun left right_2 =>
+            And.casesOn right_2 fun left h_f => False.elim (False.casesOn (fun x => False) right))
+    h_adm
+theorem DefiKernel.Certificates.jsonDepthFuel_stable : ∀ (f : ℕ) (j : Json),
+  jsonDepthFuel f j < f → ∀ g ≥ f, jsonDepthFuel g j = jsonDepthFuel f j :=
+fun f j h =>
+  Nat.recAux (motive := fun f => ∀ (j : Json), jsonDepthFuel f j < f → ∀ g ≥ f, jsonDepthFuel g j = jsonDepthFuel f j)
+    (fun j h g a => Decidable.byContradiction fun a => jsonDepthFuel_stable._proof_1_1 j h)
+    (fun f ih j h g hg =>
+      Nat.casesAuxOn (motive := fun x => x ≥ f + 1 → jsonDepthFuel x j = jsonDepthFuel (f + 1) j) g
+        (fun hg => Decidable.byContradiction fun a => jsonDepthFuel_stable._proof_1_2 f j hg)
+        (fun g hg =>
+          have hg_le := Nat.le_of_succ_le_succ hg;
+          Json.casesOn j
+            (fun h_1 =>
+              Eq.ndrec (motive := fun j =>
+                jsonDepthFuel (f + 1) j < f + 1 → jsonDepthFuel (g + 1) j = jsonDepthFuel (f + 1) j)
+                (fun h => Eq.refl (jsonDepthFuel (g + 1) Json.null)) (Eq.symm h_1) h)
+            (fun b h_1 =>
+              Eq.ndrec (motive := fun j =>
+                jsonDepthFuel (f + 1) j < f + 1 → jsonDepthFuel (g + 1) j = jsonDepthFuel (f + 1) j)
+                (fun h => Eq.refl (jsonDepthFuel (g + 1) (Json.bool b))) (Eq.symm h_1) h)
+            (fun n h_1 =>
+              Eq.ndrec (motive := fun j =>
+                jsonDepthFuel (f + 1) j < f + 1 → jsonDepthFuel (g + 1) j = jsonDepthFuel (f + 1) j)
+                (fun h => Eq.refl (jsonDepthFuel (g + 1) (Json.num n))) (Eq.symm h_1) h)
+            (fun s h_1 =>
+              Eq.ndrec (motive := fun j =>
+                jsonDepthFuel (f + 1) j < f + 1 → jsonDepthFuel (g + 1) j = jsonDepthFuel (f + 1) j)
+                (fun h => Eq.refl (jsonDepthFuel (g + 1) (Json.str s))) (Eq.symm h_1) h)
+            (fun elems h_1 =>
+              Eq.ndrec (motive := fun j =>
+                jsonDepthFuel (f + 1) j < f + 1 → jsonDepthFuel (g + 1) j = jsonDepthFuel (f + 1) j)
+                (fun h =>
+                  id
+                    (have h_lt := Decidable.byContradiction fun a => jsonDepthFuel_stable._proof_1_3 f g elems h a;
+                    Eq.mpr
+                      (id
+                        (congrArg
+                          (fun _a => 1 + _a = 1 + Array.foldl (fun acc elem => acc.max (jsonDepthFuel f elem)) 0 elems)
+                          (Eq.symm (Array.foldl_toList fun acc elem => acc.max (jsonDepthFuel g elem)))))
+                      (have h_elem_eq := fun elem helem =>
+                        have h_elem_le := mem_le_foldl_max elems.toList (fun elem => jsonDepthFuel f elem) elem helem 0;
+                        have h_elem_lt :=
+                          Decidable.byContradiction fun a =>
+                            jsonDepthFuel_stable._proof_1_4 f g elems
+                              (Eq.mp
+                                (congrArg (fun _a => _a < f)
+                                  (Eq.symm (Array.foldl_toList fun acc elem => acc.max (jsonDepthFuel f elem))))
+                                h_lt)
+                              elem h_elem_le a;
+                        ih elem h_elem_lt g hg_le;
+                      have h_fold_eq :=
+                        foldl_max_congr elems.toList (fun elem => jsonDepthFuel g elem)
+                          (fun elem => jsonDepthFuel f elem) 0 h_elem_eq;
+                      Eq.mpr
+                        (id
+                          (congrArg
+                            (fun _a =>
+                              1 + _a = 1 + Array.foldl (fun acc elem => acc.max (jsonDepthFuel f elem)) 0 elems)
+                            h_fold_eq))
+                        (Eq.mpr
+                          (id
+                            (congrArg
+                              (fun _a =>
+                                1 + _a = 1 + Array.foldl (fun acc elem => acc.max (jsonDepthFuel f elem)) 0 elems)
+                              (Array.foldl_toList fun acc y => acc.max (jsonDepthFuel f y))))
+                          (Eq.refl (1 + Array.foldl (fun acc y => acc.max (jsonDepthFuel f y)) 0 elems))))))
+                (Eq.symm h_1) h)
+            (fun kvs h_1 =>
+              Eq.ndrec (motive := fun j =>
+                jsonDepthFuel (f + 1) j < f + 1 → jsonDepthFuel (g + 1) j = jsonDepthFuel (f + 1) j)
+                (fun h =>
+                  id
+                    (have h_lt := Decidable.byContradiction fun a => jsonDepthFuel_stable._proof_1_5 f g kvs h a;
+                    Eq.mpr
+                      (id
+                        (congrArg
+                          (fun _a =>
+                            1 + _a = 1 + Std.TreeMap.Raw.foldl (fun acc x val => acc.max (jsonDepthFuel f val)) 0 kvs)
+                          Std.TreeMap.Raw.foldl_eq_foldl_toList))
+                      (have h_val_eq := fun p hp =>
+                        have h_p_le := mem_le_foldl_max kvs.toList (fun p => jsonDepthFuel f p.2) p hp 0;
+                        have h_p_lt :=
+                          Decidable.byContradiction fun a =>
+                            jsonDepthFuel_stable._proof_1_6 f g kvs
+                              (Eq.mp (congrArg (fun _a => _a < f) Std.TreeMap.Raw.foldl_eq_foldl_toList) h_lt) p h_p_le
+                              a;
+                        ih p.2 h_p_lt g hg_le;
+                      have h_fold_eq :=
+                        foldl_max_congr kvs.toList (fun p => jsonDepthFuel g p.2) (fun p => jsonDepthFuel f p.2) 0
+                          h_val_eq;
+                      Eq.mpr
+                        (id
+                          (congrArg
+                            (fun _a =>
+                              1 + _a = 1 + Std.TreeMap.Raw.foldl (fun acc x val => acc.max (jsonDepthFuel f val)) 0 kvs)
+                            h_fold_eq))
+                        (Eq.mpr
+                          (id
+                            (congrArg
+                              (fun _a =>
+                                1 + List.foldl (fun acc y => acc.max (jsonDepthFuel f y.2)) 0 kvs.toList = 1 + _a)
+                              Std.TreeMap.Raw.foldl_eq_foldl_toList))
+                          (Eq.refl (1 + List.foldl (fun acc y => acc.max (jsonDepthFuel f y.2)) 0 kvs.toList))))))
+                (Eq.symm h_1) h)
+            (Eq.refl j))
+        hg)
+    f j h
+theorem DefiKernel.Certificates.jsonMaxArrayLengthFuel_stable : ∀ (f : ℕ) (j : Json),
+  jsonDepthFuel f j < f → ∀ g ≥ f, jsonMaxArrayLengthFuel g j = jsonMaxArrayLengthFuel f j :=
+fun f j h =>
+  Nat.recAux (motive := fun f =>
+    ∀ (j : Json), jsonDepthFuel f j < f → ∀ g ≥ f, jsonMaxArrayLengthFuel g j = jsonMaxArrayLengthFuel f j)
+    (fun j h g a => Decidable.byContradiction fun a => jsonMaxArrayLengthFuel_stable._proof_1_1 j h)
+    (fun f ih j h g hg =>
+      Nat.casesAuxOn (motive := fun x => x ≥ f + 1 → jsonMaxArrayLengthFuel x j = jsonMaxArrayLengthFuel (f + 1) j) g
+        (fun hg => Decidable.byContradiction fun a => jsonMaxArrayLengthFuel_stable._proof_1_2 f j hg)
+        (fun g hg =>
+          have hg_le := Nat.le_of_succ_le_succ hg;
+          Json.casesOn j
+            (fun h_1 =>
+              Eq.ndrec (motive := fun j =>
+                jsonDepthFuel (f + 1) j < f + 1 → jsonMaxArrayLengthFuel (g + 1) j = jsonMaxArrayLengthFuel (f + 1) j)
+                (fun h => Eq.refl (jsonMaxArrayLengthFuel (g + 1) Json.null)) (Eq.symm h_1) h)
+            (fun b h_1 =>
+              Eq.ndrec (motive := fun j =>
+                jsonDepthFuel (f + 1) j < f + 1 → jsonMaxArrayLengthFuel (g + 1) j = jsonMaxArrayLengthFuel (f + 1) j)
+                (fun h => Eq.refl (jsonMaxArrayLengthFuel (g + 1) (Json.bool b))) (Eq.symm h_1) h)
+            (fun n h_1 =>
+              Eq.ndrec (motive := fun j =>
+                jsonDepthFuel (f + 1) j < f + 1 → jsonMaxArrayLengthFuel (g + 1) j = jsonMaxArrayLengthFuel (f + 1) j)
+                (fun h => Eq.refl (jsonMaxArrayLengthFuel (g + 1) (Json.num n))) (Eq.symm h_1) h)
+            (fun s h_1 =>
+              Eq.ndrec (motive := fun j =>
+                jsonDepthFuel (f + 1) j < f + 1 → jsonMaxArrayLengthFuel (g + 1) j = jsonMaxArrayLengthFuel (f + 1) j)
+                (fun h => Eq.refl (jsonMaxArrayLengthFuel (g + 1) (Json.str s))) (Eq.symm h_1) h)
+            (fun elems h_1 =>
+              Eq.ndrec (motive := fun j =>
+                jsonDepthFuel (f + 1) j < f + 1 → jsonMaxArrayLengthFuel (g + 1) j = jsonMaxArrayLengthFuel (f + 1) j)
+                (fun h =>
+                  id
+                    (have h_lt :=
+                      Decidable.byContradiction fun a => jsonMaxArrayLengthFuel_stable._proof_1_3 f g elems h a;
+                    Eq.mpr
+                      (id
+                        (congrArg
+                          (fun _a =>
+                            elems.size.max _a =
+                              elems.size.max
+                                (Array.foldl (fun acc elem => acc.max (jsonMaxArrayLengthFuel f elem)) 0 elems))
+                          (Eq.symm (Array.foldl_toList fun acc elem => acc.max (jsonMaxArrayLengthFuel g elem)))))
+                      (have h_elem_eq := fun elem helem =>
+                        have h_elem_le := mem_le_foldl_max elems.toList (fun elem => jsonDepthFuel f elem) elem helem 0;
+                        have h_elem_lt :=
+                          Decidable.byContradiction fun a =>
+                            jsonMaxArrayLengthFuel_stable._proof_1_4 f g elems
+                              (Eq.mp
+                                (congrArg (fun _a => _a < f)
+                                  (Eq.symm (Array.foldl_toList fun acc elem => acc.max (jsonDepthFuel f elem))))
+                                h_lt)
+                              elem h_elem_le a;
+                        ih elem h_elem_lt g hg_le;
+                      have h_fold_eq :=
+                        foldl_max_congr elems.toList (fun elem => jsonMaxArrayLengthFuel g elem)
+                          (fun elem => jsonMaxArrayLengthFuel f elem) 0 h_elem_eq;
+                      Eq.mpr
+                        (id
+                          (congrArg
+                            (fun _a =>
+                              elems.size.max _a =
+                                elems.size.max
+                                  (Array.foldl (fun acc elem => acc.max (jsonMaxArrayLengthFuel f elem)) 0 elems))
+                            h_fold_eq))
+                        (Eq.mpr
+                          (id
+                            (congrArg
+                              (fun _a =>
+                                elems.size.max _a =
+                                  elems.size.max
+                                    (Array.foldl (fun acc elem => acc.max (jsonMaxArrayLengthFuel f elem)) 0 elems))
+                              (Array.foldl_toList fun acc y => acc.max (jsonMaxArrayLengthFuel f y))))
+                          (Eq.refl
+                            (elems.size.max
+                              (Array.foldl (fun acc y => acc.max (jsonMaxArrayLengthFuel f y)) 0 elems)))))))
+                (Eq.symm h_1) h)
+            (fun kvs h_1 =>
+              Eq.ndrec (motive := fun j =>
+                jsonDepthFuel (f + 1) j < f + 1 → jsonMaxArrayLengthFuel (g + 1) j = jsonMaxArrayLengthFuel (f + 1) j)
+                (fun h =>
+                  id
+                    (have h_lt :=
+                      Decidable.byContradiction fun a => jsonMaxArrayLengthFuel_stable._proof_1_5 f g kvs h a;
+                    Eq.mpr
+                      (id
+                        (congrArg
+                          (fun _a =>
+                            _a = Std.TreeMap.Raw.foldl (fun acc x val => acc.max (jsonMaxArrayLengthFuel f val)) 0 kvs)
+                          Std.TreeMap.Raw.foldl_eq_foldl_toList))
+                      (have h_val_eq := fun p hp =>
+                        have h_p_le := mem_le_foldl_max kvs.toList (fun p => jsonDepthFuel f p.2) p hp 0;
+                        have h_p_lt :=
+                          Decidable.byContradiction fun a =>
+                            jsonMaxArrayLengthFuel_stable._proof_1_6 f g kvs
+                              (Eq.mp (congrArg (fun _a => _a < f) Std.TreeMap.Raw.foldl_eq_foldl_toList) h_lt) p h_p_le
+                              a;
+                        ih p.2 h_p_lt g hg_le;
+                      have h_fold_eq :=
+                        foldl_max_congr kvs.toList (fun p => jsonMaxArrayLengthFuel g p.2)
+                          (fun p => jsonMaxArrayLengthFuel f p.2) 0 h_val_eq;
+                      Eq.mpr
+                        (id
+                          (congrArg
+                            (fun _a =>
+                              _a =
+                                Std.TreeMap.Raw.foldl (fun acc x val => acc.max (jsonMaxArrayLengthFuel f val)) 0 kvs)
+                            h_fold_eq))
+                        (Eq.mpr
+                          (id
+                            (congrArg
+                              (fun _a =>
+                                List.foldl (fun acc y => acc.max (jsonMaxArrayLengthFuel f y.2)) 0 kvs.toList = _a)
+                              Std.TreeMap.Raw.foldl_eq_foldl_toList))
+                          (Eq.refl (List.foldl (fun acc y => acc.max (jsonMaxArrayLengthFuel f y.2)) 0 kvs.toList))))))
+                (Eq.symm h_1) h)
+            (Eq.refl j))
+        hg)
+    f j h
+theorem DefiKernel.Certificates.parser_max_depth_bound : ∀ (ir : DecodedIR),
+  WholeDocumentDepthBounded ir → jsonDepth (decodedIRToJson ir) ≤ 64 :=
+fun ir h => h
+theorem DefiKernel.Certificates.parser_max_array_bound : ∀ (ir : DecodedIR),
+  WholeDocumentArrayBounded ir → jsonMaxArrayLength (decodedIRToJson ir) ≤ 4096 :=
+fun ir h => h
+theorem DefiKernel.Certificates.jsonMaxArrayLengthFuel_adequate : ∀ (j : Json), jsonDepth j ≤ 64 → jsonDepth j < 100 :=
+fun j h => jsonDepth_bound_lt_fuel j h
+arr2_fuel0=0
+arr2_fuel1=1
+arr2_fuel2=2
+arr2_fuel3=2
+arr2_fuel100=2
+obj2_fuel0=0
+obj2_fuel1=1
+obj2_fuel2=2
+obj2_fuel3=2
+arr5_max_fuel0=0
+arr5_max_fuel1=5
+arr5_max_fuel2=5
+sm_two_ab=ok:[(a, 1), (b, 2)]
+sm_two_ba_mkObj=ok:[(a, 1), (b, 2)]
+two_ab_compress={"a":"1","b":"2"}
+two_ba_compress={"a":"1","b":"2"}
+prod_sm_ab={"a":"1","b":"2"}
+prod_sm_ba={"a":"1","b":"2"}
+witness_obj=ok typed mode=typed-execute sm=0
+witness_bytes=ok typed mode=typed-execute sm=0

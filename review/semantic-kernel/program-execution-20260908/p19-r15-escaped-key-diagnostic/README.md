@@ -1,0 +1,5 @@
+# R15 escaped-key scanner diagnostic
+
+A successful pinned Lean runtime probe builds the existing canonical typed witness with two distinct sorted source-map keys: `a` followed by newline, and literal `au000a`. Production encoding emits `a\u000a` for the first key. The lexical scanner drops the escape introducer without decoding its meaning, so it reports duplicateKey `au000a`. The actual canonical JSON parser and object decoder accept the document. Its observed size is3453 bytes, JSON depth6, maximum array length32, and source-map ordering is true.
+
+Attempt1 tried to additionally prove full StructurallyAdmissibleIR, but `decide` got stuck reducing the serialized byte-size bound. That attempt has compiler exit1 and a sorryAx diagnostic; it supplies no proof credit and its original source/logs are preserved. Attempt2 removes the failed theorem and exits0 with the runtime outcomes above. This is a concrete scanner defect diagnostic, not a completed Lean refutation of the universal proposition. The author must prove the admissibility/roundtrip regression without admitted axioms and fix the scanner without restricting valid source-map strings.
