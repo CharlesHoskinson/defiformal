@@ -1,0 +1,439 @@
+--- R20/lean/DefiKernel/Certificates/CanonicalJson.lean
++++ R21/lean/DefiKernel/Certificates/CanonicalJson.lean
+@@ -1655,6 +1655,434 @@
+   dsimp [feedValue] at h_fold
+   exact parseTokens_of_foldlM (TreeJson.tokens t) (TreeJson.toJson t) h_fold
+ 
++/-- Predicate for character suffixes whose head is not a decimal digit.
++    Required for exact numeric tokenization boundary in canonical JSON. -/
++def NonDigitHead (cs : List Char) : Prop :=
++  match cs with
++  | [] => True
++  | c :: _ => c.isDigit = false
++
++theorem nonDigitHead_nil : NonDigitHead [] := trivial
++theorem nonDigitHead_comma (rest : List Char) : NonDigitHead (',' :: rest) := rfl
++theorem nonDigitHead_colon (rest : List Char) : NonDigitHead (':' :: rest) := rfl
++theorem nonDigitHead_rbracket (rest : List Char) : NonDigitHead (']' :: rest) := rfl
++theorem nonDigitHead_rbrace (rest : List Char) : NonDigitHead ('}' :: rest) := rfl
++
++theorem escapeTreeString_eq (s : String) :
++    (escapeTreeString s).toList = '"' :: (escapeChars s.toList ++ ['"']) := by
++  dsimp [escapeTreeString]
++  rw [String.toList_ofList]
++
++theorem tokenizeFuel_escapeTreeString (fuel : Nat) (s : String) (rest : List Char) :
++    tokenizeFuel (fuel + 1) ((escapeTreeString s).toList ++ rest) =
++      (do
++        let toks ← tokenizeFuel fuel rest
++        .ok (JsonToken.str s :: toks)) := by
++  rw [escapeTreeString_eq]
++  have h_append : ('"' :: (escapeChars s.toList ++ ['"'])) ++ rest =
++      '"' :: (escapeChars s.toList ++ ('"' :: rest)) := by
++    dsimp [List.cons_append]
++    rw [List.append_assoc]
++    rfl
++  rw [h_append]
++  exact tokenizeFuel_string fuel s rest
++
++theorem toList_comma : ",".toList = [','] := rfl
++theorem toList_colon : ":".toList = [':'] := rfl
++theorem toList_lbracket : "[".toList = ['['] := rfl
++theorem toList_rbracket : "]".toList = [']'] := rfl
++theorem toList_lbrace : "{".toList = ['{'] := rfl
++theorem toList_rbrace : "}".toList = ['}'] := rfl
++
++theorem encode_arr_toList (xs : List TreeJson) (rest : List Char) :
++    (TreeJson.encode (.arr xs)).toList ++ rest =
++    '[' :: ((TreeJson.encodeList xs).toList ++ (']' :: rest)) := by
++  dsimp [TreeJson.encode]
++  repeat rw [String.toList_append]
++  rw [toList_lbracket, toList_rbracket]
++  simp only [List.cons_append, List.nil_append, List.append_assoc]
++
++theorem encode_obj_toList (kvs : List (String × TreeJson)) (rest : List Char) :
++    (TreeJson.encode (.obj kvs)).toList ++ rest =
++    '{' :: ((TreeJson.encodeObj kvs).toList ++ ('}' :: rest)) := by
++  dsimp [TreeJson.encode]
++  repeat rw [String.toList_append]
++  rw [toList_lbrace, toList_rbrace]
++  simp only [List.cons_append, List.nil_append, List.append_assoc]
++
++theorem encodeList_cons_cons_toList (x x2 : TreeJson) (xs' : List TreeJson) (rest : List Char) :
++    (TreeJson.encodeList (x :: x2 :: xs')).toList ++ rest =
++    (TreeJson.encode x).toList ++ (',' :: ((TreeJson.encodeList (x2 :: xs')).toList ++ rest)) := by
++  dsimp [TreeJson.encodeList]
++  repeat rw [String.toList_append]
++  rw [toList_comma]
++  simp only [List.cons_append, List.nil_append, List.append_assoc]
++
++theorem encodeObj_singleton_toList (k : String) (v : TreeJson) (rest : List Char) :
++    (TreeJson.encodeObj [(k, v)]).toList ++ rest =
++    (escapeTreeString k).toList ++ (':' :: ((TreeJson.encode v).toList ++ rest)) := by
++  dsimp [TreeJson.encodeObj]
++  repeat rw [String.toList_append]
++  rw [toList_colon]
++  simp only [List.cons_append, List.nil_append, List.append_assoc]
++
++theorem encodeObj_cons_cons_toList (k : String) (v : TreeJson) (f2 : String × TreeJson) (kvs' : List (String × TreeJson)) (rest : List Char) :
++    (TreeJson.encodeObj ((k, v) :: f2 :: kvs')).toList ++ rest =
++    (escapeTreeString k).toList ++ (':' :: ((TreeJson.encode v).toList ++ (',' :: ((TreeJson.encodeObj (f2 :: kvs')).toList ++ rest)))) := by
++  dsimp [TreeJson.encodeObj]
++  repeat rw [String.toList_append]
++  rw [toList_colon, toList_comma]
++  simp only [List.cons_append, List.nil_append, List.append_assoc]
++
++theorem toDigits_nonempty_length (n : Nat) : 1 ≤ (Nat.toDigits 10 n).length := by
++  have := Nat.length_toDigits_pos (b := 10) (n := n)
++  omega
++
++theorem toString_nat_length_ge_one (n : Nat) : 1 ≤ (toString n).toList.length := by
++  have h_repr : (toString n).toList = Nat.toDigits 10 n := by
++    change (Nat.repr n).toList = Nat.toDigits 10 n
++    exact Nat.toList_repr
++  rw [h_repr]
++  exact toDigits_nonempty_length n
++
++theorem toString_int_length_ge_one (i : Int) : 1 ≤ (toString i).toList.length := by
++  cases i with
++  | ofNat n => exact toString_nat_length_ge_one n
++  | negSucc n =>
++    have h_repr : (toString (Int.negSucc n)).toList = '-' :: (Nat.repr (n + 1)).toList := by
++      change ("-" ++ Nat.repr (n + 1)).toList = '-' :: (Nat.repr (n + 1)).toList
++      rw [String.toList_append]
++      rfl
++    rw [h_repr]
++    dsimp [List.length]
++    omega
++
++theorem escapeTreeString_length_ge_two (s : String) : 2 ≤ (escapeTreeString s).toList.length := by
++  rw [escapeTreeString_eq]
++  dsimp [List.length]
++  rw [List.length_append]
++  simp only [List.length_cons, List.length_nil]
++  omega
++
++theorem tokensList_length_le_encodeList_length (xs : List TreeJson)
++    (h_ih : ∀ x ∈ xs, (TreeJson.tokens x).length ≤ (TreeJson.encode x).toList.length) :
++    (TreeJson.tokensList xs).length ≤ (TreeJson.encodeList xs).toList.length := by
++  induction xs with
++  | nil => rfl
++  | cons x tl ih =>
++    cases tl with
++    | nil =>
++      dsimp [TreeJson.tokensList, TreeJson.encodeList]
++      exact h_ih x (List.Mem.head [])
++    | cons x2 xs' =>
++      dsimp [TreeJson.tokensList, TreeJson.encodeList]
++      repeat rw [String.toList_append]
++      rw [toList_comma]
++      simp only [List.length_append, List.length_cons, List.length_nil]
++      have h_x := h_ih x (List.Mem.head _)
++      have h_ih_tl := ih (fun y hy => h_ih y (List.Mem.tail x hy))
++      omega
++
++theorem tokensObj_length_le_encodeObj_length (kvs : List (String × TreeJson))
++    (h_ih : ∀ (k : String) (v : TreeJson), (k, v) ∈ kvs → (TreeJson.tokens v).length ≤ (TreeJson.encode v).toList.length) :
++    (TreeJson.tokensObj kvs).length ≤ (TreeJson.encodeObj kvs).toList.length := by
++  induction kvs with
++  | nil => rfl
++  | cons f tl ih =>
++    rcases f with ⟨k, v⟩
++    cases tl with
++    | nil =>
++      dsimp [TreeJson.tokensObj, TreeJson.encodeObj]
++      repeat rw [String.toList_append]
++      rw [toList_colon]
++      simp only [List.length_append, List.length_cons, List.length_nil]
++      have h_v := h_ih k v (List.Mem.head [])
++      have h_k := escapeTreeString_length_ge_two k
++      omega
++    | cons f2 kvs' =>
++      dsimp [TreeJson.tokensObj, TreeJson.encodeObj]
++      repeat rw [String.toList_append]
++      rw [toList_colon, toList_comma]
++      simp only [List.length_append, List.length_cons, List.length_nil]
++      have h_v := h_ih k v (List.Mem.head _)
++      have h_k := escapeTreeString_length_ge_two k
++      have h_ih_tl := ih (fun k' v' hy => h_ih k' v' (List.Mem.tail (k, v) hy))
++      omega
++
++/-- Non-circular length bound: the number of produced JSON tokens is bounded by serialized characters. -/
++theorem tokens_length_le_encode_length (t : TreeJson) :
++    (TreeJson.tokens t).length ≤ (TreeJson.encode t).toList.length := by
++  match t with
++  | .null => decide
++  | .bool true => decide
++  | .bool false => decide
++  | .num n =>
++    dsimp [TreeJson.tokens, TreeJson.encode]
++    exact toString_int_length_ge_one n
++  | .str s =>
++    dsimp [TreeJson.tokens, TreeJson.encode]
++    have := escapeTreeString_length_ge_two s
++    omega
++  | .arr xs =>
++    dsimp [TreeJson.tokens, TreeJson.encode]
++    repeat rw [String.toList_append]
++    rw [toList_lbracket, toList_rbracket]
++    simp only [List.length_append, List.length_cons, List.length_nil]
++    have h_ih : ∀ x ∈ xs, (TreeJson.tokens x).length ≤ (TreeJson.encode x).toList.length := by
++      intro x hx
++      have : TreeJson.size x < TreeJson.size (.arr xs) := by
++        dsimp [TreeJson.size]
++        have := TreeJson.mem_sizeList x xs hx
++        omega
++      exact tokens_length_le_encode_length x
++    have h_list := tokensList_length_le_encodeList_length xs h_ih
++    omega
++  | .obj kvs =>
++    dsimp [TreeJson.tokens, TreeJson.encode]
++    repeat rw [String.toList_append]
++    rw [toList_lbrace, toList_rbrace]
++    simp only [List.length_append, List.length_cons, List.length_nil]
++    have h_ih : ∀ (k : String) (v : TreeJson), (k, v) ∈ kvs → (TreeJson.tokens v).length ≤ (TreeJson.encode v).toList.length := by
++      intro k v hv
++      have : TreeJson.size v < TreeJson.size (.obj kvs) := by
++        dsimp [TreeJson.size]
++        have := TreeJson.mem_sizeObj k v kvs hv
++        omega
++      exact tokens_length_le_encode_length v
++    have h_obj := tokensObj_length_le_encodeObj_length kvs h_ih
++    omega
++termination_by TreeJson.size t
++
++/-- Fuel-bounded tokenization inversion for array element sequences. -/
++theorem tokenizeFuel_encodeList (xs : List TreeJson)
++    (h_ih : ∀ x ∈ xs, ∀ (fuel : Nat) (rest : List Char), NonDigitHead rest →
++      tokenizeFuel ((TreeJson.tokens x).length + fuel) ((TreeJson.encode x).toList ++ rest) =
++        (do let toks ← tokenizeFuel fuel rest; .ok (TreeJson.tokens x ++ toks)))
++    (fuel : Nat) (rest : List Char) (h_end : NonDigitHead rest) :
++    tokenizeFuel ((TreeJson.tokensList xs).length + fuel) ((TreeJson.encodeList xs).toList ++ rest) =
++      (do
++        let toks ← tokenizeFuel fuel rest
++        .ok (TreeJson.tokensList xs ++ toks)) := by
++  induction xs with
++  | nil =>
++    dsimp [TreeJson.tokensList, TreeJson.encodeList]
++    have : 0 + fuel = fuel := by omega
++    rw [this]
++    cases tokenizeFuel fuel rest <;> rfl
++  | cons x tl ih =>
++    cases tl with
++    | nil =>
++      dsimp [TreeJson.tokensList, TreeJson.encodeList]
++      exact h_ih x (List.Mem.head []) fuel rest h_end
++    | cons x2 xs' =>
++      rw [encodeList_cons_cons_toList]
++      have h_fuel : (TreeJson.tokensList (x :: x2 :: xs')).length + fuel =
++          (TreeJson.tokens x).length + (((TreeJson.tokensList (x2 :: xs')).length + fuel) + 1) := by
++        dsimp [TreeJson.tokensList]
++        simp only [List.length_append, List.length_cons, List.length_nil]
++        omega
++      rw [h_fuel]
++      have h_x := h_ih x (List.Mem.head _) (((TreeJson.tokensList (x2 :: xs')).length + fuel) + 1)
++          (',' :: ((TreeJson.encodeList (x2 :: xs')).toList ++ rest)) (nonDigitHead_comma _)
++      rw [h_x]
++      dsimp [bind, Except.bind]
++      rw [tokenizeFuel_comma]
++      dsimp [bind, Except.bind]
++      have h_ih_tl : ∀ y ∈ x2 :: xs', ∀ (fuel : Nat) (rest : List Char), NonDigitHead rest →
++          tokenizeFuel ((TreeJson.tokens y).length + fuel) ((TreeJson.encode y).toList ++ rest) =
++            (do let toks ← tokenizeFuel fuel rest; .ok (TreeJson.tokens y ++ toks)) := by
++        intro y hy f r he
++        exact h_ih y (List.Mem.tail x hy) f r he
++      rw [ih h_ih_tl]
++      dsimp [bind, Except.bind]
++      cases tokenizeFuel fuel rest with
++      | error _ => rfl
++      | ok toks => simp [TreeJson.tokensList]
++
++/-- Fuel-bounded tokenization inversion for object field sequences. -/
++theorem tokenizeFuel_encodeObj (kvs : List (String × TreeJson))
++    (h_ih : ∀ (k : String) (v : TreeJson), (k, v) ∈ kvs → ∀ (fuel : Nat) (rest : List Char), NonDigitHead rest →
++      tokenizeFuel ((TreeJson.tokens v).length + fuel) ((TreeJson.encode v).toList ++ rest) =
++        (do let toks ← tokenizeFuel fuel rest; .ok (TreeJson.tokens v ++ toks)))
++    (fuel : Nat) (rest : List Char) (h_end : NonDigitHead rest) :
++    tokenizeFuel ((TreeJson.tokensObj kvs).length + fuel) ((TreeJson.encodeObj kvs).toList ++ rest) =
++      (do
++        let toks ← tokenizeFuel fuel rest
++        .ok (TreeJson.tokensObj kvs ++ toks)) := by
++  induction kvs with
++  | nil =>
++    dsimp [TreeJson.tokensObj, TreeJson.encodeObj]
++    have : 0 + fuel = fuel := by omega
++    rw [this]
++    cases tokenizeFuel fuel rest <;> rfl
++  | cons f tl ih =>
++    rcases f with ⟨k, v⟩
++    cases tl with
++    | nil =>
++      rw [encodeObj_singleton_toList]
++      have h_fuel : (TreeJson.tokensObj [(k, v)]).length + fuel =
++          ((TreeJson.tokens v).length + fuel + 1) + 1 := by
++        simp [TreeJson.tokensObj]
++        omega
++      rw [h_fuel]
++      rw [tokenizeFuel_escapeTreeString]
++      dsimp [bind, Except.bind]
++      rw [tokenizeFuel_colon]
++      dsimp [bind, Except.bind]
++      have h_v := h_ih k v (List.Mem.head []) fuel rest h_end
++      rw [h_v]
++      dsimp [bind, Except.bind]
++      cases tokenizeFuel fuel rest <;> rfl
++    | cons f2 kvs' =>
++      rw [encodeObj_cons_cons_toList]
++      have h_fuel : (TreeJson.tokensObj ((k, v) :: f2 :: kvs')).length + fuel =
++          ((TreeJson.tokens v).length + (((TreeJson.tokensObj (f2 :: kvs')).length + fuel) + 1) + 1) + 1 := by
++        dsimp [TreeJson.tokensObj]
++        simp only [List.length_append, List.length_cons, List.length_nil]
++        omega
++      rw [h_fuel]
++      rw [tokenizeFuel_escapeTreeString]
++      dsimp [bind, Except.bind]
++      rw [tokenizeFuel_colon]
++      dsimp [bind, Except.bind]
++      have h_v := h_ih k v (List.Mem.head _) (((TreeJson.tokensObj (f2 :: kvs')).length + fuel) + 1)
++          (',' :: ((TreeJson.encodeObj (f2 :: kvs')).toList ++ rest)) (nonDigitHead_comma _)
++      rw [h_v]
++      dsimp [bind, Except.bind]
++      rw [tokenizeFuel_comma]
++      dsimp [bind, Except.bind]
++      have h_ih_tl : ∀ (k' : String) (v' : TreeJson), (k', v') ∈ f2 :: kvs' → ∀ (fuel : Nat) (rest : List Char), NonDigitHead rest →
++          tokenizeFuel ((TreeJson.tokens v').length + fuel) ((TreeJson.encode v').toList ++ rest) =
++            (do let toks ← tokenizeFuel fuel rest; .ok (TreeJson.tokens v' ++ toks)) := by
++        intro k' v' h_mem f r he
++        exact h_ih k' v' (List.Mem.tail (k, v) h_mem) f r he
++      rw [ih h_ih_tl]
++      dsimp [bind, Except.bind]
++      cases tokenizeFuel fuel rest with
++      | error _ => rfl
++      | ok toks => simp [TreeJson.tokensObj]
++
++/-- Universal fuel-bounded tokenization theorem:
++    tokenizing the serialized characters of any TreeJson consumes exactly its token count in fuel
++    and prepends its canonical token sequence. -/
++theorem tokenizeFuel_tree (t : TreeJson) (fuel : Nat) (rest : List Char) (h_end : NonDigitHead rest) :
++    tokenizeFuel ((TreeJson.tokens t).length + fuel) ((TreeJson.encode t).toList ++ rest) =
++      (do
++        let toks ← tokenizeFuel fuel rest
++        .ok (TreeJson.tokens t ++ toks)) := by
++  match t with
++  | .null =>
++    have h_fuel : (TreeJson.tokens .null).length + fuel = fuel + 1 := by
++      dsimp [TreeJson.tokens]; omega
++    rw [h_fuel]
++    dsimp [TreeJson.tokens, TreeJson.encode]
++    rfl
++  | .bool true =>
++    have h_fuel : (TreeJson.tokens (.bool true)).length + fuel = fuel + 1 := by
++      dsimp [TreeJson.tokens]; omega
++    rw [h_fuel]
++    dsimp [TreeJson.tokens, TreeJson.encode]
++    rfl
++  | .bool false =>
++    have h_fuel : (TreeJson.tokens (.bool false)).length + fuel = fuel + 1 := by
++      dsimp [TreeJson.tokens]; omega
++    rw [h_fuel]
++    dsimp [TreeJson.tokens, TreeJson.encode]
++    rfl
++  | .num n =>
++    have h_fuel : (TreeJson.tokens (.num n)).length + fuel = fuel + 1 := by
++      dsimp [TreeJson.tokens]; omega
++    rw [h_fuel]
++    dsimp [TreeJson.tokens, TreeJson.encode]
++    have h_tok := tokenizeFuel_int fuel n rest h_end
++    rw [h_tok]
++  | .str s =>
++    have h_fuel : (TreeJson.tokens (.str s)).length + fuel = fuel + 1 := by
++      dsimp [TreeJson.tokens]; omega
++    rw [h_fuel]
++    dsimp [TreeJson.tokens, TreeJson.encode]
++    have h_tok := tokenizeFuel_escapeTreeString fuel s rest
++    rw [h_tok]
++  | .arr xs =>
++    rw [encode_arr_toList]
++    have h_fuel : (TreeJson.tokens (.arr xs)).length + fuel =
++        ((TreeJson.tokensList xs).length + (fuel + 1)) + 1 := by
++      dsimp [TreeJson.tokens]
++      simp only [List.length_append, List.length_cons, List.length_nil]
++      omega
++    rw [h_fuel]
++    rw [tokenizeFuel_lbracket]
++    dsimp [bind, Except.bind]
++    have h_ih : ∀ x ∈ xs, ∀ (fuel' : Nat) (rest' : List Char), NonDigitHead rest' →
++        tokenizeFuel ((TreeJson.tokens x).length + fuel') ((TreeJson.encode x).toList ++ rest') =
++          (do let toks ← tokenizeFuel fuel' rest'; .ok (TreeJson.tokens x ++ toks)) := by
++      intro x hx f' r' he'
++      have : TreeJson.size x < TreeJson.size (.arr xs) := by
++        dsimp [TreeJson.size]
++        have := TreeJson.mem_sizeList x xs hx
++        omega
++      exact tokenizeFuel_tree x f' r' he'
++    rw [tokenizeFuel_encodeList xs h_ih (fuel + 1) (']' :: rest) (nonDigitHead_rbracket _)]
++    dsimp [bind, Except.bind]
++    rw [tokenizeFuel_rbracket]
++    dsimp [bind, Except.bind]
++    cases tokenizeFuel fuel rest with
++    | error _ => rfl
++    | ok toks => simp [TreeJson.tokens]
++  | .obj kvs =>
++    rw [encode_obj_toList]
++    have h_fuel : (TreeJson.tokens (.obj kvs)).length + fuel =
++        ((TreeJson.tokensObj kvs).length + (fuel + 1)) + 1 := by
++      dsimp [TreeJson.tokens]
++      simp only [List.length_append, List.length_cons, List.length_nil]
++      omega
++    rw [h_fuel]
++    rw [tokenizeFuel_lbrace]
++    dsimp [bind, Except.bind]
++    have h_ih : ∀ (k : String) (v : TreeJson), (k, v) ∈ kvs → ∀ (fuel' : Nat) (rest' : List Char), NonDigitHead rest' →
++        tokenizeFuel ((TreeJson.tokens v).length + fuel') ((TreeJson.encode v).toList ++ rest') =
++          (do let toks ← tokenizeFuel fuel' rest'; .ok (TreeJson.tokens v ++ toks)) := by
++      intro k v hv f' r' he'
++      have : TreeJson.size v < TreeJson.size (.obj kvs) := by
++        dsimp [TreeJson.size]
++        have := TreeJson.mem_sizeObj k v kvs hv
++        omega
++      exact tokenizeFuel_tree v f' r' he'
++    rw [tokenizeFuel_encodeObj kvs h_ih (fuel + 1) ('}' :: rest) (nonDigitHead_rbrace _)]
++    dsimp [bind, Except.bind]
++    rw [tokenizeFuel_rbrace]
++    dsimp [bind, Except.bind]
++    cases tokenizeFuel fuel rest with
++    | error _ => rfl
++    | ok toks => simp [TreeJson.tokens]
++termination_by TreeJson.size t
++
++/-- Universal canonical tokenizer inversion theorem:
++    for any TreeJson value, tokenizing its serialized text produces exactly its canonical token sequence. -/
++theorem tokenize_tree (t : TreeJson) :
++    tokenize (TreeJson.encode t) = .ok (TreeJson.tokens t) := by
++  dsimp [tokenize]
++  have h_le := tokens_length_le_encode_length t
++  have h_eq_fuel : (TreeJson.encode t).toList.length + 1 =
++      (TreeJson.tokens t).length + ((TreeJson.encode t).toList.length - (TreeJson.tokens t).length + 1) := by
++    omega
++  rw [h_eq_fuel]
++  have h_step := tokenizeFuel_tree t ((TreeJson.encode t).toList.length - (TreeJson.tokens t).length + 1) [] nonDigitHead_nil
++  simp only [List.append_nil] at h_step
++  rw [h_step]
++  rw [tokenizeFuel_empty]
++  dsimp [bind, Except.bind]
++  simp only [List.append_nil]
++
++/-- Universal canonical parser inversion theorem:
++    any structurally admissible TreeJson within the 64 depth bound parses directly from its serialized characters
++    to its semantic Lean.Json representation. -/
++theorem parseCanonicalJson_tree (t : TreeJson) (h_valid : TreeJson.Valid t)
++    (h_depth : TreeJson.depth t ≤ 64) :
++    parseCanonicalJson (TreeJson.encode t) = .ok (TreeJson.toJson t) := by
++  dsimp [parseCanonicalJson]
++  rw [tokenize_tree t]
++  dsimp [bind, Except.bind]
++  exact parseTokens_tree_valid t h_valid h_depth
++
+ end DefiKernel.Certificates
+-
+-
