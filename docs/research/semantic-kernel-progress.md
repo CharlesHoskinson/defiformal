@@ -451,3 +451,7 @@ and [delivery](../../review/semantic-kernel/program-execution-20260908/p01-deliv
 record the exact evidence and separate transport status. P02's full fixtures,
 mutations, contracts and monitor work remains open. This is not whole-M4,
 deployed-protocol or whole-program acceptance.
+
+## Core roadmap resumed with AGY implementation and Grok audit (2026-09-10)
+
+The user selected native AGY Gemini3.8FlashHigh with high effort to implement and fresh native Grok4.6 high to audit. P19 certificate implementation is dispatched in its prepared isolated checkout. Frozen P17 R6 is under a fresh Grok repair audit using exact unchanged prior Opus evidence; P18 R2 remains queued for Grok review. Earlier author/reviewer identities and acceptance limits are preserved. The app goal objective and active status were read back after the authorized resumption. STATE.json and CURRENT.json bind current dispatches. This changes routing and resumes work; it grants no new implementation acceptance.
