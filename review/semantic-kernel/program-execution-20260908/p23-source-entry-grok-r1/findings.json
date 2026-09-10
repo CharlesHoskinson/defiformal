@@ -1,0 +1,270 @@
+{
+  "schema": "defiformal-p23-source-entry-audit-findings/v1",
+  "utc_note": "auditor clock is session date 2026-09-09/10; input readiness utc is 2026-09-10",
+  "flag": "SOURCE_ENTRY_DIAGNOSTIC_ONLY_NO_ACCEPTANCE",
+  "acceptance": false,
+  "disposition": "source_candidate_usable_with_obligations",
+  "candidate": {
+    "usable": "liquity_v1",
+    "v1_commit": "3e64ee1b52c50d51587c64c1cf75e0ba82934979",
+    "v2_commit": "c8a5a4ee2e9dc024905856b6698a77d849c68c7e",
+    "v2_status": "mismatch_preserved_not_usable_for_empty_set"
+  },
+  "requested_model": "grok-4.6",
+  "reported_runtime_model": null,
+  "reported_runtime_model_note": "native.jsonl usage records have token counts and signatures but no model name; root preserves modelUsage separately",
+  "closes": {
+    "24.1": false,
+    "24.2": false,
+    "24.3": false,
+    "P23": false,
+    "P10": false,
+    "R12": false
+  },
+  "findings": [
+    {
+      "id": "F01",
+      "severity": "info",
+      "title": "V1 is a legitimate candidate for generic Liquity-style ordered redemption",
+      "evidence": [
+        {
+          "path": "openspec/changes/reusable-verification-platform-program/tasks.md",
+          "lines": [189, 193]
+        },
+        {
+          "path": "openspec/changes/reusable-verification-platform-program/specs/source-bound-library-families/spec.md",
+          "lines": [79, 85]
+        },
+        {
+          "path": "p23-v1-source-entry-preparation/upstream/packages/contracts/contracts/SortedTroves.sol",
+          "lines": [17, 18, 69, 70, 271, 287]
+        },
+        {
+          "path": "p23-v1-source-entry-preparation/upstream/packages/contracts/contracts/TroveManager.sol",
+          "lines": [925, 962, 970, 974]
+        }
+      ],
+      "reasoning_summary": "Binding P23 text requires Liquity-style ordered redemption, partial fills, and empty-set refusal. It does not name V2, BOLD, or interest-rate order. V1 walks the NICR-sorted tail, skips ICR<MCR, and supports partial lots. That is a legitimate candidate, not acceptance.",
+      "required_action": "If V1 is selected, freeze ICR/MCR order as the pinned order. Do not claim interest-rate prefix."
+    },
+    {
+      "id": "F02",
+      "severity": "medium",
+      "title": "Historical P2 interest-rate prefix is a preserved conflict, not a P23 requirement",
+      "evidence": [
+        {
+          "path": "research/positive-program/phase2/P2-SCOPE.md",
+          "lines": [9, 14]
+        },
+        {
+          "path": "research/positive-program/phase2/P2-CONTRACT.md",
+          "lines": [69, 78]
+        },
+        {
+          "path": "p23-source-entry-inspection/upstream/contracts/src/TroveManager.sol",
+          "lines": [765, 777]
+        },
+        {
+          "path": "p23-source-entry-inspection/upstream/contracts/src/SortedTroves.sol",
+          "lines": [18, 323, 325]
+        }
+      ],
+      "reasoning_summary": "Historical P2 liquity mechanism is BOLD getLast/getPrev over interest-rate order at TroveManager 770/785, with rate-ascending redeemPrefix vectors. V1 order is NICR. Selecting V1 does not silently replace a binding P23 interest-order requirement because P23 does not have one. Using V1 to close the historical P2 liquity re-spec would be a contract conflict.",
+      "required_action": "Preserve P2 bytes and V2 mismatch. Do not discharge historical redeemPrefix via V1 ICR order. Do not implement V2 interest/zombie/batch inside a V1 P23 library."
+    },
+    {
+      "id": "F03",
+      "severity": "high",
+      "title": "V2 comments out the no-fill require and can zero-fill succeed in source",
+      "evidence": [
+        {
+          "path": "p23-source-entry-inspection/upstream/contracts/src/TroveManager.sol",
+          "lines": [826, 827, 838, 841, 844]
+        },
+        {
+          "path": "p23-source-entry-inspection/upstream/contracts/src/CollateralRegistry.sol",
+          "lines": [92, 95, 96, 116, 147, 157, 171, 174]
+        },
+        {
+          "path": "p23-source-entry-inspection/readiness.json",
+          "lines": [96, 107]
+        }
+      ],
+      "reasoning_summary": "V2 TroveManager 826-827 explicitly removes require(totalCollDrawn>0). The method returns debtDecrease, possibly 0. Registry burns only if redeemedAmount>0 and has no empty-set require. A call that passes amount/fee checks and matches no redeemable branch/trove can complete with zero fill. Other independent reverts must not be relabelled as the missing named empty-set guard.",
+      "required_action": "Keep V2 as a captured mismatch. Do not use V2 as the P23 empty-set pin. Do not invent a V2 refusal."
+    },
+    {
+      "id": "F04",
+      "severity": "high",
+      "title": "V1 live guard is totalETHDrawn>0, broader than empty eligible set",
+      "evidence": [
+        {
+          "path": "p23-v1-source-entry-preparation/upstream/packages/contracts/contracts/TroveManager.sol",
+          "lines": [831, 853, 855, 991, 994, 999]
+        },
+        {
+          "path": "p23-v1-source-entry-preparation/readiness.json",
+          "lines": [95, 100]
+        }
+      ],
+      "reasoning_summary": "Line 999 requires totals.totalETHDrawn>0. That fires on empty iteration, cancelled first partial with no prior fill, rounding-zero ETHLot, and a positive maxIterations cap that adds no lot. ETHLot is floor(LUSDLot*1e18/price) and can be 0 while LUSDLot>0. The required 24.1/24.3 case is refusal when no redeemable trove exists, not every no-collateral-drawn revert.",
+      "required_action": "Freeze the actual predicate as no-collateral-drawn. Record empty-set as a distinct observation. Do not treat cancelled-partial or rounding-zero as empty-set."
+    },
+    {
+      "id": "F05",
+      "severity": "high",
+      "title": "Empty-set refusal is not established; earlier guards and last-trove close can pre-empt line 999",
+      "evidence": [
+        {
+          "path": "p23-v1-source-entry-preparation/upstream/packages/contracts/contracts/TroveManager.sol",
+          "lines": [51, 948, 957, 1248, 1484, 1488, 1489, 1492, 1496, 1497, 1500, 1502, 1505]
+        },
+        {
+          "path": "p23-v1-source-entry-preparation/upstream/packages/contracts/contracts/Dependencies/LiquityBase.sol",
+          "lines": [22, 60, 67, 74]
+        },
+        {
+          "path": "p23-v1-source-entry-preparation/upstream/packages/contracts/contracts/Dependencies/LiquityMath.sol",
+          "lines": [102, 109, 110]
+        }
+      ],
+      "reasoning_summary": "Before 999: max fee, 14-day bootstrap via missing LQTY token, priceFeed.fetchPrice, TCR>=MCR, amount>0, user balance, assert(balance<=system debt). _closeTrove always requires more than one trove, so emptying the list through close is source-blocked. All-ICR<MCR is in tension with TCR>=MCR if TCR is the debt-weighted average of current ICRs. None of this is a proof that empty-set is unreachable. No executed witness exists.",
+      "required_action": "Execute the specified empty-set witness, or report the actual revert of a failed construction. Do not claim unreachable without a proof. Do not close 24.1."
+    },
+    {
+      "id": "F06",
+      "severity": "medium",
+      "title": "Payment/debt correspondence must include gas reserve, pending rewards, fee, and SafeMath floor",
+      "evidence": [
+        {
+          "path": "p23-v1-source-entry-preparation/upstream/packages/contracts/contracts/TroveManager.sol",
+          "lines": [828, 831, 837, 841, 882, 883, 885, 979, 993, 1008, 1014, 1019, 1021]
+        },
+        {
+          "path": "p23-v1-source-entry-preparation/upstream/packages/contracts/contracts/LUSDToken.sol",
+          "lines": [104, 230, 233]
+        },
+        {
+          "path": "p23-v1-source-entry-preparation/upstream/packages/contracts/contracts/ActivePool.sol",
+          "lines": [83, 99]
+        },
+        {
+          "path": "p23-v1-source-entry-preparation/upstream/packages/contracts/contracts/Dependencies/LiquityBase.sol",
+          "lines": [28, 31]
+        }
+      ],
+      "reasoning_summary": "Redeemer burn is totalLUSDToRedeem; full close additionally burns LUSD_GAS_COMPENSATION from the gas pool and decreases ActivePool debt by that reserve. Pending rewards are applied before the lot. Fee is subtracted from drawn ETH after line 999. Naive burn==debtDecrease is false on full close. ETHLot floor can be zero.",
+      "required_action": "Include reserve and pending-reward boundaries in any payment/debt proof, or name a partial-only domain. The payment-without-debt-reduction negative must not be the reserve itself."
+    },
+    {
+      "id": "F07",
+      "severity": "medium",
+      "title": "maxIterations==0 is an unlimited sentinel",
+      "evidence": [
+        {
+          "path": "p23-v1-source-entry-preparation/upstream/packages/contracts/contracts/TroveManager.sol",
+          "lines": [910, 973]
+        },
+        {
+          "path": "p23-source-entry-inspection/upstream/contracts/src/TroveManager.sol",
+          "lines": [740, 778]
+        }
+      ],
+      "reasoning_summary": "Both V1 and V2 treat _maxIterations==0 as uint(-1)/type(uint256).max, not zero iterations. A bounded Lean model that treats 0 as empty iteration would disagree with source.",
+      "required_action": "Name the sentinel in the observation schema. Do not model 0 as no-loop."
+    },
+    {
+      "id": "F08",
+      "severity": "medium",
+      "title": "Selected files are not a compiler or runtime closure",
+      "evidence": [
+        {
+          "path": "review/semantic-kernel/program-execution-20260908/p23-source-entry-grok-r1/probes/06-import-closure/import-closure.json",
+          "lines": [1]
+        },
+        {
+          "path": "p23-v1-source-entry-preparation/upstream/packages/contracts/contracts/Dependencies/LiquityMath.sol",
+          "lines": [6]
+        },
+        {
+          "path": "p23-source-entry-inspection/upstream/contracts/src/TroveManager.sol",
+          "lines": [15]
+        },
+        {
+          "path": "p23-v1-source-entry-preparation/readiness.json",
+          "lines": [117, 125]
+        }
+      ],
+      "reasoning_summary": "Static import parse: V1 missing 31 imports (Interfaces, Ownable, CheckContract, console.sol, PriceFeed, CollSurplusPool, LQTY token/staking). V2 missing 29 including Dependencies/LiquityBase.sol and OpenZeppelin. This diagnostic did not compile. Compiler-settings inspection only: V1 pragma 0.6.11, hardhat solidity 0.6.11 istanbul optimizer 100; V2 pragma 0.8.24, foundry evm_version cancun optimizer 200, no solc= pin in foundry.toml. Configs were not executed.",
+      "required_action": "Next author must capture complete import/compiler closure before claiming source execution. Do not treat this inspection as compile evidence."
+    },
+    {
+      "id": "F09",
+      "severity": "info",
+      "title": "New development entries; P10/R12 remain separate and open",
+      "evidence": [
+        {
+          "path": "p23-source-entry-inspection/readiness.json",
+          "lines": [79, 89, 118]
+        },
+        {
+          "path": "p23-v1-source-entry-preparation/readiness.json",
+          "lines": [10, 84, 91]
+        },
+        {
+          "path": "openspec/changes/reusable-verification-platform-program/tasks.md",
+          "lines": [90, 92, 193]
+        }
+      ],
+      "reasoning_summary": "Both readiness records mark development_source_entry_not_untouched_holdout and new_explicit_pin. They do not establish sameness to an old development revision. P10 is the Liquity V1 liquidation-source challenge; this pin is ordered redemption. R12 stays open.",
+      "required_action": "Do not relabel these captures as holdouts or as P10/R12 closure."
+    },
+    {
+      "id": "F10",
+      "severity": "info",
+      "title": "inputs.json hashes verified; three logging probes failed and are preserved",
+      "evidence": [
+        {
+          "path": "review/semantic-kernel/program-execution-20260908/p23-source-entry-grok-r1/probes/01-hash-verify/hash-verify.json",
+          "lines": [1]
+        },
+        {
+          "path": "review/semantic-kernel/program-execution-20260908/p23-source-entry-grok-r1/probes/02-archive-members-failed/FAILURE.json",
+          "lines": [1]
+        },
+        {
+          "path": "review/semantic-kernel/program-execution-20260908/p23-source-entry-grok-r1/probes/08-hash-verify-argv-failed/FAILURE.json",
+          "lines": [1]
+        },
+        {
+          "path": "review/semantic-kernel/program-execution-20260908/p23-source-entry-grok-r1/probes/09-manifest-false-literal-failed/FAILURE.json",
+          "lines": [1]
+        }
+      ],
+      "reasoning_summary": "41/41 inputs.json files matched. Archive-member JSON serialization failed because tarfile.TarInfo.type is bytes; retry succeeded. An argv-mixed python hash-verify failed with IndexError; retry with an explicit script succeeded. A MANIFEST writer used JSON false in Python and NameError'd; retry used False. Failures are logging-script errors, not hash mismatches.",
+      "required_action": "Keep failed probes. Do not treat logging failure as input-integrity failure."
+    }
+  ],
+  "unverified_runtime_reachability": [
+    "any compiled bytecode or EVM transaction",
+    "empty eligible set reaching TroveManager.sol:999",
+    "all-ICR<MCR coexisting with TCR>=MCR under pending-reward rounding",
+    "leftover pool coll/debt with empty sorted list",
+    "PriceFeed.fetchPrice behaviour",
+    "LQTYToken.getDeploymentStartTime / bootstrap clock",
+    "CollSurplusPool, LQTY staking, gas pool, BorrowerOperations, StabilityPool",
+    "V2 zero-fill success on a reachable empty branch set",
+    "hint/NICR correspondence after pending rewards",
+    "optimizer/istanbul/cancun effects",
+    "deployment or historical pin restoration",
+    "Lean model, mutants, proofs"
+  ],
+  "smallest_next_agy_task": [
+    "Preserve V2 mismatch and historical P2 interest-order evidence; do not implement empty-set against V2",
+    "Capture complete V1 redeemCollateral compile/import closure at 3e64ee1b52c50d51587c64c1cf75e0ba82934979 with solc 0.6.11 optimizer 100 istanbul from inspected hardhat solidity settings (do not execute the config)",
+    "Freeze observation schema distinguishing ordinary prefix, partial fill, empty eligible set, cancelled-first-partial, rounding-zero coll, last-trove close, iteration-cap, and earlier guards",
+    "Execute those cases. Empty-set must be the specified witness or an explicit failed construction with the actual revert. Do not substitute",
+    "Only then implement lean/DefiKernel/Redemption/ with gas-reserve payment/debt, skip-first-eligible mutant, and payment-without-debt-reduction negative",
+    "Fresh independent Grok review. Do not close 24.1/P23/P10/R12 from this diagnostic"
+  ]
+}
