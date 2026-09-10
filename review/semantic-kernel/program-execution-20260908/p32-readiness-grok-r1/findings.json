@@ -1,0 +1,100 @@
+{
+  "schema": "defiformal-p32-readiness-review-findings/v1",
+  "utc": "2026-09-10T17:29:40+00:00",
+  "decision": "ACCEPT_WITH_LIMITATIONS",
+  "changes_required": false,
+  "full_p32_accepted": false,
+  "full_p34_accepted": false,
+  "whole_program_complete": false,
+  "acceptance": false,
+  "findings": [
+    {
+      "id": "P32-HASHES",
+      "severity": "info",
+      "status": "confirmed",
+      "title": "All 58 declared input hashes match before and after probes",
+      "evidence": "inputs.json SHA-256 c9184522474aa5e74e5c45a8d552fd16e367af17e860570973ed2e98d97fc948 declares 58 sandbox paths. hash-before.json: 58 present, 58 match, missing [], mismatches []. hash-after.json: 58 match, changed_since_before []. Capture.py was not rerun.",
+      "fix": "None. Keep the frozen bytes."
+    },
+    {
+      "id": "P32-EVM-PIN",
+      "severity": "info",
+      "status": "confirmed",
+      "title": "EVM record binds Uniswap v1.0.0 commit, helper, and seven source-closure hashes",
+      "evidence": "evm.json pin equals source-pin.json: repo https://github.com/Uniswap/v3-core, tag v1.0.0, commit e3589b192d0be27e100cd0daaf6c97204fdb1899. Helper SqrtPriceMath.getNextSqrtPriceFromAmount0RoundingUp, lines 28-56, internal pure. Seven closure SHA-256 values match pin, upstream, overlay libraries, and source-hashes.json. Token0Probe overlay SHA-256 cc12001912e34069e54042ed62be5ecd0c1e57bca7e1c3685fce404e21cb069c.",
+      "fix": "None for this scoped helper. A later selected deployed contract needs its own verified address/code/environment binding."
+    },
+    {
+      "id": "P32-COMPILER-FORK",
+      "severity": "info",
+      "status": "confirmed",
+      "title": "Compiler evmVersion is distinct from the supplied genesis execution fork",
+      "evidence": "standard-json-input.json settings.evmVersion is istanbul and equals evm.json compile_settings. genesis-binding.json selected_fork is istanbul, istanbulBlock is 0, later fork keys are absent, compiler_evmVersion_establishes_execution_fork is false. Genesis file SHA-256 1a70be555705a08e5422705322b45fd716a81989af2c5830fbfcffc963b01be4. hardhat.config.ts declares solidity 0.7.6 optimizer 800 bytecodeHash none and does not declare evmVersion.",
+      "fix": "None. Keep the two fields separate if the compile target or genesis fork later changes."
+    },
+    {
+      "id": "P32-VERSION",
+      "severity": "info",
+      "status": "confirmed",
+      "title": "Fresh absolute-path --version commands match frozen P16 and P32 receipts",
+      "evidence": "solc tool SHA-256 bd69ea85427bf2f4da74cb426ad951dd78db9dfdd01d791208eccc2d4958a6bb, stdout SHA-256 fb5129a0d033c434a82a06911c66b2307dcb1d9794ec0237aa7098358195a2d7, exit 0. evm tool SHA-256 d298ce2c811de089d650ed4f9535c0c58efc72e7adee9b61a40b6c10cc26fb5c, stdout SHA-256 49af542659aefc62a0ec07a860388d6afc05ff1d97bd8be6e7994a7c3afa5954, exit 0. Both stderr hashes are the empty digest e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855. No compilation was performed.",
+      "fix": "None."
+    },
+    {
+      "id": "P32-RUNTIME",
+      "severity": "info",
+      "status": "confirmed",
+      "title": "Runtime bytecode hash is not the runtime.hex file hash",
+      "evidence": "Decoded runtime.hex is 734 bytes, SHA-256 07f36245480430411ce6a9afe829520f63ffd9a9af7fd7cac52f133d75c6f580, matching bytecode-hashes.json, compile.json, result.json, and evm.json deployment.runtime_bytecode_sha256. runtime.hex file SHA-256 is f2e0d587d298221822e4fa03a5191b998c2d1ca370ff558457d01b358ed6eb38. creation.hex file SHA-256 is af6e49aa03a0dbe293c19ff6ca766cdc4e8c243826667f59520519c81801e438.",
+      "fix": "None. Continue to cite bytecode content hashes for deployment identity."
+    },
+    {
+      "id": "P32-BLOCKED-FIVE",
+      "severity": "info",
+      "status": "confirmed",
+      "title": "Five environments remain explicit blocked_unavailable without invented pins",
+      "evidence": "solana.json, cosmos.json, move-sui.json, sovereign-cross-chain.json, and payment-channel.json set verified_source_pin, verified_deployment, and verified_toolchain to null. Status is blocked_unavailable. readiness_accepted and p34_execution_accepted are false. Unblock requirements name a P32 source pin, a chain-specific compiler/runtime, local execution/deployment binding, and later P33/P34 preservation.",
+      "fix": "Do not relabel these as available platforms. To unblock one environment: select and pin an implementation commit through the P32 source gate; locate and verify the chain-specific toolchain and version; bind local execution/deployment configuration; then independently re-review that record."
+    },
+    {
+      "id": "P32-BOUNDED-DISCOVERY",
+      "severity": "info",
+      "status": "confirmed",
+      "title": "Named chain tools are absent from the declared lookup; generic Rust/Go are present and are not chain readiness",
+      "evidence": "Independent which on current PATH and on the original recorded PATH returned null for every named chain tool. Directory checks match the original: p16-tools lists evm among named tools only. rustc and cargo resolved to /home/charl/.cargo/bin; go resolved to /usr/local/go/bin. Discovery timestamps 2026-09-10T17:26:14.024855+00:00 to 2026-09-10T17:26:16.417498+00:00. Searched roots: /home/charl/.local/bin, /home/charl/.cargo/bin, /usr/local/bin, /home/charl/.cache/defiformal-program/program-execution-20260908/p16-tools.",
+      "fix": "None for these records. Do not treat rustc, cargo, or go as Solana/Cosmos/Move readiness."
+    },
+    {
+      "id": "P32-PATH-SCOPE",
+      "severity": "limitation",
+      "status": "in-scope",
+      "title": "Absence from PATH-plus-four-root lookup is not whole-machine or public-network absence",
+      "evidence": "Current PATH string differs from the capture PATH string. A Windows PATH entry .../cardano-node-11.0.1/bin is present; shutil.which('cardano-node') and shutil.which('cardano-cli') remained null. Exact-name listing did not inspect that Windows directory because it is not one of the four declared roots. tool-discovery.json already states this bound.",
+      "fix": "Keep the blocked records. If a Linux chain toolchain is later bound, record its absolute path, version, and SHA-256 instead of expanding this lookup into a whole-machine search."
+    },
+    {
+      "id": "P32-HISTORICAL-PIN-FLAGS",
+      "severity": "info",
+      "status": "confirmed",
+      "title": "source-pin.json historical captured_not_executed flags are retained and are not current EVM unavailability",
+      "evidence": "source-pin.json status captured_not_executed, compiler_binary_verified false, evm_harness not_established. source-bindings.json states those historical flags are retained and that P16-SOURCE-ACCEPTANCE.md separately records accepted scoped execution. Frozen solc/evm receipts and compiler artifacts are present and hash-verified.",
+      "fix": "None. Do not read the historical pin status field as a missing P32 EVM toolchain."
+    },
+    {
+      "id": "P32-NO-P34-OR-PROGRAM",
+      "severity": "limitation",
+      "status": "in-scope",
+      "title": "Readiness records do not accept P34, whole-program completion, or other-environment scores",
+      "evidence": "Every record sets p34_execution_accepted false and new_execution_cases 0. readiness-index.json sets full_p32_accepted false, full_p34_accepted false, whole_program_complete false. evm.json remaining text states prior token0 evidence scores only its scoped EVM function. Spec scenario: EVM pin counts as EVM evidence for the declared function, not as coverage of other environments. Line 1116 is an excerpt, not a toolchain existence proof. No mainnet identity is claimed.",
+      "fix": "Keep P34 open. After P33, run nonempty success and refusal per required environment or keep those environments blocked. Do not inherit EVM scores."
+    },
+    {
+      "id": "P32-PROBE-ARGV-LABELS",
+      "severity": "info",
+      "status": "observed",
+      "title": "Probe helper stored in-process step labels that were not separate argv",
+      "evidence": "commands-raw.json lists --bounded-discovery and --evm-crosscheck on run_probes.py. Those flags were not parsed and were not separate processes. The only nested subprocesses inside run_probes.py were the two absolute-path --version commands. Final commands.json records in-process steps with argv null.",
+      "fix": "Treat commands.json as the command ledger. Preserve commands-raw.json as a failed/misleading source of argv, not as proof of extra processes."
+    }
+  ]
+}
