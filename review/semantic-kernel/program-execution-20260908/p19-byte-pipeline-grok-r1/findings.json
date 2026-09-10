@@ -1,0 +1,159 @@
+{
+  "schema": "defiformal-byte-pipeline-findings/v1",
+  "mark": "BYTE_PIPELINE_R15_CONDITIONAL_PROOF_SCANNER_OPEN_FULL_P19_OPEN",
+  "acceptance": false,
+  "verdict": "CHANGES_REQUIRED",
+  "fresh_session": true,
+  "evidence_classes": {
+    "compiler_proved": "Private Correspondence rebuild then #print axioms on all 247 named source theorems; child_compiler_exit 0; axioms only from {propext, Classical.choice, Quot.sound}.",
+    "successful_execution": "Child compiler exit 0 and no Lean error: line. ProbeAxioms, escaped-key attempt2, and ProbeEscape only.",
+    "source_inspection": "Read of frozen Encode/Decode/CanonicalJson/Correspondence/Verify/R15 REPORT/results/theorems/source-manifest/root precheck/escaped-key diagnostic.",
+    "failed_probe": "Nonzero child compiler exit or Lean error: line. Independent attempt1 replay has zero admissibility proof credit.",
+    "author_captured": "Inspected R15 evidence folder and author commands.json; 54/99/16 and Tests.lean 21 not re-run here.",
+    "unverified": "Not executed in this review."
+  },
+  "findings": [
+    {
+      "id": "R15-UNIVERSAL-OPEN",
+      "severity": "blocker",
+      "class": "EncodeDecodeRoundtripStatement_still_Prop",
+      "evidence_class": "compiler_proved+source_inspection+successful_execution",
+      "source": "lean/DefiKernel/Certificates/Correspondence.lean:1032",
+      "issue": "EncodeDecodeRoundtripStatement remains a def Prop quantifying every StructurallyAdmissibleIR ir to decodeBytes (encodeModule ir) = .ok ir. R15 does not prove that proposition. Full P19 acceptance stays false while this obligation is open.",
+      "actual": {
+        "kind": "def Prop",
+        "is_theorem": false
+      }
+    },
+    {
+      "id": "R15-CONDITIONAL-NOT-UNIVERSAL",
+      "severity": "blocker",
+      "class": "h_lex_h_parse_unproved_success_premises",
+      "evidence_class": "compiler_proved+source_inspection",
+      "source": "Correspondence.lean encodeModule_eq_toUTF8, string_fromUTF8_encodeModule, decodeBytes_eq_of_steps, decodeBytes_encodeModule_of_lex_and_parse",
+      "issue": "encodeModule_eq_toUTF8 is the definitional identity encodeModule ir = (encodeModuleString ir).toUTF8. string_fromUTF8_encodeModule follows from string_fromUTF8?_toUTF8. decodeBytes_encodeModule_of_lex_and_parse is a useful pipeline decomposition: it uses decodeDecodedIR_of_structurallyAdmissible so it does not assume object-decoder success. It still assumes h_lex : scanLexical (encodeModule ir) = .ok () and h_parse : parseCanonicalJson (encodeModuleString ir) = .ok (decodedIRToJson ir). Those premises are unproved. The theorem is not a universal byte roundtrip.",
+      "actual": {
+        "object_decoder_premise": false,
+        "h_lex": "unproved success premise",
+        "h_parse": "unproved success premise",
+        "parse_equality_target": "decodedIRToJson ir, not Json.compress byte equality"
+      }
+    },
+    {
+      "id": "R15-SCANNER-ESCAPED-KEY",
+      "severity": "blocker",
+      "class": "scanLexical_false_duplicate_on_distinct_escaped_keys",
+      "evidence_class": "successful_execution+source_inspection+failed_probe",
+      "source": "Decode.lean scanLexical escape branch; Encode.lean escapeJsonString/jsonObj; CanonicalJson.lean lexString; probes/escaped-key/attempt2 and extra",
+      "issue": "Distinct source-map keys a+newline and literal au000a serialize as a\\u000a and au000a. lexString decodes \\u000a to newline. scanLexical treats a backslash as a one-character skip and appends the following character, so both keys become au000a and it reports duplicateKey au000a. decodeBytes therefore fails. parseCanonicalJson plus decodeDecodedIR succeeds. Observed size 3453, depth 6, max array 32, source-map sorted true. Independent attempt2 stdout hash matches the root diagnostic exactly. True duplicate key same is refused by both scanner and parser. A lone newline key scans as ok under the corrupted identity. Preserving the full canonical string domain requires scanner repair. This is a concrete scanner defect, not a kernel-proved admissible counterexample.",
+      "probe": "probes/escaped-key/attempt2/stdout.log",
+      "actual": {
+        "encoded_source_map": "{\"a\\u000a\":\"1\",\"au000a\":\"2\"}",
+        "scanLexical": "duplicateKey au000a",
+        "decodeBytes": "duplicateKey au000a",
+        "parser_object_decoder": "ok",
+        "byte_length": 3453,
+        "json_depth": 6,
+        "max_array_length": 32,
+        "sorted": true,
+        "true_duplicate": "scanner and parser both duplicateKey same",
+        "lexString_backslash_u000a": "ok newline",
+        "attempt2_stdout_sha256": "330523d46fe73c1cbcadd454611ac3bf415a6ef42c6ebc3e606913e13f1ad928",
+        "matches_root_attempt2": true,
+        "formal_admissibility_proved": false
+      }
+    },
+    {
+      "id": "R15-ATTEMPT1-NO-PROOF-CREDIT",
+      "severity": "note",
+      "class": "failed_decide_sorryAx_not_admissible_counterexample",
+      "evidence_class": "failed_probe",
+      "source": "probes/escaped-key/attempt1/Probe.lean; root-original/attempt1",
+      "issue": "Root attempt1 added theorem escapedKeyCollision_admissible : StructurallyAdmissibleIR collisionIR. Independent replay against frozen R15: decide failed on the encodeModule byte-size bound, compiler exit 1, #print axioms includes sorryAx. Zero proof credit. Original root source and log are preserved separately from this replay. native_decide is not accepted mathematical evidence; this failed decide is also not a proof.",
+      "actual": {
+        "exit": 1,
+        "sorryAx": true,
+        "probe_sha256": "4362d31588d3b0aa3c843ad4d83059eb43d008a298d55b84927dd787ab03733e"
+      }
+    },
+    {
+      "id": "R15-PARSER-STEPS-ASSUME-CHILD-FOLD",
+      "severity": "note_progress_with_remaining_limits",
+      "class": "step_facts_not_recursive_induction",
+      "evidence_class": "compiler_proved+source_inspection",
+      "source": "CanonicalJson.lean parse_arr_feed_elem, parse_obj_field_step, parse_obj_field_comma, parseTokens_of_foldlM, parseCanonicalJson_of_tokenize_parseTokens",
+      "issue": "parseStep_* equalities are context-general definitional facts. parse_arr_feed_elem and parse_obj_field_* assume a successful child foldlM (h_feed / h_val) and then append comma or key/colon. parse_obj_field_step's _h_not_dup is unused. These are compositional step facts. They do not prove recursive inversion of arbitrary nested arrays and objects.",
+      "actual": {
+        "child_fold_success_assumed": true,
+        "recursive_induction": false
+      }
+    },
+    {
+      "id": "R15-WITNESS-NOT-GENERIC-NUMBER",
+      "severity": "note_progress_with_remaining_limits",
+      "class": "fixed_witness_not_generic_numeric_inverse",
+      "evidence_class": "compiler_proved+source_inspection",
+      "source": "Correspondence.lean parseCanonicalJson_encodeRat_witness, parseCanonicalJson_encodeCell_witness, parseCanonicalJson_encodeParty",
+      "issue": "Scalar parser inverses for party/asset/domain/partyRef/cellRef are enumeration case splits. parseCanonicalJson_encodeRat_witness is only RatEnc 0/1. parseCanonicalJson_encodeCell_witness is only the main/alice/usd cell. Generic encoded numeric/rational parser inversion is not proved by those fixed examples.",
+      "actual": {
+        "rat_witness": [0, 1],
+        "cell_witness": ["main", "alice", "usd"]
+      }
+    },
+    {
+      "id": "R15-WORDING-RESOLVES-ALL",
+      "severity": "blocker",
+      "class": "report_overstates_closed_findings_and_decoder_assumptions",
+      "evidence_class": "author_captured+source_inspection",
+      "source": "review/semantic-kernel/certificates/p19/implementation/agy-r15-proof/REPORT.md; results.json",
+      "issue": "The R15 report says it resolves all five R14 root-precheck findings and that decodeBytes_encodeModule_of_lex_and_parse requires zero decoder assumptions. Finding 1 (universal Prop) is acknowledged as still open, not resolved. Finding 3 is a conditional reduction, not a closed decodeBytes theorem. Zero decoder assumptions is accurate only for the object decoder; h_lex and h_parse remain unproved success premises. Disposition PARTIAL_PROOF_WORK is otherwise correctly retained. auditor_model is correctly pending.",
+      "actual": {
+        "author_disposition": "PARTIAL_PROOF_WORK",
+        "auditor_model_pending": true,
+        "universal_closed": false,
+        "zero_success_premises": false
+      }
+    },
+    {
+      "id": "R15-247-CONFIRMED",
+      "severity": "progress",
+      "class": "independent_exact_name_axiom_inventory",
+      "evidence_class": "compiler_proved+successful_execution",
+      "source": "probes/axioms247",
+      "issue": "After private rebuild, exact-name #print axioms of 37 CanonicalJson plus 210 Correspondence theorems returned 247 names, 236 standard-axiom, 11 none, 0 forbidden. lemma exprDepth_pos is extra and not in the 247. This inventory is separate from Verify.lean scope counts.",
+      "actual": {
+        "named": 247,
+        "standard_axioms": 236,
+        "none": 11,
+        "forbidden": 0,
+        "exit": 0
+      }
+    },
+    {
+      "id": "R15-287-408-SCOPE",
+      "severity": "note",
+      "class": "Verify_lean_scope_line_not_named_inventory",
+      "evidence_class": "author_captured",
+      "source": "agy-r15-proof/compiler-axiom-audit.log; Certificates/Verify.lean",
+      "issue": "Author 287/408 is a Verify.lean #audit_axioms PASS line, not the 247 named CanonicalJson+Correspondence inventory and not the whole Certificates import prefix. Author log: Certificates 1392 theorems / 2520 supplemental; Typed 420 / 677; Composition 287 / 408. This review did not re-run Verify.lean or the unchanged 7/21 suites.",
+      "actual": {
+        "named_247": 247,
+        "author_cited": "287/408",
+        "author_log_Composition": "287/408",
+        "author_log_Certificates": "1392/2520"
+      }
+    },
+    {
+      "id": "R15-SOURCE-ORDER",
+      "severity": "note",
+      "class": "jsonObj_preserves_list_order_mkObj_sorts",
+      "evidence_class": "source_inspection+successful_execution",
+      "source": "Encode.lean jsonObj; Correspondence.lean envelopeToJson, envelopeOrderedFields, envelopeSortedFields; ProbeEscape JSONOBJ_ORDER",
+      "issue": "Production jsonObj concatenates fields in list order and does not sort. Lean.Json.mkObj sorts. encodeEnvelope uses jsonObj in declaration order. envelopeToJson uses mkObj. The R15 parse-equality target is decodedIRToJson, not .compress byte equality. No hypothetical blanket parent-symlink requirement: the fixture runner live-relative-symlink test is a sibling target, not a parent path.",
+      "actual": {
+        "jsonObj_ba": "{\"b\":1,\"a\":2}",
+        "parent_symlink_requirement": false
+      }
+    }
+  ]
+}
