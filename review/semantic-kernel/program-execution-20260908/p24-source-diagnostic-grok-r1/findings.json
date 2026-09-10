@@ -1,0 +1,107 @@
+{
+  "schema": "defiformal-p24-source-diagnostic-review-findings/v1",
+  "utc": "2026-09-10T10:41:51.834201+00:00",
+  "decision": "usable",
+  "changes_required": false,
+  "P24_accepted": false,
+  "findings": [
+    {
+      "id": "P24-DIAG-IDENTS",
+      "severity": "info",
+      "status": "confirmed",
+      "title": "Pinned source and compile identities hold",
+      "detail": "115/115 bound files match inputs.json. Solc 0.8.19 viaIR optimizer 999999 Paris bytecodeHash none. Geth evm 1.15.11. Morpho creation/runtime 16014/15582 bytes match p24-compile-readiness exactly in both diagnostic compiles. Fresh compile stdout is bit-identical to pinned compile.stdout. 27 git blob SHA-1 values recompute from snapshots."
+    },
+    {
+      "id": "P24-DIAG-REPLAY",
+      "severity": "info",
+      "status": "confirmed",
+      "title": "Five EVM cases replay bit-identically",
+      "detail": "Private-directory recompile then evm run of four public-call scenarios and one two-supplier probe returned exit 0. Decoded arrays match pinned results. Raw stdout SHA-256 matches original evidence for all five cases."
+    },
+    {
+      "id": "P24-DIAG-ATTEMPT1",
+      "severity": "info",
+      "status": "classified-failure",
+      "title": "Attempt 1 solc JSON DeclarationError despite process 0",
+      "detail": "Archived attempt-1 input recompiled to process exit 0 with DeclarationError 2904: WAD is not in ConstantsLib.sol. Bit-identical compile stdout. Zero EVM executions. Not a production Morpho defect and not execution credit."
+    },
+    {
+      "id": "P24-DIAG-ATTEMPT2",
+      "severity": "info",
+      "status": "classified-failure",
+      "title": "Attempt 2 genesis number 1 panics before code",
+      "detail": "Archived attempt2/paris-genesis.json has number 0x1. evm run exits 2 with panic can't commit genesis block with number > 0 and empty stdout. Stack pointer bytes differ across runs; panic text does not. Successful runner reuses the exact attempt-2 compile with block 0. Not a production Morpho defect and not execution credit."
+    },
+    {
+      "id": "P24-DIAG-HEALTHY",
+      "severity": "limitation",
+      "status": "in-scope",
+      "title": "Healthy refusal asserts market and position structs only",
+      "detail": "Scenario 0 requires exact HEALTHY_POSITION and keccak256 of encoded Market and Position before/after. It does not compare global token balances or other storage. Observed structs are unchanged."
+    },
+    {
+      "id": "P24-DIAG-ZERO-SEIZE",
+      "severity": "limitation",
+      "status": "in-scope",
+      "title": "Zero seized collateral is a returned quantity, not the input constraint",
+      "detail": "Scenario 1 requests seizedAssets 0 and repaidShares 1. UtilsLib.exactlyOneZero applies to that requested pair. Morpho returns seized 0, repaid 1; collateral remains 400; borrow assets 300 to 299. Do not treat returned seized 0 as a violation of exactly-one-zero."
+    },
+    {
+      "id": "P24-DIAG-MIN-BRANCH",
+      "severity": "info",
+      "status": "confirmed",
+      "title": "One extra borrow share reaches the actual min branch",
+      "detail": "Scenario 3 remaining-after-repay 907499999999999998; reconstructed unclamped conversion 907499999999999999; Morpho post-state borrow assets/shares and collateral 0; totalSupplyAssets falls by the remaining amount. The unclamped figure is a harness reconstruction using pinned SharesMathLib, not a Morpho return value."
+    },
+    {
+      "id": "P24-DIAG-TWO-SUPPLIER",
+      "severity": "info",
+      "status": "confirmed",
+      "title": "Rounded expectedSupplyAssets decreases are not market loss",
+      "detail": "Market supply assets 2 to 1 (loss 1). Pinned MorphoBalancesLib.expectedSupplyAssets via MorphoLib extSloads returns [1,1] then [0,0] (summed decrease 2). Each supplier keeps 1000000 shares. Counterexample only; no allocation policy or sequential withdrawal."
+    },
+    {
+      "id": "P24-DIAG-FEE-CAVEAT",
+      "severity": "info",
+      "status": "confirmed",
+      "title": "expectedSupplyAssets feeRecipient caveat does not apply here",
+      "detail": "Owner is the probe at receiver 0x200. feeRecipient remains address(0). Market fee is 0. elapsed is 0 so interest is skipped. Suppliers are 0x1001 and 0x1002."
+    },
+    {
+      "id": "P24-DIAG-UPSTREAM-TESTS",
+      "severity": "limitation",
+      "status": "in-scope",
+      "title": "Upstream liquidation tests are source references, not executed",
+      "detail": "LiquidateIntegrationTest.sol tests_executed 0. testBadDebtOverTotalBorrowAssets has no explicit post-state assertions. testSeizedAssetsRoundUp expects seized 0 / repaid 1. Tests use mocks and cheatcodes. Do not label these source tests newly passing."
+    },
+    {
+      "id": "P24-DIAG-FORK",
+      "severity": "limitation",
+      "status": "in-scope",
+      "title": "Configured Paris local runtime, not a deployed network",
+      "detail": "Genesis enables London and merge, omits shanghaiTime and cancunTime, block 0, timestamp 1. evm run injects harness runtime. Morpho is created with new Morpho(address(this)). No unobserved deployed-network or arbitrary-transaction reachability claim."
+    },
+    {
+      "id": "P24-DIAG-MISSING-PINS",
+      "severity": "note",
+      "status": "recorded",
+      "title": "Harness, launcher, and genesis-template pins are outside Morpho git blobs",
+      "detail": "Compiler-embedded production, mock, and periphery sources all match bound snapshots and recorded git blobs. Missing Morpho git blobs: root harnesses, geth launcher sources, and the p16 istanbul genesis template cited by runner-r3.py. IrmMock is pinned and unused. Resulting paris-genesis.json is hash-bound."
+    },
+    {
+      "id": "P24-DIAG-SIZE-WARNING",
+      "severity": "note",
+      "status": "recorded",
+      "title": "Two-supplier probe exceeds 24576 bytes",
+      "detail": "Solc warning errorCode 5574: TwoSupplierProbe runtime 29052 bytes. Local evm run injects the runtime. Not a Morpho production bytecode defect and not a mainnet-deployability claim for the harness."
+    },
+    {
+      "id": "P24-DIAG-NO-ACCEPTANCE",
+      "severity": "scope",
+      "status": "recorded",
+      "title": "No P24, task 25.1, Lean, or model acceptance",
+      "detail": "Usable diagnostic source evidence only. Allocation/remainder contract, mutants, interest, fees, callbacks, and supplier withdrawals remain open. A correctly scoped diagnostic does not require an extra full-program proof."
+    }
+  ]
+}
