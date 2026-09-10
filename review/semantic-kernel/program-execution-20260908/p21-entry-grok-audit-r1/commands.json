@@ -1,0 +1,72 @@
+{
+  "schema": "defiformal-p21-entry-grok-audit-commands/v1",
+  "note": "Read-only inspection and diagnostic calculation only. No compilation, no Lean build, no solc, no EVM, no compiled mutant, no source execution credit.",
+  "not_run": [
+    "solc",
+    "lake build",
+    "lean",
+    "hardhat",
+    "yarn",
+    "evm",
+    "compiled SwapMath M09",
+    "network source acquisition"
+  ],
+  "commands": [
+    {
+      "name": "inventory-sandbox-files",
+      "kind": "read_only_inspection",
+      "not_compilation": true,
+      "not_execution_credit": true,
+      "argv": ["find", "/home/charl/.cache/defiformal-program/program-execution-20260908/p21-entry-grok-audit-sandbox", "-type", "f"],
+      "cwd": "/home/charl/.cache/defiformal-program/program-execution-20260908/p21-entry-grok-audit-sandbox",
+      "result": "114 files. Matches inputs.json files_verified."
+    },
+    {
+      "name": "verify-inputs-json-hashes",
+      "kind": "read_only_inspection",
+      "not_compilation": true,
+      "not_execution_credit": true,
+      "description": "SHA-256 of each of the 114 inputs.json paths in the sandbox compared to the declared digest. Also compared the 41 original_archive_files and 11 source_files_verified records from p21-entry-preparation.json.",
+      "evidence": "logs/hash-verification.json",
+      "result": "114/114 inputs match. 41/41 archive members match. 11/11 pinned source files match. Resource-gate acceptance hashes match."
+    },
+    {
+      "name": "inspect-pinned-swap-and-libraries",
+      "kind": "read_only_inspection",
+      "not_compilation": true,
+      "not_execution_credit": true,
+      "paths": [
+        "review/semantic-kernel/program-loop-20260908/concentrated-liquidity-source-readiness-gpt6-evidence/upstream/contracts/UniswapV3Pool.sol",
+        "review/semantic-kernel/program-loop-20260908/concentrated-liquidity-source-readiness-gpt6-evidence/upstream/contracts/libraries/SwapMath.sol",
+        "review/semantic-kernel/program-loop-20260908/concentrated-liquidity-source-readiness-gpt6-evidence/upstream/contracts/libraries/Tick.sol",
+        "review/semantic-kernel/program-loop-20260908/concentrated-liquidity-source-readiness-gpt6-evidence/upstream/contracts/libraries/TickMath.sol",
+        "review/semantic-kernel/program-loop-20260908/concentrated-liquidity-source-readiness-gpt6-evidence/upstream/contracts/libraries/TickBitmap.sol",
+        "review/semantic-kernel/program-loop-20260908/concentrated-liquidity-source-readiness-gpt6-evidence/upstream/contracts/libraries/SqrtPriceMath.sol",
+        "review/semantic-kernel/program-loop-20260908/concentrated-liquidity-source-readiness-gpt6-evidence/upstream/contracts/libraries/FullMath.sol",
+        "review/semantic-kernel/program-loop-20260908/concentrated-liquidity-source-readiness-gpt6-evidence/upstream/contracts/libraries/UnsafeMath.sol",
+        "review/semantic-kernel/program-loop-20260908/concentrated-liquidity-source-readiness-gpt6-evidence/upstream/contracts/libraries/LiquidityMath.sol",
+        "review/semantic-kernel/program-loop-20260908/concentrated-liquidity-source-readiness-gpt6-evidence/upstream/contracts/UniswapV3Factory.sol"
+      ]
+    },
+    {
+      "name": "m09-direction-flip-diagnostic",
+      "kind": "diagnostic_calculation",
+      "not_compilation": true,
+      "not_compiled_mutant": true,
+      "not_source_execution": true,
+      "not_p16_compiled_swapmath_evidence": true,
+      "description": "Copied cl_oracle.compute_swap_step source, replaced the single assignment zero_for_one = sqrt_current >= sqrt_target with zero_for_one = sqrt_current < sqrt_target, and compared full returned dictionaries or named OracleError values for F28, F29, F30, F31, F32, F33. Frozen literals were not edited. The original oracle function body remains the >= predicate.",
+      "oracle": "review/semantic-kernel/concentrated-liquidity/planning/grok-gpt6-official-r1/cl_oracle.py",
+      "evidence": "logs/m09-diagnostic.json",
+      "result": "F28 amountIn 2 becomes 1. F31 amountOut 0 becomes 1. F32 and F33 remain invalidFee and intOverflow. Import created a bytecode cache under the sandbox. That cache was deleted. Sandbox file count returned to 114/114 matching inputs.json."
+    },
+    {
+      "name": "restore-sandbox-pycache",
+      "kind": "sandbox_restore",
+      "not_compilation": true,
+      "not_execution_credit": true,
+      "description": "Deleted the import-created __pycache__/cl_oracle.cpython-314.pyc so frozen sandbox bytes remain the 114 inputs.json members.",
+      "result": "sandbox_files 114, extra none, 114/114 hashes match"
+    }
+  ]
+}

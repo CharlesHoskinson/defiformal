@@ -1,0 +1,218 @@
+{
+  "schema": "defiformal-p21-source-entry-planning-repair-findings/v1",
+  "auditor": {
+    "role": "fresh native Grok4.6 high independent source-entry and planning-repair auditor",
+    "requested_model": "grok-4.6",
+    "effort": "high",
+    "fresh_session": true
+  },
+  "disposition": "PLAN_REPAIR_REQUIRED",
+  "p21_accepted": false,
+  "repaired_plan_accepted": false,
+  "implementation_authorized": false,
+  "closes_program_task_22_1": false,
+  "binding_contracts": {
+    "program_tasks": "openspec/changes/reusable-verification-platform-program/tasks.md 22.1-22.8",
+    "sprint": "openspec/changes/reusable-verification-platform-program/sprint-index.json P21",
+    "family_spec": "openspec/changes/reusable-verification-platform-program/specs/source-bound-library-families/spec.md requirement Full concentrated-liquidity traversal",
+    "matrix": "openspec/changes/reusable-verification-platform-program/proof-obligation-dependency-matrix.json family P21",
+    "plan_acceptance": "review/semantic-kernel/program-execution-20260908/PLAN-ACCEPTANCE.md",
+    "preparation": "review/semantic-kernel/program-execution-20260908/p21-entry-preparation.json",
+    "original_unaccepted_plan": "openspec/changes/concentrated-liquidity-library/",
+    "upstream": "Uniswap v3-core v1.0.0 commit e3589b192d0be27e100cd0daaf6c97204fdb1899"
+  },
+  "hash_verification": {
+    "inputs_json_sha256": "f07308e490939cd278643bdb38881203bf8d9b78e1d886b18d3bfb0b7a796d45",
+    "inputs_files_matched": "114/114",
+    "original_archive_members_matched": "41/41",
+    "declared_original_archive_sha256": "e1cd08f9f8a843355f1b249a013c9de0d29e7e1ebf1d5a3e8716d6d7621baf77",
+    "source_pin_files_matched": "11/11",
+    "tar_gz_in_sandbox": false,
+    "note": "This sandbox holds the 41 extracted archive members. It does not hold the tar.gz bytes. Member hashes match the preparation record."
+  },
+  "findings": [
+    {
+      "id": "P21-F01-TRAVERSAL-INCREMENT",
+      "severity": "blocking_for_authoring",
+      "binding_requirement": "P21 successful_exit and program task 22.7 require declared multi-word tick traversal with liquidity and amount/fee accounting, a two-tick success, and independent acceptance. Naming remainder R-FULL-TRAVERSAL must not close R22, P21, or the program.",
+      "source_refs": [
+        "UniswapV3Pool.sol:641-730 while remaining != 0 and price != limit",
+        "UniswapV3Pool.sol:646-657 nextInitializedTickWithinOneWord plus MIN/MAX clamp",
+        "UniswapV3Pool.sol:663-679 computeSwapStep and amountSpecifiedRemaining/amountCalculated updates",
+        "UniswapV3Pool.sol:693-725 initialized Tick.cross, signed liquidityNet, addDelta, tickNext-1",
+        "TickBitmap.sol:42-77 one-word search only",
+        "program tasks.md:180 22.7",
+        "sprint-index.json P21 successful_exit",
+        "source-bound-library-families spec Scenario One-word bitmap is not full traversal"
+      ],
+      "original_plan": "concentrated-liquidity-library design.md Decision 1, remainder-obligations.json R-FULL-TRAVERSAL, source-correspondence.json UniswapV3Pool.swap kind out_of_scope, proposed-api.json termination.out_of_scope, tasks.md 7.4, spec CLE03/E06 all exclude Pool.swap traversal from this increment.",
+      "repair": "The repaired P21 residual plan must declare a limited traversal increment that repeats one-word search across at least two initialized ticks and across a bitmap word edge, applies signed liquidityNet only on initialized crosses, and accounts amount/fee remaining across steps. Preserve the original failed no-traversal scope as historical evidence. Do not close by renaming R-FULL-TRAVERSAL.",
+      "not_a_new_requirement": true
+    },
+    {
+      "id": "P21-F02-SPL-REFUSAL-VS-EXACT-OUT-CAP",
+      "severity": "blocking_for_authoring",
+      "binding_requirement": "Exact-output capping in SwapMath.sol lines 87-89 is bounded success, not executor refusal. Declared pool admission failure for this scope is UniswapV3Pool.swap SPL at lines 608-613.",
+      "source_refs": [
+        "SwapMath.sol:87-89 if (!exactIn && amountOut > uint256(-amountRemaining)) amountOut = uint256(-amountRemaining)",
+        "UniswapV3Pool.sol:608-613 require(zeroForOne ? limit < current && limit > MIN_SQRT_RATIO : limit > current && limit < MAX_SQRT_RATIO, 'SPL')",
+        "UniswapV3Pool.sol:603 AS amountSpecified != 0",
+        "UniswapV3Pool.sol:607 LOK unlocked",
+        "fixtures.json F30 exact-output cap success",
+        "observation-contracts.json currently labels SPL as out of scope pool price limit",
+        "program tasks.md:180 and family spec Scenario Exact-output cap is success"
+      ],
+      "original_plan": "F30 already treats the cap as success. observation-contracts.json and remainder-obligations.json keep SPL with AS/LOK/IIA as out-of-scope pool entry. That is the failed original scope record.",
+      "repair": "Keep F30 as bounded success. Add an SPL admission-refusal fixture and theorem against Pool.sol:608-613. Do not classify the cap as refusal. Do not silently promote AS, LOK, lock, callback, IIA, or payment into this increment. 22.6 keeps those named until pinned and observed.",
+      "not_a_new_requirement": true
+    },
+    {
+      "id": "P21-F03-TRAVERSAL-SOURCE-FIXTURE-THEOREM-MUTANT",
+      "severity": "blocking_for_authoring",
+      "binding_requirement": "P21 matrix success_class is traversal that crosses at least two initialized ticks with independently expected amounts and fees plus residual token1/delta. Characteristic mutation is skip a tick cross or drop fee remainder. Source-independent negative is liquidity delta applied without a corresponding tick cross.",
+      "source_refs": [
+        "Tick.sol:166-182 cross returns info.liquidityNet and also writes fee/seconds outside fields",
+        "UniswapV3Pool.sol:718-722 if (zeroForOne) liquidityNet = -liquidityNet; state.liquidity = LiquidityMath.addDelta(...)",
+        "UniswapV3Pool.sol:719 comment safe because liquidityNet cannot be type(int128).min",
+        "UniswapV3Pool.sol:725 state.tick = zeroForOne ? step.tickNext - 1 : step.tickNext",
+        "TickMath.sol:8-16 MIN_TICK/MAX_TICK and MIN/MAX_SQRT_RATIO used by clamp and SPL",
+        "proof-obligation-dependency-matrix.json P21 family"
+      ],
+      "original_plan": "No Tick.cross API, no two-tick fixture, no multi-word walk, no SPL fixture, no skip-cross mutant. M07 already drops remainder-as-fee inside one computeSwapStep. F37-F39 are one-word bitmap primitives.",
+      "repair": "The repaired plan must explicitly declare, for the already-required limited traversal: (1) source correspondence for the loop slice above, with Tick.cross liquidityNet in scope and Tick.cross fee/oracle outside writes remainder unless included with fixtures, (2) a two-initialized-tick success fixture with independent amount/fee/liquidity literals, (3) a multi-word continuation observation, because two ticks in one word do not discharge declared multi-word traversal, (4) SPL refusal fixture, (5) a skip-initialized-cross mutant, (6) a source-independent liquidity-delta-without-cross negative, (7) theorems for signed liquidityNet application and step amount/fee accumulation. Drop-fee-remainder may reuse M07 for the single-step remainder branch. It does not replace skip-cross.",
+      "not_a_new_requirement": true
+    },
+    {
+      "id": "P21-F04-M09-F28-INTERFERENCE",
+      "severity": "blocking_for_authoring",
+      "binding_requirement": "Compiled M09 SwapMath.computeSwapStep execution belongs to P21. The per-mutant unaffected-control set must exclude or replace F28. Preserve the failed original plan. P16 control-plan correction is not compiled M09 evidence.",
+      "source_refs": [
+        "SwapMath.sol:37 bool zeroForOne = sqrtRatioCurrentX96 >= sqrtRatioTargetX96",
+        "planned-mutations.json M09 designated_false F31 unaffected_positive F28",
+        "fixtures.json F28 amountIn 2 / F31 amountIn 1 amountOut 0 zeroForOne false",
+        "cl_oracle.py:238-242 invalidFee and intOverflow before the direction assignment",
+        "observation-contracts.json computeSwapStep precedence invalidFee then intOverflow then nested errors",
+        "spec CLE02 Scenario E03 currently requires F28 true for M01-M12",
+        "family spec Scenario M09 does not protect F28 and Scenario Compiled M09 uses the repaired control set"
+      ],
+      "original_plan": "M09 flips zeroForOne to current < target and keeps F28 as sibling. Global positives include F28 for every mutant. Status PLANNED_NOT_IMPLEMENTED_OR_COMPILED.",
+      "diagnostic": "Independent oracle copy-edit of the single direction assignment, not a compiled mutant. F28 amountIn 2 becomes 1 and zeroForOne true becomes false. F31 amountIn stays 1, amountOut 0 becomes 1, zeroForOne false becomes true. F29 numeric fields stay 0/0/1 but zeroForOne flips. F30 amountIn 3 becomes 2 and next price changes. F32 remains invalidFee. F33 remains intOverflow. Frozen literals were not edited.",
+      "repair": "Keep the original M09/F28 record as failed evidence. Exclude F28 from compiled M09 unaffected controls. Name F31 detection fields as amountOut and/or zeroForOne, not amountIn. Replacement-control constraints from existing fixtures: F32 is defensible only if production refuses feePips>=1e6 before the direction predicate (Lean/oracle plan). F32 is not a pinned-Solidity SwapMath sibling because SwapMath.sol does not check feePips. F33 has the same Lean-only constraint for int256 min. F29 is numeric-stable and direction-unstable. F01/F10/F40 are not SwapMath siblings. Repair CLE02/E03 so M09 is not required to keep F28 true. Do not change frozen F28/F31 literals.",
+      "not_a_new_requirement": true
+    },
+    {
+      "id": "P21-F05-TICKMATH-QUANTIFIED-3.3",
+      "severity": "blocking_for_authoring",
+      "binding_requirement": "Program 22.2 and original task 3.3 require bound refusals, forward monotonicity on [MIN_TICK, MAX_TICK], and the final inverse choice equation. Generic statements must not be replaced by the five finite round-trips.",
+      "source_refs": [
+        "TickMath.sol:23-25 absTick bound require 'T'",
+        "TickMath.sol:200-203 tickLow/tickHi and final choice tick = tickLow == tickHi ? tickLow : getSqrtRatioAtTick(tickHi) <= sqrtPriceX96 ? tickHi : tickLow",
+        "original tasks.md 3.1-3.3",
+        "proof-strategy.json generic forward monotonicity, not_claimed generic inverse equals greatest-tick unless separately proved",
+        "spec cl-tick-math T01-T06 are finite fixtures including five round-trips"
+      ],
+      "original_plan": "Implementation follows the captured bit-constant and msb/log/choice algorithm. Fixtures F10-F19 compare against independent greatest-tick literals. Spec scenarios are finite. Task 3.3 and proof-strategy already demand quantified monotonicity and the choice equation.",
+      "repair": "The repaired plan must keep 3.3 as generic proof obligations: |tick|>MAX_TICK refuse, forward monotonicity on the closed tick interval, and the source final-choice equation at TickMath.sol:203. Finite F10-F19 and T06 remain necessary and are not a substitute. Do not silently claim a generic inverse-equals-greatest-tick theorem. The original proof-strategy already forbids that silent substitute.",
+      "not_a_new_requirement": true
+    },
+    {
+      "id": "P21-F06-TOKEN1-DELTA-RESIDUAL-4.1",
+      "severity": "blocking_for_authoring",
+      "binding_requirement": "P21 must own residual original-4.1 amount0/amount1 deltas and token1 next-price getNextSqrtPriceFromAmount1RoundingDown. It must not be dropped because P16 is narrow.",
+      "source_refs": [
+        "SqrtPriceMath.sol:68-97 getNextSqrtPriceFromAmount1RoundingDown",
+        "SqrtPriceMath.sol:84 add path uint256(sqrtPX96).add(quotient).toUint160() SafeCast",
+        "SqrtPriceMath.sol:89-95 remove path UnsafeMath.divRoundingUp for amount<=uint160.max, require(sqrtPX96 > quotient), unchecked uint160(sqrtPX96 - quotient)",
+        "SqrtPriceMath.sol:182-194 getAmount1Delta",
+        "SqrtPriceMath.sol:153-173 getAmount0Delta including UnsafeMath.divRoundingUp on the round-up path",
+        "fixtures.json F20-F23 deltas, F24/F27 token0 next-price only, zero token1 next-price fixtures",
+        "legacy-task-disposition.json original 4.1 P21 contribution"
+      ],
+      "original_plan": "proposed-api.json lists getNextSqrtPriceFromAmount1RoundingDown via getNextSqrtPriceFromInput/Output. Task 4.1 verifies F20-F27. Those fixtures never call the token1 next-price helper.",
+      "repair": "Keep F20-F27. Add residual token1 next-price success/refusal observations for the Amount1 helper, including the uint160-max quotient branch split, SafeCast add downcast, remove require sqrtPX96 > quotient, and the direct-helper liquidity/price guards versus the Input/Output wrapper requires. This is residual 4.1, not a new family.",
+      "not_a_new_requirement": true
+    },
+    {
+      "id": "P21-F07-BITMAP-LIQUIDITY-FACTORY-NOT-TRAVERSAL",
+      "severity": "blocking_for_authoring",
+      "binding_requirement": "22.4 executes original 5.1-5.3 without claiming whole-pool traversal. 22.7 still requires the declared traversal increment.",
+      "source_refs": [
+        "TickBitmap.sol:42-77 nextInitializedTickWithinOneWord",
+        "TickBitmap.sol:48-49 compress floor adjustment",
+        "LiquidityMath.sol:10-16 addDelta LS/LA",
+        "UniswapV3Factory.sol:26-31 builtin (500,10),(3000,60),(10000,200)",
+        "UniswapV3Factory.sol:61-67 enableFeeAmount fee < 1000000 and 0 < spacing < 16384",
+        "original tasks.md 5.3 verify these proofs do not claim whole-pool traversal or Tick.cross"
+      ],
+      "original_plan": "F34-F44 cover compress, position, one-word search, addDelta, factory predicates. Task 5.3 already forbids claiming traversal from one-word proofs.",
+      "repair": "Keep 5.1-5.3 as library primitives. Do not mark 22.7 or R22 done from F37-F39. Traversal records in P21-F01 and P21-F03 are additional already-required artifacts.",
+      "not_a_new_requirement": true
+    },
+    {
+      "id": "P21-F08-SOURCE-WIDTH-AND-NAMED-GAPS",
+      "severity": "blocking_for_authoring",
+      "binding_requirement": "22.6 keeps G-FULLMATH-ASSEMBLY and G-NO-SOLC-DIFFERENTIAL explicit until separately discharged. Solidity 0.7.6 wrap is not 0.8 checked arithmetic. P16 source evidence and P17 platform reuse open dependencies. They do not discharge wider-family proofs or full P21 source evidence.",
+      "source_refs": [
+        "hardhat.config.ts solidity 0.7.6 optimizer 800 bytecodeHash none",
+        "FullMath.sol:26-54 assembly mulmod/CRT remainder",
+        "SwapMath.sol:40 1e6 - feePips with no fee<1e6 guard",
+        "SwapMath.sol:57 uint256(-amountRemaining) on exact-out",
+        "SqrtPriceMath.sol:40-47 token0 wrap-check and uint160 truncation on add",
+        "SqrtPriceMath.sol:84 vs 95 token1 SafeCast add versus unchecked uint160 remove",
+        "UnsafeMath.sol:8-15 y=0 unspecified",
+        "remainder-obligations.json named_gaps",
+        "P16-SOURCE-ACCEPTANCE.md token0 twelve-case campaign only",
+        "P17-ACCEPTANCE.md platform_reuse accepted, P21 remains open"
+      ],
+      "original_plan": "Named gaps G-FULLMATH-ASSEMBLY, G-UNSAFEMATH-ZERO, G-UINT160-UNCHECKED-DOWNCAST, G-INT256-MIN-NEGATION, G-FEE-PIPS-FACTORY-CONTEXT, G-NO-SOLC-DIFFERENTIAL, G-NO-DEPLOYMENT.",
+      "repair": "Retain those named gaps. Distinguish Lean strengthenings F32/F33 from source wrap. Distinguish token1 SafeCast add downcast from token0 unchecked add truncation and from token1 unchecked remove downcast. Distinguish one-word bitmap from multi-word traversal. Reuse of P16 compiler identity is planning input, not P21 source-campaign discharge. P17 reuse does not prove TickMath, SwapMath, token1, bitmap, or traversal.",
+      "not_a_new_requirement": true
+    },
+    {
+      "id": "P21-F09-MIXED-IDS-AND-22-1-NOT-CLOSED",
+      "severity": "blocking_for_authoring",
+      "binding_requirement": "22.8 closes mixed original IDs only after corresponding P16 contributions exist. Original 1.2 closes only after both accepted planning-slice outcomes exist. This audit is not that residual-slice planning review and does not close 22.1.",
+      "source_refs": [
+        "program tasks.md:174 22.1 and :181 22.8",
+        "PLAN-ACCEPTANCE.md P16/P21 independent planning slices",
+        "p21-entry-preparation.json planning_accepted false",
+        "READINESS.md gate accepted false"
+      ],
+      "original_plan": "Whole-library freeze never independently accepted. Gate accepted remains false.",
+      "repair": "AGY authors a repaired residual planning slice. Independent review of that slice is 22.1. Frozen program text still names GPT-6 as the historical checker role. Current user routing is AGY Gemini3.8 Flash High author and fresh Grok4.6 high audit. Do not treat this source-entry audit as 22.1 closeout or as original 1.2.",
+      "not_a_new_requirement": true
+    },
+    {
+      "id": "P21-F10-SIGNED-2.1-AND-FULL-CAMPAIGNS",
+      "severity": "blocking_for_authoring",
+      "binding_requirement": "P21 owns TickMath/SwapMath/bitmap/factory, all 45 fixtures, M01-M12 with repaired M09 controls, residual proof/runtime/audit/inventory/review tasks, and original 7.4 remainder recording after the declared traversal split.",
+      "source_refs": [
+        "original tasks.md 2.1 Types.lean Signed widths and F45",
+        "original tasks.md 6.1-6.5 and 7.1-7.4",
+        "fixtures.json 45 ids F01-F45 all execution not_run",
+        "planned-mutations.json 12 mutants status PLANNED_NOT_IMPLEMENTED_OR_COMPILED",
+        "P16 planning review R3 retained signed/tick/fee/F45 in P21 residual disposition"
+      ],
+      "original_plan": "One increment owned all of 2.1 and 6.x. P16 took unsigned token0 and FullMath substrate. P21 still owes Signed/I24/I128/I256, F45, the 45-fixture campaign, namespace-wide audit, and residual review/build.",
+      "repair": "Declare 2.1 residual Signed/F45 in the P21 slice. Keep all 45 original fixture literals. Keep M01-M12 with the M09 control repair. Keep 6.2/6.4/6.5/7.1-7.3 as split contributions, not whole-ID close from P21 alone. Rewrite 7.4 so R-FULL-TRAVERSAL names only the undeclared pool remainder after the limited traversal increment, while G-FULLMATH-ASSEMBLY and G-NO-SOLC-DIFFERENTIAL stay named.",
+      "not_a_new_requirement": true
+    }
+  ],
+  "supported_preserved_records": [
+    "Original 41-file unaccepted freeze hashes match.",
+    "Pinned v1.0.0 source hashes match preparation source_files_verified.",
+    "P16 source and proof acceptance hashes match. P17 root adjudication hash matches.",
+    "Original failed no-traversal remainder list is valid historical evidence and must be preserved, not reused as P21 closeout.",
+    "F30 already records exact-output cap as success.",
+    "M09/F28/F31 frozen literals match the oracle baseline.",
+    "P16 token0 slice and P17.platform_reuse are accepted contributions/gates. They are not P21 proofs or compiled M09."
+  ],
+  "unknowns": [
+    "The tar.gz archive bytes e1cd08f9... are not in this sandbox. Only the 41 extracted members were hashed here.",
+    "Exact Lean function name and record type for the limited traversal increment are not in the original proposed-api.json. The author must declare them against the source slice in P21-F01/F03.",
+    "Whether Tick.cross feeGrowthOutside/secondsOutside writes are inside the declared increment. Binding text requires liquidity and amount/fee accounting. It does not require oracle or protocol-fee identity. Name the choice.",
+    "Whether compiled M09 is Lean production SwapMath, pinned Solidity SwapMath.sol, or both. Sibling validity for F32/F33 depends on that freeze.",
+    "Pool.sol:719 source comment that liquidityNet cannot be int128.min is not a measured invariant in this audit. Name it as a source-comment restriction if the plan models the negation.",
+    "P21 source-campaign compiler/EVM identity is not discharged by P16 token0 evidence. Acquisition status in this sandbox is not a compiled campaign."
+  ]
+}

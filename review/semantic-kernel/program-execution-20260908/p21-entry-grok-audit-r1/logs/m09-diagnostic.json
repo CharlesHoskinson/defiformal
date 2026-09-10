@@ -1,0 +1,148 @@
+{
+  "schema": "defiformal-p21-entry-grok-audit-m09-diagnostic/v1",
+  "kind": "diagnostic_calculation",
+  "not_compiled_mutant": true,
+  "not_source_execution": true,
+  "not_p16_compiled_swapmath_evidence": true,
+  "oracle_path": "review/semantic-kernel/concentrated-liquidity/planning/grok-gpt6-official-r1/cl_oracle.py",
+  "oracle_sha256": "4ecd60394ab4deff50387f578a9ac85f981946d17b9ff36d0724ccbd3921e0cd",
+  "mutation": {
+    "planned_id": "M09",
+    "planned_anchor": "let zeroForOne := current.value \u2265 target.value",
+    "actual_source_change": "Flip zeroForOne to current < target.",
+    "diagnostic_edit": "replaced the single oracle assignment zero_for_one = sqrt_current >= sqrt_target with zero_for_one = sqrt_current < sqrt_target in a copied function body",
+    "pinned_solidity_predicate": "Uniswap v3-core SwapMath.sol line 37: bool zeroForOne = sqrtRatioCurrentX96 >= sqrtRatioTargetX96;"
+  },
+  "frozen_literals_unchanged": true,
+  "baseline_matches_frozen_F28": true,
+  "baseline_matches_frozen_F31": true,
+  "observations": {
+    "F28": {
+      "baseline": {
+        "ok": {
+          "sqrtRatioNextX96": 79228162514264337593543950335,
+          "amountIn": 2,
+          "amountOut": 1,
+          "feeAmount": 1,
+          "zeroForOne": true
+        }
+      },
+      "mutant_current_lt_target": {
+        "ok": {
+          "sqrtRatioNextX96": 79228162514264337593543950335,
+          "amountIn": 1,
+          "amountOut": 1,
+          "feeAmount": 1,
+          "zeroForOne": false
+        }
+      },
+      "observation_changed": true,
+      "same_named_error": false
+    },
+    "F31": {
+      "baseline": {
+        "ok": {
+          "sqrtRatioNextX96": 79228162514264337593543950337,
+          "amountIn": 1,
+          "amountOut": 0,
+          "feeAmount": 1,
+          "zeroForOne": false
+        }
+      },
+      "mutant_current_lt_target": {
+        "ok": {
+          "sqrtRatioNextX96": 79228162514264337593543950337,
+          "amountIn": 1,
+          "amountOut": 1,
+          "feeAmount": 1,
+          "zeroForOne": true
+        }
+      },
+      "observation_changed": true,
+      "same_named_error": false
+    },
+    "F29": {
+      "baseline": {
+        "ok": {
+          "sqrtRatioNextX96": 79228162514264337593543950336,
+          "amountIn": 0,
+          "amountOut": 0,
+          "feeAmount": 1,
+          "zeroForOne": true
+        }
+      },
+      "mutant_current_lt_target": {
+        "ok": {
+          "sqrtRatioNextX96": 79228162514264337593543950336,
+          "amountIn": 0,
+          "amountOut": 0,
+          "feeAmount": 1,
+          "zeroForOne": false
+        }
+      },
+      "observation_changed": true,
+      "same_named_error": false
+    },
+    "F30": {
+      "baseline": {
+        "ok": {
+          "sqrtRatioNextX96": 79228162514264337593543950335,
+          "amountIn": 3,
+          "amountOut": 1,
+          "feeAmount": 1,
+          "zeroForOne": true
+        }
+      },
+      "mutant_current_lt_target": {
+        "ok": {
+          "sqrtRatioNextX96": 79228162514264337593543950337,
+          "amountIn": 2,
+          "amountOut": 1,
+          "feeAmount": 1,
+          "zeroForOne": false
+        }
+      },
+      "observation_changed": true,
+      "same_named_error": false
+    },
+    "F32": {
+      "baseline": {
+        "error": "invalidFee"
+      },
+      "mutant_current_lt_target": {
+        "error": "invalidFee"
+      },
+      "observation_changed": false,
+      "same_named_error": true
+    },
+    "F33": {
+      "baseline": {
+        "error": "intOverflow"
+      },
+      "mutant_current_lt_target": {
+        "error": "intOverflow"
+      },
+      "observation_changed": false,
+      "same_named_error": true
+    }
+  },
+  "interference": {
+    "F28": "Original unaffected_positive. amountIn changes 2 to 1. zeroForOne true becomes false. amountOut and feeAmount stay 1. F28 cannot be an unaffected control for this mutation.",
+    "F31": "Designated false. amountIn stays 1. amountOut changes 0 to 1. zeroForOne false becomes true. Detection depends on amountOut and/or zeroForOne, not amountIn.",
+    "F29": "Numeric amountIn/amountOut/feeAmount/next price unchanged. zeroForOne true becomes false. Frozen F29 expected object has no zeroForOne field.",
+    "F30": "Exact-output cap success. amountIn 3 to 2. next price and zeroForOne change. Not unaffected.",
+    "F32": "invalidFee before the direction assignment in this oracle and in the original observation-contracts precedence. Unchanged. Lean/oracle strengthening only. Pinned SwapMath.sol has no feePips>=1e6 guard.",
+    "F33": "intOverflow before the direction assignment in this oracle. Unchanged. Lean/oracle strengthening only. Pinned SwapMath.sol wraps int256 min negation."
+  },
+  "replacement_control_constraints": [
+    "Preserve the failed original plan that names F28 as M09 unaffected_positive.",
+    "Exclude F28 from the compiled M09 unaffected-control set.",
+    "F32 is a defensible replacement sibling only if production SwapMath refuses feePips>=1e6 before evaluating the direction predicate. That matches the original Lean/oracle plan. It is not a Solidity SwapMath.sol sibling.",
+    "F33 has the same Lean-before-direction constraint for amountRemaining=-2^255.",
+    "F29 numeric fields are stable under the flip, but the direction flag changes. Use F29 as a sibling only if the published observation excludes direction and that limitation is named.",
+    "F01, F10 and F40 do not call computeSwapStep. They may remain global positives. They are not same-function siblings.",
+    "No existing success SwapMath fixture is fully observation-invariant when direction is observed.",
+    "P16 control-plan correction is not compiled SwapMath M09 evidence.",
+    "Do not change frozen F28/F31 literals."
+  ]
+}
