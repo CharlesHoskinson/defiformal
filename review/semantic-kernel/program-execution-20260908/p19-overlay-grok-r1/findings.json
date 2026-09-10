@@ -1,0 +1,58 @@
+{
+  "schema": "defiformal-overlay-policy-findings/v1",
+  "mark": "OVERLAY_AND_POLICY_REVIEW_ONLY_FULL_P19_OPEN",
+  "findings": [
+    {
+      "id": "P19-OV-01",
+      "severity": "high",
+      "title": "F13 overlay deletes the required decoded-IR equality assertion",
+      "file": "review/semantic-kernel/certificates/p19/implementation/agy-r5/fixture-canonical-order-overlay.json",
+      "also": [
+        "lean/DefiKernel/Certificates/RunFixtures.lean:22-25",
+        "openspec/changes/serialized-kernel-certificates/fixtures.json F13 expected.result.ir"
+      ],
+      "status": "open",
+      "evidence_class": "static comparison plus bounded execution",
+      "description": "Planning F13 expected.result.ir is the literal alias 'DecodedIR of F25 payload'. Root adjudication P19-EB-03 requires replacing that alias with actual independently checked decoded-IR equality; omitting the field or printing decoded=true does not meet it. Native R5 overlay sets ir to JSON null and RunFixtures decode-ok always prints ir:null. Overlay expected matches that weakened driver, so the author 54/54 campaign stays green. Independent compare of overlay actual against the original ir label fails. A private ProbeIREq run on the same canonical bytes shows decodeBytes(F13_overlay)=decodeBytes(F25_canon) and encodeModule equals those bytes. That evidence exists; the overlay/harness does not require it.",
+      "suggestion": "Keep canonical F13 raw_utf8 and its echo. Emit the actual decoded IR (or a dedicated irEq entrypoint against F25's canonical envelope) and store that independent expected. Do not keep ir:null as the equality witness. Do not invent a new claim; this is the existing F13/S14 plus the F25 payload alias."
+    },
+    {
+      "id": "P19-OV-02",
+      "severity": "medium",
+      "title": "Overlay harness does not bind original identity or detect stale/unapplied entries",
+      "file": "scripts/run_certificate_fixtures.py:251-263,419-449,168-191",
+      "status": "open",
+      "evidence_class": "static comparison; wrong-expected discrimination is bounded execution of deep_compare",
+      "description": "Overlay apply is id-keyed overwrite of inputs and expected. There is no original_sha256 check against frozen fixtures.json, no error on unknown overlay ids, no error on unapplied overlay ids, and regressions do not re-hash the original planning raw against a recorded pin (reviewer independently confirmed the bytes). Schema keys are not enforced. make_altered_control mutates status only, so it does not fail an ir:null expected that matches an ir:null driver. A deliberately wrong status, empty outstanding, alice usd 7->8, or restored ir label does fail deep_compare against actuals.",
+      "suggestion": "Enforce the accepted exact-input contract: each overlay/regression entry records original fixture id plus original input hash; refuse unknown, stale, or unapplied ids; keep independent expected literals. Do not add unrelated new gate families. After F13 IR is restored, the altered control must be able to fail a missing-IR expected."
+    }
+  ],
+  "non_findings_accepted_with_limitations": [
+    {
+      "id": "P19-OV-A1",
+      "title": "F13/F28 raw positives are source_map key-order only",
+      "detail": "Single substring replace of the source_map object recovers overlay bytes; lengths 9699=9699; payload/purpose unchanged. Original hashes match root inspection. Overlay hashes 9b8c2b42... and 0ce945e4... match author REPORT prefixes."
+    },
+    {
+      "id": "P19-OV-A2",
+      "title": "Original raw bytes preserved as regressions with actual admission constructor",
+      "detail": "F13-raw-regression and F28-raw-regression raw_utf8 sha256 equal planning originals. Decode refuses malformed noncanonicalWhitespace. Schema has no separate key-order constructor; grammar groups key-order and extra whitespace as decode refusals. Classification is the closed constructor, not a silent accept."
+    },
+    {
+      "id": "P19-OV-A3",
+      "title": "source_map informational outstanding policy matches PB04",
+      "detail": "Check.lean derives outstanding sourceRefinement from nonempty source_map in checkTyped/checkStep/checkRun. sourceRefinement judgment remains notApplicable. Accepted/refused/incomplete status, kernel/configuration/observationMismatch constructors, world/receipt preserved on targeted cases. Empty source_map F25 is accepted with outstanding []. Filename variants of identical F25/F43 bytes all stdout sha256 d59d1c137956c9793477cac5c6c76066d7f87fa577c2792f07a302aa729c4111. No path.contains oracle remains in RunFixtures.lean."
+    },
+    {
+      "id": "P19-OV-A4",
+      "title": "Object-valued F25/F27 presentation order is not a raw-byte specimen",
+      "detail": "All 34 overlaid object inputs keep transfer/store insertion order and are object-equal to planning inputs. Harness canonicalize_json sorts keys before Lean. Unsorted compact bytes equal original F13 raw and decode as noncanonicalWhitespace. Sorted compact bytes equal overlay F13 raw."
+    }
+  ],
+  "out_of_scope_open": [
+    "universal EncodeDecodeRoundtripStatement",
+    "trusted host compiler/audit candidate binding (P19-EB-04 family)",
+    "stale top-level manifests and M02-empty mutation rerun",
+    "full P19 production acceptance"
+  ]
+}
