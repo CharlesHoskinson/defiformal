@@ -1,0 +1,154 @@
+{
+  "schema": "defiformal-p19-codec-diagnostic-findings/v1",
+  "scope": "DIAGNOSTIC_ONLY_NO_ACCEPTANCE",
+  "acceptance": false,
+  "question": "Can EncodeDecodeRoundtripStatement and DecodeEncodeCanonicalBytesStatement hold for the declared SupportedIR/CanonicalIR?",
+  "answer": "No, not for the predicates and encoder currently declared. Compiled encode/decode inequality on imported functions; predicates reduced from source. Kernel negation of the Props was not proved.",
+  "classes": {
+    "compiled_counterexample": [
+      {
+        "id": "CE-empty-codec-roundtrip",
+        "kind": "compiled_execution",
+        "refutes": ["EncodeDecodeRoundtripStatement"],
+        "module": "DefiKernel.Certificates.Correspondence",
+        "statement_lines": "lean/DefiKernel/Certificates/Correspondence.lean:42-43",
+        "encoder_lines": "lean/DefiKernel/Certificates/Decode.lean:1256-1260",
+        "decoder_lines": "lean/DefiKernel/Certificates/Decode.lean:1248-1254",
+        "predicate_lines": "lean/DefiKernel/Certificates/Correspondence.lean:25-26 and :37-38 (codec => True)",
+        "input": "DecodedIR.codec {}  (DecodeOnly.lean emptyCodec)",
+        "encode": "ByteArray empty, UTF-8 \"\", size 0",
+        "decode_of_encode": "Except.error DecodeFailure.emptyDocument",
+        "predicate_status": "SupportedIR/CanonicalIR are True by source match on .codec; not compiled decide",
+        "evidence": "logs/decode-only-r2.stdout lines CASE emptyCodec and CASE emptyCodec.neq true",
+        "proof_status": "compiled_eval_not_kernel_negation"
+      },
+      {
+        "id": "CE-default-execution-audit-roundtrip",
+        "kind": "compiled_execution",
+        "refutes": ["EncodeDecodeRoundtripStatement"],
+        "encoder_lines": "lean/DefiKernel/Certificates/Decode.lean:1259-1260",
+        "input": "emptyTyped/emptyStep/emptyRun/emptyAudit = default execution or audit IR",
+        "encode": "UTF-8 \"{}\", size 2",
+        "decode_of_encode": "Except.error DecodeFailure.schemaVersion",
+        "predicate_status": "audit => True; typed/step/run List.all on default empty cells is true = true",
+        "evidence": "CASE emptyTyped/emptyAudit/emptyStep/emptyRun and emptyTyped.neq/emptyAudit.neq",
+        "note": "encodeModule ignores payload, so the required 32-cell Typed/sequential universe is likewise unroundtrippable"
+      },
+      {
+        "id": "CE-typedjson-canonical-bytes",
+        "kind": "compiled_execution",
+        "refutes": ["DecodeEncodeCanonicalBytesStatement", "EncodeDecodeRoundtripStatement"],
+        "decoder_lines": "lean/DefiKernel/Certificates/Decode.lean:1231-1233,1248-1254",
+        "encoder_lines": "lean/DefiKernel/Certificates/Decode.lean:1260",
+        "input_raw": "typedJson compact mode=typed-execute empty payload (DecodeOnly.lean:43-44)",
+        "decode": "ok:typed mode=typed-execute cells=0",
+        "encode_after": "UTF-8 \"{}\"; equal=false; re-decode schemaVersion",
+        "canonical_premise": "CanonicalIR of empty cells is true = true by source; types enumerations empty so this IR is outside the accepted nonempty-types domain, but still a counterexample to the current statement",
+        "evidence": "CASE typedJson.decode and CASE typedJson.encodeAfter"
+      },
+      {
+        "id": "CE-auditjson-canonical-bytes",
+        "kind": "compiled_execution",
+        "refutes": ["DecodeEncodeCanonicalBytesStatement", "EncodeDecodeRoundtripStatement"],
+        "decoder_lines": "lean/DefiKernel/Certificates/Decode.lean:1242-1243",
+        "encoder_lines": "lean/DefiKernel/Certificates/Decode.lean:1259",
+        "input_raw": "auditJson compact mode=audit (DecodeOnly.lean:37-38)",
+        "decode": "ok:audit mode=audit commands=0 imported_theorems_min=1 (payload dropped)",
+        "encode_after": "UTF-8 \"{}\"; equal=false",
+        "canonical_premise": "CanonicalIR .audit _ => True",
+        "evidence": "CASE auditJson.decode and CASE auditJson.encodeAfter"
+      }
+    ],
+    "compiled_but_not_a_statement_counterexample": [
+      {
+        "id": "OBS-codec-identity-whitespace",
+        "kind": "compiled_execution",
+        "meaning": "codec encode dumps stored rawText, so DecodeEncodeCanonicalBytesStatement holds accidentally on codec JSON including extra whitespace",
+        "evidence": "CASE codecJson.encodeAfter equal=true; CASE wsCodecJson.decode ok and encodeAfter equal=true",
+        "intended_contract": "grammar.json extra whitespace is DecodeFailure.noncanonicalWhitespace; scanLexical never constructs that (Decode.lean:32-144; Schema.lean:668)"
+      },
+      {
+        "id": "OBS-reordered-rat-decode",
+        "kind": "compiled_decode_plus_source_encode",
+        "evidence": "CASE reorderedRat.decode ok:typed cells=1",
+        "not_printed": "encodeAfter for reorderedRat",
+        "source_reduction": "any .execution encodes to {} (Decode.lean:1260)"
+      }
+    ],
+    "source_inspection": [
+      {
+        "id": "SRC-expr-timestamp-now",
+        "lines": "Decode.lean:433-483 vs Schema.lean:184-194 and grammar.json expr_constructors_supported"
+      },
+      {
+        "id": "SRC-ite-key-names",
+        "lines": "Decode.lean:431,475-481 vs grammar.json Expr keys condition/yes/no"
+      },
+      {
+        "id": "SRC-envread-currentTime",
+        "lines": "Decode.lean:342-354 vs Schema.lean:155-162"
+      },
+      {
+        "id": "SRC-audit-payload-drop",
+        "lines": "Decode.lean:1242-1243"
+      },
+      {
+        "id": "SRC-resource-limit-malformed",
+        "lines": "Check.lean:750-753 vs grammar.json resource_limits.exceeded; Decode.lean:33-34,95,107"
+      },
+      {
+        "id": "SRC-packedvalue-toRat",
+        "lines": "Schema.lean:100-104; Decode.lean:260-261"
+      }
+    ],
+    "missing_proofs": [
+      {
+        "id": "MP-no-kernel-negation",
+        "detail": "RoundtripStatements.lean written, never compiled; no theorem ¬ EncodeDecodeRoundtripStatement"
+      },
+      {
+        "id": "MP-props-are-not-proofs",
+        "lines": "Correspondence.lean:40-47"
+      },
+      {
+        "id": "MP-task-2.4-open",
+        "detail": "P19 task 2.4 not discharged by deferred-to-P20 comments or finite fixtures"
+      }
+    ],
+    "adjacent_soundness_not_expanded": [
+      {
+        "id": "ADJ-run-inputs-dropped",
+        "lines": "Check.lean:711,725,702-703"
+      },
+      {
+        "id": "ADJ-checkIR-audit-always-pass",
+        "lines": "Check.lean:747-748"
+      },
+      {
+        "id": "ADJ-checkCertificate-ignores-bytes",
+        "lines": "Check.lean:756-757"
+      },
+      {
+        "id": "ADJ-rawExecute-receipt-unproved",
+        "lines": "Check.lean:640-650; Soundness.lean:55-72"
+      }
+    ]
+  },
+  "repair": {
+    "do_not": [
+      "SupportedIR := roundtrip-holds",
+      "shrink Party/Asset/Domain or drop sequential run / Typed timestamp/now / currentTime",
+      "treat codec rawText identity as canonical-bytes",
+      "omit P19 task 2.4 because proof_gate in correspondence-theorems.json says P20"
+    ],
+    "supported_ir": "DecodedExecution only; nonempty Schema Party/Asset/Domain enumerations matching envelope types; complete declaration-order state table; unique registry ids; steps invoke|issue|revoke; den>0 nonnegative cells. Codec/audit not True.",
+    "canonical_ir": "RatEnc lowest terms den>0 on stored rationals; not whitespace/key-order (those are byte-level decode refusals).",
+    "canonical_bytes": "unique compact UTF-8; grammar canonical_nested_key_order plus lexicographic fallback; decode accepts iff encodeModule ir = raw",
+    "resource_limits": "blocked not malformed: maxBytes 1048576, maxDepth 64, max_array_length 4096, harness timeout",
+    "task_map": {
+      "p19_task_2.4": "implement real encodeModule and prove supported canonical roundtrip; F25/F27/F28 bounded only",
+      "program_20.2": "includes candidate tasks 2.1-2.6",
+      "program_21.1_p20": "quantified encode/decode plus checkIR_execute_ok/_error and step/run correspondence over the same supported domain; compatibility and library instantiation remain P20"
+    }
+  }
+}
