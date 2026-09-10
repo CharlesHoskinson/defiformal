@@ -1,0 +1,60 @@
+{
+  "schema": "defiformal-p23-upstream-test-entry-readiness/v1",
+  "utc": "2026-09-10T07:44:35.365962+00:00",
+  "commit": "3e64ee1b52c50d51587c64c1cf75e0ba82934979",
+  "captured_source_files": 6,
+  "static_redemption_test_declarations": 37,
+  "declared_skipped_redemption_cases": 1,
+  "source_or_test_execution": false,
+  "P23_task_24_1_accepted": false,
+  "full_P23_accepted": false,
+  "source_boundary_findings": [
+    {
+      "id": "P23-TEST-HELPER-SUBSTITUTION",
+      "evidence": [
+        "TroveManagerTest.js:3-4",
+        "TroveManagerTest.js:56-66",
+        "deploymentHelpers.js:88-105"
+      ],
+      "observation": "The suite replaces initially deployed production TroveManager and LUSDToken with Tester artifacts and uses PriceFeedTestnet. Its observations cannot be attributed to the unchanged43-source production closure without an explicit source-bound port.",
+      "tester_source_filenames_absent_from_pinned_git_tree": [
+        "TroveManagerTester.sol"
+      ],
+      "qualification": "Static Git inventory and source inspection. This is not a measured Hardhat build failure."
+    },
+    {
+      "id": "P23-ZERO-DEBT-TEST-NOT-EMPTY-SET-EVIDENCE",
+      "evidence": [
+        "TroveManagerTest.js:3573-3607"
+      ],
+      "observation": "The zero-debt test calls unprotectedMint, does not advance its new deployment past bootstrap in its body, catches any VM exception, and has no mandatory assertion if the call returns successfully. The commented receipt assertion is inactive. It does not prove the exact production no-fill/empty-eligible-set refusal.",
+      "qualification": "No transaction was executed and no actual revert branch is asserted here."
+    },
+    {
+      "id": "P23-PARTIAL-FILL-SETUP-CANDIDATE",
+      "evidence": [
+        "TroveManagerTest.js:2701-2726"
+      ],
+      "observation": "Three1000ETH positions targeting total debts10000/20000/30000LUSD; consolidate A/C tokens into B; advance two weeks; redeem55000; expect B/C closed and A active with approximately4600 debt. Suitable setup guidance for a new exact production-source observation.",
+      "limits": "Calls tester setBaseRate(0), uses debt helpers/rounding tolerance and a helper whose fourth argument is gasPrice, not maxFee. No exact source result or theorem is claimed."
+    },
+    {
+      "id": "P23-EARLIER-AND-SEPARATE-REFUSALS",
+      "evidence": [
+        "TroveManagerTest.js:2729-2756",
+        "TroveManagerTest.js:2758-2856",
+        "TroveManagerTest.js:2998-3015"
+      ],
+      "observation": "Min-debt cancellation, stale partial hint and earlier TCR<MCR refusal are distinct source cases. They cannot silently replace the required empty eligible-set observation."
+    },
+    {
+      "id": "P23-HELPER-CALL-BINDING",
+      "evidence": [
+        "testHelpers.js:943-957",
+        "testHelpers.js:974-997"
+      ],
+      "observation": "Helper signatures distinguish LUSDAmount, gasPrice and maxFee. performRedemptionTx also supplies gasPrice_toUse to getRedemptionHints as its third argument and uses0 as redeemCollateral maxIterations. Bind the actual public call arguments explicitly instead of relying on a test title or wrapper-call comment."
+    }
+  ],
+  "next_action": "Use the existing43-source compiler-ready production closure to construct exact admitted pre-state and public-call observations. Port useful partial-fill setup with independently checked debt/rounding/hints and explicit oracle boundary. Establish the actual empty-set refusal and branch separately; do not claim deployed-state reachability from a test helper state or add an unsolicited deployment-history proof requirement. AGY P19 proof remains current author priority."
+}

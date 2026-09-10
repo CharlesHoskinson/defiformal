@@ -1,0 +1,12 @@
+from pathlib import Path
+import subprocess,tarfile,io,json,hashlib,datetime
+repo=Path('/home/charl/.cache/defiformal-program/program-execution-20260908/p23-liquity-v1-source-repository');pin='3e64ee1b52c50d51587c64c1cf75e0ba82934979';o=Path('/home/charl/defiformal/review/semantic-kernel/program-execution-20260908/p23-v1-test-entry-preparation');assert o.is_dir() and not list(o.iterdir())
+(o/'attempt1-preparation-failure.json').write_text(json.dumps({'stage':'root path validation before capture','missing_assumed_path':'packages/contracts/contracts/TestContracts/TroveManagerTester.sol','actual_git_tree_contains_path':False,'captured_files':0,'test_execution':False,'note':'Root guessed a helper source path that is absent at the pinned commit. No source/test failure is inferred.'},indent=2)+'\n')
+paths=['packages/contracts/test/TroveManagerTest.js','packages/contracts/utils/deploymentHelpers.js','packages/contracts/utils/testHelpers.js','packages/contracts/hardhat.config.js','packages/contracts/package.json','.github/workflows/test-contracts.yml']
+known=set(subprocess.check_output(['git','ls-tree','-r','--name-only',pin],cwd=repo,text=True).splitlines());assert all(n in known for n in paths)
+start=datetime.datetime.now(datetime.timezone.utc).isoformat();cmd=['git','archive','--format=tar',pin,*paths];r=subprocess.run(cmd,cwd=repo,capture_output=True);(o/'capture.stderr').write_bytes(r.stderr);assert r.returncode==0,r.stderr.decode();(o/'source').mkdir()
+with tarfile.open(fileobj=io.BytesIO(r.stdout)) as t:t.extractall(o/'source',filter='data')
+files=[]
+for n in paths:
+ q=o/'source'/n;obj=subprocess.check_output(['git','rev-parse',pin+':'+n],cwd=repo,text=True).strip();raw=q.read_bytes();computed=hashlib.sha1(b'blob '+str(len(raw)).encode()+b'\0'+raw).hexdigest();assert computed==obj,n;files.append({'path':'source/'+n,'source_path':n,'git_blob':obj,'sha256':hashlib.sha256(raw).hexdigest(),'bytes':len(raw)})
+rec={'schema':'defiformal-source-test-entry-capture/v1','utc':start,'repository':'https://github.com/liquity/dev','commit':pin,'command':cmd,'cwd':str(repo),'exit':r.returncode,'files':files,'evidence_class':'Pinned upstream test/helper/config source only; no test or EVM execution','P23_acceptance':False};(o/'capture.json').write_text(json.dumps(rec,indent=2)+'\n');print(json.dumps({'files_captured_and_git_blob_verified':len(files),'bytes':sum(f['bytes'] for f in files),'test_execution':False}))
