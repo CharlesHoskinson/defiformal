@@ -1,0 +1,75 @@
+{
+  "schema": "defiformal-p19-module-validity-r24-review-findings/v1",
+  "mark": "P19_R24_MODULE_VALIDITY_CHANGES_REQUIRED",
+  "status": "in_progress",
+  "verdict": "CHANGES_REQUIRED",
+  "acceptance": false,
+  "full_P19_accepted": false,
+  "scoped_module_validity": "pending_compile",
+  "false_raw_tree_permutation_premise": false,
+  "findings": [
+    {
+      "id": "F1-full-p19-unproved",
+      "severity": "blocker",
+      "status": "open",
+      "file": "lean/DefiKernel/Certificates/Roundtrip.lean:1668",
+      "summary": "R24 does not prove EncodeDecodeRoundtripStatement. Full P19 remains CHANGES_REQUIRED.",
+      "detail": "Strongest theorem decodeBytes_encodeModule_of_depth still assumes h_depth, h_dec, and h_lex. moduleToTreeJson_valid discharges only h_valid. EncodeDecodeRoundtripStatement remains a def Prop. Decoder/scanner-image premises are not accepted as the required roundtrip.",
+      "classification": "full_P19 CHANGES_REQUIRED"
+    },
+    {
+      "id": "F2-h-depth-not-admission-treejson",
+      "severity": "high",
+      "status": "open",
+      "file": "lean/DefiKernel/Certificates/Correspondence.lean:640",
+      "summary": "Admission depth bound is jsonDepth decodedIRToJson, not TreeJson.depth moduleToTreeJson.",
+      "detail": "SupportedIR includes WholeDocumentDepthBounded ir := jsonDepth (decodedIRToJson ir) ≤ 64. decodeBytes_encodeModule_of_depth requires TreeJson.depth (moduleToTreeJson ir) ≤ 64. Those are different functions on different representations. Discharging one from the other needs a metric correspondence, not Json RB-tree structural equality.",
+      "classification": "missing_bridge"
+    },
+    {
+      "id": "F3-h-dec-image-premise",
+      "severity": "high",
+      "status": "open",
+      "file": "lean/DefiKernel/Certificates/Roundtrip.lean:1671",
+      "summary": "h_dec is a decoder-success image premise on (moduleToTreeJson ir).toJson.",
+      "detail": "Correspondence already has decodeDecodedIR on decodedIRToJson. Using it here needs semantic agreement of (moduleToTreeJson ir).toJson with decodedIRToJson without claiming structural equality of arbitrary-order Raw/Json trees. Root libraryRef counterexample: declaration-order TreeJson.toJson root key theorem vs mapped libraryRefToJson root key module, BEq true, = false.",
+      "classification": "full_P19 CHANGES_REQUIRED"
+    },
+    {
+      "id": "F4-decodeWorld-canonical-assumptions",
+      "severity": "medium",
+      "status": "open",
+      "file": "lean/DefiKernel/Certificates/Roundtrip.lean:1329",
+      "summary": "decodeWorld_worldToTreeJson needs reduced unique cells, not admission alone.",
+      "detail": "The theorem assumes h_st_valid (den ≠ 0, gcd 1, num ≥ 0) and h_st_unique. It rewrites through state/store toJson maps then mkObj/TreeMap, then decodeState/decodeStore. Those are actual canonical assumptions. It is not a module-level roundtrip and not a false permutation bridge.",
+      "classification": "scoped_lemma_limitation"
+    },
+    {
+      "id": "F5-campaigns-not-closed",
+      "severity": "medium",
+      "status": "open",
+      "file": "review/semantic-kernel/certificates/p19/implementation/agy-r24-proof/",
+      "summary": "No 99-scenario / 16-mutant closure from status mapping or 54 fixtures.",
+      "detail": "Existing overlay/hash/schema/independent expectedIR/host executor concerns remain. Unchanged fixtures are not re-run in this review unless a new concern appears.",
+      "classification": "full_P19 CHANGES_REQUIRED"
+    },
+    {
+      "id": "N1-module-validity-source-scope",
+      "severity": "note",
+      "status": "pending_compile",
+      "file": "lean/DefiKernel/Certificates/Roundtrip.lean:1609",
+      "summary": "moduleToTreeJson_valid is the intended admission-to-Valid map for typed/step/run envelopes.",
+      "detail": "TreeJson.Valid is recursive trees, distinct keys, array 4096. Not sorted object fields. Envelope, source-map Nodup from SourceMapSorted, arrays, 32-cell omega, config/registry/template/interface/invocation/step/typed/run, optional claimed_next_state are in the proof as read. Compile pending isolated rebuild.",
+      "classification": "scoped_usable_if_compiles"
+    },
+    {
+      "id": "N2-libraryref-decode-not-permutation-bridge",
+      "severity": "note",
+      "status": "open",
+      "file": "lean/DefiKernel/Certificates/Roundtrip.lean:1364",
+      "summary": "decodeLibraryRef_libraryRefToTreeJson uses toJson/mkObj/name lookup, not TreeJson structural permutation.",
+      "detail": "checkObjectKeys is allowed-key containment. getField is name lookup. Root object diagnostic remains: encodedOrder root theorem, mappedOrder root module, BEq true, structural = false. Source as read does not claim those Json values are =.",
+      "classification": "preserve_counterexample"
+    }
+  ]
+}
