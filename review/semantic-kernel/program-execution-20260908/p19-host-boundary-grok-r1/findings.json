@@ -1,0 +1,174 @@
+{
+  "schema": "defiformal-host-boundary-design-findings/v1",
+  "mark": "HOST_BOUNDARY_DESIGN_ONLY_FULL_P19_OPEN",
+  "utc": "2026-09-10T08:21:50Z",
+  "requested_model": "grok-4.6",
+  "effort": "high",
+  "role": "independent auditor",
+  "acceptance": false,
+  "findings": [
+    {
+      "id": "P19-HB-01",
+      "severity": "high",
+      "status": "required_for_implementation",
+      "scope": "public audit success paths",
+      "title": "Standalone callers still obtain audit passed from supplied counts and command strings; sidecar Verify scan is not a repair",
+      "classification": "Known P19-EB-04 hole confirmed on frozen R5 source. This is the precise path list the next host repair must close. Not a new universal-proof finding and not F46 acceptance.",
+      "evidence_class": "static source and harness read; no new compiler execution",
+      "paths": [
+        {
+          "file": "lean/DefiKernel/Certificates/Check.lean",
+          "lines": "751-766",
+          "sha256": "2cd24e9b302de52a85d7999c034cb7b08e4cb3d06b5fe79eb9943d4aa24ad66c",
+          "behavior": "checkAudit returns passed from commands/auditPrefix/default DefiKernel unless imported_theorems==0 or forbidden_claimed_roots is present. imported_theorems_min unused. No IO."
+        },
+        {
+          "file": "lean/DefiKernel/Certificates/Check.lean",
+          "lines": "768-786",
+          "behavior": "checkIR routes audit to checkAudit; checkBytes and checkCertificateBytes expose that Outcome."
+        },
+        {
+          "file": "lean/DefiKernel/Certificates/RunFixtures.lean",
+          "lines": "30-39",
+          "sha256": "03fcb7d41fe4648f4933aa3c7a202a81cbed30c9c85a6619f3291fdb844ec98f",
+          "behavior": "check mode prints encodeOutcome of checkBytes. Standalone CLI success path."
+        },
+        {
+          "file": "scripts/run_certificate_fixtures.py",
+          "lines": "342-411,623-624",
+          "sha256": "4852f33cfd5d68db750e0bdcd1a1140deb4d7f61fa3e38ded6f0a5f37fc35d5d",
+          "behavior": "F44/F45/F46 scored by deep_compare of checkAudit JSON. F44 compiler_audit_binding is sidecar metadata. Process exit also requires global Verify scan. which lean is not pinned identity. parse_and_validate_audit is a log regex with five synthetic-string controls."
+        }
+      ],
+      "smallest_repair": [
+        "Keep checkAudit as untrusted classification. Do not add IO to checkIR/checkAudit/rawExecute.",
+        "Add an explicit host that validates the identity tuple before any discharged audit success the caller consumes.",
+        "Gate F44/S58 on that host, not on expected.status=passed from the F44 document.",
+        "Do not treat SourcePin.compiler_record JSON as evidence."
+      ]
+    },
+    {
+      "id": "P19-HB-02",
+      "severity": "high",
+      "status": "required_interpretation",
+      "scope": "F44/F45/F46 evidence identity",
+      "title": "Two compiler environments and declaring-module provenance must be bound; S58 Verify is the wrapper, not an imported theorem",
+      "classification": "Contract interpretation. No new grammar field. Root README already states the wrapper fact; PB05 S58 text is easy to misread.",
+      "environments": {
+        "candidate_verify": {
+          "wrapper": "lean/DefiKernel/Certificates/Verify.lean",
+          "sha256_frozen_r5": "47ba130e824c224e37b63c590329486a6c642403f8e70a7874743a4dc0d53f16",
+          "imports": ["Audit", "Correspondence", "Soundness", "Observation", "Check", "Decode", "Schema", "Tests", "AxiomAudit"],
+          "commands": ["#audit_axioms DefiKernel.Certificates", "#audit_axioms DefiKernel.Typed", "#audit_axioms DefiKernel.Composition"],
+          "use": ["F44 positive", "F45 actual claimed roots"]
+        },
+        "empty_import_wrapper": {
+          "wrapper": "EmptyCertificatesScope.lean",
+          "sha256": "c63063a793bde62dff5b614f70c275028955f613ba41c67897a9176c03657b75",
+          "imports": ["DefiKernel.AxiomAudit"],
+          "command": "#audit_axioms DefiKernel.Certificates",
+          "recorded_stdout_sha256": "51b466973ad8be6b9f78b576af4e7308e3cf939ea9979e9fbfafa45db33869eb",
+          "use": ["F46 only"],
+          "F46_accepted": false
+        }
+      },
+      "provenance": "AxiomAudit.importedTheorems uses env.getModuleIdxFor? and excludes the current module. Verify.lean has no theorems. Correspondence and Soundness must appear as imported declaring modules under Certificates. Verify is host wrapper identity.",
+      "replay_tuple": [
+        "wrapper path+sha256",
+        "AxiomAudit sha256",
+        "import-closure sources that affect discovered theorems",
+        "requested prefixes and exact commands",
+        "pinned lake/lean argv, version+githash, trampoline hash; pin libleanshared or equivalent at implementation",
+        "cwd/package/mathlib_rev",
+        "exit, stdout sha256, stderr sha256",
+        "parsed modules= from AXIOM AUDIT scope lines, theorem counts, forbidden counts",
+        "evidence class tag candidate-verify | empty-import-wrapper"
+      ],
+      "controls": {
+        "F44": "missing/stale/substituted candidate or scope refuse discharge; do not reuse empty-wrapper inventory",
+        "F45": "compare actual Verify commands, observed imported prefixes, and envelope audit_roots to forbidden Nary/Claims/Arithmetic/Atomic; forbidden_claimed_roots document remains parser inspection",
+        "F46": "actual empty-import compiler blocked theorems=0 modules=[]; imported_theorems=0 document remains parser classification"
+      },
+      "do_not": [
+        "Invent new AuditResult or FailurePath constructors",
+        "Add envelope fields for actual inventory",
+        "Require Verify in importedTheorems",
+        "Trust compiler_record JSON",
+        "Use which lean"
+      ]
+    },
+    {
+      "id": "P19-HB-03",
+      "severity": "medium",
+      "status": "required_for_implementation",
+      "scope": "host evidence object versus SourcePin",
+      "title": "Do not implement 'compiler record' as self-authenticating SourcePin.compiler_record/audit_record JSON or as IO inside checkIR",
+      "classification": "Architectural caution on root wording. Root also says host records are explicit evidence inputs and pure decoding/execution stay independent of compiler IO. Those two sentences govern.",
+      "existing_fields": {
+        "SourcePin": ["git", "lean_toolchain", "mathlib_rev", "checker_candidate", "compiler_record", "audit_record"],
+        "frozen_fixture_values": {"compiler_record": null, "audit_record": null, "checker_candidate": "unimplemented"}
+      },
+      "allowed": "Host may store hashes that happen to be copied into those slots after validation. The host validates files and logs. Callers cannot discharge by supplying the object.",
+      "forbidden": "checkAudit or checkBytes treating a non-null compiler_record as successful compile. Ambient LEAN_PATH/lake-manifest/env lookup from pure checker functions."
+    },
+    {
+      "id": "P19-HB-04",
+      "severity": "medium",
+      "status": "limit_not_overclaim",
+      "scope": "root empty-scope receipt",
+      "title": "Copied receipt is a recorded negative observation without private oleans; bind final candidate source at implementation",
+      "classification": "Preparation is honest. F46 remains open. This review did not rerun the compiler and does not fabricate a reproduced result.",
+      "what_root_did_not_overclaim": [
+        "readiness.json F44/F45/F46_accepted false",
+        "production_host_implemented false",
+        "receipt host_integration_complete false",
+        "README: Verify environment is different and must not reuse this inventory"
+      ],
+      "causal_chain_recorded": [
+        "attempt1 missing AxiomAudit.olean, empty_scope_observed false, stdout sha256 b82a9b28…",
+        "lake build DefiKernel.AxiomAudit --offline exit 0, stdout sha256 bacc3ace…",
+        "second run exit 1, stdout sha256 51b46697…, modules=[], theorems=0"
+      ],
+      "static_corroboration": [
+        "all 28 inputs.json hashes match",
+        "source-inputs and preparation manifest match",
+        "review-dir EmptyCertificatesScope.lean same sha256 c63063a7…",
+        "AxiomAudit.lean sha256 4a8e330d… matches receipt audit_module_sha256",
+        "lean trampoline sha256 e8baaa71… matches receipt compiler_sha256",
+        "lean --version string matches receipt compiler_version",
+        "copied stdout text matches AxiomAudit.lean blocked-empty format"
+      ],
+      "limits": [
+        "no olean/cache in the preparation package",
+        "argv path is p19-host-boundary-preparation; cwd is overlay probe tree",
+        "source-inputs snapshot root is p19-overlay-grok-r1-sandbox frozen R5, not live author source",
+        "compiler_sha256 is the 9024-byte trampoline, not libleanshared.so",
+        "attempt1 JSON is a short classification; stdout is the evidence"
+      ],
+      "implementation_bind": "Recompute the identity tuple on the repaired candidate. Stale R5 hashes do not discharge F46. This receipt is a template for the empty-import wrapper."
+    }
+  ],
+  "non_findings": [
+    {
+      "id": "P19-HB-N1",
+      "title": "Root preparation does not credit completed F46 or F44/F45",
+      "detail": "Flags are false. README and queued-repair text keep parser controls separate from host controls."
+    },
+    {
+      "id": "P19-HB-N2",
+      "title": "Pure checkIR/rawExecute contract can be preserved",
+      "detail": "An explicit IO host beside those functions satisfies accepted interpretation 1 without new grammar fields."
+    },
+    {
+      "id": "P19-HB-N3",
+      "title": "Original 54/99/38/16 scope is intact in this frozen snapshot",
+      "detail": "fixtures.json still has 54 entries; F44/F45/F46 remain the three audit fixtures. This review did not modify planning bytes."
+    }
+  ],
+  "out_of_scope_open": [
+    "universal EncodeDecodeRoundtripStatement",
+    "P19-OV-01",
+    "P19-OV-02",
+    "full P19 candidate acceptance"
+  ]
+}
