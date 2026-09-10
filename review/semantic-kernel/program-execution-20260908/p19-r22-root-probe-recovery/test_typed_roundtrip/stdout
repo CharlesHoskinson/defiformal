@@ -1,0 +1,182 @@
+/home/charl/defiformal-wt-p19-certificates-grok-opus-20260909/review/semantic-kernel/certificates/p19/implementation/agy-r22-proof/probes/test_typed_roundtrip.lean:502:12: error: Tactic `rfl` failed: The left-hand side
+  Json.mkObj
+    [("operation", Json.num { mantissa := ↑r.operation, exponent := 0 }),
+      ("parties", Json.arr (List.map partyToJson r.parties).toArray),
+      ("arguments", Json.arr (List.map packedValueFullToJson r.arguments).toArray),
+      ("capabilityIds",
+        Json.arr (List.map (fun x => (TreeJson.num x).toJson) (List.flatMap (fun a => [↑a]) r.capabilityIds)).toArray),
+      ("claimedActor",
+        (match none with
+          | some a => partyToTreeJson a
+          | none => TreeJson.null).toJson)]
+is not definitionally equal to the right-hand side
+  Json.mkObj
+    [("arguments", Json.arr (List.map packedValueFullToJson r.arguments).toArray),
+      ("capabilityIds", Json.arr (List.map natToJson r.capabilityIds).toArray),
+      ("claimedActor",
+        match none with
+        | none => Json.null
+        | some p => partyToJson p),
+      ("operation", Json.num (JsonNumber.fromNat r.operation)),
+      ("parties", Json.arr (List.map partyToJson r.parties).toArray)]
+
+case none
+r : RequestEnc
+h_ps : List.map (fun x => (partyToTreeJson x).toJson) r.parties = List.map partyToJson r.parties
+h_args :
+  List.map (fun x => (packedValueFullToTreeJson x).toJson) r.arguments = List.map packedValueFullToJson r.arguments
+⊢ Json.mkObj
+      [("operation", Json.num { mantissa := ↑r.operation, exponent := 0 }),
+        ("parties", Json.arr (List.map partyToJson r.parties).toArray),
+        ("arguments", Json.arr (List.map packedValueFullToJson r.arguments).toArray),
+        ("capabilityIds",
+          Json.arr
+            (List.map (fun x => (TreeJson.num x).toJson) (List.flatMap (fun a => [↑a]) r.capabilityIds)).toArray),
+        ("claimedActor",
+          (match none with
+            | some a => partyToTreeJson a
+            | none => TreeJson.null).toJson)] =
+    Json.mkObj
+      [("arguments", Json.arr (List.map packedValueFullToJson r.arguments).toArray),
+        ("capabilityIds", Json.arr (List.map natToJson r.capabilityIds).toArray),
+        ("claimedActor",
+          match none with
+          | none => Json.null
+          | some p => partyToJson p),
+        ("operation", Json.num (JsonNumber.fromNat r.operation)),
+        ("parties", Json.arr (List.map partyToJson r.parties).toArray)]
+/home/charl/defiformal-wt-p19-certificates-grok-opus-20260909/review/semantic-kernel/certificates/p19/implementation/agy-r22-proof/probes/test_typed_roundtrip.lean:503:11: error: unsolved goals
+case some
+r : RequestEnc
+h_ps : List.map (fun x => (partyToTreeJson x).toJson) r.parties = List.map partyToJson r.parties
+h_args :
+  List.map (fun x => (packedValueFullToTreeJson x).toJson) r.arguments = List.map packedValueFullToJson r.arguments
+a : Party
+⊢ Json.mkObj
+      [("operation", Json.num { mantissa := ↑r.operation, exponent := 0 }),
+        ("parties", Json.arr (List.map partyToJson r.parties).toArray),
+        ("arguments", Json.arr (List.map packedValueFullToJson r.arguments).toArray),
+        ("capabilityIds",
+          Json.arr
+            (List.map (fun x => (TreeJson.num x).toJson) (List.flatMap (fun a => [↑a]) r.capabilityIds)).toArray),
+        ("claimedActor", partyToJson a)] =
+    Json.mkObj
+      [("arguments", Json.arr (List.map packedValueFullToJson r.arguments).toArray),
+        ("capabilityIds", Json.arr (List.map natToJson r.capabilityIds).toArray), ("claimedActor", partyToJson a),
+        ("operation", Json.num (JsonNumber.fromNat r.operation)),
+        ("parties", Json.arr (List.map partyToJson r.parties).toArray)]
+/home/charl/defiformal-wt-p19-certificates-grok-opus-20260909/review/semantic-kernel/certificates/p19/implementation/agy-r22-proof/probes/test_typed_roundtrip.lean:518:4: error: `simp` made no progress
+/home/charl/defiformal-wt-p19-certificates-grok-opus-20260909/review/semantic-kernel/certificates/p19/implementation/agy-r22-proof/probes/test_typed_roundtrip.lean:519:20: error: Tactic `rewrite` failed: Did not find an occurrence of the pattern
+  List.map (fun x => (TreeJson.num x).encode) do
+    let a ← r.capabilityIds
+    pure ↑a
+in the target expression
+  jsonObj
+      [("operation", (TreeJson.num ↑r.operation).encode), ("parties", jsonArr (List.map encodeParty r.parties)),
+        ("arguments", jsonArr (List.map encodePackedValue r.arguments)),
+        ("capabilityIds",
+          jsonArr (List.map (fun x => (TreeJson.num x).encode) (List.flatMap (fun a => [↑a]) r.capabilityIds))),
+        ("claimedActor",
+          (match r.claimedActor with
+            | some a => partyToTreeJson a
+            | none => TreeJson.null).encode)] =
+    jsonObj
+      [("operation", toString r.operation), ("parties", jsonArr (List.map encodeParty r.parties)),
+        ("arguments", jsonArr (List.map encodePackedValue r.arguments)),
+        ("capabilityIds", jsonArr (List.map toString r.capabilityIds)),
+        ("claimedActor",
+          match r.claimedActor with
+          | some a => encodeParty a
+          | none => "null")]
+
+r : RequestEnc
+h_ps : List.map (fun x => (partyToTreeJson x).encode) r.parties = List.map encodeParty r.parties
+h_args : List.map (fun x => (packedValueFullToTreeJson x).encode) r.arguments = List.map encodePackedValue r.arguments
+h_caps :
+  (List.map (fun x => (TreeJson.num x).encode) do
+      let a ← r.capabilityIds
+      pure ↑a) =
+    List.map toString r.capabilityIds
+⊢ jsonObj
+      [("operation", (TreeJson.num ↑r.operation).encode), ("parties", jsonArr (List.map encodeParty r.parties)),
+        ("arguments", jsonArr (List.map encodePackedValue r.arguments)),
+        ("capabilityIds",
+          jsonArr (List.map (fun x => (TreeJson.num x).encode) (List.flatMap (fun a => [↑a]) r.capabilityIds))),
+        ("claimedActor",
+          (match r.claimedActor with
+            | some a => partyToTreeJson a
+            | none => TreeJson.null).encode)] =
+    jsonObj
+      [("operation", toString r.operation), ("parties", jsonArr (List.map encodeParty r.parties)),
+        ("arguments", jsonArr (List.map encodePackedValue r.arguments)),
+        ("capabilityIds", jsonArr (List.map toString r.capabilityIds)),
+        ("claimedActor",
+          match r.claimedActor with
+          | some a => encodeParty a
+          | none => "null")]
+/home/charl/defiformal-wt-p19-certificates-grok-opus-20260909/review/semantic-kernel/certificates/p19/implementation/agy-r22-proof/probes/test_typed_roundtrip.lean:537:74: error: Application type mismatch: The argument
+  h_caps
+has type
+  r.capabilityIds.length ≤ 4096
+but is expected to have type
+  (do
+        let a ← r.capabilityIds
+        pure ↑a).length ≤
+    4096
+in the application
+  valid_arr_map (fun x => TreeJson.num x)
+    (do
+      let a ← r.capabilityIds
+      pure ↑a)
+    h_caps
+/home/charl/defiformal-wt-p19-certificates-grok-opus-20260909/review/semantic-kernel/certificates/p19/implementation/agy-r22-proof/probes/test_typed_roundtrip.lean:589:99: error: unsolved goals
+t : TypesEnumEnc
+⊢ ∀ a ∈ t.parties, (partyToTreeJson a).toJson = partyToJson a
+/home/charl/defiformal-wt-p19-certificates-grok-opus-20260909/review/semantic-kernel/certificates/p19/implementation/agy-r22-proof/probes/test_typed_roundtrip.lean:586:58: error: unsolved goals
+t : TypesEnumEnc
+h_ps : List.map (fun x => (partyToTreeJson x).toJson) t.parties = List.map partyToJson t.parties
+⊢ Json.mkObj
+      [("parties", Json.arr (List.map (fun x => (partyToTreeJson x).toJson) t.parties).toArray),
+        ("assets", Json.arr (List.map (fun x => (assetToTreeJson x).toJson) t.assets).toArray),
+        ("domains", Json.arr (List.map (fun x => (domainToTreeJson x).toJson) t.domains).toArray)] =
+    Json.mkObj
+      [("parties", Json.arr (List.map partyToJson t.parties).toArray),
+        ("assets", Json.arr (List.map assetToJson t.assets).toArray),
+        ("domains", Json.arr (List.map domainToJson t.domains).toArray)]
+/home/charl/defiformal-wt-p19-certificates-grok-opus-20260909/review/semantic-kernel/certificates/p19/implementation/agy-r22-proof/probes/test_typed_roundtrip.lean:590:9: error: unexpected identifier; expected command
+/home/charl/defiformal-wt-p19-certificates-grok-opus-20260909/review/semantic-kernel/certificates/p19/implementation/agy-r22-proof/probes/test_typed_roundtrip.lean:632:12: error: Tactic `rfl` failed: The left-hand side
+  (libraryRefToTreeJson lib).toJson
+is not definitionally equal to the right-hand side
+  libraryRefToJson lib
+
+case none
+lib : LibraryRefEnc
+⊢ (libraryRefToTreeJson lib).toJson = libraryRefToJson lib
+/home/charl/defiformal-wt-p19-certificates-grok-opus-20260909/review/semantic-kernel/certificates/p19/implementation/agy-r22-proof/probes/test_typed_roundtrip.lean:633:14: error: Tactic `rfl` failed: The left-hand side
+  (libraryRefToTreeJson lib).toJson
+is not definitionally equal to the right-hand side
+  libraryRefToJson lib
+
+case some
+lib : LibraryRefEnc
+m : String
+⊢ (libraryRefToTreeJson lib).toJson = libraryRefToJson lib
+/home/charl/defiformal-wt-p19-certificates-grok-opus-20260909/review/semantic-kernel/certificates/p19/implementation/agy-r22-proof/probes/test_typed_roundtrip.lean:642:8: error: Tactic `rewrite` failed: Did not find an occurrence of the pattern
+  escapeTreeString ?s
+in the target expression
+  jsonObj [("theorem", (TreeJson.str lib.theoremName).encode)] = jsonObj [("theorem", escapeJsonString lib.theoremName)]
+
+case none
+lib : LibraryRefEnc
+⊢ jsonObj [("theorem", (TreeJson.str lib.theoremName).encode)] = jsonObj [("theorem", escapeJsonString lib.theoremName)]
+/home/charl/defiformal-wt-p19-certificates-grok-opus-20260909/review/semantic-kernel/certificates/p19/implementation/agy-r22-proof/probes/test_typed_roundtrip.lean:646:8: error: Tactic `rewrite` failed: Did not find an occurrence of the pattern
+  escapeTreeString ?s
+in the target expression
+  jsonObj [("theorem", (TreeJson.str lib.theoremName).encode), ("module", (TreeJson.str m).encode)] =
+    jsonObj [("theorem", escapeJsonString lib.theoremName), ("module", escapeJsonString m)]
+
+case some
+lib : LibraryRefEnc
+m : String
+⊢ jsonObj [("theorem", (TreeJson.str lib.theoremName).encode), ("module", (TreeJson.str m).encode)] =
+    jsonObj [("theorem", escapeJsonString lib.theoremName), ("module", escapeJsonString m)]
