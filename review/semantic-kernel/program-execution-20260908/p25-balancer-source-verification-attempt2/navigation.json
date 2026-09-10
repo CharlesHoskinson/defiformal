@@ -1,0 +1,135 @@
+{
+  "utc": "2026-09-10T19:34:04.886681+00:00",
+  "commit": "449f7e074be4a92f9ed35ac8d201f45d4ac01f7e",
+  "anchors": [
+    {
+      "path": "source/pkg/vault/contracts/Vault.sol",
+      "source_sha256": "270e6f2c2fee00cdbd716d6c634a17eb323b4acb1391bdebeaa0a9ad1d6d1da9",
+      "start_line": 94,
+      "end_line": 131,
+      "excerpt": "     * time the external call is complete.\n     */\n    modifier transient() {\n        bool isUnlockedBefore = _isUnlocked().tload();\n\n        if (isUnlockedBefore == false) {\n            _isUnlocked().tstore(true);\n        }\n\n        // The caller does everything here and has to settle all outstanding balances.\n        _;\n\n        if (isUnlockedBefore == false) {\n            if (_nonZeroDeltaCount().tload() != 0) {\n                revert BalanceNotSettled();\n            }\n\n            _isUnlocked().tstore(false);\n\n            // If a user adds liquidity to a pool, then does a proportional withdrawal from that pool during the same\n            // interaction, the system charges a \"round-trip\" fee on the withdrawal. This fee makes it harder for an\n            // user to add liquidity to a pool using a virtually infinite flash loan, swapping in the same pool in a way\n            // that benefits him and removes liquidity in the same transaction, which is not a valid use case.\n            //\n            // Here we introduce the \"session\" concept, to prevent this fee from being charged accidentally. For\n            // example, if an aggregator or account abstraction contract bundled several unrelated operations in the\n            // same transaction that involved the same pool with different senders, the guardrail could be triggered\n            // for a user doing a simple withdrawal. If proper limits were set, the whole transaction would revert,\n            // and if they were not, the user would be unfairly \"taxed.\"\n            //\n            // Defining an \"interaction\" this way - as a single `unlock` call vs. an entire transaction - prevents the\n            // guardrail from being triggered in the cases described above.\n\n            // Increase session counter after locking the Vault.\n            _sessionIdSlot().tIncrement();\n        }\n    }\n\n",
+      "excerpt_sha256": "a4cf35ac64236c1c50979752524285a089bf6419154986e59ac259b0c9c63091",
+      "navigation_topic": "Outermost unlock checks nonzero deltas before relocking; nested unlock behavior is distinct."
+    },
+    {
+      "path": "source/pkg/vault/contracts/Vault.sol",
+      "source_sha256": "270e6f2c2fee00cdbd716d6c634a17eb323b4acb1391bdebeaa0a9ad1d6d1da9",
+      "start_line": 133,
+      "end_line": 155,
+      "excerpt": "    function unlock(bytes calldata data) external transient returns (bytes memory result) {\n        return (msg.sender).functionCall(data);\n    }\n\n    /// @inheritdoc IVaultMain\n    function settle(IERC20 token, uint256 amountHint) external nonReentrant onlyWhenUnlocked returns (uint256 credit) {\n        uint256 reservesBefore = _reservesOf[token];\n        uint256 currentReserves = token.balanceOf(address(this));\n        _reservesOf[token] = currentReserves;\n        credit = currentReserves - reservesBefore;\n\n        // If the given hint is equal or greater to the reserve difference, we just take the actual reserve difference\n        // as the paid amount; the actual balance of the tokens in the Vault is what matters here.\n        if (credit > amountHint) {\n            // If the difference in reserves is higher than the amount claimed to be paid by the caller, there was some\n            // leftover that had been sent to the Vault beforehand, which was not incorporated into the reserves.\n            // In that case, we simply discard the leftover by considering the given hint as the amount paid.\n            // In turn, this gives the caller credit for the given amount hint, which is what the caller is expecting.\n            credit = amountHint;\n        }\n\n        _supplyCredit(token, credit);\n    }\n",
+      "excerpt_sha256": "be640d2209cc98102ddedf6724f8a4bc5572f517e2c0d31f23040578b3c2de76",
+      "navigation_topic": "Settle reads balance minus prior reserves and caps credited amount by amountHint."
+    },
+    {
+      "path": "source/pkg/vault/contracts/Vault.sol",
+      "source_sha256": "270e6f2c2fee00cdbd716d6c634a17eb323b4acb1391bdebeaa0a9ad1d6d1da9",
+      "start_line": 158,
+      "end_line": 163,
+      "excerpt": "    function sendTo(IERC20 token, address to, uint256 amount) external nonReentrant onlyWhenUnlocked {\n        _takeDebt(token, amount);\n        _reservesOf[token] -= amount;\n\n        token.safeTransfer(to, amount);\n    }\n",
+      "excerpt_sha256": "ae09c856cb226093168730fd5222b09cd227842568eb9b188795d482ebce93e0",
+      "navigation_topic": "sendTo records debt and reduces reserves before SafeERC20 transfer."
+    },
+    {
+      "path": "source/pkg/vault/contracts/VaultCommon.sol",
+      "source_sha256": "dfc2ae7ec0693149a2177093aaa4437e6f50fdf651c767ed458c9a6fb311e761",
+      "start_line": 75,
+      "end_line": 119,
+      "excerpt": "     */\n    function _supplyCredit(IERC20 token, uint256 credit) internal {\n        _accountDelta(token, -credit.toInt256());\n    }\n\n    /**\n     * @notice Records the `debt` for a given token.\n     * @param token The ERC20 token for which the `debt` will be accounted\n     * @param debt The amount of `token` taken from the Vault in favor of the caller\n     */\n    function _takeDebt(IERC20 token, uint256 debt) internal {\n        _accountDelta(token, debt.toInt256());\n    }\n\n    /**\n     * @dev Accounts the delta for the given token. A positive delta represents debt,\n     * while a negative delta represents surplus.\n     *\n     * @param token The ERC20 token for which the delta is being accounted\n     * @param delta The difference in the token balance\n     * Positive indicates a debit or a decrease in Vault's tokens,\n     * negative indicates a credit or an increase in Vault's tokens.\n     */\n    function _accountDelta(IERC20 token, int256 delta) internal {\n        // If the delta is zero, there's nothing to account for.\n        if (delta == 0) return;\n\n        // Get the current recorded delta for this token.\n        int256 current = _tokenDeltas().tGet(token);\n\n        // Calculate the new delta after accounting for the change.\n        int256 next = current + delta;\n\n        if (next == 0) {\n            // If the resultant delta becomes zero after this operation,\n            // decrease the count of non-zero deltas.\n            _nonZeroDeltaCount().tDecrement();\n        } else if (current == 0) {\n            // If there was no previous delta (i.e., it was zero) and now we have one,\n            // increase the count of non-zero deltas.\n            _nonZeroDeltaCount().tIncrement();\n        }\n\n        // Update the delta for this token.\n        _tokenDeltas().tSet(token, next);\n",
+      "excerpt_sha256": "4302db646a86f447c1a0c99706cc7025fd9752285d7aa6e1d0b039d1b7321925",
+      "navigation_topic": "Credit is negative delta, debt positive; counter tracks zero/nonzero transitions."
+    },
+    {
+      "path": "source/pkg/vault/contracts/Vault.sol",
+      "source_sha256": "270e6f2c2fee00cdbd716d6c634a17eb323b4acb1391bdebeaa0a9ad1d6d1da9",
+      "start_line": 529,
+      "end_line": 596,
+      "excerpt": "        PoolData memory poolData = _loadPoolDataUpdatingBalancesAndYieldFees(params.pool, Rounding.ROUND_UP);\n        InputHelpers.ensureInputLengthMatch(poolData.tokens.length, params.maxAmountsIn.length);\n\n        // Amounts are entering pool math, so round down.\n        // Introducing `maxAmountsInScaled18` here and passing it through to _addLiquidity is not ideal,\n        // but it avoids the even worse options of mutating amountsIn inside AddLiquidityParams,\n        // or cluttering the AddLiquidityParams interface by adding amountsInScaled18.\n        uint256[] memory maxAmountsInScaled18 = params.maxAmountsIn.copyToScaled18ApplyRateRoundDownArray(\n            poolData.decimalScalingFactors,\n            poolData.tokenRates\n        );\n\n        if (poolData.poolConfigBits.shouldCallBeforeAddLiquidity()) {\n            HooksConfigLib.callBeforeAddLiquidityHook(\n                msg.sender,\n                maxAmountsInScaled18,\n                params,\n                poolData,\n                _hooksContracts[params.pool]\n            );\n            // The hook might have altered the balances, so we need to read them again to ensure that the data\n            // are fresh moving forward. We also need to upscale (adding liquidity, so round up) again.\n            poolData.reloadBalancesAndRates(_poolTokenBalances[params.pool], Rounding.ROUND_UP);\n\n            // Also update maxAmountsInScaled18, as the rates might have changed.\n            maxAmountsInScaled18 = params.maxAmountsIn.copyToScaled18ApplyRateRoundDownArray(\n                poolData.decimalScalingFactors,\n                poolData.tokenRates\n            );\n        }\n\n        // The bulk of the work is done here: the corresponding Pool hook is called, and the final balances\n        // are computed. This function is non-reentrant, as it performs the accounting updates.\n        //\n        // Note that poolData is mutated to update the Raw and Live balances, so they are accurate when passed\n        // into the AfterAddLiquidity hook.\n        //\n        // `amountsInScaled18` will be overwritten in the custom case, so we need to pass it back and forth to\n        // encapsulate that logic in `_addLiquidity`.\n        uint256[] memory amountsInScaled18;\n        (amountsIn, amountsInScaled18, bptAmountOut, returnData) = _addLiquidity(\n            poolData,\n            params,\n            maxAmountsInScaled18\n        );\n\n        // AmountsIn can be changed by onAfterAddLiquidity if the hook charges fees or gives discounts.\n        // Uses msg.sender as the Router (the contract that called the Vault).\n        if (poolData.poolConfigBits.shouldCallAfterAddLiquidity()) {\n            // `hooksContract` needed to fix stack too deep.\n            IHooks hooksContract = _hooksContracts[params.pool];\n\n            amountsIn = poolData.poolConfigBits.callAfterAddLiquidityHook(\n                msg.sender,\n                amountsInScaled18,\n                amountsIn,\n                bptAmountOut,\n                params,\n                poolData,\n                hooksContract\n            );\n        }\n    }\n\n    // Avoid \"stack too deep\" - without polluting the Add/RemoveLiquidity params interface.\n    struct LiquidityLocals {\n        uint256 numTokens;\n        uint256 aggregateSwapFeeAmountRaw;\n",
+      "excerpt_sha256": "6b223aa978ba46236279eae4f29c71990998ccd2f402972f730f3c85a8ddb92e",
+      "navigation_topic": "Before hook can change balances/rates; reload precedes liquidity accounting and after hook."
+    },
+    {
+      "path": "source/pkg/vault/contracts/lib/HooksConfigLib.sol",
+      "source_sha256": "5bd0a161e7af359a19975fdbae5eb897286f3e91812ab2645958f1fc4573e49b",
+      "start_line": 322,
+      "end_line": 348,
+      "excerpt": "     * @param hooksContract Storage slot with the address of the hooks contract\n     * @return hookAdjustedAmountsInRaw New amountsInRaw, potentially modified by the hook\n     */\n    function callAfterAddLiquidityHook(\n        PoolConfigBits config,\n        address router,\n        uint256[] memory amountsInScaled18,\n        uint256[] memory amountsInRaw,\n        uint256 bptAmountOut,\n        AddLiquidityParams memory params,\n        PoolData memory poolData,\n        IHooks hooksContract\n    ) internal returns (uint256[] memory) {\n        (bool success, uint256[] memory hookAdjustedAmountsInRaw) = hooksContract.onAfterAddLiquidity(\n            router,\n            params.pool,\n            params.kind,\n            amountsInScaled18,\n            amountsInRaw,\n            bptAmountOut,\n            poolData.balancesLiveScaled18,\n            params.userData\n        );\n\n        if (success == false || hookAdjustedAmountsInRaw.length != amountsInRaw.length) {\n            revert IVaultErrors.AfterAddLiquidityHookFailed();\n        }\n",
+      "excerpt_sha256": "ad0bf5013160257837c63241494b6645a486ab6642dc3dfe47083b78551b44b5",
+      "navigation_topic": "After hook false or wrong return length triggers AfterAddLiquidityHookFailed."
+    }
+  ],
+  "compiler_configuration_observed": {
+    "src": "contracts",
+    "out": "forge-artifacts",
+    "libs": [
+      "node_modules"
+    ],
+    "test": "test/foundry",
+    "cache_path": "forge-cache",
+    "allow_paths": [
+      "../",
+      "../../node_modules/"
+    ],
+    "ffi": true,
+    "fs_permissions": [
+      {
+        "access": "read",
+        "path": "./artifacts/"
+      },
+      {
+        "access": "read-write",
+        "path": "./.forge-snapshots/"
+      }
+    ],
+    "remappings": [
+      "vault/=../vault/",
+      "pool-weighted/=../pool-weighted/",
+      "solidity-utils/=../solidity-utils/",
+      "ds-test/=../../node_modules/forge-std/lib/ds-test/src/",
+      "forge-std/=../../node_modules/forge-std/src/",
+      "@openzeppelin/=../../node_modules/@openzeppelin/",
+      "permit2/=../../node_modules/permit2/",
+      "@balancer-labs/=../../node_modules/@balancer-labs/",
+      "forge-gas-snapshot/=../../node_modules/forge-gas-snapshot/src/"
+    ],
+    "optimizer": true,
+    "optimizer_runs": 999,
+    "solc_version": "0.8.27",
+    "auto_detect_solc": false,
+    "evm_version": "cancun",
+    "ignored_error_codes": [
+      2394,
+      5574,
+      3860
+    ],
+    "allow_internal_expect_revert": true
+  },
+  "external_import_occurrences": 72,
+  "external_import_specifiers": [
+    "@openzeppelin/contracts/interfaces/IERC4626.sol",
+    "@openzeppelin/contracts/interfaces/draft-IERC6093.sol",
+    "@openzeppelin/contracts/proxy/Proxy.sol",
+    "@openzeppelin/contracts/token/ERC20/IERC20.sol",
+    "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol",
+    "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol",
+    "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol",
+    "@openzeppelin/contracts/utils/Address.sol",
+    "@openzeppelin/contracts/utils/Nonces.sol",
+    "@openzeppelin/contracts/utils/cryptography/ECDSA.sol",
+    "@openzeppelin/contracts/utils/cryptography/EIP712.sol",
+    "@openzeppelin/contracts/utils/introspection/ERC165.sol",
+    "@openzeppelin/contracts/utils/math/Math.sol",
+    "@openzeppelin/contracts/utils/math/SafeCast.sol",
+    "@openzeppelin/contracts/utils/math/SignedMath.sol",
+    "permit2/src/interfaces/IAllowanceTransfer.sol",
+    "permit2/src/interfaces/IPermit2.sol"
+  ],
+  "future_contract_concerns": [
+    "Define actual balances, stored reserves, signed transient debt/credit, pool balances, fees and excess-token residue separately; settle caps credit by hint.",
+    "Distinguish outer unlock settlement from nested unlock callbacks and session boundaries.",
+    "Before/after add hooks surround actual accounting updates and can alter balances/rates; model whole transaction rollback at the real EVM call boundary.",
+    "Resolve external token, proxy, SafeERC20 and Permit2 behavior and compiler/runtime assumptions before source-execution claims."
+  ],
+  "formal_proof": false,
+  "execution": false,
+  "P25_accepted": false
+}
