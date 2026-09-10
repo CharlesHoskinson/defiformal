@@ -1,0 +1,49 @@
+{
+  "utc": "2026-09-10T22:12:01.853695+00:00",
+  "packets": [
+    {
+      "packet": "p28-payout-abi-diagnostic",
+      "bindings": 24,
+      "commands": 8,
+      "scenarios": 5,
+      "unchanged_upstream_sources": 71,
+      "unchanged_prior_contract_objects": 71,
+      "seal_sha256": "1dd194b97adedf97830ae11419d9944bac4aface12a5dc0c46f32ac079132a2d"
+    },
+    {
+      "packet": "p28-payout-abi-diagnostic-attempt2",
+      "bindings": 24,
+      "commands": 8,
+      "scenarios": 5,
+      "unchanged_upstream_sources": 71,
+      "unchanged_prior_contract_objects": 71,
+      "seal_sha256": "9c4191f1293fa6d13e49e8a96aa20fa2135c100c76d8c96037040f1cab1c349b"
+    }
+  ],
+  "current_diagnostic": "p28-payout-abi-diagnostic-attempt2",
+  "attempt1_limit": "Scenario1 assigned a constant64 marker, so it did not measure Product returndata length. Attempt2 obtains raw bytes from a low-level Product wrapper call and measures actual64bytes. Original attempt remains immutable.",
+  "reported_tool_versions": {
+    "solc": "solc, the solidity compiler commandline interface\nVersion: 0.8.2+commit.661d1103.Linux.g++",
+    "evm": "evm version 1.15.11-stable"
+  },
+  "source_and_runtime_findings": [
+    "Actual pinned ProductService delegates to actual pinned PolicyDefaultFlow, which returns default false plus mock treasury fee7/net93; raw returned bytes96.",
+    "Actual unchanged inherited Product._processPayout reads first two words as uint256s and returns(0,7), raw Product returndata64bytes; no implicit ABI rejection of trailing word.",
+    "Ignoring the Product return values reaches marker42, while each mock treasury/policy/pool call executes once and mock pool records100.",
+    "Exact source authorization and responsible-product error bytes are checked in two negative cases with all mock effect counterszero."
+  ],
+  "comparison_control": {
+    "intact_results_accepted": true,
+    "altered_product_return_rejected": true,
+    "source_files_mutated": false
+  },
+  "assumptions": [
+    "Mock registry routing/license authorization/component id and policy metadata.",
+    "Mock treasury return7/93 and counters; no token movement, fees charged, real payout or real policy/pool bookkeeping.",
+    "Harness runtime injected by evm run; actual upstream service and flow constructors invoked from diagnostic.",
+    "Compiler defaultIstanbul, executionParis block0timestamp1; no chain deployment/state or full DepegProduct.processPolicy path."
+  ],
+  "full_P28_entry_contract_open": true,
+  "P28_accepted": false,
+  "independent_review_pending": true
+}
