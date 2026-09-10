@@ -167,3 +167,16 @@ and recover current dispatch from CURRENT.json and STATE.json.
 ## Author and auditor change, 2026-09-10
 
 The user instructed: "resume your roadmap using AGY gemini Flash 3.8 high and grok to audit". Resume the full authorized DeFiFormal core roadmap. Native AGY `gemini-3.8-flash-high` with `--effort high` implements; a fresh native Grok `grok-4.6` session with high reasoning effort independently audits completed frozen candidates. This supersedes the earlier Grok-author/Opus-review routing for future work, including pending candidate reviews. Preserve all historical AGY/Grok/Opus authorship and review identities. Existing accepted plans and implementation gates remain binding. One substantive author and one independent auditor at a time, each using isolated source/build state. Root verifies, adjudicates, integrates and publishes to semantic-kernel-pivot. No Foreman, main merge, extra windows, or Atlas work. Recover current dispatch from STATE.json and CURRENT.json.
+
+## One branch, 2026-09-10
+
+The user instructed: "let's get to one branch". Use `semantic-kernel-pivot`
+as the sole local and GitHub development/delivery branch and the GitHub default.
+This supersedes older instructions to keep named worker or Atlas feature branches.
+Preserve Atlas as parked evidence; branch consolidation does not authorize Atlas
+work or accept unfinished candidates. Existing auxiliary worktrees retain their
+files at detached HEADs. Future author and reviewer isolation uses detached
+working copies; do not create extra branch names. Accepted changes and clearly
+labelled candidate snapshots are published on the sole branch. Recover former
+branch heads from `review/semantic-kernel/one-branch-20260910/manifest.json`.
+Historical records retain their original branch names and exact identities.
