@@ -1,0 +1,15 @@
+# P18 versioned token0 example and evidence release acceptance
+
+Root accepts and integrates P18 with limitations, covering program tasks19.1–19.3: the version0.1.0 external-user Lean token0 example/API and its accepted-P16 evidence packets. This is an arithmetic library increment, not a new source campaign or a universal source-refinement result.
+
+The exact 140-file Grok R2 candidate is bound by archive SHA256 `75319b8f5879ae448c722fe4d1d24bf998a7a27d0c6a47b7ed078f296ded1ed3`. Independent native Grok review requested `grok-4.6` high and returned `grok-4.6-build`, fresh session `01a08972-d034-73e0-9056-635e767e35ab`. Its verdict is ACCEPT_WITH_LIMITATIONS, closing P18-R1 through P18-R5. See `p18-implementation-grok-review-r1/REVIEW.md`, `root-adjudication.json` and `root-seal.json`.
+
+Primary integration passed the actual environment binder, all12 Lean example observations, the public evidence validator, all8 real release-control classifications and missing-binding exit3. The example includes zero identity, ordinary add, removal refusal and overflow fallback. The independent review also checked the affected22-row P16 runtime consumer and kept empty Tests.lean compilation distinct from runtime. See `p18-primary-integration-check-r2/summary.json`.
+
+The package resolves12 prior source invocations plus4 model invocations,6 compiled production mutants and6 unaffected controls by actual evidence hashes. These counts carry their original P16 execution and GPT-6 acceptance identities. They are not new Grok source executions or proofs. Packet schema validity alone receives no semantic credit.
+
+The reviewer’s source-path limitation concerns a candidate-overlay-only sandbox. The required source capture is already tracked at the candidate’s recorded Git base and in the delivery repository with SHA256 `ddd62e3a94346248677f30f1ab009ef015e71e4b8696dcca890eeabc9dc6c149`. Root omitted it from sandbox preparation. The reviewer’s separate source-present diagnostic and the primary integration both pass. The overlay archive is not a standalone repository. Preserve the original blocked3 and failed4/8 results and the reviewer’s wording; see `p18-root-sandbox-source-omission.json` for the exact baseline Git identities.
+
+Use `examples/platform-increment/README.md` for binding and invocation. The frozen candidate’s Opus-pending and credit_eligible:false fields are historical pre-review metadata. This external root decision supplies current acceptance and actual reviewer identity. Illustrative, empty and blocked control packets retain false credit; they are never promoted by this decision.
+
+P17 is accepted separately and its packets are absent from this P18 release. Source/assembly refinement P30, wider liquidity P21, certificate correspondence P19/P20, full M4, untouched evaluation and whole-program P37 remain open. This increment does not claim pool storage, cash settlement or sequential token0-vault composition. Delivery is only to semantic-kernel-pivot; main and Atlas remain unchanged.
