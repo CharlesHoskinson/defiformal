@@ -1,0 +1,121 @@
+{
+  "schema": "defiformal-general-codec-findings/v1",
+  "mark": "GENERAL_CODEC_COMPONENT_REVIEW_ONLY_FULL_P19_OPEN",
+  "acceptance": false,
+  "verdict": "CHANGES_REQUIRED",
+  "session": "01a08acb-1748-7ff2-986e-cf06a229462b",
+  "fresh_session": false,
+  "evidence_classes": {
+    "compiler_proved": "Kernel theorems imported from the private rebuild; #print axioms on all 150 named source theorems with child_compiler_exit 0.",
+    "successful_execution": "Child compiler exit 0 and no Lean error: line. ProbeAxioms and ProbeR10 only.",
+    "source_inspection": "Read of frozen Schema/Encode/Decode/CanonicalJson/Correspondence/Check/grammar/R10 REPORT/results/theorems/source-manifest/root precheck.",
+    "failed_probe": "Nonzero child compiler exit or Lean error: line. None in this R10 audit. Native process_exit 1 is session cancellation, not a Lean failure.",
+    "author_captured": "Inspected R10 evidence folder files and author commands.json; fixtures/scenarios not re-run.",
+    "unverified": "Not executed in this review."
+  },
+  "findings": [
+    {
+      "id": "R10-DEPTH-FIDELITY",
+      "severity": "blocker",
+      "class": "remaining_52_55_cap_excludes_admitted_grammar",
+      "evidence_class": "source_inspection+successful_execution",
+      "source": "Correspondence.lean ExprDepthBounded/exprMaxStackDepth/TemplateDepthBounded Encode.lean encodeExpr",
+      "issue": "ExprDepthBounded remains exprMaxStackDepth e ≤ 52 AND exprDepth e ≤ 55. REPORT claims the old exprDepth ≤ 55 cap was eliminated and that stack ≤ 52 plus 10 outer levels yields document depth ≤ 62 < 64. The 55 conjunct is still in source. ProbeR10 (child_compiler_exit 0): wrapNow 51 (AST 52, stack 52) stackLe52 true, document nest 58, decodeBytes ok-eq. wrapNow 52 (AST 53, stack 53) stackLe52 false, depthLe55 true, nest 59, decodeBytes ok-eq. wrapNow 55 (AST 56) nest 62 ok-eq. wrapNow 57 (AST 58) nest 64 ok-eq. Outer framing on the typed-execute guard path is 6 (witness nest 6; 6+stack), not 10. The 52 cap excludes decoder-admitted guards at JSON depth 59–64. The 55 conjunct does not bind once stack ≤ 52, because stack ≥ AST depth on these constructors. TemplateDepthBounded now walks guard, deltas.amount, and supplyDeltas.amount. That is R10 progress relative to R9's guard-only bound. It is not a whole-document JSON-depth equivalence, and it still uses the 52/55 conjuncts. No kernel SupportedIR membership proof; the probe printed Nat.ble, not decide ExprDepthBounded. Do not shrink grammar to make the theorem true.",
+      "probe": "../logs/probe-r10.stdout",
+      "actual": {
+        "witness_bytes": 3427,
+        "witness_nest": 6,
+        "wrapNow51_ast_stack_nest": [52, 52, 52],
+        "wrapNow51_stackLe52": true,
+        "guard52_document_nest": 58,
+        "guard52_decode": "ok-eq",
+        "wrapNow52_ast_stack_nest": [53, 53, 53],
+        "wrapNow52_stackLe52": false,
+        "wrapNow52_depthLe55": true,
+        "guard53_document_nest": 59,
+        "guard53_decode": "ok-eq",
+        "guard56_document_nest": 62,
+        "guard56_decode": "ok-eq",
+        "guard58_document_nest": 64,
+        "guard58_decode": "ok-eq"
+      }
+    },
+    {
+      "id": "R10-STACK-MEASURE-INEXACT",
+      "severity": "blocker",
+      "class": "exprMaxStackDepth_not_encodeExpr_nest",
+      "evidence_class": "source_inspection+successful_execution",
+      "source": "Correspondence.lean exprMaxStackDepth Encode.lean encodeExpr encodePackedCellRef encodeUnaryOp encodeBinaryOp",
+      "issue": "exprMaxStackDepth is constructor-sensitive but is not exact production JSON nesting. ProbeR10 encodeNest versus claimed stack: now 1=1, litBool/litNum/arg/timestamp 2=2, observe 3=3, unaryNotNow 2=2, binAnd 2=2. Mismatches: balance claimed 3 actual encodeNest 4 (packedCellRef + cellRef + partyRef owner object); unaryNegNow claimed 2 actual 3 (op.numeric object); binAdd claimed 2 actual 3. REPORT's displayed definition assigns every leaf 1; frozen source uses 2 or 3 for several leaves. The 52 cap is therefore both an undercount on some constructors and an over-restriction on now-unary guards. There is no proved equivalence between exprMaxStackDepth, encodeExpr nesting, and scanLexical/parseStep depth 64.",
+      "probe": "../logs/probe-r10.stdout",
+      "actual": {
+        "balance_stack": 3,
+        "balance_encodeNest": 4,
+        "unaryNegNow_stack": 2,
+        "unaryNegNow_encodeNest": 3,
+        "binAdd_stack": 2,
+        "binAdd_encodeNest": 3
+      }
+    },
+    {
+      "id": "R10-PUBLIC-RESOURCE-CLASSIFICATION",
+      "severity": "blocker",
+      "class": "parser_resourceLimit_mapped_to_malformed",
+      "evidence_class": "source_inspection+successful_execution",
+      "source": "Decode.lean decodeBytes parseCanonicalJson remap; Check.lean checkBytes; CanonicalJson.lean feedValue; Decode.lean scanLexical",
+      "issue": "decodeBytes maps every parseCanonicalJson error to notJsonObject. checkBytes maps resourceLimit to blocked and every other decode error to malformed. Grammar requires exceeded resource limits to be CodecResult.blocked. ProbeR10 raw 4097-element array: scanLexical ok, parseCanonicalJson resourceLimit max_array_length, decodeBytes notJsonObject, checkBytes malformed:notJsonObject. Scanner comma-count admits 4097; parser refuses the 4097th. Public refusal still happens; the classification is malformed rather than blocked. SupportedIR membership is not required for this raw-byte classification test. Decode and Check hashes are unchanged from R9. This is a frozen R10 defect already assigned to R11; it is not treated as repaired.",
+      "probe": "../logs/probe-r10.stdout",
+      "actual": {
+        "arr4097_len_bytes": 8201,
+        "arr4097_scan": "ok",
+        "arr4097_parse": "resourceLimit max_array_length",
+        "arr4097_decode": "notJsonObject",
+        "arr4097_check": "malformed:notJsonObject"
+      }
+    },
+    {
+      "id": "R10-UNIVERSAL-OPEN",
+      "severity": "blocker",
+      "class": "helper_inversions_not_encodeModule_decodeBytes",
+      "evidence_class": "compiler_proved+source_inspection",
+      "source": "Correspondence.lean EncodeDecodeRoundtripStatement decodeExpr_exprToJson decodePackedValue_canonical decodeRegistry_registryToJson CanonicalJson.lean tokenizeFuel_string parseTokens_*",
+      "issue": "EncodeDecodeRoundtripStatement remains def Prop. Fresh axiom audit printed 150 named theorems, all standard axioms only (propext, Classical.choice, Quot.sound); three have empty axiom lists. That is compiler-proved helper progress, not the universal IR theorem. decodeExprFuel_exprToJson / decodeExpr_exprToJson invert exprToJson through decodeExprFuel 64 under ExprCanonical and AST depth ≤ 64, not encodeExpr/encodeModule. decodePackedValue_canonical inverts packedValueFullToJson, not encodePackedValue bytes. packedValueToJson for bool is Json.bool. decodeRegistry_registryToJson assumes RegistryCanonical (Nodup + TemplateCanonical). decodeTemplate_templateToJson assumes TemplateCanonical. decodeSourcePin_sourcePinToJson requires compiler_record = none and audit_record = none and uses sourcePinToJson, which omits those keys; production encodeSourcePin emits them. decodeStateCell_stateCellToJson requires nonneg, which matches grammar stateNonneg. tokenizeFuel_string connects escaped character lists to a string token plus remaining tokenizeFuel; parseTokens_* invert singleton token lists. There is no proved tokenize-then-parseCanonicalJson-then-decodeBytes of encodeModule bytes. decodeBytes_encode_canonical and decode_encode_roundtrip_of_decode assume prior decodeBytes = .ok. No componentToJson inversion exists despite production encodeComponent/decodeComponent. A valid helper is progress and is not full encodeModule/decodeBytes proof.",
+      "probe": "../logs/probe-axioms.stdout"
+    },
+    {
+      "id": "R10-COUNT-AND-REPORT-IDENTITY",
+      "severity": "blocker",
+      "class": "author_count_and_report_text_disagree_with_source",
+      "evidence_class": "source_inspection+compiler_proved+author_captured",
+      "source": "Correspondence.lean CanonicalJson.lean theorems.json results.json REPORT.md source-manifest.json",
+      "issue": "Actual ^theorem declarations: CanonicalJson 15 + Correspondence 135 = 150. ProbeAxioms printed all 150 names. theorems.json count field and array length are 148, split 133 Correspondence + 15 CanonicalJson; source theorems missing from that list are decodeParty_encodeParty and decodeRat_fromRat. REPORT says 148 total and 138 Correspondence + 10 CanonicalJson. results.json theorems_count is 148 and the findings prose says 138 Correspondence inversions. CanonicalJson 10 is the R9 number; five new tokenizer/parser theorems are present in source. REPORT source hashes for Schema/Encode/Decode/CanonicalJson/Correspondence/Check/Verify match the frozen files and source-manifest. source-manifest lean_version string says 4.33.1 while the executable path is v4.33.0-rc2. Header auditor grok-4.6-high is pending, not an observed review of R10. Author commands.json cwd is the author worktree. Captured 54-fixture / 99-scenario files remain historical with known F13 null/host/overlay holes; they were not re-run and are not fresh evidence. REPORT finding R9-DEPTH-INCOMPLETE is marked RESOLVED; the 52/55 conjunct remains.",
+      "actual": {
+        "source_canonicaljson_theorems": 15,
+        "source_correspondence_theorems": 135,
+        "source_total": 150,
+        "print_axioms_count": 150,
+        "theorems_json_count_field": 148,
+        "theorems_json_correspondence": 133,
+        "theorems_json_canonicaljson": 15,
+        "in_source_not_json": ["decodeParty_encodeParty", "decodeRat_fromRat"],
+        "report_claimed_total": 148,
+        "report_claimed_correspondence": 138,
+        "report_claimed_canonicaljson": 10
+      }
+    },
+    {
+      "id": "R10-COLLECTION-BOUNDS-PROGRESS",
+      "severity": "note",
+      "class": "nested_array_predicates_added",
+      "evidence_class": "source_inspection",
+      "source": "Correspondence.lean OperationInterfaceLengthBounds ComponentLengthBounds ConfigLengthBounds ClaimedNextStateLengthBounds EnvelopeLengthBounds StepPayloadLengthBounds RunPayloadLengthBounds",
+      "issue": "R9 omitted component privateCells/exports/imports/operations, operation inputs/outputs, and claimed_next_state.capabilities.entries from length predicates. Frozen R10 source adds those bounds at 4096 (cells == 32 for claimed next state) and threads them through envelope/step/run/config predicates. This review does not reassert the R9 omitted-array finding as a current source defect. It also did not re-run the R9 4097 catalog/inputs/capabilities campaigns. Predicate text is not a kernel proof that every SupportedIR document satisfies parser 4096, and it is not public acceptance of oversized arrays."
+    }
+  ],
+  "failed_probes_zero_credit": [],
+  "not_fresh_evidence": [
+    "author fixture-results.json 54/54",
+    "author scenario-results.json 99",
+    "author compiler-axiom-audit.log 1266/420/287 campaign counts"
+  ]
+}
