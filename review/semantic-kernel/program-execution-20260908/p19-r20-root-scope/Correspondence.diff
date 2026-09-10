@@ -1,0 +1,720 @@
+--- R19/lean/DefiKernel/Certificates/Correspondence.lean
++++ R20/lean/DefiKernel/Certificates/Correspondence.lean
+@@ -3991,5 +3991,717 @@
+       let j ← parseCanonicalJson (encodeExpr (.observe ⟨⟨.main, 0⟩, .bool⟩))
+       decodeExpr j) = .ok (.observe ⟨⟨.main, 0⟩, .bool⟩) := rfl
+ 
++/-- TreeJson escape string equivalence to standard escapeJsonString. -/
++theorem escapeTreeString_eq_escapeJsonString (s : String) :
++    escapeTreeString s = escapeJsonString s := rfl
++
++/-- List encoding equivalence for TreeJson arrays. -/
++theorem encodeList_eq_intercalate (xs : List TreeJson) :
++    TreeJson.encodeList xs = String.intercalate "," (xs.map TreeJson.encode) := by
++  induction xs with
++  | nil => rfl
++  | cons x xs ih =>
++    cases xs with
++    | nil => rfl
++    | cons y ys =>
++      dsimp [TreeJson.encodeList, List.map]
++      rw [String.intercalate_cons_cons]
++      rw [ih]
++      rfl
++
++/-- Object encoding equivalence for TreeJson objects. -/
++theorem encodeObj_eq_intercalate (kvs : List (String × TreeJson)) :
++    TreeJson.encodeObj kvs = String.intercalate "," (kvs.map (fun (k, v) => escapeJsonString k ++ ":" ++ TreeJson.encode v)) := by
++  induction kvs with
++  | nil => rfl
++  | cons kv kvs ih =>
++    rcases kv with ⟨k, v⟩
++    cases kvs with
++    | nil => rfl
++    | cons kv2 kvs2 =>
++      dsimp [TreeJson.encodeObj, List.map]
++      rw [String.intercalate_cons_cons]
++      rw [ih]
++      rfl
++
++/-- Exact representation equality connecting TreeJson array encoding to jsonArr. -/
++theorem encode_arr_eq_jsonArr (xs : List TreeJson) :
++    TreeJson.encode (.arr xs) = jsonArr (xs.map TreeJson.encode) := by
++  dsimp [TreeJson.encode, jsonArr]
++  rw [encodeList_eq_intercalate]
++
++/-- Exact representation equality connecting TreeJson object encoding to jsonObj. -/
++theorem encode_obj_eq_jsonObj (kvs : List (String × TreeJson)) :
++    TreeJson.encode (.obj kvs) = jsonObj (kvs.map (fun (k, v) => (k, TreeJson.encode v))) := by
++  dsimp [TreeJson.encode, jsonObj]
++  rw [encodeObj_eq_intercalate]
++  simp only [List.map_map]
++  rfl
++
++/-- Structured TreeJson representation for canonical rational numbers. -/
++def ratToTreeJson (r : RatEnc) : TreeJson :=
++  TreeJson.obj [("num", TreeJson.num r.num), ("den", TreeJson.num (r.den : Int))]
++
++/-- Semantic JSON correspondence for TreeJson rationals. -/
++theorem ratToTreeJson_toJson (r : RatEnc) :
++    (ratToTreeJson r).toJson = ratToJson r := by
++  dsimp [ratToTreeJson, TreeJson.toJson, TreeJson.toJsonObj, ratToJson]
++  rfl
++
++/-- String encoding correspondence for TreeJson rationals. -/
++theorem ratToTreeJson_encode (r : RatEnc) :
++    (ratToTreeJson r).encode = encodeRat r := by
++  dsimp [ratToTreeJson, encodeRat]
++  rw [encode_obj_eq_jsonObj]
++  rfl
++
++/-- Structured TreeJson representation for parties. -/
++def partyToTreeJson (p : Party) : TreeJson :=
++  TreeJson.str (match p with | .alice => "alice" | .bob => "bob" | .vault => "vault" | .pool => "pool")
++
++/-- Semantic JSON correspondence for TreeJson parties. -/
++theorem partyToTreeJson_toJson (p : Party) :
++    (partyToTreeJson p).toJson = partyToJson p := by
++  cases p <;> rfl
++
++/-- String encoding correspondence for TreeJson parties. -/
++theorem partyToTreeJson_encode (p : Party) :
++    (partyToTreeJson p).encode = encodeParty p := by
++  cases p <;> rfl
++
++/-- Structured TreeJson representation for assets. -/
++def assetToTreeJson (a : Asset) : TreeJson :=
++  TreeJson.str (match a with | .usd => "usd" | .share => "share" | .collateral => "collateral" | .debt => "debt")
++
++/-- Semantic JSON correspondence for TreeJson assets. -/
++theorem assetToTreeJson_toJson (a : Asset) :
++    (assetToTreeJson a).toJson = assetToJson a := by
++  cases a <;> rfl
++
++/-- String encoding correspondence for TreeJson assets. -/
++theorem assetToTreeJson_encode (a : Asset) :
++    (assetToTreeJson a).encode = encodeAsset a := by
++  cases a <;> rfl
++
++/-- Structured TreeJson representation for domains. -/
++def domainToTreeJson (d : Domain) : TreeJson :=
++  TreeJson.str (match d with | .main => "main" | .other => "other")
++
++/-- Semantic JSON correspondence for TreeJson domains. -/
++theorem domainToTreeJson_toJson (d : Domain) :
++    (domainToTreeJson d).toJson = domainToJson d := by
++  cases d <;> rfl
++
++/-- String encoding correspondence for TreeJson domains. -/
++theorem domainToTreeJson_encode (d : Domain) :
++    (domainToTreeJson d).encode = encodeDomain d := by
++  cases d <;> rfl
++
++/-- Structured TreeJson representation for party references. -/
++def partyRefToTreeJson : PartyRefEnc → TreeJson
++  | .caller => TreeJson.obj [("tag", TreeJson.str "caller")]
++  | .argument idx => TreeJson.obj [("tag", TreeJson.str "argument"), ("index", TreeJson.num idx)]
++  | .literal p => TreeJson.obj [("tag", TreeJson.str "literal"), ("party", partyToTreeJson p)]
++
++/-- Semantic JSON correspondence for TreeJson party references. -/
++theorem partyRefToTreeJson_toJson (pr : PartyRefEnc) :
++    (partyRefToTreeJson pr).toJson = partyRefToJson pr := by
++  cases pr with
++  | caller => rfl
++  | argument idx =>
++    dsimp [partyRefToTreeJson, TreeJson.toJson, TreeJson.toJsonObj, partyRefToJson]
++    rfl
++  | literal p =>
++    dsimp [partyRefToTreeJson, TreeJson.toJson, TreeJson.toJsonObj, partyRefToJson]
++    rw [partyToTreeJson_toJson]
++
++/-- String encoding correspondence for TreeJson party references. -/
++theorem partyRefToTreeJson_encode (pr : PartyRefEnc) :
++    (partyRefToTreeJson pr).encode = encodePartyRef pr := by
++  cases pr with
++  | caller => rfl
++  | argument idx =>
++    dsimp [partyRefToTreeJson, encodePartyRef]
++    rw [encode_obj_eq_jsonObj]
++    dsimp [List.map]
++    rfl
++  | literal p =>
++    dsimp [partyRefToTreeJson, encodePartyRef]
++    rw [encode_obj_eq_jsonObj]
++    dsimp [List.map]
++    rw [partyToTreeJson_encode]
++    rfl
++
++/-- Structured TreeJson representation for cell references. -/
++def cellRefToTreeJson (c : CellRefEnc) : TreeJson :=
++  TreeJson.obj [("domain", domainToTreeJson c.domain), ("owner", partyRefToTreeJson c.owner)]
++
++/-- Semantic JSON correspondence for TreeJson cell references. -/
++theorem cellRefToTreeJson_toJson (c : CellRefEnc) :
++    (cellRefToTreeJson c).toJson = cellRefToJson c := by
++  dsimp [cellRefToTreeJson, TreeJson.toJson, TreeJson.toJsonObj, cellRefToJson]
++  rw [domainToTreeJson_toJson, partyRefToTreeJson_toJson]
++
++/-- String encoding correspondence for TreeJson cell references. -/
++theorem cellRefToTreeJson_encode (c : CellRefEnc) :
++    (cellRefToTreeJson c).encode = encodeCellRef c := by
++  dsimp [cellRefToTreeJson, encodeCellRef]
++  rw [encode_obj_eq_jsonObj]
++  dsimp [List.map]
++  rw [domainToTreeJson_encode, partyRefToTreeJson_encode]
++
++/-- Structured TreeJson representation for packed cell references. -/
++def packedCellRefToTreeJson (c : PackedCellRefEnc) : TreeJson :=
++  TreeJson.obj [("asset", assetToTreeJson c.asset), ("cell", cellRefToTreeJson c.cell)]
++
++/-- Semantic JSON correspondence for TreeJson packed cell references. -/
++theorem packedCellRefToTreeJson_toJson (c : PackedCellRefEnc) :
++    (packedCellRefToTreeJson c).toJson = packedCellRefToJson c := by
++  dsimp [packedCellRefToTreeJson, TreeJson.toJson, TreeJson.toJsonObj, packedCellRefToJson]
++  rw [assetToTreeJson_toJson, cellRefToTreeJson_toJson]
++
++/-- String encoding correspondence for TreeJson packed cell references. -/
++theorem packedCellRefToTreeJson_encode (c : PackedCellRefEnc) :
++    (packedCellRefToTreeJson c).encode = encodePackedCellRef c := by
++  dsimp [packedCellRefToTreeJson, encodePackedCellRef]
++  rw [encode_obj_eq_jsonObj]
++  dsimp [List.map]
++  rw [assetToTreeJson_encode, cellRefToTreeJson_encode]
++
++/-- Structured TreeJson representation for observation keys. -/
++def observationKeyToTreeJson (k : ObservationKeyEnc) : TreeJson :=
++  TreeJson.obj [("domain", domainToTreeJson k.domain), ("id", TreeJson.num k.id)]
++
++/-- Semantic JSON correspondence for TreeJson observation keys. -/
++theorem observationKeyToTreeJson_toJson (k : ObservationKeyEnc) :
++    (observationKeyToTreeJson k).toJson = observationKeyToJson k := by
++  dsimp [observationKeyToTreeJson, TreeJson.toJson, TreeJson.toJsonObj, observationKeyToJson]
++  rw [domainToTreeJson_toJson]
++  rfl
++
++/-- String encoding correspondence for TreeJson observation keys. -/
++theorem observationKeyToTreeJson_encode (k : ObservationKeyEnc) :
++    (observationKeyToTreeJson k).encode = encodeObservationKey k := by
++  dsimp [observationKeyToTreeJson, encodeObservationKey]
++  rw [encode_obj_eq_jsonObj]
++  dsimp [List.map]
++  rw [domainToTreeJson_encode]
++  rfl
++
++/-- Structured TreeJson representation for numeric units. -/
++def numericUnitToTreeJson : NumericUnitEnc → TreeJson
++  | .scalar => TreeJson.obj [("tag", TreeJson.str "scalar")]
++  | .amount a => TreeJson.obj [("tag", TreeJson.str "amount"), ("asset", assetToTreeJson a)]
++  | .price b q => TreeJson.obj [("tag", TreeJson.str "price"), ("base", assetToTreeJson b), ("quote", assetToTreeJson q)]
++
++/-- Semantic JSON correspondence for TreeJson numeric units. -/
++theorem numericUnitToTreeJson_toJson (nu : NumericUnitEnc) :
++    (numericUnitToTreeJson nu).toJson = numericUnitToJson nu := by
++  cases nu with
++  | scalar => rfl
++  | amount a =>
++    dsimp [numericUnitToTreeJson, TreeJson.toJson, TreeJson.toJsonObj, numericUnitToJson]
++    rw [assetToTreeJson_toJson]
++  | price b q =>
++    dsimp [numericUnitToTreeJson, TreeJson.toJson, TreeJson.toJsonObj, numericUnitToJson]
++    rw [assetToTreeJson_toJson, assetToTreeJson_toJson]
++
++/-- String encoding correspondence for TreeJson numeric units. -/
++theorem numericUnitToTreeJson_encode (nu : NumericUnitEnc) :
++    (numericUnitToTreeJson nu).encode = encodeNumericUnit nu := by
++  cases nu with
++  | scalar => rfl
++  | amount a =>
++    dsimp [numericUnitToTreeJson, encodeNumericUnit]
++    rw [encode_obj_eq_jsonObj]
++    dsimp [List.map]
++    rw [assetToTreeJson_encode]
++    rfl
++  | price b q =>
++    dsimp [numericUnitToTreeJson, encodeNumericUnit]
++    rw [encode_obj_eq_jsonObj]
++    dsimp [List.map]
++    rw [assetToTreeJson_encode, assetToTreeJson_encode]
++    rfl
++
++/-- Structured TreeJson representation for units. -/
++def unitToTreeJson : UnitEnc → TreeJson
++  | .bool => TreeJson.obj [("tag", TreeJson.str "bool")]
++  | .numeric nu => numericUnitToTreeJson nu
++
++/-- Semantic JSON correspondence for TreeJson units. -/
++theorem unitToTreeJson_toJson (u : UnitEnc) :
++    (unitToTreeJson u).toJson = unitToJson u := by
++  cases u with
++  | bool => rfl
++  | numeric nu => exact numericUnitToTreeJson_toJson nu
++
++/-- String encoding correspondence for TreeJson units. -/
++theorem unitToTreeJson_encode (u : UnitEnc) :
++    (unitToTreeJson u).encode = encodeUnit u := by
++  cases u with
++  | bool => rfl
++  | numeric nu => exact numericUnitToTreeJson_encode nu
++
++/-- Structured TreeJson representation for observation references. -/
++def observationRefToTreeJson (r : ObservationRefEnc) : TreeJson :=
++  TreeJson.obj [("key", observationKeyToTreeJson r.key), ("unit", unitToTreeJson r.unit)]
++
++/-- Semantic JSON correspondence for TreeJson observation references. -/
++theorem observationRefToTreeJson_toJson (r : ObservationRefEnc) :
++    (observationRefToTreeJson r).toJson = observationRefToJson r := by
++  dsimp [observationRefToTreeJson, TreeJson.toJson, TreeJson.toJsonObj, observationRefToJson]
++  rw [observationKeyToTreeJson_toJson, unitToTreeJson_toJson]
++
++/-- String encoding correspondence for TreeJson observation references. -/
++theorem observationRefToTreeJson_encode (r : ObservationRefEnc) :
++    (observationRefToTreeJson r).encode = encodeObservationRef r := by
++  dsimp [observationRefToTreeJson, encodeObservationRef]
++  rw [encode_obj_eq_jsonObj]
++  dsimp [List.map]
++  rw [observationKeyToTreeJson_encode, unitToTreeJson_encode]
++
++/-- Structured TreeJson representation for unary operations. -/
++def unaryOpToTreeJson : UnaryOpEnc → TreeJson
++  | .not => TreeJson.obj [("tag", TreeJson.str "not")]
++  | .neg nu => TreeJson.obj [("tag", TreeJson.str "neg"), ("numeric", numericUnitToTreeJson nu)]
++
++/-- Semantic JSON correspondence for TreeJson unary operations. -/
++theorem unaryOpToTreeJson_toJson (op : UnaryOpEnc) :
++    (unaryOpToTreeJson op).toJson = unaryOpToJson op := by
++  cases op with
++  | not => rfl
++  | neg nu =>
++    dsimp [unaryOpToTreeJson, TreeJson.toJson, TreeJson.toJsonObj, unaryOpToJson]
++    rw [numericUnitToTreeJson_toJson]
++
++/-- String encoding correspondence for TreeJson unary operations. -/
++theorem unaryOpToTreeJson_encode (op : UnaryOpEnc) :
++    (unaryOpToTreeJson op).encode = encodeUnaryOp op := by
++  cases op with
++  | not => rfl
++  | neg nu =>
++    dsimp [unaryOpToTreeJson, encodeUnaryOp]
++    rw [encode_obj_eq_jsonObj]
++    dsimp [List.map]
++    rw [numericUnitToTreeJson_encode]
++    rfl
++
++/-- Structured TreeJson representation for binary operations. -/
++def binaryOpToTreeJson : BinaryOpEnc → TreeJson
++  | .add nu => TreeJson.obj [("tag", TreeJson.str "add"), ("numeric", numericUnitToTreeJson nu)]
++  | .sub nu => TreeJson.obj [("tag", TreeJson.str "sub"), ("numeric", numericUnitToTreeJson nu)]
++  | .scale nu => TreeJson.obj [("tag", TreeJson.str "scale"), ("numeric", numericUnitToTreeJson nu)]
++  | .divide nu => TreeJson.obj [("tag", TreeJson.str "divide"), ("numeric", numericUnitToTreeJson nu)]
++  | .ratio nu => TreeJson.obj [("tag", TreeJson.str "ratio"), ("numeric", numericUnitToTreeJson nu)]
++  | .convert b q => TreeJson.obj [("tag", TreeJson.str "convert"), ("base", assetToTreeJson b), ("quote", assetToTreeJson q)]
++  | .unconvert b q => TreeJson.obj [("tag", TreeJson.str "unconvert"), ("base", assetToTreeJson b), ("quote", assetToTreeJson q)]
++  | .and => TreeJson.obj [("tag", TreeJson.str "and")]
++  | .or => TreeJson.obj [("tag", TreeJson.str "or")]
++  | .eq u => TreeJson.obj [("tag", TreeJson.str "eq"), ("unit", unitToTreeJson u)]
++  | .lt nu => TreeJson.obj [("tag", TreeJson.str "lt"), ("numeric", numericUnitToTreeJson nu)]
++  | .le nu => TreeJson.obj [("tag", TreeJson.str "le"), ("numeric", numericUnitToTreeJson nu)]
++
++/-- Semantic JSON correspondence for TreeJson binary operations. -/
++theorem binaryOpToTreeJson_toJson (op : BinaryOpEnc) :
++    (binaryOpToTreeJson op).toJson = binaryOpToJson op := by
++  cases op with
++  | and => rfl
++  | or => rfl
++  | eq u =>
++    dsimp [binaryOpToTreeJson, TreeJson.toJson, TreeJson.toJsonObj, binaryOpToJson]
++    rw [unitToTreeJson_toJson]
++  | add nu | sub nu | scale nu | divide nu | ratio nu | lt nu | le nu =>
++    dsimp [binaryOpToTreeJson, TreeJson.toJson, TreeJson.toJsonObj, binaryOpToJson]
++    rw [numericUnitToTreeJson_toJson]
++  | convert b q | unconvert b q =>
++    dsimp [binaryOpToTreeJson, TreeJson.toJson, TreeJson.toJsonObj, binaryOpToJson]
++    rw [assetToTreeJson_toJson, assetToTreeJson_toJson]
++
++/-- String encoding correspondence for TreeJson binary operations. -/
++theorem binaryOpToTreeJson_encode (op : BinaryOpEnc) :
++    (binaryOpToTreeJson op).encode = encodeBinaryOp op := by
++  cases op with
++  | and => rfl
++  | or => rfl
++  | eq u =>
++    dsimp [binaryOpToTreeJson, encodeBinaryOp]
++    rw [encode_obj_eq_jsonObj]
++    dsimp [List.map]
++    rw [unitToTreeJson_encode]
++    rfl
++  | add nu | sub nu | scale nu | divide nu | ratio nu | lt nu | le nu =>
++    dsimp [binaryOpToTreeJson, encodeBinaryOp]
++    rw [encode_obj_eq_jsonObj]
++    dsimp [List.map]
++    rw [numericUnitToTreeJson_encode]
++    rfl
++  | convert b q | unconvert b q =>
++    dsimp [binaryOpToTreeJson, encodeBinaryOp]
++    rw [encode_obj_eq_jsonObj]
++    dsimp [List.map]
++    rw [assetToTreeJson_encode, assetToTreeJson_encode]
++    rfl
++
++/-- Structured TreeJson representation for packed values. -/
++def packedValueToTreeJson (v : PackedValueEnc) : TreeJson :=
++  match v.unit with
++  | .bool => TreeJson.bool v.valBool
++  | .numeric _ => ratToTreeJson ⟨v.valRat.num, v.valRat.den⟩
++
++/-- Semantic JSON correspondence for TreeJson packed values. -/
++theorem packedValueToTreeJson_toJson (v : PackedValueEnc) :
++    (packedValueToTreeJson v).toJson = packedValueToJson v := by
++  dsimp [packedValueToTreeJson, packedValueToJson]
++  cases v.unit with
++  | bool => rfl
++  | numeric nu => exact ratToTreeJson_toJson ⟨v.valRat.num, v.valRat.den⟩
++
++/-- Universal recursive AST mapping from expressions to structured TreeJson trees. -/
++def exprToTreeJson : ExprEnc → TreeJson
++  | .lit v =>
++    match v.unit with
++    | .bool =>
++      TreeJson.obj [
++        ("tag", TreeJson.str "lit"),
++        ("unit", TreeJson.obj [("tag", TreeJson.str "bool")]),
++        ("value", TreeJson.bool v.valBool)
++      ]
++    | .numeric nu =>
++      TreeJson.obj [
++        ("tag", TreeJson.str "lit"),
++        ("unit", numericUnitToTreeJson nu),
++        ("value", ratToTreeJson ⟨v.valRat.num, v.valRat.den⟩)
++      ]
++  | .arg idx u =>
++    TreeJson.obj [
++      ("tag", TreeJson.str "arg"),
++      ("index", TreeJson.num idx),
++      ("unit", unitToTreeJson u)
++    ]
++  | .balance c =>
++    TreeJson.obj [
++      ("tag", TreeJson.str "balance"),
++      ("cell", packedCellRefToTreeJson c)
++    ]
++  | .observe r =>
++    TreeJson.obj [
++      ("tag", TreeJson.str "observe"),
++      ("ref", observationRefToTreeJson r)
++    ]
++  | .timestamp k =>
++    TreeJson.obj [
++      ("tag", TreeJson.str "timestamp"),
++      ("key", observationKeyToTreeJson k)
++    ]
++  | .now =>
++    TreeJson.obj [("tag", TreeJson.str "now")]
++  | .unary op x =>
++    TreeJson.obj [
++      ("tag", TreeJson.str "unary"),
++      ("op", unaryOpToTreeJson op),
++      ("x", exprToTreeJson x)
++    ]
++  | .binary op x y =>
++    TreeJson.obj [
++      ("tag", TreeJson.str "binary"),
++      ("op", binaryOpToTreeJson op),
++      ("x", exprToTreeJson x),
++      ("y", exprToTreeJson y)
++    ]
++  | .ite c y n =>
++    TreeJson.obj [
++      ("tag", TreeJson.str "ite"),
++      ("condition", exprToTreeJson c),
++      ("yes", exprToTreeJson y),
++      ("no", exprToTreeJson n)
++    ]
++
++/-- Universal semantic JSON theorem: exprToTreeJson faithfully matches exprToJson for all ASTs. -/
++theorem exprToTreeJson_toJson (e : ExprEnc) :
++    (exprToTreeJson e).toJson = exprToJson e := by
++  induction e with
++  | lit v =>
++    dsimp [exprToTreeJson, exprToJson]
++    cases h : v.unit with
++    | bool =>
++      dsimp [TreeJson.toJson, TreeJson.toJsonObj, unitToJson, packedValueToJson]
++      rw [h]
++    | numeric nu =>
++      dsimp [TreeJson.toJson, TreeJson.toJsonObj, unitToJson, packedValueToJson]
++      rw [h]
++      dsimp
++      rw [numericUnitToTreeJson_toJson nu, ratToTreeJson_toJson]
++  | arg idx u =>
++    dsimp [exprToTreeJson, TreeJson.toJson, TreeJson.toJsonObj, exprToJson]
++    rw [unitToTreeJson_toJson]
++    rfl
++  | balance c =>
++    dsimp [exprToTreeJson, TreeJson.toJson, TreeJson.toJsonObj, exprToJson]
++    rw [packedCellRefToTreeJson_toJson]
++  | observe r =>
++    dsimp [exprToTreeJson, TreeJson.toJson, TreeJson.toJsonObj, exprToJson]
++    rw [observationRefToTreeJson_toJson]
++  | timestamp k =>
++    dsimp [exprToTreeJson, TreeJson.toJson, TreeJson.toJsonObj, exprToJson]
++    rw [observationKeyToTreeJson_toJson]
++  | now =>
++    rfl
++  | unary op x ih =>
++    dsimp [exprToTreeJson, TreeJson.toJson, TreeJson.toJsonObj, exprToJson]
++    rw [unaryOpToTreeJson_toJson, ih]
++  | binary op x y ih_x ih_y =>
++    dsimp [exprToTreeJson, TreeJson.toJson, TreeJson.toJsonObj, exprToJson]
++    rw [binaryOpToTreeJson_toJson, ih_x, ih_y]
++  | ite c y n ih_c ih_y ih_n =>
++    dsimp [exprToTreeJson, TreeJson.toJson, TreeJson.toJsonObj, exprToJson]
++    rw [ih_c, ih_y, ih_n]
++
++/-- Universal string encoding theorem: exprToTreeJson faithfully matches encodeExpr for all ASTs. -/
++theorem exprToTreeJson_encode (e : ExprEnc) :
++    (exprToTreeJson e).encode = encodeExpr e := by
++  induction e with
++  | lit v =>
++    dsimp [exprToTreeJson, encodeExpr]
++    cases h : v.unit with
++    | bool =>
++      rw [encode_obj_eq_jsonObj]
++      dsimp [List.map]
++      cases v.valBool <;> rfl
++    | numeric nu =>
++      rw [encode_obj_eq_jsonObj]
++      dsimp [List.map]
++      rw [numericUnitToTreeJson_encode, ratToTreeJson_encode]
++      rfl
++  | arg idx u =>
++    dsimp [exprToTreeJson, encodeExpr]
++    rw [encode_obj_eq_jsonObj]
++    dsimp [List.map]
++    rw [unitToTreeJson_encode]
++    rfl
++  | balance c =>
++    dsimp [exprToTreeJson, encodeExpr]
++    rw [encode_obj_eq_jsonObj]
++    dsimp [List.map]
++    rw [packedCellRefToTreeJson_encode]
++    rfl
++  | observe r =>
++    dsimp [exprToTreeJson, encodeExpr]
++    rw [encode_obj_eq_jsonObj]
++    dsimp [List.map]
++    rw [observationRefToTreeJson_encode]
++    rfl
++  | timestamp k =>
++    dsimp [exprToTreeJson, encodeExpr]
++    rw [encode_obj_eq_jsonObj]
++    dsimp [List.map]
++    rw [observationKeyToTreeJson_encode]
++    rfl
++  | now =>
++    rfl
++  | unary op x ih =>
++    dsimp [exprToTreeJson, encodeExpr]
++    rw [encode_obj_eq_jsonObj]
++    dsimp [List.map]
++    rw [unaryOpToTreeJson_encode, ih]
++    rfl
++  | binary op x y ih_x ih_y =>
++    dsimp [exprToTreeJson, encodeExpr]
++    rw [encode_obj_eq_jsonObj]
++    dsimp [List.map]
++    rw [binaryOpToTreeJson_encode, ih_x, ih_y]
++    rfl
++  | ite c y n ih_c ih_y ih_n =>
++    dsimp [exprToTreeJson, encodeExpr]
++    rw [encode_obj_eq_jsonObj]
++    dsimp [List.map]
++    rw [ih_c, ih_y, ih_n]
++    rfl
++
++/-- Validity of rational TreeJson. -/
++theorem ratToTreeJson_valid (r : RatEnc) : TreeJson.Valid (ratToTreeJson r) := by
++  dsimp [ratToTreeJson, TreeJson.Valid, TreeJson.ValidObj]
++  simp only [List.map_cons, List.map_nil]
++  refine ⟨by decide, trivial, trivial, trivial⟩
++
++/-- Validity of party TreeJson. -/
++theorem partyToTreeJson_valid (p : Party) : TreeJson.Valid (partyToTreeJson p) := by
++  cases p <;> trivial
++
++/-- Validity of asset TreeJson. -/
++theorem assetToTreeJson_valid (a : Asset) : TreeJson.Valid (assetToTreeJson a) := by
++  cases a <;> trivial
++
++/-- Validity of domain TreeJson. -/
++theorem domainToTreeJson_valid (d : Domain) : TreeJson.Valid (domainToTreeJson d) := by
++  cases d <;> trivial
++
++/-- Validity of party reference TreeJson. -/
++theorem partyRefToTreeJson_valid (pr : PartyRefEnc) : TreeJson.Valid (partyRefToTreeJson pr) := by
++  cases pr with
++  | caller =>
++    dsimp [partyRefToTreeJson, TreeJson.Valid, TreeJson.ValidObj]
++    simp only [List.map_cons, List.map_nil]
++    refine ⟨by decide, trivial, trivial⟩
++  | argument idx =>
++    dsimp [partyRefToTreeJson, TreeJson.Valid, TreeJson.ValidObj]
++    simp only [List.map_cons, List.map_nil]
++    refine ⟨by decide, trivial, trivial, trivial⟩
++  | literal p =>
++    dsimp [partyRefToTreeJson, TreeJson.Valid, TreeJson.ValidObj]
++    simp only [List.map_cons, List.map_nil]
++    refine ⟨by decide, trivial, partyToTreeJson_valid p, trivial⟩
++
++/-- Validity of cell reference TreeJson. -/
++theorem cellRefToTreeJson_valid (c : CellRefEnc) : TreeJson.Valid (cellRefToTreeJson c) := by
++  dsimp [cellRefToTreeJson, TreeJson.Valid, TreeJson.ValidObj]
++  simp only [List.map_cons, List.map_nil]
++  refine ⟨by decide, domainToTreeJson_valid c.domain, partyRefToTreeJson_valid c.owner, trivial⟩
++
++/-- Validity of packed cell reference TreeJson. -/
++theorem packedCellRefToTreeJson_valid (c : PackedCellRefEnc) : TreeJson.Valid (packedCellRefToTreeJson c) := by
++  dsimp [packedCellRefToTreeJson, TreeJson.Valid, TreeJson.ValidObj]
++  simp only [List.map_cons, List.map_nil]
++  refine ⟨by decide, assetToTreeJson_valid c.asset, cellRefToTreeJson_valid c.cell, trivial⟩
++
++/-- Validity of observation key TreeJson. -/
++theorem observationKeyToTreeJson_valid (k : ObservationKeyEnc) : TreeJson.Valid (observationKeyToTreeJson k) := by
++  dsimp [observationKeyToTreeJson, TreeJson.Valid, TreeJson.ValidObj]
++  simp only [List.map_cons, List.map_nil]
++  refine ⟨by decide, domainToTreeJson_valid k.domain, trivial, trivial⟩
++
++/-- Validity of numeric unit TreeJson. -/
++theorem numericUnitToTreeJson_valid (nu : NumericUnitEnc) : TreeJson.Valid (numericUnitToTreeJson nu) := by
++  cases nu with
++  | scalar =>
++    dsimp [numericUnitToTreeJson, TreeJson.Valid, TreeJson.ValidObj]
++    simp only [List.map_cons, List.map_nil]
++    refine ⟨by decide, trivial, trivial⟩
++  | amount a =>
++    dsimp [numericUnitToTreeJson, TreeJson.Valid, TreeJson.ValidObj]
++    simp only [List.map_cons, List.map_nil]
++    refine ⟨by decide, trivial, assetToTreeJson_valid a, trivial⟩
++  | price b q =>
++    dsimp [numericUnitToTreeJson, TreeJson.Valid, TreeJson.ValidObj]
++    simp only [List.map_cons, List.map_nil]
++    refine ⟨by decide, trivial, assetToTreeJson_valid b, assetToTreeJson_valid q, trivial⟩
++
++/-- Validity of unit TreeJson. -/
++theorem unitToTreeJson_valid (u : UnitEnc) : TreeJson.Valid (unitToTreeJson u) := by
++  cases u with
++  | bool =>
++    dsimp [unitToTreeJson, TreeJson.Valid, TreeJson.ValidObj]
++    simp only [List.map_cons, List.map_nil]
++    refine ⟨by decide, trivial, trivial⟩
++  | numeric nu => exact numericUnitToTreeJson_valid nu
++
++/-- Validity of observation reference TreeJson. -/
++theorem observationRefToTreeJson_valid (r : ObservationRefEnc) : TreeJson.Valid (observationRefToTreeJson r) := by
++  dsimp [observationRefToTreeJson, TreeJson.Valid, TreeJson.ValidObj]
++  simp only [List.map_cons, List.map_nil]
++  refine ⟨by decide, observationKeyToTreeJson_valid r.key, unitToTreeJson_valid r.unit, trivial⟩
++
++/-- Validity of unary operation TreeJson. -/
++theorem unaryOpToTreeJson_valid (op : UnaryOpEnc) : TreeJson.Valid (unaryOpToTreeJson op) := by
++  cases op with
++  | not =>
++    dsimp [unaryOpToTreeJson, TreeJson.Valid, TreeJson.ValidObj]
++    simp only [List.map_cons, List.map_nil]
++    refine ⟨by decide, trivial, trivial⟩
++  | neg nu =>
++    dsimp [unaryOpToTreeJson, TreeJson.Valid, TreeJson.ValidObj]
++    simp only [List.map_cons, List.map_nil]
++    refine ⟨by decide, trivial, numericUnitToTreeJson_valid nu, trivial⟩
++
++/-- Validity of binary operation TreeJson. -/
++theorem binaryOpToTreeJson_valid (op : BinaryOpEnc) : TreeJson.Valid (binaryOpToTreeJson op) := by
++  cases op with
++  | and | or =>
++    dsimp [binaryOpToTreeJson, TreeJson.Valid, TreeJson.ValidObj]
++    simp only [List.map_cons, List.map_nil]
++    refine ⟨by decide, trivial, trivial⟩
++  | eq u =>
++    dsimp [binaryOpToTreeJson, TreeJson.Valid, TreeJson.ValidObj]
++    simp only [List.map_cons, List.map_nil]
++    refine ⟨by decide, trivial, unitToTreeJson_valid u, trivial⟩
++  | add nu | sub nu | scale nu | divide nu | ratio nu | lt nu | le nu =>
++    dsimp [binaryOpToTreeJson, TreeJson.Valid, TreeJson.ValidObj]
++    simp only [List.map_cons, List.map_nil]
++    refine ⟨by decide, trivial, numericUnitToTreeJson_valid nu, trivial⟩
++  | convert b q | unconvert b q =>
++    dsimp [binaryOpToTreeJson, TreeJson.Valid, TreeJson.ValidObj]
++    simp only [List.map_cons, List.map_nil]
++    refine ⟨by decide, trivial, assetToTreeJson_valid b, assetToTreeJson_valid q, trivial⟩
++
++/-- Universal structural validity theorem: all expression trees generated by exprToTreeJson are TreeJson.Valid. -/
++theorem exprToTreeJson_valid (e : ExprEnc) : TreeJson.Valid (exprToTreeJson e) := by
++  induction e with
++  | lit v =>
++    dsimp [exprToTreeJson]
++    cases h : v.unit with
++    | bool =>
++      dsimp [TreeJson.Valid, TreeJson.ValidObj]
++      simp only [List.map_cons, List.map_nil]
++      refine ⟨by decide, trivial, ⟨by decide, trivial, trivial⟩, trivial, trivial⟩
++    | numeric nu =>
++      dsimp [TreeJson.Valid, TreeJson.ValidObj]
++      simp only [List.map_cons, List.map_nil]
++      refine ⟨by decide, trivial, numericUnitToTreeJson_valid nu, ratToTreeJson_valid ⟨v.valRat.num, v.valRat.den⟩, trivial⟩
++  | arg idx u =>
++    dsimp [exprToTreeJson, TreeJson.Valid, TreeJson.ValidObj]
++    simp only [List.map_cons, List.map_nil]
++    refine ⟨by decide, trivial, trivial, unitToTreeJson_valid u, trivial⟩
++  | balance c =>
++    dsimp [exprToTreeJson, TreeJson.Valid, TreeJson.ValidObj]
++    simp only [List.map_cons, List.map_nil]
++    refine ⟨by decide, trivial, packedCellRefToTreeJson_valid c, trivial⟩
++  | observe r =>
++    dsimp [exprToTreeJson, TreeJson.Valid, TreeJson.ValidObj]
++    simp only [List.map_cons, List.map_nil]
++    refine ⟨by decide, trivial, observationRefToTreeJson_valid r, trivial⟩
++  | timestamp k =>
++    dsimp [exprToTreeJson, TreeJson.Valid, TreeJson.ValidObj]
++    simp only [List.map_cons, List.map_nil]
++    refine ⟨by decide, trivial, observationKeyToTreeJson_valid k, trivial⟩
++  | now =>
++    dsimp [exprToTreeJson, TreeJson.Valid, TreeJson.ValidObj]
++    simp only [List.map_cons, List.map_nil]
++    refine ⟨by decide, trivial, trivial⟩
++  | unary op x ih =>
++    dsimp [exprToTreeJson, TreeJson.Valid, TreeJson.ValidObj]
++    simp only [List.map_cons, List.map_nil]
++    refine ⟨by decide, trivial, unaryOpToTreeJson_valid op, ih, trivial⟩
++  | binary op x y ih_x ih_y =>
++    dsimp [exprToTreeJson, TreeJson.Valid, TreeJson.ValidObj]
++    simp only [List.map_cons, List.map_nil]
++    refine ⟨by decide, trivial, binaryOpToTreeJson_valid op, ih_x, ih_y, trivial⟩
++  | ite c y n ih_c ih_y ih_n =>
++    dsimp [exprToTreeJson, TreeJson.Valid, TreeJson.ValidObj]
++    simp only [List.map_cons, List.map_nil]
++    refine ⟨by decide, trivial, ih_c, ih_y, ih_n, trivial⟩
++
++/-- Universal expression parser inversion on tokens:
++    for any expression whose tree depth does not exceed 64, parseTokens inverts the token stream to exprToJson. -/
++theorem parseTokens_exprToTreeJson (e : ExprEnc)
++    (h_depth : TreeJson.depth (exprToTreeJson e) ≤ 64) :
++    parseTokens (TreeJson.tokens (exprToTreeJson e)) = .ok (exprToJson e) := by
++  have h_val := exprToTreeJson_valid e
++  have h_parse := parseTokens_tree_valid (exprToTreeJson e) h_val h_depth
++  rw [exprToTreeJson_toJson] at h_parse
++  exact h_parse
++
++/-- Universal end-to-end token parser and decoder roundtrip for arbitrary recursive expressions. -/
++theorem expr_tokens_end_to_end (e : ExprEnc)
++    (h_tree_depth : TreeJson.depth (exprToTreeJson e) ≤ 64)
++    (h_expr_depth : ExprEnc.depth e ≤ 64)
++    (h_can : ExprCanonical e) :
++    (do
++      let j ← parseTokens (TreeJson.tokens (exprToTreeJson e))
++      decodeExpr j) = .ok e := by
++  rw [parseTokens_exprToTreeJson e h_tree_depth]
++  dsimp [bind, Except.bind]
++  exact decodeExpr_exprToJson e h_expr_depth h_can
++
+ end DefiKernel.Certificates
+ 
++

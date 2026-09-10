@@ -1,0 +1,655 @@
+--- R19/lean/DefiKernel/Certificates/CanonicalJson.lean
++++ R20/lean/DefiKernel/Certificates/CanonicalJson.lean
+@@ -1009,5 +1009,652 @@
+ /-- Top-level parseTokens inversion on empty TreeJson.obj. -/
+ theorem parseTokens_tree_empty_obj : parseTokens (TreeJson.tokens (.obj [])) = .ok (Lean.Json.mkObj []) := rfl
+ 
++/-- Predicate characterizing parser states that are structurally ready to receive an evaluated value. -/
++def IsValueContext (st : ParserState) : Prop :=
++  st.result = none ∧
++  match st.stack with
++  | [] => True
++  | StackFrame.arr _ ArrState.emptyOrVal :: _ => True
++  | StackFrame.arr _ ArrState.expectVal :: _ => True
++  | StackFrame.obj _ (ObjState.expectVal _) :: _ => True
++  | _ => False
++
++mutual
++  /-- Syntactic container nesting depth of a TreeJson document. -/
++  def TreeJson.depth : TreeJson → Nat
++    | .null | .bool _ | .num _ | .str _ => 0
++    | .arr xs => 1 + TreeJson.depthList xs
++    | .obj kvs => 1 + TreeJson.depthObj kvs
++
++  /-- Maximal syntactic nesting depth across a list of array elements. -/
++  def TreeJson.depthList : List TreeJson → Nat
++    | [] => 0
++    | x :: xs => max (TreeJson.depth x) (TreeJson.depthList xs)
++
++  /-- Maximal syntactic nesting depth across key-value fields of an object. -/
++  def TreeJson.depthObj : List (String × TreeJson) → Nat
++    | [] => 0
++    | (_, v) :: kvs => max (TreeJson.depth v) (TreeJson.depthObj kvs)
++end
++
++mutual
++  /-- Structural node size measure for well-founded tree induction. -/
++  def TreeJson.size : TreeJson → Nat
++    | .null | .bool _ | .num _ | .str _ => 1
++    | .arr xs => 1 + TreeJson.sizeList xs
++    | .obj kvs => 1 + TreeJson.sizeObj kvs
++
++  /-- Structural node size across an array element list. -/
++  def TreeJson.sizeList : List TreeJson → Nat
++    | [] => 0
++    | x :: xs => TreeJson.size x + TreeJson.sizeList xs
++
++  /-- Structural node size across an object field list. -/
++  def TreeJson.sizeObj : List (String × TreeJson) → Nat
++    | [] => 0
++    | (_, v) :: kvs => TreeJson.size v + TreeJson.sizeObj kvs
++end
++
++mutual
++  /-- Proof-level structural admissibility for canonical JSON trees:
++      arrays obey the 4096-element budget and objects have pairwise distinct keys. -/
++  def TreeJson.Valid : TreeJson → Prop
++    | .null | .bool _ | .num _ | .str _ => True
++    | .arr xs => xs.length ≤ 4096 ∧ TreeJson.ValidList xs
++    | .obj kvs => (kvs.map Prod.fst).Nodup ∧ TreeJson.ValidObj kvs
++
++  /-- Structural admissibility across array element lists. -/
++  def TreeJson.ValidList : List TreeJson → Prop
++    | [] => True
++    | x :: xs => TreeJson.Valid x ∧ TreeJson.ValidList xs
++
++  /-- Structural admissibility across object field lists. -/
++  def TreeJson.ValidObj : List (String × TreeJson) → Prop
++    | [] => True
++    | (_, v) :: kvs => TreeJson.Valid v ∧ TreeJson.ValidObj kvs
++end
++
++/-- Positive size lower bound for all TreeJson nodes. -/
++theorem TreeJson.size_pos (t : TreeJson) : 0 < TreeJson.size t := by
++  cases t <;> dsimp [TreeJson.size] <;> omega
++
++/-- Element size is bounded by aggregate size of the enclosing array list. -/
++theorem TreeJson.mem_sizeList (x : TreeJson) (xs : List TreeJson) (h : x ∈ xs) :
++    TreeJson.size x ≤ TreeJson.sizeList xs := by
++  induction xs with
++  | nil => contradiction
++  | cons y ys ih =>
++    dsimp [TreeJson.sizeList]
++    cases h with
++    | head => omega
++    | tail _ h_in =>
++      have := ih h_in
++      omega
++
++/-- Value size is bounded by aggregate size of the enclosing object field list. -/
++theorem TreeJson.mem_sizeObj (k : String) (v : TreeJson) (kvs : List (String × TreeJson)) (h : (k, v) ∈ kvs) :
++    TreeJson.size v ≤ TreeJson.sizeObj kvs := by
++  induction kvs with
++  | nil => contradiction
++  | cons f fs ih =>
++    rcases f with ⟨k', v'⟩
++    dsimp [TreeJson.sizeObj]
++    cases h with
++    | head => omega
++    | tail _ h_in =>
++      have := ih h_in
++      omega
++
++/-- Validity propagates to any member of an admissible array element list. -/
++theorem TreeJson.valid_of_mem_validList (x : TreeJson) (xs : List TreeJson)
++    (h_vl : TreeJson.ValidList xs) (h_in : x ∈ xs) : TreeJson.Valid x := by
++  induction xs with
++  | nil => contradiction
++  | cons y ys ih =>
++    dsimp [TreeJson.ValidList] at h_vl
++    cases h_in with
++    | head => exact h_vl.1
++    | tail _ h_tl => exact ih h_vl.2 h_tl
++
++/-- Validity propagates to any field value of an admissible object field list. -/
++theorem TreeJson.valid_of_mem_validObj (k : String) (v : TreeJson) (kvs : List (String × TreeJson))
++    (h_vo : TreeJson.ValidObj kvs) (h_in : (k, v) ∈ kvs) : TreeJson.Valid v := by
++  induction kvs with
++  | nil => contradiction
++  | cons f fs ih =>
++    rcases f with ⟨k', v'⟩
++    dsimp [TreeJson.ValidObj] at h_vo
++    cases h_in with
++    | head => exact h_vo.1
++    | tail _ h_tl => exact ih h_vo.2 h_tl
++
++/-- Pushdown automaton step on string token in any value-expecting context. -/
++theorem parseStep_str_of_isValueContext (st : ParserState) (h_ctx : IsValueContext st) (s : String) :
++    parseStep st (.str s) = feedValue st (.str s) := by
++  rcases st with ⟨stack, res⟩
++  rcases h_ctx with ⟨h_res, h_stack⟩
++  dsimp at h_res h_stack ⊢
++  dsimp [parseStep]
++  cases stack with
++  | nil => rfl
++  | cons frame rest =>
++    cases frame with
++    | obj acc ost =>
++      cases ost with
++      | expectVal k => rfl
++      | emptyOrKey => contradiction
++      | expectKey => contradiction
++      | expectColon _ => contradiction
++      | expectCommaOrRbrace => contradiction
++    | arr acc ast =>
++      cases ast with
++      | emptyOrVal => rfl
++      | expectVal => rfl
++      | expectCommaOrRbracket => contradiction
++
++/-- Pushdown automaton step on lbrace delimiter in any value-expecting context. -/
++theorem parseStep_lbrace_of_isValueContext (st : ParserState)
++    (h_ctx : IsValueContext st) (h_depth : st.stack.length < 64) :
++    parseStep st .lbrace = .ok { stack := StackFrame.obj [] ObjState.emptyOrKey :: st.stack, result := none } := by
++  rcases st with ⟨stack, res⟩
++  rcases h_ctx with ⟨h_res, h_stack⟩
++  dsimp at h_res h_stack h_depth ⊢
++  subst h_res
++  dsimp [parseStep]
++  split
++  · rename_i h_ge; omega
++  · cases stack with
++    | nil => rfl
++    | cons frame rest =>
++      cases frame with
++      | obj acc ost =>
++        cases ost with
++        | expectVal k => rfl
++        | emptyOrKey => contradiction
++        | expectKey => contradiction
++        | expectColon _ => contradiction
++        | expectCommaOrRbrace => contradiction
++      | arr acc ast =>
++        cases ast with
++        | emptyOrVal => rfl
++        | expectVal => rfl
++        | expectCommaOrRbracket => contradiction
++
++/-- Pushdown automaton step on lbracket delimiter in any value-expecting context. -/
++theorem parseStep_lbracket_of_isValueContext (st : ParserState)
++    (h_ctx : IsValueContext st) (h_depth : st.stack.length < 64) :
++    parseStep st .lbracket = .ok { stack := StackFrame.arr #[] ArrState.emptyOrVal :: st.stack, result := none } := by
++  rcases st with ⟨stack, res⟩
++  rcases h_ctx with ⟨h_res, h_stack⟩
++  dsimp at h_res h_stack h_depth ⊢
++  subst h_res
++  dsimp [parseStep]
++  split
++  · rename_i h_ge; omega
++  · cases stack with
++    | nil => rfl
++    | cons frame rest =>
++      cases frame with
++      | obj acc ost =>
++        cases ost with
++        | expectVal k => rfl
++        | emptyOrKey => contradiction
++        | expectKey => contradiction
++        | expectColon _ => contradiction
++        | expectCommaOrRbrace => contradiction
++      | arr acc ast =>
++        cases ast with
++        | emptyOrVal => rfl
++        | expectVal => rfl
++        | expectCommaOrRbracket => contradiction
++
++/-- Successful value ingestion into an initial array frame with capacity. -/
++theorem feedValue_arr_emptyOrVal_ok (acc : Array Lean.Json) (v : Lean.Json) (rest : List StackFrame)
++    (h_len : acc.size < 4096) :
++    feedValue { stack := StackFrame.arr acc ArrState.emptyOrVal :: rest, result := none } v =
++    .ok { stack := StackFrame.arr (acc.push v) ArrState.expectCommaOrRbracket :: rest, result := none } := by
++  dsimp [feedValue]
++  split
++  · rename_i h; omega
++  · rfl
++
++/-- Successful value ingestion into an expecting array frame with capacity. -/
++theorem feedValue_arr_expectVal_ok (acc : Array Lean.Json) (v : Lean.Json) (rest : List StackFrame)
++    (h_len : acc.size < 4096) :
++    feedValue { stack := StackFrame.arr acc ArrState.expectVal :: rest, result := none } v =
++    .ok { stack := StackFrame.arr (acc.push v) ArrState.expectCommaOrRbracket :: rest, result := none } := by
++  dsimp [feedValue]
++  split
++  · rename_i h; omega
++  · rfl
++
++/-- Successful value ingestion into an expecting object frame without duplicate key collision. -/
++theorem feedValue_obj_expectVal_ok (acc : List (String × Lean.Json)) (key : String) (v : Lean.Json) (rest : List StackFrame)
++    (h_not_dup : acc.any (fun (k, _) => k == key) = false) :
++    feedValue { stack := StackFrame.obj acc (ObjState.expectVal key) :: rest, result := none } v =
++    .ok { stack := StackFrame.obj ((key, v) :: acc) ObjState.expectCommaOrRbrace :: rest, result := none } := by
++  dsimp [feedValue]
++  rw [h_not_dup]
++  rfl
++
++/-- Base singleton pushdown reduction for array element list. -/
++theorem parse_arr_tokensList_cons_nil (x : TreeJson)
++    (h_val : ∀ (st : ParserState), IsValueContext st → st.stack.length + TreeJson.depth x ≤ 64 →
++      (TreeJson.tokens x).foldlM parseStep st = feedValue st (TreeJson.toJson x))
++    (acc : Array Lean.Json) (state : ArrState) (rest : List StackFrame)
++    (h_state : state = ArrState.emptyOrVal ∨ state = ArrState.expectVal)
++    (h_cap : acc.size < 4096)
++    (h_depth : rest.length + 1 + TreeJson.depth x ≤ 64) :
++    (TreeJson.tokensList [x]).foldlM parseStep { stack := StackFrame.arr acc state :: rest, result := none } =
++    .ok { stack := StackFrame.arr (acc.push (TreeJson.toJson x)) ArrState.expectCommaOrRbracket :: rest, result := none } := by
++  dsimp [TreeJson.tokensList]
++  have h_ctx : IsValueContext { stack := StackFrame.arr acc state :: rest, result := none } := by
++    dsimp [IsValueContext]
++    refine ⟨rfl, ?_⟩
++    rcases h_state with rfl | rfl <;> trivial
++  have h_d : ({ stack := StackFrame.arr acc state :: rest, result := none } : ParserState).stack.length + TreeJson.depth x ≤ 64 := by
++    dsimp; omega
++  rw [h_val { stack := StackFrame.arr acc state :: rest, result := none } h_ctx h_d]
++  rcases h_state with rfl | rfl
++  · exact feedValue_arr_emptyOrVal_ok acc (TreeJson.toJson x) rest h_cap
++  · exact feedValue_arr_expectVal_ok acc (TreeJson.toJson x) rest h_cap
++
++/-- Step transition pushdown reduction for array element followed by comma. -/
++theorem parse_arr_tokensList_cons_cons (x : TreeJson) (y : TreeJson) (ys : List TreeJson)
++    (h_val : ∀ (st : ParserState), IsValueContext st → st.stack.length + TreeJson.depth x ≤ 64 →
++      (TreeJson.tokens x).foldlM parseStep st = feedValue st (TreeJson.toJson x))
++    (acc : Array Lean.Json) (state : ArrState) (rest : List StackFrame)
++    (h_state : state = ArrState.emptyOrVal ∨ state = ArrState.expectVal)
++    (h_cap : acc.size < 4096)
++    (h_depth : rest.length + 1 + TreeJson.depth x ≤ 64)
++    (finalSt : ParserState)
++    (h_rest : (TreeJson.tokensList (y :: ys)).foldlM parseStep
++        { stack := StackFrame.arr (acc.push (TreeJson.toJson x)) ArrState.expectVal :: rest, result := none } =
++      .ok finalSt) :
++    (TreeJson.tokensList (x :: y :: ys)).foldlM parseStep { stack := StackFrame.arr acc state :: rest, result := none } =
++    .ok finalSt := by
++  have h_eq : TreeJson.tokensList (x :: y :: ys) = (TreeJson.tokens x ++ [JsonToken.comma]) ++ TreeJson.tokensList (y :: ys) := rfl
++  rw [h_eq, List.foldlM_append, List.foldlM_append]
++  have h_ctx : IsValueContext { stack := StackFrame.arr acc state :: rest, result := none } := by
++    dsimp [IsValueContext]
++    refine ⟨rfl, ?_⟩
++    rcases h_state with rfl | rfl <;> trivial
++  have h_d : ({ stack := StackFrame.arr acc state :: rest, result := none } : ParserState).stack.length + TreeJson.depth x ≤ 64 := by
++    dsimp; omega
++  have h_x := h_val { stack := StackFrame.arr acc state :: rest, result := none } h_ctx h_d
++  rw [h_x]
++  dsimp [bind, Except.bind]
++  rcases h_state with rfl | rfl
++  · rw [feedValue_arr_emptyOrVal_ok acc (TreeJson.toJson x) rest h_cap]
++    dsimp [List.foldlM, bind, Except.bind, parseStep]
++    exact h_rest
++  · rw [feedValue_arr_expectVal_ok acc (TreeJson.toJson x) rest h_cap]
++    dsimp [List.foldlM, bind, Except.bind, parseStep]
++    exact h_rest
++
++/-- Array push equivalent to appending singleton array. -/
++theorem array_push_eq_append_singleton (acc : Array Lean.Json) (v : Lean.Json) :
++    acc.push v = acc ++ #[v] := by
++  rcases acc with ⟨l⟩
++  apply Array.ext'
++  simp
++
++/-- Associativity of array append. -/
++theorem array_append_assoc (a b c : Array Lean.Json) :
++    (a ++ b) ++ c = a ++ (b ++ c) := by
++  rcases a with ⟨la⟩
++  rcases b with ⟨lb⟩
++  rcases c with ⟨lc⟩
++  apply Array.ext'
++  simp
++
++/-- Head cons decomposition of array conversion on lists. -/
++theorem toArray_cons (x : Lean.Json) (xs : List Lean.Json) :
++    (x :: xs).toArray = #[x] ++ xs.toArray := by
++  apply Array.ext'
++  simp
++
++/-- General pushdown reduction folding an arbitrary non-empty list of array elements. -/
++theorem parse_arr_tokensList (xs : List TreeJson)
++    (h_val : ∀ x ∈ xs, ∀ (st : ParserState), IsValueContext st → st.stack.length + TreeJson.depth x ≤ 64 →
++      (TreeJson.tokens x).foldlM parseStep st = feedValue st (TreeJson.toJson x))
++    (acc : Array Lean.Json) (state : ArrState) (rest : List StackFrame)
++    (h_state : state = ArrState.emptyOrVal ∨ state = ArrState.expectVal)
++    (h_nonempty : xs ≠ [])
++    (h_cap : acc.size + xs.length ≤ 4096)
++    (h_depth : rest.length + 1 + TreeJson.depthList xs ≤ 64) :
++    (TreeJson.tokensList xs).foldlM parseStep { stack := StackFrame.arr acc state :: rest, result := none } =
++    .ok { stack := StackFrame.arr (acc ++ (TreeJson.toJsonList xs).toArray) ArrState.expectCommaOrRbracket :: rest, result := none } := by
++  induction xs generalizing acc state with
++  | nil => contradiction
++  | cons x tl ih =>
++    cases tl with
++    | nil =>
++      have h_val_x := h_val x (List.Mem.head [])
++      have h_cap_x : acc.size < 4096 := by
++        dsimp at h_cap
++        omega
++      have h_d_x : rest.length + 1 + x.depth ≤ 64 := by
++        dsimp [TreeJson.depthList] at h_depth
++        omega
++      have h_res := parse_arr_tokensList_cons_nil x h_val_x acc state rest h_state h_cap_x h_d_x
++      rw [h_res]
++      dsimp [TreeJson.toJsonList]
++      rw [array_push_eq_append_singleton]
++    | cons y ys =>
++      have h_val_x := h_val x (by simp)
++      have h_cap_x : acc.size < 4096 := by
++        dsimp at h_cap
++        omega
++      have h_d_x : rest.length + 1 + x.depth ≤ 64 := by
++        dsimp [TreeJson.depthList] at h_depth
++        omega
++      have h_val_tl : ∀ z ∈ (y :: ys), ∀ (st : ParserState), IsValueContext st → st.stack.length + TreeJson.depth z ≤ 64 →
++          (TreeJson.tokens z).foldlM parseStep st = feedValue st (TreeJson.toJson z) := by
++        intro z hz
++        exact h_val z (by simp [hz])
++      have h_cap_tl : (acc.push (TreeJson.toJson x)).size + (y :: ys).length ≤ 4096 := by
++        simp only [Array.size_push, List.length_cons] at h_cap ⊢
++        omega
++      have h_d_tl : rest.length + 1 + TreeJson.depthList (y :: ys) ≤ 64 := by
++        have : TreeJson.depthList (y :: ys) ≤ TreeJson.depthList (x :: y :: ys) := by
++          dsimp [TreeJson.depthList]
++          omega
++        omega
++      have h_ih := ih h_val_tl (acc.push (TreeJson.toJson x)) ArrState.expectVal (Or.inr rfl) (by intro h; contradiction) h_cap_tl h_d_tl
++      have h_step := parse_arr_tokensList_cons_cons x y ys h_val_x acc state rest h_state h_cap_x h_d_x _ h_ih
++      rw [h_step]
++      dsimp [TreeJson.toJsonList]
++      rw [array_push_eq_append_singleton]
++      rw [array_append_assoc]
++      rw [← toArray_cons]
++
++/-- Universal pushdown parser reduction for arbitrary admissible array trees. -/
++theorem parse_tokens_arr (xs : List TreeJson)
++    (h_val : ∀ x ∈ xs, ∀ (st : ParserState), IsValueContext st → st.stack.length + TreeJson.depth x ≤ 64 →
++      (TreeJson.tokens x).foldlM parseStep st = feedValue st (TreeJson.toJson x))
++    (h_len : xs.length ≤ 4096)
++    (st : ParserState) (h_ctx : IsValueContext st)
++    (h_depth : st.stack.length + TreeJson.depth (.arr xs) ≤ 64) :
++    (TreeJson.tokens (.arr xs)).foldlM parseStep st = feedValue st (TreeJson.toJson (.arr xs)) := by
++  rcases st with ⟨stack, res⟩
++  rcases h_ctx with ⟨h_res, h_stack⟩
++  dsimp at h_res h_stack h_depth ⊢
++  subst h_res
++  have h_ctx' : IsValueContext { stack := stack, result := none } := ⟨rfl, h_stack⟩
++  have h_split : TreeJson.tokens (.arr xs) = JsonToken.lbracket :: (TreeJson.tokensList xs ++ [JsonToken.rbracket]) := rfl
++  rw [h_split]
++  simp only [List.foldlM_cons]
++  have h_d_lbracket : stack.length < 64 := by
++    dsimp [TreeJson.depth] at h_depth
++    omega
++  have h_lb := parseStep_lbracket_of_isValueContext { stack := stack, result := none } h_ctx' h_d_lbracket
++  rw [h_lb]
++  dsimp [bind, Except.bind]
++  rw [List.foldlM_append]
++  cases xs with
++  | nil =>
++    dsimp [TreeJson.tokensList, List.foldlM, bind, Except.bind, pure, Except.pure, parseStep, TreeJson.toJson, TreeJson.toJsonList]
++    generalize feedValue { stack := stack, result := none } (Lean.Json.arr #[]) = res_fv
++    cases res_fv <;> rfl
++  | cons y ys =>
++    have h_nonempty : y :: ys ≠ [] := by intro h; contradiction
++    have h_cap : (#[] : Array Lean.Json).size + (y :: ys).length ≤ 4096 := by
++      simp only [Array.size_empty, Nat.zero_add]
++      exact h_len
++    have h_d_tl : stack.length + 1 + TreeJson.depthList (y :: ys) ≤ 64 := by
++      dsimp [TreeJson.depth] at h_depth
++      omega
++    have h_fold := parse_arr_tokensList (y :: ys) h_val #[] ArrState.emptyOrVal stack (Or.inl rfl) h_nonempty h_cap h_d_tl
++    rw [h_fold]
++    dsimp [List.foldlM, bind, Except.bind, pure, Except.pure, parseStep]
++    have h_empty_app : #[] ++ (TreeJson.toJsonList (y :: ys)).toArray = (TreeJson.toJsonList (y :: ys)).toArray := by
++      apply Array.ext'
++      simp
++    rw [h_empty_app]
++    dsimp [TreeJson.toJson]
++    generalize feedValue { stack := stack, result := none } (Lean.Json.arr (TreeJson.toJsonList (y :: ys)).toArray) = res_fv
++    cases res_fv <;> rfl
++
++/-- Pushdown reduction for a single key-colon-value field sequence. -/
++theorem parse_obj_tokens_field (k : String) (v : TreeJson)
++    (h_val : ∀ (st : ParserState), IsValueContext st → st.stack.length + TreeJson.depth v ≤ 64 →
++      (TreeJson.tokens v).foldlM parseStep st = feedValue st (TreeJson.toJson v))
++    (acc : List (String × Lean.Json)) (state : ObjState) (rest : List StackFrame)
++    (h_state : state = ObjState.emptyOrKey ∨ state = ObjState.expectKey)
++    (h_not_dup : acc.any (fun (k', _) => k' == k) = false)
++    (h_depth : rest.length + 1 + TreeJson.depth v ≤ 64) :
++    ([JsonToken.str k, JsonToken.colon] ++ TreeJson.tokens v).foldlM parseStep
++        { stack := StackFrame.obj acc state :: rest, result := none } =
++    .ok { stack := StackFrame.obj ((k, TreeJson.toJson v) :: acc) ObjState.expectCommaOrRbrace :: rest, result := none } := by
++  have h_split : ([JsonToken.str k, JsonToken.colon] ++ TreeJson.tokens v) =
++      JsonToken.str k :: (JsonToken.colon :: TreeJson.tokens v) := rfl
++  rw [h_split]
++  simp only [List.foldlM_cons]
++  dsimp [parseStep]
++  rcases h_state with rfl | rfl <;> dsimp [bind, Except.bind]
++  · have h_ctx : IsValueContext { stack := StackFrame.obj acc (ObjState.expectVal k) :: rest, result := none } := ⟨rfl, trivial⟩
++    have h_d : ({ stack := StackFrame.obj acc (ObjState.expectVal k) :: rest, result := none } : ParserState).stack.length + TreeJson.depth v ≤ 64 := by
++      dsimp; omega
++    have h_v := h_val { stack := StackFrame.obj acc (ObjState.expectVal k) :: rest, result := none } h_ctx h_d
++    rw [h_v]
++    exact feedValue_obj_expectVal_ok acc k (TreeJson.toJson v) rest h_not_dup
++  · have h_ctx : IsValueContext { stack := StackFrame.obj acc (ObjState.expectVal k) :: rest, result := none } := ⟨rfl, trivial⟩
++    have h_d : ({ stack := StackFrame.obj acc (ObjState.expectVal k) :: rest, result := none } : ParserState).stack.length + TreeJson.depth v ≤ 64 := by
++      dsimp; omega
++    have h_v := h_val { stack := StackFrame.obj acc (ObjState.expectVal k) :: rest, result := none } h_ctx h_d
++    rw [h_v]
++    exact feedValue_obj_expectVal_ok acc k (TreeJson.toJson v) rest h_not_dup
++
++/-- Base singleton pushdown reduction for object field list. -/
++theorem parse_obj_tokensObj_cons_nil (k : String) (v : TreeJson)
++    (h_val : ∀ (st : ParserState), IsValueContext st → st.stack.length + TreeJson.depth v ≤ 64 →
++      (TreeJson.tokens v).foldlM parseStep st = feedValue st (TreeJson.toJson v))
++    (acc : List (String × Lean.Json)) (state : ObjState) (rest : List StackFrame)
++    (h_state : state = ObjState.emptyOrKey ∨ state = ObjState.expectKey)
++    (h_not_dup : acc.any (fun (k', _) => k' == k) = false)
++    (h_depth : rest.length + 1 + TreeJson.depth v ≤ 64) :
++    (TreeJson.tokensObj [(k, v)]).foldlM parseStep { stack := StackFrame.obj acc state :: rest, result := none } =
++    .ok { stack := StackFrame.obj ((k, TreeJson.toJson v) :: acc) ObjState.expectCommaOrRbrace :: rest, result := none } := by
++  dsimp [TreeJson.tokensObj]
++  exact parse_obj_tokens_field k v h_val acc state rest h_state h_not_dup h_depth
++
++/-- Step transition pushdown reduction for object field followed by comma. -/
++theorem parse_obj_tokensObj_cons_cons (k : String) (v : TreeJson) (f2 : String × TreeJson) (kvs : List (String × TreeJson))
++    (h_val : ∀ (st : ParserState), IsValueContext st → st.stack.length + TreeJson.depth v ≤ 64 →
++      (TreeJson.tokens v).foldlM parseStep st = feedValue st (TreeJson.toJson v))
++    (acc : List (String × Lean.Json)) (state : ObjState) (rest : List StackFrame)
++    (h_state : state = ObjState.emptyOrKey ∨ state = ObjState.expectKey)
++    (h_not_dup : acc.any (fun (k', _) => k' == k) = false)
++    (h_depth : rest.length + 1 + TreeJson.depth v ≤ 64)
++    (finalSt : ParserState)
++    (h_rest : (TreeJson.tokensObj (f2 :: kvs)).foldlM parseStep
++        { stack := StackFrame.obj ((k, TreeJson.toJson v) :: acc) ObjState.expectKey :: rest, result := none } =
++      .ok finalSt) :
++    (TreeJson.tokensObj ((k, v) :: f2 :: kvs)).foldlM parseStep { stack := StackFrame.obj acc state :: rest, result := none } =
++    .ok finalSt := by
++  have h_eq : TreeJson.tokensObj ((k, v) :: f2 :: kvs) =
++      ([JsonToken.str k, JsonToken.colon] ++ TreeJson.tokens v ++ [JsonToken.comma]) ++ TreeJson.tokensObj (f2 :: kvs) := rfl
++  rw [h_eq, List.foldlM_append]
++  have h_field_split : ([JsonToken.str k, JsonToken.colon] ++ TreeJson.tokens v ++ [JsonToken.comma]) =
++      ([JsonToken.str k, JsonToken.colon] ++ TreeJson.tokens v) ++ [JsonToken.comma] := rfl
++  rw [h_field_split, List.foldlM_append]
++  have h_field := parse_obj_tokens_field k v h_val acc state rest h_state h_not_dup h_depth
++  rw [h_field]
++  dsimp [List.foldlM, bind, Except.bind, parseStep]
++  exact h_rest
++
++/-- General pushdown reduction folding an arbitrary non-empty list of object fields. -/
++theorem parse_obj_tokensObj (kvs : List (String × TreeJson))
++    (h_val : ∀ (k : String) (v : TreeJson), (k, v) ∈ kvs → ∀ (st : ParserState), IsValueContext st → st.stack.length + TreeJson.depth v ≤ 64 →
++      (TreeJson.tokens v).foldlM parseStep st = feedValue st (TreeJson.toJson v))
++    (acc : List (String × Lean.Json)) (state : ObjState) (rest : List StackFrame)
++    (h_state : state = ObjState.emptyOrKey ∨ state = ObjState.expectKey)
++    (h_nonempty : kvs ≠ [])
++    (h_not_dup : ∀ (k : String) (v : TreeJson), (k, v) ∈ kvs → acc.any (fun (k', _) => k' == k) = false)
++    (h_nodup_kvs : (kvs.map Prod.fst).Nodup)
++    (h_depth : rest.length + 1 + TreeJson.depthObj kvs ≤ 64) :
++    (TreeJson.tokensObj kvs).foldlM parseStep { stack := StackFrame.obj acc state :: rest, result := none } =
++    .ok { stack := StackFrame.obj ((TreeJson.toJsonObj kvs).reverse ++ acc) ObjState.expectCommaOrRbrace :: rest, result := none } := by
++  induction kvs generalizing acc state with
++  | nil => contradiction
++  | cons f tl ih =>
++    rcases f with ⟨k, v⟩
++    cases tl with
++    | nil =>
++      have h_val_kv := h_val k v (List.Mem.head [])
++      have h_not_dup_kv := h_not_dup k v (List.Mem.head [])
++      have h_d_kv : rest.length + 1 + v.depth ≤ 64 := by
++        dsimp [TreeJson.depthObj] at h_depth
++        omega
++      have h_res := parse_obj_tokensObj_cons_nil k v h_val_kv acc state rest h_state h_not_dup_kv h_d_kv
++      rw [h_res]
++      dsimp [TreeJson.toJsonObj]
++      rfl
++    | cons f2 kvs' =>
++      have h_val_kv := h_val k v (by simp)
++      have h_not_dup_kv := h_not_dup k v (by simp)
++      have h_d_kv : rest.length + 1 + v.depth ≤ 64 := by
++        dsimp [TreeJson.depthObj] at h_depth
++        omega
++      have h_val_tl : ∀ (k' : String) (v' : TreeJson), (k', v') ∈ f2 :: kvs' → ∀ (st : ParserState), IsValueContext st → st.stack.length + TreeJson.depth v' ≤ 64 →
++          (TreeJson.tokens v').foldlM parseStep st = feedValue st (TreeJson.toJson v') := by
++        intro k' v' h_mem
++        exact h_val k' v' (by simp [h_mem])
++      have h_not_dup_tl : ∀ (k' : String) (v' : TreeJson), (k', v') ∈ f2 :: kvs' → ((k, TreeJson.toJson v) :: acc).any (fun (k'', _) => k'' == k') = false := by
++        intro k' v' h_mem
++        dsimp [List.any]
++        have h_k_neq : ¬ (k = k') := by
++          intro h_eq
++          subst h_eq
++          have h_nodup_fst := List.nodup_cons.mp h_nodup_kvs
++          have h_k_in : k ∈ (f2 :: kvs').map Prod.fst := List.mem_map.mpr ⟨(k, v'), h_mem, rfl⟩
++          exact h_nodup_fst.1 h_k_in
++        have h_k_b : (k == k') = false := by
++          cases h_c : (k == k')
++          · rfl
++          · exfalso
++            have h_eq : k = k' := beq_iff_eq.mp h_c
++            exact h_k_neq h_eq
++        rw [h_k_b]
++        dsimp [Bool.or]
++        exact h_not_dup k' v' (by simp [h_mem])
++      have h_nodup_tl : ((f2 :: kvs').map Prod.fst).Nodup := (List.nodup_cons.mp h_nodup_kvs).2
++      have h_d_tl : rest.length + 1 + TreeJson.depthObj (f2 :: kvs') ≤ 64 := by
++        have : TreeJson.depthObj (f2 :: kvs') ≤ TreeJson.depthObj ((k, v) :: f2 :: kvs') := by
++          dsimp [TreeJson.depthObj]
++          omega
++        omega
++      have h_ih := ih h_val_tl ((k, TreeJson.toJson v) :: acc) ObjState.expectKey (Or.inr rfl) (by intro h; contradiction) h_not_dup_tl h_nodup_tl h_d_tl
++      have h_step := parse_obj_tokensObj_cons_cons k v f2 kvs' h_val_kv acc state rest h_state h_not_dup_kv h_d_kv _ h_ih
++      rw [h_step]
++      rcases f2 with ⟨k2, v2⟩
++      dsimp [TreeJson.toJsonObj]
++      simp only [List.reverse_cons, List.append_assoc, List.cons_append, List.nil_append]
++
++/-- Universal pushdown parser reduction for arbitrary admissible object trees. -/
++theorem parse_tokens_obj (kvs : List (String × TreeJson))
++    (h_val : ∀ (k : String) (v : TreeJson), (k, v) ∈ kvs → ∀ (st : ParserState), IsValueContext st → st.stack.length + TreeJson.depth v ≤ 64 →
++      (TreeJson.tokens v).foldlM parseStep st = feedValue st (TreeJson.toJson v))
++    (h_nodup : (kvs.map Prod.fst).Nodup)
++    (st : ParserState) (h_ctx : IsValueContext st)
++    (h_depth : st.stack.length + TreeJson.depth (.obj kvs) ≤ 64) :
++    (TreeJson.tokens (.obj kvs)).foldlM parseStep st = feedValue st (TreeJson.toJson (.obj kvs)) := by
++  rcases st with ⟨stack, res⟩
++  rcases h_ctx with ⟨h_res, h_stack⟩
++  dsimp at h_res h_stack h_depth ⊢
++  subst h_res
++  have h_ctx' : IsValueContext { stack := stack, result := none } := ⟨rfl, h_stack⟩
++  have h_split : TreeJson.tokens (.obj kvs) = JsonToken.lbrace :: (TreeJson.tokensObj kvs ++ [JsonToken.rbrace]) := rfl
++  rw [h_split]
++  simp only [List.foldlM_cons]
++  have h_d_lbrace : stack.length < 64 := by
++    dsimp [TreeJson.depth] at h_depth
++    omega
++  have h_lb := parseStep_lbrace_of_isValueContext { stack := stack, result := none } h_ctx' h_d_lbrace
++  rw [h_lb]
++  dsimp [bind, Except.bind]
++  rw [List.foldlM_append]
++  cases kvs with
++  | nil =>
++    dsimp [TreeJson.tokensObj, List.foldlM, bind, Except.bind, pure, Except.pure, parseStep, TreeJson.toJson, TreeJson.toJsonObj]
++    generalize feedValue { stack := stack, result := none } (Lean.Json.mkObj []) = res_fv
++    cases res_fv <;> rfl
++  | cons f tl =>
++    rcases f with ⟨k, v⟩
++    have h_nonempty : (k, v) :: tl ≠ [] := by intro h; contradiction
++    have h_not_dup_empty : ∀ (k' : String) (v' : TreeJson), (k', v') ∈ (k, v) :: tl → ([] : List (String × Lean.Json)).any (fun (k'', _) => k'' == k') = false := by
++      intro _ _ _
++      rfl
++    have h_d_tl : stack.length + 1 + TreeJson.depthObj ((k, v) :: tl) ≤ 64 := by
++      dsimp [TreeJson.depth] at h_depth
++      omega
++    have h_fold := parse_obj_tokensObj ((k, v) :: tl) h_val [] ObjState.emptyOrKey stack (Or.inl rfl) h_nonempty h_not_dup_empty h_nodup h_d_tl
++    rw [h_fold]
++    dsimp [List.foldlM, bind, Except.bind, pure, Except.pure, parseStep]
++    simp only [List.append_nil, List.reverse_reverse]
++    dsimp [TreeJson.toJson]
++    generalize feedValue { stack := stack, result := none } (Lean.Json.mkObj (TreeJson.toJsonObj ((k, v) :: tl))) = res_fv
++    cases res_fv <;> rfl
++
++/-- Universal pushdown parser reduction for all admissible TreeJson values in any value-expecting context. -/
++theorem parse_tokens_tree (t : TreeJson)
++    (h_valid : TreeJson.Valid t)
++    (st : ParserState) (h_ctx : IsValueContext st)
++    (h_depth : st.stack.length + TreeJson.depth t ≤ 64) :
++    (TreeJson.tokens t).foldlM parseStep st = feedValue st (TreeJson.toJson t) := by
++  match t with
++  | .null =>
++    dsimp [TreeJson.tokens, List.foldlM, bind, Except.bind, parseStep, TreeJson.toJson]
++    cases feedValue st Lean.Json.null <;> rfl
++  | .bool b =>
++    dsimp [TreeJson.tokens, List.foldlM, bind, Except.bind, parseStep, TreeJson.toJson]
++    cases feedValue st (Lean.Json.bool b) <;> rfl
++  | .num n =>
++    dsimp [TreeJson.tokens, List.foldlM, bind, Except.bind, parseStep, TreeJson.toJson]
++    cases feedValue st (Lean.Json.num ⟨n, 0⟩) <;> rfl
++  | .str s =>
++    dsimp [TreeJson.tokens, List.foldlM, bind, Except.bind, TreeJson.toJson]
++    rw [parseStep_str_of_isValueContext st h_ctx s]
++    cases feedValue st (Lean.Json.str s) <;> rfl
++  | .arr xs =>
++    dsimp [TreeJson.Valid] at h_valid
++    have h_ih : ∀ x ∈ xs, ∀ (st' : ParserState), IsValueContext st' → st'.stack.length + TreeJson.depth x ≤ 64 →
++        (TreeJson.tokens x).foldlM parseStep st' = feedValue st' (TreeJson.toJson x) := by
++      intro x h_in st' h_ctx' h_d'
++      have h_x_valid := TreeJson.valid_of_mem_validList x xs h_valid.2 h_in
++      have h_x_size : TreeJson.size x < TreeJson.size (.arr xs) := by
++        dsimp [TreeJson.size]
++        have := TreeJson.mem_sizeList x xs h_in
++        omega
++      exact parse_tokens_tree x h_x_valid st' h_ctx' h_d'
++    exact parse_tokens_arr xs h_ih h_valid.1 st h_ctx h_depth
++  | .obj kvs =>
++    dsimp [TreeJson.Valid] at h_valid
++    have h_ih : ∀ (k : String) (v : TreeJson), (k, v) ∈ kvs → ∀ (st' : ParserState), IsValueContext st' → st'.stack.length + TreeJson.depth v ≤ 64 →
++        (TreeJson.tokens v).foldlM parseStep st' = feedValue st' (TreeJson.toJson v) := by
++      intro k v h_in st' h_ctx' h_d'
++      have h_v_valid := TreeJson.valid_of_mem_validObj k v kvs h_valid.2 h_in
++      have h_v_size : TreeJson.size v < TreeJson.size (.obj kvs) := by
++        dsimp [TreeJson.size]
++        have := TreeJson.mem_sizeObj k v kvs h_in
++        omega
++      exact parse_tokens_tree v h_v_valid st' h_ctx' h_d'
++    exact parse_tokens_obj kvs h_ih h_valid.1 st h_ctx h_depth
++termination_by TreeJson.size t
++
++/-- General bounded ordered TreeJson parser inversion:
++    every structurally admissible TreeJson within the 64 depth bound parses to its semantic Lean.Json. -/
++theorem parseTokens_tree_valid (t : TreeJson) (h_valid : TreeJson.Valid t)
++    (h_depth : TreeJson.depth t ≤ 64) :
++    parseTokens (TreeJson.tokens t) = .ok (TreeJson.toJson t) := by
++  have h_ctx : IsValueContext { stack := [], result := none } := ⟨rfl, trivial⟩
++  have h_d : ({ stack := [], result := none } : ParserState).stack.length + TreeJson.depth t ≤ 64 := by
++    dsimp; omega
++  have h_fold := parse_tokens_tree t h_valid { stack := [], result := none } h_ctx h_d
++  dsimp [feedValue] at h_fold
++  exact parseTokens_of_foldlM (TreeJson.tokens t) (TreeJson.toJson t) h_fold
++
+ end DefiKernel.Certificates
+ 
++
