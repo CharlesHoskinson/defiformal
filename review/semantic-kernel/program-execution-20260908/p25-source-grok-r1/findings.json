@@ -1,0 +1,95 @@
+{
+  "schema": "defiformal-p25-source-compiler-audit-findings/v1",
+  "mark": "P25_SOURCE_COMPILER_PREPARATION_ONLY_FULL_P25_OPEN",
+  "acceptance": false,
+  "verdict": "USABLE",
+  "fresh_session": true,
+  "evidence_classes": {
+    "hash_identity": "SHA-256 of sandbox files against inputs.json and packet records; git blob SHA-1 of captured and Permit2 archive members.",
+    "archive_extraction": "Read-only tar/gzip member walk; no writes into the sandbox.",
+    "graph_recount": "Lexical Solidity import parse of captured 68 traversal sources and of the selected 98 compile sources.",
+    "frozen_compiler_parse": "Decompress and parse supplied input.json.gz and stdout.json.gz; compare hashes to command.json.",
+    "fresh_compiler_execution": "One isolated solc --standard-json using compiler.json binary_path after hash verification; outputs only under this review directory.",
+    "source_inspection": "Read of Vault.sol, VaultCommon.sol, HooksConfigLib.sol, foundry.toml, and three Hardhat profile files; six navigation excerpts.",
+    "failed_probe": "First verify.py JSON serialization failure; second probe four over-strict predicates. Zero packet-defect credit."
+  },
+  "findings": [
+    {
+      "id": "P25-SRC-USABLE-NOT-FROZEN",
+      "severity": "scope",
+      "class": "preparation_usable_source_entry_open",
+      "evidence_class": "hash_identity+fresh_compiler_execution+source_inspection",
+      "issue": "The frozen packets are usable as source/compiler input. Task 26.1 observation contract is not written here. Do not mark source-entry observations frozen or full P25 accepted. Existing P17 pin is not this Balancer commit and must not be substituted.",
+      "packet_repair": false
+    },
+    {
+      "id": "P25-SRC-FIRST-TREE-FAIL-ZERO-CREDIT",
+      "severity": "preserved_negative",
+      "class": "failed_identity_attempt_not_success",
+      "evidence_class": "hash_identity",
+      "source": "p25-balancer-source-verification/failure.json; discovery/tree.json; p25-balancer-tree-identity-followup/tree.json",
+      "issue": "Initial recursive-tree request used commit SHA 449f7e07... and the response sha field echoes that commit SHA, not commit.tree.sha a4420a82.... Exit 1, credit false. Follow-up on the tree SHA returns 1247 identical entries. The failed first attempt is not a successful identity check.",
+      "packet_repair": false
+    },
+    {
+      "id": "P25-SRC-NOT-FULL-CLOSURE",
+      "severity": "limitation",
+      "class": "selected_98_not_npm_or_test_closure",
+      "evidence_class": "graph_recount+archive_extraction",
+      "issue": "98 sources / 308 edges / 0 unresolved paths exclude the two foundry tests and the rest of the monorepo. Packet already records compiler_resolution_verified false and test_import_closure_verified false. Yarn checksums are cache containers, not raw archive hashes.",
+      "packet_repair": false
+    },
+    {
+      "id": "P25-SRC-BASELINE-NOT-HARDHAT",
+      "severity": "limitation",
+      "class": "foundry_999_noIR_not_hardhat_profile",
+      "evidence_class": "frozen_compiler_parse+fresh_compiler_execution+source_inspection",
+      "issue": "Baseline is solc 0.8.27, optimizer 999, Cancun, viaIR omitted. Warnings 2394 and 5574 (Router 26365, Vault 33240, VaultExtension 28902) belong to that baseline. Hardhat uses viaIR unless COVERAGE=true, 0.8.26/0.8.27, custom optimizer sequence, default runs 9999, Vault/VaultExtension 0.8.26/500, allowUnlimitedContractSize on local Hardhat. No Hardhat build was run. Do not infer deployed size or endorse bypassing EIP-170. Packet comparison matches the three git-bound files. Extra observation: Hardhat default runs are 9999, which the packet did not need to claim.",
+      "packet_repair": false,
+      "profile_claim_mismatch": false
+    },
+    {
+      "id": "P25-SRC-SETTLE-RESIDUE",
+      "severity": "later_contract",
+      "class": "amountHint_cap_does_not_delete_reserves",
+      "evidence_class": "source_inspection",
+      "source": "pkg/vault/contracts/Vault.sol settle",
+      "issue": "_reservesOf[token] is set to token.balanceOf(this) before credit is capped by amountHint. Excess is absorbed into stored reserves and is not _supplyCredit-ed. The comment says the leftover is discarded from the credited amount. Later observation contract must keep reserve residue, caller credit, and tokenDelta distinct. Source inspection is not an EVM rollback proof.",
+      "packet_repair": false
+    },
+    {
+      "id": "P25-SRC-HOOKS-AFTER-ACCOUNTING",
+      "severity": "later_contract",
+      "class": "before_reload_after_revert_not_custom_undo",
+      "evidence_class": "source_inspection",
+      "source": "Vault.sol addLiquidity path; HooksConfigLib.callAfterAddLiquidityHook",
+      "issue": "Before-add hook can change balances/rates; reload precedes _addLiquidity. After-add false or wrong length reverts. If enableHookAdjustedAmounts is false, hook return amounts are ignored. A revert of the outer Solidity call is ordinary EVM rollback, not a proved P25 hook-revert accounting theorem.",
+      "packet_repair": false
+    },
+    {
+      "id": "P25-SRC-UNLOCK-NESTING",
+      "severity": "later_contract",
+      "class": "outer_zero_delta_nested_distinct",
+      "evidence_class": "source_inspection",
+      "source": "Vault.sol transient modifier and unlock",
+      "issue": "Credit is negative tokenDelta, debt positive. Non-zero counter updates only on zero transitions. Outer unlock requires zero outstanding deltas then increments session. Nested unlock does not take that settle check. unlock calls msg.sender via functionCall under the modifier.",
+      "packet_repair": false
+    },
+    {
+      "id": "P25-SRC-PROBE-OVERSTRICT",
+      "severity": "note",
+      "class": "auditor_predicate_error_zero_packet_credit",
+      "evidence_class": "failed_probe",
+      "issue": "Four second-probe failures were auditor predicates: 70-file import recount, relative coverage.sh .. links, packument path into a version document, Permit2 104 compared as boolean True. Corrected facts confirm the packet claims. Preserved under logs/failed-attempts/.",
+      "packet_repair": false
+    },
+    {
+      "id": "P25-SRC-OPEN-GAPS",
+      "severity": "open",
+      "class": "program_gaps_not_packet_defects",
+      "evidence_class": "source_inspection",
+      "issue": "Still open after this preparation audit: AGY 26.1 cash-plus-owed and hook-revert observation contract and later design review; 26.2/26.3 Lean proof, join/refusal/mutants; source-execution gate; token/Permit2/compiler/runtime assumptions; deployed identity.",
+      "packet_repair": false
+    }
+  ]
+}
