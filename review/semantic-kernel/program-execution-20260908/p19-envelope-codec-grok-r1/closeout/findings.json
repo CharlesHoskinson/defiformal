@@ -1,0 +1,150 @@
+{
+  "schema": "defiformal-envelope-codec-findings/v1",
+  "mark": "ENVELOPE_CODEC_COMPONENT_REVIEW_ONLY_FULL_P19_OPEN",
+  "acceptance": false,
+  "verdict": "CHANGES_REQUIRED",
+  "fresh_session": true,
+  "evidence_classes": {
+    "compiler_proved": "Kernel theorems imported from the private rebuild; #print axioms on all 178 named source theorems with child_compiler_exit 0.",
+    "successful_execution": "Child compiler exit 0 and no Lean error: line. ProbeAxioms and ProbeR12 only.",
+    "source_inspection": "Read of frozen Schema/Encode/Decode/CanonicalJson/Correspondence/Check/Tests/R12 REPORT/results/theorems/source-manifest/root precheck/sealed R11 REVIEW/runner.",
+    "failed_probe": "Nonzero child compiler exit or Lean error: line. No failed Lean probes in this review. Runner sentinel exit 1 after guard pass is a measured control, not a Lean failure.",
+    "author_captured": "Inspected R12 evidence folder files and author commands.json; fixtures/scenarios not re-run here.",
+    "unverified": "Not executed in this review."
+  },
+  "findings": [
+    {
+      "id": "R12-UNIVERSAL-OPEN",
+      "severity": "blocker",
+      "class": "helper_inversions_not_encodeModule_decodeBytes",
+      "evidence_class": "compiler_proved+source_inspection",
+      "source": "Correspondence.lean EncodeDecodeRoundtripStatement and 11 new lemmas; Encode.lean encodeModule/encodeLibraryRef",
+      "issue": "EncodeDecodeRoundtripStatement remains def Prop quantifying StructurallyAdmissibleIR ir → decodeBytes (encodeModule ir) = .ok ir. The 11 new lemmas invert Correspondence helper JSON/field lists. decode_encode_roundtrip_of_decode only rewrites an already-successful decodeBytes. Two serializers exist. Do not credit helper inversion as the whole byte/IR theorem.",
+      "actual": {
+        "EncodeDecodeRoundtripStatement": "def Prop",
+        "new11_compile": true,
+        "print_axioms_178": true
+      }
+    },
+    {
+      "id": "R12-LOOKALIKE-NO-BRIDGE",
+      "severity": "blocker",
+      "class": "decodeDecodedIR_fields_is_inlined_do_not_decodeDecodedIR",
+      "evidence_class": "compiler_proved+source_inspection+successful_execution",
+      "source": "Correspondence.lean decodeDecodedIR_fields_typed/step/run; Decode.lean decodeDecodedIR",
+      "issue": "The three field theorems prove an inlined do-expression matching the body shape of decodeDecodedIR, applied to envelopeSortedFields, with unused raw : String. They do not mention decodeDecodedIR or decodeBytes. ProbeAxioms #check prints that do-block. ProbeR12: decodeDecodedIR (decodedIRToJson canonicalWitnessIR) is ok-eq on that one witness (bounded execution). That is not a universal bridge.",
+      "probe": "logs/probe-r12.stdout",
+      "actual": {
+        "theorem_mentions_decodeDecodedIR": false,
+        "witness_decodeDecodedIR_helper": "ok-eq",
+        "witness_decodeBytes_encode": "ok-eq"
+      }
+    },
+    {
+      "id": "R12-ENVELOPE-DOMAIN-RESTRICTED",
+      "severity": "blocker",
+      "class": "empty_source_map_and_none_claimed_next_state_not_full_domain",
+      "evidence_class": "source_inspection+successful_execution",
+      "source": "Correspondence.lean decodeEnvelope_orderedFields/sortedFields, CanonicalIR, EnvelopeLengthBounds, ClaimedNextStateCanonical; Decode.lean decodeEnvelope",
+      "issue": "decodeEnvelope and decodeDecodedIR_fields_* require source_map = [] and claimed_next_state = none. CanonicalIR requires SourceMapSorted and ClaimedNextStateCanonical, which admit nonempty sorted maps and some canonical worlds. EnvelopeLengthBounds allows source_map.length ≤ 4096. decodeEnvelope itself decodes nonempty maps and claimed_next_state some via decodeWorld. ProbeR12: decodeEnvelope sorted nonempty sm → ok sm=1; cns some → ok cns=some. The restrictions are proof-gap hypotheses, not decoder or full-domain facts.",
+      "probe": "logs/probe-r12.stdout",
+      "actual": {
+        "decodeEnvelope_empty_sm": "ok sm=0 cns=none",
+        "decodeEnvelope_nonempty_sm": "ok sm=1 cns=none",
+        "decodeEnvelope_cns_some": "ok sm=0 cns=some"
+      }
+    },
+    {
+      "id": "R12-LIBRARYREF-SHAPE",
+      "severity": "blocker",
+      "class": "libraryRef_helper_string_vs_production_object",
+      "evidence_class": "source_inspection+successful_execution",
+      "source": "Correspondence.lean libraryRefToJson/decodeLibraryRef_libraryRefToJson; Encode.lean encodeLibraryRef",
+      "issue": "libraryRefToJson none is Json.str theoremName. Production encodeLibraryRef none is jsonObj [(\"theorem\", escapeJsonString …)]. ProbeR12 helper keys none=STR; prod none={\"theorem\":\"T\"}. Both decode to ok thm=T mod=none. Helper inversion is valid for the helper encoding and is not production equivalence.",
+      "probe": "logs/probe-r12.stdout",
+      "actual": {
+        "libraryRef_helper_none": "STR",
+        "libraryRef_prod_none": "{\"theorem\":\"T\"}",
+        "decode_helper_none": "ok thm=T mod=none",
+        "decode_prod_none": "ok thm=T mod=none"
+      }
+    },
+    {
+      "id": "R12-DEPTH-AST58-REPAIRED-FUEL-UNPROVED",
+      "severity": "note_progress_with_remaining_limits",
+      "class": "scalar_depth0_runtime_match_fuel_adequacy_unproved",
+      "evidence_class": "source_inspection+successful_execution",
+      "source": "Correspondence.lean jsonDepthFuel/jsonDepth/WholeDocumentDepthBounded; CanonicalJson.lean parseStep maxDepth; Tests.lean checkDepthBoundaryRegression",
+      "issue": "jsonDepthFuel scalars are 0. ProbeR12: jsonDepth str/num/null/bool=0; nestJson 64=64 ≤64 true; guard AST58 encode nest 64, decodeBytes ok-eq, helper jsonDepth 64, production parse depth=64 arr=32. This closes the R11 AST58 off-by-one at runtime. jsonDepth_scalar and jsonDepthFuel_zero_of_scalar do not prove general array/object fuel adequacy. jsonDepthFuel 64 (nestJson 65)=64 undercounts the refusal threshold. Production jsonDepth uses fuel 100, which reports 65 for nestJson 65 and truncates nestJson 101 to 100. Public 4097/65 blocked class is preserved. Scanner still admits 4097. Intermediate scanner/parser disagreement is not a new requirement.",
+      "probe": "logs/probe-r12.stdout",
+      "actual": {
+        "scalar_jsonDepth": 0,
+        "nestJson64_jsonDepth": 64,
+        "nestJson64_le64": true,
+        "guard58_ast": 58,
+        "guard58_encode_nest": 64,
+        "guard58_decode": "ok-eq",
+        "guard58_helper_jsonDepth": 64,
+        "guard58_helper_le64": true,
+        "guard58_prod_parse_depth": 64,
+        "fuel64_nestJson65": 64,
+        "fuel100_nestJson101": 100,
+        "arr4097_decode": "resourceLimit max_array_length",
+        "nest65_decode": "resourceLimit maxDepth"
+      }
+    },
+    {
+      "id": "R12-SOURCEPIN-PROGRESS-REPORT-SNIPPET",
+      "severity": "note_progress_with_report_error",
+      "class": "sourcePin_null_or_string_vs_report_omitted_none",
+      "evidence_class": "source_inspection+successful_execution",
+      "source": "Correspondence.lean sourcePinToJson/decodeSourcePin_sourcePinToJson; Encode.lean encodeSourcePin; agy-r12-proof/REPORT.md §3",
+      "issue": "Actual sourcePinToJson always emits compiler_record and audit_record as null or string. decodeSourcePin_sourcePinToJson is cases cr <;> cases ar <;> rfl with no none hypotheses. ProbeR12 helper keys none and some are the six keys; decode of some returns some:cr/some:ar; production none uses null. The REPORT snippet that omits none-keys and appends only some-keys is not the implementation. That is a report defect, not a remaining sourcePin helper omission.",
+      "probe": "logs/probe-r12.stdout",
+      "actual": {
+        "helper_keys_none": "audit_record,checker_candidate,compiler_record,git,lean_toolchain,mathlib_rev",
+        "helper_keys_some": "audit_record,checker_candidate,compiler_record,git,lean_toolchain,mathlib_rev",
+        "prod_none": "{\"git\":\"g\",\"lean_toolchain\":\"t\",\"mathlib_rev\":\"m\",\"checker_candidate\":\"c\",\"compiler_record\":null,\"audit_record\":null}",
+        "decode_helper_some": "ok cr=some:cr ar=some:ar"
+      }
+    },
+    {
+      "id": "R12-RUNNER-SYMLINK-OVERCLAIM",
+      "severity": "blocker_for_report_claim",
+      "class": "relative_resolve_before_symlink_dangling_bypasses_exists",
+      "evidence_class": "successful_execution+source_inspection",
+      "source": "scripts/run_certificate_fixtures.py out_dir resolve/exists/is_symlink; REPORT RUNNER-OUTPUT-SAFETY",
+      "issue": "--out is required (exit 2, stderr SHA256 matches root missing-out). Nonempty targets refuse exit 2 with 0 sentinel mutation. Actual guard is: relative paths .resolve() first; then if exists(): refuse symlink or not-dir or nonempty. REPORT snippet that tests is_symlink before exists is not the source. Relative symlink to nonempty is refused as the resolved target path. Dangling abs/rel symlinks bypass exists() and are not refused as symlinks (exit 1 opening fixtures in this private tree). Empty existing directories are not refused. Absolute symlink to empty dir is refused as symlink. Blanket symlink refusal is not established. No historical directory was used as a write target.",
+      "probe": "probes/runner-sentinel-results.json",
+      "actual": {
+        "missing_out_exit": 2,
+        "missing_out_stderr_sha256": "ef3c4a1cbf89fdcbc80c5fe4e18f8ddf1a9fef80d29a391a4accf3760129b334",
+        "nonempty_exit": 2,
+        "nonempty_marker_unchanged": true,
+        "empty_existing_exit": 1,
+        "rel_symlink_nonempty_refused_as": "resolved nonempty path",
+        "dangling_abs_exit": 1,
+        "dangling_rel_exit": 1,
+        "abs_symlink_empty_exit": 2,
+        "f01_full_path": "not rerun"
+      }
+    },
+    {
+      "id": "R12-REPORT-IDENTITY",
+      "severity": "blocker_for_report_claim",
+      "class": "inventory_snippet_and_fixture_limitation",
+      "evidence_class": "source_inspection+author_captured",
+      "source": "agy-r12-proof/REPORT.md; sealed R11 REVIEW/verdict; fixture-results.json; results.json",
+      "issue": "REPORT says R11 regex omitted string_fromUTF8?_toUTF8 and decodeParty_encodeParty. Sealed R11 in_source_not_json is decodeParty_encodeParty and decodeRat_fromRat; string_fromUTF8?_toUTF8 was in the 167. REPORT jsonDepthFuel snippet uses els.map and ¬ j.isObj; source uses foldl and a match hypothesis. REPORT ran full 54 fixtures / 99 scenarios despite requested deferral. Count those author-captured totals as bounded execution with limitations, not universal proof. F13 host/overlay/IR oracle remains open.",
+      "actual": {
+        "source_theorems": 178,
+        "canonicaljson": 15,
+        "correspondence": 163,
+        "punctuation": ["string_fromUTF8?_toUTF8"],
+        "r11_missing_actual": ["decodeParty_encodeParty", "decodeRat_fromRat"],
+        "author_fixtures_recorded": "54/54",
+        "author_scenarios_recorded": "99 with 1 open P20"
+      }
+    }
+  ]
+}
