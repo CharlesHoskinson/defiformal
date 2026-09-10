@@ -1,0 +1,16 @@
+[
+  {
+    "path": "source/contracts/position/DecreasePositionUtils.sol",
+    "sha256": "d7f64a8c1eb2c48fd02c228c9fdddefcfd32d52a90b91afa41976c44a14b468a",
+    "start": 213,
+    "end": 240,
+    "text": "        cache.pnlTokenPrice = params.position.isLong() ? cache.prices.longTokenPrice : cache.prices.shortTokenPrice;\n\n        if (params.order.decreasePositionSwapType() != Order.DecreasePositionSwapType.NoSwap &&\n            cache.pnlToken == params.position.collateralToken()) {\n            params.order.setDecreasePositionSwapType(Order.DecreasePositionSwapType.NoSwap);\n        }\n\n        if (Order.isLiquidationOrder(params.order.orderType())) {\n            (bool isLiquidatable, string memory reason, PositionUtils.IsPositionLiquidatableInfo memory info) = PositionUtils.isPositionLiquidatable(\n                params.contracts.dataStore,\n                params.contracts.referralStorage,\n                params.position,\n                params.market,\n                cache.prices,\n                true, // shouldValidateMinCollateralUsd\n                true // forLiquidation\n            );\n\n            if (!isLiquidatable) {\n                revert Errors.PositionShouldNotBeLiquidated(\n                    reason,\n                    info.remainingCollateralUsd,\n                    info.minCollateralUsd,\n                    info.minCollateralUsdForLeverage\n                );\n            }\n        }\n\n"
+  },
+  {
+    "path": "source/contracts/position/DecreasePositionCollateralUtils.sol",
+    "sha256": "32b23e4edd9a52e79cfae0ab600b2e448af09d2c57a512e6b8ef7ada7b04423b",
+    "start": 635,
+    "end": 667,
+    "text": "        string memory step\n    ) internal returns (PositionUtils.DecreasePositionCollateralValues memory, PositionPricingUtils.PositionFees memory) {\n        if (!collateralCache.isInsolventCloseAllowed) {\n            revert Errors.InsufficientFundsToPayForCosts(collateralCache.result.remainingCostUsd, step);\n        }\n\n        PositionEventUtils.emitPositionFeesInfo(\n            params.contracts.eventEmitter,\n            params.orderKey,\n            params.positionKey,\n            params.market.marketToken,\n            params.position.collateralToken(),\n            params.order.sizeDeltaUsd(),\n            false, // isIncrease\n            fees\n        );\n\n        PositionEventUtils.emitInsolventClose(\n            params.contracts.eventEmitter,\n            params.orderKey,\n            params.position.collateralAmount(),\n            values.basePnlUsd,\n            collateralCache.result.remainingCostUsd,\n            step\n        );\n\n        return (values, getEmptyFees(fees));\n    }\n\n    function getEmptyFees(\n        PositionPricingUtils.PositionFees memory fees\n    ) internal pure returns (PositionPricingUtils.PositionFees memory) {\n        PositionPricingUtils.PositionReferralFees memory referral = PositionPricingUtils.PositionReferralFees({\n"
+  }
+]
