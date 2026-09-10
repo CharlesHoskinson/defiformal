@@ -1,0 +1,268 @@
+{
+  "schema": "defiformal-precedence-repair-findings/v1",
+  "mark": "PRECEDENCE_REPAIR_R18_PARTIAL_PROOF_UNIVERSAL_OPEN_FULL_P19_OPEN",
+  "acceptance": false,
+  "verdict": "CHANGES_REQUIRED",
+  "fresh_session": true,
+  "lean4_review_output": {
+    "version": "2.0",
+    "error": null,
+    "summary": {
+      "total_suggestions": 6,
+      "by_severity": {
+        "error": 3,
+        "warning": 2,
+        "advisory": 1,
+        "hint": 0,
+        "style": 0
+      }
+    },
+    "suggestions": [
+      {
+        "file": "lean/DefiKernel/Certificates/Correspondence.lean",
+        "line": 1061,
+        "column": 0,
+        "severity": "error",
+        "category": "axiom",
+        "rule_id": "unproved-roundtrip-prop",
+        "message": "EncodeDecodeRoundtripStatement remains a def Prop. Whole P19 acceptance is blocked. Compiling 311 named declarations is not acceptance.",
+        "fix": null
+      },
+      {
+        "file": "lean/DefiKernel/Certificates/Correspondence.lean",
+        "line": 3594,
+        "column": 0,
+        "severity": "error",
+        "category": "axiom",
+        "rule_id": "unproved-success-premises",
+        "message": "decodeBytes_encodeModule_of_lex_and_parse still assumes h_lex and h_parse. Recursive object/array/Expr/envelope inverse remains open.",
+        "fix": null
+      },
+      {
+        "file": "lean/DefiKernel/Certificates/Decode.lean",
+        "line": 94,
+        "column": 0,
+        "severity": "error",
+        "category": "api",
+        "rule_id": "unterminated-whitespace-precedence",
+        "message": "skipStringChars none returns notJsonObject before foundWhitespace EOF. Unterminated value/key after whitespace are notJsonObject; R15 returned noncanonicalWhitespace. No-whitespace controls remain notJsonObject.",
+        "fix": null
+      },
+      {
+        "file": "lean/DefiKernel/Certificates/CanonicalJson.lean",
+        "line": 807,
+        "column": 0,
+        "severity": "warning",
+        "category": "api",
+        "rule_id": "child-success-hypothesis",
+        "message": "parse_obj_first_field_step and parse_obj_first_field_comma still assume child foldlM success. Scalar field facts are base cases. Not nested-document inverse.",
+        "fix": null
+      },
+      {
+        "file": "lean/DefiKernel/Certificates/Decode.lean",
+        "line": 154,
+        "column": 0,
+        "severity": "warning",
+        "category": "api",
+        "rule_id": "malformed-vs-bound-acceptance",
+        "message": "Unterminated whitespace is codec malformed notJsonObject, not blocked. Size 1048577 remains resourceLimit maxBytes / codec blocked. Not a valid-domain roundtrip counterexample. Preserve 1MiB/depth64/array4096.",
+        "fix": null
+      },
+      {
+        "file": "review/semantic-kernel/certificates/p19/implementation/agy-r18-proof/commands.json",
+        "line": 27,
+        "column": 0,
+        "severity": "advisory",
+        "category": "metadata",
+        "rule_id": "author-command-scope",
+        "message": "Eight raw-stream bindings hash-match. lake build DefiKernel is a named library target (~0.59s cache replay), not unqualified full lake build. Verify 1498/2545, 420/677, 287/408 are historical author scopes, separate from the 311 named probe.",
+        "fix": null
+      }
+    ]
+  },
+  "evidence_classes": {
+    "compiler_proved": "Private Correspondence rebuild child_compiler_exit 0. Independent probe-axioms311 exit 0 printed 311 names, 299 standard, 12 none, 0 forbidden.",
+    "successful_execution": "Child compiler exit 0 and no Lean error line: lean-version, preflight, project-context, sorry-analyzers, lake-rebuild-correspondence, probe-axioms311, probe-mixed-six, probe-c0-controls, probe-unterminated, probe-runtime-acceptance.",
+    "source_inspection": "Read of frozen Encode/Decode/CanonicalJson/Correspondence/Schema/Verify, R18 REPORT/results/commands, root precheck/controls/unterminated finding, sealed R17 adjudication.",
+    "failed_probe": "None in this review.",
+    "author_captured": "Inspected frozen agy-r18-proof evidence. Eight command raw streams hash-bound. Verify prefixes from cmd-04 stdout. 54/99/16 and Tests.lean 21 not re-run.",
+    "unverified": "Verify.lean not re-run. 7/21 not re-run. R19 not inspected."
+  },
+  "findings": [
+    {
+      "id": "R18-UNIVERSAL-OPEN",
+      "severity": "blocker",
+      "class": "EncodeDecodeRoundtripStatement_still_Prop",
+      "evidence_class": "source_inspection+compiler_proved",
+      "source": "lean/DefiKernel/Certificates/Correspondence.lean:1061 EncodeDecodeRoundtripStatement",
+      "issue": "EncodeDecodeRoundtripStatement remains a def Prop quantifying every StructurallyAdmissibleIR ir to decodeBytes (encodeModule ir) = .ok ir. R18 does not prove that proposition. Full P19 acceptance stays false.",
+      "actual": {"kind": "def Prop", "is_theorem": false, "in_named_311": false}
+    },
+    {
+      "id": "R18-CONDITIONAL-NOT-UNIVERSAL",
+      "severity": "blocker",
+      "class": "h_lex_h_parse_unproved_success_premises",
+      "evidence_class": "source_inspection+compiler_proved",
+      "source": "Correspondence.lean:3594 decodeBytes_encodeModule_of_lex_and_parse",
+      "issue": "decodeBytes_encodeModule_of_lex_and_parse still assumes h_lex and h_parse. Object-decoder success is discharged. Lexical and parser success are not. Compiling the theorem with standard axioms is not a proof of the premises.",
+      "actual": {
+        "object_decoder_premise": false,
+        "h_lex": "unproved success premise",
+        "h_parse": "unproved success premise",
+        "axioms": ["propext", "Classical.choice", "Quot.sound"]
+      }
+    },
+    {
+      "id": "R18-UNTERMINATED-WHITESPACE-PRECEDENCE",
+      "severity": "required_repair",
+      "class": "skipStringChars_none_before_foundWhitespace",
+      "evidence_class": "successful_execution",
+      "source": "Decode.lean:49 skipStringChars, :94/:103 none => notJsonObject; probes/unterminated",
+      "issue": "Independently replayed exact root diagnostic. Unterminated value/key after whitespace return notJsonObject; R15 returned noncanonicalWhitespace. No-whitespace controls remain notJsonObject. Malformed-input precedence, not an admissible-domain roundtrip counterexample. R19 author has both repairs; not inspected.",
+      "actual": {
+        "stdout_sha256": "d82c224e3af9f1588a52eed59bb40c23ed7db206ef5151d89e81f1ec5019ae22",
+        "value_space": "notJsonObject",
+        "key_space": "notJsonObject",
+        "no_space_controls": "notJsonObject",
+        "r15_space_expected": "noncanonicalWhitespace",
+        "credit": true
+      }
+    },
+    {
+      "id": "R18-MIXED-SIX-RESTORED",
+      "severity": "progress",
+      "class": "r15_mixed_error_precedence_restored",
+      "evidence_class": "successful_execution",
+      "source": "probes/mixed-six; logs/probe-mixed-six",
+      "issue": "Exact six mixed-error controls match R15 bit-for-bit on the private rebuild. Scientific, whitespace, later duplicate, and maxDepth after malformed escape are restored. Two unchanged controls remain.",
+      "actual": {
+        "exit": 0,
+        "stdout_sha256": "0ec3c792debf9f40328a2f78e0cd97b21303911262542cf2939ab3ca21d25d02",
+        "matches_r15": true,
+        "credit": true
+      }
+    },
+    {
+      "id": "R18-C0-AND-ESCAPED-DUPLICATES",
+      "severity": "progress",
+      "class": "r16_c0_and_key_identity_preserved",
+      "evidence_class": "successful_execution",
+      "source": "probes/c0-controls; logs/probe-c0-controls",
+      "issue": "32 C0 collision positive roundtrips, true duplicate, equivalent escaped duplicate, and quote/backslash positives match R16 bit-for-bit.",
+      "actual": {
+        "exit": 0,
+        "stdout_sha256": "6caac5c24bbef54474ebc6635ba526341a58169148fd2c8470407aa78f90df6d",
+        "matches_r16": true,
+        "true_duplicate": "duplicateKey a",
+        "equivalent_escaped": "duplicateKey a",
+        "quote_control": "ok",
+        "backslash_control": "ok",
+        "credit": true
+      }
+    },
+    {
+      "id": "R18-COMPONENT-INVERSE-BASE-CASES",
+      "severity": "progress",
+      "class": "enum_unit_numericUnit_unaryOp_and_scalar_parser_facts",
+      "evidence_class": "source_inspection+compiler_proved",
+      "source": "CanonicalJson.lean:807-864; Correspondence.lean:3847-3897",
+      "issue": "Strongest actual general R18 results are enum/base inverses for NumericUnitEnc/UnitEnc/UnaryOpEnc and scalar/first-field parser facts. Child foldlM success remains assumed in first-field support facts. These do not close arbitrary recursive Expr/list/object/envelope inversion.",
+      "actual": {
+        "parseCanonicalJson_encodeNumericUnit_hypotheses": [],
+        "parseCanonicalJson_encodeUnit_hypotheses": [],
+        "parseCanonicalJson_encodeUnaryOp_hypotheses": [],
+        "parse_obj_first_field_step_h_val": "hypothesis",
+        "nested_document_inverse": false
+      }
+    },
+    {
+      "id": "R18-CHILD-SUCCESS-HYPOTHESES",
+      "severity": "blocker_for_nested_inverse",
+      "class": "assumed_child_foldlM_success",
+      "evidence_class": "source_inspection",
+      "source": "CanonicalJson.lean:556 parse_arr_feed_elem, :568 parse_obj_field_step, :807 parse_obj_first_field_step, :612 parseCanonicalJson_of_tokenize_parseTokens",
+      "issue": "Nested object/array step facts still take child foldlM success (h_val/h_feed) or tokenizer/parser success (h_tok/h_parse). New first-field facts do the same. Exact remaining obligation is recursive object/array/ExprEnc.unary|binary|ite/list/envelope tokenization and parseTokens inversion from StructurallyAdmissibleIR.",
+      "actual": {
+        "parse_obj_first_field_step_h_val": "hypothesis",
+        "parse_obj_field_step_h_val": "hypothesis",
+        "parse_arr_feed_elem_h_feed": "hypothesis"
+      }
+    },
+    {
+      "id": "R18-RUNTIME-ACCEPTANCE-BOUNDS",
+      "severity": "qualification",
+      "class": "malformed_precedence_vs_valid_domain_and_resource_limit",
+      "evidence_class": "successful_execution",
+      "source": "probes/runtime-acceptance; Decode.lean:154 maxBytes; Correspondence.lean:1074 decode_error_no_kernel",
+      "issue": "Concrete new concern: remaining unterminated-whitespace defect is checker-visible as codec malformed notJsonObject, not as blocked and not as kernel execution. Size 1048577 still resourceLimit maxBytes / codec blocked. Size 1048576 is not rejected by the exclusive-greater size gate. C0 valid-domain roundtrips still succeed. Do not treat the unterminated cases as SupportedIR counterexamples. Domain 1MiB/depth64/array4096/full canonical strings remain.",
+      "actual": {
+        "exit": 0,
+        "stdout_sha256": "4049a3b8e68b3793210bc4a7e3756c45c2fe4b9c838cf1d8d61adc345e235b33",
+        "unterminated_space_class": "codec malformed notJsonObject",
+        "maxBytes_1048577_class": "codec blocked maxBytes",
+        "valid_domain_regressed": false,
+        "credit": true
+      }
+    },
+    {
+      "id": "R18-AXIOM-GATE-SUCCESS",
+      "severity": "progress",
+      "class": "exact311_print_axioms_on_private_rebuild",
+      "evidence_class": "successful_execution",
+      "source": "probes/axioms311; logs/probe-axioms311",
+      "issue": "Independent #print axioms of exact 311 named declarations on the private rebuild succeeded. Includes lemma exprDepth_pos. 299 standard, 12 none, 0 forbidden. Name/axiom map equals author CMD-07. Not whole-P19 acceptance.",
+      "actual": {
+        "exit": 0,
+        "named": 311,
+        "standard": 299,
+        "none": 12,
+        "forbidden": 0,
+        "stdout_sha256": "ed005fa048efa1ae6ce50e5353ea7dff6265fe07241bdb1275328647e481807a",
+        "credit": true
+      }
+    },
+    {
+      "id": "R18-AUTHOR-COMMAND-SCOPE",
+      "severity": "report_correction",
+      "class": "named_library_target_and_verify_prefix_scope",
+      "evidence_class": "author_captured",
+      "source": "agy-r18-proof/commands.json and logs/cmd-01..cmd-08; logs/author-command-bindings.json",
+      "issue": "All eight author raw stdout/stderr hashes match claimed bindings. Captured lake build DefiKernel is a named library target (argv lake build DefiKernel, ~0.59s cache replay), not unqualified full lake build. Actual author Verify reports Certificates 1498/2545, Typed 420/677, Composition 287/408; those historical author execution scopes are separate from the 311 named probe. 7/21 and 54/99/16 were not re-run.",
+      "actual": {
+        "bindings_verified": 8,
+        "stdout_hash_match": true,
+        "stderr_hash_match": true,
+        "cmd02_named_target": "DefiKernel",
+        "verify_certificates": "1498/2545",
+        "verify_typed": "420/677",
+        "verify_composition": "287/408"
+      }
+    },
+    {
+      "id": "R18-PREVIOUS-299-PRESERVED",
+      "severity": "progress",
+      "class": "historical_named_set_preserved",
+      "evidence_class": "source_inspection",
+      "source": "probes/axioms311/inventory.json versus R17 inventory",
+      "issue": "All 299 previous R17 named declarations are present. CanonicalJson 62→68 (+6). Correspondence 237 named remain plus +6 theorems give 243 named. exprDepth_pos predates R17. R17 added 29 theorems; R18 adds 12.",
+      "actual": {
+        "missing_previous_r17": [],
+        "new_theorem_count": 12,
+        "exprDepth_pos_new_in_r18": false
+      }
+    },
+    {
+      "id": "R18-ENVELOPE-ORDER",
+      "severity": "qualification",
+      "class": "production_declaration_order_vs_helper_mkObj",
+      "evidence_class": "source_inspection",
+      "source": "Encode.lean:15 jsonObj, :282 encodeEnvelope, :277 encodeSourceMap; Correspondence.lean:562 envelopeToJson, :3357 envelopeToJson_eq_mkObj_sortedFields",
+      "issue": "Production envelope bytes are jsonObj in supplied declaration order. SourceMap uses sorted entries with a sorted fast path. Helper envelopeToJson / mkObj sorts internally. Do not assert production bytes equal helper.compress.",
+      "actual": {
+        "jsonObj_sorts": false,
+        "mkObj_sorts": true,
+        "source_map_fastpath_if_sorted": true
+      }
+    }
+  ]
+}
