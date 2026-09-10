@@ -1,0 +1,159 @@
+{
+  "schema": "defiformal-independent-source-audit-findings/v1",
+  "attempt": "p26-source-grok-r1",
+  "phase": "reporting_closeout",
+  "continuing_session": "01a08d48-bd88-7c83-b189-1f491bc7e5df",
+  "verdict": "usable",
+  "P26_accepted": false,
+  "P29_accepted": false,
+  "complete_review_acceptance": false,
+  "closeout_note": "F05 statement is narrowed relative to the original-terminal findings.json overclaim that frozen status blocks recv/timeout/ack verification. No new source inspection was performed.",
+  "findings": [
+    {
+      "id": "F01",
+      "severity": "required_observation_mapping",
+      "blocks_source_preparation": false,
+      "title": "Ordinary duplicate receipts are NOOP success, not a transaction error",
+      "evidence": [
+        "source/modules/core/04-channel/keeper/packet.go:199-206 unordered receipt found returns types.ErrNoOpMsg",
+        "source/modules/core/04-channel/keeper/packet.go:224-229 ordered sequence < nextSequenceRecv returns types.ErrNoOpMsg",
+        "source/modules/core/keeper/msg_server.go:439-441 maps ErrNoOpMsg to MsgRecvPacketResponse{Result: NOOP}, nil and returns before OnRecvPacket"
+      ],
+      "statement": "P26 replay-after-finality cannot be represented as an invented executor error for ordinary IBC duplicates. Task 27.1 must freeze an explicit observation mapping or select a different workflow that actually refuses."
+    },
+    {
+      "id": "F02",
+      "severity": "required_observation_mapping",
+      "blocks_source_preparation": false,
+      "title": "Earlier guards can refuse before the NOOP classification",
+      "evidence": [
+        "packet.go:113-115 channel not OPEN",
+        "packet.go:147-148 timeout elapsed on receive is an actual error",
+        "packet.go:154-160 proof failure is an actual error",
+        "packet.go:190-191 sequence < recvStartSequence returns ErrPacketReceived",
+        "packet.go:234-237 ordered sequence != nextSequenceRecv returns ErrPacketSequenceOutOfOrder"
+      ],
+      "statement": "Do not claim every malformed, expired, or stale replay reaches NOOP. Packets below recvStartSequence are ErrPacketReceived. Ordered future sequence is another actual refusal."
+    },
+    {
+      "id": "F03",
+      "severity": "required_observation_mapping",
+      "blocks_source_preparation": false,
+      "title": "Ack and timeout consume the source packet commitment; ordinary timeout checks maturity and remote non-receipt",
+      "evidence": [
+        "packet.go:437 deletePacketCommitment on successful ack",
+        "timeout.go:68-71 timeout not reached is an actual error",
+        "timeout.go:75-81 empty local commitment returns ErrNoOpMsg",
+        "timeout.go:91-110 ordered next-sequence proof versus unordered VerifyPacketReceiptAbsence",
+        "timeout.go:135 timeoutExecuted deletes commitment and closes ordered channels",
+        "timeout.go:159-262 TimeoutOnClose is present in the selected source"
+      ],
+      "statement": "Successful acknowledgement deletes the sending-chain commitment before the application ack callback. Ordinary timeout requires verified remote non-receipt and maturity at the supplied proof height or timestamp. Missing local commitment alone is not the entire timeout guard. TimeoutOnClose remains a selected compensation path and must be retained for 27.1."
+    },
+    {
+      "id": "F04",
+      "severity": "required_observation_mapping",
+      "blocks_source_preparation": false,
+      "title": "ICS-20 compensation is conditional and origin-dependent",
+      "evidence": [
+        "relay.go:220-224 successful Acknowledgement_Result returns nil without token movement",
+        "relay.go:225-228 error ack refunds",
+        "relay.go:235-242 timeout refunds",
+        "relay.go:261-262 refund rejects blocked sender",
+        "relay.go:277-291 prefixed denom remints; otherwise unescrows",
+        "relay.go:316-321 UnescrowCoin can fail"
+      ],
+      "statement": "Do not claim unconditional compensation or refund success. Successful ack does not refund. Error ack and timeout refund by unescrow or voucher remint according to asset origin. Refund can fail, including blocked sender and unescrow failure."
+    },
+    {
+      "id": "F05",
+      "severity": "required_observation_mapping",
+      "blocks_source_preparation": false,
+      "title": "Verified misbehaviour freezes the client and returns success without refunding packets",
+      "evidence": [
+        "client.go:60-74 VerifyClientMessage, CheckForMisbehaviour, UpdateStateOnMisbehaviour, return nil",
+        "update.go:211-217 FrozenHeight assigned without re-checking misbehaviour",
+        "client_state.go:81-88 frozen status precedes expiry",
+        "keeper.go:343-344 VerifyMembership requires status Active",
+        "packet.go:61-62 SendPacket requires Active",
+        "client.go:118-145 RecoverClient can restore a non-Active subject from an Active substitute",
+        "packet.go:377-386 ack empty-commitment NOOP runs before acknowledgement proof",
+        "timeout.go:75-81 timeout empty-commitment NOOP runs before non-receipt proof"
+      ],
+      "statement": "Challenge/finality freeze is not automatic per-message compensation. The read VerifyMembership path returns ErrClientNotActive unless the client is Active; RecvPacket's VerifyPacketCommitment call uses that membership helper after earlier channel/timeout guards. This does not prove that every recv, timeout, or ack is blocked while frozen: empty-commitment NOOP and earlier guards can run first. Unordered timeout/TimeoutOnClose call VerifyPacketReceiptAbsence; that nonmembership implementation was not excerpted and is not proved by the membership Active check alone. RecoverClient is a selected unfreeze path and does not refund pending packets. Later contracts must keep freeze, recovery, and proof-status assumptions explicit."
+    },
+    {
+      "id": "F06",
+      "severity": "required_observation_mapping",
+      "blocks_source_preparation": false,
+      "title": "Local SDK cache and transaction boundaries are not remote rollback",
+      "evidence": [
+        "msg_server.go:433-451 RecvPacket uses CacheContext; first writeFn commits receipt before the application callback",
+        "msg_server.go:452-458 unsuccessful application ack discards callback cache but keeps the already-written receipt",
+        "msg_server.go:497-516 TimeoutPacket writeFn then OnTimeoutPacket on the parent context"
+      ],
+      "statement": "Core callbacks and SDK nested cache/transaction commit boundaries must not be confused with synchronous rollback of a remote chain. A later P26 model must not assume the counterparty is undone."
+    },
+    {
+      "id": "F07",
+      "severity": "editorial",
+      "blocks_source_preparation": false,
+      "title": "README refund wording says blocked recipient; refund source checks sender",
+      "evidence": [
+        "p26-ibc-source-preparation/README.md sentence on refund failure",
+        "relay.go:261 IsBlockedAddr(sender) in refundPacketTokens",
+        "relay.go:137 IsBlockedAddr(receiver) in OnRecvPacket"
+      ],
+      "statement": "The packet README says refund can fail including for a blocked recipient. The refund function rejects a blocked sender. Receive rejects a blocked receiver. This is an editorial imprecision, not an identity mismatch. Task 27.1 should pin the actual sender guard."
+    },
+    {
+      "id": "F08",
+      "severity": "coverage_note",
+      "blocks_source_preparation": false,
+      "title": "TimeoutOnClose is an additional compensation path and is not a navigation anchor",
+      "evidence": [
+        "timeout.go:196-202 TimeoutOnClose empty commitment returns ErrNoOpMsg",
+        "msg_server.go:551-553 MsgTimeoutOnCloseResponse NOOP",
+        "source-navigation.json has timeout-noop-api for MsgTimeoutResponse only"
+      ],
+      "statement": "TimeoutOnClose can compensate without ordinary timeout elapsed, after proving the counterparty channel is closed and non-receipt. Ordinary TimeoutOnClose duplicates are also NOOP. This path is in the selected source and must remain available to 27.1."
+    },
+    {
+      "id": "F09",
+      "severity": "remaining_obligation",
+      "blocks_source_preparation": false,
+      "title": "Source declarations are not installed runtime identities; no import closure",
+      "evidence": [
+        "source/go.mod module github.com/cosmos/ibc-go/v11, go 1.26.5, cosmos-sdk v0.55.0, cometbft v0.40.0",
+        "source-manifest.json import_closure_claimed false, compiler_runtime_dependencies_resolved false, source_execution false",
+        "archive has 1890 regular members; only 33 selected Git blobs were identity-checked"
+      ],
+      "statement": "Go 1.26.5, ibc-go v11, SDK v0.55.0 and CometBFT v0.40.0 were not installed or executed. Oracle, custody, legal, sequencing, finality and proof authenticity remain explicit future contract obligations."
+    },
+    {
+      "id": "F10",
+      "severity": "remaining_program_work",
+      "blocks_source_preparation": false,
+      "title": "P26 and P29 are not accepted from this packet",
+      "evidence": [
+        "openspec tasks 27.1, 27.2, 27.3 unchecked in the sandbox copy",
+        "task 30.1 P29 is after P26 and separate",
+        "root assessment P26_accepted false, P29_accepted false"
+      ],
+      "statement": "Task 27.1 still needs a concrete workflow and frozen observation/assumption contract plus independent review. Tasks 27.2 and 27.3 need Lean implementation and proofs, success, refusal, double-terminal mutation and a source-independent two-terminal negative. P29 complete cross-domain accounting remains separate. No narrowed substitute acceptance. Full roadmap unchanged."
+    },
+    {
+      "id": "F11",
+      "severity": "audit_limit",
+      "blocks_source_preparation": false,
+      "title": "Some packet claims were not independently re-executed",
+      "evidence": [
+        "formal/v3/GATE-REGISTER.md is absent from the frozen sandbox and was not read from live trees",
+        "README graph-query sentence was not re-run",
+        "capture.py, scope.py, verify.py, Makefile and Go tests were not executed",
+        "closeout did not re-access the sandbox or run new probes"
+      ],
+      "statement": "The original session independently reproduced identity hashes, archive membership, Git blobs, anchors and the altered-byte control against the sandbox archive. Those 38 checks and 30 excerpts are source inspection and hash evidence, not proof or runtime execution. Capture, Go, graphify and live cache paths were not run. Root verification remains source-identity evidence, not proof."
+    }
+  ]
+}
