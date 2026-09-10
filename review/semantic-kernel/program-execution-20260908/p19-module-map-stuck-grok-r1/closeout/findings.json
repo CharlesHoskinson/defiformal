@@ -1,0 +1,177 @@
+{
+  "schema": "defiformal-p19-module-map-stuck-review-findings/v1",
+  "mark": "P19_R22_MODULE_MAP_STUCK_CHANGES_REQUIRED",
+  "acceptance": false,
+  "verdict": "CHANGES_REQUIRED",
+  "full_P19_accepted": false,
+  "fresh_session": false,
+  "original_session": "01a08d18-60dd-7c12-ae42-5c8d622712e5",
+  "evidence_class": {
+    "root_scratch_compiles": "root-context p19-r22-root-probe-recovery, not this reviewer",
+    "this_review_lean_execution": "none",
+    "unsupported_tag": "source-level mismatch from Encode.lean 242 versus CanonicalJson TreeJson.str encode",
+    "mkObj_equality": "inspected Json.obj = TreeMap.Raw; permutation = unfinished"
+  },
+  "findings": [
+    {
+      "id": "P19-R22-STUCK-01",
+      "severity": "error",
+      "class": "typeclass-coercion-elaboration",
+      "file": "review/semantic-kernel/certificates/p19/implementation/agy-r22-proof/probes/test_typed_roundtrip.lean",
+      "lines": [488, 517, 537],
+      "also": "test_all_structures.lean 399, 413-415",
+      "message": "capabilityIds List Nat mapped through TreeJson.num : Int → TreeJson elaborates to List.flatMap (fun a => [↑a]). Production encode is List.map toString. Length 4096 hypothesis does not apply to the coerced list.",
+      "repair": "Explicit map (fun id : Nat => TreeJson.num (Int.ofNat id)). Rewrite with List.map_eq_flatMap. Length via List.length_map. Untested.",
+      "false_statement": false
+    },
+    {
+      "id": "P19-R22-STUCK-02",
+      "severity": "error",
+      "class": "definitional-equality",
+      "file": "lean/DefiKernel/Certificates/Correspondence.lean",
+      "lines": [437, 506, 884],
+      "library": "Lean/Data/Json/Basic.lean mkObj 225-226, Json.obj 186, beq' 191-206, fromNat 32, normalize 48",
+      "message": "rfl on Json.mkObj fails when scratch TreeJson.obj uses declaration order and *ToJson uses sorted keys. Json equality is the Raw tree, not JSON semantic object equality. fromNat is ⟨n, 0⟩, not normalize. Template leftover is fromNat versus constructor on partyArity.",
+      "repair": "Prove encode along jsonObj declaration order. For toJson, match *ToJson list order or prove Raw equality. Unfold JsonNumber.fromNat if it remains. mkObj permutation = is unfinished. Untested tactics.",
+      "false_statement": false
+    },
+    {
+      "id": "P19-R22-STUCK-03",
+      "severity": "error",
+      "class": "statement-shape",
+      "file": "review/semantic-kernel/certificates/p19/implementation/agy-r22-proof/probes/test_all_structures.lean",
+      "lines": [469, 490, 494],
+      "production": "lean/DefiKernel/Certificates/Encode.lean:242",
+      "admission": "Correspondence.lean StepCanonical 115-119, SupportedIR 907 and 919, decodeStep_stepToJson 3094-3114",
+      "message": "stepToTreeJson_encode quantifies over unsupported tags. encodeStep interpolates raw quotes. TreeJson.str escapes. Source-level mismatch. No diagnostic executed. Not a supported-input codec bug.",
+      "repair": "Lemma with StepCanonical (implied by admission). Cases invoke/issue/revoke. contradiction on unsupported. Do not narrow StructurallyAdmissibleIR. Do not add decoder-success premises. Do not replace the codec.",
+      "false_statement": "possible for arbitrary tags; not executed"
+    },
+    {
+      "id": "P19-R22-STUCK-04",
+      "severity": "error",
+      "class": "syntax",
+      "file": "review/semantic-kernel/certificates/p19/implementation/agy-r22-proof/probes/test_typed_roundtrip.lean",
+      "lines": [590],
+      "message": "simp profile_map is malformed. Other proofs in the same file use List.map_inj_left. Tactic mistake, not a false TypesEnum statement.",
+      "repair": "simp only [List.map_inj_left]. Untested.",
+      "false_statement": false
+    },
+    {
+      "id": "P19-R22-STUCK-05",
+      "severity": "error",
+      "class": "unknown-identifier",
+      "file": "review/semantic-kernel/certificates/p19/implementation/agy-r22-proof/probes/test_template_fix.lean",
+      "lines": [172, 174],
+      "message": "Unknown identifiers cellDeltaToJson_encode and supplyDeltaToJson_encode. Production names are encodeCellDelta and encodeSupplyDelta (Encode.lean 112-116).",
+      "repair": "Use encodeCellDelta / encodeSupplyDelta. Naming mistake.",
+      "false_statement": false
+    },
+    {
+      "id": "P19-R22-STUCK-06",
+      "severity": "warning",
+      "class": "proof-too-large",
+      "file": "review/semantic-kernel/certificates/p19/implementation/agy-r22-proof/probes/test_template_fix.lean",
+      "lines": [185],
+      "message": "whnf heartbeat 200000 after dsimp [TreeJson.encode]; rfl. Unlimited unfolding is not the fix.",
+      "repair": "encode_obj_eq_jsonObj, encode_arr_eq_jsonArr / encode_arr_map, child encode lemmas. Untested.",
+      "false_statement": false
+    }
+  ],
+  "lean4_review_output": {
+    "version": "2.0",
+    "error": null,
+    "summary": {
+      "total_suggestions": 8,
+      "by_severity": {
+        "error": 5,
+        "warning": 2,
+        "advisory": 1,
+        "hint": 0,
+        "style": 0
+      }
+    },
+    "suggestions": [
+      {
+        "file": "review/semantic-kernel/certificates/p19/implementation/agy-r22-proof/probes/test_typed_roundtrip.lean",
+        "line": 488,
+        "column": 0,
+        "severity": "error",
+        "category": "structure",
+        "rule_id": "capabilityids-nat-int-flatmap",
+        "message": "Request/Invocation capabilityIds elaborate to List.flatMap of coerced Nat→Int. Use an explicit Int.ofNat map and List.length_map. Production encode remains List.map toString.",
+        "fix": null
+      },
+      {
+        "file": "lean/DefiKernel/Certificates/Correspondence.lean",
+        "line": 437,
+        "column": 0,
+        "severity": "error",
+        "category": "api",
+        "rule_id": "mkobj-order-not-rfl",
+        "message": "Json.mkObj is TreeMap.Raw.ofList. Declaration-order TreeJson.obj versus sorted *ToJson lists are not rfl. Do not infer Lean Json equality from semantic key-set equality. Permutation = unfinished.",
+        "fix": null
+      },
+      {
+        "file": "review/semantic-kernel/certificates/p19/implementation/agy-r22-proof/probes/test_all_structures.lean",
+        "line": 471,
+        "column": 0,
+        "severity": "error",
+        "category": "axiom",
+        "rule_id": "unsupported-tag-raw-vs-escape",
+        "message": "stepToTreeJson_encode over all tags mismatches encodeStep raw quotes versus TreeJson string escaping. Source-level only. Scope a new lemma with existing StepCanonical. Do not narrow StructurallyAdmissibleIR.",
+        "fix": null
+      },
+      {
+        "file": "review/semantic-kernel/certificates/p19/implementation/agy-r22-proof/probes/test_typed_roundtrip.lean",
+        "line": 590,
+        "column": 0,
+        "severity": "error",
+        "category": "style",
+        "rule_id": "malformed-simp-profile-map",
+        "message": "simp profile_map is not valid syntax. Use List.map_inj_left as in sibling proofs.",
+        "fix": null
+      },
+      {
+        "file": "review/semantic-kernel/certificates/p19/implementation/agy-r22-proof/probes/test_template_fix.lean",
+        "line": 172,
+        "column": 0,
+        "severity": "error",
+        "category": "naming",
+        "rule_id": "missing-encode-celldelta",
+        "message": "cellDeltaToJson_encode / supplyDeltaToJson_encode do not exist. Production identifiers are encodeCellDelta and encodeSupplyDelta.",
+        "fix": null
+      },
+      {
+        "file": "review/semantic-kernel/certificates/p19/implementation/agy-r22-proof/probes/test_template_fix.lean",
+        "line": 185,
+        "column": 0,
+        "severity": "warning",
+        "category": "golf",
+        "rule_id": "whnf-heartbeat-unfold-encode",
+        "message": "dsimp [TreeJson.encode]; rfl hit 200000 heartbeats. Use encode_obj_eq_jsonObj and child encode lemmas. Do not raise heartbeats as the repair.",
+        "fix": null
+      },
+      {
+        "file": "lean/DefiKernel/Certificates/Encode.lean",
+        "line": 242,
+        "column": 0,
+        "severity": "warning",
+        "category": "api",
+        "rule_id": "unsupported-encode-outside-admission",
+        "message": "Production encodeStep .unsupported concatenates unescaped tag quotes. Supported/canonical admission already excludes that constructor. Do not treat this as a supported-input codec bug.",
+        "fix": null
+      },
+      {
+        "file": "review/semantic-kernel/certificates/p19/implementation/agy-r22-proof",
+        "line": 1,
+        "column": 0,
+        "severity": "advisory",
+        "category": "metadata",
+        "rule_id": "author-evidence-gap",
+        "message": "Author commands.json is empty, MANIFEST files are empty, reports remain IN_PROGRESS. Native SUCCESS is not compiler credit. Production is unchanged from R21. Full P19 remains open.",
+        "fix": null
+      }
+    ]
+  }
+}

@@ -1,0 +1,15 @@
+theorem decodeBytes_encodeModule_of_valid_and_depth (ir : DecodedIR)
+    (h_adm : StructurallyAdmissibleIR ir)
+    (h_valid : TreeJson.Valid (moduleToTreeJson ir))
+    (h_depth : TreeJson.depth (moduleToTreeJson ir) ≤ 64)
+    (h_dec : decodeDecodedIR ((moduleToTreeJson ir).toJson) (encodeModuleString ir) = .ok ir)
+    (h_lex : scanLexical (encodeModule ir) = .ok ()) :
+    decodeBytes (encodeModule ir) = .ok ir := by
+  have h_parse := parseCanonicalJson_encodeModuleString_tree ir h_adm h_valid h_depth
+  apply decodeBytes_eq_of_steps (encodeModule ir) (encodeModuleString ir) ((moduleToTreeJson ir).toJson) ir
+  · exact h_lex
+  · exact string_fromUTF8_encodeModule ir
+  · exact h_parse
+  · exact h_dec
+  · rfl
+
