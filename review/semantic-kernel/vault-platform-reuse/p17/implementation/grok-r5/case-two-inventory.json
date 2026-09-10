@@ -1,0 +1,108 @@
+{
+  "case": "P17-vault-platform-reuse",
+  "status": "measured_not_independently_accepted",
+  "candidate": "grok-r5",
+  "baseline_inventory": "review/semantic-kernel/vault-platform-reuse/p17/implementation/agy-r4/case-two-inventory.json",
+  "baseline_note": "agy-r4 measured new Lean/engine definitions only; assumptions, interface changes and effort were absent (Opus R-2).",
+  "author": "native Grok 4.6 R5 (repairs); AGY r1-r4 authoring preserved",
+  "reviewer": "pending native Opus repair review",
+  "date": "2026-09-09",
+  "units": {
+    "definitions": "source files / Lean modules",
+    "assumptions": "named harness or scope assumptions, not theorems",
+    "interface": "engine function and schema names",
+    "effort": "native process receipts and calendar date; not person-hours; not summed cumulative usage"
+  },
+  "new_definitions": {
+    "lean_modules": [
+      {"module": "DefiKernel.Vault.Types", "role": "RAY, WAD, Addr, Asset, Domain, Failure"},
+      {"module": "DefiKernel.Vault.Conversion", "role": "convertToShares/Assets, previewMint/Withdraw"},
+      {"module": "DefiKernel.Vault.Operations", "role": "deposit, mint, withdraw, redeem Ledger operations"},
+      {"module": "DefiKernel.Vault.Adapter", "role": "deposit template only (no redeem template), library-derived wadQ/sharesQ, execute_ok_iff"},
+      {"module": "DefiKernel.Vault.Examples", "role": "runtimeChecks including credit predicate and token0 library add vs identity"},
+      {"module": "DefiKernel.Vault.Tests", "role": "named runtimeChecks Nodup"},
+      {"module": "DefiKernel.Vault.RuntimeAudit", "role": "#eval runtime denominator"},
+      {"module": "DefiKernel.Vault.ProofAudit", "role": "axiom audit DefiKernel.Vault and Token0Bridge"},
+      {"module": "DefiKernel.Vault.Verify", "role": "import root"},
+      {"module": "DefiKernel.ConcentratedLiquidity.Token0Bridge", "role": "quote-register wrap; R-1 lifts preQ/postQ via Quantity.toQuantity"}
+    ],
+    "engine_modules": [
+      "scripts/platform_engine/__init__.py",
+      "scripts/platform_engine/common.py",
+      "scripts/platform_engine/compile.py",
+      "scripts/platform_engine/prestate.py",
+      "scripts/platform_engine/score.py",
+      "scripts/platform_engine/evm.py",
+      "scripts/platform_engine/abi.py",
+      "scripts/platform_engine/keccak.py",
+      "scripts/platform_engine/vault_exec.py",
+      "scripts/platform_engine/vault_campaign.py",
+      "scripts/platform_engine/vault_mutants.py",
+      "scripts/platform_engine/token0_campaign.py",
+      "scripts/platform_engine/dump_smoke.py",
+      "scripts/platform_engine/setup_controls.py",
+      "scripts/platform_engine/rr4_metadata_diagnostics.py",
+      "scripts/platform_engine/token0_detector_controls.py",
+      "scripts/platform_engine/manifest.py"
+    ]
+  },
+  "new_assumptions_case_two": [
+    {"id": "UsdsMock-VatMock-UsdsJoinMock", "kind": "harness", "not": "captured SUsds source identity"},
+    {"id": "D1-chi-storage-seed", "kind": "harness", "claim": "no protocol-reachability evidence; non-reachability is not proved"},
+    {"id": "stable-time-D0-D1", "kind": "domain", "claim": "timestamp == rho; no _rpow accrual"},
+    {"id": "G-UNCHECKED-SUPPLY-WRAP", "kind": "named gap", "source": "unchecked _mint/_burn wrap in Solidity vs Lean overflow refuse"},
+    {"id": "G-MULDIV-UNBOUNDED-PRODUCT", "kind": "named gap", "source": "Lean unbounded mul vs 0.8.21 checked mul"},
+    {"id": "no-deployment-identity", "kind": "scope", "claim": "no mainnet address or codehash"}
+  ],
+  "inherited_assumptions": [
+    {"id": "Typed.execute_ok_iff", "source": "accepted P15/Typed kernel; statement unchanged"},
+    {"id": "P16-token0-library", "source": "accepted P16 SqrtPriceMath/FullMath"},
+    {"id": "frozen-planning-package", "source": "67 planning files, hashes frozen"}
+  ],
+  "interface_changes_for_case_two": [
+    {"name": "compile_sources", "change": "parameterized solc hash, evmVersion, optimizer, bytecodeHash, required contracts, bytecode_sha256"},
+    {"name": "run_fixtures", "change": "fixture_ids subset vs canonical VAULT_FIXTURE_IDS on full runs"},
+    {"name": "validate_model_receipt", "change": "fail-closed Lean binding receipts"},
+    {"name": "19-cell observation schema", "change": "OBSERVED_CELLS compared on success rows"},
+    {"name": "VAULT_ERROR_CONTEXT_MAP", "change": "mapped vs unmapped refusal labels"},
+    {"name": "classify_evm_stdout", "change": "P16 r6 duplicate empty before known errors; Error(string)/Panic payloads"},
+    {"name": "vault_emitter_projection", "change": "emitter==vault filter beside full logs"},
+    {"name": "token0 detection", "change": "disagreement with intact expectation, not agreement with mutated prediction"}
+  ],
+  "effort": {
+    "baseline": "agy-r4 inventory 2026-09-09 (definitions only)",
+    "units": "native process receipts / calendar UTC; not person-hours",
+    "agy_r1_r4_authoring": "preserved under implementation/agy-r*; not summed into this row",
+    "opus_review_r1": {
+      "session": "a1e40b81-7427-45e5-8b00-b2492cd46156",
+      "finish_utc": "2026-09-09T21:20:29.627155+00:00",
+      "verdict": "CHANGES_REQUIRED",
+      "note": "reviewer session; not author effort"
+    },
+    "grok_r5_repair_round": {
+      "date": "2026-09-09",
+      "role": "native Grok 4.6 implementing R-1..R-9 plus ROOT-T2.2/2.3/2.5/RR4/FULL-COVERAGE",
+      "units": "native record_cmd start_utc/end_utc; not person-hours; not summed cumulative usage",
+      "receipts": [
+        {"name": "token0bridge-r1-lift", "start_utc": "2026-09-09T21:32:14.849391+00:00", "end_utc": "2026-09-09T21:32:17.056938+00:00", "exit": 1, "preserved_failed": true},
+        {"name": "token0bridge-r1-lift2", "start_utc": "2026-09-09T21:32:53.941139+00:00", "end_utc": "2026-09-09T21:32:55.947709+00:00", "exit": 0},
+        {"name": "lean-version-r5", "start_utc": "2026-09-09T21:44:41.886490+00:00", "end_utc": "2026-09-09T21:44:42.361225+00:00", "exit": 0},
+        {"name": "lean-verify-r5", "start_utc": "2026-09-09T21:45:04.771991+00:00", "end_utc": "2026-09-09T21:45:17.873351+00:00", "exit": 0},
+        {"name": "setup-controls-r5", "start_utc": "2026-09-09T21:45:04.787678+00:00", "end_utc": "2026-09-09T21:45:04.948929+00:00", "exit": 0},
+        {"name": "rr4-r5", "start_utc": "2026-09-09T21:45:05.036751+00:00", "end_utc": "2026-09-09T21:45:05.071266+00:00", "exit": 1, "preserved_failed": true},
+        {"name": "token0-detector-r5", "start_utc": "2026-09-09T21:45:05.123186+00:00", "end_utc": "2026-09-09T21:45:05.162209+00:00", "exit": 0},
+        {"name": "rr4-r5-2", "start_utc": "2026-09-09T21:46:40.568810+00:00", "end_utc": "2026-09-09T21:46:40.601397+00:00", "exit": 0},
+        {"name": "vault-campaign-r5", "start_utc": "2026-09-09T21:46:40.575604+00:00", "end_utc": "2026-09-09T21:47:29.430260+00:00", "exit": 0},
+        {"name": "dump-smoke-r5", "start_utc": "2026-09-09T21:48:07.548491+00:00", "end_utc": "2026-09-09T21:48:07.698426+00:00", "exit": 0},
+        {"name": "vault-mutants-r5", "start_utc": "2026-09-09T21:48:07.558387+00:00", "end_utc": "2026-09-09T21:48:32.806577+00:00", "exit": 0},
+        {"name": "token0-campaign-r5", "start_utc": "2026-09-09T21:48:35.922030+00:00", "end_utc": "2026-09-09T21:48:39.926426+00:00", "exit": 0},
+        {"name": "harness-parser-r5", "start_utc": "2026-09-09T21:49:48.868391+00:00", "end_utc": "2026-09-09T21:49:48.901589+00:00", "exit": 0},
+        {"name": "harness-logs-r5", "start_utc": "2026-09-09T21:49:48.944071+00:00", "end_utc": "2026-09-09T21:49:48.993029+00:00", "exit": 0},
+        {"name": "harness-discrimination-r5", "start_utc": "2026-09-09T21:49:49.042529+00:00", "end_utc": "2026-09-09T21:50:10.135755+00:00", "exit": 0},
+        {"name": "harness-model-consumer-r5", "start_utc": "2026-09-09T21:50:31.431666+00:00", "end_utc": "2026-09-09T21:50:41.940249+00:00", "exit": 0}
+      ],
+      "note": "single repair session receipts; do not add prior cumulative Grok or AGY usage"
+    }
+  },
+  "erratum": "agy-r4 described Adapter as containing deposit and redeem templates; only a deposit template exists."
+}

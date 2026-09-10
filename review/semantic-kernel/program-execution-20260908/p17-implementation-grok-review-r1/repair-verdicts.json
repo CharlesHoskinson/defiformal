@@ -1,0 +1,68 @@
+{
+  "schema": "p17-grok-repair-review-repair-verdicts/v1",
+  "reviewer": "native Grok 4.6",
+  "candidate_sha256": "8e575d70c9db331acfb427baaba87fb01db23af5afce3f60da066037f048c5a2",
+  "parent_candidate_sha256": "df5521cca52a53ff38858611befb82044cb676d64f50c8dea29d0291a4ede74c",
+  "adopted_repairs_reviewed": 1,
+  "rr4_modes_reviewed": 5,
+  "total": 6,
+  "closed": 6,
+  "changes_required": [],
+  "repairs": [
+    {
+      "id": "RR4-NEG-FALSIFIER",
+      "parent": "ROOT-RR4",
+      "requirement": "fail_negative must call the same real validator as the intact path; grant credit from compiled Lean/runtime results or a real semantic consumer, not copied test logic or source-text matches; Valid holds while no-credit post-observation equality fails; missing/malformed required evidence must not receive successful credit; driver fails if expected classifications are not observed",
+      "reviewer_verdict": "closed",
+      "severity_was": "moderate",
+      "reviewer_evidence": [
+        "work/cmd/lean-runtimeaudit/ (independent RuntimeAudit #eval, exit 0, denom 20, POS true, NEG true)",
+        "work/cmd/lean-nocredit-inspect/ (credit/perturb/identity values and axioms)",
+        "work/cmd/rr4-metadata-diagnostics/ and work/20-diagnostics/grok-r1/rr4-metadata-diagnostics/ (shipped driver 12/12)",
+        "work/30-reviewer-diagnostics/rr4-consumer-probe/ (imported check_negative_predicate; intact 0, NEG false 1, POS false 1, missing/malformed 3)"
+      ],
+      "note": "The R5 tautology is gone. fail_negative inverts the compiled P17-NEG-MINT-NO-CREDIT line in the real RuntimeAudit stdout, re-parses it, and returns check_negative_predicate(false_obs). The validator scores parsed booleans from that compiled observation; it does not grep Adapter.lean or RR-COMPLIANCE.md. I confirmed the compiled meaning independently: creditPredicate on the honest D0 deposit post is true (vault USDS = 10^18); noCreditPerturb zeros vault USDS so the credit predicate fails; an identity perturb leaves USDS = 10^18 so identity_neg is false. Feeding that identity-perturb observation to the same validator yields exit 1 with the named post-equality failure. Adapter.no_credit_is_observation is byte-identical to R5 and still Valid ∧ ¬ post equality, axioms [propext, Classical.choice, Quot.sound]. Metadata diagnostics remain labelled metadata_diagnostic_not_compiled_mutation."
+    }
+  ],
+  "rr4_modes": [
+    {
+      "id": "merge-rule",
+      "intact": {"expected": 0, "actual": 0, "matched": true},
+      "falsifier": {"expected": 1, "actual": 1, "matched": true, "reason": "P17-DEP-D0 merge mismatch on chi"},
+      "same_validator": "check_merge",
+      "reviewer_verdict": "covered"
+    },
+    {
+      "id": "finite-allowance",
+      "intact": {"expected": 0, "actual": 0, "matched": true},
+      "falsifier": {"expected": 1, "actual": 1, "matched": true, "reason": "P17-DEP-D0 success entry uses UINT256_MAX allowance"},
+      "same_validator": "check_finite_allowance",
+      "reviewer_verdict": "covered"
+    },
+    {
+      "id": "d1-seed-classification",
+      "intact": {"expected": 0, "actual": 0, "matched": true},
+      "falsifier": {"expected": 1, "actual": 1, "matched": true, "reason": "P17-DEP-D1 incorrectly claims D1 chi is protocol-reachable"},
+      "same_validator": "check_d1_seed",
+      "reviewer_verdict": "covered",
+      "limit": "D1 seed has no protocol-reachability claim; non-reachability is not proved"
+    },
+    {
+      "id": "funding-label",
+      "intact": {"expected": 0, "actual": 0, "matched": true},
+      "falsifier": {"expected": 1, "actual": 1, "matched": true, "reason": "P17-RED-D0 funding label is produced_by_deposit"},
+      "same_validator": "check_funding_label",
+      "reviewer_verdict": "covered"
+    },
+    {
+      "id": "negative-theorem-predicate",
+      "intact": {"expected": 0, "actual": 0, "matched": true, "reason": "POS true and NEG true on compiled RuntimeAudit stdout"},
+      "falsifier": {"expected": 1, "actual": 1, "matched": true, "reason": "P17-NEG-MINT-NO-CREDIT false: no-credit candidate no longer violates post equality"},
+      "blocked_missing": {"expected": 3, "actual": 3, "matched": true},
+      "blocked_malformed": {"expected": 3, "actual": 3, "matched": true},
+      "same_validator": "check_negative_predicate",
+      "consumer": "DefiKernel.Vault.RuntimeAudit #eval",
+      "reviewer_verdict": "covered"
+    }
+  ]
+}

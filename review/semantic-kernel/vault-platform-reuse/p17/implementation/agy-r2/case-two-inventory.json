@@ -1,0 +1,157 @@
+{
+  "case": "P17-vault-platform-reuse",
+  "status": "complete",
+  "author": "AGY Gemini (gemini-3.8-flash-high, effort high)",
+  "reviewer": "Claude Opus (native opus model alias)",
+  "date": "2026-09-09",
+  "metrics": {
+    "vault_theorems_proven": 175,
+    "vault_declarations_audited": 184,
+    "token0_bridge_theorems_proven": 73,
+    "token0_bridge_declarations_audited": 62,
+    "sorry_count": 0,
+    "custom_axioms": 0,
+    "forbidden_axioms": 0,
+    "vault_fixtures_total": 17,
+    "vault_fixtures_ok": 17,
+    "vault_fixtures_fail": 0,
+    "vault_fixtures_blocked": 0,
+    "token0_fixtures_total": 12,
+    "token0_fixtures_ok": 12,
+    "token0_fixtures_fail": 0,
+    "token0_fixtures_blocked": 0,
+    "vault_mutants_tested": 2,
+    "vault_mutants_detected": 2,
+    "vault_mutant_controls_ok": true,
+    "token0_mutants_tested": 6,
+    "token0_mutants_detected": 6,
+    "token0_mutant_controls_ok": true,
+    "token0_ordinary_add_probe_ok": true,
+    "token0_ordinary_add_matches_theorem": true,
+    "token0_compile_ok": true,
+    "token0_execute_ok": true,
+    "lean_model_bindings_vault_ok": true,
+    "lean_model_bindings_token0_ok": true
+  },
+  "deployment_and_prestate_reconciliation": {
+    "genesis_timestamp": 1700000000,
+    "rho_initial": 1700000000,
+    "stable_time_domain_explanation": "Genesis timestamp is set to 1700000000 matching rho (1700000000), ensuring drip() rate accrual does not advance during call execution.",
+    "actor_addresses": {
+      "S": "0x1111111111111111111111111111111111110001",
+      "R": "0x1111111111111111111111111111111111110002",
+      "O": "0x1111111111111111111111111111111111110003",
+      "P": "0x1111111111111111111111111111111111110004",
+      "VOW": "0x1111111111111111111111111111111111110005"
+    },
+    "contract_architecture": {
+      "vat": "test/mocks/VatMock.sol:VatMock deployed at genesis",
+      "usds": "test/mocks/UsdsMock.sol:UsdsMock deployed at genesis",
+      "join": "test/mocks/UsdsJoinMock.sol:UsdsJoinMock deployed with ctor (vat, usds)",
+      "implementation": "src/SUsds.sol:SUsds deployed with ctor (join, vow)",
+      "proxy": "OpenZeppelin ERC1967Proxy deployed with ctor (impl, initialize()) where initialize selector is 0x8129fc1c with no arguments",
+      "execution_target": "All vault operations call the ERC1967 proxy address directly, which delegatecalls to SUsds implementation, preserving proxy address as address(this)."
+    }
+  },
+  "new_definitions": {
+    "lean_modules": [
+      {
+        "module": "DefiKernel.Vault.Types",
+        "role": "Vault domain types: RAY, WAD, words, Party, Asset, Domain, Failure, Cell, State"
+      },
+      {
+        "module": "DefiKernel.Vault.Conversion",
+        "role": "Directional conversions: convertToShares/Assets floor/ceil and _divup"
+      },
+      {
+        "module": "DefiKernel.Vault.Operations",
+        "role": "Functional operations: deposit, mint, withdraw, redeem under D0/D1 premises"
+      },
+      {
+        "module": "DefiKernel.Vault.Adapter",
+        "role": "Typed kernel adapters: deposit and redeem templates, registry, evaluated transitions, soundness"
+      },
+      {
+        "module": "DefiKernel.ConcentratedLiquidity.Token0Bridge",
+        "role": "Quote-register Typed wrap of delivered token0 library without editing P16 statements"
+      },
+      {
+        "module": "DefiKernel.Vault.Examples",
+        "role": "Concrete runtime test fixtures and examples"
+      },
+      {
+        "module": "DefiKernel.Vault.Tests",
+        "role": "Named runtime test suite and uniqueness proof"
+      },
+      {
+        "module": "DefiKernel.Vault.RuntimeAudit",
+        "role": "Runtime evaluation of 20 named checks"
+      },
+      {
+        "module": "DefiKernel.Vault.ProofAudit",
+        "role": "Axiom audit over DefiKernel.Vault and Token0Bridge"
+      },
+      {
+        "module": "DefiKernel.Vault.Verify",
+        "role": "Root verification aggregator"
+      }
+    ],
+    "engine_modules": [
+      "scripts/platform_engine/common.py",
+      "scripts/platform_engine/compile.py",
+      "scripts/platform_engine/evm.py",
+      "scripts/platform_engine/abi.py",
+      "scripts/platform_engine/keccak.py",
+      "scripts/platform_engine/prestate.py",
+      "scripts/platform_engine/score.py",
+      "scripts/platform_engine/vault_campaign.py",
+      "scripts/platform_engine/vault_exec.py",
+      "scripts/platform_engine/vault_mutants.py",
+      "scripts/platform_engine/token0_campaign.py"
+    ]
+  },
+  "new_assumptions": [
+    {
+      "id": "A-MOCK-INFRASTRUCTURE",
+      "statement": "UsdsMock, VatMock, and UsdsJoinMock stand in for Maker/Sky external infrastructure; ERC20 transfers mutate balances without external reentrancy hooks or fees."
+    },
+    {
+      "id": "A-INITIALIZATION-PROXY",
+      "statement": "SUsds contract is deployed behind OpenZeppelin ERC1967Proxy and initialized with initialize() selector 0x8129fc1c, setting chi=RAY and rho=block.timestamp."
+    },
+    {
+      "id": "A-STABLE-TIME-DOMAIN",
+      "statement": "Fixtures execute under stable-time domain D0 (timestamp=1700000000, chi=RAY) and D1 (timestamp=1700000000, chi=RAY+1 storage seed); drip() rate accrual does not advance during call."
+    },
+    {
+      "id": "A-OBSERVED-STATE-MOVEMENT",
+      "statement": "Successful external call alone does not prove asset movement; post-state balances of all 19 cells are explicitly evaluated and verified."
+    },
+    {
+      "id": "A-SYNTHETIC-ACTOR-ADDRESSES",
+      "statement": "Actor addresses are deterministically assigned synthetic addresses (S=0x1111...0001 through VOW=0x1111...0005) funded in genesis, not live mainnet addresses."
+    }
+  ],
+  "interface_changes": [
+    {
+      "change": "Stateful Observation Domain",
+      "description": "Expanded from 4 pure arithmetic inputs in P16 to 19 state cells covering assets, shares, supplies, and allowances across two tokens."
+    },
+    {
+      "change": "Shanghai EVM Execution Fork",
+      "description": "Fork upgraded from Istanbul to Shanghai (shanghaiTime=0), supporting Solidity 0.8.21 with PUSH0 opcode."
+    },
+    {
+      "change": "Multi-Asset Kernel Templates",
+      "description": "Typed kernel template extended to manage two asset classes (underlying asset USDS and vault share sUSDS) simultaneously."
+    },
+    {
+      "change": "Token0 Quote-Register Typed Wrap",
+      "description": "Token0 pure helper bridged into Typed framework via synthetic QuoteSqrtP register with proven nonzero effect (postQ - preQ != 0)."
+    },
+    {
+      "change": "Strict Call-Frame Emitter Tracking",
+      "description": "Log parser tracks call-frame stack across CALL and DELEGATECALL, binding emitted events to true executing addresses rather than heuristic transfer field inspection."
+    }
+  ]
+}

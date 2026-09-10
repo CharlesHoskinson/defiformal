@@ -1,0 +1,91 @@
+DefiKernel/Vault/Adapter.lean:85:43: warning: Variable name `h` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _h
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+DefiKernel/Vault/Adapter.lean:94:43: warning: This simp argument is unused:
+  h
+
+Hint: Omit it from the simp argument list.
+  [apply] simp [hs]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+DefiKernel/Vault/Adapter.lean:103:76: error: unsolved goals
+assets shares : ℚ
+cell : Cell P A D
+⊢ (if (Domain.vault, Addr.S, Asset.usds) = cell then -assets else 0) +
+      ((if (Domain.vault, Addr.vault, Asset.usds) = cell then assets else 0) +
+        if (Domain.vault, Addr.R, Asset.susds) = cell then shares else 0) =
+    (if cell = (Domain.vault, Addr.S, Asset.usds) then -assets else 0) +
+      ((if cell = (Domain.vault, Addr.vault, Asset.usds) then assets else 0) +
+        if cell = (Domain.vault, Addr.R, Asset.susds) then shares else 0)
+DefiKernel/Vault/Adapter.lean:135:53: error: unsolved goals
+case vault.usds
+assets shares : ℚ
+⊢ ∑ p, ((if Addr.S = p then -assets else 0) + if Addr.vault = p then assets else 0) = 0
+DefiKernel/Vault/Adapter.lean:147:4: error: Tactic `rfl` failed: Expected the goal to be a binary relation
+
+Hint: Reflexivity tactics can only be used on goals of the form `x ~ x` or `R x x`
+
+case refine_1.vault
+assets shares : ℚ
+p : P
+a : A
+hne : (evaluated assets shares).effect (Domain.vault, p, a) ≠ 0
+⊢ True
+DefiKernel/Vault/Adapter.lean:150:4: error: Tactic `rfl` failed: Expected the goal to be a binary relation
+
+Hint: Reflexivity tactics can only be used on goals of the form `x ~ x` or `R x x`
+
+case refine_2.vault
+assets shares : ℚ
+a : A
+hne : (evaluated assets shares).supply Domain.vault a ≠ 0
+⊢ True
+DefiKernel/Vault/Adapter.lean:179:4: error: Type mismatch: After simplification, term
+  has_debit_S
+ has type
+  @Eq Bool (hasAuthority store req.capabilityIds ctx depositOp (Right.debit (Domain.vault, Addr.S, Asset.usds))) true
+but is expected to have type
+  @Eq Bool (hasAuthority store req.capabilityIds ctx req.operation (Right.debit (Domain.vault, Addr.S, Asset.usds)))
+    true
+DefiKernel/Vault/Adapter.lean:265:6: error: Type mismatch
+  Eq.symm hr
+has type
+  some template = if req.operation = { value := 0 } then some (depositTemplate wadQ wadQ) else none
+but is expected to have type
+  template = depositTemplate wadQ wadQ
+DefiKernel/Vault/Adapter.lean:271:6: error: Type mismatch
+  Eq.symm this
+has type
+  evaluated wadQ wadQ = e
+but is expected to have type
+  e = evaluated wadQ wadQ
+DefiKernel/Vault/Adapter.lean:278:4: error: unsolved goals
+case mpr.refine_1
+post : ExecutionResult P A D
+hiff :
+  execute (registry wadQ wadQ) store ctx env 0 req (fundedState wadQ wad_nonneg) = Except.ok post ↔
+    ∃ template,
+      registry wadQ wadQ req.operation = some template ∧
+        (req.claimedActor = none ∨ req.claimedActor = some ctx.principal) ∧
+          ctx.domain = template.domain ∧
+            req.parties.length = template.partyArity ∧
+              ∃ args,
+                Args.check template.signature req.arguments = Except.ok args ∧
+                  hasAuthority store req.capabilityIds ctx req.operation Right.invoke = true ∧
+                    ∃ e,
+                      template.evaluate
+                            { state := fundedState wadQ wad_nonneg, env := env, caller := ctx.principal,
+                              parties := req.parties, args := args, now := 0 } =
+                          Except.ok e ∧
+                        Evaluated.Valid store ctx req (fundedState wadQ wad_nonneg) e ∧
+                          post.capabilities = store ∧
+                            ∀ (c : Cell P A D),
+                              post.state.balance c = (fundedState wadQ wad_nonneg).balance c + e.effect c
+hv : Evaluated.Valid store ctx req (fundedState wadQ wad_nonneg) (evaluated wadQ wadQ)
+hcap : post.capabilities = store
+hbal :
+  ∀ (c : Cell P A D), post.state.balance c = (fundedState wadQ wad_nonneg).balance c + (evaluated wadQ wadQ).effect c
+⊢ (if req.operation = { value := 0 } then some (depositTemplate wadQ wadQ) else none) = some (depositTemplate wadQ wadQ)
