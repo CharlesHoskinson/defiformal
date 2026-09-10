@@ -1,0 +1,154 @@
+--- R18/lean/DefiKernel/Certificates/CanonicalJson.lean
++++ R19/lean/DefiKernel/Certificates/CanonicalJson.lean
+@@ -863,5 +863,151 @@
+   rw [feedValue_obj_expectVal acc key .null rest h_not_dup]
+   rfl
+ 
++/-- Canonical JSON tree representation for recursive parser and serializer inversion. -/
++inductive TreeJson where
++  | null
++  | bool (b : Bool)
++  | num (n : Int)
++  | str (s : String)
++  | arr (elements : List TreeJson)
++  | obj (fields : List (String × TreeJson))
++  deriving Repr, Inhabited
++
++mutual
++  /-- Semantic JSON mapping for TreeJson values. -/
++  def TreeJson.toJson : TreeJson → Lean.Json
++    | .null => Lean.Json.null
++    | .bool b => Lean.Json.bool b
++    | .num n => Lean.Json.num ⟨n, 0⟩
++    | .str s => Lean.Json.str s
++    | .arr xs => Lean.Json.arr (TreeJson.toJsonList xs).toArray
++    | .obj kvs => Lean.Json.mkObj (TreeJson.toJsonObj kvs)
++
++  /-- Semantic JSON element mapping for list of TreeJson values. -/
++  def TreeJson.toJsonList : List TreeJson → List Lean.Json
++    | [] => []
++    | x :: xs => TreeJson.toJson x :: TreeJson.toJsonList xs
++
++  /-- Semantic JSON field mapping for object key-value pairs. -/
++  def TreeJson.toJsonObj : List (String × TreeJson) → List (String × Lean.Json)
++    | [] => []
++    | (k, v) :: kvs => (k, TreeJson.toJson v) :: TreeJson.toJsonObj kvs
++end
++
++mutual
++  /-- Canonical token sequence produced by TreeJson. -/
++  def TreeJson.tokens : TreeJson → List JsonToken
++    | .null => [JsonToken.null]
++    | .bool b => [JsonToken.bool b]
++    | .num n => [JsonToken.num ⟨n, 0⟩]
++    | .str s => [JsonToken.str s]
++    | .arr xs => [JsonToken.lbracket] ++ TreeJson.tokensList xs ++ [JsonToken.rbracket]
++    | .obj kvs => [JsonToken.lbrace] ++ TreeJson.tokensObj kvs ++ [JsonToken.rbrace]
++
++  /-- Token sequence for elements of an array. -/
++  def TreeJson.tokensList : List TreeJson → List JsonToken
++    | [] => []
++    | [x] => TreeJson.tokens x
++    | x :: xs => TreeJson.tokens x ++ [JsonToken.comma] ++ TreeJson.tokensList xs
++
++  /-- Token sequence for fields of an object. -/
++  def TreeJson.tokensObj : List (String × TreeJson) → List JsonToken
++    | [] => []
++    | [(k, v)] => [JsonToken.str k, JsonToken.colon] ++ TreeJson.tokens v
++    | (k, v) :: kvs => [JsonToken.str k, JsonToken.colon] ++ TreeJson.tokens v ++ [JsonToken.comma] ++ TreeJson.tokensObj kvs
++end
++
++/-- Helper to format an escaped JSON string. -/
++def escapeTreeString (s : String) : String :=
++  String.ofList ('"' :: (escapeChars s.toList ++ ['"']))
++
++mutual
++  /-- Canonical string encoding of TreeJson. -/
++  def TreeJson.encode : TreeJson → String
++    | .null => "null"
++    | .bool true => "true"
++    | .bool false => "false"
++    | .num n => toString n
++    | .str s => escapeTreeString s
++    | .arr xs => "[" ++ TreeJson.encodeList xs ++ "]"
++    | .obj kvs => "{" ++ TreeJson.encodeObj kvs ++ "}"
++
++  /-- Canonical string encoding for array elements. -/
++  def TreeJson.encodeList : List TreeJson → String
++    | [] => ""
++    | [x] => TreeJson.encode x
++    | x :: xs => TreeJson.encode x ++ "," ++ TreeJson.encodeList xs
++
++  /-- Canonical string encoding for object fields. -/
++  def TreeJson.encodeObj : List (String × TreeJson) → String
++    | [] => ""
++    | [(k, v)] => escapeTreeString k ++ ":" ++ TreeJson.encode v
++    | (k, v) :: kvs => escapeTreeString k ++ ":" ++ TreeJson.encode v ++ "," ++ TreeJson.encodeObj kvs
++end
++
++/-- Pushdown parser foldlM equivalence on null tree value. -/
++theorem parseStep_foldlM_tokens_null (st : ParserState) :
++    (TreeJson.tokens .null).foldlM parseStep st = feedValue st .null := by
++  dsimp [TreeJson.tokens, List.foldlM, parseStep, bind, Except.bind]
++  cases feedValue st .null <;> rfl
++
++/-- Pushdown parser foldlM equivalence on boolean tree value. -/
++theorem parseStep_foldlM_tokens_bool (st : ParserState) (b : Bool) :
++    (TreeJson.tokens (.bool b)).foldlM parseStep st = feedValue st (.bool b) := by
++  dsimp [TreeJson.tokens, List.foldlM, parseStep, bind, Except.bind]
++  cases feedValue st (.bool b) <;> rfl
++
++/-- Pushdown parser foldlM equivalence on number tree value. -/
++theorem parseStep_foldlM_tokens_num (st : ParserState) (n : Int) :
++    (TreeJson.tokens (.num n)).foldlM parseStep st = feedValue st (.num ⟨n, 0⟩) := by
++  dsimp [TreeJson.tokens, List.foldlM, parseStep, bind, Except.bind]
++  cases feedValue st (.num ⟨n, 0⟩) <;> rfl
++
++/-- Pushdown parser step equivalence on empty array token list. -/
++theorem parseTokensList_nil (acc : Array Lean.Json) (rest : List StackFrame) :
++    (TreeJson.tokensList []).foldlM parseStep { stack := StackFrame.arr acc ArrState.emptyOrVal :: rest, result := none } =
++    .ok { stack := StackFrame.arr acc ArrState.emptyOrVal :: rest, result := none } := rfl
++
++/-- Pushdown parser step equivalence on empty object token list. -/
++theorem parseTokensObj_nil (acc : List (String × Lean.Json)) (rest : List StackFrame) :
++    (TreeJson.tokensObj []).foldlM parseStep { stack := StackFrame.obj acc ObjState.emptyOrKey :: rest, result := none } =
++    .ok { stack := StackFrame.obj acc ObjState.emptyOrKey :: rest, result := none } := rfl
++
++/-- Top-level pushdown parser foldlM inversion on empty TreeJson object. -/
++theorem parseTokens_empty_tree_obj (st : ParserState) (h_stack : st.stack = []) (h_res : st.result = none) :
++    (TreeJson.tokens (.obj [])).foldlM parseStep st = feedValue st (Lean.Json.mkObj []) := by
++  cases st with | mk stack res =>
++  dsimp at h_stack h_res
++  subst h_stack h_res
++  dsimp [TreeJson.tokens, TreeJson.tokensObj, List.foldlM, parseStep, bind, Except.bind]
++  cases feedValue { stack := [], result := none } (Lean.Json.mkObj []) <;> rfl
++
++/-- Top-level pushdown parser foldlM inversion on empty TreeJson array. -/
++theorem parseTokens_empty_tree_arr (st : ParserState) (h_stack : st.stack = []) (h_res : st.result = none) :
++    (TreeJson.tokens (.arr [])).foldlM parseStep st = feedValue st (Lean.Json.arr #[]) := by
++  cases st with | mk stack res =>
++  dsimp at h_stack h_res
++  subst h_stack h_res
++  dsimp [TreeJson.tokens, TreeJson.tokensList, List.foldlM, parseStep, bind, Except.bind]
++  cases feedValue { stack := [], result := none } (Lean.Json.arr #[]) <;> rfl
++
++/-- Top-level parseTokens inversion on TreeJson.null. -/
++theorem parseTokens_tree_null : parseTokens (TreeJson.tokens .null) = .ok Lean.Json.null := rfl
++
++/-- Top-level parseTokens inversion on TreeJson.bool. -/
++theorem parseTokens_tree_bool (b : Bool) : parseTokens (TreeJson.tokens (.bool b)) = .ok (Lean.Json.bool b) := rfl
++
++/-- Top-level parseTokens inversion on TreeJson.num. -/
++theorem parseTokens_tree_num (n : Int) : parseTokens (TreeJson.tokens (.num n)) = .ok (Lean.Json.num ⟨n, 0⟩) := rfl
++
++/-- Top-level parseTokens inversion on TreeJson.str. -/
++theorem parseTokens_tree_str (s : String) : parseTokens (TreeJson.tokens (.str s)) = .ok (Lean.Json.str s) := rfl
++
++/-- Top-level parseTokens inversion on empty TreeJson.arr. -/
++theorem parseTokens_tree_empty_arr : parseTokens (TreeJson.tokens (.arr [])) = .ok (Lean.Json.arr #[]) := rfl
++
++/-- Top-level parseTokens inversion on empty TreeJson.obj. -/
++theorem parseTokens_tree_empty_obj : parseTokens (TreeJson.tokens (.obj [])) = .ok (Lean.Json.mkObj []) := rfl
++
+ end DefiKernel.Certificates
+ 

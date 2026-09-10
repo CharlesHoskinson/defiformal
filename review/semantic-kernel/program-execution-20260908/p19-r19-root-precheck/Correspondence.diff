@@ -1,0 +1,103 @@
+--- R18/lean/DefiKernel/Certificates/Correspondence.lean
++++ R19/lean/DefiKernel/Certificates/Correspondence.lean
+@@ -3896,5 +3896,100 @@
+   dsimp [bind, Except.bind]
+   exact decodeUnaryOp_unaryOpToJson op
+ 
++/-- Canonical JSON parsing on ExprEnc.now literal. -/
++theorem parseCanonicalJson_encodeExpr_now :
++    parseCanonicalJson (encodeExpr .now) = .ok (exprToJson .now) := rfl
++
++/-- Canonical JSON parsing on boolean literal expressions. -/
++theorem parseCanonicalJson_encodeExpr_lit_bool (b : Bool) :
++    parseCanonicalJson (encodeExpr (.lit ⟨.bool, 0, b⟩)) = .ok (exprToJson (.lit ⟨.bool, 0, b⟩)) := by
++  cases b <;> rfl
++
++/-- Canonical JSON parsing on boolean literal true expression. -/
++theorem parseCanonicalJson_encodeExpr_lit_bool_true :
++    parseCanonicalJson (encodeExpr (.lit ⟨.bool, 0, true⟩)) = .ok (exprToJson (.lit ⟨.bool, 0, true⟩)) := rfl
++
++/-- Canonical JSON parsing on boolean literal false expression. -/
++theorem parseCanonicalJson_encodeExpr_lit_bool_false :
++    parseCanonicalJson (encodeExpr (.lit ⟨.bool, 0, false⟩)) = .ok (exprToJson (.lit ⟨.bool, 0, false⟩)) := rfl
++
++/-- Canonical JSON parsing on unary not expression over now. -/
++theorem parseCanonicalJson_encodeExpr_unary_not_now :
++    parseCanonicalJson (encodeExpr (.unary .not .now)) = .ok (exprToJson (.unary .not .now)) := rfl
++
++/-- Canonical JSON parsing on binary and expression over now. -/
++theorem parseCanonicalJson_encodeExpr_binary_and_now :
++    parseCanonicalJson (encodeExpr (.binary .and .now .now)) = .ok (exprToJson (.binary .and .now .now)) := rfl
++
++/-- Canonical JSON parsing on conditional ite expression over now. -/
++theorem parseCanonicalJson_encodeExpr_ite_now :
++    parseCanonicalJson (encodeExpr (.ite .now .now .now)) = .ok (exprToJson (.ite .now .now .now)) := rfl
++
++/-- Universal end-to-end roundtrip for now expression. -/
++theorem expr_end_to_end_now :
++    (do
++      let j ← parseCanonicalJson (encodeExpr .now)
++      decodeExpr j) = .ok .now := rfl
++
++/-- Universal end-to-end roundtrip for boolean literal true expression. -/
++theorem expr_end_to_end_lit_bool_true :
++    (do
++      let j ← parseCanonicalJson (encodeExpr (.lit ⟨.bool, 0, true⟩))
++      decodeExpr j) = .ok (.lit ⟨.bool, 0, true⟩) := rfl
++
++/-- Universal end-to-end roundtrip for boolean literal false expression. -/
++theorem expr_end_to_end_lit_bool_false :
++    (do
++      let j ← parseCanonicalJson (encodeExpr (.lit ⟨.bool, 0, false⟩))
++      decodeExpr j) = .ok (.lit ⟨.bool, 0, false⟩) := rfl
++
++/-- Universal end-to-end roundtrip for unary not expression over now. -/
++theorem expr_end_to_end_unary_not_now :
++    (do
++      let j ← parseCanonicalJson (encodeExpr (.unary .not .now))
++      decodeExpr j) = .ok (.unary .not .now) := rfl
++
++/-- Universal end-to-end roundtrip for binary and expression over now. -/
++theorem expr_end_to_end_binary_and_now :
++    (do
++      let j ← parseCanonicalJson (encodeExpr (.binary .and .now .now))
++      decodeExpr j) = .ok (.binary .and .now .now) := rfl
++
++/-- Universal end-to-end roundtrip for conditional ite expression over now. -/
++theorem expr_end_to_end_ite_now :
++    (do
++      let j ← parseCanonicalJson (encodeExpr (.ite .now .now .now))
++      decodeExpr j) = .ok (.ite .now .now .now) := rfl
++
++/-- Canonical JSON parsing on balance expression with caller owner. -/
++theorem parseCanonicalJson_encodeExpr_balance_caller :
++    parseCanonicalJson (encodeExpr (.balance ⟨.usd, ⟨.main, .caller⟩⟩)) = .ok (exprToJson (.balance ⟨.usd, ⟨.main, .caller⟩⟩)) := rfl
++
++/-- Universal end-to-end roundtrip for balance expression with caller owner. -/
++theorem expr_end_to_end_balance_caller :
++    (do
++      let j ← parseCanonicalJson (encodeExpr (.balance ⟨.usd, ⟨.main, .caller⟩⟩))
++      decodeExpr j) = .ok (.balance ⟨.usd, ⟨.main, .caller⟩⟩) := rfl
++
++/-- Canonical JSON parsing on timestamp expression. -/
++theorem parseCanonicalJson_encodeExpr_timestamp :
++    parseCanonicalJson (encodeExpr (.timestamp ⟨.main, 0⟩)) = .ok (exprToJson (.timestamp ⟨.main, 0⟩)) := rfl
++
++/-- Universal end-to-end roundtrip for timestamp expression. -/
++theorem expr_end_to_end_timestamp :
++    (do
++      let j ← parseCanonicalJson (encodeExpr (.timestamp ⟨.main, 0⟩))
++      decodeExpr j) = .ok (.timestamp ⟨.main, 0⟩) := rfl
++
++/-- Canonical JSON parsing on observation reference expression. -/
++theorem parseCanonicalJson_encodeExpr_observe :
++    parseCanonicalJson (encodeExpr (.observe ⟨⟨.main, 0⟩, .bool⟩)) = .ok (exprToJson (.observe ⟨⟨.main, 0⟩, .bool⟩)) := rfl
++
++/-- Universal end-to-end roundtrip for observation reference expression. -/
++theorem expr_end_to_end_observe :
++    (do
++      let j ← parseCanonicalJson (encodeExpr (.observe ⟨⟨.main, 0⟩, .bool⟩))
++      decodeExpr j) = .ok (.observe ⟨⟨.main, 0⟩, .bool⟩) := rfl
++
+ end DefiKernel.Certificates
+ 

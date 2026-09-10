@@ -1,0 +1,20 @@
+--- R18/lean/DefiKernel/Certificates/Decode.lean
++++ R19/lean/DefiKernel/Certificates/Decode.lean
+@@ -91,7 +91,7 @@
+                 | LexScope.inObj keys _ :: restScopes =>
+                   scanLexicalFuel fuel' rest' depth (LexScope.inObj keys false :: restScopes) [] foundWhitespace
+                 | _ => scanLexicalFuel fuel' rest' depth scopes [] foundWhitespace
+-              | none => .error .notJsonObject
++              | none => if foundWhitespace then .error .noncanonicalWhitespace else .error .notJsonObject
+           else
+             match lexString [] rest with
+             | .ok (_, rest') =>
+@@ -100,7 +100,7 @@
+               match skipStringChars rest with
+               | some rest' =>
+                 scanLexicalFuel fuel' rest' depth scopes [] foundWhitespace
+-              | none => .error .notJsonObject
++              | none => if foundWhitespace then .error .noncanonicalWhitespace else .error .notJsonObject
+       else if c == '{' then
+         let d := depth + 1
+         if d > 64 then .error (.resourceLimit "maxDepth")
