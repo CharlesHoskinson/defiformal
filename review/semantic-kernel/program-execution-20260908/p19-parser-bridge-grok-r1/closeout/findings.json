@@ -1,0 +1,171 @@
+{
+  "schema": "defiformal-parser-bridge-findings/v1",
+  "mark": "PARSER_BRIDGE_COMPONENT_REVIEW_ONLY_FULL_P19_OPEN",
+  "acceptance": false,
+  "verdict": "CHANGES_REQUIRED",
+  "same_session_closeout": true,
+  "session": "01a08bdf-5a94-7ba0-b04d-697686708e06",
+  "evidence_classes": {
+    "compiler_proved": "Kernel theorems imported from the private rebuild; #print axioms on all 200 named source theorems with child_compiler_exit 0.",
+    "successful_execution": "Child compiler exit 0 and no Lean error: line. ProbeAxioms and ProbeR13 attempt 2 only.",
+    "source_inspection": "Read of frozen Schema/Encode/Decode/CanonicalJson/Correspondence/Check/Tests/R13 REPORT/results/theorems/root precheck/sealed R12 review/runner.",
+    "failed_probe": "Nonzero child compiler exit or Lean error: line. ProbeR13 attempt 1. Runner parent-symlink child exit 1 after guard pass is a measured control, not a Lean failure.",
+    "author_captured": "Inspected R13 evidence folder files and author REPORT/results; fixtures/scenarios not re-run here.",
+    "unverified": "Not executed in this review."
+  },
+  "findings": [
+    {
+      "id": "R13-UNIVERSAL-OPEN",
+      "severity": "blocker",
+      "class": "helper_inversions_not_encodeModule_decodeBytes",
+      "evidence_class": "compiler_proved+source_inspection",
+      "source": "Correspondence.lean EncodeDecodeRoundtripStatement and 22 new lemmas; Encode.lean encodeModule",
+      "issue": "EncodeDecodeRoundtripStatement remains def Prop quantifying StructurallyAdmissibleIR ir → decodeBytes (encodeModule ir) = .ok ir. Useful new string, envelope-equivalence, claimed-state, and libraryRef proofs are not that theorem. decode_encode_roundtrip_of_decode only rewrites an already-successful decodeBytes. Two serializers exist.",
+      "actual": {
+        "EncodeDecodeRoundtripStatement": "def Prop",
+        "new22_compile": true,
+        "print_axioms_200": true
+      }
+    },
+    {
+      "id": "R13-H-SM-ASSUMED",
+      "severity": "blocker",
+      "class": "assumed_decodeSourceMap_success_not_SourceMapSorted_inverse",
+      "evidence_class": "compiler_proved+source_inspection+successful_execution",
+      "source": "Correspondence.lean decodeEnvelope_orderedFields/sortedFields, decodeDecodedIR_fields_*; Decode.lean decodeSourceMap; SourceMapSorted",
+      "issue": "R13 reports arbitrary source-map inverse resolved. The envelope and execution theorems still take h_sm : decodeSourceMap (Lean.Json.mkObj (env.source_map.map …)) = .ok env.source_map. Proved cases are decodeSourceMap_nil and decodeSourceMap_single only. SourceMapSorted is isSortedStrictAscending on keys. Assumed decoder success cannot close the full admissible domain. ProbeR13 attempt 2 shows runtime two-key mkObj decodes ok; that is bounded execution, not the missing theorem.",
+      "probe": "../logs/probe-r13-attempt2.stdout",
+      "actual": {
+        "proved_source_map_cases": ["nil", "single"],
+        "h_sm_still_required": true,
+        "runtime_two_key_mkObj": "ok:[(a, 1), (b, 2)]"
+      }
+    },
+    {
+      "id": "R13-FUEL-WEAK",
+      "severity": "blocker_for_report_claim",
+      "class": "omega_depth_lt_100_is_not_fuel_or_parser_agreement",
+      "evidence_class": "compiler_proved+source_inspection+successful_execution",
+      "source": "Correspondence.lean jsonDepthFuel_adequate_of_le64, jsonMaxArrayLengthFuel_adequate, parser_max_depth_bound, parser_max_array_bound",
+      "issue": "Both fuel-named lemmas conclude jsonDepth j < 100 from jsonDepth j ≤ 64 by omega. jsonMaxArrayLengthFuel_adequate does not mention array length. parser_max_* return their hypotheses. These statements are true and weak. They do not prove fuel stability, max-array correctness, or parser agreement. ProbeR13 attempt 2: nestArr 64 depth 64; nestArr 65 depth 65 and still < 100; jsonDepthFuel 100 (nestArr 101) = 100 truncates. Fuel 100 at depth 64 may be adequate; that remains unproved. Do not invent a false counterexample.",
+      "probe": "../logs/probe-r13-attempt2.stdout",
+      "actual": {
+        "depth64": 64,
+        "depth64_le64": true,
+        "depth64_lt100": true,
+        "depth65": 65,
+        "depth65_le64": false,
+        "depth65_lt100": true,
+        "fuel100_nest101": 100
+      }
+    },
+    {
+      "id": "R13-STRING-AND-DECODEDECODEDIR-PROGRESS",
+      "severity": "note_progress",
+      "class": "general_string_inverse_and_production_decodeDecodedIR_bridge",
+      "evidence_class": "compiler_proved+successful_execution",
+      "source": "CanonicalJson/Correspondence tokenize_escapeJsonString, parseCanonicalJson_escapeJsonString, decodeDecodedIR_envelopeToJson_eq, decodeDecodedIR_fields_*",
+      "issue": "tokenize_escapeJsonString and parseCanonicalJson_escapeJsonString invert canonical escaped strings in general. decodeDecodedIR_envelopeToJson_eq is rfl with production decodeDecodedIR, eliminating the R12 lookalike do-expression. typed/step/run inverses now mention decodeDecodedIR. They still carry h_sm and are not decodeBytes (encodeModule ir). ProbeR13 attempt 2 parsed escaped quote/slash/empty and decoded a two-entry codec envelope through decodeDecodedIR.",
+      "probe": "../logs/probe-r13-attempt2.stdout",
+      "actual": {
+        "parse_escape_quote": "ok:\"a\\\"b\"",
+        "decodeDecodedIR_codec_two_sm": "ok codec sm=[(a, 1), (b, 2)]",
+        "mentions_decodeDecodedIR": true
+      }
+    },
+    {
+      "id": "R13-LIBRARYREF-ALIGNED",
+      "severity": "note_progress",
+      "class": "libraryRef_none_object_matches_production",
+      "evidence_class": "source_inspection+successful_execution",
+      "source": "Correspondence.lean libraryRefToJson/decodeLibraryRef_libraryRefToJson; Encode.lean encodeLibraryRef",
+      "issue": "libraryRefToJson none is now Lean.Json.mkObj [(\"theorem\", str)]. Production encodeLibraryRef none is jsonObj [(\"theorem\", escapeJsonString …)]. ProbeR13 attempt 2: both none strings are {\"theorem\":\"T\"} and decode ok. Helper some .compress is {\"module\":\"M\",\"theorem\":\"T\"}; production some is {\"theorem\":\"T\",\"module\":\"M\"}. Different .compress field order is not a defect: both decode to ok thm=T mod=some:M. No byte-equality theorem was claimed for those strings.",
+      "probe": "../logs/probe-r13-attempt2.stdout",
+      "actual": {
+        "helper_none": "{\"theorem\":\"T\"}",
+        "prod_none": "{\"theorem\":\"T\"}",
+        "helper_some_compress": "{\"module\":\"M\",\"theorem\":\"T\"}",
+        "prod_some": "{\"theorem\":\"T\",\"module\":\"M\"}",
+        "decode_helper_none": "ok thm=T mod=none",
+        "decode_helper_some": "ok thm=T mod=some:M"
+      }
+    },
+    {
+      "id": "R13-CLAIMED-NEXT-STATE",
+      "severity": "note_progress",
+      "class": "canonical_claimed_next_state_inverse",
+      "evidence_class": "compiler_proved+successful_execution",
+      "source": "Correspondence.lean decodeClaimedNextState_none/some/of_canonical; Decode.lean decodeClaimedNextState",
+      "issue": "decodeClaimedNextState_of_canonical covers none and canonical some w. This is real progress versus R12 empty-only inverses. It is not a whole-IR byte theorem. ProbeR13 attempt 2: null → ok:none; empty world JSON → ok:some cells=0.",
+      "probe": "../logs/probe-r13-attempt2.stdout",
+      "actual": {
+        "cns_null": "ok:none",
+        "cns_small_world": "ok:some cells=0"
+      }
+    },
+    {
+      "id": "R13-DECODE-FACTOR",
+      "severity": "note",
+      "class": "extracted_helpers_preserve_prior_match_classes",
+      "evidence_class": "source_inspection",
+      "source": "R13 Decode.lean decodeSourceMap/decodeClaimedNextState versus sealed R12 inline decodeEnvelope",
+      "issue": "The extracted helpers are the R12 object/sorted-key/jsonType \"source_map\" match and the null-or-decodeWorld match, called from decodeEnvelope. decodeDecodedIR mode dispatch is unchanged. Object/array resource failure classes live in the parser/scanner, not in these extractors. This session did not rerun unchanged array/depth/54/99/16 campaigns.",
+      "actual": {
+        "decodeSourceMap_error_non_obj": "jsonType source_map",
+        "decodeSourceMap_unsorted": "noncanonicalWhitespace",
+        "decodeClaimedNextState_null": "ok none",
+        "array_depth_campaign": "not rerun"
+      }
+    },
+    {
+      "id": "R13-RUNNER-LEXICAL-SYMLINK",
+      "severity": "blocker_for_report_claim",
+      "class": "lexical_out_symlink_refused_author_relative_test_dangles_parent_child_not_banned",
+      "evidence_class": "successful_execution+source_inspection",
+      "source": "scripts/run_certificate_fixtures.py lexical is_symlink before resolve; test_certificate_fixture_runner.py test_relative_symlink_refused",
+      "issue": "Runner checks lexical_target.is_symlink() before resolve/exists. Live relative, dangling relative, and absolute live --out paths refuse with exit 2 and no sentinel mutation. The author relative-link regression does symlink_to(rel_tmp / \"real_rel_dir\"), whose readlink duplicates the temp parent and dangles; that test is a broken-link control, not a live relative link. A fresh child under a parent symlink is not itself a symlink and is not refused by the lexical check (exit 1 later opening fixtures in the private tree). No new blanket parent-symlink prohibition is required. No historical outputs were write targets. F01 was not rerun.",
+      "probe": "../probes/runner-sentinel-results.json",
+      "actual": {
+        "live_relative_exit": 2,
+        "live_relative_sentinel_unchanged": true,
+        "dangling_relative_exit": 2,
+        "absolute_live_exit": 2,
+        "author_style_readlink": "tmpPARENT/real_rel_dir",
+        "author_style_exists": false,
+        "parent_symlink_fresh_child_exit": 1,
+        "parent_symlink_fresh_child_guard": "passed",
+        "f01": "not rerun"
+      }
+    },
+    {
+      "id": "R13-REPORT-OVERCLAIM",
+      "severity": "blocker_for_report_claim",
+      "class": "author_report_credits_weak_or_unproved_statements",
+      "evidence_class": "source_inspection+author_captured",
+      "source": "agy-r13-proof/REPORT.md and results.json findings_addressed",
+      "issue": "Author REPORT marks arbitrary source-map inverse, fuel adequacy/parser agreement, and blanket symlink refusal RESOLVED. Source and this session's measurements contradict those credits: h_sm remains; fuel lemmas are omega < 100; parser_max_* return hypotheses; relative regression dangles; parent-symlink children are not banned. Author 7 runner checks and 21 Tests.lean checks are captured author evidence, not independent universal proof. Full 54/99/16 were deferred.",
+      "actual": {
+        "author_source_map_status": "RESOLVED_in_report",
+        "independent_source_map_status": "h_sm_open_beyond_nil_single",
+        "author_fuel_status": "RESOLVED_in_report",
+        "independent_fuel_status": "weak_omega_lt_100",
+        "author_symlink_status": "RESOLVED_blanket",
+        "independent_symlink_status": "lexical_out_path_only"
+      }
+    },
+    {
+      "id": "R13-PROBE-ATTEMPT1-FAIL",
+      "severity": "note",
+      "class": "failed_probe_zero_credit_source_overwritten",
+      "evidence_class": "failed_probe",
+      "source": "../logs/probe-r13.stdout; current ../probes/ProbeR13.lean is attempt 2",
+      "issue": "First lake env lean ProbeR13.lean failed with invalidField on Option EnvelopeEnc field notation and used def main without #eval. Zero credit. Attempt-1 source was overwritten by attempt 2. This closeout does not reconstruct attempt-1 bytes. Successful replay target is ../logs/probe-r13-attempt2.stdout.",
+      "actual": {
+        "attempt1_stdout_sha256": "dc696812cacdd107444cbcdfbf53d61621620577bb35fafdff09168885f69d4d",
+        "attempt2_stdout_sha256": "ef28fd0341f6f37d30f439d52dffa73f2164df6f30fa5f7b18845fb0cbd9d42e",
+        "current_ProbeR13_sha256": "cddc30783d75862dcada4cc233e1e327b2990501a69544fc291e31bb61cdde59",
+        "attempt1_source_bytes": "overwritten_not_reconstructed"
+      }
+    }
+  ]
+}
