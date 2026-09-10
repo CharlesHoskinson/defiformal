@@ -1,0 +1,141 @@
+{
+  "schema": "defiformal-p31-source-readiness-review-findings/v1",
+  "utc": "2026-09-10T14:24:02.293010+00:00",
+  "decision": "usable",
+  "changes_required": false,
+  "readiness_accepted": false,
+  "adapter_implemented": false,
+  "P31_accepted": false,
+  "whole_program_complete": false,
+  "acceptance": false,
+  "source_pin": "7307349d0275af6fcb4144e1661d8b59d6b2663a",
+  "files_inspected": [
+    "pct.json",
+    "zkir.json",
+    "commands.json",
+    "README.md",
+    "moriarty.json",
+    "compact.json",
+    "manifest.json",
+    "source/LICENSE",
+    "source/experiments/moriarty-language/src/types.ts",
+    "source/experiments/moriarty-language/src/runtime-types.ts",
+    "source/experiments/moriarty-language/src/evaluate.ts",
+    "source/experiments/moriarty-language/src/codec.ts",
+    "source/experiments/moriarty-language/src/lower-compact.ts",
+    "source/experiments/moriarty-language/src/successor/core.ts",
+    "source/experiments/moriarty-language/src/successor/repayment.ts",
+    "source/experiments/moriarty-language/compact/MAPPING.md",
+    "source/experiments/moriarty-language/compact/arithmetic.compact",
+    "source/experiments/moriarty-language/compact/verify-mapping.py",
+    "source/experiments/moriarty-language/formal/k/moriarty.k",
+    "source/experiments/moriarty-language/spec/numeric-profile.json"
+  ],
+  "findings": [
+    {
+      "id": "P31-IDENTS",
+      "severity": "info",
+      "status": "confirmed",
+      "title": "Pinned SHA-256 and Git blob identities hold",
+      "detail": "20/20 inputs.json files match frozen sandbox SHA-256. All 13 source/license files match manifest SHA-256, byte length, and Git blob SHA-1 recomputed as sha1(blob SP len NUL bytes) from frozen bytes. Live git show against /home/charl/Moriarty was not repeated. LICENSE is Apache-2.0. Manifest acceptance is false."
+    },
+    {
+      "id": "P31-TASK-SPLIT",
+      "severity": "info",
+      "status": "confirmed",
+      "title": "Drafts prepare 32.1-32.4 and leave 32.5-32.8 unimplemented",
+      "detail": "Each record names pinned interfaces, sets readiness_accepted false, adapter_implemented false, P31_accepted false, whole_program_complete false, source_execution_performed false, and new_Lean_proof false. None uses blocked_unavailable. That is correct: interfaces were found. Missing Lean adapters are the known next phase, not a fabricated test failure. Absence of a verified DeFiKernel adapter contract in this pin is not proof that no implementation exists elsewhere."
+    },
+    {
+      "id": "P31-MORIARTY-PROFILES",
+      "severity": "info",
+      "status": "confirmed",
+      "title": "Bounded-atomic, funded-source, and funded-repayment are separate",
+      "detail": "types.ts / runtime-types.ts / evaluate.ts use profile moriarty-bounded-atomic/1 and BoundProgram schema moriarty-program/1. successor/core.ts FundedCore uses moriarty-funded-source/0 and is documented as not an execution input. successor/repayment.ts prepareRepayment uses moriarty-funded-repayment/0. Named APIs BoundProgram, EvaluationInput, Simulation, Complete, Rejected, createSimulator, evaluate, FundedCore, and prepareRepayment exist at the stated paths. No DefiKernel correspondence is in these files."
+    },
+    {
+      "id": "P31-CODEC",
+      "severity": "info",
+      "status": "confirmed",
+      "title": "canonicalEncode admits records, arrays, strings, booleans",
+      "detail": "codec.ts canonicalEncode accepts those four shapes and fails NON_CANONICAL_VALUE on null and numeric primitives. decodeCanonicalRecord requires an explicit closed-schema validator. Additional rules reject sparse or accessor arrays, non-Object prototypes, symbol or non-enumerable keys, non-ASCII keys, cycles, depth greater than 256, and lone surrogates. Those extra rules do not contradict the record. evaluate.ts same() uses canonicalEncode equality."
+    },
+    {
+      "id": "P31-FUNDED-REMAINDER",
+      "severity": "info",
+      "status": "confirmed",
+      "title": "Funded repayment decrements unallocated transfer remainder",
+      "detail": "applyTransfer stores step remaining equal to the transfer amount. applyRepay requires transfer-in-step, payer/creditor/settlement-asset match, unused allocationId, convertNominal, settlement nonzero, and settlement.value <= funded.remaining, then subtracts settlement.value. Distinct allocation IDs may consume one transfer. DUPLICATE is allocation-id reuse, not a one-allocation-per-transfer rule. A one-allocation-per-transfer adapter requirement would narrow this source."
+    },
+    {
+      "id": "P31-UINT128",
+      "severity": "info",
+      "status": "confirmed",
+      "title": "Bounded-atomic and Compact mul reject UInt128-overflowing intermediates",
+      "detail": "evaluate.ts Mul does checkedUInt128(a*b). arithmetic.compact checkedMul asserts 64-bit limb splits and rejects UINT_OVERFLOW_HIGH and UINT_OVERFLOW_MIDDLE so the product must fit UInt128. numeric-profile.json widthBoundary requires reject-overflow-even-when-a-later-quotient-would-fit, but that file is proposed-not-frozen. The evaluate and Compact mul behavior is independently in those source files."
+    },
+    {
+      "id": "P31-COMPACT-RESTRICTED",
+      "severity": "info",
+      "status": "confirmed",
+      "title": "Compact mapper is a restricted Core subset",
+      "detail": "lowerCompact and CompactMapping exist. Mapper rejects persistent Text, observation Text, And/Or, and unguarded Text arguments. Metadata restrictions omit obligation-ledger, authority, proof, settlement, and acceptance. Source evaluator still has And/Or short-circuit and Text state. Treating the mapper subset as full Moriarty Core would narrow source. Function names lowerCompact, prepareCompactCall, decodeCompactResult, compactSnapshotHarness, checkedAdd, checkedSub, checkedMul, checkedDiv match the records."
+    },
+    {
+      "id": "P31-ZKIR-SKIP-ZK",
+      "severity": "info",
+      "status": "confirmed",
+      "title": "Recorded compiler route is --skip-zk with no key or proof credit",
+      "detail": "verify-mapping.py asserts compact compile --version 0.31.1, --language-version 0.23.0, --runtime-version 0.16.0, compiles with --skip-zk, and asserts no .prover or .verifier files. compactSnapshotHarness is labeled TEST HARNESS ONLY and writes disclose(kernel) into a snapshot cell. Receipt fields keysGenerated and proofsGenerated are false. Those compiler versions are source-declared. This audit did not run compact. No general ZKIR schema is in the thirteen files. That is a missing verified adapter contract, not a proof that no ZKIR implementation exists."
+    },
+    {
+      "id": "P31-PCT-BACKEND",
+      "severity": "info",
+      "status": "confirmed",
+      "title": "evaluate trust boundary is deployment-owned TrustedAcceptanceBackend",
+      "detail": "TrustedAcceptanceBackend extends SourceBinding with authenticate and verifyAndCommit. Package comment says this package supplies neither cryptographic claim verification nor durable atomic state-and-nonce consumption, and that a boolean callback is not an implementation. evaluate returns Rejected PROOF_INVALID if backend or those methods are absent, discards client checks, reconstructs ExternalChecks via authenticate, executes, then requires verifyAndCommit tag Committed with matching traceHash, proofContextHash, and afterStateHash. Simulation is internal and unaccepted. evaluate recompiles backend.source / backend.bounds. PCT remaining correctly waits on accepted P20 for certificate consumption and keeps cryptographic, semantic, oracle, custody, legal, and durable state/nonce classes separate."
+    },
+    {
+      "id": "P31-UNPINNED-COMPILE",
+      "severity": "limitation",
+      "status": "in-scope",
+      "title": "Named evaluate/lowerCompact APIs import unpinned compile and bounds",
+      "detail": "evaluate.ts and lower-compact.ts import compile from frontend.ts. evaluate.ts imports registeredBounds from registered-bounds.ts. Those modules are not in the 13-file pin. Runtime encoding limits used by evaluate (evaluationEncoding, signingEnvelope, resultEncoding, proofAcceptanceEncoding, obligationRecordsIncludingSettled) are not fully in types.ts Bounds. This is a closed-pin gap for later implementation, not a false API name. Distinguishes missing capture from proof that compile does not exist at the pin."
+    },
+    {
+      "id": "P31-K-PROJECTION",
+      "severity": "limitation",
+      "status": "in-scope",
+      "title": "Retained K source is a two-balance projection",
+      "detail": "moriarty.k header says Bounded Transfer-only or two-action funded repayment projection. No source/Core/proof claim. Packet has two balances, one transfer, optional one repay. Unallocated check is CASH <= T, not a multi-allocation remaining field. Work remaining is 1 or 2, not action-count. Using K as the funded-source adapter contract would narrow prepareRepayment. The Moriarty record does not claim K is complete and says retained K source establishes no DefiKernel correspondence."
+    },
+    {
+      "id": "P31-CODEC-VS-REPAYMENT-JSON",
+      "severity": "limitation",
+      "status": "in-scope",
+      "title": "Funded repayment admits compact JSON.stringify, not canonicalEncode",
+      "detail": "prepareRepayment admitSource does JSON.parse then requires JSON.stringify(parsed) === source. Amounts are later required to be UInt128 decimal strings. canonicalEncode sorts keys and rejects numbers at the codec layer. Applying bounded-atomic canonicalEncode to repayment inputs would reject some compact JSON the repayment kernel admits. Records keep the profiles separate and do not make this substitution."
+    },
+    {
+      "id": "P31-COMPACT-ADD-CAST",
+      "severity": "limitation",
+      "status": "in-scope",
+      "title": "Compact checkedAdd overflow is not observed in this pin",
+      "detail": "arithmetic.compact checkedAdd is (a + b) as Uint<128> with no explicit overflow assert. checkedSub, checkedMul, and checkedDiv have explicit asserts. Compact add wrap-versus-reject is compiler semantics and was not observed. Do not equate that cast with evaluate.ts checkedUInt128 without a compiler-semantics pin. compact.json claims UInt128 intermediate multiplication bounds, which checkedMul does enforce."
+    },
+    {
+      "id": "P31-NUMERIC-UNFROZEN",
+      "severity": "limitation",
+      "status": "in-scope",
+      "title": "numeric-profile.json is proposed-not-frozen",
+      "detail": "Pinned spec/numeric-profile.json status is proposed-not-frozen. Loan and swap firstExamples set upstreamConformance/protocolConformance false. Treat it as supporting notes, not a frozen numeric contract. Records do not list it as a frozen interface."
+    },
+    {
+      "id": "P31-NO-LEAN",
+      "severity": "info",
+      "status": "confirmed",
+      "title": "No Lean proof or adapter module is in this sandbox",
+      "detail": "No .lean file is present. cameronfreer lean4-skills was not invoked. No lake build. Missing Lean implementation is the known 32.5-32.8 phase. Task 32.9 (kernel modules must not import imagined APIs) cannot be discharged here because no adapter modules exist in the pin."
+    }
+  ]
+}
