@@ -180,3 +180,7 @@ working copies; do not create extra branch names. Accepted changes and clearly
 labelled candidate snapshots are published on the sole branch. Recover former
 branch heads from `review/semantic-kernel/one-branch-20260910/manifest.json`.
 Historical records retain their original branch names and exact identities.
+
+## Full roadmap loop and reviewer change, 2026-09-19
+
+The user instructed: "install all the lean plugins and dependencies, make sure we have the latest version, then arm a loop for Grok 4.6 to implement and Astra medium to check. Try to get all to P37 done in the loop". Native Grok `grok-4.6` is the implementation author; independent `gpt-6-astra` at `medium` reasoning checks frozen candidates. This supersedes earlier author/reviewer assignments. The requested full P37 scope resumes P35/P36 Atlas after core priorities and dependencies. Preserve existing accepted evidence and historical model identities. One substantive author and one independent checker at a time, with isolated source/build state. No Foreman or extra branch names; root verifies, adjudicates, integrates and publishes accepted work to `semantic-kernel-pivot`. No completion by deferral, narrowed theorem statements, invented source semantics, or missing reviews. Keep pinned historical evidence valid; toolchain migration needs its own verified candidate. Recover this loop from `review/semantic-kernel/program-execution-20260919/STATE.json`, with prior program STATE and CURRENT as historical inputs.
