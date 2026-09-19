@@ -50,3 +50,26 @@ dependencies. It does not qualify the whole certificate checker, validate the
 external host inventory, or close the remaining P19/P20 gates. The default
 `DefiKernel` import remains unchanged. See
 `review/semantic-kernel/program-execution-20260919/astra-focused-compatibility-review/REVIEW-DIAGNOSTIC.md`.
+
+## P19 host inventory validation
+
+From the repository root, build the pinned host module and validate the supplied
+host inventory:
+
+```sh
+(cd lean && lake build DefiKernel.Certificates.TrustedHost)
+python3 scripts/verify_certificate_host.py
+```
+
+The validator checks source dependency bytes, Arithmetic compiler records, and
+identity constants evaluated from the reviewed `TrustedHost.olean`. It rejects
+missing or substituted records, source drift, changed compiled identity, and
+malformed exporter output. It invokes the absolute, digest-checked Lean and Lake
+binaries, so a local `lean` executable cannot impersonate the exporter.
+
+This scoped implementation requires the recorded Linux binaries for
+Lean 4.33.0-rc2 under `~/.elan/toolchains/`. The installed toolchain and transitive
+compiled dependencies remain trusted; this is not a general build attestation.
+Astra accepted the exact three-file repair in
+`review/semantic-kernel/program-execution-20260919/astra-p19-host-review/REVIEW-ARTIFACT.md`.
+Whole P19/P20 checker qualification remains open.
