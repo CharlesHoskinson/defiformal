@@ -72,14 +72,14 @@ def kernelProjection (rep : Report) : RawObservation :=
     | _ => none
   ⟨rep.world, rep.receipt, rep.outputs, rep.events, rep.nextIndex, rep.cursorFailure, kf⟩
 
-def staleJudgments (claimed : ClaimedJudgments) : List JudgmentResult :=
+def staleJudgments (claimed : ClaimedJudgments) (missing : Option String) : List JudgmentResult :=
   makeJudgments [
     ("typeCorrect", .notReached),
     ("footprintCorrect", .notReached),
     ("authorityCorrect", .notReached),
     ("accountingCorrect", .notReached),
     ("compositionCompatible", .notApplicable),
-    ("assumptionsDeclared", .«true»),
+    ("assumptionsDeclared", assumptionsDeclaredOutcome missing),
     ("libraryTheoremsInstantiated", .notApplicable),
     ("sourceRefinement", .notApplicable)
   ] claimed
@@ -98,14 +98,14 @@ def compositionCompatibleFromSteps
     compositionCompatibleIndexed cfg boundaries steps
 
 def notReachedFamilies (compat : JudgmentOutcome) (lib : JudgmentOutcome)
-    (claimed : ClaimedJudgments) : List JudgmentResult :=
+    (claimed : ClaimedJudgments) (missing : Option String) : List JudgmentResult :=
   makeJudgments [
     ("typeCorrect", .notReached),
     ("footprintCorrect", .notReached),
     ("authorityCorrect", .notReached),
     ("accountingCorrect", .notReached),
     ("compositionCompatible", compat),
-    ("assumptionsDeclared", .«true»),
+    ("assumptionsDeclared", assumptionsDeclaredOutcome missing),
     ("libraryTheoremsInstantiated", lib),
     ("sourceRefinement", .notApplicable)
   ] claimed
@@ -191,7 +191,7 @@ def checkTyped (env : EnvelopeEnc) (payload : TypedExecutePayloadEnc) : Report :
   let claimed := parseClaimedJudgments env.claimed_judgments
   let outstanding := outstandingFamilies env
   if !sourceIdentity env.source_pin then
-    ⟨.refused, some (sourceIdentityFailure env.source_pin), staleJudgments claimed,
+    ⟨.refused, some (sourceIdentityFailure env.source_pin), staleJudgments claimed missingAssump,
      preWorld, none, [], [], 0, none, assumptionsList, outstanding, env.source_pin, env.audit_roots, none⟩
   else
     let raw := rawExecute (.typed env payload)
@@ -208,7 +208,7 @@ def checkStep (env : EnvelopeEnc) (payload : CompositionStepPayloadEnc) : Report
   let claimed := parseClaimedJudgments env.claimed_judgments
   let outstanding := outstandingFamilies env
   if !sourceIdentity env.source_pin then
-    ⟨.refused, some (sourceIdentityFailure env.source_pin), staleJudgments claimed,
+    ⟨.refused, some (sourceIdentityFailure env.source_pin), staleJudgments claimed missingAssump,
      preWorld, none, [], [], payload.index, none, assumptionsList, outstanding, env.source_pin, env.audit_roots, none⟩
   else
     let raw := rawExecute (.step env payload)
@@ -222,7 +222,7 @@ def checkRun (env : EnvelopeEnc) (payload : CompositionRunPayloadEnc) : Report :
   let claimed := parseClaimedJudgments env.claimed_judgments
   let outstanding := outstandingFamilies env
   if !sourceIdentity env.source_pin then
-    ⟨.refused, some (sourceIdentityFailure env.source_pin), staleJudgments claimed,
+    ⟨.refused, some (sourceIdentityFailure env.source_pin), staleJudgments claimed missingAssump,
      preWorld, none, [], [], 0, none, assumptionsList, outstanding, env.source_pin, env.audit_roots, none⟩
   else
     let raw := rawExecute (.run env payload)

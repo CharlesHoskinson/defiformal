@@ -331,19 +331,15 @@ def SIX_ASSUMPTIONS : List String := [
 ]
 
 def computeAssumptions (cert : EnvelopeEnc) : List (String × String) × Option String :=
-  let missingEnv := !cert.assumptions.contains "environment-authenticity"
-  let missingReplay := !cert.assumptions.contains "replay-prevention-outside-model"
-  if missingEnv || missingReplay then
-    let pairs := SIX_ASSUMPTIONS.map fun name ↦
-      if name == "environment-authenticity" then (name, "missing")
-      else (name, "present")
-    (pairs, some "environment-authenticity")
-  else
-    let pairs := SIX_ASSUMPTIONS.map fun name ↦
-      if cert.assumptions.contains name then (name, "present")
-      else (name, "missing")
-    let firstMissing := SIX_ASSUMPTIONS.find? (!cert.assumptions.contains ·)
-    (pairs, firstMissing)
+  let pairs := SIX_ASSUMPTIONS.map fun name ↦
+    if cert.assumptions.contains name then (name, "present")
+    else (name, "missing")
+  let firstMissing := SIX_ASSUMPTIONS.find? (!cert.assumptions.contains ·)
+  (pairs, firstMissing)
+
+/-- Required class missing is classified false. All six present is classified true. -/
+def assumptionsDeclaredOutcome (missing : Option String) : JudgmentOutcome :=
+  if missing.isSome then JudgmentOutcome.«false» else JudgmentOutcome.«true»
 
 structure CertContext where
   claimed_next_state : Option (Typed.ExecutionResult Party Asset Domain) := none
@@ -481,7 +477,7 @@ def checkTyped (rawCert : EnvelopeEnc) (payload : TypedExecutePayloadEnc) : Repo
       ("authorityCorrect", .notReached),
       ("accountingCorrect", .notReached),
       ("compositionCompatible", .notApplicable),
-      ("assumptionsDeclared", .«true»),
+      ("assumptionsDeclared", assumptionsDeclaredOutcome missingAssump),
       ("libraryTheoremsInstantiated", .notApplicable),
       ("sourceRefinement", .notApplicable)
     ]
@@ -564,7 +560,7 @@ def checkTyped (rawCert : EnvelopeEnc) (payload : TypedExecutePayloadEnc) : Repo
         ("authorityCorrect", ac),
         ("accountingCorrect", acc),
         ("compositionCompatible", .notApplicable),
-        ("assumptionsDeclared", .«true»),
+        ("assumptionsDeclared", assumptionsDeclaredOutcome missingAssump),
         ("libraryTheoremsInstantiated", libraryTheoremsInstantiated),
         ("sourceRefinement", sourceRefinement)
       ]
@@ -605,7 +601,7 @@ def checkTyped (rawCert : EnvelopeEnc) (payload : TypedExecutePayloadEnc) : Repo
 /-- Composition single-step checker. -/
 def checkStep (cert : EnvelopeEnc) (payload : CompositionStepPayloadEnc) : Report :=
   let preWorld := payload.pre
-  let (assumptionsList, _) := computeAssumptions cert
+  let (assumptionsList, missingAssump) := computeAssumptions cert
   let claimed := parseClaimedJudgments cert.claimed_judgments
   let outstanding := outstandingFamilies cert
   match configToTyped? payload.config with
@@ -636,7 +632,7 @@ def checkStep (cert : EnvelopeEnc) (payload : CompositionStepPayloadEnc) : Repor
             ("authorityCorrect", .notReached),
             ("accountingCorrect", .notReached),
             ("compositionCompatible", .«false»),
-            ("assumptionsDeclared", .«true»),
+            ("assumptionsDeclared", assumptionsDeclaredOutcome missingAssump),
             ("libraryTheoremsInstantiated", .notApplicable),
             ("sourceRefinement", .notApplicable)
           ]
@@ -658,7 +654,7 @@ def checkStep (cert : EnvelopeEnc) (payload : CompositionStepPayloadEnc) : Repor
             ("authorityCorrect", .«true»),
             ("accountingCorrect", if isIssueRevoke then .notApplicable else .«true»),
             ("compositionCompatible", compatOut),
-            ("assumptionsDeclared", .«true»),
+            ("assumptionsDeclared", assumptionsDeclaredOutcome missingAssump),
             ("libraryTheoremsInstantiated", .notApplicable),
             ("sourceRefinement", .notApplicable)
           ]
@@ -667,7 +663,7 @@ def checkStep (cert : EnvelopeEnc) (payload : CompositionStepPayloadEnc) : Repor
 /-- Composition run checker. -/
 def checkRun (cert : EnvelopeEnc) (payload : CompositionRunPayloadEnc) : Report :=
   let preWorld := payload.world
-  let (assumptionsList, _) := computeAssumptions cert
+  let (assumptionsList, missingAssump) := computeAssumptions cert
   let claimed := parseClaimedJudgments cert.claimed_judgments
   let outstanding := outstandingFamilies cert
   match configToTyped? payload.config with
@@ -728,7 +724,7 @@ def checkRun (cert : EnvelopeEnc) (payload : CompositionRunPayloadEnc) : Report 
             ("authorityCorrect", .«true»),
             ("accountingCorrect", .«false»),
             ("compositionCompatible", compatOut),
-            ("assumptionsDeclared", .«true»),
+            ("assumptionsDeclared", assumptionsDeclaredOutcome missingAssump),
             ("libraryTheoremsInstantiated", .notApplicable),
             ("sourceRefinement", .notApplicable)
           ]
@@ -740,7 +736,7 @@ def checkRun (cert : EnvelopeEnc) (payload : CompositionRunPayloadEnc) : Report 
             ("authorityCorrect", .«true»),
             ("accountingCorrect", .«true»),
             ("compositionCompatible", compatOut),
-            ("assumptionsDeclared", .«true»),
+            ("assumptionsDeclared", assumptionsDeclaredOutcome missingAssump),
             ("libraryTheoremsInstantiated", .notApplicable),
             ("sourceRefinement", .notApplicable)
           ]

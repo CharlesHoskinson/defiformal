@@ -96,3 +96,24 @@ records actual source hashes rather than claiming they equal committed blobs.
 Runner and Audit acceptance is recorded in
 `review/semantic-kernel/program-execution-20260919/astra-p19-mutation-runner-review/REVIEW.md`.
 This does not by itself qualify the complete mutation campaign or P19.
+
+## Accurate assumption classification
+
+The delivered typed, step and run checkers label all six required assumption
+classes from actual membership. Missing classes produce an incomplete report
+with `assumptionsDeclared = false`; the diagnostic names the first missing class.
+Claimed judgments are compared with that computed result. Presence records an
+assumption, not proof that it is true.
+
+Run the focused regression from `lean/`:
+
+```sh
+lake env lean --run DefiKernel/Certificates/AssumptionsRegression.lean
+```
+
+The regression covers all 64 subsets, report fields, claimed judgments and
+complete-input controls. The original F41 fixture contains an incorrect
+environment/replay expectation; its historical bytes are preserved, with
+corrected cases in `f41-assumption-companions.json`. The independent review is
+`review/semantic-kernel/program-execution-20260919/astra-p19-assumptions-review/REVIEW-JUDGMENT.md`.
+Whole P19/P20 qualification remains open.

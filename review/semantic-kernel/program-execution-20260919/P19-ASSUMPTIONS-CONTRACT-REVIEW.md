@@ -1,0 +1,16 @@
+# P19 assumptions contract review
+
+**APPROVE the narrow correction and additive companion roles.** PB03 requires actual presence and accurate labels for all six classes. S55 designates environment-authenticity omission. The frozen F41 instead includes environment-authenticity and omits replay-prevention-outside-model, while its expected report falsely labels environment missing and replay present. That expectation must not constrain the repaired runtime.
+
+Preserve original F41, its expected report and all historical execution bytes. Original fixture-file SHA-256: `ad1857ecf7269920a2169ab7e644d28da3311cad91be60df09a737cf94fe7742`. The previous 54/54 comparison remains a historical match against those expectations; it is not a claim that unchanged F41 passes after repair. A repaired run against original F41 should expose the diagnostic mismatch explicitly, not silently adapt the frozen expectation.
+
+Approved additive evidence:
+
+- **Environment-missing S55 companion:** use the same funded kernel payload with exactly environment-authenticity absent and the other five classes present. Expect only environment labelled missing, `AssumptionsDeclared` false and status incomplete with `incompleteObligation.environment-authenticity`.
+- **Replay-missing companion:** retain original F41 input, supplying a separately named independent corrected expectation. Environment is present; only replay-prevention-outside-model is missing. Expect `AssumptionsDeclared` false and status incomplete with `incompleteObligation.replay-prevention-outside-model`.
+
+For every subset, each of the six report labels must equal actual membership in the supplied assumptions. Empty input labels all six missing. Complete input labels all six present; this establishes presence, never truth, and permits acceptance only when the other report gates pass. For multiple missing classes, select the first actual missing class in the existing six-class order: registry, administrator, context, observation, environment, replay. This deterministic diagnostic choice must not hide the other missing labels. The funded companions retain their independently expected kernel world/receipt fields; changing assumption diagnostics does not alter execution observations.
+
+Approve the focused `computeAssumptions` implementation repair, per-class/subset and report-level regression coverage, and directly affected proof-script repairs preserving theorem statements. Prefer all 64 subsets plus complete/missing report siblings as already authorized in the focused brief. No weakening of required classes, acceptance predicates, frozen fixture history, or theorem statements is authorized by this correction. Candidate implementation and actual companion results still require independent review; this document accepts neither them nor full P19/P20.
+
+Read-only evidence: PB03/S55 in `openspec/changes/serialized-kernel-certificates/specs/runtime-proof-boundary/spec.md` (SHA-256 `0106888e25f962dd636541d72dbdf5d7c162ee9aebb1dc5fe66d7a1e9b352d6a`), and `p19-assumption-diagnostic.log` (SHA-256 `e3cae0ecce71773231ba5eb8c0ffd363b70e7ac47cdce88ce7dcab5ec7fea756`) confirming empty and replay-only omissions produce the same incorrect labels. No source edits, builds or new executions were performed for this adjudication.
