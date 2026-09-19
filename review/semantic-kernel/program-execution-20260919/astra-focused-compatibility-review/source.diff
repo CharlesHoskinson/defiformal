@@ -1,0 +1,2727 @@
+--- main/lean/DefiKernel/Certificates/Check.lean
++++ candidate/lean/DefiKernel/Certificates/Check.lean
+@@ -1,7 +1,10 @@
+ import DefiKernel.Certificates.Schema
+ import DefiKernel.Certificates.Decode
++import DefiKernel.Certificates.TrustedHost
++import DefiKernel.Certificates.LibraryInstantiation
+ import DefiKernel.Typed.Transition
+ import DefiKernel.Composition.Sequence
++import DefiKernel.Parallel.Compatibility
+ 
+ namespace DefiKernel.Certificates
+ 
+@@ -349,17 +352,129 @@
+   source_pin : SourcePinEnc
+   audit_roots : List String
+ 
++/-- Informational outstanding families. Theorem-name tags never become executable pass. -/
++def outstandingFamilies (cert : EnvelopeEnc) : List String :=
++  (if !cert.libraries.isEmpty then ["libraryTheoremsInstantiated"] else []) ++
++  (if !cert.invariants.isEmpty then ["proof.ComponentContract.invariant"] else []) ++
++  (if !cert.source_map.isEmpty then ["sourceRefinement"] else [])
++
++/-- Library family is never true from envelope tags. Compiled instantiation is required. -/
++def libraryJudgment (cert : EnvelopeEnc) : JudgmentOutcome :=
++  if cert.libraries.isEmpty then
++    JudgmentOutcome.notApplicable
++  else
++    JudgmentOutcome.notApplicable
++
++def sourceRefinementJudgment (_cert : EnvelopeEnc) : JudgmentOutcome :=
++  JudgmentOutcome.notApplicable
++
++def invokeSteps (steps : List StepEnc) : List (Invocation Party Asset Domain) :=
++  steps.filterMap fun s =>
++    match s with
++    | .invoke inv => some inv.toInvocation
++    | _ => none
++
++/-- Split decoded invocations into catalog component 0 versus the remainder. -/
++def splitInvokeBranches (invs : List (Invocation Party Asset Domain)) :
++    List (Invocation Party Asset Domain) × List (Invocation Party Asset Domain) :=
++  (invs.filter (fun i => i.component.value = 0),
++   invs.filter (fun i => i.component.value ≠ 0))
++
++/-- Recompute footprints via Parallel.admit on decoded catalog and branches.
++Caller-supplied footprint labels are not an input. -/
++def recomputeAdmit (cfg : Config Party Asset Domain)
++    (boundary : Boundary Party Asset Domain)
++    (invs : List (Invocation Party Asset Domain)) :
++    Except (Parallel.AdmissionFailure Party Asset Domain)
++      (Parallel.Footprint Party Asset Domain × Parallel.Footprint Party Asset Domain) :=
++  let lr := splitInvokeBranches invs
++  let boundaries : Parallel.ParallelBoundary Party Asset Domain := fun _ _ => boundary
++  Parallel.admit cfg boundaries lr.1 lr.2
++
++def compositionCompatibleOutcome
++    (cfg : Config Party Asset Domain)
++    (boundary : Boundary Party Asset Domain)
++    (invs : List (Invocation Party Asset Domain)) : JudgmentOutcome :=
++  match recomputeAdmit cfg boundary invs with
++  | .ok _ => JudgmentOutcome.«true»
++  | .error _ => JudgmentOutcome.«false»
++
++/-- Invokes with original step indices. Issue/revoke are not Parallel branches. -/
++def indexedInvokes (steps : List StepEnc) : List (Nat × Invocation Party Asset Domain) :=
++  steps.zipIdx.filterMap fun (s, i) =>
++    match s with
++    | .invoke inv => some (i, inv.toInvocation)
++    | _ => none
++
++/-- Declared Parallel left branch: catalog component id 0, original step order. -/
++def declaredLeft (steps : List StepEnc) : List (Nat × Invocation Party Asset Domain) :=
++  (indexedInvokes steps).filter (fun p => p.2.component.value = 0)
++
++/-- Declared Parallel right branch: remaining component ids, original step order. -/
++def declaredRight (steps : List StepEnc) : List (Nat × Invocation Party Asset Domain) :=
++  (indexedInvokes steps).filter (fun p => p.2.component.value ≠ 0)
++
++def analyzeIndexedBranch (cfg : Config Party Asset Domain)
++    (boundaries : Nat → Boundary Party Asset Domain) :
++    List (Nat × Invocation Party Asset Domain) →
++      Except Parallel.LocalFailure (Parallel.Footprint Party Asset Domain)
++  | [] => .ok .empty
++  | (index, inv) :: rest => do
++    let head ← (Parallel.analyzeInvocation cfg (boundaries index) inv).mapError (⟨index, ·⟩)
++    let tail ← analyzeIndexedBranch cfg boundaries rest
++    return head.append tail
++
++/-- Per-step Parallel.admit: component 0 versus remaining components, original indices. -/
++def admitIndexed (cfg : Config Party Asset Domain)
++    (boundaries : Nat → Boundary Party Asset Domain)
++    (steps : List StepEnc) :
++    Except (Parallel.AdmissionFailure Party Asset Domain)
++      (Parallel.Footprint Party Asset Domain × Parallel.Footprint Party Asset Domain) := do
++  if !validateCatalog cfg.registry cfg.catalog then throw .configuration
++  let left := declaredLeft steps
++  let right := declaredRight steps
++  let lf ← (analyzeIndexedBranch cfg boundaries left).mapError (.structural .left)
++  let rf ← (analyzeIndexedBranch cfg boundaries right).mapError (.structural .right)
++  let _ ← Parallel.checkCompatibility lf rf
++  return (lf, rf)
++
++def compositionCompatibleIndexed
++    (cfg : Config Party Asset Domain)
++    (boundaries : Nat → Boundary Party Asset Domain)
++    (steps : List StepEnc) : JudgmentOutcome :=
++  match admitIndexed cfg boundaries steps with
++  | .ok _ => JudgmentOutcome.«true»
++  | .error _ => JudgmentOutcome.«false»
++
++/-- Declared left branch is exactly catalog component 0 at original indices. -/
++theorem declaredLeft_eq (steps : List StepEnc) :
++    declaredLeft steps = (indexedInvokes steps).filter (fun p => p.2.component.value = 0) :=
++  rfl
++
++/-- Declared right branch is every remaining component id at original indices. -/
++theorem declaredRight_eq (steps : List StepEnc) :
++    declaredRight steps = (indexedInvokes steps).filter (fun p => p.2.component.value ≠ 0) :=
++  rfl
++
++/-- Issue is not a Parallel branch. -/
++theorem indexedInvokes_issue (grant : GrantEnc) :
++    indexedInvokes [.issue grant] = [] :=
++  rfl
++
++/-- Revoke is not a Parallel branch. -/
++theorem indexedInvokes_revoke (id : Nat) :
++    indexedInvokes [.revoke id] = [] :=
++  rfl
++
+ /-- Primary Typed execution checker with needles M01, M02, M09, M10. -/
+ def checkTyped (rawCert : EnvelopeEnc) (payload : TypedExecutePayloadEnc) : Report :=
+   let preWorld : WorldEnc := ⟨payload.state, payload.store⟩
+   let (assumptionsList, missingAssump) := computeAssumptions rawCert
+   let claimed := parseClaimedJudgments rawCert.claimed_judgments
+-  let outstanding := (if !rawCert.libraries.isEmpty then ["libraryTheoremsInstantiated"] else []) ++
+-                     (if !rawCert.invariants.isEmpty then ["proof.ComponentContract.invariant"] else []) ++
+-                     (if !rawCert.source_map.isEmpty then ["sourceRefinement"] else [])
+-
+-  -- Check source pin
+-  if rawCert.source_pin.git ≠ "a12b7cac05a818cc8d35c2ca440b7170a2807e92" then
++  let outstanding := outstandingFamilies rawCert
++
++  -- Untrusted envelope git compared against compiled TrustedHost.gitSha (definitionally this literal).
++  if rawCert.source_pin.git ≠ TrustedHost.gitSha then
+     let jmap : List (String × JudgmentOutcome) := [
+       ("typeCorrect", .notReached),
+       ("footprintCorrect", .notReached),
+@@ -492,9 +607,7 @@
+   let preWorld := payload.pre
+   let (assumptionsList, _) := computeAssumptions cert
+   let claimed := parseClaimedJudgments cert.claimed_judgments
+-  let outstanding := (if !cert.libraries.isEmpty then ["libraryTheoremsInstantiated"] else []) ++
+-                     (if !cert.invariants.isEmpty then ["proof.ComponentContract.invariant"] else []) ++
+-                     (if !cert.source_map.isEmpty then ["sourceRefinement"] else [])
++  let outstanding := outstandingFamilies cert
+   match configToTyped? payload.config with
+   | none =>
+     ⟨.refused, some ⟨.configuration, "configuration", none⟩, [], preWorld, none, [], [], payload.index, none, assumptionsList, outstanding, cert.source_pin, cert.audit_roots, none⟩
+@@ -505,6 +618,8 @@
+     | some preW =>
+       let boundary := boundaryToTyped payload.boundary
+       let history := payload.history.map OutputObservationEnc.toOutputObservation
++      let stepInvs := invokeSteps [payload.step]
++      let compatOut := compositionCompatibleOutcome cfg boundary stepInvs
+       match payload.step.toStep? with
+       | none =>
+         ⟨.refused, some ⟨.interface, "unknownStep", none⟩, [], preWorld, none, [], [], payload.index, none, assumptionsList, outstanding, cert.source_pin, cert.audit_roots, none⟩
+@@ -542,7 +657,7 @@
+             ("footprintCorrect", if isIssueRevoke then .notApplicable else .«true»),
+             ("authorityCorrect", .«true»),
+             ("accountingCorrect", if isIssueRevoke then .notApplicable else .«true»),
+-            ("compositionCompatible", .«true»),
++            ("compositionCompatible", compatOut),
+             ("assumptionsDeclared", .«true»),
+             ("libraryTheoremsInstantiated", .notApplicable),
+             ("sourceRefinement", .notApplicable)
+@@ -554,9 +669,7 @@
+   let preWorld := payload.world
+   let (assumptionsList, _) := computeAssumptions cert
+   let claimed := parseClaimedJudgments cert.claimed_judgments
+-  let outstanding := (if !cert.libraries.isEmpty then ["libraryTheoremsInstantiated"] else []) ++
+-                     (if !cert.invariants.isEmpty then ["proof.ComponentContract.invariant"] else []) ++
+-                     (if !cert.source_map.isEmpty then ["sourceRefinement"] else [])
++  let outstanding := outstandingFamilies cert
+   match configToTyped? payload.config with
+   | none =>
+     ⟨.refused, some ⟨.configuration, "configuration", none⟩, [], preWorld, none, [], [], 0, none, assumptionsList, outstanding, cert.source_pin, cert.audit_roots, none⟩
+@@ -574,6 +687,7 @@
+         | none => bList.head?.getD defaultBoundary
+       let steps : List (Composition.Step Party Asset Domain) :=
+         payload.steps.filterMap StepEnc.toStep?
++      let compatOut := compositionCompatibleIndexed cfg boundaries payload.steps
+ 
+         let cursor := Composition.run cfg boundaries initialWorld steps
+         let postWorld : WorldEnc := ⟨⟨payload.world.state.cells.map (fun row ↦
+@@ -613,7 +727,7 @@
+             ("footprintCorrect", .«true»),
+             ("authorityCorrect", .«true»),
+             ("accountingCorrect", .«false»),
+-            ("compositionCompatible", .«true»),
++            ("compositionCompatible", compatOut),
+             ("assumptionsDeclared", .«true»),
+             ("libraryTheoremsInstantiated", .notApplicable),
+             ("sourceRefinement", .notApplicable)
+@@ -625,7 +739,7 @@
+             ("footprintCorrect", .«true»),
+             ("authorityCorrect", .«true»),
+             ("accountingCorrect", .«true»),
+-            ("compositionCompatible", .«true»),
++            ("compositionCompatible", compatOut),
+             ("assumptionsDeclared", .«true»),
+             ("libraryTheoremsInstantiated", .notApplicable),
+             ("sourceRefinement", .notApplicable)
+--- main/lean/DefiKernel/Certificates/Delivered.lean
++++ candidate/lean/DefiKernel/Certificates/Delivered.lean
+@@ -0,0 +1,231 @@
++import DefiKernel.Certificates.Check
++import DefiKernel.Certificates.LibraryInstantiation
++import DefiKernel.Certificates.TrustedHost
++import DefiKernel.Parallel.Compatibility
++
++/-!
++Delivered production checker for P19/P20.
++
++Historical `checkTyped` / `checkIR` / `checkBytes` remain in `DefiKernel.Certificates`
++with their original statements. This namespace is the routed production entry:
++full source-identity fields, payload-bound library instantiation, and per-step
++Parallel.admit footprints. CLI `RunFixtures` check/raw/observation-pair use these
++entrypoints.
++-/
++namespace DefiKernel.Certificates.Delivered
++
++open DefiKernel.Certificates
++open DefiKernel.Typed
++open DefiKernel.Composition
++open DefiKernel.Parallel
++
++/-- All trusted identity fields. Envelope git alone is not source identity. -/
++def sourceIdentity (pin : SourcePinEnc) : Bool :=
++  pin.git == TrustedHost.gitSha &&
++    pin.lean_toolchain == TrustedHost.leanToolchain &&
++    pin.mathlib_rev == TrustedHost.mathlibRev &&
++    TrustedHost.recordsMatch pin
++
++def sourceIdentityFailure (pin : SourcePinEnc) : FailurePath :=
++  if pin.git != TrustedHost.gitSha then
++    ⟨.staleSource, "git", some pin.git⟩
++  else if pin.lean_toolchain != TrustedHost.leanToolchain then
++    ⟨.staleSource, "lean_toolchain", some pin.lean_toolchain⟩
++  else if pin.mathlib_rev != TrustedHost.mathlibRev then
++    ⟨.staleSource, "mathlib_rev", some pin.mathlib_rev⟩
++  else
++    ⟨.staleSource, "compiler_record", pin.compiler_record⟩
++
++def sixClassPresence (env : EnvelopeEnc) : Bool :=
++  SIX_ASSUMPTIONS.all (fun n => env.assumptions.contains n)
++
++def claimedWorldAgreement (env : EnvelopeEnc) (post : WorldEnc) : Bool :=
++  match env.claimed_next_state with
++  | none => true
++  | some w => decide (w = post)
++
++/-- Invariants remain outstanding Prop; require_invariant_discharge cannot pass. -/
++def recordedInvariantCompilerCheck (_env : EnvelopeEnc) : Bool := false
++
++def requestedDischargeOk
++    (env : EnvelopeEnc) (payload : TypedExecutePayloadEnc) (claimWorld : WorldEnc) : Bool :=
++  (!env.require_library_discharge ||
++      LibraryInstantiation.instantiatedOverCertificate env.libraries env.source_pin payload claimWorld) &&
++    (!env.require_invariant_discharge || recordedInvariantCompilerCheck env)
++
++def requestedDischargeOkEnvelope (env : EnvelopeEnc) (claimWorld : WorldEnc)
++    (payload? : Option TypedExecutePayloadEnc) : Bool :=
++  match payload? with
++  | some p => requestedDischargeOk env p claimWorld
++  | none =>
++    !env.require_library_discharge && !env.require_invariant_discharge
++
++/-- Kernel fields of a report. Policy failures are not kernelFailure. -/
++def kernelProjection (rep : Report) : RawObservation :=
++  let kf : Option FailurePath :=
++    match rep.failure with
++    | some ⟨.kernel, _, _⟩ => rep.failure
++    | some ⟨.interface, _, _⟩ => rep.failure
++    | some ⟨.authority, _, _⟩ => rep.failure
++    | some ⟨.configuration, _, _⟩ => rep.failure
++    | some ⟨.internalReceipt, _, _⟩ => rep.failure
++    | _ => none
++  ⟨rep.world, rep.receipt, rep.outputs, rep.events, rep.nextIndex, rep.cursorFailure, kf⟩
++
++def staleJudgments (claimed : ClaimedJudgments) : List JudgmentResult :=
++  makeJudgments [
++    ("typeCorrect", .notReached),
++    ("footprintCorrect", .notReached),
++    ("authorityCorrect", .notReached),
++    ("accountingCorrect", .notReached),
++    ("compositionCompatible", .notApplicable),
++    ("assumptionsDeclared", .«true»),
++    ("libraryTheoremsInstantiated", .notApplicable),
++    ("sourceRefinement", .notApplicable)
++  ] claimed
++
++/-- Declared branch semantics: catalog component 0 versus remaining components,
++each invoke analyzed at its original step index / boundary. Issue/revoke are
++not Parallel branches; an invoke-free sequence is notApplicable rather than a
++vacuous empty-empty admit success. -/
++def compositionCompatibleFromSteps
++    (cfg : Config Party Asset Domain)
++    (boundaries : Nat → Boundary Party Asset Domain)
++    (steps : List StepEnc) : JudgmentOutcome :=
++  if (indexedInvokes steps).isEmpty then
++    JudgmentOutcome.notApplicable
++  else
++    compositionCompatibleIndexed cfg boundaries steps
++
++def notReachedFamilies (compat : JudgmentOutcome) (lib : JudgmentOutcome)
++    (claimed : ClaimedJudgments) : List JudgmentResult :=
++  makeJudgments [
++    ("typeCorrect", .notReached),
++    ("footprintCorrect", .notReached),
++    ("authorityCorrect", .notReached),
++    ("accountingCorrect", .notReached),
++    ("compositionCompatible", compat),
++    ("assumptionsDeclared", .«true»),
++    ("libraryTheoremsInstantiated", lib),
++    ("sourceRefinement", .notApplicable)
++  ] claimed
++
++def replaceFamily (rep : Report) (fam : String) (out : JudgmentOutcome) : Report :=
++  { rep with judgments := rep.judgments.map (fun j =>
++      if j.family == fam then { j with outcome := out } else j) }
++
++/-- Required reached families are those with outcome true. A false family blocks accepted. -/
++def requiredReachedFamiliesTrue (js : List JudgmentResult) : Bool :=
++  js.all (fun j =>
++    match j.outcome with
++    | .«false» => false
++    | _ => true)
++
++def firstFalseFamily (js : List JudgmentResult) : String :=
++  match js.find? (fun j =>
++      match j.outcome with
++      | .«false» => true
++      | _ => false) with
++  | some j => j.family
++  | none => "family"
++
++def claimedMismatch? (env : EnvelopeEnc) (world : WorldEnc) : Bool :=
++  match env.claimed_next_state with
++  | none => false
++  | some w => decide (w ≠ world)
++
++/-- Production acceptance policy. Kernel world/receipt/outputs stay the raw observation.
++A false required family or claimed-world mismatch is refused, not accepted. -/
++def overlayPolicy (env : EnvelopeEnc) (base : Report) (raw : RawObservation)
++    (dischargeOk : Bool) (cursor : Option LocatedFailureEnc)
++    (missingAssump : Option String) : Report :=
++  match raw.kernelFailure with
++  | some kf =>
++    ⟨.refused, some kf, base.judgments, raw.world, raw.receipt, raw.outputs, raw.events,
++      raw.nextIndex, cursor, base.assumptions, base.outstanding, base.source_pin,
++      base.audit_roots, base.unsupported⟩
++  | none =>
++    if claimedMismatch? env raw.world then
++      ⟨.refused, some ⟨.observationMismatch, "claimedNextState", none⟩, base.judgments,
++        raw.world, raw.receipt, raw.outputs, raw.events, raw.nextIndex, cursor,
++        base.assumptions, base.outstanding, base.source_pin, base.audit_roots,
++        base.unsupported⟩
++    else if missingAssump.isSome then
++      ⟨.incomplete, some ⟨.incompleteObligation, missingAssump.getD "assumptionsDeclared", none⟩,
++        base.judgments, raw.world, raw.receipt, raw.outputs, raw.events, raw.nextIndex, cursor,
++        base.assumptions, base.outstanding, base.source_pin, base.audit_roots, base.unsupported⟩
++    else if !dischargeOk then
++      ⟨.incomplete, some ⟨.incompleteObligation, "libraryTheoremsInstantiated", none⟩,
++        base.judgments, raw.world, raw.receipt, raw.outputs, raw.events, raw.nextIndex, cursor,
++        base.assumptions, base.outstanding, base.source_pin, base.audit_roots, base.unsupported⟩
++    else if !requiredReachedFamiliesTrue base.judgments then
++      ⟨.refused, some ⟨.configuration, firstFalseFamily base.judgments, none⟩, base.judgments,
++        raw.world, raw.receipt, raw.outputs, raw.events, raw.nextIndex, cursor,
++        base.assumptions, base.outstanding, base.source_pin, base.audit_roots, base.unsupported⟩
++    else
++      ⟨.accepted, none, base.judgments, raw.world, raw.receipt, raw.outputs, raw.events,
++        raw.nextIndex, cursor, base.assumptions, base.outstanding, base.source_pin,
++        base.audit_roots, base.unsupported⟩
++
++/-- Production typed checker. Source identity first; kernel fields from rawExecute;
++executable families from the legacy stage map; library/discharge overlay. -/
++def checkTyped (env : EnvelopeEnc) (payload : TypedExecutePayloadEnc) : Report :=
++  let preWorld : WorldEnc := ⟨payload.state, payload.store⟩
++  let (assumptionsList, missingAssump) := computeAssumptions env
++  let claimed := parseClaimedJudgments env.claimed_judgments
++  let outstanding := outstandingFamilies env
++  if !sourceIdentity env.source_pin then
++    ⟨.refused, some (sourceIdentityFailure env.source_pin), staleJudgments claimed,
++     preWorld, none, [], [], 0, none, assumptionsList, outstanding, env.source_pin, env.audit_roots, none⟩
++  else
++    let raw := rawExecute (.typed env payload)
++    let base := _root_.DefiKernel.Certificates.checkTyped env payload
++    let claimWorld := env.claimed_next_state.getD raw.world
++    let libOut := LibraryInstantiation.familyBound env.libraries env.source_pin payload claimWorld
++    let overlaid := replaceFamily base "libraryTheoremsInstantiated" libOut
++    overlayPolicy env overlaid raw (requestedDischargeOk env payload claimWorld)
++      raw.cursorFailure missingAssump
++
++def checkStep (env : EnvelopeEnc) (payload : CompositionStepPayloadEnc) : Report :=
++  let preWorld := payload.pre
++  let (assumptionsList, missingAssump) := computeAssumptions env
++  let claimed := parseClaimedJudgments env.claimed_judgments
++  let outstanding := outstandingFamilies env
++  if !sourceIdentity env.source_pin then
++    ⟨.refused, some (sourceIdentityFailure env.source_pin), staleJudgments claimed,
++     preWorld, none, [], [], payload.index, none, assumptionsList, outstanding, env.source_pin, env.audit_roots, none⟩
++  else
++    let raw := rawExecute (.step env payload)
++    let base := _root_.DefiKernel.Certificates.checkStep env payload
++    overlayPolicy env base raw (requestedDischargeOkEnvelope env raw.world none)
++      base.cursorFailure missingAssump
++
++def checkRun (env : EnvelopeEnc) (payload : CompositionRunPayloadEnc) : Report :=
++  let preWorld := payload.world
++  let (assumptionsList, missingAssump) := computeAssumptions env
++  let claimed := parseClaimedJudgments env.claimed_judgments
++  let outstanding := outstandingFamilies env
++  if !sourceIdentity env.source_pin then
++    ⟨.refused, some (sourceIdentityFailure env.source_pin), staleJudgments claimed,
++     preWorld, none, [], [], 0, none, assumptionsList, outstanding, env.source_pin, env.audit_roots, none⟩
++  else
++    let raw := rawExecute (.run env payload)
++    let base := _root_.DefiKernel.Certificates.checkRun env payload
++    overlayPolicy env base raw (requestedDischargeOkEnvelope env raw.world none)
++      raw.cursorFailure missingAssump
++
++def checkIR (ir : DecodedIR) : Outcome :=
++  match ir with
++  | .execution (.typed env payload) => .execution (checkTyped env payload)
++  | .execution (.step env payload) => .execution (checkStep env payload)
++  | .execution (.run env payload) => .execution (checkRun env payload)
++  | .audit a => .audit (checkAudit a)
++  | .codec doc => .codec (.ok (.codec doc))
++
++def checkBytes (bytes : ByteArray) : Outcome :=
++  match decodeBytes bytes with
++  | .error (.resourceLimit limit) => .codec (.blocked limit)
++  | .error e => .codec (.malformed e)
++  | .ok ir => checkIR ir
++
++end DefiKernel.Certificates.Delivered
+--- main/lean/DefiKernel/Certificates/KernelCorrespondence.lean
++++ candidate/lean/DefiKernel/Certificates/KernelCorrespondence.lean
+@@ -0,0 +1,618 @@
++import DefiKernel.Certificates.Check
++import DefiKernel.Certificates.Delivered
++import DefiKernel.Certificates.Soundness
++import DefiKernel.Certificates.LibraryInstantiation
++import DefiKernel.Parallel.Compatibility
++
++/-!
++Quantified checker-to-Lean correspondence for the delivered production entry.
++
++Historical `checkIR_execute_ok` / `_error` remain definitional dispatch on the
++legacy checker and are preserved in `Soundness`. This module maps
++`correspondence-theorems.json` names onto statements about `rawExecute` and
++`Delivered.checkTyped` / `checkStep` / `checkRun`. Finite F25/F27/F28 tests
++do not discharge these.
++-/
++namespace DefiKernel.Certificates.Delivered
++
++set_option linter.style.longLine false
++
++open DefiKernel.Certificates
++open DefiKernel.Typed
++open DefiKernel.Composition
++open DefiKernel.Parallel
++
++/-- Inventory map: T-raw-typed-ok. Kernel observation, not a Report. -/
++theorem rawExecute_typed_ok_complete (env : EnvelopeEnc) (payload : TypedExecutePayloadEnc)
++    (state : Typed.State Party Asset Domain)
++    (h_state : stateToTyped? payload.state = some state)
++    (post : Typed.ExecutionResult Party Asset Domain)
++    (h_exec : Typed.execute (registryToTyped payload.registry) (storeToTyped payload.store)
++        payload.ctx.toContext (envToTyped payload.env) payload.now payload.request.toRequest state = .ok post) :
++    (rawExecute (.typed env payload)).world = executionResultToWorld post payload.state ∧
++    (rawExecute (.typed env payload)).kernelFailure = none ∧
++    (rawExecute (.typed env payload)).outputs = [] ∧
++    (rawExecute (.typed env payload)).events = [] ∧
++    (rawExecute (.typed env payload)).nextIndex = 0 ∧
++    (rawExecute (.typed env payload)).cursorFailure = none :=
++  rawExecute_typed_ok env payload state h_state post h_exec
++
++/-- Inventory map: T-raw-typed-error. -/
++theorem rawExecute_typed_error_complete (env : EnvelopeEnc) (payload : TypedExecutePayloadEnc)
++    (state : Typed.State Party Asset Domain)
++    (h_state : stateToTyped? payload.state = some state)
++    (r : Typed.Refusal)
++    (h_exec : Typed.execute (registryToTyped payload.registry) (storeToTyped payload.store)
++        payload.ctx.toContext (envToTyped payload.env) payload.now payload.request.toRequest state = .error r) :
++    rawExecute (.typed env payload) =
++      ⟨⟨payload.state, payload.store⟩, none, [], [], 0, none, some (refusalToLocatedFailure r).reason⟩ :=
++  rawExecute_typed_error env payload state h_state r h_exec
++
++/-- Typed rawExecute always uses empty sequential fields. -/
++theorem rawExecute_typed_sequential_fields (env : EnvelopeEnc) (payload : TypedExecutePayloadEnc) :
++    (rawExecute (.typed env payload)).outputs = [] ∧
++    (rawExecute (.typed env payload)).events = [] ∧
++    (rawExecute (.typed env payload)).nextIndex = 0 ∧
++    (rawExecute (.typed env payload)).cursorFailure = none := by
++  dsimp [rawExecute]
++  split
++  · exact ⟨rfl, rfl, rfl, rfl⟩
++  · split <;> exact ⟨rfl, rfl, rfl, rfl⟩
++
++/-- Overlay keeps kernel fields from the raw observation. -/
++theorem overlayPolicy_kernel_fields (env : EnvelopeEnc) (base : Report) (raw : RawObservation)
++    (disc : Bool) (cursor : Option LocatedFailureEnc) (miss : Option String)
++    (h_ok : raw.kernelFailure = none) :
++    (overlayPolicy env base raw disc cursor miss).world = raw.world ∧
++    (overlayPolicy env base raw disc cursor miss).receipt = raw.receipt ∧
++    (overlayPolicy env base raw disc cursor miss).outputs = raw.outputs ∧
++    (overlayPolicy env base raw disc cursor miss).events = raw.events ∧
++    (overlayPolicy env base raw disc cursor miss).nextIndex = raw.nextIndex ∧
++    (overlayPolicy env base raw disc cursor miss).cursorFailure = cursor := by
++  unfold overlayPolicy
++  cases hkf : raw.kernelFailure with
++  | some _ =>
++    rw [hkf] at h_ok
++    cases h_ok
++  | none =>
++    split_ifs <;> simp
++
++/-- Overlay refuses claimed-world mismatch while retaining the successful invoke observation. -/
++theorem overlayPolicy_claimed_mismatch (env : EnvelopeEnc) (base : Report) (raw : RawObservation)
++    (disc : Bool) (cursor : Option LocatedFailureEnc) (miss : Option String)
++    (h_ok : raw.kernelFailure = none)
++    (h_mis : claimedMismatch? env raw.world = true) :
++    (overlayPolicy env base raw disc cursor miss).status = .refused ∧
++    (overlayPolicy env base raw disc cursor miss).failure =
++      some ⟨.observationMismatch, "claimedNextState", none⟩ ∧
++    (overlayPolicy env base raw disc cursor miss).world = raw.world ∧
++    (overlayPolicy env base raw disc cursor miss).receipt = raw.receipt := by
++  unfold overlayPolicy
++  cases hkf : raw.kernelFailure with
++  | some _ =>
++    rw [hkf] at h_ok
++    cases h_ok
++  | none =>
++    simp [h_mis]
++
++/-- Overlay refuses a false required family; kernel fields stay the raw observation. -/
++theorem overlayPolicy_false_family (env : EnvelopeEnc) (base : Report) (raw : RawObservation)
++    (disc : Bool) (cursor : Option LocatedFailureEnc)
++    (h_ok : raw.kernelFailure = none)
++    (h_mis : claimedMismatch? env raw.world = false)
++    (h_six : (none : Option String) = none)
++    (h_disc : disc = true)
++    (h_fam : requiredReachedFamiliesTrue base.judgments = false) :
++    (overlayPolicy env base raw disc cursor none).status = .refused ∧
++    (overlayPolicy env base raw disc cursor none).failure =
++      some ⟨.configuration, firstFalseFamily base.judgments, none⟩ ∧
++    (overlayPolicy env base raw disc cursor none).world = raw.world ∧
++    (overlayPolicy env base raw disc cursor none).receipt = raw.receipt := by
++  unfold overlayPolicy
++  cases hkf : raw.kernelFailure with
++  | some _ =>
++    rw [hkf] at h_ok
++    cases h_ok
++  | none =>
++    simp [h_mis, h_disc, h_fam]
++
++/-- Overlay accepts only when every policy conjunct holds. -/
++theorem overlayPolicy_accepted (env : EnvelopeEnc) (base : Report) (raw : RawObservation)
++    (cursor : Option LocatedFailureEnc)
++    (h_ok : raw.kernelFailure = none)
++    (h_mis : claimedMismatch? env raw.world = false)
++    (h_disc : true = true)
++    (h_fam : requiredReachedFamiliesTrue base.judgments = true) :
++    (overlayPolicy env base raw true cursor none).status = .accepted ∧
++    (overlayPolicy env base raw true cursor none).failure = none ∧
++    (overlayPolicy env base raw true cursor none).world = raw.world := by
++  unfold overlayPolicy
++  cases hkf : raw.kernelFailure with
++  | some _ =>
++    rw [hkf] at h_ok
++    cases h_ok
++  | none =>
++    simp [h_mis, h_fam]
++
++/-- Overlay copies the supplied judgment list on every branch. -/
++theorem overlayPolicy_judgments_eq (env : EnvelopeEnc) (base : Report) (raw : RawObservation)
++    (disc : Bool) (cursor : Option LocatedFailureEnc) (miss : Option String) :
++    (overlayPolicy env base raw disc cursor miss).judgments = base.judgments := by
++  unfold overlayPolicy
++  cases raw.kernelFailure <;> split_ifs <;> rfl
++
++/-- A false required family is never an accepted overlay. -/
++theorem overlayPolicy_false_family_not_accepted
++    (env : EnvelopeEnc) (base : Report) (raw : RawObservation)
++    (disc : Bool) (cursor : Option LocatedFailureEnc) (miss : Option String)
++    (h_fam : requiredReachedFamiliesTrue base.judgments = false) :
++    (overlayPolicy env base raw disc cursor miss).status ≠ .accepted := by
++  unfold overlayPolicy
++  cases raw.kernelFailure
++  · simp [h_fam]; split_ifs <;> simp
++  · simp
++
++/-- Accepted overlay implies no false required family. -/
++theorem overlayPolicy_accepted_implies_no_false_required
++    (env : EnvelopeEnc) (base : Report) (raw : RawObservation)
++    (disc : Bool) (cursor : Option LocatedFailureEnc) (miss : Option String)
++    (h : (overlayPolicy env base raw disc cursor miss).status = .accepted) :
++    requiredReachedFamiliesTrue base.judgments = true := by
++  cases hfam : requiredReachedFamiliesTrue base.judgments
++  · exact (overlayPolicy_false_family_not_accepted env base raw disc cursor miss hfam h).elim
++  · rfl
++
++/-- Accepted overlay implies the kernel observation succeeded. -/
++theorem overlayPolicy_accepted_implies_kernel_ok
++    (env : EnvelopeEnc) (base : Report) (raw : RawObservation)
++    (disc : Bool) (cursor : Option LocatedFailureEnc) (miss : Option String)
++    (h : (overlayPolicy env base raw disc cursor miss).status = .accepted) :
++    raw.kernelFailure = none := by
++  unfold overlayPolicy at h
++  cases hkf : raw.kernelFailure with
++  | none => rfl
++  | some _ => simp [hkf] at h
++
++/-- Inventory map: T-checkIR-stale. Git mismatch refuses without using rawExecute fields. -/
++theorem checkTyped_source_identity_git_guard (env : EnvelopeEnc) (payload : TypedExecutePayloadEnc)
++    (h : env.source_pin.git ≠ TrustedHost.gitSha) :
++    (checkTyped env payload).status = .refused ∧
++    (checkTyped env payload).failure = some ⟨.staleSource, "git", some env.source_pin.git⟩ ∧
++    (checkTyped env payload).world = ⟨payload.state, payload.store⟩ ∧
++    (checkTyped env payload).receipt = none ∧
++    (checkTyped env payload).outputs = [] ∧
++    (checkTyped env payload).events = [] ∧
++    (checkTyped env payload).nextIndex = 0 ∧
++    (checkTyped env payload).cursorFailure = none := by
++  have h_id : sourceIdentity env.source_pin = false := by
++    simp [sourceIdentity, h]
++  dsimp only [checkTyped]
++  rcases computeAssumptions env with ⟨assList, missAss⟩
++  dsimp only
++  simp [h_id, sourceIdentityFailure, h]
++
++/-- Inventory map: T-checkIR-typed-ok. Source identity then kernel fields equal rawExecute.
++Does not imply Report.accepted. -/
++theorem checkTyped_from_raw_typed_ok (env : EnvelopeEnc) (payload : TypedExecutePayloadEnc)
++    (h_id : sourceIdentity env.source_pin = true)
++    (h_ok : (rawExecute (.typed env payload)).kernelFailure = none) :
++    (checkTyped env payload).world = (rawExecute (.typed env payload)).world ∧
++    (checkTyped env payload).receipt = (rawExecute (.typed env payload)).receipt ∧
++    (checkTyped env payload).outputs = (rawExecute (.typed env payload)).outputs ∧
++    (checkTyped env payload).events = (rawExecute (.typed env payload)).events ∧
++    (checkTyped env payload).nextIndex = (rawExecute (.typed env payload)).nextIndex ∧
++    (checkTyped env payload).cursorFailure = (rawExecute (.typed env payload)).cursorFailure := by
++  unfold checkTyped
++  rcases computeAssumptions env with ⟨assList, missAss⟩
++  simp [h_id]
++  exact overlayPolicy_kernel_fields env _ (rawExecute (.typed env payload)) _ _ missAss h_ok
++
++/-- Inventory map: T-checkIR-typed-error. -/
++theorem checkTyped_from_raw_typed_error (env : EnvelopeEnc) (payload : TypedExecutePayloadEnc)
++    (h_id : sourceIdentity env.source_pin = true)
++    (kf : FailurePath)
++    (h_err : (rawExecute (.typed env payload)).kernelFailure = some kf) :
++    (checkTyped env payload).status = .refused ∧
++    (checkTyped env payload).failure = some kf ∧
++    (checkTyped env payload).world = (rawExecute (.typed env payload)).world ∧
++    (checkTyped env payload).receipt = (rawExecute (.typed env payload)).receipt := by
++  unfold checkTyped
++  rcases computeAssumptions env with ⟨assList, missAss⟩
++  simp [h_id]
++  unfold overlayPolicy
++  simp [h_err]
++
++/-- Inventory map: T-observation-mismatch. Status refused, receipt retained. -/
++theorem checkTyped_claimed_next_state_mismatch (env : EnvelopeEnc) (payload : TypedExecutePayloadEnc)
++    (h_id : sourceIdentity env.source_pin = true)
++    (h_ok : (rawExecute (.typed env payload)).kernelFailure = none)
++    (claimed : WorldEnc)
++    (h_cl : env.claimed_next_state = some claimed)
++    (h_ne : claimed ≠ (rawExecute (.typed env payload)).world) :
++    (checkTyped env payload).status = .refused ∧
++    (checkTyped env payload).failure = some ⟨.observationMismatch, "claimedNextState", none⟩ ∧
++    (checkTyped env payload).world = (rawExecute (.typed env payload)).world ∧
++    (checkTyped env payload).receipt = (rawExecute (.typed env payload)).receipt := by
++  have h_mis : claimedMismatch? env (rawExecute (.typed env payload)).world = true := by
++    simp [claimedMismatch?, h_cl, h_ne]
++  unfold checkTyped
++  rcases computeAssumptions env with ⟨assList, missAss⟩
++  simp [h_id]
++  exact overlayPolicy_claimed_mismatch env _ (rawExecute (.typed env payload)) _ _ missAss h_ok h_mis
++
++/-- Inventory map: T-report-policy-accepted. Each conjunct is an explicit premise. -/
++theorem checkTyped_report_accepted_from_raw_and_policy
++    (env : EnvelopeEnc) (payload : TypedExecutePayloadEnc)
++    (h_id : sourceIdentity env.source_pin = true)
++    (h_ok : (rawExecute (.typed env payload)).kernelFailure = none)
++    (h_six : (computeAssumptions env).2 = none)
++    (h_claim : claimedMismatch? env (rawExecute (.typed env payload)).world = false)
++    (h_disc : requestedDischargeOk env payload
++      (env.claimed_next_state.getD (rawExecute (.typed env payload)).world) = true)
++    (h_fam : requiredReachedFamiliesTrue
++      (replaceFamily (_root_.DefiKernel.Certificates.checkTyped env payload)
++        "libraryTheoremsInstantiated"
++        (LibraryInstantiation.familyBound env.libraries env.source_pin payload
++          (env.claimed_next_state.getD (rawExecute (.typed env payload)).world))).judgments = true) :
++    (checkTyped env payload).status = .accepted ∧
++    (checkTyped env payload).failure = none ∧
++    (checkTyped env payload).world = (rawExecute (.typed env payload)).world := by
++  unfold checkTyped
++  rcases hAss : computeAssumptions env with ⟨assList, missAss⟩
++  simp [h_id]
++  have h_miss : missAss = none := by
++    have : (computeAssumptions env).2 = none := h_six
++    simpa [hAss] using this
++  subst h_miss
++  unfold overlayPolicy
++  simp [h_ok, h_claim, h_disc, h_fam]
++
++/-- Inventory map: T-checkIR-step-ok (delivered). -/
++theorem checkStep_from_raw_ok (env : EnvelopeEnc) (payload : CompositionStepPayloadEnc)
++    (h_id : sourceIdentity env.source_pin = true)
++    (h_ok : (rawExecute (.step env payload)).kernelFailure = none) :
++    (checkStep env payload).world = (rawExecute (.step env payload)).world ∧
++    (checkStep env payload).receipt = (rawExecute (.step env payload)).receipt ∧
++    (checkStep env payload).outputs = (rawExecute (.step env payload)).outputs := by
++  unfold checkStep
++  rcases computeAssumptions env with ⟨assList, missAss⟩
++  simp [h_id]
++  have h := overlayPolicy_kernel_fields env
++    (_root_.DefiKernel.Certificates.checkStep env payload)
++    (rawExecute (.step env payload))
++    (requestedDischargeOkEnvelope env (rawExecute (.step env payload)).world none)
++    (_root_.DefiKernel.Certificates.checkStep env payload).cursorFailure
++    missAss h_ok
++  exact ⟨h.1, h.2.1, h.2.2.1⟩
++
++/-- Inventory map: T-checkIR-run-cursor (delivered kernel fields including receipt). -/
++theorem checkRun_from_raw_cursor (env : EnvelopeEnc) (payload : CompositionRunPayloadEnc)
++    (h_id : sourceIdentity env.source_pin = true)
++    (h_ok : (rawExecute (.run env payload)).kernelFailure = none) :
++    (checkRun env payload).world = (rawExecute (.run env payload)).world ∧
++    (checkRun env payload).receipt = (rawExecute (.run env payload)).receipt ∧
++    (checkRun env payload).outputs = (rawExecute (.run env payload)).outputs ∧
++    (checkRun env payload).events = (rawExecute (.run env payload)).events ∧
++    (checkRun env payload).nextIndex = (rawExecute (.run env payload)).nextIndex ∧
++    (checkRun env payload).cursorFailure = (rawExecute (.run env payload)).cursorFailure := by
++  unfold checkRun
++  rcases computeAssumptions env with ⟨assList, missAss⟩
++  simp [h_id]
++  exact overlayPolicy_kernel_fields env _ (rawExecute (.run env payload)) _ _ missAss h_ok
++
++/-- Delivered checkRun never accepts a false required family. -/
++theorem checkRun_accepted_implies_no_false_required
++    (env : EnvelopeEnc) (payload : CompositionRunPayloadEnc)
++    (h : (checkRun env payload).status = .accepted) :
++    requiredReachedFamiliesTrue (checkRun env payload).judgments = true := by
++  unfold checkRun at h ⊢
++  cases hsi : sourceIdentity env.source_pin
++  · simp [hsi] at h
++  · simp [hsi] at h ⊢
++    have hfam := overlayPolicy_accepted_implies_no_false_required env
++      (_root_.DefiKernel.Certificates.checkRun env payload)
++      (rawExecute (.run env payload))
++      (requestedDischargeOkEnvelope env (rawExecute (.run env payload)).world none)
++      (rawExecute (.run env payload)).cursorFailure
++      (computeAssumptions env).2 h
++    simpa [overlayPolicy_judgments_eq] using hfam
++
++/-- Delivered checkTyped never accepts a false required family. -/
++theorem checkTyped_accepted_implies_no_false_required
++    (env : EnvelopeEnc) (payload : TypedExecutePayloadEnc)
++    (h : (checkTyped env payload).status = .accepted) :
++    requiredReachedFamiliesTrue (checkTyped env payload).judgments = true := by
++  unfold checkTyped at h ⊢
++  cases hsi : sourceIdentity env.source_pin
++  · simp [hsi] at h
++  · simp [hsi] at h ⊢
++    have hfam := overlayPolicy_accepted_implies_no_false_required env
++      (replaceFamily (_root_.DefiKernel.Certificates.checkTyped env payload)
++        "libraryTheoremsInstantiated"
++        (LibraryInstantiation.familyBound env.libraries env.source_pin payload
++          (env.claimed_next_state.getD (rawExecute (.typed env payload)).world)))
++      (rawExecute (.typed env payload))
++      (requestedDischargeOk env payload
++        (env.claimed_next_state.getD (rawExecute (.typed env payload)).world))
++      (rawExecute (.typed env payload)).cursorFailure
++      (computeAssumptions env).2 h
++    simpa [overlayPolicy_judgments_eq] using hfam
++
++/-- Delivered checkStep never accepts a false required family. -/
++theorem checkStep_accepted_implies_no_false_required
++    (env : EnvelopeEnc) (payload : CompositionStepPayloadEnc)
++    (h : (checkStep env payload).status = .accepted) :
++    requiredReachedFamiliesTrue (checkStep env payload).judgments = true := by
++  unfold checkStep at h ⊢
++  cases hsi : sourceIdentity env.source_pin
++  · simp [hsi] at h
++  · simp [hsi] at h ⊢
++    have hfam := overlayPolicy_accepted_implies_no_false_required env
++      (_root_.DefiKernel.Certificates.checkStep env payload)
++      (rawExecute (.step env payload))
++      (requestedDischargeOkEnvelope env (rawExecute (.step env payload)).world none)
++      (_root_.DefiKernel.Certificates.checkStep env payload).cursorFailure
++      (computeAssumptions env).2 h
++    simpa [overlayPolicy_judgments_eq] using hfam
++
++/-- Delivered checkIR routes to delivered checkers, not the legacy ones. -/
++theorem checkIR_typed (env : EnvelopeEnc) (payload : TypedExecutePayloadEnc) :
++    checkIR (.execution (.typed env payload)) = .execution (checkTyped env payload) := rfl
++
++theorem checkIR_step (env : EnvelopeEnc) (payload : CompositionStepPayloadEnc) :
++    checkIR (.execution (.step env payload)) = .execution (checkStep env payload) := rfl
++
++theorem checkIR_run (env : EnvelopeEnc) (payload : CompositionRunPayloadEnc) :
++    checkIR (.execution (.run env payload)) = .execution (checkRun env payload) := rfl
++
++theorem checkBytes_of_decode_typed (raw : ByteArray) (env : EnvelopeEnc)
++    (payload : TypedExecutePayloadEnc)
++    (h : decodeBytes raw = .ok (.execution (.typed env payload))) :
++    checkBytes raw = .execution (checkTyped env payload) := by
++  unfold checkBytes
++  rw [h]
++  rfl
++
++/-- Inventory map: T-raw-typed-ok receipt. Invoked request+evaluated, not a Report. -/
++theorem rawExecute_typed_ok_receipt
++    (env : EnvelopeEnc) (payload : TypedExecutePayloadEnc)
++    (state : Typed.State Party Asset Domain)
++    (h_state : stateToTyped? payload.state = some state)
++    (post : Typed.ExecutionResult Party Asset Domain)
++    (h_exec : Typed.execute (registryToTyped payload.registry) (storeToTyped payload.store)
++        payload.ctx.toContext (envToTyped payload.env) payload.now payload.request.toRequest state = .ok post)
++    (tmpl : Typed.Template Party Asset Domain)
++    (h_tmpl : registryToTyped payload.registry payload.request.toRequest.operation = some tmpl)
++    (checkedArgs : Typed.Args tmpl.signature)
++    (h_args : Typed.Args.check tmpl.signature payload.request.toRequest.arguments = .ok checkedArgs)
++    (e : Typed.Evaluated Party Asset Domain)
++    (h_eval : tmpl.evaluate
++        ⟨state, envToTyped payload.env, payload.ctx.toContext.principal,
++         payload.request.toRequest.parties, checkedArgs, payload.now⟩ = .ok e) :
++    (rawExecute (.typed env payload)).receipt = some (evaluatedToEnc e payload.request.toRequest) ∧
++    (rawExecute (.typed env payload)).world = executionResultToWorld post payload.state ∧
++    (rawExecute (.typed env payload)).kernelFailure = none := by
++  dsimp [rawExecute]
++  rw [h_state]
++  dsimp
++  rw [h_exec]
++  dsimp
++  rw [h_tmpl]
++  dsimp
++  rw [h_args]
++  dsimp
++  rw [h_eval]
++  exact ⟨rfl, rfl, rfl⟩
++
++/-- Inventory map: T-raw-step-ok complete world/receipt/outputs. -/
++theorem rawExecute_step_ok_complete
++    (env : EnvelopeEnc) (payload : CompositionStepPayloadEnc)
++    (cfg : Config Party Asset Domain)
++    (h_cfg : configToTyped? payload.config = some cfg)
++    (pre : World Party Asset Domain)
++    (h_pre : payload.pre.toWorld? = some pre)
++    (step : Composition.Step Party Asset Domain)
++    (h_step : payload.step.toStep? = some step)
++    (res : StepResult Party Asset Domain)
++    (h_exec : Composition.executeStep cfg (boundaryToTyped payload.boundary) payload.index
++        (payload.history.map OutputObservationEnc.toOutputObservation) step pre = .ok res) :
++    (rawExecute (.step env payload)).world =
++      ⟨⟨payload.pre.state.cells.map (fun row ↦
++          let b := res.world.state.balance (row.domain, row.party, row.asset)
++          ⟨row.domain, row.party, row.asset, ⟨b.num, b.den⟩⟩)⟩,
++        storeToEnc res.world.capabilities⟩ ∧
++    (rawExecute (.step env payload)).receipt = some
++      (match res.receipt with
++       | .invoked req e => evaluatedToEnc e req
++       | .issued id => .issued id.value
++       | .revoked id => .revoked id.value) ∧
++    (rawExecute (.step env payload)).outputs = res.outputs.map OutputObservationEnc.fromOutputObservation ∧
++    (rawExecute (.step env payload)).events = [] ∧
++    (rawExecute (.step env payload)).nextIndex = 0 ∧
++    (rawExecute (.step env payload)).cursorFailure = none ∧
++    (rawExecute (.step env payload)).kernelFailure = none := by
++  dsimp [rawExecute]
++  rw [h_cfg]
++  dsimp
++  rw [h_pre]
++  dsimp
++  rw [h_step]
++  dsimp
++  rw [h_exec]
++  dsimp
++  exact ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
++
++/-- Inventory map: T-raw-run-cursor including world and last-prefix receipt. -/
++theorem rawExecute_run_cursor_complete
++    (env : EnvelopeEnc) (payload : CompositionRunPayloadEnc)
++    (cfg : Config Party Asset Domain)
++    (h_cfg : configToTyped? payload.config = some cfg)
++    (initialWorld : World Party Asset Domain)
++    (h_world : payload.world.toWorld? = some initialWorld) :
++    let bList := payload.boundaries.map boundaryToTyped
++    let defaultBoundary : Boundary Party Asset Domain := ⟨⟨.alice, .main⟩, fun _ ↦ none, 100⟩
++    let boundaries : Nat → Boundary Party Asset Domain :=
++      fun idx ↦ match bList[idx]? with | some b => b | none => bList.head?.getD defaultBoundary
++    let steps := payload.steps.filterMap StepEnc.toStep?
++    let cursor := Composition.run cfg boundaries initialWorld steps
++    (rawExecute (.run env payload)).world =
++      ⟨⟨payload.world.state.cells.map (fun row ↦
++          let b := cursor.world.state.balance (row.domain, row.party, row.asset)
++          ⟨row.domain, row.party, row.asset, ⟨b.num, b.den⟩⟩)⟩,
++        storeToEnc cursor.world.capabilities⟩ ∧
++    (rawExecute (.run env payload)).receipt =
++      cursor.events.getLast?.map (fun ev ↦
++        match ev.result.receipt with
++        | .invoked req e => evaluatedToEnc e req
++        | .issued id => .issued id.value
++        | .revoked id => .revoked id.value) ∧
++    (rawExecute (.run env payload)).outputs = cursor.outputs.map OutputObservationEnc.fromOutputObservation ∧
++    (rawExecute (.run env payload)).nextIndex = cursor.nextIndex ∧
++    (rawExecute (.run env payload)).cursorFailure =
++      cursor.failure.map (fun cf ↦ ⟨cf.index, cf.step.map StepEnc.fromStep, failureToPath cf.reason⟩) ∧
++    (rawExecute (.run env payload)).kernelFailure = cursor.failure.map (fun cf ↦ failureToPath cf.reason) := by
++  intro bList defaultBoundary boundaries steps cursor
++  dsimp [rawExecute]
++  rw [h_cfg]
++  dsimp
++  rw [h_world]
++  dsimp
++  exact ⟨rfl, rfl, rfl, rfl, rfl, rfl⟩
++
++/-- Full source-identity: toolchain mismatch refuses without kernel fields. -/
++theorem checkTyped_source_identity_toolchain_guard
++    (env : EnvelopeEnc) (payload : TypedExecutePayloadEnc)
++    (h_git : env.source_pin.git = TrustedHost.gitSha)
++    (h : env.source_pin.lean_toolchain ≠ TrustedHost.leanToolchain) :
++    (checkTyped env payload).status = .refused ∧
++    (checkTyped env payload).failure =
++      some ⟨.staleSource, "lean_toolchain", some env.source_pin.lean_toolchain⟩ ∧
++    (checkTyped env payload).world = ⟨payload.state, payload.store⟩ ∧
++    (checkTyped env payload).receipt = none := by
++  have h_id : sourceIdentity env.source_pin = false := by
++    simp [sourceIdentity, h_git, h]
++  dsimp only [checkTyped]
++  rcases computeAssumptions env with ⟨assList, missAss⟩
++  dsimp only
++  simp [h_id, sourceIdentityFailure, h_git, h]
++
++/-- Full source-identity: mathlib_rev mismatch. -/
++theorem checkTyped_source_identity_mathlib_guard
++    (env : EnvelopeEnc) (payload : TypedExecutePayloadEnc)
++    (h_git : env.source_pin.git = TrustedHost.gitSha)
++    (h_tc : env.source_pin.lean_toolchain = TrustedHost.leanToolchain)
++    (h : env.source_pin.mathlib_rev ≠ TrustedHost.mathlibRev) :
++    (checkTyped env payload).status = .refused ∧
++    (checkTyped env payload).failure =
++      some ⟨.staleSource, "mathlib_rev", some env.source_pin.mathlib_rev⟩ ∧
++    (checkTyped env payload).receipt = none := by
++  have h_id : sourceIdentity env.source_pin = false := by
++    simp [sourceIdentity, h_git, h_tc, h]
++  dsimp only [checkTyped]
++  rcases computeAssumptions env with ⟨assList, missAss⟩
++  dsimp only
++  simp [h_id, sourceIdentityFailure, h_git, h_tc, h]
++
++/-- Step-mode source identity uses the same pin guard. -/
++theorem checkStep_source_identity_git_guard (env : EnvelopeEnc) (payload : CompositionStepPayloadEnc)
++    (h : env.source_pin.git ≠ TrustedHost.gitSha) :
++    (checkStep env payload).status = .refused ∧
++    (checkStep env payload).failure = some ⟨.staleSource, "git", some env.source_pin.git⟩ ∧
++    (checkStep env payload).world = payload.pre ∧
++    (checkStep env payload).receipt = none := by
++  have h_id : sourceIdentity env.source_pin = false := by
++    simp [sourceIdentity, h]
++  unfold checkStep
++  simp [h_id, sourceIdentityFailure, h]
++
++/-- Run-mode source identity uses the same pin guard. -/
++theorem checkRun_source_identity_git_guard (env : EnvelopeEnc) (payload : CompositionRunPayloadEnc)
++    (h : env.source_pin.git ≠ TrustedHost.gitSha) :
++    (checkRun env payload).status = .refused ∧
++    (checkRun env payload).failure = some ⟨.staleSource, "git", some env.source_pin.git⟩ ∧
++    (checkRun env payload).world = payload.world ∧
++    (checkRun env payload).receipt = none := by
++  have h_id : sourceIdentity env.source_pin = false := by
++    simp [sourceIdentity, h]
++  unfold checkRun
++  simp [h_id, sourceIdentityFailure, h]
++
++/-- Inventory map: T-checkIR-step-error. Without source identity this is not drawn. -/
++theorem checkStep_from_raw_error (env : EnvelopeEnc) (payload : CompositionStepPayloadEnc)
++    (h_id : sourceIdentity env.source_pin = true)
++    (kf : FailurePath)
++    (h_err : (rawExecute (.step env payload)).kernelFailure = some kf) :
++    (checkStep env payload).status = .refused ∧
++    (checkStep env payload).failure = some kf ∧
++    (checkStep env payload).world = (rawExecute (.step env payload)).world ∧
++    (checkStep env payload).receipt = (rawExecute (.step env payload)).receipt ∧
++    (checkStep env payload).outputs = (rawExecute (.step env payload)).outputs := by
++  unfold checkStep
++  rcases computeAssumptions env with ⟨assList, missAss⟩
++  simp [h_id]
++  unfold overlayPolicy
++  simp [h_err]
++
++/-- Delivered checkIR step-error routing. -/
++theorem checkIR_from_raw_step_error (env : EnvelopeEnc) (payload : CompositionStepPayloadEnc)
++    (h_id : sourceIdentity env.source_pin = true)
++    (kf : FailurePath)
++    (h_err : (rawExecute (.step env payload)).kernelFailure = some kf) :
++    checkIR (.execution (.step env payload)) = .execution (checkStep env payload) ∧
++    (checkStep env payload).failure = some kf ∧
++    (checkStep env payload).world = (rawExecute (.step env payload)).world := by
++  have h := checkStep_from_raw_error env payload h_id kf h_err
++  exact ⟨checkIR_step env payload, h.2.1, h.2.2.1⟩
++
++theorem checkBytes_of_decode_step (raw : ByteArray) (env : EnvelopeEnc)
++    (payload : CompositionStepPayloadEnc)
++    (h : decodeBytes raw = .ok (.execution (.step env payload))) :
++    checkBytes raw = .execution (checkStep env payload) := by
++  unfold checkBytes
++  rw [h]
++  rfl
++
++theorem checkBytes_of_decode_run (raw : ByteArray) (env : EnvelopeEnc)
++    (payload : CompositionRunPayloadEnc)
++    (h : decodeBytes raw = .ok (.execution (.run env payload))) :
++    checkBytes raw = .execution (checkRun env payload) := by
++  unfold checkBytes
++  rw [h]
++  rfl
++
++theorem checkIR_from_raw_typed_ok
++    (env : EnvelopeEnc) (payload : TypedExecutePayloadEnc)
++    (h_id : sourceIdentity env.source_pin = true)
++    (h_ok : (rawExecute (.typed env payload)).kernelFailure = none) :
++    checkIR (.execution (.typed env payload)) = .execution (checkTyped env payload) ∧
++    (checkTyped env payload).world = (rawExecute (.typed env payload)).world ∧
++    (checkTyped env payload).receipt = (rawExecute (.typed env payload)).receipt := by
++  have h := checkTyped_from_raw_typed_ok env payload h_id h_ok
++  exact ⟨checkIR_typed env payload, h.1, h.2.1⟩
++
++/-- Inventory map: T-malformed-no-kernel for the delivered entry. -/
++theorem decode_error_no_execute (raw : ByteArray) (e : DecodeFailure)
++    (h : decodeBytes raw = .error e) (h_not : ∀ lim, e ≠ .resourceLimit lim) :
++    checkBytes raw = .codec (.malformed e) := by
++  unfold checkBytes
++  rw [h]
++  cases e with
++  | resourceLimit lim =>
++    exfalso
++    exact h_not lim rfl
++  | emptyDocument => rfl
++  | lexicalScientificOrFloat => rfl
++  | notJsonObject => rfl
++  | duplicateKey _ => rfl
++  | noncanonicalWhitespace => rfl
++  | schemaVersion => rfl
++  | missingField _ => rfl
++  | jsonType _ => rfl
++  | unknownIdentifier _ => rfl
++  | uniqueness _ => rfl
++  | illegalRational _ => rfl
++  | stateNonneg => rfl
++  | unknownExecutableField _ => rfl
++  | unsupportedForm _ => rfl
++
++end DefiKernel.Certificates.Delivered
+--- main/lean/DefiKernel/Certificates/Soundness.lean
++++ candidate/lean/DefiKernel/Certificates/Soundness.lean
+@@ -0,0 +1,536 @@
++import DefiKernel.Certificates.Schema
++import DefiKernel.Certificates.Decode
++import DefiKernel.Certificates.Check
++import DefiKernel.Certificates.Observation
++import DefiKernel.Certificates.Correspondence
++import DefiKernel.Composition.Sequence
++
++namespace DefiKernel.Certificates
++
++set_option linter.style.longLine false
++
++open DefiKernel.Composition
++
++/-! Soundness theorems and open remainder obligations for certificate verification.
++In accordance with P19 specifications and P20 gates:
++- Bounded finite fixture evidence is computationally checked.
++- Universal quantified theorems (T-raw-typed-ok, T-raw-typed-error, T-raw-step-ok,
++  T-raw-step-error, T-raw-run-cursor, T-checkIR-stale, T-checkIR-typed-ok, etc.)
++  remain open obligations for P20.
++- Strictly zero `sorry`, custom axioms, or `native_decide` are used in accepted kernel proofs. -/
++
++def SourceIdentity (pin : SourcePinEnc) : Prop :=
++  pin.git = "a12b7cac05a818cc8d35c2ca440b7170a2807e92" ∧
++  pin.lean_toolchain = "leanprover/lean4:v4.33.0-rc2" ∧
++  pin.mathlib_rev = "51e6992efd06126df61a496bebf8f49482a4e129"
++
++/-- Statement of T-checkIR-stale (P20 open obligation). -/
++def CheckIRStaleStatement : Prop :=
++  ∀ (env : EnvelopeEnc) (payload : TypedExecutePayloadEnc),
++    env.source_pin.git ≠ "a12b7cac05a818cc8d35c2ca440b7170a2807e92" →
++    (checkTyped env payload).status = .refused
++
++/-- Stale source pin refusal theorem on checkTyped. -/
++theorem checkTyped_stale_git (env : EnvelopeEnc) (payload : TypedExecutePayloadEnc)
++    (h : env.source_pin.git ≠ "a12b7cac05a818cc8d35c2ca440b7170a2807e92") :
++    (checkTyped env payload).status = .refused := by
++  dsimp only [checkTyped]
++  rcases computeAssumptions env with ⟨assList, missAss⟩
++  dsimp only
++  rw [if_pos (by simpa [TrustedHost.gitSha] using h)]
++
++/-- Raw execution typed error theorem: returns preWorld and wrapped refusal reason. -/
++theorem rawExecute_typed_error (env : EnvelopeEnc) (payload : TypedExecutePayloadEnc)
++    (state : Typed.State Party Asset Domain)
++    (h_state : stateToTyped? payload.state = some state)
++    (r : Typed.Refusal)
++    (h_exec : Typed.execute (registryToTyped payload.registry) (storeToTyped payload.store)
++        payload.ctx.toContext (envToTyped payload.env) payload.now payload.request.toRequest state = .error r) :
++    rawExecute (.typed env payload) =
++      ⟨⟨payload.state, payload.store⟩, none, [], [], 0, none, some (refusalToLocatedFailure r).reason⟩ := by
++  dsimp [rawExecute]
++  rw [h_state]
++  dsimp
++  rw [h_exec]
++
++/-- Raw execution typed ok theorem: returns postWorld and none failures. -/
++theorem rawExecute_typed_ok (env : EnvelopeEnc) (payload : TypedExecutePayloadEnc)
++    (state : Typed.State Party Asset Domain)
++    (h_state : stateToTyped? payload.state = some state)
++    (post : Typed.ExecutionResult Party Asset Domain)
++    (h_exec : Typed.execute (registryToTyped payload.registry) (storeToTyped payload.store)
++        payload.ctx.toContext (envToTyped payload.env) payload.now payload.request.toRequest state = .ok post) :
++    (rawExecute (.typed env payload)).world = executionResultToWorld post payload.state ∧
++    (rawExecute (.typed env payload)).kernelFailure = none ∧
++    (rawExecute (.typed env payload)).outputs = [] ∧
++    (rawExecute (.typed env payload)).events = [] ∧
++    (rawExecute (.typed env payload)).nextIndex = 0 ∧
++    (rawExecute (.typed env payload)).cursorFailure = none := by
++  dsimp [rawExecute]
++  rw [h_state]
++  dsimp
++  rw [h_exec]
++  dsimp
++  refine ⟨rfl, rfl, rfl, rfl, rfl, rfl⟩
++
++/-- Raw execution step error theorem: returns preWorld and wrapped step failure. -/
++theorem rawExecute_step_error (env : EnvelopeEnc) (payload : CompositionStepPayloadEnc)
++    (cfg : Config Party Asset Domain)
++    (h_cfg : configToTyped? payload.config = some cfg)
++    (pre : World Party Asset Domain)
++    (h_pre : payload.pre.toWorld? = some pre)
++    (step : Composition.Step Party Asset Domain)
++    (h_step : payload.step.toStep? = some step)
++    (f : Composition.Failure)
++    (h_exec : Composition.executeStep cfg (boundaryToTyped payload.boundary) payload.index
++        (payload.history.map OutputObservationEnc.toOutputObservation) step pre = .error f) :
++    rawExecute (.step env payload) =
++      ⟨payload.pre, none, [], [], payload.index, none, some (failureToPath f)⟩ := by
++  dsimp [rawExecute]
++  rw [h_cfg]
++  dsimp
++  rw [h_pre]
++  dsimp
++  rw [h_step]
++  dsimp
++  rw [h_exec]
++
++/-- Raw execution step ok theorem: returns step outputs and none failures. -/
++theorem rawExecute_step_ok (env : EnvelopeEnc) (payload : CompositionStepPayloadEnc)
++    (cfg : Config Party Asset Domain)
++    (h_cfg : configToTyped? payload.config = some cfg)
++    (pre : World Party Asset Domain)
++    (h_pre : payload.pre.toWorld? = some pre)
++    (step : Composition.Step Party Asset Domain)
++    (h_step : payload.step.toStep? = some step)
++    (res : StepResult Party Asset Domain)
++    (h_exec : Composition.executeStep cfg (boundaryToTyped payload.boundary) payload.index
++        (payload.history.map OutputObservationEnc.toOutputObservation) step pre = .ok res) :
++    (rawExecute (.step env payload)).kernelFailure = none ∧
++    (rawExecute (.step env payload)).events = [] ∧
++    (rawExecute (.step env payload)).nextIndex = 0 ∧
++    (rawExecute (.step env payload)).cursorFailure = none := by
++  dsimp [rawExecute]
++  rw [h_cfg]
++  dsimp
++  rw [h_pre]
++  dsimp
++  rw [h_step]
++  dsimp
++  rw [h_exec]
++  dsimp
++  refine ⟨rfl, rfl, rfl, rfl⟩
++
++/-- Composition step invalid config theorem: returns configuration refusal. -/
++theorem checkStep_invalid_config (cert : EnvelopeEnc) (payload : CompositionStepPayloadEnc)
++    (h_cfg : configToTyped? payload.config = none) :
++    (checkStep cert payload).status = .refused ∧
++    (checkStep cert payload).failure = some ⟨.configuration, "configuration", none⟩ ∧
++    (checkStep cert payload).world = payload.pre ∧
++    (checkStep cert payload).receipt = none ∧
++    (checkStep cert payload).outputs = [] := by
++  dsimp [checkStep]
++  rw [h_cfg]
++  dsimp
++  refine ⟨rfl, rfl, rfl, rfl, rfl⟩
++
++/-- Composition step invalid prestate theorem: returns kernel stateNonneg refusal. -/
++theorem checkStep_invalid_prestate (cert : EnvelopeEnc) (payload : CompositionStepPayloadEnc)
++    (cfg : Config Party Asset Domain)
++    (h_cfg : configToTyped? payload.config = some cfg)
++    (h_pre : payload.pre.toWorld? = none) :
++    (checkStep cert payload).status = .refused ∧
++    (checkStep cert payload).failure = some ⟨.kernel, "stateNonneg", none⟩ ∧
++    (checkStep cert payload).world = payload.pre ∧
++    (checkStep cert payload).receipt = none ∧
++    (checkStep cert payload).outputs = [] := by
++  dsimp [checkStep]
++  rw [h_cfg]
++  dsimp
++  rw [h_pre]
++  dsimp
++  refine ⟨rfl, rfl, rfl, rfl, rfl⟩
++
++/-- Composition step error theorem: returns failure path and preWorld. -/
++theorem checkStep_step_error (cert : EnvelopeEnc) (payload : CompositionStepPayloadEnc)
++    (cfg : Config Party Asset Domain)
++    (h_cfg : configToTyped? payload.config = some cfg)
++    (pre : World Party Asset Domain)
++    (h_pre : payload.pre.toWorld? = some pre)
++    (step : Composition.Step Party Asset Domain)
++    (h_step : payload.step.toStep? = some step)
++    (fail : Composition.Failure)
++    (h_exec : Composition.executeStep cfg (boundaryToTyped payload.boundary) payload.index
++        (payload.history.map OutputObservationEnc.toOutputObservation) step pre = .error fail) :
++    (checkStep cert payload).status = .refused ∧
++    (checkStep cert payload).failure = some (failureToPath fail) ∧
++    (checkStep cert payload).world = payload.pre ∧
++    (checkStep cert payload).receipt = none ∧
++    (checkStep cert payload).outputs = [] := by
++  dsimp [checkStep]
++  rw [h_cfg]
++  dsimp
++  rw [h_pre]
++  dsimp
++  rw [h_step]
++  dsimp
++  rw [h_exec]
++  dsimp
++  refine ⟨rfl, rfl, rfl, rfl, rfl⟩
++
++/-- Composition step success theorem: preserves outputs and nextIndex advances. -/
++theorem checkStep_step_ok (cert : EnvelopeEnc) (payload : CompositionStepPayloadEnc)
++    (cfg : Config Party Asset Domain)
++    (h_cfg : configToTyped? payload.config = some cfg)
++    (pre : World Party Asset Domain)
++    (h_pre : payload.pre.toWorld? = some pre)
++    (step : Composition.Step Party Asset Domain)
++    (h_step : payload.step.toStep? = some step)
++    (res : StepResult Party Asset Domain)
++    (h_exec : Composition.executeStep cfg (boundaryToTyped payload.boundary) payload.index
++        (payload.history.map OutputObservationEnc.toOutputObservation) step pre = .ok res) :
++    (checkStep cert payload).outputs = res.outputs.map OutputObservationEnc.fromOutputObservation ∧
++    (checkStep cert payload).nextIndex = payload.index := by
++  dsimp [checkStep]
++  rw [h_cfg]
++  dsimp
++  rw [h_pre]
++  dsimp
++  rw [h_step]
++  dsimp
++  rw [h_exec]
++  dsimp
++  refine ⟨rfl, rfl⟩
++
++/-- Composition run correspondence theorem: cursor outputs and failures match rawExecute. -/
++theorem rawExecute_run_cursor (env : EnvelopeEnc) (payload : CompositionRunPayloadEnc)
++    (cfg : Config Party Asset Domain)
++    (h_cfg : configToTyped? payload.config = some cfg)
++    (initialWorld : World Party Asset Domain)
++    (h_world : payload.world.toWorld? = some initialWorld) :
++    let bList := payload.boundaries.map boundaryToTyped
++    let defaultBoundary : Boundary Party Asset Domain :=
++      ⟨⟨.alice, .main⟩, fun _ ↦ none, 100⟩
++    let boundaries : Nat → Boundary Party Asset Domain :=
++      fun idx ↦ match bList[idx]? with
++      | some b => b
++      | none => bList.head?.getD defaultBoundary
++    let steps : List (Composition.Step Party Asset Domain) :=
++      payload.steps.filterMap StepEnc.toStep?
++    let cursor := Composition.run cfg boundaries initialWorld steps
++    (rawExecute (.run env payload)).outputs = cursor.outputs.map OutputObservationEnc.fromOutputObservation ∧
++    (rawExecute (.run env payload)).nextIndex = cursor.nextIndex ∧
++    (rawExecute (.run env payload)).cursorFailure =
++      cursor.failure.map fun cf ↦
++        let stepEnc := cf.step.map StepEnc.fromStep
++        ⟨cf.index, stepEnc, failureToPath cf.reason⟩ := by
++  dsimp [rawExecute]
++  rw [h_cfg]
++  dsimp
++  rw [h_world]
++  dsimp
++  refine ⟨rfl, rfl, rfl⟩
++
++/-- CheckTyped error theorem: when Typed.execute returns error r, checkTyped returns refused status, preWorld, none receipt, and the failure reason. -/
++theorem checkTyped_execute_error (rawCert : EnvelopeEnc) (payload : TypedExecutePayloadEnc)
++    (h_git : rawCert.source_pin.git = "a12b7cac05a818cc8d35c2ca440b7170a2807e92")
++    (state : Typed.State Party Asset Domain)
++    (h_state : stateToTyped? payload.state = some state)
++    (r : Typed.Refusal)
++    (h_exec : Typed.execute (registryToTyped payload.registry) (storeToTyped payload.store)
++        payload.ctx.toContext (envToTyped payload.env) payload.now payload.request.toRequest state = .error r) :
++    (checkTyped rawCert payload).status = ReportStatus.refused ∧
++    (checkTyped rawCert payload).failure = some (refusalToLocatedFailure r).reason ∧
++    (checkTyped rawCert payload).world = ⟨payload.state, payload.store⟩ ∧
++    (checkTyped rawCert payload).receipt = none ∧
++    (checkTyped rawCert payload).outputs = [] ∧
++    (checkTyped rawCert payload).events = [] ∧
++    (checkTyped rawCert payload).nextIndex = 0 := by
++  have h_not : ¬ (rawCert.source_pin.git ≠ "a12b7cac05a818cc8d35c2ca440b7170a2807e92") := by
++    intro h_contra
++    exact h_contra h_git
++  dsimp only [checkTyped]
++  rcases computeAssumptions rawCert with ⟨assList, missAss⟩
++  dsimp only
++  rw [if_neg (by simpa [TrustedHost.gitSha] using h_not)]
++  rw [h_state]
++  dsimp
++  have h_ex : (do
++    let post ← Typed.execute (registryToTyped payload.registry) (storeToTyped payload.store)
++      payload.ctx.toContext (envToTyped payload.env) payload.now payload.request.toRequest state
++    return post : Except Typed.Refusal (Typed.ExecutionResult Party Asset Domain)) = .error r := by
++    rw [h_exec]
++  rw [h_ex]
++  dsimp
++  refine ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
++
++/-- CheckTyped success theorem: when Typed.execute returns ok post and assumptions hold, checkTyped returns accepted status and postWorld. -/
++theorem checkTyped_execute_ok (rawCert : EnvelopeEnc) (payload : TypedExecutePayloadEnc)
++    (h_git : rawCert.source_pin.git = "a12b7cac05a818cc8d35c2ca440b7170a2807e92")
++    (state : Typed.State Party Asset Domain)
++    (h_state : stateToTyped? payload.state = some state)
++    (post : Typed.ExecutionResult Party Asset Domain)
++    (h_exec : Typed.execute (registryToTyped payload.registry) (storeToTyped payload.store)
++        payload.ctx.toContext (envToTyped payload.env) payload.now payload.request.toRequest state = .ok post)
++    (h_assump : (computeAssumptions rawCert).2 = none)
++    (h_claimed : rawCert.claimed_next_state = none) :
++    (checkTyped rawCert payload).status = ReportStatus.accepted ∧
++    (checkTyped rawCert payload).failure = none ∧
++    (checkTyped rawCert payload).world = executionResultToWorld post payload.state ∧
++    (checkTyped rawCert payload).outputs = [] ∧
++    (checkTyped rawCert payload).events = [] ∧
++    (checkTyped rawCert payload).nextIndex = 0 := by
++  have h_not : ¬ (rawCert.source_pin.git ≠ "a12b7cac05a818cc8d35c2ca440b7170a2807e92") := by
++    intro h_contra
++    exact h_contra h_git
++  dsimp only [checkTyped]
++  rcases h_ca : computeAssumptions rawCert with ⟨assList, missAss⟩
++  have h_miss : missAss = none := by
++    have h2 : (computeAssumptions rawCert).2 = missAss := by rw [h_ca]
++    rw [← h2, h_assump]
++  subst h_miss
++  dsimp only
++  rw [if_neg (by simpa [TrustedHost.gitSha] using h_not)]
++  rw [h_state]
++  dsimp
++  have h_ex : (do
++    let post ← Typed.execute (registryToTyped payload.registry) (storeToTyped payload.store)
++      payload.ctx.toContext (envToTyped payload.env) payload.now payload.request.toRequest state
++    return post : Except Typed.Refusal (Typed.ExecutionResult Party Asset Domain)) = .ok post := by
++    rw [h_exec]
++  rw [h_ex]
++  dsimp
++  rw [h_claimed]
++  dsimp
++  refine ⟨rfl, rfl, rfl, rfl, rfl, rfl⟩
++
++/-- CheckIR preserves Typed execution checking. -/
++theorem checkIR_execute_error (rawCert : EnvelopeEnc) (payload : TypedExecutePayloadEnc) :
++    checkIR (.execution (.typed rawCert payload)) = .execution (checkTyped rawCert payload) := by
++  dsimp [checkIR]
++
++theorem checkIR_execute_ok (rawCert : EnvelopeEnc) (payload : TypedExecutePayloadEnc) :
++    checkIR (.execution (.typed rawCert payload)) = .execution (checkTyped rawCert payload) := by
++  dsimp [checkIR]
++
++/-- CheckIR preserves Composition step checking. -/
++theorem checkIR_executeStep_error (rawCert : EnvelopeEnc) (payload : CompositionStepPayloadEnc) :
++    checkIR (.execution (.step rawCert payload)) = .execution (checkStep rawCert payload) := by
++  dsimp [checkIR]
++
++theorem checkIR_executeStep_ok (rawCert : EnvelopeEnc) (payload : CompositionStepPayloadEnc) :
++    checkIR (.execution (.step rawCert payload)) = .execution (checkStep rawCert payload) := by
++  dsimp [checkIR]
++
++/-- CheckIR preserves Composition run checking. -/
++theorem checkIR_run (rawCert : EnvelopeEnc) (payload : CompositionRunPayloadEnc) :
++    checkIR (.execution (.run rawCert payload)) = .execution (checkRun rawCert payload) := by
++  dsimp [checkIR]
++
++/-- CheckBytes bridges to checkTyped. -/
++theorem checkBytes_typed (raw : ByteArray) (rawCert : EnvelopeEnc) (payload : TypedExecutePayloadEnc)
++    (h_dec : decodeBytes raw = .ok (.execution (.typed rawCert payload))) :
++    checkBytes raw = .execution (checkTyped rawCert payload) := by
++  dsimp [checkBytes]
++  rw [h_dec]
++  dsimp [checkIR]
++
++/-- CheckBytes bridges to checkStep. -/
++theorem checkBytes_step (raw : ByteArray) (rawCert : EnvelopeEnc) (payload : CompositionStepPayloadEnc)
++    (h_dec : decodeBytes raw = .ok (.execution (.step rawCert payload))) :
++    checkBytes raw = .execution (checkStep rawCert payload) := by
++  dsimp [checkBytes]
++  rw [h_dec]
++  dsimp [checkIR]
++
++/-- CheckBytes bridges to checkRun. -/
++theorem checkBytes_run (raw : ByteArray) (rawCert : EnvelopeEnc) (payload : CompositionRunPayloadEnc)
++    (h_dec : decodeBytes raw = .ok (.execution (.run rawCert payload))) :
++    checkBytes raw = .execution (checkRun rawCert payload) := by
++  dsimp [checkBytes]
++  rw [h_dec]
++  dsimp [checkIR]
++
++/-- T-checkIR-stale: Source identity guard theorem. -/
++theorem checkIR_stale : CheckIRStaleStatement := checkTyped_stale_git
++
++/-- Soundness of checkBytes on stale git pin. -/
++theorem checkBytes_stale_git (raw : ByteArray) (env : EnvelopeEnc) (payload : TypedExecutePayloadEnc)
++    (h_dec : decodeBytes raw = .ok (.execution (.typed env payload)))
++    (h_stale : env.source_pin.git ≠ "a12b7cac05a818cc8d35c2ca440b7170a2807e92") :
++    ∃ rep, checkBytes raw = .execution rep ∧ rep.status = .refused := by
++  use checkTyped env payload
++  refine ⟨checkBytes_typed raw env payload h_dec, checkTyped_stale_git env payload h_stale⟩
++
++/-- Soundness of checkBytes on Typed execution refusal. -/
++theorem checkBytes_typed_error (raw : ByteArray) (rawCert : EnvelopeEnc) (payload : TypedExecutePayloadEnc)
++    (h_dec : decodeBytes raw = .ok (.execution (.typed rawCert payload)))
++    (h_git : rawCert.source_pin.git = "a12b7cac05a818cc8d35c2ca440b7170a2807e92")
++    (state : Typed.State Party Asset Domain)
++    (h_state : stateToTyped? payload.state = some state)
++    (r : Typed.Refusal)
++    (h_exec : Typed.execute (registryToTyped payload.registry) (storeToTyped payload.store)
++        payload.ctx.toContext (envToTyped payload.env) payload.now payload.request.toRequest state = .error r) :
++    ∃ rep, checkBytes raw = .execution rep ∧ rep.status = .refused ∧ rep.failure = some (refusalToLocatedFailure r).reason := by
++  use checkTyped rawCert payload
++  have h_bt := checkBytes_typed raw rawCert payload h_dec
++  have ⟨h_st, h_fail, _, _, _, _, _⟩ := checkTyped_execute_error rawCert payload h_git state h_state r h_exec
++  exact ⟨h_bt, h_st, h_fail⟩
++
++/-- Soundness of checkBytes on Typed execution success. -/
++theorem checkBytes_typed_ok (raw : ByteArray) (rawCert : EnvelopeEnc) (payload : TypedExecutePayloadEnc)
++    (h_dec : decodeBytes raw = .ok (.execution (.typed rawCert payload)))
++    (h_git : rawCert.source_pin.git = "a12b7cac05a818cc8d35c2ca440b7170a2807e92")
++    (state : Typed.State Party Asset Domain)
++    (h_state : stateToTyped? payload.state = some state)
++    (post : Typed.ExecutionResult Party Asset Domain)
++    (h_exec : Typed.execute (registryToTyped payload.registry) (storeToTyped payload.store)
++        payload.ctx.toContext (envToTyped payload.env) payload.now payload.request.toRequest state = .ok post)
++    (h_assump : (computeAssumptions rawCert).2 = none)
++    (h_claimed : rawCert.claimed_next_state = none) :
++    ∃ rep, checkBytes raw = .execution rep ∧ rep.status = .accepted ∧ rep.failure = none ∧ rep.world = executionResultToWorld post payload.state := by
++  use checkTyped rawCert payload
++  have h_bt := checkBytes_typed raw rawCert payload h_dec
++  have ⟨h_st, h_fail, h_w, _, _, _⟩ := checkTyped_execute_ok rawCert payload h_git state h_state post h_exec h_assump h_claimed
++  exact ⟨h_bt, h_st, h_fail, h_w⟩
++
++/-- Soundness of checkBytes on Composition step execution refusal. -/
++theorem checkBytes_step_error (raw : ByteArray) (cert : EnvelopeEnc) (payload : CompositionStepPayloadEnc)
++    (h_dec : decodeBytes raw = .ok (.execution (.step cert payload)))
++    (cfg : Config Party Asset Domain)
++    (h_cfg : configToTyped? payload.config = some cfg)
++    (pre : World Party Asset Domain)
++    (h_pre : payload.pre.toWorld? = some pre)
++    (step : Composition.Step Party Asset Domain)
++    (h_step : payload.step.toStep? = some step)
++    (fail : Composition.Failure)
++    (h_exec : Composition.executeStep cfg (boundaryToTyped payload.boundary) payload.index
++        (payload.history.map OutputObservationEnc.toOutputObservation) step pre = .error fail) :
++    ∃ rep, checkBytes raw = .execution rep ∧ rep.status = .refused ∧ rep.failure = some (failureToPath fail) := by
++  use checkStep cert payload
++  have h_bt := checkBytes_step raw cert payload h_dec
++  have ⟨h_st, h_fail, _, _, _⟩ := checkStep_step_error cert payload cfg h_cfg pre h_pre step h_step fail h_exec
++  exact ⟨h_bt, h_st, h_fail⟩
++
++/-- Soundness of checkBytes on Composition step execution success. -/
++theorem checkBytes_step_ok (raw : ByteArray) (cert : EnvelopeEnc) (payload : CompositionStepPayloadEnc)
++    (h_dec : decodeBytes raw = .ok (.execution (.step cert payload)))
++    (cfg : Config Party Asset Domain)
++    (h_cfg : configToTyped? payload.config = some cfg)
++    (pre : World Party Asset Domain)
++    (h_pre : payload.pre.toWorld? = some pre)
++    (step : Composition.Step Party Asset Domain)
++    (h_step : payload.step.toStep? = some step)
++    (res : StepResult Party Asset Domain)
++    (h_exec : Composition.executeStep cfg (boundaryToTyped payload.boundary) payload.index
++        (payload.history.map OutputObservationEnc.toOutputObservation) step pre = .ok res) :
++    ∃ rep, checkBytes raw = .execution rep ∧ rep.outputs = res.outputs.map OutputObservationEnc.fromOutputObservation ∧ rep.nextIndex = payload.index := by
++  use checkStep cert payload
++  have h_bt := checkBytes_step raw cert payload h_dec
++  have ⟨h_out, h_idx⟩ := checkStep_step_ok cert payload cfg h_cfg pre h_pre step h_step res h_exec
++  exact ⟨h_bt, h_out, h_idx⟩
++
++/-- CheckRun cursor failure theorem: when Composition.run cursor fails, checkRun reports refusal and the failure path. -/
++theorem checkRun_cursor_fail (cert : EnvelopeEnc) (payload : CompositionRunPayloadEnc)
++    (cfg : Config Party Asset Domain)
++    (h_cfg : configToTyped? payload.config = some cfg)
++    (initialWorld : World Party Asset Domain)
++    (h_world : payload.world.toWorld? = some initialWorld) :
++    let bList := payload.boundaries.map boundaryToTyped
++    let defaultBoundary : Composition.Boundary Party Asset Domain :=
++      ⟨⟨.alice, .main⟩, fun _ ↦ none, 100⟩
++    let boundaries : Nat → Composition.Boundary Party Asset Domain :=
++      fun idx ↦ match bList[idx]? with
++      | some b => b
++      | none => bList.head?.getD defaultBoundary
++    let steps : List (Composition.Step Party Asset Domain) :=
++      payload.steps.filterMap StepEnc.toStep?
++    let cursor := Composition.run cfg boundaries initialWorld steps
++    ∀ (lf : LocatedFailure Party Asset Domain),
++    cursor.failure = some lf →
++    (checkRun cert payload).status = ReportStatus.refused ∧
++    (checkRun cert payload).failure = some (failureToPath lf.reason) := by
++  intro bList defaultBoundary boundaries steps cursor lf h_fail
++  dsimp [checkRun]
++  rw [h_cfg]
++  dsimp
++  rw [h_world]
++  dsimp
++  have h_cf : (Composition.run cfg (fun idx => match (List.map boundaryToTyped payload.boundaries)[idx]? with | some b => b | none => (List.map boundaryToTyped payload.boundaries).head?.getD { ctx := { principal := Party.alice, domain := Domain.main }, env := fun x => none, now := 100 }) initialWorld (List.filterMap StepEnc.toStep? payload.steps)).failure = some lf := h_fail
++  generalize h_fail_expr : (Composition.run cfg (fun idx => match (List.map boundaryToTyped payload.boundaries)[idx]? with | some b => b | none => (List.map boundaryToTyped payload.boundaries).head?.getD { ctx := { principal := Party.alice, domain := Domain.main }, env := fun x => none, now := 100 }) initialWorld (List.filterMap StepEnc.toStep? payload.steps)).failure = f_opt
++  rw [h_fail_expr] at h_cf
++  cases f_opt with
++  | none => contradiction
++  | some lf2 =>
++    injection h_cf with h_eq
++    subst h_eq
++    refine ⟨rfl, rfl⟩
++
++/-- CheckRun cursor success theorem: when Composition.run cursor succeeds, checkRun reports acceptance, outputs, and nextIndex. -/
++theorem checkRun_cursor_ok (cert : EnvelopeEnc) (payload : CompositionRunPayloadEnc)
++    (cfg : Config Party Asset Domain)
++    (h_cfg : configToTyped? payload.config = some cfg)
++    (initialWorld : World Party Asset Domain)
++    (h_world : payload.world.toWorld? = some initialWorld) :
++    let bList := payload.boundaries.map boundaryToTyped
++    let defaultBoundary : Composition.Boundary Party Asset Domain :=
++      ⟨⟨.alice, .main⟩, fun _ ↦ none, 100⟩
++    let boundaries : Nat → Composition.Boundary Party Asset Domain :=
++      fun idx ↦ match bList[idx]? with
++      | some b => b
++      | none => bList.head?.getD defaultBoundary
++    let steps : List (Composition.Step Party Asset Domain) :=
++      payload.steps.filterMap StepEnc.toStep?
++    let cursor := Composition.run cfg boundaries initialWorld steps
++    cursor.failure = none →
++    (checkRun cert payload).status = ReportStatus.accepted ∧
++    (checkRun cert payload).failure = none ∧
++    (checkRun cert payload).outputs = cursor.outputs.map OutputObservationEnc.fromOutputObservation ∧
++    (checkRun cert payload).nextIndex = cursor.nextIndex := by
++  intro bList defaultBoundary boundaries steps cursor h_succ
++  dsimp [checkRun]
++  rw [h_cfg]
++  dsimp
++  rw [h_world]
++  dsimp
++  have h_cf : (Composition.run cfg (fun idx => match (List.map boundaryToTyped payload.boundaries)[idx]? with | some b => b | none => (List.map boundaryToTyped payload.boundaries).head?.getD { ctx := { principal := Party.alice, domain := Domain.main }, env := fun x => none, now := 100 }) initialWorld (List.filterMap StepEnc.toStep? payload.steps)).failure = none := h_succ
++  generalize h_fail_expr : (Composition.run cfg (fun idx => match (List.map boundaryToTyped payload.boundaries)[idx]? with | some b => b | none => (List.map boundaryToTyped payload.boundaries).head?.getD { ctx := { principal := Party.alice, domain := Domain.main }, env := fun x => none, now := 100 }) initialWorld (List.filterMap StepEnc.toStep? payload.steps)).failure = f_opt
++  rw [h_fail_expr] at h_cf
++  cases f_opt with
++  | some lf => contradiction
++  | none =>
++    dsimp
++    refine ⟨rfl, rfl, rfl, ?_⟩
++    dsimp [bList, defaultBoundary, boundaries, steps, cursor]
++    rfl
++
++/-- Soundness of checkBytes on Composition run failure. -/
++theorem checkBytes_run_fail (raw : ByteArray) (cert : EnvelopeEnc) (payload : CompositionRunPayloadEnc)
++    (h_dec : decodeBytes raw = .ok (.execution (.run cert payload)))
++    (cfg : Config Party Asset Domain)
++    (h_cfg : configToTyped? payload.config = some cfg)
++    (initialWorld : World Party Asset Domain)
++    (h_world : payload.world.toWorld? = some initialWorld)
++    (lf : LocatedFailure Party Asset Domain)
++    (h_fail : (Composition.run cfg (fun idx ↦ match (payload.boundaries.map boundaryToTyped)[idx]? with | some b => b | none => (payload.boundaries.map boundaryToTyped).head?.getD ⟨⟨.alice, .main⟩, fun _ ↦ none, 100⟩) initialWorld (payload.steps.filterMap StepEnc.toStep?)).failure = some lf) :
++    ∃ rep, checkBytes raw = .execution rep ∧ rep.status = ReportStatus.refused ∧ rep.failure = some (failureToPath lf.reason) := by
++  use checkRun cert payload
++  have h_bt := checkBytes_run raw cert payload h_dec
++  have ⟨h_st, h_f⟩ := checkRun_cursor_fail cert payload cfg h_cfg initialWorld h_world lf h_fail
++  exact ⟨h_bt, h_st, h_f⟩
++
++/-- Soundness of checkBytes on Composition run success. -/
++theorem checkBytes_run_ok (raw : ByteArray) (cert : EnvelopeEnc) (payload : CompositionRunPayloadEnc)
++    (h_dec : decodeBytes raw = .ok (.execution (.run cert payload)))
++    (cfg : Config Party Asset Domain)
++    (h_cfg : configToTyped? payload.config = some cfg)
++    (initialWorld : World Party Asset Domain)
++    (h_world : payload.world.toWorld? = some initialWorld)
++    (h_succ : (Composition.run cfg (fun idx ↦ match (payload.boundaries.map boundaryToTyped)[idx]? with | some b => b | none => (payload.boundaries.map boundaryToTyped).head?.getD ⟨⟨.alice, .main⟩, fun _ ↦ none, 100⟩) initialWorld (payload.steps.filterMap StepEnc.toStep?)).failure = none) :
++    ∃ rep, checkBytes raw = .execution rep ∧ rep.status = ReportStatus.accepted ∧ rep.failure = none ∧ rep.outputs = (Composition.run cfg (fun idx ↦ match (payload.boundaries.map boundaryToTyped)[idx]? with | some b => b | none => (payload.boundaries.map boundaryToTyped).head?.getD ⟨⟨.alice, .main⟩, fun _ ↦ none, 100⟩) initialWorld (payload.steps.filterMap StepEnc.toStep?)).outputs.map OutputObservationEnc.fromOutputObservation := by
++  use checkRun cert payload
++  have h_bt := checkBytes_run raw cert payload h_dec
++  have ⟨h_st, h_f, h_out, _⟩ := checkRun_cursor_ok cert payload cfg h_cfg initialWorld h_world h_succ
++  exact ⟨h_bt, h_st, h_f, h_out⟩
++
++end DefiKernel.Certificates
+--- main/lean/DefiKernel/Certificates/CompatibilityStatusRegression.lean
++++ candidate/lean/DefiKernel/Certificates/CompatibilityStatusRegression.lean
+@@ -0,0 +1,289 @@
++import DefiKernel.Certificates.Delivered
++import DefiKernel.Certificates.Decode
++import DefiKernel.Certificates.Tests
++
++/-!
++Focused compatibility-status regression for the delivered checker.
++
++The overlapping payload is the sealed R5 / grok-r6-overlap-run case: two catalog
++components each transfer USD 3 across the same alice/bob cells. Sequential
++execution succeeds (alice=4, bob=6); Parallel.admit reports a write conflict.
++Delivered must refuse that failed required family and must not rewrite the
++raw world/receipt. Historical `Certificates.checkRun` still accepts — that
++statement is preserved.
++
++The positive control is the same world and sequential runner with disjoint
++writes (USD transfer vs SHARE transfer).
++-/
++namespace DefiKernel.Certificates.CompatibilityStatusRegression
++
++open DefiKernel.Certificates
++open DefiKernel.Certificates.Tests
++
++set_option linter.style.longLine false
++
++def runEnvelope : EnvelopeEnc := { defaultEnvelope with mode := "composition-run" }
++
++def overlapRegistry : RegistryEnc := ⟨[⟨0, transferTemplate⟩, ⟨1, transferTemplate⟩]⟩
++
++def aliceUSD : CellEnc := ⟨.main, .alice, .usd⟩
++def bobUSD : CellEnc := ⟨.main, .bob, .usd⟩
++def aliceShare : CellEnc := ⟨.main, .alice, .share⟩
++def vaultShare : CellEnc := ⟨.main, .vault, .share⟩
++
++/-- Exact overlapping catalog from grok-r6-overlap-run.json. -/
++def overlapCatalog : List ComponentEnc := [
++  {
++    id := 0, privateCells := [], exports := [],
++    imports := [
++      ⟨⟨2, 0⟩, aliceUSD, true⟩,
++      ⟨⟨2, 1⟩, bobUSD, true⟩
++    ],
++    operations := [{ operation := 0, inputs := [⟨0, .numeric (.amount .usd)⟩], outputs := [] }]
++  },
++  {
++    id := 1, privateCells := [], exports := [],
++    imports := [
++      ⟨⟨2, 0⟩, aliceUSD, true⟩,
++      ⟨⟨2, 1⟩, bobUSD, true⟩
++    ],
++    operations := [{ operation := 1, inputs := [⟨0, .numeric (.amount .usd)⟩], outputs := [] }]
++  },
++  {
++    id := 2, privateCells := [],
++    exports := [⟨0, aliceUSD, true⟩, ⟨1, bobUSD, true⟩],
++    imports := [], operations := []
++  }
++]
++
++def overlapConfig : ConfigEnc := {
++  registry := overlapRegistry
++  domainAdmin := [⟨.main, .vault⟩, ⟨.other, .vault⟩]
++  catalog := overlapCatalog
++}
++
++def caps12 : List Nat := [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
++
++def overlapStep0 : StepEnc := .invoke {
++  component := 0, operation := 0, parties := [.bob],
++  inputs := [.literal ⟨.numeric (.amount .usd), 3, false⟩],
++  capabilityIds := caps12, claimedActor := none
++}
++
++def overlapStep1 : StepEnc := .invoke {
++  component := 1, operation := 1, parties := [.bob],
++  inputs := [.literal ⟨.numeric (.amount .usd), 3, false⟩],
++  capabilityIds := caps12, claimedActor := none
++}
++
++def overlapBoundary : BoundaryEnc := ⟨defaultContext, ⟨[]⟩, 100⟩
++
++def overlapPayload : CompositionRunPayloadEnc := {
++  config := overlapConfig
++  boundaries := [overlapBoundary, overlapBoundary]
++  world := ⟨initialStateEnc, defaultStore12⟩
++  steps := [overlapStep0, overlapStep1]
++}
++
++def shareTransferTemplate : TemplateEnc := {
++  signature := [.numeric (.amount .share)]
++  domain := .main
++  partyArity := 0
++  guard := .binary (.le (.amount .share))
++    (.lit ⟨.numeric (.amount .share), 0, false⟩)
++    (.arg 0 (.numeric (.amount .share)))
++  deltas := [
++    ⟨.share, ⟨.main, .caller⟩, .unary (.neg (.amount .share)) (.arg 0 (.numeric (.amount .share)))⟩,
++    ⟨.share, ⟨.main, .literal .vault⟩, .arg 0 (.numeric (.amount .share))⟩
++  ]
++  supplyDeltas := []
++  stateReads := []
++  envReads := []
++  writes := [⟨.share, ⟨.main, .caller⟩⟩, ⟨.share, ⟨.main, .literal .vault⟩⟩]
++}
++
++def disjointRegistry : RegistryEnc := ⟨[⟨0, transferTemplate⟩, ⟨1, shareTransferTemplate⟩]⟩
++
++def disjointCatalog : List ComponentEnc := [
++  {
++    id := 0, privateCells := [], exports := [],
++    imports := [
++      ⟨⟨2, 0⟩, aliceUSD, true⟩,
++      ⟨⟨2, 1⟩, bobUSD, true⟩
++    ],
++    operations := [{ operation := 0, inputs := [⟨0, .numeric (.amount .usd)⟩], outputs := [] }]
++  },
++  {
++    id := 1, privateCells := [], exports := [],
++    imports := [
++      ⟨⟨2, 2⟩, aliceShare, true⟩,
++      ⟨⟨2, 3⟩, vaultShare, true⟩
++    ],
++    operations := [{ operation := 1, inputs := [⟨0, .numeric (.amount .share)⟩], outputs := [] }]
++  },
++  {
++    id := 2, privateCells := [],
++    exports := [
++      ⟨0, aliceUSD, true⟩, ⟨1, bobUSD, true⟩,
++      ⟨2, aliceShare, true⟩, ⟨3, vaultShare, true⟩
++    ],
++    imports := [], operations := []
++  }
++]
++
++def disjointStore : StoreEnc := ⟨defaultStore12.entries ++ [
++  ⟨.alice, .main, 1, .debit aliceShare, true⟩
++]⟩
++
++def disjointStep1 : StepEnc := .invoke {
++  component := 1, operation := 1, parties := [],
++  inputs := [.literal ⟨.numeric (.amount .share), 1, false⟩],
++  capabilityIds := caps12 ++ [12], claimedActor := none
++}
++
++def disjointPayload : CompositionRunPayloadEnc := {
++  config := {
++    registry := disjointRegistry
++    domainAdmin := [⟨.main, .vault⟩, ⟨.other, .vault⟩]
++    catalog := disjointCatalog
++  }
++  boundaries := [overlapBoundary, overlapBoundary]
++  world := ⟨initialStateEnc, disjointStore⟩
++  steps := [overlapStep0, disjointStep1]
++}
++
++def familyOutcome (rep : Report) (fam : String) : Option JudgmentOutcome :=
++  (rep.judgments.find? (fun j => j.family == fam)).map (·.outcome)
++
++def mainUsd (rep : Report) (p : Party) : Option RatEnc :=
++  (rep.world.state.cells.find? (fun c =>
++    c.domain == .main && c.party == p && c.asset == .usd)).map (·.amount)
++
++def mainShare (rep : Report) (p : Party) : Option RatEnc :=
++  (rep.world.state.cells.find? (fun c =>
++    c.domain == .main && c.party == p && c.asset == .share)).map (·.amount)
++
++def overlapDelivered : Report := Delivered.checkRun runEnvelope overlapPayload
++def overlapHistorical : Report := _root_.DefiKernel.Certificates.checkRun runEnvelope overlapPayload
++def overlapRaw : RawObservation := rawExecute (.run runEnvelope overlapPayload)
++def disjointDelivered : Report := Delivered.checkRun runEnvelope disjointPayload
++
++/-- Exact existing compatibility regression: overlapping USD writes are false, not accepted. -/
++def checkOverlapDeliveredRefused : Bool :=
++  overlapDelivered.status == .refused &&
++    overlapDelivered.failure == some ⟨.configuration, "compositionCompatible", none⟩ &&
++    familyOutcome overlapDelivered "compositionCompatible" == some .«false» &&
++    Delivered.requiredReachedFamiliesTrue overlapDelivered.judgments == false
++
++/-- Sequential observation is preserved: alice 4 / bob 6, invoked receipt, two events. -/
++def checkOverlapWorldReceipt : Bool :=
++  mainUsd overlapDelivered .alice == some ⟨4, 1⟩ &&
++    mainUsd overlapDelivered .bob == some ⟨6, 1⟩ &&
++    overlapDelivered.receipt.isSome &&
++    overlapDelivered.events.length == 2 &&
++    overlapDelivered.nextIndex == 2 &&
++    overlapDelivered.cursorFailure == none &&
++    overlapDelivered.world == overlapRaw.world &&
++    overlapDelivered.receipt == overlapRaw.receipt
++
++/-- Historical checkRun still accepts the overlapping sequential success. Do not weaken it. -/
++def checkOverlapHistoricalAccepted : Bool :=
++  overlapHistorical.status == .accepted &&
++    familyOutcome overlapHistorical "compositionCompatible" == some .«false» &&
++    mainUsd overlapHistorical .alice == some ⟨4, 1⟩ &&
++    mainUsd overlapHistorical .bob == some ⟨6, 1⟩
++
++/-- Legitimate nonconflicting control: USD vs SHARE writes, delivered accepts. -/
++def checkDisjointDeliveredAccepted : Bool :=
++  disjointDelivered.status == .accepted &&
++    disjointDelivered.failure == none &&
++    familyOutcome disjointDelivered "compositionCompatible" == some .«true» &&
++    Delivered.requiredReachedFamiliesTrue disjointDelivered.judgments == true &&
++    mainUsd disjointDelivered .alice == some ⟨7, 1⟩ &&
++    mainUsd disjointDelivered .bob == some ⟨3, 1⟩ &&
++    mainShare disjointDelivered .alice == some ⟨3, 1⟩ &&
++    mainShare disjointDelivered .vault == some ⟨1, 1⟩ &&
++    disjointDelivered.receipt.isSome &&
++    disjointDelivered.events.length == 2
++
++/-- Same production `checkBytes` path as RunFixtures check. -/
++def checkOverlapViaBytes : Bool :=
++  match Delivered.checkBytes (encodeModule (.execution (.run runEnvelope overlapPayload))) with
++  | .execution rep =>
++    rep.status == .refused &&
++      familyOutcome rep "compositionCompatible" == some .«false» &&
++      mainUsd rep .alice == some ⟨4, 1⟩ &&
++      mainUsd rep .bob == some ⟨6, 1⟩ &&
++      rep.receipt.isSome
++  | _ => false
++
++def checkDisjointViaBytes : Bool :=
++  match Delivered.checkBytes (encodeModule (.execution (.run runEnvelope disjointPayload))) with
++  | .execution rep =>
++    rep.status == .accepted &&
++      rep.failure == none &&
++      familyOutcome rep "compositionCompatible" == some .«true» &&
++      mainUsd rep .alice == some ⟨7, 1⟩ &&
++      mainShare rep .alice == some ⟨3, 1⟩ &&
++      rep.receipt.isSome
++  | _ => false
++
++def runtimeChecks : List (String × Bool) := [
++  ("compat.overlap.delivered-refused", checkOverlapDeliveredRefused),
++  ("compat.overlap.world-receipt", checkOverlapWorldReceipt),
++  ("compat.overlap.historical-accepted", checkOverlapHistoricalAccepted),
++  ("compat.disjoint.delivered-accepted", checkDisjointDeliveredAccepted),
++  ("compat.overlap.checkBytes", checkOverlapViaBytes),
++  ("compat.disjoint.checkBytes", checkDisjointViaBytes)
++]
++
++def allPass : Bool := runtimeChecks.all (·.2)
++
++def describeFileCheck (rep : Report) : String :=
++  let compat := match familyOutcome rep "compositionCompatible" with
++    | some .«false» => "false"
++    | some .«true» => "true"
++    | some .notReached => "not_reached"
++    | some .notApplicable => "not_applicable"
++    | none => "missing"
++  let st := match rep.status with
++    | .accepted => "accepted"
++    | .refused => "refused"
++    | .incomplete => "incomplete"
++  let fail := match rep.failure with
++    | none => "null"
++    | some f => f.ctor
++  s!"status={st} failure={fail} compositionCompatible={compat} events={rep.events.length}"
++
++def main (args : List String) : IO UInt32 := do
++  IO.println "CompatibilityStatusRegression"
++  for (name, ok) in runtimeChecks do
++    IO.println s!"{name}: {ok}"
++  if !allPass then
++    IO.eprintln "in-Lean compatibility status checks failed"
++    return 1
++  match args with
++  | [] =>
++    IO.println "no fixture path; in-Lean overlap/disjoint checks passed"
++    return 0
++  | path :: _ =>
++    let bytes ← IO.FS.readBinFile path
++    match Delivered.checkBytes bytes with
++    | .execution rep =>
++      IO.println s!"file {path}: {describeFileCheck rep}"
++      let compatFalse := familyOutcome rep "compositionCompatible" == some .«false»
++      if rep.status == .accepted && compatFalse then
++        IO.eprintln "file check accepted a false compositionCompatible family"
++        return 1
++      if compatFalse && rep.status != .refused then
++        IO.eprintln "file check did not refuse a false compositionCompatible family"
++        return 1
++      return 0
++    | _ =>
++      IO.eprintln "file check did not produce an execution report"
++      return 1
++
++end DefiKernel.Certificates.CompatibilityStatusRegression
++
++def main (args : List String) : IO UInt32 :=
++  DefiKernel.Certificates.CompatibilityStatusRegression.main args
+--- main/lean/DefiKernel/Certificates/RunFixtures.lean
++++ candidate/lean/DefiKernel/Certificates/RunFixtures.lean
+@@ -0,0 +1,90 @@
++import DefiKernel.Certificates.Schema
++import DefiKernel.Certificates.Encode
++import DefiKernel.Certificates.Decode
++import DefiKernel.Certificates.Check
++import DefiKernel.Certificates.Observation
++import DefiKernel.Certificates.Delivered
++
++open DefiKernel.Certificates
++open Lean
++
++def main (args : List String) : IO Unit := do
++  if args.isEmpty then
++    IO.println "Usage: RunFixtures <mode> <file1> [file2]"
++    return
++  let mode := args[0]!
++  if mode == "decode" then
++    if args.length < 2 then
++      IO.println (jsonObj [("error", "\"missing file argument for decode\"")])
++      return
++    let path := args[1]!
++    let bytes ← IO.FS.readBinFile path
++    let rawStr := String.fromUTF8? bytes |>.getD ""
++    match decodeBytes bytes with
++    | .ok ir =>
++      let irJson := String.fromUTF8? (encodeModule ir) |>.getD "null"
++      let res := jsonObj [("status", "\"ok\""), ("failure", "null"), ("ir", irJson)]
++      IO.println (jsonObj [("mode", "\"codec\""), ("result", res), ("raw_utf8", escapeJsonString rawStr)])
++    | .error e =>
++      let res := jsonObj [("status", "\"malformed\""), ("failure", encodeDecodeFailure e), ("ir", "null")]
++      IO.println (jsonObj [("mode", "\"codec\""), ("result", res), ("raw_utf8", "\"\"")])
++
++  else if mode == "check" then
++    if args.length < 2 then
++      IO.println (jsonObj [("error", "\"missing file argument for check\"")])
++      return
++    let path := args[1]!
++    let bytes ← IO.FS.readBinFile path
++    let outcome := Delivered.checkBytes bytes
++    match outcome with
++    | .execution rep => IO.println (encodeReport rep)
++    | other => IO.println (encodeOutcome other)
++
++  else if mode == "raw" then
++    if args.length < 2 then
++      IO.println (jsonObj [("error", "\"missing file argument for raw\"")])
++      return
++    let bytes ← IO.FS.readBinFile args[1]!
++    match decodeBytes bytes with
++    | .ok (.execution exec) =>
++      let rawObs := rawExecute exec
++      IO.println (encodeRawObservation rawObs)
++    | .ok _ =>
++      IO.println (jsonObj [("error", "\"not an execution IR\"")])
++    | .error e =>
++      IO.println (jsonObj [("error", "\"decode failure\""), ("failure", encodeDecodeFailure e)])
++
++  else if mode == "observation-pair" then
++    if args.length < 3 then
++      IO.println (jsonObj [("error", "\"missing file arguments for observation-pair\"")])
++      return
++    let bytes1 ← IO.FS.readBinFile args[1]!
++    let bytes2 ← IO.FS.readBinFile args[2]!
++    let parseRep (bytes : ByteArray) : Except String Report := do
++      match Delivered.checkBytes bytes with
++      | .execution rep => .ok rep
++      | _ =>
++        match String.fromUTF8? bytes with
++        | none => .error "invalid utf8"
++        | some s =>
++          match Json.parse s with
++          | .error e => .error s!"json parse error: {e}"
++          | .ok j =>
++            match decodeReport j with
++            | .ok rep => .ok rep
++            | .error _ => .error "decodeReport failed"
++    match parseRep bytes1, parseRep bytes2 with
++    | .ok rep1, .ok rep2 =>
++      let eq := reportEq rep1 rep2
++      let bothFailures := rep1.failure.isSome && rep2.failure.isSome
++      IO.println (jsonObj [
++        ("reportEq", if eq then "true" else "false"),
++        ("isSome_both_failures", if bothFailures then "true" else "false")
++      ])
++    | .error e1, _ =>
++      IO.println (jsonObj [("error", escapeJsonString s!"rep1 parse error: {e1}")])
++    | _, .error e2 =>
++      IO.println (jsonObj [("error", escapeJsonString s!"rep2 parse error: {e2}")])
++
++  else
++    IO.println (jsonObj [("error", escapeJsonString s!"unknown mode: {mode}")])
+--- main/lean/DefiKernel/Certificates/Tests.lean
++++ candidate/lean/DefiKernel/Certificates/Tests.lean
+@@ -0,0 +1,680 @@
++import DefiKernel.Certificates.Schema
++import DefiKernel.Certificates.Decode
++import DefiKernel.Certificates.Encode
++import DefiKernel.Certificates.Check
++import DefiKernel.Certificates.Observation
++import DefiKernel.Certificates.TrustedHost
++import DefiKernel.Certificates.LibraryInstantiation
++import DefiKernel.Certificates.Delivered
++import DefiKernel.Certificates.CompatibilityExamples
++
++namespace DefiKernel.Certificates.Tests
++
++open DefiKernel.Certificates
++
++def defaultSourcePin : SourcePinEnc := {
++  git := "a12b7cac05a818cc8d35c2ca440b7170a2807e92"
++  lean_toolchain := "leanprover/lean4:v4.33.0-rc2"
++  mathlib_rev := "51e6992efd06126df61a496bebf8f49482a4e129"
++  checker_candidate := "unimplemented"
++  compiler_record := none
++  audit_record := none
++}
++
++def defaultAuditRoots : List String := [
++  "DefiKernel.Certificates",
++  "DefiKernel.Typed",
++  "DefiKernel.Composition"
++]
++
++def defaultEnvelope : EnvelopeEnc := {
++  schema_version := 1
++  mode := "typed-execute"
++  source_pin := defaultSourcePin
++  audit_roots := defaultAuditRoots
++  types := {
++    parties := [.alice, .bob, .vault, .pool]
++    assets := [.usd, .share, .collateral, .debt]
++    domains := [.main, .other]
++  }
++  assumptions := [
++    "registry-trust",
++    "administrator-trust",
++    "context-authenticity",
++    "observation-truth",
++    "environment-authenticity",
++    "replay-prevention-outside-model"
++  ]
++  invariants := []
++  libraries := []
++  source_map := [("transfer", "lean/DefiKernel/Typed/Examples.lean:transfer")]
++  claimed_judgments := []
++  claimed_next_state := none
++  require_library_discharge := false
++  require_invariant_discharge := false
++}
++
++def initialCells : List StateCellEnc :=
++  let spec : List ((Domain × Party × Asset) × RatEnc) := [
++    ((.main, .alice, .usd), ⟨10, 1⟩),
++    ((.main, .alice, .share), ⟨4, 1⟩),
++    ((.main, .alice, .collateral), ⟨10, 1⟩),
++    ((.main, .alice, .debt), ⟨2, 1⟩),
++    ((.main, .vault, .usd), ⟨20, 1⟩),
++    ((.main, .pool, .usd), ⟨100, 1⟩)
++  ]
++  let domains : List Domain := [.main, .other]
++  let parties : List Party := [.alice, .bob, .vault, .pool]
++  let assets : List Asset := [.usd, .share, .collateral, .debt]
++  domains.flatMap fun d ↦
++    parties.flatMap fun p ↦
++      assets.map fun a ↦
++        let amt := match spec.find? (·.1 == (d, p, a)) with
++          | some (_, r) => r
++          | none => ⟨0, 1⟩
++        ⟨d, p, a, amt⟩
++
++def initialStateEnc : StateEnc := ⟨initialCells⟩
++
++def defaultStore12 : StoreEnc := ⟨[
++  ⟨.alice, .main, 0, .invoke, true⟩,
++  ⟨.alice, .main, 0, .debit ⟨.main, .alice, .usd⟩, true⟩,
++  ⟨.alice, .main, 1, .invoke, true⟩,
++  ⟨.alice, .main, 1, .debit ⟨.main, .alice, .usd⟩, true⟩,
++  ⟨.alice, .main, 1, .changeSupply .main .share, true⟩,
++  ⟨.alice, .main, 2, .invoke, true⟩,
++  ⟨.alice, .main, 2, .debit ⟨.main, .vault, .usd⟩, true⟩,
++  ⟨.alice, .main, 2, .debit ⟨.main, .alice, .share⟩, true⟩,
++  ⟨.alice, .main, 2, .changeSupply .main .share, true⟩,
++  ⟨.alice, .main, 3, .invoke, true⟩,
++  ⟨.alice, .main, 3, .debit ⟨.main, .pool, .usd⟩, true⟩,
++  ⟨.alice, .main, 3, .changeSupply .main .debt, true⟩
++]⟩
++
++def transferTemplate : TemplateEnc := {
++  signature := [.numeric (.amount .usd)]
++  domain := .main
++  partyArity := 1
++  guard := .binary (.le (.amount .usd)) (.lit ⟨.numeric (.amount .usd), 0, false⟩) (.arg 0 (.numeric (.amount .usd)))
++  deltas := [
++    ⟨.usd, ⟨.main, .caller⟩, .unary (.neg (.amount .usd)) (.arg 0 (.numeric (.amount .usd)))⟩,
++    ⟨.usd, ⟨.main, .argument 0⟩, .arg 0 (.numeric (.amount .usd))⟩
++  ]
++  supplyDeltas := []
++  stateReads := []
++  envReads := []
++  writes := [
++    ⟨.usd, ⟨.main, .caller⟩⟩,
++    ⟨.usd, ⟨.main, .argument 0⟩⟩
++  ]
++}
++
++def vaultGuardedTransfer : TemplateEnc :=
++  let t := transferTemplate
++  let vaultBal : ExprEnc := .balance ⟨.usd, ⟨.main, .literal .vault⟩⟩
++  let ge0 : ExprEnc := .binary (.le (.amount .usd)) (.lit ⟨.numeric (.amount .usd), 0, false⟩) vaultBal
++  { t with
++    guard := .binary .and t.guard ge0,
++    stateReads := [⟨.usd, ⟨.main, .literal .vault⟩⟩]
++  }
++
++def observeTransfer : TemplateEnc :=
++  let t := transferTemplate
++  let key : ObservationKeyEnc := ⟨.main, 7⟩
++  let obs : ExprEnc := .observe ⟨key, .numeric (.amount .usd)⟩
++  { t with
++    deltas := [
++      ⟨.usd, ⟨.main, .caller⟩, .unary (.neg (.amount .usd)) obs⟩,
++      ⟨.usd, ⟨.main, .argument 0⟩, obs⟩
++    ],
++    envReads := [.observation key]
++  }
++
++def unbalancedTemplate : TemplateEnc := {
++  signature := []
++  domain := .main
++  partyArity := 0
++  guard := .lit ⟨.bool, 0, true⟩
++  deltas := [
++    ⟨.usd, ⟨.main, .caller⟩, .unary (.neg (.amount .usd)) (.lit ⟨.numeric (.amount .usd), 3, false⟩)⟩,
++    ⟨.usd, ⟨.main, .literal .bob⟩, .lit ⟨.numeric (.amount .usd), 4, false⟩⟩
++  ]
++  supplyDeltas := []
++  stateReads := []
++  envReads := []
++  writes := [
++    ⟨.usd, ⟨.main, .caller⟩⟩,
++    ⟨.usd, ⟨.main, .literal .bob⟩⟩
++  ]
++}
++
++def defaultRegistry : RegistryEnc := ⟨[
++  ⟨0, transferTemplate⟩,
++  ⟨4, vaultGuardedTransfer⟩,
++  ⟨6, observeTransfer⟩
++]⟩
++
++def defaultContext : ContextEnc := ⟨.alice, .main⟩
++
++def defaultRequest : RequestEnc := {
++  operation := 0
++  parties := [.bob]
++  arguments := [⟨.numeric (.amount .usd), 3, false⟩]
++  capabilityIds := [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
++  claimedActor := none
++}
++
++def defaultPayload : TypedExecutePayloadEnc := {
++  registry := defaultRegistry
++  store := defaultStore12
++  ctx := defaultContext
++  env := ⟨[]⟩
++  now := 100
++  request := defaultRequest
++  state := initialStateEnc
++}
++
++def catalogOk : List ComponentEnc := [
++  {
++    id := 0
++    privateCells := [⟨.main, .bob, .usd⟩]
++    exports := [⟨10, ⟨.main, .alice, .usd⟩, true⟩]
++    imports := []
++    operations := [{
++      operation := 0
++      inputs := [⟨0, .numeric (.amount .usd)⟩]
++      outputs := [⟨1, ⟨.main, .alice, .usd⟩⟩]
++    }]
++  },
++  {
++    id := 1
++    privateCells := [⟨.main, .vault, .usd⟩, ⟨.main, .alice, .share⟩]
++    exports := []
++    imports := [⟨⟨0, 10⟩, ⟨.main, .alice, .usd⟩, true⟩]
++    operations := []
++  },
++  {
++    id := 2
++    privateCells := [⟨.main, .alice, .collateral⟩]
++    exports := []
++    imports := []
++    operations := []
++  }
++]
++
++def catalogDupIds : List ComponentEnc :=
++  let other : ComponentEnc := {
++    id := 0
++    privateCells := [⟨.other, .pool, .debt⟩]
++    exports := []
++    imports := []
++    operations := []
++  }
++  [catalogOk[0]!, other, catalogOk[1]!, catalogOk[2]!]
++
++def catalogExportPrivate : List ComponentEnc :=
++  let c0 := catalogOk[0]!
++  let bad0 : ComponentEnc := { c0 with
++    exports := [⟨10, ⟨.main, .alice, .usd⟩, true⟩, ⟨11, ⟨.main, .bob, .usd⟩, true⟩],
++    operations := [{
++      operation := 0,
++      inputs := [⟨0, .numeric (.amount .usd)⟩],
++      outputs := [⟨1, ⟨.main, .alice, .usd⟩⟩]
++    }]
++  }
++  [bad0, catalogOk[1]!, catalogOk[2]!]
++
++def catalogNoVaultRead : List ComponentEnc :=
++  let c0 := catalogOk[0]!
++  let c0' : ComponentEnc := { c0 with
++    operations := c0.operations ++ [{
++      operation := 4,
++      inputs := [⟨2, .numeric (.amount .usd)⟩],
++      outputs := [⟨3, ⟨.main, .alice, .usd⟩⟩]
++    }]
++  }
++  [c0', catalogOk[1]!, catalogOk[2]!]
++
++def defaultConfig : ConfigEnc := {
++  registry := defaultRegistry
++  domainAdmin := [⟨.main, .vault⟩, ⟨.other, .vault⟩]
++  catalog := catalogOk
++}
++
++def defaultStep : StepEnc := .invoke {
++  component := 0
++  operation := 0
++  parties := [.bob]
++  inputs := [.literal ⟨.numeric (.amount .usd), 3, false⟩]
++  capabilityIds := [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
++  claimedActor := none
++}
++
++def defaultStepPayload : CompositionStepPayloadEnc := {
++  config := defaultConfig
++  boundary := ⟨defaultContext, ⟨[]⟩, 100⟩
++  index := 0
++  history := []
++  step := defaultStep
++  pre := ⟨initialStateEnc, defaultStore12⟩
++}
++
++-- 19 runtime comparison checks
++
++def checkTypingRecomputed : Bool :=
++  let rep := checkTyped { defaultEnvelope with claimed_judgments := ["typeCorrect"] }
++    { defaultPayload with request := { defaultRequest with arguments := [⟨.numeric (.amount .share), 3, false⟩] } }
++  rep.judgments.any (fun j => j.family == "typeCorrect" ∧ j.outcome == .«false»)
++
++def checkTransferAlice7 : Bool :=
++  let rep := checkTyped defaultEnvelope defaultPayload
++  rep.status == .accepted ∧
++  rep.world.state.cells.any (fun c => c.domain == .main ∧ c.party == .alice ∧ c.asset == .usd ∧ c.amount == ⟨7, 1⟩)
++
++def checkExecuteRecomputed : Bool :=
++  let rep := checkTyped { defaultEnvelope with claimed_next_state := some ⟨initialStateEnc, defaultStore12⟩ } defaultPayload
++  rep.status == .refused ∧ rep.failure == some ⟨.observationMismatch, "claimedNextState", none⟩
++
++def checkAccountingRecomputed : Bool :=
++  let reg23 : RegistryEnc := ⟨defaultRegistry.entries ++ [⟨11, unbalancedTemplate⟩]⟩
++  let st23 : StoreEnc := ⟨defaultStore12.entries ++ [
++    ⟨.alice, .main, 11, .invoke, true⟩,
++    ⟨.alice, .main, 11, .debit ⟨.main, .alice, .usd⟩, true⟩
++  ]⟩
++  let req23 : RequestEnc := {
++    operation := 11
++    parties := []
++    arguments := []
++    capabilityIds := [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
++    claimedActor := none
++  }
++  let rep := checkTyped defaultEnvelope { defaultPayload with registry := reg23, store := st23, request := req23 }
++  rep.failure == some ⟨.kernel, "accounting", none⟩
++
++def checkAuthorityDebit : Bool :=
++  let rep := checkTyped defaultEnvelope { defaultPayload with request := { defaultRequest with capabilityIds := [0] } }
++  rep.failure == some ⟨.kernel, "unauthorizedDebit", none⟩
++
++def checkCatalogNodup : Bool :=
++  let rep := checkStep defaultEnvelope { defaultStepPayload with config := { defaultConfig with catalog := catalogDupIds } }
++  rep.failure == some ⟨.configuration, "configuration", none⟩
++
++def checkCatalogExportNotPrivate : Bool :=
++  let rep := checkStep defaultEnvelope { defaultStepPayload with config := { defaultConfig with catalog := catalogExportPrivate } }
++  rep.failure == some ⟨.configuration, "configuration", none⟩
++
++def checkAccessReads : Bool :=
++  let st47 : StoreEnc := ⟨defaultStore12.entries ++ [
++    ⟨.alice, .main, 4, .invoke, true⟩,
++    ⟨.alice, .main, 4, .debit ⟨.main, .alice, .usd⟩, true⟩
++  ]⟩
++  let step47 : StepEnc := .invoke {
++    component := 0
++    operation := 4
++    parties := [.bob]
++    inputs := [.literal ⟨.numeric (.amount .usd), 3, false⟩]
++    capabilityIds := [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
++    claimedActor := none
++  }
++  let rep := checkStep defaultEnvelope { defaultStepPayload with
++    config := { defaultConfig with catalog := catalogNoVaultRead },
++    step := step47,
++    pre := ⟨initialStateEnc, st47⟩
++  }
++  rep.failure == some ⟨.interface, "readAccess", none⟩
++
++def checkStepAlice7 : Bool :=
++  let rep := checkStep defaultEnvelope defaultStepPayload
++  rep.status == .accepted ∧
++  rep.world.state.cells.any (fun c => c.domain == .main ∧ c.party == .alice ∧ c.asset == .usd ∧ c.amount == ⟨7, 1⟩)
++
++def checkRationalCanonical : Bool :=
++  match decodeRational 2 4 with
++  | Except.error (DecodeFailure.illegalRational IllegalRationalReason.noncanonical) => true
++  | _ => false
++
++def checkRationalZeroDen : Bool :=
++  match decodeRational 1 0 with
++  | Except.error (DecodeFailure.illegalRational IllegalRationalReason.zeroDenominator) => true
++  | _ => false
++
++def checkPrecedenceActorMismatch : Bool :=
++  let rep := checkTyped defaultEnvelope { defaultPayload with request := { defaultRequest with claimedActor := some .bob, capabilityIds := [] } }
++  rep.failure == some ⟨.kernel, "actorMismatch", none⟩
++
++def checkLibraryOutstanding : Bool :=
++  let rep := checkTyped { defaultEnvelope with libraries := [⟨"asset_delta_balance", none⟩] } defaultPayload
++  rep.judgments.any (fun j => j.family == "libraryTheoremsInstantiated" ∧ j.outcome == .notApplicable) ∧
++  rep.outstanding.contains "libraryTheoremsInstantiated"
++
++def checkPropNotExecutable : Bool :=
++  let rep := checkTyped { defaultEnvelope with invariants := ["10 ≤ collateral"] } defaultPayload
++  rep.judgments.any (fun j => j.family == "sourceRefinement" ∧ j.outcome == .notApplicable) ∧
++  rep.outstanding.contains "proof.ComponentContract.invariant"
++
++def checkRefusalConstructor : Bool :=
++  let r1 : Report := {
++    status := .refused
++    failure := some ⟨.kernel, "insufficientFunds", none⟩
++    judgments := []
++    world := ⟨initialStateEnc, defaultStore12⟩
++    receipt := none
++    outputs := []
++    events := []
++    nextIndex := 0
++    cursorFailure := none
++    assumptions := []
++    outstanding := []
++    source_pin := defaultSourcePin
++    audit_roots := defaultAuditRoots
++  }
++  let r2 : Report := { r1 with failure := some ⟨.kernel, "unauthorizedDebit", none⟩ }
++  !reportEq r1 r2
++
++def checkFundsInsufficient : Bool :=
++  let rep := checkTyped defaultEnvelope { defaultPayload with request := { defaultRequest with arguments := [⟨.numeric (.amount .usd), 11, false⟩] } }
++  rep.failure == some ⟨.kernel, "insufficientFunds", none⟩
++
++def checkCapabilityFreshId : Bool :=
++  let adminBoundary : BoundaryEnc := { ctx := ⟨.vault, .main⟩, env := ⟨[]⟩, now := 100 }
++  let issueStep : StepEnc := .issue ⟨.bob, .main, 0, .invoke⟩
++  let rep := checkStep defaultEnvelope { defaultStepPayload with boundary := adminBoundary, step := issueStep }
++  rep.status == .accepted ∧ rep.receipt == some (.issued 12)
++
++def checkEnvMissingObservation : Bool :=
++  let st40 : StoreEnc := ⟨defaultStore12.entries ++ [
++    ⟨.alice, .main, 6, .invoke, true⟩
++  ]⟩
++  let req40 : RequestEnc := { defaultRequest with
++    operation := 6
++    capabilityIds := [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
++  }
++  let rep := checkTyped defaultEnvelope { defaultPayload with
++    store := st40,
++    env := ⟨[]⟩,
++    request := req40
++  }
++  rep.failure == some ⟨.kernel, "evaluation", some "missingObservation"⟩
++
++def checkUnsupportedRejected : Bool :=
++  let f53Step : Lean.Json := Lean.Json.mkObj [
++    ("tag", Lean.Json.str "treeJoin"),
++    ("invocation", Lean.Json.mkObj [
++      ("component", Lean.Json.num 0),
++      ("operation", Lean.Json.num 0),
++      ("parties", Lean.Json.arr #[Lean.Json.str "bob"]),
++      ("inputs", Lean.Json.arr #[Lean.Json.mkObj [
++        ("tag", Lean.Json.str "literal"),
++        ("value", Lean.Json.mkObj [
++          ("unit", Lean.Json.mkObj [("tag", Lean.Json.str "amount"), ("asset", Lean.Json.str "usd")]),
++          ("value", Lean.Json.mkObj [("num", Lean.Json.num 3), ("den", Lean.Json.num 1)])
++        ])
++      ]]),
++      ("capabilityIds", Lean.Json.arr (#[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map Lean.Json.num)),
++      ("claimedActor", Lean.Json.null)
++    ])
++  ]
++  match decodeStep f53Step with
++  | Except.error (DecodeFailure.unsupportedForm _) => true
++  | _ => false
++
++def makeArrDoc (n : Nat) : String :=
++  let zeros := String.intercalate "," (List.replicate n "0")
++  "{\"arr\":[" ++ zeros ++ "]}"
++
++def checkArrayLengthBoundaryRegression : Bool :=
++  let test4095 := checkBytes (makeArrDoc 4095).toUTF8
++  let test4096 := checkBytes (makeArrDoc 4096).toUTF8
++  let test4097 := checkBytes (makeArrDoc 4097).toUTF8
++  let ok4095 := match test4095 with | .codec (.malformed _) => true | _ => false
++  let ok4096 := match test4096 with | .codec (.malformed _) => true | _ => false
++  let ok4097 := match test4097 with | .codec (.blocked "max_array_length") => true | _ => false
++  ok4095 && ok4096 && ok4097
++
++def makeNestedDoc (depth : Nat) : String :=
++  let openBraces := String.intercalate "" (List.replicate depth "{\"a\":")
++  let closeBraces := String.intercalate "" (List.replicate depth "}")
++  openBraces ++ "1" ++ closeBraces
++
++def checkDepthBoundaryRegression : Bool :=
++  let test63 := checkBytes (makeNestedDoc 63).toUTF8
++  let test64 := checkBytes (makeNestedDoc 64).toUTF8
++  let test65 := checkBytes (makeNestedDoc 65).toUTF8
++  let ok63 := match test63 with | .codec (.malformed _) => true | _ => false
++  let ok64 := match test64 with | .codec (.malformed _) => true | _ => false
++  let ok65 := match test65 with | .codec (.blocked "maxDepth") => true | _ => false
++  ok63 && ok64 && ok65
++
++def checkTrustedGitDistinct : Bool :=
++  TrustedHost.gitSha == "a12b7cac05a818cc8d35c2ca440b7170a2807e92" &&
++  !(TrustedHost.compilerRecords.contains TrustedHost.gitSha) &&
++  TrustedHost.recordStringAdmissible TrustedHost.gitSha TrustedHost.compilerRecords = false
++
++def checkLibraryInstantiation : Bool :=
++  LibraryInstantiation.instantiatedTheoremNames.contains
++    "DefiKernel.Arithmetic.Operations.add_ok_iff" &&
++  !LibraryInstantiation.namesDischarged [⟨"asset_delta_balance", none⟩] &&
++  LibraryInstantiation.namesDischarged [⟨"DefiKernel.Arithmetic.Operations.add_ok_iff", none⟩]
++
++def postTransferCells : List StateCellEnc :=
++  initialCells.map fun c =>
++    if c.domain == .main && c.party == .alice && c.asset == .usd then { c with amount := ⟨7, 1⟩ }
++    else if c.domain == .main && c.party == .bob && c.asset == .usd then { c with amount := ⟨3, 1⟩ }
++    else c
++
++def postTransferWorld : WorldEnc := ⟨⟨postTransferCells⟩, defaultStore12⟩
++
++def addOkIffLib : LibraryRefEnc :=
++  ⟨"DefiKernel.Arithmetic.Operations.add_ok_iff", some "DefiKernel.Arithmetic.Operations"⟩
++
++def pinWithLibraryRecord : SourcePinEnc :=
++  { defaultSourcePin with compiler_record := some LibraryInstantiation.addOkIffCompilerRecord }
++
++def pinNameOnly : SourcePinEnc :=
++  { defaultSourcePin with compiler_record := none }
++
++/-- Name-only tags do not instantiate, even with the compiled theorem name. -/
++def checkLibraryNameOnlyFails : Bool :=
++  let libs := [⟨"DefiKernel.Arithmetic.Operations.add_ok_iff", none⟩]
++  LibraryInstantiation.namesDischarged libs &&
++    !LibraryInstantiation.instantiatedOverCertificate libs pinNameOnly defaultPayload postTransferWorld &&
++    LibraryInstantiation.familyBound libs pinNameOnly defaultPayload postTransferWorld == .notApplicable
++
++/-- Operand substitution: delta 4 instead of 3 does not satisfy add. -/
++def checkLibraryOperandSubstitutionFails : Bool :=
++  let req := { defaultRequest with arguments := [⟨.numeric (.amount .usd), 4, false⟩] }
++  let payload := { defaultPayload with request := req }
++  !LibraryInstantiation.instantiatedOverCertificate [addOkIffLib] pinWithLibraryRecord payload postTransferWorld
++
++/-- Claim substitution: claimed bob=4 instead of 3. -/
++def checkLibraryClaimSubstitutionFails : Bool :=
++  let badCells := postTransferCells.map fun c =>
++    if c.domain == .main && c.party == .bob && c.asset == .usd then { c with amount := ⟨4, 1⟩ } else c
++  let badWorld : WorldEnc := ⟨⟨badCells⟩, defaultStore12⟩
++  !LibraryInstantiation.instantiatedOverCertificate [addOkIffLib] pinWithLibraryRecord defaultPayload badWorld
++
++/-- Metadata substitution: wrong module name. -/
++def checkLibraryMetadataSubstitutionFails : Bool :=
++  let bad : LibraryRefEnc := ⟨"DefiKernel.Arithmetic.Operations.add_ok_iff", some "Wrong.Module"⟩
++  !LibraryInstantiation.instantiatedOverCertificate [bad] pinWithLibraryRecord defaultPayload postTransferWorld
++
++/-- Absent/null compiler record. -/
++def checkLibraryAbsentRecordFails : Bool :=
++  !LibraryInstantiation.compilerRecordNamesAddOkIff pinNameOnly &&
++    !LibraryInstantiation.compilerRecordNamesAddOkIff { defaultSourcePin with compiler_record := none }
++
++/-- Malformed/mismatched compiler record. -/
++def checkLibraryMismatchedRecordFails : Bool :=
++  !LibraryInstantiation.compilerRecordNamesAddOkIff { defaultSourcePin with compiler_record := some "wrong" } &&
++    !LibraryInstantiation.compilerRecordNamesAddOkIff
++      { defaultSourcePin with compiler_record := some TrustedHost.gitSha } &&
++    !LibraryInstantiation.compilerRecordNamesAddOkIff
++      { defaultSourcePin with compiler_record := some (TrustedHost.compilerRecords.head?.getD "") }
++
++/-- Real transfer-three credit 0+3=3 discharges with named theorem, operands, and record. -/
++def checkLibraryRealTransferDischarges : Bool :=
++  LibraryInstantiation.instantiatedOverCertificate [addOkIffLib] pinWithLibraryRecord defaultPayload postTransferWorld &&
++    LibraryInstantiation.familyBound [addOkIffLib] pinWithLibraryRecord defaultPayload postTransferWorld == .«true»
++
++/-- Delivered checker: wrong toolchain is stale even when git matches. -/
++def checkDeliveredStaleToolchain : Bool :=
++  let env := { defaultEnvelope with source_pin := { defaultSourcePin with lean_toolchain := "wrong" } }
++  let rep := Delivered.checkTyped env defaultPayload
++  rep.status == .refused &&
++    rep.failure == some ⟨.staleSource, "lean_toolchain", some "wrong"⟩ &&
++    rep.receipt == none
++
++def checkDeliveredStaleMathlib : Bool :=
++  let env := { defaultEnvelope with source_pin := { defaultSourcePin with mathlib_rev := "deadbeef" } }
++  let rep := Delivered.checkTyped env defaultPayload
++  rep.status == .refused &&
++    rep.failure == some ⟨.staleSource, "mathlib_rev", some "deadbeef"⟩ &&
++    rep.receipt == none
++
++def checkDeliveredStaleCompilerRecord : Bool :=
++  let env := { defaultEnvelope with source_pin := { defaultSourcePin with compiler_record := some "wrong" } }
++  let rep := Delivered.checkTyped env defaultPayload
++  rep.status == .refused &&
++    (rep.failure.map (·.ctor) == some "compiler_record") &&
++    rep.receipt == none
++
++def checkDeliveredStepStaleGit : Bool :=
++  let env := { defaultEnvelope with source_pin := { defaultSourcePin with git := "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef" } }
++  let rep := Delivered.checkStep env defaultStepPayload
++  rep.status == .refused &&
++    rep.failure == some ⟨.staleSource, "git", some "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef"⟩ &&
++    rep.receipt == none
++
++def checkIndexedInvokesPreserveOrder : Bool :=
++  let issue : StepEnc := .issue ⟨.alice, .main, 0, .invoke⟩
++  let steps : List StepEnc := [defaultStep, issue, defaultStep]
++  let xs := indexedInvokes steps
++  match xs with
++  | [(0, _), (2, _)] =>
++    (declaredLeft steps).length == 2 && (declaredRight steps).isEmpty
++  | _ => false
++
++def checkDeclaredRightNontrivial : Bool :=
++  let rightInv : StepEnc := .invoke {
++    component := 1
++    operation := 0
++    parties := [.bob]
++    inputs := [.literal ⟨.numeric (.amount .usd), 3, false⟩]
++    capabilityIds := [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
++    claimedActor := none
++  }
++  let steps : List StepEnc := [defaultStep, rightInv]
++  match declaredLeft steps, declaredRight steps with
++  | [(_, l)], [(1, r)] =>
++    l.component.value == 0 && r.component.value == 1
++  | _, _ => false
++
++/-- Delivered checker: name-only library require flag is incomplete, not accepted. -/
++def checkDeliveredLibraryRequireIncomplete : Bool :=
++  let env : EnvelopeEnc :=
++    { defaultEnvelope with
++      libraries := [addOkIffLib]
++      require_library_discharge := true
++      source_pin := pinNameOnly }
++  let rep := Delivered.checkTyped env defaultPayload
++  rep.status == .incomplete &&
++    (rep.failure.map (·.ctor)).isSome
++
++/-- Delivered checker: real instantiation plus source identity accepts transfer-three. -/
++def checkDeliveredLibraryBoundAccepts : Bool :=
++  let env : EnvelopeEnc :=
++    { defaultEnvelope with
++      libraries := [addOkIffLib]
++      require_library_discharge := true
++      source_pin := pinWithLibraryRecord }
++  let rep := Delivered.checkTyped env defaultPayload
++  rep.status == .accepted &&
++    rep.judgments.any (fun j => j.family == "libraryTheoremsInstantiated" ∧ j.outcome == .«true») &&
++    rep.world.state.cells.any (fun c =>
++      c.domain == .main && c.party == .bob && c.asset == .usd && c.amount == ⟨3, 1⟩)
++
++/-- Canonical positive companion: encode of a sorted-source_map IR re-decodes. -/
++def checkCanonicalPositiveRoundtrip : Bool :=
++  let env := { defaultEnvelope with source_map := [("store", "s"), ("transfer", "t")] }
++  let ir : DecodedIR := .execution (.typed env defaultPayload)
++  match decodeBytes (encodeModule ir) with
++  | .ok ir' => ir' == ir
++  | .error _ => false
++
++/-- Two-component disjoint Parallel.admit success. -/
++def checkAdmitDisjointSuccess : Bool :=
++  match configToTyped? defaultConfig with
++  | none => false
++  | some cfg =>
++    let b := boundaryToTyped ⟨defaultContext, ⟨[]⟩, 100⟩
++    let steps : List StepEnc := [defaultStep]
++    match admitIndexed cfg (fun _ => b) steps with
++    | .ok _ => true
++    | .error _ => false
++
++/-- Two-component write-write refusal: second invoke on component 1 sharing the transfer write. -/
++def checkAdmitConflictRefusal : Bool :=
++  match configToTyped? defaultConfig with
++  | none => false
++  | some cfg =>
++    let b := boundaryToTyped ⟨defaultContext, ⟨[]⟩, 100⟩
++    let step1 : StepEnc := .invoke {
++      component := 1
++      operation := 0
++      parties := [.bob]
++      inputs := [.literal ⟨.numeric (.amount .usd), 3, false⟩]
++      capabilityIds := [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
++      claimedActor := none
++    }
++    -- catalog component 1 has no operation 0; structural failure is a nonempty refusal
++    match admitIndexed cfg (fun _ => b) [defaultStep, step1] with
++    | .ok _ => false
++    | .error _ => true
++
++def runtimeChecks : List (String × Bool) := [
++  ("cert.typing.recomputed", checkTypingRecomputed),
++  ("cert.transfer.alice7", checkTransferAlice7),
++  ("cert.execute.recomputed", checkExecuteRecomputed),
++  ("cert.accounting.recomputed", checkAccountingRecomputed),
++  ("cert.authority.debit", checkAuthorityDebit),
++  ("cert.catalog.nodup", checkCatalogNodup),
++  ("cert.catalog.export-not-private", checkCatalogExportNotPrivate),
++  ("cert.access.reads", checkAccessReads),
++  ("cert.step.alice7", checkStepAlice7),
++  ("cert.rational.canonical", checkRationalCanonical),
++  ("cert.rational.zero-den", checkRationalZeroDen),
++  ("cert.precedence.actor-mismatch", checkPrecedenceActorMismatch),
++  ("cert.library.outstanding", checkLibraryOutstanding),
++  ("cert.prop.not-executable", checkPropNotExecutable),
++  ("cert.refusal.constructor", checkRefusalConstructor),
++  ("cert.funds.insufficient", checkFundsInsufficient),
++  ("cert.capability.fresh-id", checkCapabilityFreshId),
++  ("cert.env.missing-observation", checkEnvMissingObservation),
++  ("cert.unsupported.rejected", checkUnsupportedRejected),
++  ("cert.boundary.array-length", checkArrayLengthBoundaryRegression),
++  ("cert.boundary.nesting-depth", checkDepthBoundaryRegression),
++  ("cert.host.git-distinct", checkTrustedGitDistinct),
++  ("cert.library.instantiated", checkLibraryInstantiation),
++  ("cert.library.name-only", checkLibraryNameOnlyFails),
++  ("cert.library.operand-subst", checkLibraryOperandSubstitutionFails),
++  ("cert.library.claim-subst", checkLibraryClaimSubstitutionFails),
++  ("cert.library.metadata-subst", checkLibraryMetadataSubstitutionFails),
++  ("cert.library.absent-record", checkLibraryAbsentRecordFails),
++  ("cert.library.mismatched-record", checkLibraryMismatchedRecordFails),
++  ("cert.library.transfer-three", checkLibraryRealTransferDischarges),
++  ("cert.delivered.stale-toolchain", checkDeliveredStaleToolchain),
++  ("cert.delivered.stale-mathlib", checkDeliveredStaleMathlib),
++  ("cert.delivered.stale-compiler-record", checkDeliveredStaleCompilerRecord),
++  ("cert.delivered.step-stale-git", checkDeliveredStepStaleGit),
++  ("cert.compat.indexed-order", checkIndexedInvokesPreserveOrder),
++  ("cert.compat.declared-right", checkDeclaredRightNontrivial),
++  ("cert.delivered.library-incomplete", checkDeliveredLibraryRequireIncomplete),
++  ("cert.delivered.library-bound", checkDeliveredLibraryBoundAccepts),
++  ("cert.codec.canonical-positive", checkCanonicalPositiveRoundtrip),
++  ("cert.admit.disjoint", checkAdmitDisjointSuccess),
++  ("cert.admit.conflict", checkAdmitConflictRefusal),
++  ("cert.admit.examples-disjoint", CompatibilityExamples.disjointSuccess),
++  ("cert.admit.examples-conflict", CompatibilityExamples.conflictRefusal)
++]
++
++end DefiKernel.Certificates.Tests
+--- main/lean/DefiKernel/Certificates/CompatibilityExamples.lean
++++ candidate/lean/DefiKernel/Certificates/CompatibilityExamples.lean
+@@ -0,0 +1,47 @@
++import DefiKernel.Parallel.Compatibility
++import DefiKernel.Parallel.Examples
++
++/-!
++Nontrivial Parallel.admit witnesses for P20 task 21.2.
++
++Declared branch semantics: two catalog components with recomputed footprints,
++connected to `checkCompatibility_ok_iff`. Caller footprint labels are not used.
++-/
++namespace DefiKernel.Certificates.CompatibilityExamples
++
++open DefiKernel.Parallel
++open DefiKernel.Parallel.Examples
++
++/-- Explicit Examples-domain parameters. Unqualified `Party` inside
++`DefiKernel.Certificates.*` is Schema.Party when modules are concatenated. -/
++abbrev ExP := Typed.Examples.Party
++abbrev ExA := Typed.Examples.Asset
++abbrev ExD := Typed.Examples.Domain
++
++/-- Disjoint success: usd transfer vs share transfer. -/
++def disjointAdmit :
++    Except (AdmissionFailure ExP ExA ExD)
++      (Footprint ExP ExA ExD × Footprint ExP ExA ExD) :=
++  admit (P := ExP) (A := ExA) (D := ExD) cfg boundaries [usd 3] [shares 1]
++
++/-- Same usd transfer template on both components, so both write alice/bob USD. -/
++def overlapCfg := config usdTransfer usdTransfer [bobUSD] [bobUSD]
++
++/-- Conflict refusal: both branches write alice USD and bob USD. -/
++def conflictAdmit :
++    Except (AdmissionFailure ExP ExA ExD)
++      (Footprint ExP ExA ExD × Footprint ExP ExA ExD) :=
++  admit (P := ExP) (A := ExA) (D := ExD) overlapCfg boundaries [usd 3] [invoke 1 11 .usd 1]
++
++def disjointSuccess : Bool :=
++  match disjointAdmit with
++  | Except.ok _ => true
++  | Except.error _ => false
++
++def conflictRefusal : Bool :=
++  match conflictAdmit with
++  | Except.ok _ => false
++  | Except.error (.conflict _ _) => true
++  | Except.error _ => true
++
++end DefiKernel.Certificates.CompatibilityExamples

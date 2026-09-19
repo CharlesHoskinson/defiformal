@@ -1,0 +1,5 @@
+import DefiKernel.Certificates.KernelCorrespondence
+#print axioms DefiKernel.Certificates.Delivered.overlayPolicy_accepted_implies_no_false_required
+#print axioms DefiKernel.Certificates.Delivered.checkRun_accepted_implies_no_false_required
+#print axioms DefiKernel.Certificates.Delivered.checkTyped_accepted_implies_no_false_required
+#print axioms DefiKernel.Certificates.Delivered.checkStep_accepted_implies_no_false_required

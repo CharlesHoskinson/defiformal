@@ -26,4 +26,27 @@ helpers with their stated Lean theorems. `TrustedHost` supplies static identity
 constants. These two modules have separate scoped R5 acceptance, recorded in
 `GROK-R5-SCOPED-ACCEPTANCE.json` alongside the R3 integration record. They do not
 establish complete certificate-library discharge or validate external host records.
-The rejected R5 delivery route and CLI are not included in this integration.
+The R5 helper acceptance did not accept its delivery route or CLI. The scoped
+compatibility repair below has a separate review.
+
+## Scoped compatibility repair
+
+`Delivered.checkRun` and the direct `RunFixtures` checker now refuse an
+overlapping run when its required compatibility judgment is false. The report
+retains the actual sequential world and receipt. A disjoint USD/share transfer
+control remains accepted. Required invariant discharge failures identify the
+invariant obligation separately from library discharge failures.
+
+`KernelCorrespondence` includes accepted-implies-no-false-required-judgment
+theorems for typed, step and run reports. Astra independently reviewed this
+exact contribution; run its focused regression from `lean/` with:
+
+```sh
+lake env lean --run DefiKernel/Certificates/CompatibilityStatusRegression.lean
+```
+
+This is scoped acceptance of the compatibility repair and its source
+dependencies. It does not qualify the whole certificate checker, validate the
+external host inventory, or close the remaining P19/P20 gates. The default
+`DefiKernel` import remains unchanged. See
+`review/semantic-kernel/program-execution-20260919/astra-focused-compatibility-review/REVIEW-DIAGNOSTIC.md`.

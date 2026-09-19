@@ -1,7 +1,10 @@
 import DefiKernel.Certificates.Schema
 import DefiKernel.Certificates.Decode
+import DefiKernel.Certificates.TrustedHost
+import DefiKernel.Certificates.LibraryInstantiation
 import DefiKernel.Typed.Transition
 import DefiKernel.Composition.Sequence
+import DefiKernel.Parallel.Compatibility
 
 namespace DefiKernel.Certificates
 
@@ -349,17 +352,129 @@ structure CertContext where
   source_pin : SourcePinEnc
   audit_roots : List String
 
+/-- Informational outstanding families. Theorem-name tags never become executable pass. -/
+def outstandingFamilies (cert : EnvelopeEnc) : List String :=
+  (if !cert.libraries.isEmpty then ["libraryTheoremsInstantiated"] else []) ++
+  (if !cert.invariants.isEmpty then ["proof.ComponentContract.invariant"] else []) ++
+  (if !cert.source_map.isEmpty then ["sourceRefinement"] else [])
+
+/-- Library family is never true from envelope tags. Compiled instantiation is required. -/
+def libraryJudgment (cert : EnvelopeEnc) : JudgmentOutcome :=
+  if cert.libraries.isEmpty then
+    JudgmentOutcome.notApplicable
+  else
+    JudgmentOutcome.notApplicable
+
+def sourceRefinementJudgment (_cert : EnvelopeEnc) : JudgmentOutcome :=
+  JudgmentOutcome.notApplicable
+
+def invokeSteps (steps : List StepEnc) : List (Invocation Party Asset Domain) :=
+  steps.filterMap fun s =>
+    match s with
+    | .invoke inv => some inv.toInvocation
+    | _ => none
+
+/-- Split decoded invocations into catalog component 0 versus the remainder. -/
+def splitInvokeBranches (invs : List (Invocation Party Asset Domain)) :
+    List (Invocation Party Asset Domain) × List (Invocation Party Asset Domain) :=
+  (invs.filter (fun i => i.component.value = 0),
+   invs.filter (fun i => i.component.value ≠ 0))
+
+/-- Recompute footprints via Parallel.admit on decoded catalog and branches.
+Caller-supplied footprint labels are not an input. -/
+def recomputeAdmit (cfg : Config Party Asset Domain)
+    (boundary : Boundary Party Asset Domain)
+    (invs : List (Invocation Party Asset Domain)) :
+    Except (Parallel.AdmissionFailure Party Asset Domain)
+      (Parallel.Footprint Party Asset Domain × Parallel.Footprint Party Asset Domain) :=
+  let lr := splitInvokeBranches invs
+  let boundaries : Parallel.ParallelBoundary Party Asset Domain := fun _ _ => boundary
+  Parallel.admit cfg boundaries lr.1 lr.2
+
+def compositionCompatibleOutcome
+    (cfg : Config Party Asset Domain)
+    (boundary : Boundary Party Asset Domain)
+    (invs : List (Invocation Party Asset Domain)) : JudgmentOutcome :=
+  match recomputeAdmit cfg boundary invs with
+  | .ok _ => JudgmentOutcome.«true»
+  | .error _ => JudgmentOutcome.«false»
+
+/-- Invokes with original step indices. Issue/revoke are not Parallel branches. -/
+def indexedInvokes (steps : List StepEnc) : List (Nat × Invocation Party Asset Domain) :=
+  steps.zipIdx.filterMap fun (s, i) =>
+    match s with
+    | .invoke inv => some (i, inv.toInvocation)
+    | _ => none
+
+/-- Declared Parallel left branch: catalog component id 0, original step order. -/
+def declaredLeft (steps : List StepEnc) : List (Nat × Invocation Party Asset Domain) :=
+  (indexedInvokes steps).filter (fun p => p.2.component.value = 0)
+
+/-- Declared Parallel right branch: remaining component ids, original step order. -/
+def declaredRight (steps : List StepEnc) : List (Nat × Invocation Party Asset Domain) :=
+  (indexedInvokes steps).filter (fun p => p.2.component.value ≠ 0)
+
+def analyzeIndexedBranch (cfg : Config Party Asset Domain)
+    (boundaries : Nat → Boundary Party Asset Domain) :
+    List (Nat × Invocation Party Asset Domain) →
+      Except Parallel.LocalFailure (Parallel.Footprint Party Asset Domain)
+  | [] => .ok .empty
+  | (index, inv) :: rest => do
+    let head ← (Parallel.analyzeInvocation cfg (boundaries index) inv).mapError (⟨index, ·⟩)
+    let tail ← analyzeIndexedBranch cfg boundaries rest
+    return head.append tail
+
+/-- Per-step Parallel.admit: component 0 versus remaining components, original indices. -/
+def admitIndexed (cfg : Config Party Asset Domain)
+    (boundaries : Nat → Boundary Party Asset Domain)
+    (steps : List StepEnc) :
+    Except (Parallel.AdmissionFailure Party Asset Domain)
+      (Parallel.Footprint Party Asset Domain × Parallel.Footprint Party Asset Domain) := do
+  if !validateCatalog cfg.registry cfg.catalog then throw .configuration
+  let left := declaredLeft steps
+  let right := declaredRight steps
+  let lf ← (analyzeIndexedBranch cfg boundaries left).mapError (.structural .left)
+  let rf ← (analyzeIndexedBranch cfg boundaries right).mapError (.structural .right)
+  let _ ← Parallel.checkCompatibility lf rf
+  return (lf, rf)
+
+def compositionCompatibleIndexed
+    (cfg : Config Party Asset Domain)
+    (boundaries : Nat → Boundary Party Asset Domain)
+    (steps : List StepEnc) : JudgmentOutcome :=
+  match admitIndexed cfg boundaries steps with
+  | .ok _ => JudgmentOutcome.«true»
+  | .error _ => JudgmentOutcome.«false»
+
+/-- Declared left branch is exactly catalog component 0 at original indices. -/
+theorem declaredLeft_eq (steps : List StepEnc) :
+    declaredLeft steps = (indexedInvokes steps).filter (fun p => p.2.component.value = 0) :=
+  rfl
+
+/-- Declared right branch is every remaining component id at original indices. -/
+theorem declaredRight_eq (steps : List StepEnc) :
+    declaredRight steps = (indexedInvokes steps).filter (fun p => p.2.component.value ≠ 0) :=
+  rfl
+
+/-- Issue is not a Parallel branch. -/
+theorem indexedInvokes_issue (grant : GrantEnc) :
+    indexedInvokes [.issue grant] = [] :=
+  rfl
+
+/-- Revoke is not a Parallel branch. -/
+theorem indexedInvokes_revoke (id : Nat) :
+    indexedInvokes [.revoke id] = [] :=
+  rfl
+
 /-- Primary Typed execution checker with needles M01, M02, M09, M10. -/
 def checkTyped (rawCert : EnvelopeEnc) (payload : TypedExecutePayloadEnc) : Report :=
   let preWorld : WorldEnc := ⟨payload.state, payload.store⟩
   let (assumptionsList, missingAssump) := computeAssumptions rawCert
   let claimed := parseClaimedJudgments rawCert.claimed_judgments
-  let outstanding := (if !rawCert.libraries.isEmpty then ["libraryTheoremsInstantiated"] else []) ++
-                     (if !rawCert.invariants.isEmpty then ["proof.ComponentContract.invariant"] else []) ++
-                     (if !rawCert.source_map.isEmpty then ["sourceRefinement"] else [])
+  let outstanding := outstandingFamilies rawCert
 
-  -- Check source pin
-  if rawCert.source_pin.git ≠ "a12b7cac05a818cc8d35c2ca440b7170a2807e92" then
+  -- Untrusted envelope git compared against compiled TrustedHost.gitSha (definitionally this literal).
+  if rawCert.source_pin.git ≠ TrustedHost.gitSha then
     let jmap : List (String × JudgmentOutcome) := [
       ("typeCorrect", .notReached),
       ("footprintCorrect", .notReached),
@@ -492,9 +607,7 @@ def checkStep (cert : EnvelopeEnc) (payload : CompositionStepPayloadEnc) : Repor
   let preWorld := payload.pre
   let (assumptionsList, _) := computeAssumptions cert
   let claimed := parseClaimedJudgments cert.claimed_judgments
-  let outstanding := (if !cert.libraries.isEmpty then ["libraryTheoremsInstantiated"] else []) ++
-                     (if !cert.invariants.isEmpty then ["proof.ComponentContract.invariant"] else []) ++
-                     (if !cert.source_map.isEmpty then ["sourceRefinement"] else [])
+  let outstanding := outstandingFamilies cert
   match configToTyped? payload.config with
   | none =>
     ⟨.refused, some ⟨.configuration, "configuration", none⟩, [], preWorld, none, [], [], payload.index, none, assumptionsList, outstanding, cert.source_pin, cert.audit_roots, none⟩
@@ -505,6 +618,8 @@ def checkStep (cert : EnvelopeEnc) (payload : CompositionStepPayloadEnc) : Repor
     | some preW =>
       let boundary := boundaryToTyped payload.boundary
       let history := payload.history.map OutputObservationEnc.toOutputObservation
+      let stepInvs := invokeSteps [payload.step]
+      let compatOut := compositionCompatibleOutcome cfg boundary stepInvs
       match payload.step.toStep? with
       | none =>
         ⟨.refused, some ⟨.interface, "unknownStep", none⟩, [], preWorld, none, [], [], payload.index, none, assumptionsList, outstanding, cert.source_pin, cert.audit_roots, none⟩
@@ -542,7 +657,7 @@ def checkStep (cert : EnvelopeEnc) (payload : CompositionStepPayloadEnc) : Repor
             ("footprintCorrect", if isIssueRevoke then .notApplicable else .«true»),
             ("authorityCorrect", .«true»),
             ("accountingCorrect", if isIssueRevoke then .notApplicable else .«true»),
-            ("compositionCompatible", .«true»),
+            ("compositionCompatible", compatOut),
             ("assumptionsDeclared", .«true»),
             ("libraryTheoremsInstantiated", .notApplicable),
             ("sourceRefinement", .notApplicable)
@@ -554,9 +669,7 @@ def checkRun (cert : EnvelopeEnc) (payload : CompositionRunPayloadEnc) : Report 
   let preWorld := payload.world
   let (assumptionsList, _) := computeAssumptions cert
   let claimed := parseClaimedJudgments cert.claimed_judgments
-  let outstanding := (if !cert.libraries.isEmpty then ["libraryTheoremsInstantiated"] else []) ++
-                     (if !cert.invariants.isEmpty then ["proof.ComponentContract.invariant"] else []) ++
-                     (if !cert.source_map.isEmpty then ["sourceRefinement"] else [])
+  let outstanding := outstandingFamilies cert
   match configToTyped? payload.config with
   | none =>
     ⟨.refused, some ⟨.configuration, "configuration", none⟩, [], preWorld, none, [], [], 0, none, assumptionsList, outstanding, cert.source_pin, cert.audit_roots, none⟩
@@ -574,6 +687,7 @@ def checkRun (cert : EnvelopeEnc) (payload : CompositionRunPayloadEnc) : Report 
         | none => bList.head?.getD defaultBoundary
       let steps : List (Composition.Step Party Asset Domain) :=
         payload.steps.filterMap StepEnc.toStep?
+      let compatOut := compositionCompatibleIndexed cfg boundaries payload.steps
 
         let cursor := Composition.run cfg boundaries initialWorld steps
         let postWorld : WorldEnc := ⟨⟨payload.world.state.cells.map (fun row ↦
@@ -613,7 +727,7 @@ def checkRun (cert : EnvelopeEnc) (payload : CompositionRunPayloadEnc) : Report 
             ("footprintCorrect", .«true»),
             ("authorityCorrect", .«true»),
             ("accountingCorrect", .«false»),
-            ("compositionCompatible", .«true»),
+            ("compositionCompatible", compatOut),
             ("assumptionsDeclared", .«true»),
             ("libraryTheoremsInstantiated", .notApplicable),
             ("sourceRefinement", .notApplicable)
@@ -625,7 +739,7 @@ def checkRun (cert : EnvelopeEnc) (payload : CompositionRunPayloadEnc) : Report 
             ("footprintCorrect", .«true»),
             ("authorityCorrect", .«true»),
             ("accountingCorrect", .«true»),
-            ("compositionCompatible", .«true»),
+            ("compositionCompatible", compatOut),
             ("assumptionsDeclared", .«true»),
             ("libraryTheoremsInstantiated", .notApplicable),
             ("sourceRefinement", .notApplicable)

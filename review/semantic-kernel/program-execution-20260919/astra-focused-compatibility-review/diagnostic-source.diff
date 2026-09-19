@@ -1,0 +1,145 @@
+--- before/lean/DefiKernel/Certificates/Delivered.lean
++++ after/lean/DefiKernel/Certificates/Delivered.lean
+@@ -133,6 +133,22 @@
+   match env.claimed_next_state with
+   | none => false
+   | some w => decide (w ≠ world)
++
++/-- Identity of an unmet requested discharge. Does not decide whether discharge fails. -/
++def incompleteDischargeCtor (env : EnvelopeEnc) (js : List JudgmentResult) : String :=
++  let libTrue : Bool :=
++    match js.find? (fun j => j.family == "libraryTheoremsInstantiated") with
++    | some j =>
++      match j.outcome with
++      | .«true» => true
++      | _ => false
++    | none => false
++  if env.require_library_discharge && !libTrue then
++    "libraryTheoremsInstantiated"
++  else if env.require_invariant_discharge then
++    "proof.ComponentContract.invariant"
++  else
++    "libraryTheoremsInstantiated"
+ 
+ /-- Production acceptance policy. Kernel world/receipt/outputs stay the raw observation.
+ A false required family or claimed-world mismatch is refused, not accepted. -/
+@@ -155,7 +171,7 @@
+         base.judgments, raw.world, raw.receipt, raw.outputs, raw.events, raw.nextIndex, cursor,
+         base.assumptions, base.outstanding, base.source_pin, base.audit_roots, base.unsupported⟩
+     else if !dischargeOk then
+-      ⟨.incomplete, some ⟨.incompleteObligation, "libraryTheoremsInstantiated", none⟩,
++      ⟨.incomplete, some ⟨.incompleteObligation, incompleteDischargeCtor env base.judgments, none⟩,
+         base.judgments, raw.world, raw.receipt, raw.outputs, raw.events, raw.nextIndex, cursor,
+         base.assumptions, base.outstanding, base.source_pin, base.audit_roots, base.unsupported⟩
+     else if !requiredReachedFamiliesTrue base.judgments then
+--- before/lean/DefiKernel/Certificates/CompatibilityStatusRegression.lean
++++ after/lean/DefiKernel/Certificates/CompatibilityStatusRegression.lean
+@@ -228,13 +228,77 @@
+       rep.receipt.isSome
+   | _ => false
+ 
++def invariantOnlyEnv : EnvelopeEnc :=
++  { defaultEnvelope with
++    require_library_discharge := false
++    require_invariant_discharge := true
++    invariants := ["I"] }
++
++def libraryOnlyEnv : EnvelopeEnc :=
++  { defaultEnvelope with
++    libraries := [addOkIffLib]
++    require_library_discharge := true
++    require_invariant_discharge := false
++    source_pin := pinNameOnly }
++
++def bothLibraryOkEnv : EnvelopeEnc :=
++  { defaultEnvelope with
++    libraries := [addOkIffLib]
++    require_library_discharge := true
++    require_invariant_discharge := true
++    invariants := ["I"]
++    source_pin := pinWithLibraryRecord }
++
++def bothLibraryFailEnv : EnvelopeEnc :=
++  { defaultEnvelope with
++    libraries := [addOkIffLib]
++    require_library_discharge := true
++    require_invariant_discharge := true
++    invariants := ["I"]
++    source_pin := pinNameOnly }
++
++def invariantOnlyReport : Report := Delivered.checkTyped invariantOnlyEnv defaultPayload
++def libraryOnlyReport : Report := Delivered.checkTyped libraryOnlyEnv defaultPayload
++def bothLibraryOkReport : Report := Delivered.checkTyped bothLibraryOkEnv defaultPayload
++def bothLibraryFailReport : Report := Delivered.checkTyped bothLibraryFailEnv defaultPayload
++
++/-- Astra invariant-only: unmet invariant obligation, not a library identity. -/
++def checkInvariantOnlyCtor : Bool :=
++  invariantOnlyReport.status == .incomplete &&
++    invariantOnlyReport.failure ==
++      some ⟨.incompleteObligation, "proof.ComponentContract.invariant", none⟩ &&
++    invariantOnlyReport.receipt.isSome
++
++/-- Library-only name-only pin still names the library obligation. -/
++def checkLibraryOnlyCtor : Bool :=
++  libraryOnlyReport.status == .incomplete &&
++    libraryOnlyReport.failure ==
++      some ⟨.incompleteObligation, "libraryTheoremsInstantiated", none⟩
++
++/-- Both requested, library instantiated: remaining identity is the invariant. -/
++def checkBothLibraryOkCtor : Bool :=
++  bothLibraryOkReport.status == .incomplete &&
++    bothLibraryOkReport.failure ==
++      some ⟨.incompleteObligation, "proof.ComponentContract.invariant", none⟩ &&
++    familyOutcome bothLibraryOkReport "libraryTheoremsInstantiated" == some .«true»
++
++/-- Both requested, library unmet: library identity stays truthful. -/
++def checkBothLibraryFailCtor : Bool :=
++  bothLibraryFailReport.status == .incomplete &&
++    bothLibraryFailReport.failure ==
++      some ⟨.incompleteObligation, "libraryTheoremsInstantiated", none⟩
++
+ def runtimeChecks : List (String × Bool) := [
+   ("compat.overlap.delivered-refused", checkOverlapDeliveredRefused),
+   ("compat.overlap.world-receipt", checkOverlapWorldReceipt),
+   ("compat.overlap.historical-accepted", checkOverlapHistoricalAccepted),
+   ("compat.disjoint.delivered-accepted", checkDisjointDeliveredAccepted),
+   ("compat.overlap.checkBytes", checkOverlapViaBytes),
+-  ("compat.disjoint.checkBytes", checkDisjointViaBytes)
++  ("compat.disjoint.checkBytes", checkDisjointViaBytes),
++  ("compat.discharge.invariant-only", checkInvariantOnlyCtor),
++  ("compat.discharge.library-only", checkLibraryOnlyCtor),
++  ("compat.discharge.both-library-ok", checkBothLibraryOkCtor),
++  ("compat.discharge.both-library-fail", checkBothLibraryFailCtor)
+ ]
+ 
+ def allPass : Bool := runtimeChecks.all (·.2)
+@@ -255,8 +319,29 @@
+     | some f => f.ctor
+   s!"status={st} failure={fail} compositionCompatible={compat} events={rep.events.length}"
+ 
++def describeDischarge (rep : Report) : String :=
++  let st := match rep.status with
++    | .accepted => "accepted"
++    | .refused => "refused"
++    | .incomplete => "incomplete"
++  let fail := match rep.failure with
++    | none => "null"
++    | some f => f.ctor
++  let lib := match familyOutcome rep "libraryTheoremsInstantiated" with
++    | some .«true» => "true"
++    | some .«false» => "false"
++    | some .notReached => "not_reached"
++    | some .notApplicable => "not_applicable"
++    | none => "missing"
++  s!"status={st} failure={fail} libraryTheoremsInstantiated={lib}"
++
+ def main (args : List String) : IO UInt32 := do
+   IO.println "CompatibilityStatusRegression"
++  IO.println s!"DIAG invariant-only: {describeDischarge invariantOnlyReport}"
++  IO.println s!"DIAG library-only: {describeDischarge libraryOnlyReport}"
++  IO.println s!"DIAG both-library-ok: {describeDischarge bothLibraryOkReport}"
++  IO.println s!"DIAG both-library-fail: {describeDischarge bothLibraryFailReport}"
++  IO.println s!"DIAG disjoint-accepted: {describeFileCheck disjointDelivered}"
+   for (name, ok) in runtimeChecks do
+     IO.println s!"{name}: {ok}"
+   if !allPass then
