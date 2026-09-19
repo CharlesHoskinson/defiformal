@@ -73,3 +73,26 @@ compiled dependencies remain trusted; this is not a general build attestation.
 Astra accepted the exact three-file repair in
 `review/semantic-kernel/program-execution-20260919/astra-p19-host-review/REVIEW-ARTIFACT.md`.
 Whole P19/P20 checker qualification remains open.
+
+## P19 runtime mutation checks
+
+`Certificates.Audit` runs the nonempty, uniquely named runtime comparisons and
+fails when any comparison is false. `scripts/run_certificate_mutations.py`
+replays an unchanged control and a specified source mutation, requiring the
+designated negative result and preserving the specified positive control.
+Compiler failures and missing observations do not count as detected defects.
+
+Run one prepared P19 mutation per invocation from the repository root, using a
+fresh output directory outside the checkout:
+
+```sh
+python3 scripts/run_certificate_mutations.py --repo . \
+  --spec scripts/certificate-mutations/M01.json --out /tmp/p19-M01
+```
+
+The 16 prepared specifications match the frozen planned mutations and their
+protected checks. For deliberately uncommitted source, `--bind-working-tree`
+records actual source hashes rather than claiming they equal committed blobs.
+Runner and Audit acceptance is recorded in
+`review/semantic-kernel/program-execution-20260919/astra-p19-mutation-runner-review/REVIEW.md`.
+This does not by itself qualify the complete mutation campaign or P19.

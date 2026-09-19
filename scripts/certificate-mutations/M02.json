@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "modules": [
+    "DefiKernel.Certificates.Check",
+    "DefiKernel.Certificates.Audit"
+  ],
+  "mutations": [
+    {
+      "name": "m02-claimed-world-bypasses-execute",
+      "module": "DefiKernel.Certificates.Check",
+      "needle": "let post ← Typed.execute registry store ctx env now request state",
+      "replacement": "let post ← match cert.claimed_next_state with | some w => .ok w | none => Typed.execute registry store ctx env now request state",
+      "required_false": [
+        "cert.execute.recomputed"
+      ]
+    }
+  ],
+  "positive_checks": [
+    "cert.typing.recomputed"
+  ]
+}
