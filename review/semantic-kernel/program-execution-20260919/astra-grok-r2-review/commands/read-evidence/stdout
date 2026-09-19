@@ -1,0 +1,278 @@
+# P19 grok-20260919-r2: universal TreeJson depth and scanner continuation
+
+- **Attempt**: `grok-20260919-r2`
+- **Author**: Grok 4.6 (native implementation)
+- **Checker**: pending independent GPT-6 Astra medium
+- **Disposition**: `PARTIAL`
+- **Build**: `DefiKernel.Certificates.Verify` compiled after new CompositionDepth and Lexical imports; 943 jobs, forbidden axioms 0
+
+## What this round proved
+
+R1 discharged `h_depth` for typed-execute only. This round completes the representation metric for composition-step and composition-run payloads (actual steps, invocation histories, and boundaries) using the existing R1 envelope/config/component metrics. Unchanged `StructurallyAdmissibleIR` / `WholeDocumentDepthBounded` then imply `TreeJson.depth (moduleToTreeJson ir) ≤ 64` for every supported IR. A new production theorem drops `h_depth` while preserving the old general signature.
+
+Scanner work then starts the structural `scanLexicalFuel` continuation on canonical `TreeJson.encode`: strings cost one outer step via `lexString_escapeJsonString`; integer encodings fill the numeric buffer without `.`/`e`/`E`; empty arrays and objects open and close with depth and flush lemmas. Nonempty array/object key-list induction remains.
+
+Core depth theorems:
+
+```lean
+theorem jsonDepthFuel_decodedIR (ir : DecodedIR) (fuel : Nat) :
+    jsonDepthFuel fuel (decodedIRToJson ir) =
+      jsonDepthFuel fuel (moduleToTreeJson ir).toJson
+
+theorem moduleToTreeJson_depth_le_64 (ir : DecodedIR)
+    (h_adm : StructurallyAdmissibleIR ir) :
+    TreeJson.depth (moduleToTreeJson ir) ≤ 64
+```
+
+## Strongest new theorem
+
+```lean
+theorem decodeBytes_encodeModule_of_lex (ir : DecodedIR)
+    (h_adm : StructurallyAdmissibleIR ir)
+    (h_lex : scanLexical (encodeModule ir) = .ok ()) :
+    decodeBytes (encodeModule ir) = .ok ir
+```
+
+`h_depth` is gone for every structurally admissible IR (typed-execute, composition-step, composition-run, including nonempty registries). The existing `decodeBytes_encodeModule_of_depth_and_lex` signature is unchanged. Axioms: `propext`, `Classical.choice`, `Quot.sound` only.
+
+Specializations `decodeBytes_encodeModule_step_of_lex` and `decodeBytes_encodeModule_run_of_lex` match the R1 typed-only form.
+
+## Still open
+
+1. **`h_lex`**: `scanLexical (encodeModule ir) = .ok ()` remains open for the full grammar. This round compiled continuation lemmas for null/bool/number/string and empty array/object encodings, plus numeric-buffer flush on comma/brace/bracket. Nonempty `encodeList` / `encodeObj` induction (visited-key disjointness, array comma counts, sufficient fuel) is not closed, so the wrapper `scanLexical` theorem is not proved.
+2. **`EncodeDecodeRoundtripStatement`**: still the explicit `def Prop` `∀ ir, StructurallyAdmissibleIR ir → decodeBytes (encodeModule ir) = .ok ir`. Not proved. After `h_depth` discharge the remaining premise is `h_lex`.
+3. **P19/P20 acceptance**: not claimed. Unchanged 54/21/7 campaigns were not rerun.
+
+## Source contract
+
+- R1 `DepthBridge.lean` SHA `bd7e639f0cfb0f03504d0b7399c07f43644767af5495bf39a3c93841f6d0e365` preserved.
+- R1 `IRDepth.lean` SHA `ae245b2f2bf92697b0a25551638d87a8bd641f0a9a3efe7e373fe89afb8aa0c8` preserved.
+- Historical Roundtrip 246 declarations preserved. Roundtrip SHA `a12a00feade30877cc1bc18e06caf68f9e59cb47e49195a3e788c59bfbff94b1` unchanged.
+- New modules: `lean/DefiKernel/Certificates/CompositionDepth.lean`, `lean/DefiKernel/Certificates/Lexical.lean`.
+- `Verify.lean` imports both new modules. No existing theorem statements, signatures, or docstrings changed.
+- No `sorry`, `native_decide`, custom axioms, `h_depth`/`h_lex` added to admission, or alternate codec.
+
+## New compiled declarations
+
+CompositionDepth: 15 theorems. Lexical: 60 top-level `def`/`theorem` matches plus mutual `scanCost`/`scanCostList`/`scanCostObj` (63 declarations). Combined 78 new declarations in those two modules. Inline helper resolved 15/15 CompositionDepth declarations as standard axioms; Lexical helper resolved 4/60 (file marked unverified by that helper). Recorded `#print axioms` on the strongest theorems, including `decodeBytes_encodeModule_of_lex`, `moduleToTreeJson_depth_le_64`, and `scanLexicalFuel_encode_scalar`, reports `propext`, `Classical.choice`, `Quot.sound` only. LSP `lean_verify` agrees.
+
+## Verification recorded this round
+
+| Check | Result |
+|---|---|
+| `lake build DefiKernel.Certificates.CompositionDepth` | exit 0, 936 jobs |
+| `lake build DefiKernel.Certificates.Verify` after CompositionDepth import | exit 0, 941 jobs, forbidden=0 |
+| Lexical compile iterations v1–v7 | failed attempts preserved |
+| `lake build DefiKernel.Certificates.Lexical` v8 | exit 0, 938 jobs |
+| `lake build DefiKernel.Certificates.Verify` after Lexical import | exit 0, 943 jobs, forbidden=0 |
+| `#print axioms` probe of strongest theorems | standard axioms only |
+| Inline axiom helper on CompositionDepth | 15/15 standard |
+| Inline axiom helper on Lexical | 4/60 resolved, remainder not accessible to that helper |
+
+Toolchain remains Lean/mathlib `v4.33.0-rc2`. No `lake update`.
+
+Root `record-author-r2-command.py` still pointed at historical `agy-r27-proof`. This round used a local copy whose `EVIDENCE` path is `grok-20260919-r2`. R1 evidence was not rewritten.
+
+## Evidence seal
+
+All recorded compiler/probe commands finished before this report. REPORT, verdict, source-manifest, and MANIFEST were written by an unrecorded `seal-r2.py` after those commands. MANIFEST is self-excluded.
+{
+  "schema": "defiformal-p19-source-manifest/v2",
+  "timestamp_utc": "2026-09-19T18:16:41.835233+00:00",
+  "git_head": "38de83c58e3f9315bf400807591d538d7565152e",
+  "lean_version": "Lean (version 4.33.0-rc2, x86_64-unknown-linux-gnu, commit d8b18978322de05a8f3dba51ef03cf5461676c17, Release)",
+  "lean_executable": "/home/charl/.elan/toolchains/leanprover--lean4---v4.33.0-rc2/bin/lean",
+  "cwd": "/home/charl/defiformal-wt-p19-certificates-grok-opus-20260909/lean",
+  "sources": {
+    "lean/DefiKernel/Certificates/Audit.lean": {
+      "sha256": "187b13c868ee71d259830a932c918d1837d9c95f14c0903059dbc877c909d91d",
+      "bytes": 705,
+      "lines": 21
+    },
+    "lean/DefiKernel/Certificates/CanonicalJson.lean": {
+      "sha256": "26f2f675b8ed8b49f2bab16196fc72d5017fe84dca1ddd67d1ec15f8877b3fbb",
+      "bytes": 97520,
+      "lines": 2088
+    },
+    "lean/DefiKernel/Certificates/Check.lean": {
+      "sha256": "2cd24e9b302de52a85d7999c034cb7b08e4cb3d06b5fe79eb9943d4aa24ad66c",
+      "bytes": 39737,
+      "lines": 789
+    },
+    "lean/DefiKernel/Certificates/CompositionDepth.lean": {
+      "sha256": "7fc24af43b856514e97a60f721597ff04cad3e8a5477d65b303660837e097168",
+      "bytes": 17383,
+      "lines": 323
+    },
+    "lean/DefiKernel/Certificates/Correspondence.lean": {
+      "sha256": "93a3a29e90a3c844b3d2309240d266b782b3fc7b137e671d12964a217d6ceaa9",
+      "bytes": 218303,
+      "lines": 4707
+    },
+    "lean/DefiKernel/Certificates/Decode.lean": {
+      "sha256": "7561716fe3f2bdba355015de7c1b81e3c594f1d6a51df0009294be248c38a23d",
+      "bytes": 64827,
+      "lines": 1567
+    },
+    "lean/DefiKernel/Certificates/DepthBridge.lean": {
+      "sha256": "bd7e639f0cfb0f03504d0b7399c07f43644767af5495bf39a3c93841f6d0e365",
+      "bytes": 13717,
+      "lines": 328
+    },
+    "lean/DefiKernel/Certificates/Encode.lean": {
+      "sha256": "9b4fdc4c0b6fd07a13f7552506cf2c6f0d0eaa3e3a31fb590ea974c1261ca3b8",
+      "bytes": 24718,
+      "lines": 540
+    },
+    "lean/DefiKernel/Certificates/IRDepth.lean": {
+      "sha256": "ae245b2f2bf92697b0a25551638d87a8bd641f0a9a3efe7e373fe89afb8aa0c8",
+      "bytes": 18351,
+      "lines": 323
+    },
+    "lean/DefiKernel/Certificates/Lexical.lean": {
+      "sha256": "1b76e26fc8dcb654bf8d0411a890e8deec0c971bcd5fa5857e62f232ab2a6021",
+      "bytes": 29566,
+      "lines": 621
+    },
+    "lean/DefiKernel/Certificates/Observation.lean": {
+      "sha256": "d33b251aa1868bc5e7c945e39d629109d2f9f46d2cc652d06d9bac96f5079a62",
+      "bytes": 1421,
+      "lines": 50
+    },
+    "lean/DefiKernel/Certificates/Roundtrip.lean": {
+      "sha256": "a12a00feade30877cc1bc18e06caf68f9e59cb47e49195a3e788c59bfbff94b1",
+      "bytes": 158982,
+      "lines": 3193
+    },
+    "lean/DefiKernel/Certificates/RunFixtures.lean": {
+      "sha256": "03fcb7d41fe4648f4933aa3c7a202a81cbed30c9c85a6619f3291fdb844ec98f",
+      "bytes": 3429,
+      "lines": 88
+    },
+    "lean/DefiKernel/Certificates/Schema.lean": {
+      "sha256": "24e99089cb0380ab8150ffde06f0f60b4362d345436e4c1e06199b46f9fb961b",
+      "bytes": 23421,
+      "lines": 777
+    },
+    "lean/DefiKernel/Certificates/Soundness.lean": {
+      "sha256": "262e726f0c7380acaaf67cd7d89d9560bc7af568032690f96269275c0c143556",
+      "bytes": 28285,
+      "lines": 536
+    },
+    "lean/DefiKernel/Certificates/Tests.lean": {
+      "sha256": "c8bee83edb30caf21075e080a6b662de53e451c1a1e9d093a2646589f7ee037b",
+      "bytes": 17252,
+      "lines": 467
+    },
+    "lean/DefiKernel/Certificates/Verify.lean": {
+      "sha256": "f6b0dc7d69d95d2e98417a7b5025828ff477a2d83eafdf37e808ff043f13e94e",
+      "bytes": 699,
+      "lines": 19
+    }
+  },
+  "r1_depthbridge_sha256_preserved": true,
+  "r1_irdepth_sha256_preserved": true,
+  "roundtrip_sha256_preserved": true
+}
+"""Record real 20260919 R2 compiler/probe results even when the native UI returns before completion."""
+from pathlib import Path
+import argparse
+import datetime
+import fcntl
+import hashlib
+import json
+import os
+import re
+import signal
+import subprocess
+
+WORK = Path('/home/charl/defiformal-wt-p19-certificates-grok-opus-20260909')
+EVIDENCE = WORK / 'review/semantic-kernel/certificates/p19/implementation/grok-20260919-r2'
+TOOL = Path('/home/charl/.elan/toolchains/leanprover--lean4---v4.33.0-rc2/bin')
+
+
+def sha(path):
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def now():
+    return datetime.datetime.now(datetime.timezone.utc).isoformat()
+
+
+def write(path, value):
+    path.write_text(json.dumps(value, indent=2) + '\n')
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--id', required=True)
+    parser.add_argument('--origin', choices=['native_author', 'root_preflight'], default='native_author')
+    parser.add_argument('--cwd', default=str(WORK / 'lean'))
+    parser.add_argument('--timeout', type=int, default=360)
+    parser.add_argument('argv', nargs=argparse.REMAINDER)
+    args = parser.parse_args()
+    if not re.fullmatch(r'[a-zA-Z0-9_-]+', args.id):
+        parser.error('id must contain only letters, numbers, underscores or hyphens')
+    argv = args.argv[1:] if args.argv[:1] == ['--'] else args.argv
+    if not argv or not 1 <= args.timeout <= 900:
+        parser.error('supply a command and timeout from 1 through 900 seconds')
+    cwd = Path(args.cwd).resolve()
+    if not cwd.is_relative_to(WORK):
+        parser.error('cwd must stay in the 20260919 R2 author working copy')
+    out = EVIDENCE / 'logs' / args.id
+    out.mkdir(parents=True, exist_ok=False)
+    sources = {str(p.relative_to(WORK)): sha(p)
+               for p in (WORK / 'lean/DefiKernel/Certificates').rglob('*.lean')}
+    assert sources
+    probe_inputs = {str(Path(a).resolve()): sha(Path(a).resolve()) for a in argv
+                    if a.endswith('.lean') and Path(a).is_file()}
+    metadata = {'id': args.id, 'origin': args.origin, 'argv': argv, 'cwd': str(cwd), 'started_utc': now(),
+                'source_sha256_before': sources, 'probe_inputs': probe_inputs,
+                'lean_sha256': sha(TOOL / 'lean'), 'lake_sha256': sha(TOOL / 'lake'),
+                'recorder_sha256': sha(Path(__file__).resolve()),
+                'scope': 'Actual subprocess execution by the 20260919 R2 recording wrapper.',
+                'P19_accepted': False}
+    write(out / 'started.json', metadata)
+    timed_out = False
+    launch_error = None
+    with (out / 'stdout').open('xb') as stdout, (out / 'stderr').open('xb') as stderr:
+        try:
+            process = subprocess.Popen(argv, cwd=cwd, stdout=stdout, stderr=stderr,
+                                       start_new_session=True)
+            write(out / 'pid.json', {'pid': process.pid, 'observed_utc': now()})
+            try:
+                code = process.wait(timeout=args.timeout)
+            except subprocess.TimeoutExpired:
+                timed_out = True
+                os.killpg(process.pid, signal.SIGTERM)
+                try:
+                    code = process.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    os.killpg(process.pid, signal.SIGKILL)
+                    code = process.wait()
+        except OSError as error:
+            code = None
+            launch_error = repr(error)
+    metadata.update({'finished_utc': now(), 'exit': code, 'timed_out': timed_out,
+                     'launch_error': launch_error,
+                     'stdout_path': str((out / 'stdout').relative_to(EVIDENCE)),
+                     'stderr_path': str((out / 'stderr').relative_to(EVIDENCE)),
+                     'stdout_sha256': sha(out / 'stdout'), 'stderr_sha256': sha(out / 'stderr'),
+                     'source_sha256_after': {str(p.relative_to(WORK)): sha(p)
+                         for p in (WORK / 'lean/DefiKernel/Certificates').rglob('*.lean')}})
+    write(out / 'command.json', metadata)
+    with (EVIDENCE / '.commands.lock').open('a') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        commands = [json.loads(p.read_text()) for p in sorted((EVIDENCE / 'logs').glob('*/command.json'))]
+        temporary = EVIDENCE / 'commands.json.tmp'
+        write(temporary, commands)
+        os.replace(temporary, EVIDENCE / 'commands.json')
+    print(json.dumps({'id': args.id, 'exit': code, 'timed_out': timed_out,
+                      'receipt': str(out / 'command.json'), 'launch_error': launch_error}), flush=True)
+    print((out / 'stdout').read_text(errors='replace')[-14000:], end='', flush=True)
+    print((out / 'stderr').read_text(errors='replace')[-4000:], end='', flush=True)
+    raise SystemExit(3 if launch_error else (124 if timed_out else code))
+
+
+if __name__ == '__main__':
+    main()

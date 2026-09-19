@@ -1,0 +1,944 @@
+import DefiKernel.Certificates.IRDepth
+import DefiKernel.Certificates.DepthBridge
+
+namespace DefiKernel.Certificates
+
+set_option linter.style.longLine false
+set_option linter.style.setOption false
+set_option linter.style.maxHeartbeats false
+set_option maxHeartbeats 4000000
+
+open Lean
+
+/-! Representation-metric lemmas for composition-step and composition-run payloads.
+    Combined with `jsonDepthFuel_toJson_eq_min` and unchanged
+    `WholeDocumentDepthBounded`, this discharges
+    `TreeJson.depth (moduleToTreeJson ir) ≤ 64` for every structurally admissible IR. -/
+
+theorem jsonDepthFuel_inputSource (src : InputSourceEnc) (fuel : Nat) :
+    jsonDepthFuel fuel (inputSourceToTreeJson src).toJson =
+      jsonDepthFuel fuel (inputSourceToJson src) := by
+  cases src with
+  | literal v =>
+    dsimp [inputSourceToTreeJson, inputSourceToJson, TreeJson.toJson, TreeJson.toJsonObj]
+    rw [packedValueFullToTreeJson_toJson]
+  | priorOutput step port =>
+    dsimp [inputSourceToTreeJson, inputSourceToJson, TreeJson.toJson, TreeJson.toJsonObj]
+    rw [natToTreeJson_toJson, qualifiedPortToTreeJson_toJson]
+    refine jsonDepthFuel_mkObj_perm fuel _ _ ?_ ?_
+    · simp [List.map_cons, List.map_nil]
+    · refine perm_of_nodup_keys_mem _ _ ?_ ?_ ?_
+      · simp [List.map_cons, List.map_nil]
+      · simp [List.map_cons, List.map_nil]
+      · intro p; simp [List.mem_cons, List.not_mem_nil]; tauto
+
+theorem jsonDepthFuel_invocation (inv : InvocationEnc) (fuel : Nat) :
+    jsonDepthFuel fuel (invocationToTreeJson inv).toJson =
+      jsonDepthFuel fuel (invocationToJson inv) := by
+  cases fuel with
+  | zero =>
+    dsimp [invocationToTreeJson, invocationToJson, TreeJson.toJson, jsonDepthFuel]
+  | succ fuel =>
+    have hps : (inv.parties.map (fun x => (partyToTreeJson x).toJson)) = inv.parties.map partyToJson := by
+      simp only [List.map_inj_left]; intro p _; exact partyToTreeJson_toJson p
+    have hcaps : (inv.capabilityIds.map (fun x => (natToTreeJson x).toJson)) =
+        inv.capabilityIds.map natToJson := by
+      simp only [List.map_inj_left]; intro c _; exact natToTreeJson_toJson c
+    have hins := jsonDepthFuel_arr_congr
+      (fun x => (inputSourceToTreeJson x).toJson) inputSourceToJson inv.inputs
+      (fun x _ f => jsonDepthFuel_inputSource x f) fuel
+    cases hact : inv.claimedActor with
+    | none =>
+      dsimp [invocationToTreeJson, invocationToJson, TreeJson.toJson, TreeJson.toJsonObj]
+      rw [toJsonList_map, toJsonList_map, toJsonList_map, hps, hcaps, natToTreeJson_toJson,
+          natToTreeJson_toJson]
+      simp [hact]
+      have h₁ : ([("component", Json.num (JsonNumber.fromNat inv.component)),
+          ("operation", Json.num (JsonNumber.fromNat inv.operation)),
+          ("parties", Json.arr (inv.parties.map partyToJson).toArray),
+          ("inputs", Json.arr (inv.inputs.map (fun x => (inputSourceToTreeJson x).toJson)).toArray),
+          ("capabilityIds", Json.arr (inv.capabilityIds.map natToJson).toArray),
+          ("claimedActor", TreeJson.null.toJson)].map Prod.fst).Nodup := by
+        simp [List.map_cons, List.map_nil]
+      have h₂ : ([("capabilityIds", Json.arr (inv.capabilityIds.map natToJson).toArray),
+          ("claimedActor", Json.null),
+          ("component", Json.num (JsonNumber.fromNat inv.component)),
+          ("inputs", Json.arr (inv.inputs.map inputSourceToJson).toArray),
+          ("operation", Json.num (JsonNumber.fromNat inv.operation)),
+          ("parties", Json.arr (inv.parties.map partyToJson).toArray)].map Prod.fst).Nodup := by
+        simp [List.map_cons, List.map_nil]
+      rw [jsonDepthFuel_mkObj_succ fuel _ h₁, jsonDepthFuel_mkObj_succ fuel _ h₂]
+      dsimp only [List.foldl]
+      rw [hins]
+      have : Std.Commutative (Nat.max : Nat → Nat → Nat) := ⟨Nat.max_comm⟩
+      have : Std.Associative (Nat.max : Nat → Nat → Nat) := ⟨Nat.max_assoc⟩
+      ac_rfl
+    | some a =>
+      dsimp [invocationToTreeJson, invocationToJson, TreeJson.toJson, TreeJson.toJsonObj]
+      rw [toJsonList_map, toJsonList_map, toJsonList_map, hps, hcaps, natToTreeJson_toJson,
+          natToTreeJson_toJson]
+      simp [hact]
+      rw [partyToTreeJson_toJson]
+      have h₁ : ([("component", Json.num (JsonNumber.fromNat inv.component)),
+          ("operation", Json.num (JsonNumber.fromNat inv.operation)),
+          ("parties", Json.arr (inv.parties.map partyToJson).toArray),
+          ("inputs", Json.arr (inv.inputs.map (fun x => (inputSourceToTreeJson x).toJson)).toArray),
+          ("capabilityIds", Json.arr (inv.capabilityIds.map natToJson).toArray),
+          ("claimedActor", partyToJson a)].map Prod.fst).Nodup := by
+        simp [List.map_cons, List.map_nil]
+      have h₂ : ([("capabilityIds", Json.arr (inv.capabilityIds.map natToJson).toArray),
+          ("claimedActor", partyToJson a),
+          ("component", Json.num (JsonNumber.fromNat inv.component)),
+          ("inputs", Json.arr (inv.inputs.map inputSourceToJson).toArray),
+          ("operation", Json.num (JsonNumber.fromNat inv.operation)),
+          ("parties", Json.arr (inv.parties.map partyToJson).toArray)].map Prod.fst).Nodup := by
+        simp [List.map_cons, List.map_nil]
+      rw [jsonDepthFuel_mkObj_succ fuel _ h₁, jsonDepthFuel_mkObj_succ fuel _ h₂]
+      dsimp only [List.foldl]
+      rw [hins]
+      have : Std.Commutative (Nat.max : Nat → Nat → Nat) := ⟨Nat.max_comm⟩
+      have : Std.Associative (Nat.max : Nat → Nat → Nat) := ⟨Nat.max_assoc⟩
+      ac_rfl
+
+theorem jsonDepthFuel_step (s : StepEnc) (fuel : Nat) :
+    jsonDepthFuel fuel (stepToTreeJson s).toJson = jsonDepthFuel fuel (stepToJson s) := by
+  cases s with
+  | invoke inv =>
+    cases fuel with
+    | zero =>
+      dsimp [stepToTreeJson, stepToJson, TreeJson.toJson, jsonDepthFuel]
+    | succ fuel =>
+      dsimp [stepToTreeJson, stepToJson, TreeJson.toJson, TreeJson.toJsonObj]
+      have hinv := jsonDepthFuel_invocation inv fuel
+      have h₁ : ([("tag", Json.str "invoke"),
+          ("invocation", (invocationToTreeJson inv).toJson)].map Prod.fst).Nodup := by
+        simp [List.map_cons, List.map_nil]
+      have h₂ : ([("invocation", invocationToJson inv),
+          ("tag", Json.str "invoke")].map Prod.fst).Nodup := by
+        simp [List.map_cons, List.map_nil]
+      rw [jsonDepthFuel_mkObj_succ fuel _ h₁, jsonDepthFuel_mkObj_succ fuel _ h₂]
+      dsimp only [List.foldl]
+      rw [hinv]
+      simp [Nat.max_comm]
+  | issue g =>
+    dsimp [stepToTreeJson, stepToJson, TreeJson.toJson, TreeJson.toJsonObj]
+    rw [grantToTreeJson_toJson]
+    refine jsonDepthFuel_mkObj_perm fuel _ _ ?_ ?_
+    · simp [List.map_cons, List.map_nil]
+    · refine perm_of_nodup_keys_mem _ _ ?_ ?_ ?_
+      · simp [List.map_cons, List.map_nil]
+      · simp [List.map_cons, List.map_nil]
+      · intro p; simp [List.mem_cons, List.not_mem_nil]; tauto
+  | revoke id =>
+    dsimp [stepToTreeJson, stepToJson, TreeJson.toJson, TreeJson.toJsonObj]
+    rw [natToTreeJson_toJson]
+    refine jsonDepthFuel_mkObj_perm fuel _ _ ?_ ?_
+    · simp [List.map_cons, List.map_nil]
+    · refine perm_of_nodup_keys_mem _ _ ?_ ?_ ?_
+      · simp [List.map_cons, List.map_nil]
+      · simp [List.map_cons, List.map_nil]
+      · intro p; simp [List.mem_cons, List.not_mem_nil]; tauto
+  | unsupported tag =>
+    dsimp [stepToTreeJson, stepToJson, TreeJson.toJson, TreeJson.toJsonObj]
+
+theorem jsonDepthFuel_outputObservation (o : OutputObservationEnc) (fuel : Nat) :
+    jsonDepthFuel fuel (outputObservationToTreeJson o).toJson =
+      jsonDepthFuel fuel (outputObservationToJson o) := by
+  dsimp [outputObservationToTreeJson, outputObservationToJson, TreeJson.toJson, TreeJson.toJsonObj]
+  rw [natToTreeJson_toJson, qualifiedPortToTreeJson_toJson, packedValueFullToTreeJson_toJson]
+  refine jsonDepthFuel_mkObj_perm fuel _ _ ?_ ?_
+  · simp [List.map_cons, List.map_nil]
+  · refine perm_of_nodup_keys_mem _ _ ?_ ?_ ?_
+    · simp [List.map_cons, List.map_nil]
+    · simp [List.map_cons, List.map_nil]
+    · intro p; simp [List.mem_cons, List.not_mem_nil]; tauto
+
+theorem jsonDepthFuel_compositionStepPayload (p : CompositionStepPayloadEnc) (fuel : Nat) :
+    jsonDepthFuel fuel (compositionStepPayloadToTreeJson p).toJson =
+      jsonDepthFuel fuel (compositionStepPayloadToJson p) := by
+  cases fuel with
+  | zero =>
+    dsimp [compositionStepPayloadToTreeJson, compositionStepPayloadToJson, TreeJson.toJson,
+      jsonDepthFuel]
+  | succ fuel =>
+    dsimp [compositionStepPayloadToTreeJson, compositionStepPayloadToJson, TreeJson.toJson,
+      TreeJson.toJsonObj]
+    rw [toJsonList_map, natToTreeJson_toJson]
+    have hcfg := jsonDepthFuel_config p.config fuel (fun x _ f => jsonDepthFuel_component x f)
+    have hbnd := jsonDepthFuel_boundary p.boundary fuel
+    have hstep := jsonDepthFuel_step p.step fuel
+    have hpre := jsonDepthFuel_world p.pre fuel
+    have hhist := jsonDepthFuel_arr_congr
+      (fun x => (outputObservationToTreeJson x).toJson) outputObservationToJson p.history
+      (fun x _ f => jsonDepthFuel_outputObservation x f) fuel
+    have h₁ : ([("config", (configToTreeJson p.config).toJson),
+        ("boundary", (boundaryToTreeJson p.boundary).toJson),
+        ("index", Json.num (JsonNumber.fromNat p.index)),
+        ("history", Json.arr (p.history.map (fun x => (outputObservationToTreeJson x).toJson)).toArray),
+        ("step", (stepToTreeJson p.step).toJson),
+        ("pre", (worldToTreeJson p.pre).toJson)].map Prod.fst).Nodup := by
+      simp [List.map_cons, List.map_nil]
+    have h₂ : ([("boundary", boundaryToJson p.boundary),
+        ("config", configToJson p.config),
+        ("history", Json.arr (p.history.map outputObservationToJson).toArray),
+        ("index", Json.num (JsonNumber.fromNat p.index)),
+        ("pre", worldToJson p.pre),
+        ("step", stepToJson p.step)].map Prod.fst).Nodup := by
+      simp [List.map_cons, List.map_nil]
+    rw [jsonDepthFuel_mkObj_succ fuel _ h₁, jsonDepthFuel_mkObj_succ fuel _ h₂]
+    dsimp only [List.foldl]
+    rw [hcfg, hbnd, hhist, hstep, hpre]
+    have : Std.Commutative (Nat.max : Nat → Nat → Nat) := ⟨Nat.max_comm⟩
+    have : Std.Associative (Nat.max : Nat → Nat → Nat) := ⟨Nat.max_assoc⟩
+    ac_rfl
+
+theorem jsonDepthFuel_compositionRunPayload (p : CompositionRunPayloadEnc) (fuel : Nat) :
+    jsonDepthFuel fuel (compositionRunPayloadToTreeJson p).toJson =
+      jsonDepthFuel fuel (compositionRunPayloadToJson p) := by
+  cases fuel with
+  | zero =>
+    dsimp [compositionRunPayloadToTreeJson, compositionRunPayloadToJson, TreeJson.toJson,
+      jsonDepthFuel]
+  | succ fuel =>
+    dsimp [compositionRunPayloadToTreeJson, compositionRunPayloadToJson, TreeJson.toJson,
+      TreeJson.toJsonObj]
+    rw [toJsonList_map, toJsonList_map]
+    have hcfg := jsonDepthFuel_config p.config fuel (fun x _ f => jsonDepthFuel_component x f)
+    have hw := jsonDepthFuel_world p.world fuel
+    have hbnds := jsonDepthFuel_arr_congr
+      (fun x => (boundaryToTreeJson x).toJson) boundaryToJson p.boundaries
+      (fun x _ f => jsonDepthFuel_boundary x f) fuel
+    have hsteps := jsonDepthFuel_arr_congr
+      (fun x => (stepToTreeJson x).toJson) stepToJson p.steps
+      (fun x _ f => jsonDepthFuel_step x f) fuel
+    have h₁ : ([("config", (configToTreeJson p.config).toJson),
+        ("boundaries", Json.arr (p.boundaries.map (fun x => (boundaryToTreeJson x).toJson)).toArray),
+        ("world", (worldToTreeJson p.world).toJson),
+        ("steps", Json.arr (p.steps.map (fun x => (stepToTreeJson x).toJson)).toArray)].map
+          Prod.fst).Nodup := by
+      simp [List.map_cons, List.map_nil]
+    have h₂ : ([("boundaries", Json.arr (p.boundaries.map boundaryToJson).toArray),
+        ("config", configToJson p.config),
+        ("steps", Json.arr (p.steps.map stepToJson).toArray),
+        ("world", worldToJson p.world)].map Prod.fst).Nodup := by
+      simp [List.map_cons, List.map_nil]
+    rw [jsonDepthFuel_mkObj_succ fuel _ h₁, jsonDepthFuel_mkObj_succ fuel _ h₂]
+    dsimp only [List.foldl]
+    rw [hcfg, hbnds, hw, hsteps]
+    have : Std.Commutative (Nat.max : Nat → Nat → Nat) := ⟨Nat.max_comm⟩
+    have : Std.Associative (Nat.max : Nat → Nat → Nat) := ⟨Nat.max_assoc⟩
+    ac_rfl
+
+theorem jsonDepthFuel_decodedIR_step (env : EnvelopeEnc) (p : CompositionStepPayloadEnc)
+    (fuel : Nat) :
+    jsonDepthFuel fuel (decodedIRToJson (.execution (.step env p))) =
+      jsonDepthFuel fuel (moduleToTreeJson (.execution (.step env p))).toJson := by
+  dsimp [decodedIRToJson, moduleToTreeJson]
+  exact (jsonDepthFuel_envelope env (compositionStepPayloadToTreeJson p)
+    (compositionStepPayloadToJson p) (jsonDepthFuel_compositionStepPayload p) fuel).symm
+
+theorem jsonDepthFuel_decodedIR_run (env : EnvelopeEnc) (p : CompositionRunPayloadEnc)
+    (fuel : Nat) :
+    jsonDepthFuel fuel (decodedIRToJson (.execution (.run env p))) =
+      jsonDepthFuel fuel (moduleToTreeJson (.execution (.run env p))).toJson := by
+  dsimp [decodedIRToJson, moduleToTreeJson]
+  exact (jsonDepthFuel_envelope env (compositionRunPayloadToTreeJson p)
+    (compositionRunPayloadToJson p) (jsonDepthFuel_compositionRunPayload p) fuel).symm
+
+theorem jsonDepthFuel_decodedIR (ir : DecodedIR) (fuel : Nat) :
+    jsonDepthFuel fuel (decodedIRToJson ir) =
+      jsonDepthFuel fuel (moduleToTreeJson ir).toJson := by
+  cases ir with
+  | execution ex =>
+    cases ex with
+    | typed env p => exact jsonDepthFuel_decodedIR_typed env p fuel
+    | step env p => exact jsonDepthFuel_decodedIR_step env p fuel
+    | run env p => exact jsonDepthFuel_decodedIR_run env p fuel
+  | audit _ =>
+    dsimp [decodedIRToJson, moduleToTreeJson, TreeJson.toJson]
+  | codec _ =>
+    dsimp [decodedIRToJson, moduleToTreeJson, TreeJson.toJson]
+
+/-- Universal TreeJson depth bound for every structurally admissible composition-step module. -/
+theorem moduleToTreeJson_step_depth_le_64 (env : EnvelopeEnc) (p : CompositionStepPayloadEnc)
+    (h_adm : StructurallyAdmissibleIR (.execution (.step env p))) :
+    TreeJson.depth (moduleToTreeJson (.execution (.step env p))) ≤ 64 := by
+  have h_valid := moduleToTreeJson_valid _ h_adm
+  have h_wd : jsonDepth (decodedIRToJson (.execution (.step env p))) ≤ 64 := by
+    rcases h_adm with ⟨h_sup, _⟩
+    exact h_sup.2.1
+  have h_eq := jsonDepthFuel_decodedIR_step env p 100
+  have h_sem : jsonDepth (moduleToTreeJson (.execution (.step env p))).toJson ≤ 64 := by
+    simpa [jsonDepth] using (h_eq.symm.trans_le h_wd)
+  exact TreeJson.depth_le_of_jsonDepth_toJson_le_64 _ h_valid h_sem
+
+/-- Universal TreeJson depth bound for every structurally admissible composition-run module. -/
+theorem moduleToTreeJson_run_depth_le_64 (env : EnvelopeEnc) (p : CompositionRunPayloadEnc)
+    (h_adm : StructurallyAdmissibleIR (.execution (.run env p))) :
+    TreeJson.depth (moduleToTreeJson (.execution (.run env p))) ≤ 64 := by
+  have h_valid := moduleToTreeJson_valid _ h_adm
+  have h_wd : jsonDepth (decodedIRToJson (.execution (.run env p))) ≤ 64 := by
+    rcases h_adm with ⟨h_sup, _⟩
+    exact h_sup.2.1
+  have h_eq := jsonDepthFuel_decodedIR_run env p 100
+  have h_sem : jsonDepth (moduleToTreeJson (.execution (.run env p))).toJson ≤ 64 := by
+    simpa [jsonDepth] using (h_eq.symm.trans_le h_wd)
+  exact TreeJson.depth_le_of_jsonDepth_toJson_le_64 _ h_valid h_sem
+
+/-- Universal TreeJson depth bound for every structurally admissible IR, including nonempty
+    registries and composition-step / composition-run payloads. -/
+theorem moduleToTreeJson_depth_le_64 (ir : DecodedIR) (h_adm : StructurallyAdmissibleIR ir) :
+    TreeJson.depth (moduleToTreeJson ir) ≤ 64 := by
+  have h_valid := moduleToTreeJson_valid ir h_adm
+  have h_wd : jsonDepth (decodedIRToJson ir) ≤ 64 := by
+    rcases h_adm with ⟨h_sup, _⟩
+    exact h_sup.2.1
+  have h_eq := jsonDepthFuel_decodedIR ir 100
+  have h_sem : jsonDepth (moduleToTreeJson ir).toJson ≤ 64 := by
+    simpa [jsonDepth] using (h_eq.symm.trans_le h_wd)
+  exact TreeJson.depth_le_of_jsonDepth_toJson_le_64 _ h_valid h_sem
+
+theorem decodeBytes_encodeModule_step_of_lex (env : EnvelopeEnc) (p : CompositionStepPayloadEnc)
+    (h_adm : StructurallyAdmissibleIR (.execution (.step env p)))
+    (h_lex : scanLexical (encodeModule (.execution (.step env p))) = .ok ()) :
+    decodeBytes (encodeModule (.execution (.step env p))) = .ok (.execution (.step env p)) :=
+  decodeBytes_encodeModule_of_depth_and_lex _ h_adm
+    (moduleToTreeJson_step_depth_le_64 env p h_adm) h_lex
+
+theorem decodeBytes_encodeModule_run_of_lex (env : EnvelopeEnc) (p : CompositionRunPayloadEnc)
+    (h_adm : StructurallyAdmissibleIR (.execution (.run env p)))
+    (h_lex : scanLexical (encodeModule (.execution (.run env p))) = .ok ()) :
+    decodeBytes (encodeModule (.execution (.run env p))) = .ok (.execution (.run env p)) :=
+  decodeBytes_encodeModule_of_depth_and_lex _ h_adm
+    (moduleToTreeJson_run_depth_le_64 env p h_adm) h_lex
+
+/-- Production roundtrip with `h_depth` discharged from `StructurallyAdmissibleIR`.
+    The existing `decodeBytes_encodeModule_of_depth_and_lex` signature is unchanged. -/
+theorem decodeBytes_encodeModule_of_lex (ir : DecodedIR)
+    (h_adm : StructurallyAdmissibleIR ir)
+    (h_lex : scanLexical (encodeModule ir) = .ok ()) :
+    decodeBytes (encodeModule ir) = .ok ir :=
+  decodeBytes_encodeModule_of_depth_and_lex ir h_adm (moduleToTreeJson_depth_le_64 ir h_adm) h_lex
+
+end DefiKernel.Certificates
+import DefiKernel.Certificates.Roundtrip
+import DefiKernel.Certificates.CompositionDepth
+import Mathlib.Tactic.IntervalCases
+
+namespace DefiKernel.Certificates
+
+set_option linter.style.longLine false
+set_option linter.style.setOption false
+set_option linter.style.maxHeartbeats false
+set_option maxHeartbeats 4000000
+
+open Lean
+
+/-! Continuation lemmas for `scanLexicalFuel` on canonical `TreeJson.encode` fragments.
+    Strings consume one outer scanner step; numbers remain buffered until a delimiter. -/
+
+/-- False precisely when the scanner is waiting for an object key. Matches the R28
+    `scanLexicalFuel_step_str_val` hypothesis. -/
+def notExpectKey (scopes : List LexScope) : Prop :=
+  match scopes with
+  | LexScope.inObj _ true :: _ => false
+  | _ => true
+
+theorem notExpectKey_nil : notExpectKey [] := rfl
+
+theorem notExpectKey_arr (cnt : Nat) (rest : List LexScope) :
+    notExpectKey (LexScope.inArr cnt :: rest) := rfl
+
+theorem notExpectKey_obj_val (keys : List String) (rest : List LexScope) :
+    notExpectKey (LexScope.inObj keys false :: rest) := rfl
+
+mutual
+  /-- Outer scanner steps consumed by a canonical encoding (strings cost 1). -/
+  def scanCost : TreeJson → Nat
+    | .null => 4
+    | .bool true => 4
+    | .bool false => 5
+    | .num n => (toString n).length
+    | .str _ => 1
+    | .arr xs => 2 + scanCostList xs
+    | .obj kvs => 2 + scanCostObj kvs
+
+  def scanCostList : List TreeJson → Nat
+    | [] => 0
+    | [x] => scanCost x
+    | x :: xs => scanCost x + 1 + scanCostList xs
+
+  def scanCostObj : List (String × TreeJson) → Nat
+    | [] => 0
+    | [(_, v)] => 2 + scanCost v
+    | (_, v) :: kvs => 3 + scanCost v + scanCostObj kvs
+end
+
+def numBuf : TreeJson → List Char
+  | .num n => (toString n).toList
+  | _ => []
+
+theorem encode_null_toList (rest : List Char) :
+    (TreeJson.encode .null).toList ++ rest = 'n' :: 'u' :: 'l' :: 'l' :: rest := rfl
+
+theorem encode_bool_true_toList (rest : List Char) :
+    (TreeJson.encode (.bool true)).toList ++ rest = 't' :: 'r' :: 'u' :: 'e' :: rest := rfl
+
+theorem encode_bool_false_toList (rest : List Char) :
+    (TreeJson.encode (.bool false)).toList ++ rest =
+      'f' :: 'a' :: 'l' :: 's' :: 'e' :: rest := rfl
+
+theorem encodeList_nil_toList (rest : List Char) :
+    (TreeJson.encodeList []).toList ++ rest = rest := rfl
+
+theorem encodeList_singleton_toList (x : TreeJson) (rest : List Char) :
+    (TreeJson.encodeList [x]).toList ++ rest = (TreeJson.encode x).toList ++ rest := by
+  dsimp [TreeJson.encodeList]
+
+/-- Consume a non-structural, non-numeric, non-whitespace character with an empty numeric buffer. -/
+theorem scanLexicalFuel_other (fuel : Nat) (c : Char) (rest : List Char) (depth : Nat)
+    (scopes : List LexScope)
+    (h_quote : (c == '"') = false) (h_lbrace : (c == '{') = false)
+    (h_rbrace : (c == '}') = false) (h_lbracket : (c == '[') = false)
+    (h_rbracket : (c == ']') = false) (h_comma : (c == ',') = false)
+    (h_colon : (c == ':') = false)
+    (h_num : (((decide (c ≥ '0') && decide (c ≤ '9')) || (c == '-')) || (c == '.')) = false)
+    (h_space : isSpace c = false) :
+    scanLexicalFuel (fuel + 1) (c :: rest) depth scopes [] false =
+      scanLexicalFuel fuel rest depth scopes [] false := by
+  dsimp [scanLexicalFuel, scanLexicalCheckNum]
+  rw [h_quote, h_lbrace, h_rbrace, h_lbracket, h_rbracket, h_comma, h_colon]
+  simp only [Bool.false_eq_true, ↓reduceIte, Bool.true_and]
+  rw [h_num]
+  simp only [Bool.false_eq_true, ↓reduceIte]
+  rw [h_space]
+  simp only [Bool.false_eq_true, ↓reduceIte]
+
+theorem scanLexicalFuel_n (fuel : Nat) (rest : List Char) (depth : Nat) (scopes : List LexScope) :
+    scanLexicalFuel (fuel + 1) ('n' :: rest) depth scopes [] false =
+      scanLexicalFuel fuel rest depth scopes [] false :=
+  scanLexicalFuel_other fuel 'n' rest depth scopes rfl rfl rfl rfl rfl rfl rfl rfl rfl
+
+theorem scanLexicalFuel_u (fuel : Nat) (rest : List Char) (depth : Nat) (scopes : List LexScope) :
+    scanLexicalFuel (fuel + 1) ('u' :: rest) depth scopes [] false =
+      scanLexicalFuel fuel rest depth scopes [] false :=
+  scanLexicalFuel_other fuel 'u' rest depth scopes rfl rfl rfl rfl rfl rfl rfl rfl rfl
+
+theorem scanLexicalFuel_l (fuel : Nat) (rest : List Char) (depth : Nat) (scopes : List LexScope) :
+    scanLexicalFuel (fuel + 1) ('l' :: rest) depth scopes [] false =
+      scanLexicalFuel fuel rest depth scopes [] false :=
+  scanLexicalFuel_other fuel 'l' rest depth scopes rfl rfl rfl rfl rfl rfl rfl rfl rfl
+
+theorem scanLexicalFuel_t (fuel : Nat) (rest : List Char) (depth : Nat) (scopes : List LexScope) :
+    scanLexicalFuel (fuel + 1) ('t' :: rest) depth scopes [] false =
+      scanLexicalFuel fuel rest depth scopes [] false :=
+  scanLexicalFuel_other fuel 't' rest depth scopes rfl rfl rfl rfl rfl rfl rfl rfl rfl
+
+theorem scanLexicalFuel_r (fuel : Nat) (rest : List Char) (depth : Nat) (scopes : List LexScope) :
+    scanLexicalFuel (fuel + 1) ('r' :: rest) depth scopes [] false =
+      scanLexicalFuel fuel rest depth scopes [] false :=
+  scanLexicalFuel_other fuel 'r' rest depth scopes rfl rfl rfl rfl rfl rfl rfl rfl rfl
+
+theorem scanLexicalFuel_e (fuel : Nat) (rest : List Char) (depth : Nat) (scopes : List LexScope) :
+    scanLexicalFuel (fuel + 1) ('e' :: rest) depth scopes [] false =
+      scanLexicalFuel fuel rest depth scopes [] false :=
+  scanLexicalFuel_other fuel 'e' rest depth scopes rfl rfl rfl rfl rfl rfl rfl rfl rfl
+
+theorem scanLexicalFuel_f (fuel : Nat) (rest : List Char) (depth : Nat) (scopes : List LexScope) :
+    scanLexicalFuel (fuel + 1) ('f' :: rest) depth scopes [] false =
+      scanLexicalFuel fuel rest depth scopes [] false :=
+  scanLexicalFuel_other fuel 'f' rest depth scopes rfl rfl rfl rfl rfl rfl rfl rfl rfl
+
+theorem scanLexicalFuel_a (fuel : Nat) (rest : List Char) (depth : Nat) (scopes : List LexScope) :
+    scanLexicalFuel (fuel + 1) ('a' :: rest) depth scopes [] false =
+      scanLexicalFuel fuel rest depth scopes [] false :=
+  scanLexicalFuel_other fuel 'a' rest depth scopes rfl rfl rfl rfl rfl rfl rfl rfl rfl
+
+theorem scanLexicalFuel_s (fuel : Nat) (rest : List Char) (depth : Nat) (scopes : List LexScope) :
+    scanLexicalFuel (fuel + 1) ('s' :: rest) depth scopes [] false =
+      scanLexicalFuel fuel rest depth scopes [] false :=
+  scanLexicalFuel_other fuel 's' rest depth scopes rfl rfl rfl rfl rfl rfl rfl rfl rfl
+
+theorem scanLexicalFuel_null (fuel : Nat) (rest : List Char) (depth : Nat) (scopes : List LexScope) :
+    scanLexicalFuel (fuel + 4) ('n' :: 'u' :: 'l' :: 'l' :: rest) depth scopes [] false =
+      scanLexicalFuel fuel rest depth scopes [] false := by
+  have h₁ := scanLexicalFuel_n (fuel + 3) ('u' :: 'l' :: 'l' :: rest) depth scopes
+  have h₂ := scanLexicalFuel_u (fuel + 2) ('l' :: 'l' :: rest) depth scopes
+  have h₃ := scanLexicalFuel_l (fuel + 1) ('l' :: rest) depth scopes
+  have h₄ := scanLexicalFuel_l fuel rest depth scopes
+  simp only [Nat.add_assoc] at h₁
+  rw [h₁, h₂, h₃, h₄]
+
+theorem scanLexicalFuel_true (fuel : Nat) (rest : List Char) (depth : Nat) (scopes : List LexScope) :
+    scanLexicalFuel (fuel + 4) ('t' :: 'r' :: 'u' :: 'e' :: rest) depth scopes [] false =
+      scanLexicalFuel fuel rest depth scopes [] false := by
+  have h₁ := scanLexicalFuel_t (fuel + 3) ('r' :: 'u' :: 'e' :: rest) depth scopes
+  have h₂ := scanLexicalFuel_r (fuel + 2) ('u' :: 'e' :: rest) depth scopes
+  have h₃ := scanLexicalFuel_u (fuel + 1) ('e' :: rest) depth scopes
+  have h₄ := scanLexicalFuel_e fuel rest depth scopes
+  simp only [Nat.add_assoc] at h₁
+  rw [h₁, h₂, h₃, h₄]
+
+theorem scanLexicalFuel_false (fuel : Nat) (rest : List Char) (depth : Nat) (scopes : List LexScope) :
+    scanLexicalFuel (fuel + 5) ('f' :: 'a' :: 'l' :: 's' :: 'e' :: rest) depth scopes [] false =
+      scanLexicalFuel fuel rest depth scopes [] false := by
+  have h₁ := scanLexicalFuel_f (fuel + 4) ('a' :: 'l' :: 's' :: 'e' :: rest) depth scopes
+  have h₂ := scanLexicalFuel_a (fuel + 3) ('l' :: 's' :: 'e' :: rest) depth scopes
+  have h₃ := scanLexicalFuel_l (fuel + 2) ('s' :: 'e' :: rest) depth scopes
+  have h₄ := scanLexicalFuel_s (fuel + 1) ('e' :: rest) depth scopes
+  have h₅ := scanLexicalFuel_e fuel rest depth scopes
+  simp only [Nat.add_assoc] at h₁
+  rw [h₁, h₂, h₃, h₄, h₅]
+
+theorem scanLexicalFuel_encode_null (fuel : Nat) (rest : List Char) (depth : Nat)
+    (scopes : List LexScope) :
+    scanLexicalFuel (fuel + scanCost .null) ((TreeJson.encode .null).toList ++ rest) depth scopes [] false =
+      scanLexicalFuel fuel rest depth scopes [] false := by
+  dsimp [scanCost]
+  rw [encode_null_toList]
+  exact scanLexicalFuel_null fuel rest depth scopes
+
+theorem scanLexicalFuel_encode_bool (fuel : Nat) (b : Bool) (rest : List Char) (depth : Nat)
+    (scopes : List LexScope) :
+    scanLexicalFuel (fuel + scanCost (.bool b))
+        ((TreeJson.encode (.bool b)).toList ++ rest) depth scopes [] false =
+      scanLexicalFuel fuel rest depth scopes [] false := by
+  cases b with
+  | true =>
+    dsimp [scanCost]
+    rw [encode_bool_true_toList]
+    exact scanLexicalFuel_true fuel rest depth scopes
+  | false =>
+    dsimp [scanCost]
+    rw [encode_bool_false_toList]
+    exact scanLexicalFuel_false fuel rest depth scopes
+
+theorem scanLexicalFuel_str_value (fuel : Nat) (s : String) (rest : List Char) (depth : Nat)
+    (scopes : List LexScope) (h_not_key : notExpectKey scopes) :
+    scanLexicalFuel (fuel + 1) ((escapeTreeString s).toList ++ rest) depth scopes [] false =
+      scanLexicalFuel fuel rest depth scopes [] false := by
+  rw [escapeTreeString_eq]
+  have h_app : ('"' :: (escapeChars s.toList ++ ['"'])) ++ rest =
+      '"' :: (escapeChars s.toList ++ ('"' :: rest)) := by
+    simp [List.append_assoc]
+  rw [h_app]
+  have h_lex := lexString_escapeJsonString s rest
+  exact scanLexicalFuel_step_str_val fuel s (escapeChars s.toList ++ ('"' :: rest)) rest depth scopes
+    h_not_key h_lex
+
+theorem scanLexicalFuel_str_key (fuel : Nat) (s : String) (rest : List Char) (depth : Nat)
+    (keys : List String) (restScopes : List LexScope)
+    (h_nodup : keys.contains s = false) :
+    scanLexicalFuel (fuel + 1) ((escapeTreeString s).toList ++ rest)
+        depth (LexScope.inObj keys true :: restScopes) [] false =
+      scanLexicalFuel fuel rest depth (LexScope.inObj (s :: keys) false :: restScopes) [] false := by
+  rw [escapeTreeString_eq]
+  have h_app : ('"' :: (escapeChars s.toList ++ ['"'])) ++ rest =
+      '"' :: (escapeChars s.toList ++ ('"' :: rest)) := by
+    simp [List.append_assoc]
+  rw [h_app]
+  have h_lex := lexString_escapeJsonString s rest
+  exact scanLexicalFuel_step_key fuel s (escapeChars s.toList ++ ('"' :: rest)) rest depth keys restScopes
+    h_lex h_nodup
+
+theorem scanLexicalFuel_encode_str (fuel : Nat) (s : String) (rest : List Char) (depth : Nat)
+    (scopes : List LexScope) (h_not_key : notExpectKey scopes) :
+    scanLexicalFuel (fuel + scanCost (.str s))
+        ((TreeJson.encode (.str s)).toList ++ rest) depth scopes [] false =
+      scanLexicalFuel fuel rest depth scopes [] false := by
+  dsimp [scanCost, TreeJson.encode]
+  exact scanLexicalFuel_str_value fuel s rest depth scopes h_not_key
+
+/-- Start a numeric buffer from an empty buffer on a digit or minus. -/
+theorem scanLexicalFuel_num_start (fuel : Nat) (c : Char) (rest : List Char) (depth : Nat)
+    (scopes : List LexScope)
+    (h_start : ((decide (c ≥ '0') && decide (c ≤ '9')) || (c == '-') || (c == '.')) = true)
+    (h_quote : (c == '"') = false) (h_lbrace : (c == '{') = false)
+    (h_rbrace : (c == '}') = false) (h_lbracket : (c == '[') = false)
+    (h_rbracket : (c == ']') = false) (h_comma : (c == ',') = false)
+    (h_colon : (c == ':') = false) :
+    scanLexicalFuel (fuel + 1) (c :: rest) depth scopes [] false =
+      scanLexicalFuel fuel rest depth scopes [c] false := by
+  dsimp [scanLexicalFuel]
+  rw [h_quote, h_lbrace, h_rbrace, h_lbracket, h_rbracket, h_comma, h_colon]
+  simp only [Bool.false_eq_true, ↓reduceIte, Bool.true_and]
+  rw [h_start]
+  simp only [eq_self, ↓reduceIte]
+
+/-- Continue a nonempty numeric buffer on a digit, sign, dot, or exponent character. -/
+theorem scanLexicalFuel_num_cont (fuel : Nat) (c : Char) (buf : List Char) (rest : List Char)
+    (depth : Nat) (scopes : List LexScope) (h_buf : buf ≠ [])
+    (h_cont : ((decide (c ≥ '0') && decide (c ≤ '9')) || (c == '-') || (c == '+') ||
+      (c == '.') || (c == 'e') || (c == 'E')) = true)
+    (h_quote : (c == '"') = false) (h_lbrace : (c == '{') = false)
+    (h_rbrace : (c == '}') = false) (h_lbracket : (c == '[') = false)
+    (h_rbracket : (c == ']') = false) (h_comma : (c == ',') = false)
+    (h_colon : (c == ':') = false) :
+    scanLexicalFuel (fuel + 1) (c :: rest) depth scopes buf false =
+      scanLexicalFuel fuel rest depth scopes (buf ++ [c]) false := by
+  dsimp [scanLexicalFuel]
+  rw [h_quote, h_lbrace, h_rbrace, h_lbracket, h_rbracket, h_comma, h_colon]
+  have hne : buf.isEmpty = false := by
+    cases buf with
+    | nil => exact (h_buf rfl).elim
+    | cons _ _ => rfl
+  simp only [hne, Bool.false_eq_true, ↓reduceIte, Bool.not_false, Bool.false_and, Bool.true_and]
+  rw [h_cont]
+  simp only [eq_self, ↓reduceIte]
+
+theorem digitChar_lt_10_isDigit (d : Nat) (h : d < 10) :
+    ((decide (Nat.digitChar d ≥ '0') && decide (Nat.digitChar d ≤ '9'))) = true := by
+  interval_cases d <;> simp [Nat.digitChar]
+
+theorem isDigit_ge_le (c : Char) (h : c.isDigit = true) :
+    (decide (c ≥ '0') && decide (c ≤ '9')) = true := by
+  have hnat := Char.isDigit_iff_toNat.mp h
+  have h0 : c ≥ '0' := by
+    change '0'.val ≤ c.val
+    rw [UInt32.le_iff_toNat_le, Char.toNat_val, Char.toNat_val]
+    exact hnat.1
+  have h9 : c ≤ '9' := by
+    change c.val ≤ '9'.val
+    rw [UInt32.le_iff_toNat_le, Char.toNat_val, Char.toNat_val]
+    exact hnat.2
+  simp [h0, h9]
+
+theorem isDigit_num_start (c : Char) (h : c.isDigit = true) :
+    ((decide (c ≥ '0') && decide (c ≤ '9')) || (c == '-') || (c == '.')) = true := by
+  simp [isDigit_ge_le c h]
+
+theorem isDigit_num_cont (c : Char) (h : c.isDigit = true) :
+    ((decide (c ≥ '0') && decide (c ≤ '9')) || (c == '-') || (c == '+') ||
+      (c == '.') || (c == 'e') || (c == 'E')) = true := by
+  simp [isDigit_ge_le c h]
+
+theorem isDigit_ne_nondigit (c d : Char) (hc : c.isDigit = true) (hd : d.isDigit = false) :
+    (c == d) = false := by
+  simp [beq_iff_eq]
+  intro heq
+  subst heq
+  simp [hc] at hd
+
+theorem isDigit_not_struct (c : Char) (h : c.isDigit = true) :
+    (c == '"') = false ∧ (c == '{') = false ∧ (c == '}') = false ∧
+    (c == '[') = false ∧ (c == ']') = false ∧ (c == ',') = false ∧
+    (c == ':') = false := by
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_⟩ <;>
+    exact isDigit_ne_nondigit c _ h rfl
+
+theorem minus_not_struct :
+    (('-' == '"') = false) ∧ (('-' == '{') = false) ∧ (('-' == '}') = false) ∧
+    (('-' == '[') = false) ∧ (('-' == ']') = false) ∧ (('-' == ',') = false) ∧
+    (('-' == ':') = false) := ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
+
+theorem minus_num_start :
+    ((decide (('-' : Char) ≥ '0') && decide (('-' : Char) ≤ '9')) || ('-' == '-') ||
+      ('-' == '.')) = true := rfl
+
+theorem scanLexicalFuel_digit_start (fuel : Nat) (c : Char) (rest : List Char) (depth : Nat)
+    (scopes : List LexScope) (h : c.isDigit = true) :
+    scanLexicalFuel (fuel + 1) (c :: rest) depth scopes [] false =
+      scanLexicalFuel fuel rest depth scopes [c] false := by
+  have hs := isDigit_not_struct c h
+  exact scanLexicalFuel_num_start fuel c rest depth scopes (isDigit_num_start c h)
+    hs.1 hs.2.1 hs.2.2.1 hs.2.2.2.1 hs.2.2.2.2.1 hs.2.2.2.2.2.1 hs.2.2.2.2.2.2
+
+theorem scanLexicalFuel_digit_cont (fuel : Nat) (c : Char) (buf rest : List Char) (depth : Nat)
+    (scopes : List LexScope) (h_buf : buf ≠ []) (h : c.isDigit = true) :
+    scanLexicalFuel (fuel + 1) (c :: rest) depth scopes buf false =
+      scanLexicalFuel fuel rest depth scopes (buf ++ [c]) false := by
+  have hs := isDigit_not_struct c h
+  exact scanLexicalFuel_num_cont fuel c buf rest depth scopes h_buf (isDigit_num_cont c h)
+    hs.1 hs.2.1 hs.2.2.1 hs.2.2.2.1 hs.2.2.2.2.1 hs.2.2.2.2.2.1 hs.2.2.2.2.2.2
+
+theorem scanLexicalFuel_digits_cont (fuel : Nat) (ds : List Char) (buf rest : List Char)
+    (depth : Nat) (scopes : List LexScope) (h_buf : buf ≠ [])
+    (h_dig : ∀ c ∈ ds, c.isDigit = true) :
+    scanLexicalFuel (fuel + ds.length) (ds ++ rest) depth scopes buf false =
+      scanLexicalFuel fuel rest depth scopes (buf ++ ds) false := by
+  induction ds generalizing fuel buf with
+  | nil =>
+    simp
+  | cons c ds ih =>
+    have hc : c.isDigit = true := h_dig c (List.Mem.head _)
+    have hds : ∀ x ∈ ds, x.isDigit = true := fun x hx => h_dig x (List.Mem.tail _ hx)
+    have hstep := scanLexicalFuel_digit_cont (fuel + ds.length) c buf (ds ++ rest) depth scopes
+      h_buf hc
+    simp only [List.length_cons, Nat.add_comm ds.length, Nat.add_assoc] at hstep ⊢
+    rw [List.cons_append, hstep]
+    have hbuf' : buf ++ [c] ≠ [] := by
+      cases buf <;> simp
+    have hrest := ih fuel (buf ++ [c]) hbuf' hds
+    simpa [List.append_assoc] using hrest
+
+theorem scanLexicalFuel_nat (fuel : Nat) (n : Nat) (rest : List Char) (depth : Nat)
+    (scopes : List LexScope) :
+    scanLexicalFuel (fuel + (toString n).length)
+        ((toString n).toList ++ rest) depth scopes [] false =
+      scanLexicalFuel fuel rest depth scopes (toString n).toList false := by
+  have h_repr : (toString n).toList = Nat.toDigits 10 n := by
+    change (Nat.repr n).toList = Nat.toDigits 10 n
+    exact Nat.toList_repr
+  rw [h_repr]
+  rcases toDigits_nonempty n with ⟨c, tl, h_digits⟩
+  rw [h_digits]
+  have hl : ∀ x ∈ Nat.toDigits 10 n, x.isDigit = true := fun x hx =>
+    Nat.isDigit_of_mem_toDigits (by decide) (by decide) hx
+  have hc : c.isDigit = true := hl c (by simp [h_digits])
+  have htl : ∀ x ∈ tl, x.isDigit = true := fun x hx =>
+    hl x (by simp [h_digits, hx])
+  have hlen : (toString n).length = (c :: tl).length := by
+    rw [← String.length_toList, h_repr, h_digits]
+  simp only [List.cons_append]
+  have hstart := scanLexicalFuel_digit_start (fuel + tl.length) c (tl ++ rest) depth scopes hc
+  have : fuel + (toString n).length = fuel + tl.length + 1 := by
+    rw [hlen]
+    simp [List.length_cons, Nat.add_assoc]
+  rw [this, hstart]
+  have hbuf : [c] ≠ [] := by simp
+  have hcont := scanLexicalFuel_digits_cont fuel tl [c] rest depth scopes hbuf htl
+  simpa [List.singleton_append] using hcont
+
+theorem scanLexicalFuel_minus (fuel : Nat) (rest : List Char) (depth : Nat)
+    (scopes : List LexScope) :
+    scanLexicalFuel (fuel + 1) ('-' :: rest) depth scopes [] false =
+      scanLexicalFuel fuel rest depth scopes ['-'] false := by
+  have hs := minus_not_struct
+  exact scanLexicalFuel_num_start fuel '-' rest depth scopes minus_num_start
+    hs.1 hs.2.1 hs.2.2.1 hs.2.2.2.1 hs.2.2.2.2.1 hs.2.2.2.2.2.1 hs.2.2.2.2.2.2
+
+theorem scanLexicalFuel_int (fuel : Nat) (i : Int) (rest : List Char) (depth : Nat)
+    (scopes : List LexScope) :
+    scanLexicalFuel (fuel + (toString i).length)
+        ((toString i).toList ++ rest) depth scopes [] false =
+      scanLexicalFuel fuel rest depth scopes (toString i).toList false := by
+  cases i with
+  | ofNat n =>
+    exact scanLexicalFuel_nat fuel n rest depth scopes
+  | negSucc n =>
+    have h_repr : (toString (Int.negSucc n)).toList = '-' :: (Nat.repr (n + 1)).toList := by
+      change ("-" ++ Nat.repr (n + 1)).toList = '-' :: (Nat.repr (n + 1)).toList
+      rw [String.toList_append]
+      rfl
+    have h_nat : (Nat.repr (n + 1)).toList = Nat.toDigits 10 (n + 1) := Nat.toList_repr
+    have hlen : (toString (Int.negSucc n)).length = (Nat.repr (n + 1)).length + 1 := by
+      rw [← String.length_toList, h_repr]
+      simp only [List.length_cons]
+      rw [String.length_toList]
+    rw [h_repr]
+    simp only [List.cons_append]
+    have : fuel + (toString (Int.negSucc n)).length = fuel + (Nat.repr (n + 1)).length + 1 := by
+      rw [hlen, Nat.add_assoc]
+    rw [this]
+    have hminus := scanLexicalFuel_minus (fuel + (Nat.repr (n + 1)).length)
+      ((Nat.repr (n + 1)).toList ++ rest) depth scopes
+    rw [hminus]
+    have hbuf : ['-'] ≠ [] := by simp
+    have hl : ∀ x ∈ Nat.toDigits 10 (n + 1), x.isDigit = true := fun x hx =>
+      Nat.isDigit_of_mem_toDigits (by decide) (by decide) hx
+    have htl : ∀ x ∈ (Nat.repr (n + 1)).toList, x.isDigit = true := by
+      intro x hx
+      rw [h_nat] at hx
+      exact hl x hx
+    have hcont := scanLexicalFuel_digits_cont fuel (Nat.repr (n + 1)).toList ['-'] rest
+      depth scopes hbuf htl
+    rw [← String.length_toList]
+    simpa [List.singleton_append] using hcont
+
+theorem scanLexicalFuel_encode_num (fuel : Nat) (n : Int) (rest : List Char) (depth : Nat)
+    (scopes : List LexScope) :
+    scanLexicalFuel (fuel + scanCost (.num n))
+        ((TreeJson.encode (.num n)).toList ++ rest) depth scopes [] false =
+      scanLexicalFuel fuel rest depth scopes (toString n).toList false := by
+  dsimp [scanCost, TreeJson.encode, numBuf]
+  exact scanLexicalFuel_int fuel n rest depth scopes
+
+theorem ofList_contains_false_of_not_mem (cs : List Char) (c : Char) (h : c ∉ cs) :
+    (String.ofList cs).contains c = false := by
+  rw [String.contains_char_eq, String.toList_ofList]
+  simp [h]
+
+theorem toDigits_not_mem_dot_e (n : Nat) :
+    ('.' ∉ Nat.toDigits 10 n) ∧ ('e' ∉ Nat.toDigits 10 n) ∧ ('E' ∉ Nat.toDigits 10 n) := by
+  have hl : ∀ x ∈ Nat.toDigits 10 n, x.isDigit = true := fun x hx =>
+    Nat.isDigit_of_mem_toDigits (by decide) (by decide) hx
+  refine ⟨?_, ?_, ?_⟩ <;> intro hmem <;>
+    have := hl _ hmem <;> simp at this
+
+theorem scanLexicalCheckNum_nat (n : Nat) :
+    scanLexicalCheckNum (toString n).toList = .ok () := by
+  have h_repr : (toString n).toList = Nat.toDigits 10 n := by
+    change (Nat.repr n).toList = Nat.toDigits 10 n
+    exact Nat.toList_repr
+  dsimp [scanLexicalCheckNum]
+  have hne : ((toString n).toList).isEmpty = false := by
+    have : 1 ≤ (toString n).toList.length := toString_nat_length_ge_one n
+    cases hcs : (toString n).toList with
+    | nil =>
+      rw [hcs] at this
+      simp at this
+    | cons _ _ => rfl
+  simp only [hne, Bool.not_false]
+  have ⟨hd, he, hE⟩ := toDigits_not_mem_dot_e n
+  have hdot : (String.ofList (toString n).toList).contains '.' = false := by
+    rw [h_repr]; exact ofList_contains_false_of_not_mem _ _ hd
+  have he' : (String.ofList (toString n).toList).contains 'e' = false := by
+    rw [h_repr]; exact ofList_contains_false_of_not_mem _ _ he
+  have hE' : (String.ofList (toString n).toList).contains 'E' = false := by
+    rw [h_repr]; exact ofList_contains_false_of_not_mem _ _ hE
+  rw [hdot, he', hE']
+  simp
+
+theorem scanLexicalCheckNum_int (i : Int) :
+    scanLexicalCheckNum (toString i).toList = .ok () := by
+  cases i with
+  | ofNat n => exact scanLexicalCheckNum_nat n
+  | negSucc n =>
+    have h_repr : (toString (Int.negSucc n)).toList = '-' :: (Nat.repr (n + 1)).toList := by
+      change ("-" ++ Nat.repr (n + 1)).toList = '-' :: (Nat.repr (n + 1)).toList
+      rw [String.toList_append]
+      rfl
+    have h_nat : (Nat.repr (n + 1)).toList = Nat.toDigits 10 (n + 1) := Nat.toList_repr
+    dsimp [scanLexicalCheckNum]
+    have hne : ((toString (Int.negSucc n)).toList).isEmpty = false := by
+      rw [h_repr]; rfl
+    simp only [hne, Bool.not_false]
+    have ⟨hd, he, hE⟩ := toDigits_not_mem_dot_e (n + 1)
+    have hmem (c : Char) (hc : c ∈ (toString (Int.negSucc n)).toList) :
+        c = '-' ∨ c ∈ Nat.toDigits 10 (n + 1) := by
+      rw [h_repr, h_nat] at hc
+      simpa using hc
+    have hdot : (String.ofList (toString (Int.negSucc n)).toList).contains '.' = false := by
+      apply ofList_contains_false_of_not_mem
+      intro hmem'
+      have := hmem '.' hmem'
+      rcases this with h | h
+      · cases h
+      · exact hd h
+    have he' : (String.ofList (toString (Int.negSucc n)).toList).contains 'e' = false := by
+      apply ofList_contains_false_of_not_mem
+      intro hmem'
+      have := hmem 'e' hmem'
+      rcases this with h | h
+      · cases h
+      · exact he h
+    have hE' : (String.ofList (toString (Int.negSucc n)).toList).contains 'E' = false := by
+      apply ofList_contains_false_of_not_mem
+      intro hmem'
+      have := hmem 'E' hmem'
+      rcases this with h | h
+      · cases h
+      · exact hE h
+    rw [hdot, he', hE']
+    simp
+
+theorem scanLexicalCheckNum_numBuf (t : TreeJson) :
+    scanLexicalCheckNum (numBuf t) = .ok () := by
+  cases t with
+  | num n => exact scanLexicalCheckNum_int n
+  | null | bool _ | str _ | arr _ | obj _ => simp [numBuf, scanLexicalCheckNum]
+
+theorem scanLexicalFuel_comma_arr_flush (fuel : Nat) (rest : List Char) (depth : Nat)
+    (cnt : Nat) (h_cnt : cnt + 1 ≤ 4096) (restScopes : List LexScope) (buf : List Char)
+    (h_ok : scanLexicalCheckNum buf = .ok ()) :
+    scanLexicalFuel (fuel + 1) (',' :: rest) depth (LexScope.inArr cnt :: restScopes) buf false =
+      scanLexicalFuel fuel rest depth (LexScope.inArr (cnt + 1) :: restScopes) [] false := by
+  dsimp [scanLexicalFuel]
+  rw [h_ok]
+  dsimp
+  have : ¬ (cnt + 1 > 4096) := by omega
+  rw [if_neg this]
+
+theorem scanLexicalFuel_comma_obj_flush (fuel : Nat) (rest : List Char) (depth : Nat)
+    (keys : List String) (restScopes : List LexScope) (buf : List Char)
+    (h_ok : scanLexicalCheckNum buf = .ok ()) :
+    scanLexicalFuel (fuel + 1) (',' :: rest) depth (LexScope.inObj keys false :: restScopes) buf false =
+      scanLexicalFuel fuel rest depth (LexScope.inObj keys true :: restScopes) [] false := by
+  dsimp [scanLexicalFuel]
+  rw [h_ok]
+
+theorem scanLexicalFuel_rbrace_flush (fuel : Nat) (rest : List Char) (depth : Nat)
+    (sc : LexScope) (scopes : List LexScope) (buf : List Char)
+    (h_depth : depth > 0) (h_ok : scanLexicalCheckNum buf = .ok ()) :
+    scanLexicalFuel (fuel + 1) ('}' :: rest) depth (sc :: scopes) buf false =
+      scanLexicalFuel fuel rest (depth - 1) scopes [] false := by
+  dsimp [scanLexicalFuel]
+  rw [h_ok]
+  dsimp
+  have : (if depth > 0 then depth - 1 else 0) = depth - 1 := if_pos h_depth
+  rw [this]
+
+theorem scanLexicalFuel_rbracket_flush (fuel : Nat) (rest : List Char) (depth : Nat)
+    (sc : LexScope) (scopes : List LexScope) (buf : List Char)
+    (h_depth : depth > 0) (h_ok : scanLexicalCheckNum buf = .ok ()) :
+    scanLexicalFuel (fuel + 1) (']' :: rest) depth (sc :: scopes) buf false =
+      scanLexicalFuel fuel rest (depth - 1) scopes [] false := by
+  dsimp [scanLexicalFuel]
+  rw [h_ok]
+  dsimp
+  have : (if depth > 0 then depth - 1 else 0) = depth - 1 := if_pos h_depth
+  rw [this]
+
+theorem contains_eq_false_of_not_mem (keys : List String) (s : String) (h : s ∉ keys) :
+    keys.contains s = false := by
+  simpa [List.contains_iff_mem] using h
+
+theorem scanCost_arr_nil : scanCost (.arr []) = 2 := rfl
+theorem scanCost_obj_nil : scanCost (.obj []) = 2 := rfl
+
+theorem scanLexicalFuel_encode_arr_nil (fuel : Nat) (rest : List Char) (depth : Nat)
+    (scopes : List LexScope) (h_depth : depth + 1 ≤ 64) :
+    scanLexicalFuel (fuel + scanCost (.arr []))
+        ((TreeJson.encode (.arr [])).toList ++ rest) depth scopes [] false =
+      scanLexicalFuel fuel rest depth scopes [] false := by
+  rw [scanCost_arr_nil, encode_arr_toList, encodeList_nil_toList]
+  have hopen := scanLexicalFuel_lbracket (fuel + 1) (']' :: rest) depth scopes h_depth
+  rw [hopen]
+  exact scanLexicalFuel_rbracket_flush fuel rest (depth + 1) (LexScope.inArr 0) scopes []
+    (by omega) scanLexicalCheckNum_nil
+
+theorem scanLexicalFuel_encode_obj_nil (fuel : Nat) (rest : List Char) (depth : Nat)
+    (scopes : List LexScope) (h_depth : depth + 1 ≤ 64) :
+    scanLexicalFuel (fuel + scanCost (.obj []))
+        ((TreeJson.encode (.obj [])).toList ++ rest) depth scopes [] false =
+      scanLexicalFuel fuel rest depth scopes [] false := by
+  rw [scanCost_obj_nil, encode_obj_toList]
+  have hempty : (TreeJson.encodeObj []).toList ++ ('}' :: rest) = '}' :: rest := rfl
+  rw [hempty]
+  have hopen := scanLexicalFuel_lbrace (fuel + 1) ('}' :: rest) depth scopes h_depth
+  rw [hopen]
+  exact scanLexicalFuel_rbrace_flush fuel rest (depth + 1) (LexScope.inObj [] true) scopes []
+    (by omega) scanLexicalCheckNum_nil
+
+/-- Scalar and empty-container continuation: numbers remain buffered; other scalars clear. -/
+theorem scanLexicalFuel_encode_scalar (t : TreeJson) (fuel : Nat) (rest : List Char)
+    (depth : Nat) (scopes : List LexScope) (h_not_key : notExpectKey scopes)
+    (h_depth : depth + t.depth ≤ 64)
+    (h_scalar : match t with | .arr (_ :: _) | .obj (_ :: _) => False | _ => True) :
+    scanLexicalFuel (fuel + scanCost t) ((TreeJson.encode t).toList ++ rest) depth scopes [] false =
+      scanLexicalFuel fuel rest depth scopes (numBuf t) false := by
+  cases t with
+  | null =>
+    simpa [numBuf] using scanLexicalFuel_encode_null fuel rest depth scopes
+  | bool b =>
+    simpa [numBuf] using scanLexicalFuel_encode_bool fuel b rest depth scopes
+  | num n =>
+    simpa [numBuf] using scanLexicalFuel_encode_num fuel n rest depth scopes
+  | str s =>
+    simpa [numBuf] using scanLexicalFuel_encode_str fuel s rest depth scopes h_not_key
+  | arr xs =>
+    cases xs with
+    | nil =>
+      simpa [numBuf] using scanLexicalFuel_encode_arr_nil fuel rest depth scopes (by
+        dsimp [TreeJson.depth] at h_depth; omega)
+    | cons _ _ => exact h_scalar.elim
+  | obj kvs =>
+    cases kvs with
+    | nil =>
+      simpa [numBuf] using scanLexicalFuel_encode_obj_nil fuel rest depth scopes (by
+        dsimp [TreeJson.depth] at h_depth; omega)
+    | cons _ _ => exact h_scalar.elim
+
+end DefiKernel.Certificates
+
+

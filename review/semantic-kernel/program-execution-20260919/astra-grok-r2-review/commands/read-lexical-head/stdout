@@ -1,0 +1,250 @@
+import DefiKernel.Certificates.Roundtrip
+import DefiKernel.Certificates.CompositionDepth
+import Mathlib.Tactic.IntervalCases
+
+namespace DefiKernel.Certificates
+
+set_option linter.style.longLine false
+set_option linter.style.setOption false
+set_option linter.style.maxHeartbeats false
+set_option maxHeartbeats 4000000
+
+open Lean
+
+/-! Continuation lemmas for `scanLexicalFuel` on canonical `TreeJson.encode` fragments.
+    Strings consume one outer scanner step; numbers remain buffered until a delimiter. -/
+
+/-- False precisely when the scanner is waiting for an object key. Matches the R28
+    `scanLexicalFuel_step_str_val` hypothesis. -/
+def notExpectKey (scopes : List LexScope) : Prop :=
+  match scopes with
+  | LexScope.inObj _ true :: _ => false
+  | _ => true
+
+theorem notExpectKey_nil : notExpectKey [] := rfl
+
+theorem notExpectKey_arr (cnt : Nat) (rest : List LexScope) :
+    notExpectKey (LexScope.inArr cnt :: rest) := rfl
+
+theorem notExpectKey_obj_val (keys : List String) (rest : List LexScope) :
+    notExpectKey (LexScope.inObj keys false :: rest) := rfl
+
+mutual
+  /-- Outer scanner steps consumed by a canonical encoding (strings cost 1). -/
+  def scanCost : TreeJson → Nat
+    | .null => 4
+    | .bool true => 4
+    | .bool false => 5
+    | .num n => (toString n).length
+    | .str _ => 1
+    | .arr xs => 2 + scanCostList xs
+    | .obj kvs => 2 + scanCostObj kvs
+
+  def scanCostList : List TreeJson → Nat
+    | [] => 0
+    | [x] => scanCost x
+    | x :: xs => scanCost x + 1 + scanCostList xs
+
+  def scanCostObj : List (String × TreeJson) → Nat
+    | [] => 0
+    | [(_, v)] => 2 + scanCost v
+    | (_, v) :: kvs => 3 + scanCost v + scanCostObj kvs
+end
+
+def numBuf : TreeJson → List Char
+  | .num n => (toString n).toList
+  | _ => []
+
+theorem encode_null_toList (rest : List Char) :
+    (TreeJson.encode .null).toList ++ rest = 'n' :: 'u' :: 'l' :: 'l' :: rest := rfl
+
+theorem encode_bool_true_toList (rest : List Char) :
+    (TreeJson.encode (.bool true)).toList ++ rest = 't' :: 'r' :: 'u' :: 'e' :: rest := rfl
+
+theorem encode_bool_false_toList (rest : List Char) :
+    (TreeJson.encode (.bool false)).toList ++ rest =
+      'f' :: 'a' :: 'l' :: 's' :: 'e' :: rest := rfl
+
+theorem encodeList_nil_toList (rest : List Char) :
+    (TreeJson.encodeList []).toList ++ rest = rest := rfl
+
+theorem encodeList_singleton_toList (x : TreeJson) (rest : List Char) :
+    (TreeJson.encodeList [x]).toList ++ rest = (TreeJson.encode x).toList ++ rest := by
+  dsimp [TreeJson.encodeList]
+
+/-- Consume a non-structural, non-numeric, non-whitespace character with an empty numeric buffer. -/
+theorem scanLexicalFuel_other (fuel : Nat) (c : Char) (rest : List Char) (depth : Nat)
+    (scopes : List LexScope)
+    (h_quote : (c == '"') = false) (h_lbrace : (c == '{') = false)
+    (h_rbrace : (c == '}') = false) (h_lbracket : (c == '[') = false)
+    (h_rbracket : (c == ']') = false) (h_comma : (c == ',') = false)
+    (h_colon : (c == ':') = false)
+    (h_num : (((decide (c ≥ '0') && decide (c ≤ '9')) || (c == '-')) || (c == '.')) = false)
+    (h_space : isSpace c = false) :
+    scanLexicalFuel (fuel + 1) (c :: rest) depth scopes [] false =
+      scanLexicalFuel fuel rest depth scopes [] false := by
+  dsimp [scanLexicalFuel, scanLexicalCheckNum]
+  rw [h_quote, h_lbrace, h_rbrace, h_lbracket, h_rbracket, h_comma, h_colon]
+  simp only [Bool.false_eq_true, ↓reduceIte, Bool.true_and]
+  rw [h_num]
+  simp only [Bool.false_eq_true, ↓reduceIte]
+  rw [h_space]
+  simp only [Bool.false_eq_true, ↓reduceIte]
+
+theorem scanLexicalFuel_n (fuel : Nat) (rest : List Char) (depth : Nat) (scopes : List LexScope) :
+    scanLexicalFuel (fuel + 1) ('n' :: rest) depth scopes [] false =
+      scanLexicalFuel fuel rest depth scopes [] false :=
+  scanLexicalFuel_other fuel 'n' rest depth scopes rfl rfl rfl rfl rfl rfl rfl rfl rfl
+
+theorem scanLexicalFuel_u (fuel : Nat) (rest : List Char) (depth : Nat) (scopes : List LexScope) :
+    scanLexicalFuel (fuel + 1) ('u' :: rest) depth scopes [] false =
+      scanLexicalFuel fuel rest depth scopes [] false :=
+  scanLexicalFuel_other fuel 'u' rest depth scopes rfl rfl rfl rfl rfl rfl rfl rfl rfl
+
+theorem scanLexicalFuel_l (fuel : Nat) (rest : List Char) (depth : Nat) (scopes : List LexScope) :
+    scanLexicalFuel (fuel + 1) ('l' :: rest) depth scopes [] false =
+      scanLexicalFuel fuel rest depth scopes [] false :=
+  scanLexicalFuel_other fuel 'l' rest depth scopes rfl rfl rfl rfl rfl rfl rfl rfl rfl
+
+theorem scanLexicalFuel_t (fuel : Nat) (rest : List Char) (depth : Nat) (scopes : List LexScope) :
+    scanLexicalFuel (fuel + 1) ('t' :: rest) depth scopes [] false =
+      scanLexicalFuel fuel rest depth scopes [] false :=
+  scanLexicalFuel_other fuel 't' rest depth scopes rfl rfl rfl rfl rfl rfl rfl rfl rfl
+
+theorem scanLexicalFuel_r (fuel : Nat) (rest : List Char) (depth : Nat) (scopes : List LexScope) :
+    scanLexicalFuel (fuel + 1) ('r' :: rest) depth scopes [] false =
+      scanLexicalFuel fuel rest depth scopes [] false :=
+  scanLexicalFuel_other fuel 'r' rest depth scopes rfl rfl rfl rfl rfl rfl rfl rfl rfl
+
+theorem scanLexicalFuel_e (fuel : Nat) (rest : List Char) (depth : Nat) (scopes : List LexScope) :
+    scanLexicalFuel (fuel + 1) ('e' :: rest) depth scopes [] false =
+      scanLexicalFuel fuel rest depth scopes [] false :=
+  scanLexicalFuel_other fuel 'e' rest depth scopes rfl rfl rfl rfl rfl rfl rfl rfl rfl
+
+theorem scanLexicalFuel_f (fuel : Nat) (rest : List Char) (depth : Nat) (scopes : List LexScope) :
+    scanLexicalFuel (fuel + 1) ('f' :: rest) depth scopes [] false =
+      scanLexicalFuel fuel rest depth scopes [] false :=
+  scanLexicalFuel_other fuel 'f' rest depth scopes rfl rfl rfl rfl rfl rfl rfl rfl rfl
+
+theorem scanLexicalFuel_a (fuel : Nat) (rest : List Char) (depth : Nat) (scopes : List LexScope) :
+    scanLexicalFuel (fuel + 1) ('a' :: rest) depth scopes [] false =
+      scanLexicalFuel fuel rest depth scopes [] false :=
+  scanLexicalFuel_other fuel 'a' rest depth scopes rfl rfl rfl rfl rfl rfl rfl rfl rfl
+
+theorem scanLexicalFuel_s (fuel : Nat) (rest : List Char) (depth : Nat) (scopes : List LexScope) :
+    scanLexicalFuel (fuel + 1) ('s' :: rest) depth scopes [] false =
+      scanLexicalFuel fuel rest depth scopes [] false :=
+  scanLexicalFuel_other fuel 's' rest depth scopes rfl rfl rfl rfl rfl rfl rfl rfl rfl
+
+theorem scanLexicalFuel_null (fuel : Nat) (rest : List Char) (depth : Nat) (scopes : List LexScope) :
+    scanLexicalFuel (fuel + 4) ('n' :: 'u' :: 'l' :: 'l' :: rest) depth scopes [] false =
+      scanLexicalFuel fuel rest depth scopes [] false := by
+  have h₁ := scanLexicalFuel_n (fuel + 3) ('u' :: 'l' :: 'l' :: rest) depth scopes
+  have h₂ := scanLexicalFuel_u (fuel + 2) ('l' :: 'l' :: rest) depth scopes
+  have h₃ := scanLexicalFuel_l (fuel + 1) ('l' :: rest) depth scopes
+  have h₄ := scanLexicalFuel_l fuel rest depth scopes
+  simp only [Nat.add_assoc] at h₁
+  rw [h₁, h₂, h₃, h₄]
+
+theorem scanLexicalFuel_true (fuel : Nat) (rest : List Char) (depth : Nat) (scopes : List LexScope) :
+    scanLexicalFuel (fuel + 4) ('t' :: 'r' :: 'u' :: 'e' :: rest) depth scopes [] false =
+      scanLexicalFuel fuel rest depth scopes [] false := by
+  have h₁ := scanLexicalFuel_t (fuel + 3) ('r' :: 'u' :: 'e' :: rest) depth scopes
+  have h₂ := scanLexicalFuel_r (fuel + 2) ('u' :: 'e' :: rest) depth scopes
+  have h₃ := scanLexicalFuel_u (fuel + 1) ('e' :: rest) depth scopes
+  have h₄ := scanLexicalFuel_e fuel rest depth scopes
+  simp only [Nat.add_assoc] at h₁
+  rw [h₁, h₂, h₃, h₄]
+
+theorem scanLexicalFuel_false (fuel : Nat) (rest : List Char) (depth : Nat) (scopes : List LexScope) :
+    scanLexicalFuel (fuel + 5) ('f' :: 'a' :: 'l' :: 's' :: 'e' :: rest) depth scopes [] false =
+      scanLexicalFuel fuel rest depth scopes [] false := by
+  have h₁ := scanLexicalFuel_f (fuel + 4) ('a' :: 'l' :: 's' :: 'e' :: rest) depth scopes
+  have h₂ := scanLexicalFuel_a (fuel + 3) ('l' :: 's' :: 'e' :: rest) depth scopes
+  have h₃ := scanLexicalFuel_l (fuel + 2) ('s' :: 'e' :: rest) depth scopes
+  have h₄ := scanLexicalFuel_s (fuel + 1) ('e' :: rest) depth scopes
+  have h₅ := scanLexicalFuel_e fuel rest depth scopes
+  simp only [Nat.add_assoc] at h₁
+  rw [h₁, h₂, h₃, h₄, h₅]
+
+theorem scanLexicalFuel_encode_null (fuel : Nat) (rest : List Char) (depth : Nat)
+    (scopes : List LexScope) :
+    scanLexicalFuel (fuel + scanCost .null) ((TreeJson.encode .null).toList ++ rest) depth scopes [] false =
+      scanLexicalFuel fuel rest depth scopes [] false := by
+  dsimp [scanCost]
+  rw [encode_null_toList]
+  exact scanLexicalFuel_null fuel rest depth scopes
+
+theorem scanLexicalFuel_encode_bool (fuel : Nat) (b : Bool) (rest : List Char) (depth : Nat)
+    (scopes : List LexScope) :
+    scanLexicalFuel (fuel + scanCost (.bool b))
+        ((TreeJson.encode (.bool b)).toList ++ rest) depth scopes [] false =
+      scanLexicalFuel fuel rest depth scopes [] false := by
+  cases b with
+  | true =>
+    dsimp [scanCost]
+    rw [encode_bool_true_toList]
+    exact scanLexicalFuel_true fuel rest depth scopes
+  | false =>
+    dsimp [scanCost]
+    rw [encode_bool_false_toList]
+    exact scanLexicalFuel_false fuel rest depth scopes
+
+theorem scanLexicalFuel_str_value (fuel : Nat) (s : String) (rest : List Char) (depth : Nat)
+    (scopes : List LexScope) (h_not_key : notExpectKey scopes) :
+    scanLexicalFuel (fuel + 1) ((escapeTreeString s).toList ++ rest) depth scopes [] false =
+      scanLexicalFuel fuel rest depth scopes [] false := by
+  rw [escapeTreeString_eq]
+  have h_app : ('"' :: (escapeChars s.toList ++ ['"'])) ++ rest =
+      '"' :: (escapeChars s.toList ++ ('"' :: rest)) := by
+    simp [List.append_assoc]
+  rw [h_app]
+  have h_lex := lexString_escapeJsonString s rest
+  exact scanLexicalFuel_step_str_val fuel s (escapeChars s.toList ++ ('"' :: rest)) rest depth scopes
+    h_not_key h_lex
+
+theorem scanLexicalFuel_str_key (fuel : Nat) (s : String) (rest : List Char) (depth : Nat)
+    (keys : List String) (restScopes : List LexScope)
+    (h_nodup : keys.contains s = false) :
+    scanLexicalFuel (fuel + 1) ((escapeTreeString s).toList ++ rest)
+        depth (LexScope.inObj keys true :: restScopes) [] false =
+      scanLexicalFuel fuel rest depth (LexScope.inObj (s :: keys) false :: restScopes) [] false := by
+  rw [escapeTreeString_eq]
+  have h_app : ('"' :: (escapeChars s.toList ++ ['"'])) ++ rest =
+      '"' :: (escapeChars s.toList ++ ('"' :: rest)) := by
+    simp [List.append_assoc]
+  rw [h_app]
+  have h_lex := lexString_escapeJsonString s rest
+  exact scanLexicalFuel_step_key fuel s (escapeChars s.toList ++ ('"' :: rest)) rest depth keys restScopes
+    h_lex h_nodup
+
+theorem scanLexicalFuel_encode_str (fuel : Nat) (s : String) (rest : List Char) (depth : Nat)
+    (scopes : List LexScope) (h_not_key : notExpectKey scopes) :
+    scanLexicalFuel (fuel + scanCost (.str s))
+        ((TreeJson.encode (.str s)).toList ++ rest) depth scopes [] false =
+      scanLexicalFuel fuel rest depth scopes [] false := by
+  dsimp [scanCost, TreeJson.encode]
+  exact scanLexicalFuel_str_value fuel s rest depth scopes h_not_key
+
+/-- Start a numeric buffer from an empty buffer on a digit or minus. -/
+theorem scanLexicalFuel_num_start (fuel : Nat) (c : Char) (rest : List Char) (depth : Nat)
+    (scopes : List LexScope)
+    (h_start : ((decide (c ≥ '0') && decide (c ≤ '9')) || (c == '-') || (c == '.')) = true)
+    (h_quote : (c == '"') = false) (h_lbrace : (c == '{') = false)
+    (h_rbrace : (c == '}') = false) (h_lbracket : (c == '[') = false)
+    (h_rbracket : (c == ']') = false) (h_comma : (c == ',') = false)
+    (h_colon : (c == ':') = false) :
+    scanLexicalFuel (fuel + 1) (c :: rest) depth scopes [] false =
+      scanLexicalFuel fuel rest depth scopes [c] false := by
+  dsimp [scanLexicalFuel]
+  rw [h_quote, h_lbrace, h_rbrace, h_lbracket, h_rbracket, h_comma, h_colon]
+  simp only [Bool.false_eq_true, ↓reduceIte, Bool.true_and]
+  rw [h_start]
+  simp only [eq_self, ↓reduceIte]
+
+/-- Continue a nonempty numeric buffer on a digit, sign, dot, or exponent character. -/
+theorem scanLexicalFuel_num_cont (fuel : Nat) (c : Char) (buf : List Char) (rest : List Char)
+    (depth : Nat) (scopes : List LexScope) (h_buf : buf ≠ [])
+    (h_cont : ((decide (c ≥ '0') && decide (c ≤ '9')) || (c == '-') || (c == '+') ||
+      (c == '.') || (c == 'e') || (c == 'E')) = true)
+    (h_quote : (c == '"') = false) (h_lbrace : (c == '{') = false)

@@ -1,0 +1,200 @@
+lean/DefiKernel/Certificates/Decode.lean:1548:def encodeModule (ir : DecodedIR) : ByteArray :=
+lean/DefiKernel/Certificates/Decode.lean-1549-  encodeModuleCanonical ir
+lean/DefiKernel/Certificates/Decode.lean-1550-
+lean/DefiKernel/Certificates/Decode.lean-1551-/-- Primary byte-level decode entrypoint with lexical security and canonical admission checks. -/
+lean/DefiKernel/Certificates/Decode.lean:1552:def decodeBytes (bytes : ByteArray) : Except DecodeFailure DecodedIR := do
+lean/DefiKernel/Certificates/Decode.lean-1553-  scanLexical bytes
+lean/DefiKernel/Certificates/Decode.lean-1554-  let some str := String.fromUTF8? bytes
+lean/DefiKernel/Certificates/Decode.lean-1555-    | throw (.jsonType "utf8")
+lean/DefiKernel/Certificates/Decode.lean-1556-  let j ← match parseCanonicalJson str with
+lean/DefiKernel/Certificates/Decode.lean-1557-    | .error (.resourceLimit r) => throw (.resourceLimit r)
+lean/DefiKernel/Certificates/Decode.lean-1558-    | .error _ => throw .notJsonObject
+lean/DefiKernel/Certificates/Decode.lean-1559-    | .ok j => pure j
+lean/DefiKernel/Certificates/Decode.lean-1560-  let ir ← decodeDecodedIR j str
+lean/DefiKernel/Certificates/Decode.lean-1561-  if _h : encodeModule ir = bytes then
+lean/DefiKernel/Certificates/Decode.lean-1562-    return ir
+lean/DefiKernel/Certificates/Decode.lean-1563-  else
+lean/DefiKernel/Certificates/Decode.lean-1564-    throw .noncanonicalWhitespace
+lean/DefiKernel/Certificates/Decode.lean-1565-
+lean/DefiKernel/Certificates/Decode.lean-1566-end DefiKernel.Certificates
+lean/DefiKernel/Certificates/Decode.lean-1567-
+--
+lean/DefiKernel/Certificates/Correspondence.lean:640:def WholeDocumentDepthBounded (ir : DecodedIR) : Prop :=
+lean/DefiKernel/Certificates/Correspondence.lean-641-  jsonDepth (decodedIRToJson ir) ≤ 64
+lean/DefiKernel/Certificates/Correspondence.lean-642-
+lean/DefiKernel/Certificates/Correspondence.lean-643-/-- Whole-document JSON array lengths bounded by 4096 (parser maximum array length limit). -/
+lean/DefiKernel/Certificates/Correspondence.lean-644-def WholeDocumentArrayBounded (ir : DecodedIR) : Prop :=
+lean/DefiKernel/Certificates/Correspondence.lean-645-  jsonMaxArrayLength (decodedIRToJson ir) ≤ 4096
+lean/DefiKernel/Certificates/Correspondence.lean-646-
+lean/DefiKernel/Certificates/Correspondence.lean-647-/-- Intermediate monotonicity helper: folding max never decreases initial accumulator. -/
+lean/DefiKernel/Certificates/Correspondence.lean-648-theorem foldl_max_ge {α : Type} (xs : List α) (f : α → Nat) (init : Nat) :
+lean/DefiKernel/Certificates/Correspondence.lean-649-    init ≤ xs.foldl (fun acc y => Nat.max acc (f y)) init := by
+lean/DefiKernel/Certificates/Correspondence.lean-650-  induction xs generalizing init with
+lean/DefiKernel/Certificates/Correspondence.lean-651-  | nil => exact Nat.le_refl init
+lean/DefiKernel/Certificates/Correspondence.lean-652-  | cons x xs ih =>
+lean/DefiKernel/Certificates/Correspondence.lean-653-    dsimp [List.foldl]
+lean/DefiKernel/Certificates/Correspondence.lean-654-    have h1 : init ≤ Nat.max init (f x) := Nat.le_max_left init (f x)
+lean/DefiKernel/Certificates/Correspondence.lean-655-    have h2 := ih (Nat.max init (f x))
+lean/DefiKernel/Certificates/Correspondence.lean-656-    exact Nat.le_trans h1 h2
+lean/DefiKernel/Certificates/Correspondence.lean-657-
+lean/DefiKernel/Certificates/Correspondence.lean-658-/-- Intermediate membership bound: any element's value is bounded by foldl max. -/
+lean/DefiKernel/Certificates/Correspondence.lean-659-theorem mem_le_foldl_max {α : Type} (xs : List α) (f : α → Nat) (x : α) (hx : x ∈ xs) (init : Nat) :
+lean/DefiKernel/Certificates/Correspondence.lean-660-    f x ≤ xs.foldl (fun acc y => Nat.max acc (f y)) init := by
+lean/DefiKernel/Certificates/Correspondence.lean-661-  induction xs generalizing init with
+lean/DefiKernel/Certificates/Correspondence.lean-662-  | nil => contradiction
+lean/DefiKernel/Certificates/Correspondence.lean-663-  | cons y ys ih =>
+lean/DefiKernel/Certificates/Correspondence.lean-664-    dsimp [List.foldl]
+lean/DefiKernel/Certificates/Correspondence.lean-665-    cases hx with
+lean/DefiKernel/Certificates/Correspondence.lean-666-    | head =>
+lean/DefiKernel/Certificates/Correspondence.lean-667-      have h1 : f x ≤ Nat.max init (f x) := Nat.le_max_right init (f x)
+lean/DefiKernel/Certificates/Correspondence.lean-668-      have h2 := foldl_max_ge ys f (Nat.max init (f x))
+--
+lean/DefiKernel/Certificates/Correspondence.lean:962:def StructurallyAdmissibleIR (ir : DecodedIR) : Prop :=
+lean/DefiKernel/Certificates/Correspondence.lean-963-  SupportedIR ir ∧ CanonicalIR ir
+lean/DefiKernel/Certificates/Correspondence.lean-964-
+lean/DefiKernel/Certificates/Correspondence.lean-965-/-- Nonempty witness for StructurallyAdmissibleIR: a standard 32-cell zero-initialized state
+lean/DefiKernel/Certificates/Correspondence.lean-966-    with canonical 0/1 rationals, schema version 1, and typed-execute mode. -/
+lean/DefiKernel/Certificates/Correspondence.lean-967-def standard32Cells : List StateCellEnc :=
+lean/DefiKernel/Certificates/Correspondence.lean-968-  let parties : List Party := [.alice, .bob, .vault, .pool]
+lean/DefiKernel/Certificates/Correspondence.lean-969-  let assets : List Asset := [.usd, .share, .collateral, .debt]
+lean/DefiKernel/Certificates/Correspondence.lean-970-  let domains : List Domain := [.main, .other]
+lean/DefiKernel/Certificates/Correspondence.lean-971-  domains.flatMap fun d ↦
+lean/DefiKernel/Certificates/Correspondence.lean-972-    parties.flatMap fun p ↦
+lean/DefiKernel/Certificates/Correspondence.lean-973-      assets.map fun a ↦
+lean/DefiKernel/Certificates/Correspondence.lean-974-        ⟨d, p, a, ⟨0, 1⟩⟩
+lean/DefiKernel/Certificates/Correspondence.lean-975-
+lean/DefiKernel/Certificates/Correspondence.lean-976-def canonicalWitnessIR : DecodedIR :=
+lean/DefiKernel/Certificates/Correspondence.lean-977-  .execution (.typed
+lean/DefiKernel/Certificates/Correspondence.lean-978-    ⟨1, "typed-execute", ⟨"a12b7cac05a818cc8d35c2ca440b7170a2807e92", "leanprover/lean4:v4.33.0-rc2",
+lean/DefiKernel/Certificates/Correspondence.lean-979-      "51e6992efd06126df61a496bebf8f49482a4e129", "", none, none⟩,
+lean/DefiKernel/Certificates/Correspondence.lean-980-      ["DefiKernel.Certificates", "DefiKernel.Typed", "DefiKernel.Composition"],
+lean/DefiKernel/Certificates/Correspondence.lean-981-      ⟨[.alice, .bob, .vault, .pool], [.usd, .share, .collateral, .debt], [.main, .other]⟩,
+lean/DefiKernel/Certificates/Correspondence.lean-982-      ["environment-authenticity"], [], [], [], [], none, false, false⟩
+lean/DefiKernel/Certificates/Correspondence.lean-983-    ⟨⟨[]⟩, ⟨[]⟩, ⟨.alice, .main⟩, ⟨[]⟩, 100, ⟨0, [.alice], [], [], some .alice⟩, ⟨standard32Cells⟩⟩)
+lean/DefiKernel/Certificates/Correspondence.lean-984-
+lean/DefiKernel/Certificates/Correspondence.lean-985-set_option maxRecDepth 500000 in
+lean/DefiKernel/Certificates/Correspondence.lean-986-/-- Theorem: StructurallyAdmissibleIR is nonempty. -/
+lean/DefiKernel/Certificates/Correspondence.lean-987-theorem structurallyAdmissible_nonempty : StructurallyAdmissibleIR canonicalWitnessIR := by
+lean/DefiKernel/Certificates/Correspondence.lean-988-  dsimp [StructurallyAdmissibleIR, SupportedIR, CanonicalIR, canonicalWitnessIR, StandardTypesEnum,
+lean/DefiKernel/Certificates/Correspondence.lean-989-         SourceMapSorted, ClaimedNextStateCanonical, standard32Cells, standard32CellKeys,
+lean/DefiKernel/Certificates/Correspondence.lean-990-         isSortedStrictAscending, StoreCanonical, RequestCanonical, EnvironmentCanonical,
+--
+lean/DefiKernel/Certificates/Correspondence.lean:1061:def EncodeDecodeRoundtripStatement : Prop :=
+lean/DefiKernel/Certificates/Correspondence.lean-1062-  ∀ (ir : DecodedIR), StructurallyAdmissibleIR ir → decodeBytes (encodeModule ir) = .ok ir
+lean/DefiKernel/Certificates/Correspondence.lean-1063-
+lean/DefiKernel/Certificates/Correspondence.lean-1064-/-- Statement of canonical bytes obligation (T-canonical-bytes). -/
+lean/DefiKernel/Certificates/Correspondence.lean-1065-def DecodeEncodeCanonicalBytesStatement : Prop :=
+lean/DefiKernel/Certificates/Correspondence.lean-1066-  ∀ raw ir, decodeBytes raw = .ok ir → StructurallyAdmissibleIR ir → encodeModule ir = raw
+lean/DefiKernel/Certificates/Correspondence.lean-1067-
+lean/DefiKernel/Certificates/Correspondence.lean-1068-/-- Discharges T-canonical-bytes: universal canonical bytes theorem proven in the Lean kernel. -/
+lean/DefiKernel/Certificates/Correspondence.lean-1069-theorem decode_encode_canonical_bytes : DecodeEncodeCanonicalBytesStatement := by
+lean/DefiKernel/Certificates/Correspondence.lean-1070-  intro raw ir h _
+lean/DefiKernel/Certificates/Correspondence.lean-1071-  exact decodeBytes_encode_canonical raw ir h
+lean/DefiKernel/Certificates/Correspondence.lean-1072-
+lean/DefiKernel/Certificates/Correspondence.lean-1073-/-- Refused decode returns no kernel object (S39-S40, S78). -/
+lean/DefiKernel/Certificates/Correspondence.lean-1074-theorem decode_error_no_kernel (raw : ByteArray) (e : DecodeFailure)
+lean/DefiKernel/Certificates/Correspondence.lean-1075-    (h : decodeBytes raw = .error e) (h_not_res : ∀ lim, e ≠ .resourceLimit lim) :
+lean/DefiKernel/Certificates/Correspondence.lean-1076-    checkBytes raw = .codec (.malformed e) := by
+lean/DefiKernel/Certificates/Correspondence.lean-1077-  dsimp [checkBytes]
+lean/DefiKernel/Certificates/Correspondence.lean-1078-  rw [h]
+lean/DefiKernel/Certificates/Correspondence.lean-1079-  cases e with
+lean/DefiKernel/Certificates/Correspondence.lean-1080-  | resourceLimit lim =>
+lean/DefiKernel/Certificates/Correspondence.lean-1081-    exfalso
+lean/DefiKernel/Certificates/Correspondence.lean-1082-    exact h_not_res lim rfl
+lean/DefiKernel/Certificates/Correspondence.lean-1083-  | emptyDocument => rfl
+lean/DefiKernel/Certificates/Correspondence.lean-1084-  | lexicalScientificOrFloat => rfl
+lean/DefiKernel/Certificates/Correspondence.lean-1085-  | notJsonObject => rfl
+lean/DefiKernel/Certificates/Correspondence.lean-1086-  | duplicateKey _ => rfl
+lean/DefiKernel/Certificates/Correspondence.lean-1087-  | noncanonicalWhitespace => rfl
+lean/DefiKernel/Certificates/Correspondence.lean-1088-  | schemaVersion => rfl
+lean/DefiKernel/Certificates/Correspondence.lean-1089-  | missingField _ => rfl
+--
+lean/DefiKernel/Certificates/Correspondence.lean:3535:def encodeModuleString (ir : DecodedIR) : String :=
+lean/DefiKernel/Certificates/Correspondence.lean-3536-  match ir with
+lean/DefiKernel/Certificates/Correspondence.lean-3537-  | .execution (.typed env p) =>
+lean/DefiKernel/Certificates/Correspondence.lean-3538-    encodeEnvelope env (encodeTypedExecutePayload p)
+lean/DefiKernel/Certificates/Correspondence.lean-3539-  | .execution (.step env p) =>
+lean/DefiKernel/Certificates/Correspondence.lean-3540-    encodeEnvelope env (encodeCompositionStepPayload p)
+lean/DefiKernel/Certificates/Correspondence.lean-3541-  | .execution (.run env p) =>
+lean/DefiKernel/Certificates/Correspondence.lean-3542-    encodeEnvelope env (encodeCompositionRunPayload p)
+lean/DefiKernel/Certificates/Correspondence.lean-3543-  | .audit a =>
+lean/DefiKernel/Certificates/Correspondence.lean-3544-    if a.hasEnvelope then
+lean/DefiKernel/Certificates/Correspondence.lean-3545-      encodeEnvelope a.envelope (encodeAuditPayload a)
+lean/DefiKernel/Certificates/Correspondence.lean-3546-    else
+lean/DefiKernel/Certificates/Correspondence.lean-3547-      encodeAuditPayload a
+lean/DefiKernel/Certificates/Correspondence.lean-3548-  | .codec doc =>
+lean/DefiKernel/Certificates/Correspondence.lean-3549-    match doc.envelope with
+lean/DefiKernel/Certificates/Correspondence.lean-3550-    | some env => encodeEnvelope env "{}"
+lean/DefiKernel/Certificates/Correspondence.lean-3551-    | none => doc.rawText
+lean/DefiKernel/Certificates/Correspondence.lean-3552-
+lean/DefiKernel/Certificates/Correspondence.lean-3553-/-- Canonical module encoding is the exact UTF-8 byte encoding of encodeModuleString. -/
+lean/DefiKernel/Certificates/Correspondence.lean-3554-theorem encodeModule_eq_toUTF8 (ir : DecodedIR) :
+lean/DefiKernel/Certificates/Correspondence.lean-3555-    encodeModule ir = (encodeModuleString ir).toUTF8 := by
+lean/DefiKernel/Certificates/Correspondence.lean-3556-  dsimp [encodeModule, encodeModuleCanonical, encodeModuleString]
+lean/DefiKernel/Certificates/Correspondence.lean-3557-  cases ir with
+lean/DefiKernel/Certificates/Correspondence.lean-3558-  | execution ex => cases ex <;> rfl
+lean/DefiKernel/Certificates/Correspondence.lean-3559-  | audit a => rfl
+lean/DefiKernel/Certificates/Correspondence.lean-3560-  | codec doc => rfl
+lean/DefiKernel/Certificates/Correspondence.lean-3561-
+lean/DefiKernel/Certificates/Correspondence.lean-3562-/-- UTF-8 inverse on serialized module bytes: roundtrips through String.fromUTF8?. -/
+lean/DefiKernel/Certificates/Correspondence.lean-3563-theorem string_fromUTF8_encodeModule (ir : DecodedIR) :
+--
+lean/DefiKernel/Certificates/Encode.lean:361:def encodeModuleCanonical (ir : DecodedIR) : ByteArray :=
+lean/DefiKernel/Certificates/Encode.lean-362-  let s : String := match ir with
+lean/DefiKernel/Certificates/Encode.lean-363-  | .execution (.typed env p) =>
+lean/DefiKernel/Certificates/Encode.lean-364-    encodeEnvelope env (encodeTypedExecutePayload p)
+lean/DefiKernel/Certificates/Encode.lean-365-  | .execution (.step env p) =>
+lean/DefiKernel/Certificates/Encode.lean-366-    encodeEnvelope env (encodeCompositionStepPayload p)
+lean/DefiKernel/Certificates/Encode.lean-367-  | .execution (.run env p) =>
+lean/DefiKernel/Certificates/Encode.lean-368-    encodeEnvelope env (encodeCompositionRunPayload p)
+lean/DefiKernel/Certificates/Encode.lean-369-  | .audit a =>
+lean/DefiKernel/Certificates/Encode.lean-370-    if a.hasEnvelope then
+lean/DefiKernel/Certificates/Encode.lean-371-      encodeEnvelope a.envelope (encodeAuditPayload a)
+lean/DefiKernel/Certificates/Encode.lean-372-    else
+lean/DefiKernel/Certificates/Encode.lean-373-      encodeAuditPayload a
+lean/DefiKernel/Certificates/Encode.lean-374-  | .codec doc =>
+lean/DefiKernel/Certificates/Encode.lean-375-    match doc.envelope with
+lean/DefiKernel/Certificates/Encode.lean-376-    | some env => encodeEnvelope env "{}"
+lean/DefiKernel/Certificates/Encode.lean-377-    | none => doc.rawText
+lean/DefiKernel/Certificates/Encode.lean-378-  s.toUTF8
+lean/DefiKernel/Certificates/Encode.lean-379-
+lean/DefiKernel/Certificates/Encode.lean-380-def encodeFailurePath (f : FailurePath) : String :=
+lean/DefiKernel/Certificates/Encode.lean-381-  let pl := match f.payload with | some p => escapeJsonString p | none => "null"
+lean/DefiKernel/Certificates/Encode.lean-382-  let cls := match f.class with
+lean/DefiKernel/Certificates/Encode.lean-383-    | .kernel => "\"kernel\""
+lean/DefiKernel/Certificates/Encode.lean-384-    | .interface => "\"interface\""
+lean/DefiKernel/Certificates/Encode.lean-385-    | .configuration => "\"configuration\""
+lean/DefiKernel/Certificates/Encode.lean-386-    | .authority => "\"authority\""
+lean/DefiKernel/Certificates/Encode.lean-387-    | .internalReceipt => "\"internalReceipt\""
+lean/DefiKernel/Certificates/Encode.lean-388-    | .staleSource => "\"staleSource\""
+lean/DefiKernel/Certificates/Encode.lean-389-    | .observationMismatch => "\"observationMismatch\""
+--
+lean/DefiKernel/Certificates/IRDepth.lean:90:theorem jsonDepthFuel_config (c : ConfigEnc) (fuel : Nat)
+lean/DefiKernel/Certificates/IRDepth.lean-91-    (hcat : ∀ x ∈ c.catalog, ∀ f, jsonDepthFuel f (componentToTreeJson x).toJson =
+lean/DefiKernel/Certificates/IRDepth.lean-92-      jsonDepthFuel f (componentToJson x)) :
+lean/DefiKernel/Certificates/IRDepth.lean-93-    jsonDepthFuel fuel (configToTreeJson c).toJson = jsonDepthFuel fuel (configToJson c) := by
+lean/DefiKernel/Certificates/IRDepth.lean-94-  cases fuel with
+lean/DefiKernel/Certificates/IRDepth.lean-95-  | zero =>
+lean/DefiKernel/Certificates/IRDepth.lean-96-    dsimp [configToTreeJson, configToJson, TreeJson.toJson, jsonDepthFuel]
+lean/DefiKernel/Certificates/IRDepth.lean-97-  | succ fuel =>
+lean/DefiKernel/Certificates/IRDepth.lean-98-    dsimp [configToTreeJson, configToJson, TreeJson.toJson, TreeJson.toJsonObj]
+lean/DefiKernel/Certificates/IRDepth.lean-99-    rw [toJsonList_map, toJsonList_map, registryToTreeJson_toJson]
+lean/DefiKernel/Certificates/IRDepth.lean-100-    have hda : (c.domainAdmin.map (fun x => (domainAdminToTreeJson x).toJson)) =
+lean/DefiKernel/Certificates/IRDepth.lean-101-        c.domainAdmin.map domainAdminToJson := by
+lean/DefiKernel/Certificates/IRDepth.lean-102-      simp only [List.map_inj_left]; intro d _; exact domainAdminToTreeJson_toJson d
+lean/DefiKernel/Certificates/IRDepth.lean-103-    rw [hda]
+lean/DefiKernel/Certificates/IRDepth.lean-104-    have h₁ : ([("registry", registryToJson c.registry),
+lean/DefiKernel/Certificates/IRDepth.lean-105-        ("domainAdmin", Json.arr (c.domainAdmin.map domainAdminToJson).toArray),
+lean/DefiKernel/Certificates/IRDepth.lean-106-        ("catalog", Json.arr (c.catalog.map (fun x => (componentToTreeJson x).toJson)).toArray)].map
+lean/DefiKernel/Certificates/IRDepth.lean-107-          Prod.fst).Nodup := by
+lean/DefiKernel/Certificates/IRDepth.lean-108-      simp [List.map_cons, List.map_nil]
+lean/DefiKernel/Certificates/IRDepth.lean-109-    have h₂ : ([("catalog", Json.arr (c.catalog.map componentToJson).toArray),
+lean/DefiKernel/Certificates/IRDepth.lean-110-        ("domainAdmin", Json.arr (c.domainAdmin.map domainAdminToJson).toArray),
+lean/DefiKernel/Certificates/IRDepth.lean-111-        ("registry", registryToJson c.registry)].map Prod.fst).Nodup := by
+lean/DefiKernel/Certificates/IRDepth.lean-112-      simp [List.map_cons, List.map_nil]
+lean/DefiKernel/Certificates/IRDepth.lean-113-    rw [jsonDepthFuel_mkObj_succ fuel _ h₁, jsonDepthFuel_mkObj_succ fuel _ h₂]
+lean/DefiKernel/Certificates/IRDepth.lean-114-    simp [List.foldl]
+lean/DefiKernel/Certificates/IRDepth.lean-115-    have harr := jsonDepthFuel_arr_congr
+lean/DefiKernel/Certificates/IRDepth.lean-116-      (fun x => (componentToTreeJson x).toJson) componentToJson c.catalog hcat fuel
+lean/DefiKernel/Certificates/IRDepth.lean-117-    rw [harr]
+lean/DefiKernel/Certificates/IRDepth.lean-118-    simp [Nat.max_comm, Nat.max_left_comm]

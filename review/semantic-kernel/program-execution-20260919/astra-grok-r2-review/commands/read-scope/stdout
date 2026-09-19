@@ -1,0 +1,34 @@
+theorem moduleToTreeJson_depth_le_64 (ir : DecodedIR) (h_adm : StructurallyAdmissibleIR ir) :
+    TreeJson.depth (moduleToTreeJson ir) ≤ 64 := by
+  have h_valid := moduleToTreeJson_valid ir h_adm
+  have h_wd : jsonDepth (decodedIRToJson ir) ≤ 64 := by
+    rcases h_adm with ⟨h_sup, _⟩
+    exact h_sup.2.1
+  have h_eq := jsonDepthFuel_decodedIR ir 100
+  have h_sem : jsonDepth (moduleToTreeJson ir).toJson ≤ 64 := by
+    simpa [jsonDepth] using (h_eq.symm.trans_le h_wd)
+  exact TreeJson.depth_le_of_jsonDepth_toJson_le_64 _ h_valid h_sem
+
+theorem decodeBytes_encodeModule_step_of_lex (env : EnvelopeEnc) (p : CompositionStepPayloadEnc)
+    (h_adm : StructurallyAdmissibleIR (.execution (.step env p)))
+    (h_lex : scanLexical (encodeModule (.execution (.step env p))) = .ok ()) :
+    decodeBytes (encodeModule (.execution (.step env p))) = .ok (.execution (.step env p)) :=
+  decodeBytes_encodeModule_of_depth_and_lex _ h_adm
+    (moduleToTreeJson_step_depth_le_64 env p h_adm) h_lex
+
+theorem decodeBytes_encodeModule_run_of_lex (env : EnvelopeEnc) (p : CompositionRunPayloadEnc)
+    (h_adm : StructurallyAdmissibleIR (.execution (.run env p)))
+    (h_lex : scanLexical (encodeModule (.execution (.run env p))) = .ok ()) :
+    decodeBytes (encodeModule (.execution (.run env p))) = .ok (.execution (.run env p)) :=
+  decodeBytes_encodeModule_of_depth_and_lex _ h_adm
+    (moduleToTreeJson_run_depth_le_64 env p h_adm) h_lex
+
+/-- Production roundtrip with `h_depth` discharged from `StructurallyAdmissibleIR`.
+    The existing `decodeBytes_encodeModule_of_depth_and_lex` signature is unchanged. -/
+theorem decodeBytes_encodeModule_of_lex (ir : DecodedIR)
+    (h_adm : StructurallyAdmissibleIR ir)
+    (h_lex : scanLexical (encodeModule ir) = .ok ()) :
+    decodeBytes (encodeModule ir) = .ok ir :=
+  decodeBytes_encodeModule_of_depth_and_lex ir h_adm (moduleToTreeJson_depth_le_64 ir h_adm) h_lex
+
+end DefiKernel.Certificates
