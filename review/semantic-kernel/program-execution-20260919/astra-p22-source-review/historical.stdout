@@ -1,0 +1,749 @@
+
+FILE historical-development/research/positive-program/phase2/kernel/curveD.qnt SHA256 8939dde6c02cf1fd375d709e4704661446102dab339e4fc4065ca5dbdbdb1938
+1: // Curve StableSwap get_D -- faithful Newton iteration with the real
+2: // termination condition carried, not a fixed-depth approximation.
+3: // Source: curvefi/curve-contract StableSwap3Pool.vy get_D (L195-217),
+4: // specialised to N_COINS = 2.
+5: module curveD {
+6: 
+7:   pure val N: int = 2
+8: 
+9:   /// unrolling depth. Chosen from measurement (see report), not guessed.
+10:   pure val MAXITER: int = 8
+11: 
+12:   type DState = { d: int, dprev: int, done: bool, iters: int }
+13: 
+14:   /// One Newton step, exactly as the Vyper writes it (same rounding, same order).
+15:   ///   D_P = D*D*D / (x*N * y*N)   -- computed as two sequential floor-divisions
+16:   ///   D   = (Ann*S + D_P*N)*D / ((Ann-1)*D + (N+1)*D_P)
+17:   pure def dStep(x: int, y: int, ann: int, s: int, st: DState): DState =
+18:     if (st.done) st
+19:     else {
+20:       val dp1 = st.d * st.d / (x * N)
+21:       val dp  = dp1  * st.d / (y * N)
+22:       val num = (ann * s + dp * N) * st.d
+23:       val den = (ann - 1) * st.d + (N + 1) * dp
+24:       val dNew = num / den
+25:       { d: dNew, dprev: st.d, iters: st.iters + 1,
+26:         done: if (dNew > st.d) dNew - st.d <= 1 else st.d - dNew <= 1 }
+27:     }
+28: 
+29:   /// D with the loop unrolled to `maxIter` steps. `done` records whether the
+30:   /// real contract`s break condition fired; `iters` is the real iteration count.
+31:   pure def getDFull(x: int, y: int, amp: int, maxIter: int): DState = {
+32:     val s = x + y
+33:     if (s == 0) { d: 0, dprev: 0, done: true, iters: 0 }
+34:     else if (x <= 0 or y <= 0) { d: 0, dprev: 0, done: true, iters: 0 }
+35:     else {
+36:       val ann = amp * N
+37:       range(0, maxIter).foldl({ d: s, dprev: 0, done: false, iters: 0 },
+38:                               (st, _) => dStep(x, y, ann, s, st))
+39:     }
+40:   }
+41: 
+42:   /// The value the contract returns. Callers must also assert `.done`.
+43:   pure def getD(x: int, y: int, amp: int): int = getDFull(x, y, amp, MAXITER).d
+44: 
+45:   /// Proof obligation exported by the unrolling: the loop really did terminate
+46:   /// the way the contract`s `break` would. If this ever fails, the unrolling
+47:   /// depth is too small and the spec is unsound -- it does not fail silently.
+48:   pure def dConverged(x: int, y: int, amp: int): bool = getDFull(x, y, amp, MAXITER).done
+49: 
+50:   /// The invariant D is meant to solve, as a residual (should be ~0):
+51:   ///   Ann*S*D^(n) ... expressed via the fixed-point form of the iteration:
+52:   ///   D == (Ann*S + D_P*n)*D / ((Ann-1)*D + (n+1)*D_P)
+53:   pure def dResidual(x: int, y: int, amp: int): int = {
+54:     val d = getD(x, y, amp)
+55:     val s = x + y
+56:     val ann = amp * N
+57:     val dp = d * d / (x * N) * d / (y * N)
+58:     val num = (ann * s + dp * N) * d
+59:     val den = (ann - 1) * d + (N + 1) * dp
+60:     val dNext = num / den
+61:     if (dNext > d) dNext - d else d - dNext
+62:   }
+63: 
+64:   // ---- measurement over the domain the specs actually use ----
+65:   pure val DOM: Set[int] = Set(1, 2, 5, 17, 100, 999, 5000, 12345, 100000, 1000000)
+66:   pure val AMPS: Set[int] = Set(1, 10, 100, 2000)
+67: 
+68:   pure val maxIters: int =
+69:     DOM.fold(0, (m, x) => DOM.fold(m, (m2, y) => AMPS.fold(m2, (m3, a) => {
+70:       val it = getDFull(x, y, a, 16).iters
+71:       if (it > m3) it else m3 })))
+72: 
+73:   pure val allConverged: bool =
+74:     DOM.forall(x => DOM.forall(y => AMPS.forall(a => dConverged(x, y, a))))
+75: 
+76:   pure val maxResidual: int =
+77:     DOM.fold(0, (m, x) => DOM.fold(m, (m2, y) => AMPS.fold(m2, (m3, a) => {
+78:       val r = dResidual(x, y, a)
+79:       if (r > m3) r else m3 })))
+80: 
+81:   /// Curve`s own bounds: D lies between the geometric-mean-like lower bound and S.
+82:   pure val dSandwich: bool =
+83:     DOM.forall(x => DOM.forall(y => AMPS.forall(a => {
+84:       val d = getD(x, y, a)
+85:       and { d > 0, d <= x + y }
+86:     })))
+87: }
+88: 
+89: 
+
+FILE historical-development/research/positive-program/evidence/curve_reconcile.py SHA256 3337808b7a3ab3502da49e2c1c78077e085126ddcde0b8bc8d87f701ac18f7eb
+1: """Reconcile the two Curve convergence claims.
+2: 
+3: Gate 2.0d (expressibility): integer Newton fails to converge on 2.8% of a
+4:     1372-point grid, at any depth up to 96 — a period-2 limit cycle.
+5: Gate 2.0e (contract): swept all 200x200 pairs at AMP=100, K=8 — zero
+6:     non-converging, worst case 3 iterations.
+7: 
+8: Both cannot be adopted uncritically: if the pathology exists but is invisible on
+9: the small domain, then choosing the small domain re-runs the exact failure by
+10: which Curve's spec reached bal0=bal1=100 and lost its discrimination witness.
+11: 
+12: This computes get_D faithfully (StableSwap n=2, integer arithmetic, as in
+13: curve-contract get_D) and reports, per domain and per amplification, the
+14: non-convergence rate and the worst iteration count.
+15: """
+16: N = 2
+17: 
+18: 
+19: def get_D(x, y, amp, max_iter=255):
+20:     """Integer StableSwap D for n=2. Returns (D, iters, converged)."""
+21:     S = x + y
+22:     if S == 0:
+23:         return 0, 0, True
+24:     D = S
+25:     Ann = amp * N
+26:     prev_seen = []
+27:     for i in range(1, max_iter + 1):
+28:         D_P = D
+29:         D_P = D_P * D // (x * N)
+30:         D_P = D_P * D // (y * N)
+31:         Dprev = D
+32:         num = (Ann * S + D_P * N) * D
+33:         den = (Ann - 1) * D + (N + 1) * D_P
+34:         if den == 0:
+35:             return D, i, False
+36:         D = num // den
+37:         if abs(D - Dprev) <= 1:
+38:             return D, i, True
+39:         # period-2 limit cycle detection
+40:         prev_seen.append(D)
+41:         if len(prev_seen) >= 4 and prev_seen[-1] == prev_seen[-3] and prev_seen[-2] == prev_seen[-4]:
+42:             return D, i, False
+43:     return D, max_iter, False
+44: 
+45: 
+46: def sweep(lo, hi, step, amp, cap_iter):
+47:     tot = bad = worst = 0
+48:     worst_pt = None
+49:     bad_pts = []
+50:     for x in range(lo, hi + 1, step):
+51:         for y in range(lo, hi + 1, step):
+52:             tot += 1
+53:             D, it, conv = get_D(x, y, amp, cap_iter)
+54:             if not conv:
+55:                 bad += 1
+56:                 if len(bad_pts) < 5:
+57:                     bad_pts.append((x, y, D))
+58:             elif it > worst:
+59:                 worst, worst_pt = it, (x, y)
+60:     return tot, bad, worst, worst_pt, bad_pts
+61: 
+62: 
+63: print("Curve get_D — integer StableSwap, n=2\n")
+64: print(f"{'domain':<24} {'amp':>5} {'K':>4} {'points':>8} {'non-conv':>9} {'rate':>7} {'worst it':>9}")
+65: print("-" * 74)
+66: 
+67: cases = [
+68:     ("1..200 step 1", 1, 200, 1),
+69:     ("1..200 step 1", 1, 200, 1),
+70:     ("1..2000 step 13", 1, 2000, 13),
+71:     ("1..10^5 step 701", 1, 10**5, 701),
+72:     ("1..10^7 step 70001", 1, 10**7, 70001),
+73: ]
+74: for (label, lo, hi, step), amp in [(c, a) for c in cases[:1] for a in (10, 100, 1000)] + \
+75:                                    [(c, 100) for c in cases[2:]]:
+76:     for K in (8, 96):
+77:         tot, bad, worst, wp, bp = sweep(lo, hi, step, amp, K)
+78:         rate = 100.0 * bad / tot if tot else 0
+79:         print(f"{label:<24} {amp:>5} {K:>4} {tot:>8} {bad:>9} {rate:>6.2f}% {worst:>9}")
+80:         if bad and K == 96:
+81:             print(f"    first non-converging points: {bp}")
+82: 
+83: # targeted: extreme imbalance, the region a small domain cannot host
+84: print("\nExtreme-imbalance probe (amp=100, K=96):")
+85: for x, y in [(199, 1), (1000, 1), (10**4, 1), (10**5, 1), (10**6, 1),
+86:              (10**6, 10), (10**7, 100)]:
+87:     D, it, conv = get_D(x, y, 100, 96)
+88:     print(f"   ({x}, {y}): D={D}  iters={it}  converged={conv}")
+
+FILE historical-development/research/positive-program/phase2/P2-SCOPE.md SHA256 7130ed3f8873e41b4ad91beade0c5412e81aa08c9090e8c2f5c66c72ba8c2c40
+1: # P2-SCOPE — per-protocol scope and execution plan for the ten re-specs
+2: 
+3: Paths: specs `SP = /root/DefiElements/quint-models/`, contracts
+4: `CP = /root/DefiElements/protocol-repos/`.
+5: 
+6: ## 1. The ten rows
+7: 
+8: | # | protocol | spec | contract | mechanism that MUST survive | may be dropped | the deletion (file:line) | diff |
+9: |---|---|---|---|---|---|---|---|
+10: | 1 | `uniswap_v2` | `SP L1/uniswap_v2.qnt` | `CP dex/Uniswap_v2-core/contracts/UniswapV2Pair.sol:120,95-99` | integer `√` — first-mint `sqrt(a0·a1) − MIN_LIQ`, and `_mintFee` comparing `√k` to `√kLast` | ERC20 plumbing, flash-swap callback, TWAP cumulatives, `skim`/`sync` | `SP L1/common.qnt:76-92` `geometricMint` → `if (a0==a1) a0 else min(a0,a1)`; `uniswap_v2.qnt:28,48` write `kLast` and **nothing ever reads it** | M |
+11: | 2 | `curve` | `SP L1/curve.qnt` | `CP dex/curvefi_curve-contract/.../3pool/StableSwap3Pool.vy:195-217` | Newton iteration on `D = (Ann·S + D_P·n)·D / ((Ann−1)·D + (n+1)·D_P)` to fixpoint ±1 | 3→2 coin reduction, admin-fee split, ramping `A`, `get_y` if `D` is exact | `curve.qnt:22-30` `approxD` — "weighted blend"; `:27` `2*min(x,y)` self-labelled *"stand-in for geometric contribution"* | H |
+12: | 3 | `compound_v3` | `SP L1/compound_v3.qnt` | `CP lend/compound-finance_comet/contracts/CometWithExtendedAssetList.sol:1068-1084,1149-1161` | **absorb seizes collateral into protocol inventory at a `liquidationFactor` haircut, and it leaves only via `buyCollateral` at a store-front discount** | multi-asset bitmask (one collateral is fine), governance, rewards, `numAssets` loop | `compound_v3.qnt:164` credits reserves the **full** `col*collPrice` (no `mulFactor(value, liquidationFactor)`); `:162` collateral teleports to `"absorber"` — no protocol inventory, no `buyCollateral` action exists | M |
+13: | 4 | `morpho_blue` | `SP L1/morpho_blue.qnt` | `CP lend/morpho-org_morpho-blue/src/Morpho.sol:366-370,391-401` | **bad-debt socialisation: collateral hits 0 ⇒ `totalSupplyAssets -= badDebtAssets`** (supplier loss), with `liquidationIncentiveFactor = min(MAX, 1/(1−cursor·(1−lltv)))` | callbacks, flash loans, authorisation, IRM, multi-market | `morpho_blue.qnt:156-159` — comment *"bad debt: if collateral wiped but debt remains, socialize"* followed by `supplyShares' = supplyShares, totalSupplyAssets' = totalSupplyAssets`. Pure no-op. `:12` `LIQ_INCENTIVE_BPS = 11500 // derived from LLTV in code; fixed here` | M |
+14: | 5 | `liquity` | `SP L2/liquity.qnt` | `CP cdp/liquity_bold/contracts/src/TroveManager.sol:770,785` | extremal selection: `getLast()` then walk `getPrev()`, consuming a **prefix** of the interest-rate order, cut off endogenously by `remainingBold` | zombie-trove path, batch interest, `_maxIterations`, surplus pool | `liquity.qnt:130` `action redeem(u: int, boldAmt: int)` — the trove is a *parameter* fed by `nondet u = USERS.oneOf()` | H |
+15: | 6 | `apex` | `SP L3/apex.qnt` | `CP perp/ApeX-Protocol_apex-protocol/contracts/core/Amm.sol:96,467-478` + `Margin.sol:253-299,608-636` | **positions are priced and closed against the reserves**: `_getAmountOut` with 999/1000 fee, and `liquidate` valuing via `getMarkPriceAcc(amm,beta,qty,·)` then writing back through `forceSwap` | oracle `beta` skew detail, router/config layer, CPF precision | `apex.qnt:47-49` `swapOut` has **no fee**; `:138-153` liquidate leaves `reserveBase/reserveQuote/marginPool` all unchanged (`:145 // simplified: collateral absorbed, not redistributed`); `:183-185` LP mint is linear, no `sqrt` bootstrap | M |
+16: | 7 | `gmx` | `SP L3/gmx.qnt` | `CP perp/gmx-io_gmx-synthetics/contracts/pricing/PricingUtils.sol:61-111` + `market/MarketUtils.sol:1854-1876` | **OI-imbalance price impact**: `f(initialDiffUsd) − f(nextDiffUsd)` under `applyImpactFactor`, signed by whether balance improved, settled through the impact pool | exponent ≠ 1 (linear impact is acceptable), multi-market, swap impact, virtual inventory | `gmx.qnt:20` declares `var impactPool`, written **only** at `:140` (residual liquidation collateral) — the impact function is absent entirely; `:64,:88` replace `validateReserve`'s `reservedUsd ≤ poolUsd·reserveFactor` with `poolAmount * markPrice >= longOI + sizeUsd` | M |
+17: | 8 | `huma` | `SP L3/huma.qnt` | `CP yield/00labs_huma-contracts-v2/contracts/liquidity/EpochManager.sol:342-360` | **subordination binds the exit, not just the entry**: `minJuniorAmount = ceilDiv(senior, maxSeniorJuniorRatio)`, junior redeemable `= junior − minJuniorAmount`, senior processed first | per-lender request queue across epochs, yield reinvest, credit line | `huma.qnt:200-202` — `fillJ = min(juniorAssetsReq, rem)`, cash-bounded only, **no ratio cap**. `:257-258` the spec then downgrades its own invariant to `val solvent: bool = trancheNonNeg` with the comment *"may break after losses — finding"* | M |
+18: | 9 | `derive` | `SP L5/derive.qnt` | `CP opt/derivexyz_v2-core/src/risk-managers/PMRMLib.sol:92-128` | **argmin over a shock-scenario set**: `minSPAN = min_i scenarioMtM(portfolio, scenarios[i])`, `worstScenario` = the index | scenario *content* (a 3-5 point spot/vol grid suffices), contingencies, dutch-auction path, subaccount NFTs | `derive.qnt:22` `MAINT_PER_SHORT: int = 15  // abstract maintenance per short unit`, applied at `:86` as `qty * MAINT_PER_SHORT`. Header `:12` admits it: *"NOT covered: full PMRM scenario matrix"* | M |
+19: | 10 | `polymarket` | `SP L6/polymarket.qnt` | `CP pred/Polymarket_ctf-exchange-v2/src/exchange/mixins/Trading.sol:390-430,577-598` | **taker crossed against an ordered maker list, match type derived from side agreement** — same-side crossings settle by batched CTF `MINT` / `MERGE`, opposite-side by `COMPLEMENTARY` transfer | EIP-712 signing, fee accounting, operator roles, UMA dispute window | `polymarket.qnt:75-97` `tradeYes(seller,buyer,yesAmt,price)` — one peer, and the **price is exogenous**: `:143 nondet price = 1.to(3).oneOf()`. `split`/`merge` exist only as standalone user actions, never as the settlement of a match | H |
+20: 
+21: ## 2. The seven-deletion hunt, in detail
+22: 
+23: The three known ones (rows 1, 2, 5) are given. The other seven, each traced from
+24: `GENERATION.md`'s stated failure to the concrete line:
+25: 
+26: **`compound_v3` — "N2 mark-to-market", `col * collPrice` at `:164`.** The raw `*`
+27: is a symptom. Comet's `absorbInternal` (`:1076-1077`) computes
+28: `value = mulPrice(seizeAmount, price, scale)` then credits only
+29: `mulFactor(value, assetInfo.liquidationFactor)`. The haircut is the protocol's
+30: liquidation margin. The spec credits reserves the *undiscounted* value, and then
+31: hands the collateral straight to an `"absorber"` account (`:162`), collapsing
+32: Comet's two-phase absorb→`buyCollateral` (`quoteCollateral`, `:1149-1161`,
+33: `discount = storeFrontPriceFactor · (1 − liquidationFactor)`) into one step. The
+34: protocol never holds inventory, so no discount can exist.
+35: 
+36: **`morpho_blue` — "N2", `seizedCol * collPrice` at `:143`.** The real deletion is
+37: larger and sits four lines lower. `Morpho.sol:391-401` writes down
+38: `totalSupplyAssets` when a borrower's collateral is fully seized: it is the only
+39: path by which supplier assets fall. `morpho_blue.qnt:156-159` names it in a
+40: comment and implements nothing. Consequence: the spec's own headline invariant
+41: `shareConservation`/`liquidityInvariant` (`:209-213`) is preserved *because the
+42: mechanism that stresses it was removed*. Second, `LIQ_INCENTIVE_BPS` (`:12`) is a
+43: literal where the contract derives it nonlinearly from `lltv` (`:366-370`).
+44: 
+45: **`apex` — "N1 trading function", `y * dx` and `baseIn * reserveQuote`.** Three
+46: concrete losses. (a) `swapOut` (`:47-49`) is fee-free; `Amm._getAmountOut`
+47: (`:467-478`) charges 999/1000, which is what makes `k` strictly increase.
+48: (b) `Amm.mint` bootstraps with `Math.sqrt(baseAmount * quoteAmount) −
+49: MINIMUM_LIQUIDITY` (`:96`) — the same `√` as row 1; the spec linearises (`:183-185`).
+50: (c) `Margin.liquidate` values the position by *simulating its close against the
+51: pool* (`_calDebtRatio` → `getMarkPriceAcc`, `Margin.sol:608-636`) and then
+52: actually pushes it through `forceSwap`; `apex.qnt:138-153` uses an exogenous
+53: `markPrice` and leaves every reserve untouched. Liquidation in the spec has no
+54: market impact at all.
+55: 
+56: **`gmx` — "N2", `poolAmount * markPrice`.** `var impactPool` is declared
+57: (`gmx.qnt:20`), initialised to 0, and written at exactly one site (`:140`) with
+58: residual liquidation collateral. It is **dead state**: nothing in the spec
+59: computes an impact. The contract's `getPriceImpactUsdForSameSideRebalance` /
+60: `...CrossoverRebalance` (`PricingUtils.sol:61-98`) is the mechanism — impact is a
+61: function of how much a trade widens or narrows `|longOI − shortOI|`, and the sign
+62: flips on `balanceWasImproved`. Separately, `:64`/`:88` substitute a raw product
+63: for `validateReserve`'s `reservedUsd ≤ applyFactor(poolUsd, reserveFactor)`.
+64: 
+65: **`huma` — "N4 tranche subordination", `MAX_SENIOR_RATIO * max(1, junior)`.**
+66: The spec enforces the senior:junior cap on *deposit* (`:49`) and nowhere else.
+67: `EpochManager._processJuniorRedemptionRequests` (`:342-360`) enforces it on
+68: *redemption*: `minJuniorAmount = ceilDiv(tranchesAssets[SENIOR], maxRatio)` and
+69: `maxRedeemableAmount = junior − minJuniorAmount`, returning early when the cap
+70: binds. `huma.qnt:200-202` computes `fillJ = min(juniorAssetsReq, rem)` — cash is
+71: the only constraint. The spec then admits the loss at `:257-258`, replacing the
+72: ratio invariant with `trancheNonNeg`. Restoring the cap makes
+73: `senior ≤ 4·junior` an assertable invariant again.
+74: 
+75: **`derive` — "N2, per-unit margin", `qty * MAINT_PER_SHORT`.** The contract's
+76: margin is an **argmin**: `PMRMLib.getMarginAndMarkToMarket:99-111` initialises
+77: `minSPAN` and loops the scenario array keeping the minimum and its index
+78: (`worstScenario`). `derive.qnt:22` replaces the whole search with the constant
+79: `15`. This is the corpus's clearest instance of the missing pattern — the residue
+80: note that *no* `fold` in 57 specs is an extremal selection is exactly this
+81: deletion. It is also the cheapest to restore: `SCENARIOS` is a small `Set`, and
+82: `fold(+∞, (acc,s) => min(acc, mtm(port,s)))` is four lines.
+83: 
+84: **`polymarket` — "N2 ×3", `yesAmt * price`.** The price is not a valuation input;
+85: it is the *outcome of a crossing*. `Trading._settleMakerOrders:390-430` walks the
+86: maker array in order, derives a `MatchType` per maker from side agreement
+87: (`_deriveMatchType:577-590` — taker and maker on the **same** side means the
+88: trade must be settled by minting or merging a complementary pair, not by
+89: transfer), accumulates `totalMintAmount`/`totalMergeAmount`, and then executes
+90: one batched `_mint`/`_merge`. `polymarket.qnt:75-97` is a single bilateral
+91: transfer at a price drawn by the driver (`:143`). Split and merge exist in the
+92: spec (`:40-67`) but are user actions, never the settlement of a trade — the
+93: identity that connects the order book to the CTF is severed.
+94: 
+95: ## 3. Execution split
+96: 
+97: **Four workers, one pilot, no shared-file writes.**
+98: 
+99: Output tree is new: `quint-models-v2/<Ln>/<protocol>.qnt`, mirroring v1. Each
+100: lane's `common.qnt` is **copied verbatim and frozen** — no worker edits any
+101: `common.qnt`, which removes every write conflict and keeps v1 intact as the
+102: baseline. New shared machinery goes in one file, `quint-models-v2/kernel/kernel.qnt`,
+103: authored during the pilot and frozen before lanes start; it holds exactly three
+104: things: `isqrtFloor`, `newtonD`, and sorted-list ops (`insertSorted`, `popHead`,
+105: `takePrefixWhile`). Anything else is declared module-locally with a
+106: `// LOCAL PRIMITIVE:` marker for later promotion.
+107: 
+108: - **Pilot (blocking):** `uniswap_v2`.
+109: - **W1 — iterative arithmetic:** `curve`, `apex`.
+110: - **W2 — valuation and haircut:** `compound_v3`, `morpho_blue`, `gmx`.
+111: - **W3 — ordered structures:** `liquity`, `polymarket`.
+112: - **W4 — extremal and waterfall:** `derive`, `huma`.
+113: 
+114: Grouping is by *technique*, not by lane, so each worker solves one hard problem
+115: once and applies it twice or three times. W3 is the heaviest (both members need a
+116: sorted/ordered list plus prefix consumption) and gets the fewest protocols.
+117: 
+118: **Shared conventions — binding on all four:**
+119: 
+120: 1. **Module name unchanged** from v1 (`module uniswap_v2 { … }`), so
+121:    `quint parse --out` and the generation checker run unmodified over v2.
+122: 2. **Header block, six mandatory lines**, in this order: `SOURCE:` (repo path +
+123:    line range), `MECHANISM:` (the must-survive, one sentence), `PRESERVED:`,
+124:    `ABSTRACTED:` (an explicit list — anything simplified and *not* listed here is
+125:    a defect), `BOUNDS:` (state-space sizes), `ACCEPTANCE:` (the three commands).
+126: 3. **The mechanism is a named `pure def`**, never inlined into an action, and its
+127:    name comes from a fixed registry: `isqrtFloor`, `newtonD`, `absorbHaircut`,
+128:    `socializeBadDebt`, `redeemPrefix`, `ammQuoteClose`, `impactUsd`,
+129:    `juniorRedeemableCap`, `worstScenarioMargin`, `matchTakerAgainstMakers`.
+130:    Naming it is what makes the acceptance check mechanical.
+131: 4. **Init:** exactly one `action init`, every `var` assigned, every value a named
+132:    `pure val` constant declared at the top in `UPPER_SNAKE`. No literal
+133:    arithmetic inside `init` (this is what produced `kLast' = 100 * 100`).
+134: 5. **Ordered state is `List`**, maintained by kernel ops. Never a `Set` the driver
+135:    selects from.
+136: 6. **Driver rule (the one that would have caught liquity):** `action step` may
+137:    `nondet` only over *exogenous* inputs — prices, amounts, time, user identity
+138:    for deposits. **Never over the identity of an element the protocol itself
+139:    selects.** If the contract computes *which*, the spec computes *which*.
+140: 7. **Invariants:** at least three, named `inv_*` — `inv_conservation` (a sum that
+141:    is constant or monotone), `inv_<mechanism>` (false if the mechanism is
+142:    bypassed), `inv_bounds` (non-negativity) — plus one witness `wit_*` (§5).
+143: 8. **Bounds:** ≤3 users, ≤5 list entries, integer ranges ≤200, so
+144:    `quint run --max-steps=20 --max-samples=500` finishes under 60s. Measured
+145:    baseline: v1 `uniswap_v2` did 100×10 in 0.6s, so there is roughly two orders
+146:    of magnitude of headroom.
+147: 9. **Prohibited:** any `var` never read; any doc comment containing "abstract",
+148:    "simplified", "stand-in" or "approx" without a matching `ABSTRACTED:` entry.
+149: 
+150: ## 4. Ordering — pilot is `uniswap_v2`
+151: 
+152: (a) Its missing mechanism, integer `√`, is the one **two other protocols also
+153: need** — `curve`'s Newton seed and `apex`'s LP bootstrap — so `kernel.isqrtFloor`
+154: gets three consumers before anyone else writes a line. (b) Its state is the
+155: smallest of the ten, so convention review is about conventions, not about the
+156: protocol. (c) Its deletion sits in `common.qnt`, i.e. in the *shared* layer —
+157: fixing it first exercises the "no worker edits common, everything new goes in
+158: kernel" rule rather than assuming it. (d) It has a second, undiagnosed deletion
+159: (`kLast` dead, `_mintFee` absent), making it a real test of convention 9 rather
+160: than a rubber stamp. The pilot is not done until a reviewer has signed off on the
+161: header block, the kernel API, and the three acceptance commands; only then do
+162: W1-W4 start.
+163: 
+164: ## 5. Acceptance test, per protocol
+165: 
+166: Three parts for every one of the ten. **T1** `quint typecheck <file>` exits 0.
+167: **T2** `quint run --main=<mod> --invariant=inv_conservation --max-steps=20
+168: --max-samples=500` reports no violation in under 60s. **T3** the positive check,
+169: in two halves: a **witness** — a `val wit_X: bool` asserting the mechanism has
+170: *never fired*, which `quint run --invariant=wit_X` must **violate**, producing a
+171: trace that exercises it; and a **mutation** — restore the v1 shortcut body and
+172: confirm `inv_<mechanism>` now fails. T3 per protocol:
+173: 
+174: 1. `uniswap_v2` — `inv_sqrtExact`: for every reached `p`, `isqrtFloor(p)^2 ≤ p <
+175:    (isqrtFloor(p)+1)^2`. `wit_firstMint`: no state has `totalSupply ==
+176:    isqrtFloor(r0*r1) − MIN_LIQ` — must be violated. `kLast` is read by `mintFee`.
+177: 2. `curve` — `inv_newtonResidual`: at the returned `D`, `|(Ann·S + D_P·n)·D −
+178:    ((Ann−1)·D + (n+1)·D_P)·D| ≤ 1`. `wit_imbalanced`: no state has
+179:    `max(bal0,bal1) ≥ 2·min(bal0,bal1)` with `2·isqrtFloor(bal0·bal1) < D < S`.
+180: 3. `compound_v3` — `wit_haircut`: no absorb has credited reserves strictly less
+181:    than `col*collPrice/basePrice`. `inv_storeFront`: protocol-held collateral is
+182:    reachable and leaves only via `buyCollateral` at the discounted quote.
+183: 4. `morpho_blue` — `wit_badDebt`: no state follows a liquidation that left
+184:    `collateral==0, borrowShares>0` and strictly decreased `totalSupplyAssets`.
+185:    `inv_incentiveDerived`: `LIQ_INCENTIVE == min(MAX_LIF, WAD²/(WAD −
+186:    CURSOR·(WAD−LLTV)/WAD))` evaluated, not a literal.
+187: 5. `liquity` — `inv_redeemPrefix`: every redemption touched a prefix of
+188:    `sortedByRate`; no untouched trove ranks below a touched one. `wit_multiTrove`:
+189:    no redemption consumed ≥2 troves — must be violated.
+190: 6. `apex` — `inv_kMonotone`: `reserveBase·reserveQuote` non-decreasing across
+191:    every swap (the 999/1000 fee). `wit_ammClose`: no liquidation changed the
+192:    reserves — must be violated.
+193: 7. `gmx` — `wit_impact`: no `increase`/`decrease` changed `impactPool`. 
+194:    `inv_impactSign`: every impact debit is negative iff `|longOI − shortOI|` grew,
+195:    and `impactPool ≥ 0`.
+196: 8. `huma` — `inv_seniorRatio`: `junior > 0 implies senior ≤ MAX_RATIO·junior`, at
+197:    every state (the invariant v1 abandoned). `wit_juniorCapped`: no epoch had
+198:    `availableCash > juniorAssetsReq` yet `fillJ < juniorAssetsReq`.
+199: 9. `derive` — `inv_marginIsMin`: `SCENARIOS.forall(s => scenarioMtM(p,s) ≥
+200:    margin)` and `SCENARIOS.exists(s => scenarioMtM(p,s) == margin)`.
+201:    `wit_nonTrivialArgmin`: `worstScenario` is always index 0 — must be violated.
+202: 10. `polymarket` — `inv_matchConserves`: within one match, `lockedCollateral`
+203:     changes only by the batched mint/merge total, and taker remaining is monotone
+204:     to 0 across the maker prefix. `wit_mintMatch`: no trade settled by MINT (two
+205:     same-side buys crossed) — must be violated.
+
+FILE historical-development/research/positive-program/phase2/P2-CONTRACT.md SHA256 e02fe92178df7e43dd6260e496481987f4f7542532014b403789e62e4c2e2cb3
+1: # P2 — REPAIRED EXECUTION CONTRACT (repairs 2, 3, 5)
+2: 
+3: Repairs 1 and 4 are applied in `P2-FIDELITY.md`. This document supplies the other three and
+4: is binding on the pilot and W1–W4. Where it conflicts with `P2-SCOPE.md`, this wins.
+5: 
+6: **How the numbers were produced.** Every vector was computed by replaying the cited
+7: Solidity/Vyper line in Python integer arithmetic — uint `/` = floor, `mulDivUp`/`ceilDiv` =
+8: ceiling — at the descaled constants named in each row (`scratchpad/p2vec.py`, `p2vec2.py`).
+9: `Math.sqrt` (`Math.sol:11-20`) was replayed as exact floor-sqrt. Nothing needs chain state
+10: except where flagged **NOT DERIVABLE**.
+11: 
+12: ---
+13: 
+14: ## A. REPAIR 2 — T0 conformance vectors
+15: 
+16: Assert each as a `pure val t0_<n>: bool = <lhs> == <rhs>`, conjoined into `inv_T0`. T0 is
+17: part of every protocol's acceptance test, ahead of T1.
+18: 
+19: ### 1. `uniswap_v2` — `isqrtFloor`, `geometricMint`, `mintFee` (`UniswapV2Pair.sol:120, 95-99`)
+20: | input | output |
+21: |---|---|
+22: | `isqrtFloor(36000000)` | `6000` |
+23: | `isqrtFloor(15)` , `isqrtFloor(8)` | `3` , `2` |
+24: | `geometricMint(4000, 9000)` | `5000` (v1 `min` → 4000; mean → 5500) |
+25: | `geometricMint(2000, 8000)` | `3000` (v1 → 2000) |
+26: | `mintFeeLiquidity(kLast=1000000, r0=1200, r1=1200, ts=1000)` | `28` (= `1000·200/(6000+1000)`) |
+27: | `mintFeeLiquidity(kLast=1000000, r0=2000, r1=2000, ts=1000)` | `90` |
+28: | `mintFeeLiquidity(kLast=1000000, r0=1000, r1=1000, ts=1000)` | `0` |
+29: 
+30: ### 2. `curve` — `newtonD`, N=2, AMP=100, K=8 (`StableSwap3Pool.vy:195-217`)
+31: | `(x, y)` | `D` | iters | `S` | `2·isqrt(xy)` | v1 blend |
+32: |---|---|---|---|---|---|
+33: | `(100,100)` | `200` | 1 | 200 | 200 | 200 |
+34: | `(150,50)` | `199` | 1 | 200 | 172 | 199 |
+35: | `(180,20)` | `198` | 2 | 200 | 120 | 199 |
+36: | `(190,10)` | `196` | 2 | 200 | 86 | 199 |
+37: | `(199,1)` | `170` | 2 | 200 | 28 | 199 |
+38: 
+39: `(190,10)` and `(199,1)` separate `M₀` from constant-sum, constant-product **and** the v1
+40: blend simultaneously. `(100,100)` and `(150,50)` do not — do not use them alone.
+41: 
+42: ### 3. `compound_v3` — `absorbHaircut`, `quoteCollateral` (`:1076-1077`, `:1154-1160`)
+43: Descaled `SCALE = 10⁴`; `liquidationFactor = 9000`, `storeFrontPriceFactor = 5000`,
+44: `assetPrice = 50000`, `basePrice = 10000`, all scales `10⁴`.
+45: | input | output |
+46: |---|---|
+47: | `absorbValue(seize=1000)` | `5000` |
+48: | `absorbHaircut(5000, 9000)` | `4500` — **v1 credits 5000** |
+49: | `absorbHaircut(1500, 9000)` (seize=300) | `1350` |
+50: | `discountFactor` , `assetPriceDiscounted` | `500` , `47500` |
+51: | `quoteCollateral(4500)` | `947` |
+52: | `quoteCollateral(950)` | `200` |
+53: 
+54: Load-bearing identity: absorbing 1000 units credits 4500 base, and 4500 base buys back only
+55: **947**. The 53-unit residue is the store-front margin, `0` under the v1 shortcut and under
+56: any "haircut of one unit".
+57: 
+58: ### 4. `morpho_blue` — `liquidationIncentiveFactor`, `socializeBadDebt` (`:366-370`, `:391-401`)
+59: `SCALE = 10⁴`, `CURSOR = 3000`, `MAX_LIF = 11500`, `VIRTUAL_SHARES = 10⁶`, `VIRTUAL_ASSETS = 1`.
+60: | input | output |
+61: |---|---|
+62: | `LIF(lltv=8600)` | `10438` (inner `9580`) — **v1 literal is 11500** |
+63: | `LIF(lltv=9000)` | `10309` |
+64: | `LIF(lltv=7700)` | `10741` |
+65: | `LIF(lltv=5000)` | `11500` (cap binds — the other side of `min`) |
+66: | `badDebtAssets(shares=200·10⁶, tBA=1000, tBS=1000·10⁶)` | `200`; `totalSupplyAssets 2000 → 1800` |
+67: | `badDebtAssets(shares=150·10⁶, tBA=500, tBS=400·10⁶)` | `188` (ceil of 187.4 — rounding up is the vector) |
+68: 
+69: ### 5. `liquity` — `redeemPrefix` (`TroveManager.sol:682-689, 770, 785`)
+70: Troves `(rate 5, debt 100), (rate 8, 100), (rate 12, 300)`; `redemptionPrice = 1`,
+71: `redemptionRate = 0` (**NOT DERIVABLE** — `_redemptionRate` is chain state; fixed at 0 and
+72: declared in `ABSTRACTED:`; the fee is a scalar skim and does not touch the order).
+73: | `amount` | touched | remaining | debts, rate-ascending |
+74: |---|---|---|---|
+75: | `50` | 1 | 0 | `[50,100,300]` |
+76: | `150` | **2** | 0 | `[0,50,300]` |
+77: | `250` | **3** | 0 | `[0,0,250]` |
+78: | `600` | 3 | **100** | `[0,0,0]` |
+79: 
+80: v1's `redeem(u, amt)` cannot produce `touched > 1` for any input.
+81: 
+82: ### 6. `apex` — `_getAmountOut`, `_getAmountIn`, LP bootstrap (`Amm.sol:474-477, 490, 96`)
+83: | input | output | zero-fee v1 |
+84: |---|---|---|
+85: | `ammOut(in=100, rIn=100, rOut=100)` | `49` | `50` |
+86: | `ammOut(in=50, rIn=200, rOut=200)` | `39` | `40` |
+87: | `ammOut(in=200, rIn=200, rOut=100)` | `49` | `50` |
+88: | `ammIn(out=100, rIn=1000, rOut=1000)` | `112` | `111` (the `+1` round-up) |
+89: | `apexMint(4000, 9000)` | `5000` | `4000` (linear) |
+90: 
+91: **Recorded finding.** At `(in=200, rIn=1000, rOut=1000)` both forms return `166` and
+92: `k' = 1000800`. `inv_kMonotone` is satisfied by the deleted mechanism at ordinary trade
+93: sizes. Only T0 separates them, and only at `amountIn ≳ reserveIn`.
+94: 
+95: ### 7. `gmx` — `impactUsd` (`PricingUtils.sol:61-77, 104-111`; `Precision.sol:88-109`)
+96: `SCALE = 10⁴`, `impactFactor = 50`, `exponentFactor = 2·SCALE`.
+97: | input | output | exponent-1 linearisation |
+98: |---|---|---|
+99: | `applyImpactFactor(d=5000)` | `0` (cliff, `Precision.sol:93`) | `0` |
+100: | `applyImpactFactor(d=10000)` | `50` | `50` |
+101: | `applyImpactFactor(d=20000)` | `200` | `100` |
+102: | `applyImpactFactor(d=30000)` | `450` | `150` |
+103: | `sameSide(init=20000, next=10000)` | `+150` | `+50` |
+104: | `sameSide(init=30000, next=20000)` | `+250` | `+50` |
+105: | `sameSide(init=0, next=20000)` | `−200` | `−100` |
+106: 
+107: Rows 5 and 6 are the convexity witness: identical ΔOI of `10000`, impact `150` vs `250`.
+108: Every linear impact function returns the same number twice. This is why the linearisation
+109: permission in `P2-SCOPE.md` row 7 is **revoked**.
+110: 
+111: ### 8. `huma` — `juniorRedeemableCap` (`EpochManager.sol:352-357`)
+112: `maxSeniorJuniorRatio = 4`.
+113: | input | `minJuniorAmount` | `maxRedeemableAmount` |
+114: |---|---|---|
+115: | `senior=700, junior=200` | `175` | `25` |
+116: | `senior=750, junior=250` | `188` (ceil of 187.5) | `62` |
+117: | `senior=800, junior=200` | `200` | `0` (early return) |
+118: 
+119: v1's `fillJ = min(req, cash)` returns `min(req, cash)` in all three.
+120: 
+121: ### 9. `derive` — `worstScenarioMargin` (`PMRMLib.sol:99-111, 162-163, 212-224`)
+122: **NOT DERIVABLE:** option-leg MtM needs `Black76.prices` plus on-chain vol/forward params.
+123: **Substitute:** the empty-`options` path — a real contract path — where `scenarioMtM` reduces
+124: exactly to `_getBaseValue` + `_getShockedPerpValue`. `UNIT = 100`, `spot = perpPrice = 10000`,
+125: `stablePrice = 100`, `spotShocks = [80,90,100,110,120]`.
+126: | portfolio | `scenarioMtM` vector | `margin` | `worstScenario` |
+127: |---|---|---|---|
+128: | `base=200, perp=−300` | `[2000,1000,0,−1000,−2000]` | `−2000` | `4` |
+129: | `base=200, perp=0` | `[−4000,−2000,0,2000,4000]` | `−4000` | `0` |
+130: | `base=0, perp=−300` | `[6000,3000,0,−3000,−6000]` | `−6000` | `4` |
+131: 
+132: Rows 1 and 2 differ in `worstScenario`. The decorated-constant cheat in the review cannot
+133: produce both, because its `scenarioMtM` does not read the base/perp split.
+134: 
+135: ### 10. `polymarket` — `matchTakerAgainstMakers` (`Trading.sol:405-428, 577-590`; `CalculatorHelper.sol:10`)
+136: | input | output |
+137: |---|---|
+138: | `matchType(BUY, BUY)` | `MINT` (1) |
+139: | `matchType(SELL, SELL)` | `MERGE` (2) |
+140: | `matchType(BUY, SELL)` , `(SELL, BUY)` | `COMPLEMENTARY` (0) |
+141: | `takingAmount(making=50, makerAmount=100, takerAmount=40)` | `20` |
+142: | `takingAmount(30, 100, 40)` | `12` |
+143: | `takingAmount(20, 100, 65)` | `13` |
+144: | batch: makers `[(BUY,100,40,fill 50), (BUY,100,40,fill 30), (SELL,100,65,fill 20)]` | `totalMintAmount = 32`, `totalMergeAmount = 0`, exactly one `_mint(32)` |
+145: 
+146: The price is `takerAmount/makerAmount` off the order — never a driver `oneOf`.
+147: 
+148: ---
+149: 
+150: ## B. REPAIR 3 — extended selection conventions
+151: 
+152: Convention 6 stands unchanged. Add:
+153: 
+154: **6b — Arithmetic identity.** Every arithmetic mechanism is a registry-named `pure def` and
+155: is pinned by its §A vectors as `pure val` equalities. At least one vector must lie outside
+156: the symmetric/near-symmetric regime and at least one must be a value where the v1 shortcut
+157: disagrees. A shape invariant may never be the only check on a `pure def`.
+158: 
+159: **6c — Rounding direction.** Every division in a cited formula carries the contract's
+160: rounding direction, and at least one T0 vector per `pure def` must be an inexact quotient
+161: where floor and ceil differ (`apex` 111→112, `huma` 187.5→188, `morpho` 187.4→188).
+162: 
+163: **6d — No-op and dead branch.** No action branch may have every primed variable equal to its
+164: unprimed variable. Every action carries `wit_fired_<action>` ("this action never fired"),
+165: which `quint run` must violate. Enabledness is witnessed, never assumed.
+166: 
+167: **6e — Coverage table.** A written table in the header: every external state-changing
+168: function of every cited contract is an action or an `ABSTRACTED:` line with a reason; every
+169: storage slot read by a `require` on a state-changing path is a `var` or an `ABSTRACTED:`
+170: line. No `var` may be write-only.
+171: 
+172: **6f — Branch and threshold coverage.** Every conditional inside a cited formula — an early
+173: return, a `min` cap, a magnitude cliff — is a branch of the `pure def` with one T0 vector on
+174: each side.
+175: 
+176: ### Mapping: the ten deletions to their covering convention
+177: 
+178: | # | deletion | caught by |
+179: |---|---|---|
+180: | 1 | `uniswap_v2` `geometricMint → min` | **6b**; dead `kLast` by **6e** |
+181: | 2 | `curve` `approxD` blend | **6b**; the `break` by **6f** |
+182: | 3 | `compound_v3` missing haircut / no inventory | **6b** + **6c**; absent `buyCollateral` by **6e** |
+183: | 4 | `morpho_blue` bad-debt no-op | **6d**; `LIQ_INCENTIVE` literal by **6b** + **6f** |
+184: | 5 | `liquity` trove as parameter | **6** (unchanged) |
+185: | 6 | `apex` fee-free swap / linear mint / inert liquidate | **6b** + **6c**; inert liquidate by **6d**; absent close path by **6e** |
+186: | 7 | `gmx` absent impact function | **6e** (write-only `impactPool`) + **6b** + **6f** (cliff, exponent) |
+187: | 8 | `huma` uncapped junior redemption | **6b** + **6c** + **6f** (early return) |
+188: | 9 | `derive` `MAINT_PER_SHORT` constant | **6** + **6b** |
+189: | 10 | `polymarket` exogenous price, no match type | **6** + **6b**; absent dispute path by **6e** |
+190: 
+191: ### Holes — named, not covered
+192: 
+193: - **H1 — `apex`'s liquidation *trigger*.** `_calDebtRatio → getMarkPriceAcc` makes
+194:   liquidatability size-dependent; the spec's scalar `markPrice` is a *legal* exogenous input
+195:   under convention 6, not an arithmetic site under 6b, not missing state under 6e. No
+196:   convention covers "an endogenous argument replaced by a legitimate exogenous one". Bespoke
+197:   obligation: `wit_sizeDependentLiquidation` — two positions of different size at the same
+198:   `markPrice` must differ in liquidatability.
+199: - **H2 — `apex` unit mismatch.** `openShortPos` records `posSize` in base units,
+200:   `openLongPos` in quote (`apex.qnt:123`); `common.qnt:120` applies one formula to both. A
+201:   type error inside `int`; no convention sees it. Obligation: a `UNITS:` header line naming
+202:   the unit of every quantitative field.
+203: - **H3 — reachability of the T0 regime.** Nothing forces the spec to enter a state where a
+204:   pinned function is applied. This is the fifth trap; see §D.
+205: - **H4 — `polymarket` contract boundary.** A 6e table built from `Trading.sol` alone does not
+206:   reach `UmaCtfAdapter.sol`. It must name both contracts.
+207: 
+208: ---
+209: 
+210: ## C. REPAIR 5 — descaled domains and their witness-hosting arguments
+211: 
+212: i64 ceiling ≈ `9.22×10¹⁸`. All peak intermediates below are stated.
+213: 
+214: | # | protocol | descale | ranges | peak intermediate |
+215: |---|---|---|---|---|
+216: | 1 | `uniswap_v2` | none (token units) | amounts `[1000, 20000]`, reserves ≤ `40000` | `a0·a1 ≤ 4×10⁸`; use `isqrtBits(n,16)`, `cand² ≤ 4.3×10⁹` |
+217: | 2 | `curve` | 1 unit = 1 token, `AMP = 100` | balances `[1, 200]`, `N=2`, `K=8` | `(Ann·S + D_P·N)·D ≤ 2×10⁸` |
+218: | 3 | `compound_v3` | `SCALE = 10⁴` for both `FACTOR_SCALE` and price scale | balances ≤ 2000, prices ≤ `10·SCALE` | `basePrice·baseAmount·assetScale ≤ 4.5×10¹¹` |
+219: | 4 | `morpho_blue` | `SCALE = 10⁴` (`SCALE² = 10⁸`); `VIRTUAL_SHARES` stays `10⁶` | assets ≤ 2000, shares ≤ `2×10⁹` | `shares·(assets+1) ≈ 4×10¹²` |
+220: | 5 | `liquity` | 1 unit = 1 BOLD, price = 1 | ≤5 troves, debts ≤ 300, amounts ≤ 600 | `< 10⁶` |
+221: | 6 | `apex` | none | swap: reserves `[100, 2000]`, `amountIn [1, 200]`; mint: amounts `[1000, 20000]` | `amountIn·999·reserveOut ≈ 4×10⁸` |
+222: | 7 | `gmx` | `SCALE = 10⁴` for `FLOAT_PRECISION`; **exponent = 2** | `diffUsd ≤ 4×10⁴`, `impactFactor ≤ 10²` | `d² = 1.6×10⁹` |
+223: | 8 | `huma` | `SCALE = 10⁴` for `DEFAULT_DECIMALS_FACTOR`; ratio `4` unscaled | senior ≤ 800, junior ≤ 300, price ≤ `2·SCALE` | `6×10⁶` |
+224: | 9 | `derive` | `UNIT = 10²` | spot = perp = `10⁴`, base `[0,3]·UNIT`, perp `[−3,3]·UNIT` | `3×10⁶` |
+225: | 10 | `polymarket` | none; price as an integer `(makerAmount, takerAmount)` pair | order amounts ≤ 200, ≥2 makers | `4×10⁴` |
+226: 
+227: **Witness hosting, per row.**
+228: 
+229: 1. `MINIMUM_LIQUIDITY = 1000` is a protocol constant, not a scale factor, so it may not be
+230:    descaled. Convention 8's "integer ranges ≤ 200" therefore makes the first-mint mechanism
+231:    **unreachable** — `sqrt(200·200) = 200 < 1000` and `.sub` underflows. The pilot's headline
+232:    mechanism cannot fire under the plan's own bounds. Domain raised as above; witness
+233:    `geometricMint(4000,9000) = 5000 ≠ 4000` is inside it.
+234: 2. The `≤ 200` cap is **not** the conflict — `(190,10)` is inside it. The conflict is `init`
+235:    at `100/100` plus trade sizes too small to reach `19:1`. Directive: `init` at `150/50`,
+236:    trade sizes up to 90, reachable imbalance stated in `BOUNDS:`. Convergence swept over all
+237:    `200×200` pairs at `AMP=100`, `K=8`: **zero** non-converging, worst iters 3 (`AMP=1` has
+238:    one bad point, `(33,1)`; fix `AMP=100`). At this descale the `≤1` break tolerance is one
+239:    whole token, not 1 wei — a real relaxation, `ABSTRACTED:` line.
+240: 3. Chained `mulPrice→mulFactor` peaks at `4.5×10¹¹`. Witness = the 53-unit residue between
+241:    absorb-credit and buy-back, reachable at seize `1000`.
+242: 4. `WAD² = 10³⁶` becomes `SCALE² = 10⁸`; T3 item 4 now runs, yielding `10438`. The bad-debt
+243:    witness is a *cross-user* loss, so `|USERS| ≥ 2` — a single-supplier domain hosts the
+244:    arithmetic and not the mechanism (regression signal 7).
+245: 5. `touched = 3` needs ≥3 troves and an amount exceeding the two smallest debts summed, so
+246:    `amounts` must reach 250. At `amounts ≤ 100` the prefix walk never walks.
+247: 6. The fee witness needs `amountIn ≳ reserveIn`; at `amountIn/reserveIn = 0.2` the two forms
+248:    coincide exactly (measured). A "safe small trade" domain silently re-deletes the fee — the
+249:    review's second-order damage path, instantiated. The mint witness needs row 1's
+250:    `[1000, 20000]`, so `apex` declares **two** ranges.
+251: 7. `applyExponentFactor` returns `0` for `d < SCALE` (`Precision.sol:93`), so a cap at
+252:    `d ≤ 10⁴` — the review's suggestion — leaves exactly one non-zero point and cannot host
+253:    the convexity witness. Raised to `d ≤ 4×10⁴`, hosting the `150` vs `250` pair at peak
+254:    `1.6×10⁹`. Exponent 2 costs nothing; linearisation is revoked.
+255: 8. `wit_juniorCapped` needs cash `>` request while fill `<` request, i.e. the ratio must
+256:    bind: `init` at `senior=700, junior=200`, not at a comfortable ratio.
+257: 9. The witness is `worstScenario` differing across two portfolios: needs a base and a perp leg
+258:    with opposite exposure and ≥2 shocks. `base=100, perp=−100` is delta-neutral and gives an
+259:    all-zero vector — it must not be `init`.
+260: 10. `wit_mintMatch` needs ≥2 makers on the taker's side in **one** action; a one-maker action
+261:     cannot host it whatever the arithmetic.
+262: 
+263: **Standing directive.** Any domain reduction taken to escape `QNT601` is re-checked against
+264: F4 and recorded in the header as `BOUNDS:` plus a sentence naming which witness still fits.
+265: 
+266: ---
+267: 
+268: ## D. The fifth trap — in this contract
+269: 
+270: **The trap.** T0 vectors are `pure val` equalities, and a `pure val` is true in every state —
+271: including in a spec whose reachable state space never applies the pinned function. A worker
+272: can satisfy all thirty-odd vectors with a correct, fully cited, registry-named `pure def`
+273: that **no action ever calls**: the arithmetic present as a library, absent as a mechanism.
+274: Same shape as the other four — the check passes because the stressing states, here the states
+275: in which the definition is applied, were never entered. It is already live in the corpus
+276: (`apex.qnt:184`'s unreachable bootstrap branch), and this repair makes it *easier*, because
+277: T0 grants shape-plus-value credit at zero reachability cost.
+278: 
+279: **The check.** Two parts, both mechanical.
+280: 
+281: 1. **Use witness.** For each registry name in convention 3, `grep` that it occurs at least
+282:    once inside an `action` body — not only inside `inv_*`/`val` blocks — and ship
+283:    `wit_used_<f>`, a state predicate that can hold only if `f`'s result was written into a
+284:    `var`. `quint run --invariant=wit_used_<f>` must report a violation. A `pure def` cited
+285:    only by invariants is a deleted mechanism carrying a certificate.
+286: 2. **`T0-LIVE:`.** A decorative call satisfies part 1, so exactly one vector per protocol is
+287:    marked `T0-LIVE:` in the header and its obligation is a *trace*: a run in which some `var`
+288:    changes by exactly the T0 output at the T0 input. Use, in order:
+289:    `geometricMint(4000,9000)=5000`; `get_D(190,10)=196`; `absorbHaircut → 4500` then
+290:    `quoteCollateral → 947`; `totalSupplyAssets 2000 → 1800`; `redeem(250)` touching 3;
+291:    `ammOut(100,100,100)=49`; `sameSide(30000,20000)=+250`; `maxRedeemable(700,200)=25`;
+292:    `worstScenario = 4` then `= 0`; `totalMintAmount = 32`.
+293: 
+294: One vector reachable as a transition is the difference between a spec that contains the
+295: mechanism and a spec that merely knows its value.
+296: 
+297: 
+298: ---
+299: 
+300: ## Convention 6h — caller authority (ADOPTED)
+301: 
+302: **Every state-changing action must resolve its caller into exactly one of three
+303: states, and say which.**
+304: 
+305: | verdict | meaning | obligation |
+306: |---|---|---|
+307: | **MODELLED** | the contract restricts the caller and the spec guards it | take the caller as an argument; guard it against modelled authority state |
+308: | **OMITTED** | the contract restricts the caller and the spec does not | declare it in the header with the contract file:line and the restriction dropped |
+309: | **PERMISSIONLESS** | the contract restricts nobody | declare it with the file:line checked. This is a **positive, falsifiable claim**, not an absence of evidence |
+310: 
+311: A fourth outcome, **UNRESOLVED**, is permitted only as a temporary marker and
+312: must name what could not be found. It is not a synonym for permissionless.
+313: 
+314: **Why the third row exists.** Without it, "no authority modelled" is
+315: indistinguishable from "no authority in the contract" — which is exactly the
+316: defect `DELETION-11.md` found and `GATE-1.1B-PAIR4.md` showed blocks Phase 1.
+317: `wbtc.addMintRequest` hardcoding `requester: MERCHANT` is an accidental
+318: declaration; `wbtc.confirmMint` taking `(id: int)` is a deletion; today a
+319: reviewer cannot tell them apart. The declaration is what separates them.
+320: 
+321: **Authority state is `var`, not a constant**, wherever the contract lets it
+322: change. Freezing it deletes the *granting* of authority, which is itself a
+323: mechanism — see `CHARACTERISATION.md`: the mandate is `Perm ⋈ Led.move`, and
+324: `grant`/`revoke` are `Perm`-gated.
+325: 
+326: **Cost is bounded.** Authority sets are small — one custodian, one operator, a
+327: two-element allocator set — so convention 8a's cap of 8 enumerated values per
+328: `nondet` is not threatened. Where a role is open-ended, model two principals: one
+329: holding it and one not. That hosts every witness the autonomy law needs.
+330: 
+331: ### Tooling
+332: 
+333: `phase2/auth_scan.py` produces the evidence: for each action in each re-spec it
+334: locates the contract function and reports whether the caller is restricted.
+335: 
+336: **It scans function bodies, not only modifiers, and the first version did not.**
+337: That version reported 50 actions permissionless, including `huma.closePool` and
+338: `huma.distributeProfit`, both of which are gated in the body:
+339: 
+340:     function closePool() external {
+341:         poolConfig.onlyPoolOwnerOrHumaOwner(msg.sender);
+342: 
+343:     function distributeLoss(uint256 loss) external {
+344:         if (msg.sender != address(creditManager)) revert ...
+345: 
+346: Huma also carries `@custom:access` NatSpec, read where present as the author's own
+347: statement. Any future access-control detector must assume the same failure.
+348: 
+349: ### Current state of the ten re-specs
+350: 
+351: | verdict | actions |
+352: |---|---|
+353: | MODELLED | 10 |
+354: | **GATED — the retrofit work-list** | **10** |
+355: | PERMISSIONLESS | 38 |
+356: | UNMATCHED — needs a hand lookup | 18 |
+357: 
+358: The 18 unmatched are **not** evidence of absence and must not be recorded as
+359: permissionless.

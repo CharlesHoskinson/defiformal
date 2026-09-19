@@ -1,0 +1,407 @@
+
+FILE current-contract/.claude/skills/defi-footguns/SKILL.md SHA256 5090b32ab6ff62df0a21d945bd85174eb0dfbb76639dda1e3489add8365470df
+1: ---
+2: name: defi-footguns
+3: description: Use when touching anything in this repo that verifies, checks, gates, or reports a result - paper/build.sh, formal/v3/*gate*, totalgate.mjs, negtest-*.sh, the sigma gates, or any script that compares a figure against paper/atlas.tex. Also use when a checker reports success, when adding an assertion, or when deciding how many review rounds a change needs.
+4: ---
+5: 
+6: # DeFi footguns
+7: 
+8: Traps that have actually fired in this repository, with the evidence. Every
+9: entry below was measured, not predicted.
+10: 
+11: **Core principle: this repo's gates exist to stop a confident wrong answer.
+12: Every trap here is a gate that produced one — usually about something it had
+13: not measured.**
+14: 
+15: Read `formal/v3/GATE-REGISTER.md` alongside this: it records, per gate, whether
+16: it has ever been *observed* failing. Two gates are marked `CANNOT FAIL` and are
+17: still cited as verification commands in `AGENDA-COMPLETE.md`.
+18: 
+19: ## Quick reference
+20: 
+21: | Symptom | Cause | Fix |
+22: |---|---|---|
+23: | `BUILD FAILED: a headline total disagrees with the verdicts`, but the PDFs rendered and the totals are right | `paper/build.sh` discarded the gate's stderr with `>/dev/null 2>&1` and mapped **every** nonzero exit onto one editorial sentence | Branch on the exit code: `0` holds, `1` the property is false, `3` the check could not run. Never merge those |
+24: | A gate reports `PASS` / `ok` / `agree` after examining nothing | Empty glob, empty directory, zero-iteration loop. `verify_final.py` printed `X21-armed pairs: 0 of 0` and exited 0 on every tree but the author's | A zero denominator is a **blocked** check, exit 3. Print the denominator in the result line |
+25: | Running the verification suite leaves the repo dirty | Gate scripts write their result JSON back into the tree, so *verifying* and *regenerating* are the same action and a gate can never disagree with its own record | Snapshot `git status --porcelain -uall` before and after. If a gate rewrites its evidence, diff it — reproducing bit-for-bit except a recorded absolute path is genuine |
+26: | `quint typecheck` cited as verification | It checks types and effects. It never evaluates `init`, never steps, never reads an invariant. **0 of 92 `.qnt` files declare an `invariant`, `temporal` or `run`** — `quint test` is an empty suite everywhere | Name the property: `quint run <f> --invariant=inv_all`. Expect `usd1.qnt` to go red — it ships violating `inv_supply` |
+27: | A gate shell reports `FAIL 61 of 72` about a corpus it never read | Unguarded `cd`, or a harness truncated with `head`/`tail` **before** being judged, discarding the EACCES that marks a blocked run | `cd "$(dirname "$0")/../.." \|\| exit 3`, plus a sentinel checking real content. Capture output in full; truncate only for display |
+28: | A `cd` guard is present and the script still lies | `cd` into a directory that merely **exists** succeeds. Landing in `/tmp` is not a failure | Sentinel on content: `corpus50/lanes/*.json` present, `begin{measurement}` in `atlas.tex` |
+29: | A count of blocked checks is off by one | `grep -c 'BLOCKED'` also matches the `GATE RESULT: BLOCKED` summary line | Anchor: `grep -cE '^  BLOCKED'`. This is the repo's own canonical example — `grep -q "violation"` matches Quint's success string `[ok] No violation found` |
+30: | A figure "agrees" with the paper but the paper is wrong | `has()` was `tex.includes()` over a 151 KB document. Strip the approx markers and `strict` becomes `45.3`, satisfied by the **coverage** literal eleven lines above | Anchor each figure to the block *and* the sentence that asserts it, and require every site that states it to agree |
+31: | An anchored claim search finds the wrong text | A `\label` sits wherever the author put it — near the top of a `measurement`, but inside the **caption** of a `table`, *below* the tabular body. Slicing forward from the label misses the numbers | Bound the block by `\begin{env}`…`\end{env}`, not by the label's position |
+32: | A comment or an unused macro satisfies a claim | A LaTeX comment is never typeset; nor is an uninvoked `\newcommand` body, nor the untaken branch of a conditional | Strip comments (see parity below). For conditionals, **refuse rather than resolve** — see the wiki. There is no complete fix short of reading the typeset PDF |
+33: | Comment stripping misses `\\%` | LaTeX comment semantics are backslash **parity**: `\%` is a literal percent, `\\%` is a line break followed by a **live** comment. A single-preceding-character test keeps the second | `replace(/(^\|[^\\])((?:\\\\)*)%.*$/gm, "$1$2")` — consume the pairs |
+34: | A conditional check blocks a correct paper | `\iff` (the math operator) matches a naive `\\if[a-zA-Z]*` | Match the real primitives: `ifnum ifdim ifodd ifx iftrue iffalse ifcase ifdefined ifcsname else fi` |
+35: | Every fix is defeated by the symmetric case one step away | Four consecutive rounds closed a pole and left its dual: whole-document → block-scoped missing a second site; comment stripped → wrong parity; `\iffalse` stripped → `\iftrue` untouched | When a fix is about *which* form, ask what the other polarity is **before** shipping. Better: make the check refuse ambiguity rather than resolve it |
+36: | A "guard" passes on an arithmetically impossible input | The total row `total & --- & 1259 & 570 & 689 & 15` was checked by testing each number occurred *somewhere* in the table. Permuting to `1259 & 689 & 570 & 15` passed | Cells carry meaning by **position**. Read the row as a row |
+37: | A count-based guard misses a partial corpus | Zero-file guards say nothing about four files of five, and "is an array" says nothing about `[]` | Count what you visited and refuse to compare an incomplete corpus. Better: make two independent sources check **each other** — `tot` from verdicts vs obligation items from specs; `cov` vs `assigned` |
+38: 
+39: ## The assertion traps — the most expensive class here
+40: 
+41: Four distinct ways an assertion stayed green against reverted code, all observed
+42: in this repo:
+43: 
+44: 1. **It tests a copy.** The probe re-implemented `want()` / `blocked_out()` in a
+45:    heredoc, so reverting the real hunk left it exercising a private copy that
+46:    still had the fix. Lift the function from source with a **bounded** extractor.
+47: 2. **It greps source instead of running behaviour.** A check for
+48:    `case "$brc" in` passed against a block that was dead code after an `exit`.
+49: 3. **A parent guard already returns the same code.** The per-verdict
+50:    `Number.isFinite` check sat under an existing `tot === 0` guard, so the
+51:    fixture returned 3 either way. Lock by the specific **message**.
+52: 4. **The fixture is degenerate.** A one-slug corpus can't exhibit a
+53:    silent-skip: the `tot === 0` guard fires first. **Two slugs minimum** for
+54:    anything about a partial walk.
+55: 
+56: **Every guard needs a positive control** proving it fires on a defeating input,
+57: **and** a negative one proving it isn't always-on. A dot-terminated sentence
+58: window shipped that failed the *intact* corpus — its control was the only reason
+59: it didn't ship red.
+60: 
+61: ## A bounded function lift
+62: 
+63: `awk '/^fn\(\) \{/,/^\}/'` runs on to the **next** function's closing brace when
+64: the definition is one-lined, so `tail -1 == "}"` passes on swallowed script body
+65: (measured: 40 lines, 5 of them body, lift returned 0). Require: non-empty, ends
+66: `}`, contains exactly one `^name() {`, and no line matching `^(echo|one |want "|===== )`.
+67: 
+68: ## How many review rounds
+69: 
+70: **State the threat model in the brief.** This repo ran 21 adversarial rounds.
+71: Rounds 1–11 found real defects — the published lie in four places, a silent
+72: PASS, gates that could not fail. Rounds 12–21 found manuscript mutations that
+73: require an adversary with **write access to `atlas.tex`**, which is not the
+74: threat: the real risk is a collaborator regenerating one figure and missing
+75: another.
+76: 
+77: - Budget rounds up front. Extension is an explicit decision, not a default.
+78: - Tell reviewers to rank by **realistic likelihood**, not constructibility.
+79: - **You** decide what blocks shipping. A finding needing adversarial write
+80:   access to the artifact under test is a note, not a blocker.
+81: - Tripwire: N consecutive rounds touching the same files → stop and reassess.
+82:   Here, ten consecutive commits touched the same two files.
+83: 
+84: ## Common mistakes
+85: 
+86: - **Trusting a gate's summary line.** `all headline totals agree with the
+87:   verdicts` was printed while two of the four cells in the row it named were
+88:   never compared.
+89: - **Believing a stated limitation.** A limitation is a claim like any other.
+90:   `GATE-REGISTER.md` overstated its own bound twice and a reviewer caught it
+91:   both times.
+92: - **Reading only the last line.** `one()` judged on `tail -1`, discarding the
+93:   evidence that marks a blocked run — in a file whose own header says every
+94:   check greps the whole output.
+95: 
+96: ## Adding entries
+97: 
+98: Append only footguns that actually fired, symptom first — that is what a future
+99: reader searches for. Keep the quick-reference table the primary surface. Record
+100: the measurement, not the intuition.
+
+FILE current-contract/formal/v3/GATE-REGISTER.md SHA256 3f25f57b1c051ae245adda4b05058c944dfc486cf25be09d4914ef087edc35b7
+1: # Gate register
+2: 
+3: **See also:** `docs/wiki/` for why these rules exist, and
+4: `.claude/skills/defi-footguns/SKILL.md` for the symptom-first version that fires
+5: while you work.
+6: 
+7: Every gate, what it claims, and whether it has been *observed* failing on a
+8: known-bad input. A checker never seen to fail is not evidence, and a row marked
+9: `CANNOT FAIL` contributes none to any claim in the paper.
+10: 
+11: Verdicts:
+12: 
+13: | Verdict | Meaning |
+14: |---|---|
+15: | `DISCRIMINATES` | Made to fail on bad **content**, and to pass on good content. Both polarities observed. |
+16: | `CANNOT FAIL` | No perturbation of input content produces a failure verdict. |
+17: | `VACUOUS` | Passes over an empty corpus, or a conjunct that is constant by construction. |
+18: | `BLOCKED` | Cannot run in this tree; no verdict either way. |
+19: 
+20: Exit-code contract: `0` property holds over a non-empty corpus · `1` property is
+21: false · `3` check could not be performed. Exit 3 follows the pre-existing
+22: `negtest-*.sh` convention (`PERTURBATION DID NOT APPLY`, `sys.exit(3)`).
+23: 
+24: ## Registered gates
+25: 
+26: | Gate | Claims | Observed failure | Perturbation | Verdict |
+27: |---|---|---|---|---|
+28: | `formal/v3/totalgate.mjs` | Headline totals in `atlas.tex` equal the verdict sums; four stale round-2 values absent | Yes, both polarities | `$1{,}259$` → `$1{,}260$` in a fixture tex (exit 1); `chmod 000` expansion root (exit 3); empty root (exit 3) | `DISCRIMINATES` |
+29: | `paper/build.sh` totals branch | Distinguishes a false total from a gate that could not run | Yes, both polarities | Fixture tex perturbation vs real `EACCES` | `DISCRIMINATES` |
+30: | `formal/v3/gate.sh` | LOOP-2 integrity over build, harnesses, claims, graphs | Yes | Run from a directory that is not a defiformal tree — now exits 3 instead of printing `FAIL 61 of 72` | `DISCRIMINATES` |
+31: | `research/positive-program/sigma/gate33_cert_check.py` | Keyword certificate over `gen-ir-v2ten`: every file has ≥1 tagged name; tags ⊆ {Led,Prop,Cmp,Post,OTHER} | Partial | Empty-of-names JSON → `FAIL: empty file`, exit 1. Empty IR → exit 3 (was `PASS 0 files`) | `DISCRIMINATES` emptiness only — the **tag-subset invariant CANNOT FAIL**: `tag_name` returns only members of `allowed` by construction, so `FAIL: bad tag` is unreachable |
+32: | `research/positive-program/sigma/verify_final.py` | X21-armed pair counts over expansion specs | Yes | Empty corpus → exit 3. **Before this change the glob matched zero files on any tree but the author's and printed `X21-armed pairs (60-app basis): 0 of 0`, exit 0** — a live pass on an empty denominator. It now measures 60 specs | `DISCRIMINATES` |
+33: | `research/positive-program/sigma/gate12_deletion_ir.py` | "IR deletion": how much of the IR surface disappears if a family is deleted | **No** — no failure path exists. Empty and missing IR both exit 0 and still write `MEASURED` | — | `CANNOT FAIL`. The residual counts are a rewrite of tag base rates (Post/Cmp = 3279/39 = 84.08×); nothing is actually deleted |
+34: | `research/positive-program/sigma/gate11a_census_v1.py` | Independent-witness census; N3 printed `indep=0 shared=6` | **No** — no failure path; empty corpus still exits 0 and writes `MEASURED` | Classification does change on constructed input, but the script cannot report failure | `CANNOT FAIL`. N3 `indep=0` is `VACUOUS` — the local-def markers match zero definitions in the tree. The maple `SHARED` hit matches a **comment**, not a call |
+35: | `formal/v3/claims.mjs` | 109 category claims recomputed from the corpus | **Yes, in-tree** | Control: `109 claims verified, 0 failed`. Drop one protocol from `corpus50/lanes`: `93 claims verified, 16 failed`, exit 1, naming `FAIL [intent] CoW 23, DFlow 1, rest 0` | `DISCRIMINATES` the corpus. **Still CANNOT FAIL on `atlas.tex` errors — it never opens the paper** |
+36: | `formal/v3/selftest.mjs` | 22 self-tests of `construct.mjs`, incl. an inadmissible X2 fixture | **Yes, in-tree** | Control: `22 passed, 0 failed`. Same mutation: `FAIL corpus size: got 71 want 72`, `17 passed, 5 failed`, exit 1 | `DISCRIMINATES` its frozen goldens |
+37: | `formal/v3/verify-measurements.mjs` | `meas:pairs` / `meas:whereitfails` numerals must appear | Not in-tree | Copy: `$147$`→`$148$` VIOLATED. **`Twenty of the`→`Nineteen of the` still VERIFIED** | `BLOCKED` in-tree; `CANNOT FAIL` on the duplicate word-form |
+38: | `formal/v3/verify-graphs.py` | GRAPHS.md figures vs the merged/domain/lane graphs | **Yes, in-tree** | Control: `GRAPH CLAIMS VERIFIED`. 777→9999 in GRAPHS.md: `GRAPH CLAIMS VIOLATED`, exit 1 | `DISCRIMINATES` |
+39: | `formal/v3/validate.mjs` | Rejects malformed construction specs | Yes, both polarities | Real spec dir → exit 0; empty dir → exit 3. Unblocked by the `formal/v2` root fix; the guard the previous change could only *record* is now demonstrated | `DISCRIMINATES` |
+40: | `research/positive-program/basis/denominators.py` | Ten-protocol generation rate (`v2 119/716 = 16.6%`) | Yes | Missing IR → exit 1; `UNGEN_V1/V2` mismatch → exit 1 | `DISCRIMINATES` those two. **The 16.6% figure itself is not a threshold** — any rate prints and exits 0 |
+41: 
+42: | `formal/v3/evidence.mjs` | cited by loop2gate §4 as a citation check | **No** — it is the supplement *emitter*, not a checker: no `process.exit`, no `throw`, and its stderr always contains the string a needle would match | — | `CANNOT FAIL` |
+43: | `formal/v3/cites.mjs` | cited by loop2gate §4 as a citation check | **No** — no failure path; prints `<-- invariant 5 violation` and still exits 0. Never emits the needle it was matched on | — | `CANNOT FAIL` |
+44: 
+45: ## The gate path runs
+46: 
+47: `formal/v3/construct.mjs:59` and `formal/v3/verify-graphs.py:10` were the last
+48: two hardcoded roots on the integrity-gate path. With those resolved from their
+49: own file locations, `formal/v3/gate.sh` reports **PASS** — ten checks, none
+50: blocked, exit 0 — for the first time in this clone, and `smoke.sh` reports
+51: `SMOKE OK`.
+52: 
+53: Three gates recorded above as `BLOCKED` are now recorded as `DISCRIMINATES`,
+54: each with a control proving it is not always-red. Note what that means and does
+55: not: they discriminate the **corpus**. `claims.mjs` still never opens
+56: `paper/atlas.tex`, so it cannot fail on a manuscript error.
+57: 
+58: About 170 files elsewhere still carry a dead `/root/...` root. None is on the
+59: gate path.
+60: 
+61: ## Rows that carry no evidence
+62: 
+63: `gate12_deletion_ir.py` and `gate11a_census_v1.py` are `CANNOT FAIL`. Both write
+64: a document headed `MEASURED` regardless of input, including empty input. Neither
+65: supports a claim, and `AGENDA-COMPLETE.md` lists both among its verification
+66: commands. Gate 1.1a is cited as MEASURED for the basis census and gate 1.2 for
+67: the deletion experiment; those citations rest on scripts with no failure path.
+68: 
+69: ## Not addressed by this change
+70: 
+71: `totalgate.mjs`'s content checks remain unanchored `String.includes` tests over
+72: the whole `.tex`, so a dummy file containing the four tokens also passes. It
+73: computes `inad` (15) and `assigned` (570) and checks neither. The stale-value
+74: blacklist is a frozen round-2 fossil rather than a derived invariant. Widening a
+75: check and fixing how failure is reported are separate changes and were kept
+76: apart deliberately; this is the candidate for the next one.
+77: 
+78: `formal/v2/tables.mjs`'s root is **fixed** — it now resolves from
+79: `import.meta.url`, and the six `formal/v2` scripts that re-read `corpus50/lanes`
+80: by absolute path use the exported `ROOT`. All three README reproduce commands
+81: run and all seven published figures reproduce (61/72, 1830, 185, 29/72, 20/61,
+82: 15 arcs, 0 violations). `gate.sh` went from **ten blocked checks to three**, with
+83: seven now `ok`.
+84: 
+85: An earlier revision of this file said "four". That count came from an unanchored
+86: `grep -c 'BLOCKED'` which also matched the `GATE RESULT: BLOCKED` summary line —
+87: the same defect this register exists to catch, committed by its own author. Both
+88: independent reviewers caught it. Anchored: `grep -cE '^  BLOCKED'` = 3, `^  ok `
+89: = 7, and 7 + 3 = 10 reconciles.
+90: 
+91: The three that remain do **not** share one cause:
+92: 
+93: | Blocked check | Actual blocker |
+94: |---|---|
+95: | 109-claim checker (`claims.mjs`) | `formal/v3/construct.mjs:59`, `loadCorpus(root = "/root/DefiElements")` |
+96: | smoke (via `selftest.mjs`) | the same line |
+97: | graph claims (`verify-graphs.py`) | its **own** `ROOT = "/root/defiformal/expansion"` — not `construct.mjs` |
+98: 
+99: Fifty-two `formal/v3` scripts also still import by absolute ESM specifier.
+100: 
+101: ## Adversarial review of this register's own change
+102: 
+103: Two independent reviewers (grok-4.6 at xhigh, claude-fable-5) were given the
+104: diff and told to attack it. Confirmed findings, all now fixed:
+105: 
+106: - **The exit contract stopped at `readdir`.** Every `readFileSync` / `JSON.parse`
+107:   of a verdict or spec was unguarded, so an `EACCES` or malformed JSON one
+108:   directory deeper threw, node exited 1, and `build.sh` reported a totals
+109:   disagreement — the original defect, alive, one syscall further in. Now every
+110:   read and parse in the corpus walk is a blocked-check candidate.
+111: - **The callers never learned the contract.** `gate.sh` and `loop2gate.sh` grepped
+112:   `build.sh`'s stdout for `OK`, so a blocked build read as a failure at the
+113:   integration layer. Both now branch on the exit code.
+114: - **`blocked_out` was over-broad** — a bare `Traceback` or the word `BLOCKED` in
+115:   ordinary output would reclassify a genuine content failure as blocked, hiding a
+116:   real defect behind a reassuring word. Patterns narrowed, and the ordering
+117:   inverted so that a harness which produced the expected answer is never called
+118:   blocked however noisy its stderr.
+119: - **The repo sentinel was a name check.** Three empty files of the right name
+120:   walked past it. It now requires `corpus50/lanes/*.json` and a `measurement`
+121:   environment in `atlas.tex`.
+122: - **The harness locked one `chmod` and the editorial sentence**, but never
+123:   asserted exit 3 *through* `build.sh`, never exercised `tot === 0`, and
+124:   truncated the orphan `gate.sh` case with `head -20`. All three now asserted.
+125: - Counting and attribution errors, above.
+126: 
+127: `negtest-reporting.sh` went from 25 assertions to **43**, all passing. The five
+128: new sections exist because a reviewer found the gap, not because the author
+129: predicted it.
+130: 
+131: ## Second adversarial review — what the first round of fixes still got wrong
+132: 
+133: Commit `6f9786b` claimed to close every finding of the first review. A second
+134: pass by the same two reviewers found it had not, and found a false statement in
+135: its own commit message. Recorded here rather than quietly amended, because a
+136: register that hides its author's errors is worth nothing.
+137: 
+138: - **`6f9786b`'s message says "Both now branch on the exit code."** That was false.
+139:   The entire change to `loop2gate.sh` was a `printf`; the verdict still came from
+140:   `case "$b" in *"OK"*)` and it still exited 1 on a blocked build. Only `gate.sh`
+141:   had been fixed. Both reviewers caught it independently and claude rated it the
+142:   most severe finding — not because the code was worst, but because the
+143:   accounting asserted something untrue.
+144: - **The contract stopped at the parse, not the type.** A verdict, spec or
+145:   obligation that is valid JSON `null` is not a parse failure, so `readJson`
+146:   returned it and the next property access threw a `TypeError` — exit 1, and
+147:   `build.sh` announced a totals disagreement without comparing a total.
+148: - **An unreadable slug directory was silently skipped**, because `existsSync`
+149:   returns false on `EACCES`. Its obligations vanished from the totals and the
+150:   short total was then reported as a real disagreement.
+151: - **The `blocked_out` ordering inversion reached `chk()` only.** The three inline
+152:   sites — `claims`, `smoke`, `graph claims` — still tested the classifier first,
+153:   and those are the only checks actually blocked today.
+154: - Two fixes shipped with **no assertion behind them**, and the identical
+155:   stale-root hazard sat note-free in `tables.mjs`, which feeds all seven figures.
+156: 
+157: A third defect was introduced while fixing the first: the new `loop2gate.sh`
+158: result block was appended *after* the script's existing `exit`, so it was dead
+159: code, and the assertion written to cover it was a source grep that passed anyway.
+160: Replaced with a behavioural test.
+161: 
+162: `loop2gate.sh`'s other twenty checks had the same defect its build step did —
+163: `brief-fresh.sh: cd: /root/defiformal: Permission denied` produced
+164: `FAIL section briefs are stale`. Ten of them also truncated with `tail -1`
+165: *before* judging, discarding the evidence of a blocked run, in a file whose own
+166: header says every check greps the whole output. All now route through one
+167: blocked-aware helper. `loop2gate.sh` reports **BLOCKED, fail=0** instead of ten
+168: content verdicts about a corpus nothing read.
+169: 
+170: `negtest-reporting.sh`: 25 → 43 → **65** assertions.
+171: 
+172: ## What this gate still cannot detect
+173: 
+174: Twelve rounds of adversarial review closed the skipped-walk class and the
+175: needle-collision class. Both reviewers independently identified one that
+176: remains, and it is recorded here rather than left implicit.
+177: 
+178: **Coordinated, sum-preserving corpus edits are invisible.** `totalgate.mjs`
+179: aggregates without identity: it never joins a verdict record to the spec file
+180: describing the same application, and never reads `app` or `category`. Two
+181: consequences:
+182: 
+183: - **Correction.** An earlier version of this section said that deleting an app's
+184:   verdict record and its spec file "is reported as agreement". That is false, and
+185:   both reviewers caught it: the pair-delete is caught by `specFiles 59 != 60`,
+186:   exit 3, and would be exit 1 even without the hardcoded constants. Recorded
+187:   rather than silently amended, because a register that overstates a hole
+188:   mis-sizes a reader's trust exactly as surely as one that hides it.
+189: - What IS invisible is the **cardinality-preserving** variant: delete an app and
+190:   duplicate another to keep the counts whole, or swap two applications with
+191:   identical statistics. Those preserve every equality the gate checks and every
+192:   count, and are reported as agreement with one application double-counted and
+193:   another unmeasured.
+194: - A coordinated edit that preserves the sums but changes what they describe is
+195:   reported as `a headline total disagrees` — a corpus defect routed through the
+196:   manuscript-is-wrong exit code, which is precisely the failure this branch
+197:   exists to prevent, surviving in the one shape the cross-source check cannot
+198:   see.
+199: 
+200: Closing it requires joining the two sources by application identity, which is a
+201: larger change than this branch's contract and is not attempted here. Anyone
+202: relying on this gate should know that its guarantee is *one-sided*: a short or
+203: inconsistent walk is caught; a self-consistent but wrong corpus is not.
+204: 
+205: `EXPECT_CATEGORIES = 12` and `EXPECT_SPEC_FILES = 60` are hardcoded. A corpus
+206: that legitimately grows will produce a false BLOCKED whose message asserts the
+207: opposite ("the corpus is incomplete" on 13 categories). That is the safe
+208: failure direction, but it is a maintenance obligation, not a check.
+209: 
+210: ## Why the manuscript comparison cannot be finished this way
+211: 
+212: Seventeen rounds of adversarial review closed the corpus walk completely. The
+213: manuscript comparison is not closed and, on the current design, cannot be.
+214: 
+215: Every headline figure is located by pattern-matching a number out of prose.
+216: Rounds 13, 15 and 17 each found a claim site that hand enumeration had missed,
+217: and round 17's fix was itself prompted by counting occurrences mechanically
+218: rather than by reading. That count is the argument:
+219: 
+220: | figure | visible sites | lines |
+221: |---|---:|---|
+222: | obligations total 1259 | 3 | 217, 1297, 1536 |
+223: | covered 570 | 2 | 1303, 1536 |
+224: | residue 689 | 2 | 1536, 2334 |
+225: | coverage 45.3% | 1 | 1297 |
+226: | strict 29.0% | 2 | 1306, 1314 |
+227: | **inadmissible 15** | **6** | 957, 1029, 1157, 1536, 1970, 2692 |
+228: 
+229: **Correction, one round later.** The paragraph below generalised from `inad`
+230: to "the method cannot be finished", and a reviewer showed that is false.
+231: `$205$`, `$36.0\%$` and `$16.3$` each occur exactly ONCE in visible text, so
+232: the every-site rule applies to them cleanly; they were unregistered, not
+233: unregisterable. Two of the three are now checked. This is the second time this
+234: register has overstated a limitation, and both times a reviewer caught it --
+235: recorded rather than amended, for the same reason as before.
+236: 
+237: What remains true is narrower: `inad` alone cannot be located by this method.
+238: The last row is the one that shows why. The digits `15` occur six times and most
+239: are unrelated counts, so the rule that fixed every other figure — *every site
+240: stating this number must agree* — would fail on a correct paper. Pattern
+241: matching cannot separate a claim about a quantity from an unrelated number that
+242: happens to equal it, and no further enumeration changes that. The gate checks
+243: `inad` at its table cell only, and that is the honest bound.
+244: 
+245: **The structural answer, not attempted here.** Emit the figures into the
+246: manuscript from one source — `\newcommand{\obligationsTotal}{1259}` generated by
+247: the gate, with the prose using the macro — so every figure has exactly one
+248: definition site by construction and the comparison becomes an identity rather
+249: than a search. That changes how the paper is authored and is the author's call,
+250: not a gate change. It is the same recommendation the reviewer made in round 12.
+251: 
+252: Until then: a figure that drifts at a registered site is caught; one that drifts
+253: at an unregistered site is not, and `inad` has five unregistered sites by
+254: necessity.
+255: 
+256: ## The real bound on the manuscript comparison
+257: 
+258: Twenty-one rounds. The corpus walk is closed. The manuscript comparison is not,
+259: and this section states why with the evidence, replacing two earlier attempts
+260: that were each wrong in a different direction.
+261: 
+262: **What was tried.** Rounds 12-21 located each headline figure by matching a
+263: number out of the LaTeX source, and every round found a new way to make the
+264: source say one thing and the typeset paper another: a whole-document search, a
+265: second claim site, a comment, a comment behind the wrong backslash parity, an
+266: `\iffalse` block, an `\iftrue \else` dual, and finally -- from both reviewers
+267: independently -- a conditional WRAPPING the claim region and a conditional whose
+268: `\else` sits outside the inspected window. Each fix was correct about the shape
+269: in front of it. None generalised.
+270: 
+271: **Why it cannot generalise.** A conditional can be defeated by position as
+272: easily as by form, and conditionals are not the only gap: a
+273: `\newcommand{\x}{... $689$ ...}` that is never invoked carries the claim phrase
+274: in text TeX never typesets, with no conditional token anywhere. Deciding what
+275: TeX typesets requires running TeX. A source-text gate cannot bound it, and every
+276: further round of this shape buys one more position rather than the class.
+277: 
+278: **Two remedies, both feasible, both the author's call.**
+279: 
+280: 1. *Compare against the typeset output.* `paper/build.sh` already produces
+281:    `atlas.pdf` before running the gate, and `pdftotext` is installed. Measured:
+282:    `pdftotext -layout` preserves the total row as a row --
+283:    `total  —  1259  570  689  15` -- so the cell-identity guarantee of round 18
+284:    survives the move, and four of the five claim phrases appear verbatim in the
+285:    typeset text. The fifth (`Pooling all`) does not, almost certainly line
+286:    wrapping or hyphenation, which is the new failure class this approach would
+287:    have to shake out. It closes conditionals of every form and position,
+288:    uninvoked macro bodies, and comments at once, because it reads what the
+289:    reader reads.
+290: 
+291: 2. *Emit the figures from one source.* `\newcommand{\obligationsTotal}{1259}`
+292:    generated by the gate, with the prose using the macro. Every figure then has
+293:    exactly one definition site by construction, the comparison becomes an
+294:    identity rather than a search, and the `inad` collision problem disappears
+295:    because the gate never has to find `15` in prose again. This is the stronger
+296:    remedy and the one a reviewer recommended in round 12.
+297: 
+298: **Until one is adopted**, the gate's "all headline totals agree with the
+299: verdicts" means: *the figures agree at the claim sites the gate knows about, in
+300: the LaTeX source, assuming those sites are macro- and conditional-transparent.*
+301: That is a real and useful guarantee. It is not the same sentence as "the paper
+302: the reader sees is consistent with the corpus", and the difference is this
+303: section.
