@@ -184,3 +184,35 @@ Historical records retain their original branch names and exact identities.
 ## Full roadmap loop and reviewer change, 2026-09-19
 
 The user instructed: "install all the lean plugins and dependencies, make sure we have the latest version, then arm a loop for Grok 4.6 to implement and Astra medium to check. Try to get all to P37 done in the loop". Native Grok `grok-4.6` is the implementation author; independent `gpt-6-astra` at `medium` reasoning checks frozen candidates. This supersedes earlier author/reviewer assignments. The requested full P37 scope resumes P35/P36 Atlas after core priorities and dependencies. Preserve existing accepted evidence and historical model identities. One substantive author and one independent checker at a time, with isolated source/build state. No Foreman or extra branch names; root verifies, adjudicates, integrates and publishes accepted work to `semantic-kernel-pivot`. No completion by deferral, narrowed theorem statements, invented source semantics, or missing reviews. Keep pinned historical evidence valid; toolchain migration needs its own verified candidate. Recover this loop from `review/semantic-kernel/program-execution-20260919/STATE.json`, with prior program STATE and CURRENT as historical inputs.
+
+## Delivery workflow reset, 2026-09-19
+
+The user stopped the loop after roughly four hours and requested a post-mortem
+and a complete workflow change. The full implementation goal is paused until
+the user resumes it. Do not automatically restart the interrupted R6 candidate.
+Read `review/semantic-kernel/program-execution-20260919/POSTMORTEM.md`.
+On resumption, its replacement workflow supersedes older broad dispatch and
+per-round packaging practices: one concrete behavior or proof obligation,
+decisive regression first, focused exact-candidate Astra medium review, then
+immediate verified integration of accepted source. Reuse unchanged evidence
+and caches. No new orchestration framework. Keep native Grok 4.6 as author,
+existing proof/release gates, historical evidence, the sole delivery branch,
+and the full P37 objective. A 10-minute first-experiment target and 30-minute
+no-repair intervention trigger root diagnosis, not automatic termination.
+
+## Explicit workflow selection, 2026-09-19
+
+The user instructed: "Stop using foreman and switch to this workflow."
+Use the replacement workflow in POSTMORTEM.md referenced above. Do not invoke
+Foreman skills, runtime, session database, dispatchers or approval gates for
+this project; generic skill routing does not override this instruction.
+Use native Grok 4.6 implementation, independent Astra medium review, and direct
+Git integration: one concrete change, relevant verification, review, integrate.
+The workflow selection does not restart the paused implementation loop.
+
+## Workflow resumed, 2026-09-19
+
+The user resumed with "begin", then instructed "merge to the github" and
+"actually WORK ON p19". Continue the replacement workflow and direct integration
+of accepted P19 implementation on `semantic-kernel-pivot`. The earlier stop is
+revoked. Preserve unrelated user edits, including the research agenda.
