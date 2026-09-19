@@ -1,0 +1,436 @@
+--- recovered-r28/R27-Roundtrip.lean	2026-09-19 11:05:27.527962228 -0600
++++ lean/DefiKernel/Certificates/Roundtrip.lean	2026-09-19 11:05:11.596488354 -0600
+@@ -2760,6 +2760,433 @@
+   decodeBytes_encodeModule_of_depth_and_lex collisionIR
+     escapedKeyCollision_admissible collisionIR_depth_le_64 h_lex
+ 
++theorem resourcePortToTreeJson_depth_le (p : ResourcePortEnc) :
++    TreeJson.depth (resourcePortToTreeJson p) ≤ 2 := by
++  dsimp [resourcePortToTreeJson, TreeJson.depth, TreeJson.depthObj]
++  rw [natToTreeJson_depth, cellToTreeJson_depth]
++  cases p.writable <;> decide
++
++theorem inputPortToTreeJson_depth_le (p : InputPortEnc) :
++    TreeJson.depth (inputPortToTreeJson p) ≤ 2 := by
++  dsimp [inputPortToTreeJson, TreeJson.depth, TreeJson.depthObj]
++  rw [natToTreeJson_depth]
++  have := unitToTreeJson_depth_le p.unit
++  omega
++
++theorem outputPortToTreeJson_depth_le (p : OutputPortEnc) :
++    TreeJson.depth (outputPortToTreeJson p) ≤ 2 := by
++  dsimp [outputPortToTreeJson, TreeJson.depth, TreeJson.depthObj]
++  rw [natToTreeJson_depth, cellToTreeJson_depth]
++  rfl
++
++theorem resourceImportToTreeJson_depth_le (ri : ResourceImportEnc) :
++    TreeJson.depth (resourceImportToTreeJson ri) ≤ 2 := by
++  dsimp [resourceImportToTreeJson, TreeJson.depth, TreeJson.depthObj]
++  rw [qualifiedPortToTreeJson_depth, cellToTreeJson_depth]
++  cases ri.writable <;> decide
++
++theorem operationInterfaceToTreeJson_depth_le (op : OperationInterfaceEnc) :
++    TreeJson.depth (operationInterfaceToTreeJson op) ≤ 4 := by
++  dsimp [operationInterfaceToTreeJson]
++  apply obj_depth_le
++  apply depthObj_le
++  intro k v hmem
++  simp only [List.mem_cons, List.not_mem_nil, or_false] at hmem
++  rcases hmem with ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩
++  · rw [natToTreeJson_depth]; omega
++  · have h_ins : TreeJson.depthList (op.inputs.map inputPortToTreeJson) ≤ 2 := by
++      apply depthList_map_le; intro p _; exact inputPortToTreeJson_depth_le p
++    have := arr_depth_le (op.inputs.map inputPortToTreeJson) 2 h_ins
++    omega
++  · have h_outs : TreeJson.depthList (op.outputs.map outputPortToTreeJson) ≤ 2 := by
++      apply depthList_map_le; intro p _; exact outputPortToTreeJson_depth_le p
++    have := arr_depth_le (op.outputs.map outputPortToTreeJson) 2 h_outs
++    omega
++
++theorem componentToTreeJson_depth_le (c : ComponentEnc) :
++    TreeJson.depth (componentToTreeJson c) ≤ 6 := by
++  dsimp [componentToTreeJson]
++  apply obj_depth_le
++  apply depthObj_le
++  intro k v hmem
++  simp only [List.mem_cons, List.not_mem_nil, or_false] at hmem
++  rcases hmem with ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩
++  · rw [natToTreeJson_depth]; omega
++  · have h_privs : TreeJson.depthList (c.privateCells.map cellToTreeJson) ≤ 1 := by
++      apply depthList_map_le; intro cell _; rw [cellToTreeJson_depth]
++    have := arr_depth_le (c.privateCells.map cellToTreeJson) 1 h_privs
++    omega
++  · have h_exps : TreeJson.depthList (c.exports.map resourcePortToTreeJson) ≤ 2 := by
++      apply depthList_map_le; intro p _; exact resourcePortToTreeJson_depth_le p
++    have := arr_depth_le (c.exports.map resourcePortToTreeJson) 2 h_exps
++    omega
++  · have h_imps : TreeJson.depthList (c.imports.map resourceImportToTreeJson) ≤ 2 := by
++      apply depthList_map_le; intro p _; exact resourceImportToTreeJson_depth_le p
++    have := arr_depth_le (c.imports.map resourceImportToTreeJson) 2 h_imps
++    omega
++  · have h_ops : TreeJson.depthList (c.operations.map operationInterfaceToTreeJson) ≤ 4 := by
++      apply depthList_map_le; intro op _; exact operationInterfaceToTreeJson_depth_le op
++    have := arr_depth_le (c.operations.map operationInterfaceToTreeJson) 4 h_ops
++    omega
++
++theorem envReadToTreeJson_depth_le (er : EnvReadEnc) :
++    TreeJson.depth (envReadToTreeJson er) ≤ 2 := by
++  cases er with
++  | observation k =>
++    dsimp [envReadToTreeJson, TreeJson.depth, TreeJson.depthObj]
++    rw [observationKeyToTreeJson_depth]
++    decide
++  | currentTime =>
++    dsimp [envReadToTreeJson, TreeJson.depth, TreeJson.depthObj]
++    decide
++
++theorem cellDeltaToTreeJson_depth_le (d : CellDeltaEnc) :
++    TreeJson.depth (cellDeltaToTreeJson d) ≤ max 2 (TreeJson.depth (exprToTreeJson d.amount)) + 1 := by
++  dsimp [cellDeltaToTreeJson]
++  apply obj_depth_le
++  apply depthObj_le
++  intro k v hmem
++  simp only [List.mem_cons, List.not_mem_nil, or_false] at hmem
++  rcases hmem with ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩
++  · rw [assetToTreeJson_depth]; omega
++  · have := cellRefToTreeJson_depth_le d.target; omega
++  · omega
++
++theorem supplyDeltaToTreeJson_depth_le (s : SupplyDeltaEnc) :
++    TreeJson.depth (supplyDeltaToTreeJson s) ≤ TreeJson.depth (exprToTreeJson s.amount) + 1 := by
++  dsimp [supplyDeltaToTreeJson]
++  apply obj_depth_le
++  apply depthObj_le
++  intro k v hmem
++  simp only [List.mem_cons, List.not_mem_nil, or_false] at hmem
++  rcases hmem with ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩
++  · rw [domainToTreeJson_depth]; omega
++  · rw [assetToTreeJson_depth]; omega
++  · omega
++
++theorem templateToTreeJson_depth_le (t : TemplateEnc) (M : Nat)
++    (h_guard : TreeJson.depth (exprToTreeJson t.guard) ≤ M)
++    (h_deltas : ∀ d ∈ t.deltas, TreeJson.depth (cellDeltaToTreeJson d) ≤ M + 1)
++    (h_supply : ∀ s ∈ t.supplyDeltas, TreeJson.depth (supplyDeltaToTreeJson s) ≤ M + 1) :
++    TreeJson.depth (templateToTreeJson t) ≤ max 4 (M + 2) + 1 := by
++  dsimp [templateToTreeJson]
++  apply obj_depth_le
++  apply depthObj_le
++  intro k v hmem
++  simp only [List.mem_cons, List.not_mem_nil, or_false] at hmem
++  rcases hmem with ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ |
++                    ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩
++  · have h_sig : TreeJson.depthList (t.signature.map unitToTreeJson) ≤ 1 := by
++      apply depthList_map_le; intro u _; exact unitToTreeJson_depth_le u
++    have := arr_depth_le (t.signature.map unitToTreeJson) 1 h_sig
++    omega
++  · rw [domainToTreeJson_depth]; omega
++  · rw [natToTreeJson_depth]; omega
++  · omega
++  · have h_d : TreeJson.depthList (t.deltas.map cellDeltaToTreeJson) ≤ M + 1 := by
++      apply depthList_map_le; intro d hd; exact h_deltas d hd
++    have := arr_depth_le (t.deltas.map cellDeltaToTreeJson) (M + 1) h_d
++    omega
++  · have h_s : TreeJson.depthList (t.supplyDeltas.map supplyDeltaToTreeJson) ≤ M + 1 := by
++      apply depthList_map_le; intro s hs; exact h_supply s hs
++    have := arr_depth_le (t.supplyDeltas.map supplyDeltaToTreeJson) (M + 1) h_s
++    omega
++  · have h_sr : TreeJson.depthList (t.stateReads.map packedCellRefToTreeJson) ≤ 3 := by
++      apply depthList_map_le; intro r _; exact packedCellRefToTreeJson_depth_le r
++    have := arr_depth_le (t.stateReads.map packedCellRefToTreeJson) 3 h_sr
++    omega
++  · have h_er : TreeJson.depthList (t.envReads.map envReadToTreeJson) ≤ 2 := by
++      apply depthList_map_le; intro er _; exact envReadToTreeJson_depth_le er
++    have := arr_depth_le (t.envReads.map envReadToTreeJson) 2 h_er
++    omega
++  · have h_w : TreeJson.depthList (t.writes.map packedCellRefToTreeJson) ≤ 3 := by
++      apply depthList_map_le; intro w _; exact packedCellRefToTreeJson_depth_le w
++    have := arr_depth_le (t.writes.map packedCellRefToTreeJson) 3 h_w
++    omega
++
++theorem registryEntryToTreeJson_depth_le (e : RegistryEntryEnc) (n : Nat)
++    (h : TreeJson.depth (templateToTreeJson e.template) ≤ n) :
++    TreeJson.depth (registryEntryToTreeJson e) ≤ n + 1 := by
++  dsimp [registryEntryToTreeJson]
++  apply obj_depth_le
++  apply depthObj_le
++  intro k v hmem
++  simp only [List.mem_cons, List.not_mem_nil, or_false] at hmem
++  rcases hmem with ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩
++  · rw [natToTreeJson_depth]; omega
++  · omega
++
++theorem registryToTreeJson_depth_le (r : RegistryEnc) (n : Nat)
++    (h : ∀ e ∈ r.entries, TreeJson.depth (registryEntryToTreeJson e) ≤ n) :
++    TreeJson.depth (registryToTreeJson r) ≤ n + 2 := by
++  dsimp [registryToTreeJson]
++  apply obj_depth_le
++  apply depthObj_le
++  intro k v hmem
++  simp only [List.mem_cons, List.not_mem_nil, or_false] at hmem
++  rcases hmem with ⟨rfl, rfl⟩
++  have h_entries : TreeJson.depthList (r.entries.map registryEntryToTreeJson) ≤ n := by
++    apply depthList_map_le; intro e he; exact h e he
++  have := arr_depth_le (r.entries.map registryEntryToTreeJson) n h_entries
++  omega
++
++theorem registryToTreeJson_empty_depth :
++    TreeJson.depth (registryToTreeJson ⟨[]⟩) = 2 := by
++  dsimp [registryToTreeJson, TreeJson.depth, TreeJson.depthObj, TreeJson.depthList]
++  decide
++
++theorem configToTreeJson_depth_le (c : ConfigEnc) (n : Nat)
++    (h : TreeJson.depth (registryToTreeJson c.registry) ≤ n) :
++    TreeJson.depth (configToTreeJson c) ≤ max 7 n + 1 := by
++  dsimp [configToTreeJson]
++  apply obj_depth_le
++  apply depthObj_le
++  intro k v hmem
++  simp only [List.mem_cons, List.not_mem_nil, or_false] at hmem
++  rcases hmem with ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩
++  · omega
++  · have h_da : TreeJson.depthList (c.domainAdmin.map domainAdminToTreeJson) ≤ 1 := by
++      apply depthList_map_le; intro d _; exact domainAdminToTreeJson_depth_le d
++    have := arr_depth_le (c.domainAdmin.map domainAdminToTreeJson) 1 h_da
++    omega
++  · have h_cat : TreeJson.depthList (c.catalog.map componentToTreeJson) ≤ 6 := by
++      apply depthList_map_le; intro comp _; exact componentToTreeJson_depth_le comp
++    have := arr_depth_le (c.catalog.map componentToTreeJson) 6 h_cat
++    omega
++
++theorem typedExecutePayloadToTreeJson_depth_le (p : TypedExecutePayloadEnc) (n : Nat)
++    (h : TreeJson.depth (registryToTreeJson p.registry) ≤ n) :
++    TreeJson.depth (typedExecutePayloadToTreeJson p) ≤ max 6 n + 1 := by
++  dsimp [typedExecutePayloadToTreeJson]
++  apply obj_depth_le
++  apply depthObj_le
++  intro k v hmem
++  simp only [List.mem_cons, List.not_mem_nil, or_false] at hmem
++  rcases hmem with ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩
++  · omega
++  · have := storeToTreeJson_depth_le p.store; omega
++  · rw [contextToTreeJson_depth]; omega
++  · have := environmentToTreeJson_depth_le p.env; omega
++  · rw [natToTreeJson_depth]; omega
++  · have := requestToTreeJson_depth_le p.request; omega
++  · have := stateToTreeJson_depth_le p.state; omega
++
++theorem compositionStepPayloadToTreeJson_depth_le (p : CompositionStepPayloadEnc) (n : Nat)
++    (h : TreeJson.depth (configToTreeJson p.config) ≤ n) :
++    TreeJson.depth (compositionStepPayloadToTreeJson p) ≤ max 7 n + 1 := by
++  dsimp [compositionStepPayloadToTreeJson]
++  apply obj_depth_le
++  apply depthObj_le
++  intro k v hmem
++  simp only [List.mem_cons, List.not_mem_nil, or_false] at hmem
++  rcases hmem with ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩
++  · omega
++  · have := boundaryToTreeJson_depth_le p.boundary; omega
++  · rw [natToTreeJson_depth]; omega
++  · have h_hist : TreeJson.depthList (p.history.map outputObservationToTreeJson) ≤ 3 := by
++      apply depthList_map_le; intro o _; exact outputObservationToTreeJson_depth_le o
++    have := arr_depth_le (p.history.map outputObservationToTreeJson) 3 h_hist
++    omega
++  · have := stepToTreeJson_depth_le p.step; omega
++  · have := worldToTreeJson_depth_le p.pre; omega
++
++theorem compositionRunPayloadToTreeJson_depth_le (p : CompositionRunPayloadEnc) (n : Nat)
++    (h : TreeJson.depth (configToTreeJson p.config) ≤ n) :
++    TreeJson.depth (compositionRunPayloadToTreeJson p) ≤ max 8 n + 1 := by
++  dsimp [compositionRunPayloadToTreeJson]
++  apply obj_depth_le
++  apply depthObj_le
++  intro k v hmem
++  simp only [List.mem_cons, List.not_mem_nil, or_false] at hmem
++  rcases hmem with ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩
++  · omega
++  · have h_bnds : TreeJson.depthList (p.boundaries.map boundaryToTreeJson) ≤ 7 := by
++      apply depthList_map_le; intro b _; exact boundaryToTreeJson_depth_le b
++    have := arr_depth_le (p.boundaries.map boundaryToTreeJson) 7 h_bnds
++    omega
++  · have := worldToTreeJson_depth_le p.world; omega
++  · have h_steps : TreeJson.depthList (p.steps.map stepToTreeJson) ≤ 6 := by
++      apply depthList_map_le; intro s _; exact stepToTreeJson_depth_le s
++    have := arr_depth_le (p.steps.map stepToTreeJson) 6 h_steps
++    omega
++
++theorem typedExecutePayloadToTreeJson_empty_registry_depth_le (p : TypedExecutePayloadEnc)
++    (h_empty : p.registry.entries = []) :
++    TreeJson.depth (typedExecutePayloadToTreeJson p) ≤ 7 := by
++  have h_r : TreeJson.depth (registryToTreeJson p.registry) ≤ 2 := by
++    have : p.registry = ⟨[]⟩ := congrArg RegistryEnc.mk h_empty
++    rw [this]
++    exact le_of_eq registryToTreeJson_empty_depth
++  have h_le := typedExecutePayloadToTreeJson_depth_le p 2 h_r
++  omega
++
++theorem moduleToTreeJson_empty_registry_depth_le_64 (env : EnvelopeEnc) (p : TypedExecutePayloadEnc)
++    (h_empty : p.registry.entries = []) :
++    TreeJson.depth (moduleToTreeJson (.execution (.typed env p))) ≤ 64 := by
++  dsimp [moduleToTreeJson]
++  apply envelopeToTreeJson_depth_le
++  have := typedExecutePayloadToTreeJson_empty_registry_depth_le p h_empty
++  omega
++
++theorem compositionStepPayloadToTreeJson_empty_registry_depth_le (p : CompositionStepPayloadEnc)
++    (h_empty : p.config.registry.entries = []) :
++    TreeJson.depth (compositionStepPayloadToTreeJson p) ≤ 9 := by
++  have h_r : TreeJson.depth (registryToTreeJson p.config.registry) ≤ 2 := by
++    have : p.config.registry = ⟨[]⟩ := congrArg RegistryEnc.mk h_empty
++    rw [this]
++    exact le_of_eq registryToTreeJson_empty_depth
++  have h_cfg := configToTreeJson_depth_le p.config 2 h_r
++  have h_le := compositionStepPayloadToTreeJson_depth_le p (max 7 2 + 1) h_cfg
++  omega
++
++theorem moduleToTreeJson_step_empty_registry_depth_le_64 (env : EnvelopeEnc) (p : CompositionStepPayloadEnc)
++    (h_empty : p.config.registry.entries = []) :
++    TreeJson.depth (moduleToTreeJson (.execution (.step env p))) ≤ 64 := by
++  dsimp [moduleToTreeJson]
++  apply envelopeToTreeJson_depth_le
++  have := compositionStepPayloadToTreeJson_empty_registry_depth_le p h_empty
++  omega
++
++theorem compositionRunPayloadToTreeJson_empty_registry_depth_le (p : CompositionRunPayloadEnc)
++    (h_empty : p.config.registry.entries = []) :
++    TreeJson.depth (compositionRunPayloadToTreeJson p) ≤ 9 := by
++  have h_r : TreeJson.depth (registryToTreeJson p.config.registry) ≤ 2 := by
++    have : p.config.registry = ⟨[]⟩ := congrArg RegistryEnc.mk h_empty
++    rw [this]
++    exact le_of_eq registryToTreeJson_empty_depth
++  have h_cfg := configToTreeJson_depth_le p.config 2 h_r
++  have h_le := compositionRunPayloadToTreeJson_depth_le p (max 7 2 + 1) h_cfg
++  omega
++
++theorem moduleToTreeJson_run_empty_registry_depth_le_64 (env : EnvelopeEnc) (p : CompositionRunPayloadEnc)
++    (h_empty : p.config.registry.entries = []) :
++    TreeJson.depth (moduleToTreeJson (.execution (.run env p))) ≤ 64 := by
++  dsimp [moduleToTreeJson]
++  apply envelopeToTreeJson_depth_le
++  have := compositionRunPayloadToTreeJson_empty_registry_depth_le p h_empty
++  omega
++
++theorem decodeBytes_encodeModule_typed_empty_registry
++    (env : EnvelopeEnc) (p : TypedExecutePayloadEnc)
++    (h_adm : StructurallyAdmissibleIR (.execution (.typed env p)))
++    (h_empty : p.registry.entries = [])
++    (h_lex : scanLexical (encodeModule (.execution (.typed env p))) = .ok ()) :
++    decodeBytes (encodeModule (.execution (.typed env p))) = .ok (.execution (.typed env p)) :=
++  decodeBytes_encodeModule_of_depth_and_lex (.execution (.typed env p))
++    h_adm (moduleToTreeJson_empty_registry_depth_le_64 env p h_empty) h_lex
++
++theorem decodeBytes_encodeModule_step_empty_registry
++    (env : EnvelopeEnc) (p : CompositionStepPayloadEnc)
++    (h_adm : StructurallyAdmissibleIR (.execution (.step env p)))
++    (h_empty : p.config.registry.entries = [])
++    (h_lex : scanLexical (encodeModule (.execution (.step env p))) = .ok ()) :
++    decodeBytes (encodeModule (.execution (.step env p))) = .ok (.execution (.step env p)) :=
++  decodeBytes_encodeModule_of_depth_and_lex (.execution (.step env p))
++    h_adm (moduleToTreeJson_step_empty_registry_depth_le_64 env p h_empty) h_lex
++
++theorem decodeBytes_encodeModule_run_empty_registry
++    (env : EnvelopeEnc) (p : CompositionRunPayloadEnc)
++    (h_adm : StructurallyAdmissibleIR (.execution (.run env p)))
++    (h_empty : p.config.registry.entries = [])
++    (h_lex : scanLexical (encodeModule (.execution (.run env p))) = .ok ()) :
++    decodeBytes (encodeModule (.execution (.run env p))) = .ok (.execution (.run env p)) :=
++  decodeBytes_encodeModule_of_depth_and_lex (.execution (.run env p))
++    h_adm (moduleToTreeJson_run_empty_registry_depth_le_64 env p h_empty) h_lex
++
++theorem scanLexicalCheckNum_nil : scanLexicalCheckNum [] = .ok () := rfl
++
++theorem scanLexicalFuel_zero (chars : List Char) (depth : Nat) (scopes : List LexScope)
++    (currentNum : List Char) (foundWhitespace : Bool) :
++    scanLexicalFuel 0 chars depth scopes currentNum foundWhitespace = .error (.resourceLimit "maxBytes") := rfl
++
++theorem scanLexicalFuel_empty (fuel : Nat) (depth : Nat) (scopes : List LexScope) :
++    scanLexicalFuel (fuel + 1) [] depth scopes [] false = .ok () := rfl
++
++theorem scanLexicalFuel_lbrace (fuel : Nat) (rest : List Char) (depth : Nat) (scopes : List LexScope)
++    (h_depth : depth + 1 ≤ 64) :
++    scanLexicalFuel (fuel + 1) ('{' :: rest) depth scopes [] false =
++      scanLexicalFuel fuel rest (depth + 1) (LexScope.inObj [] true :: scopes) [] false := by
++  dsimp [scanLexicalFuel]
++  have : ¬ (depth + 1 > 64) := by omega
++  rw [if_neg this]
++
++theorem scanLexicalFuel_lbracket (fuel : Nat) (rest : List Char) (depth : Nat) (scopes : List LexScope)
++    (h_depth : depth + 1 ≤ 64) :
++    scanLexicalFuel (fuel + 1) ('[' :: rest) depth scopes [] false =
++      scanLexicalFuel fuel rest (depth + 1) (LexScope.inArr 0 :: scopes) [] false := by
++  dsimp [scanLexicalFuel]
++  have : ¬ (depth + 1 > 64) := by omega
++  rw [if_neg this]
++
++theorem scanLexicalFuel_rbrace (fuel : Nat) (rest : List Char) (depth : Nat) (sc : LexScope) (scopes : List LexScope)
++    (h_depth : depth > 0) :
++    scanLexicalFuel (fuel + 1) ('}' :: rest) depth (sc :: scopes) [] false =
++      scanLexicalFuel fuel rest (depth - 1) scopes [] false := by
++  dsimp [scanLexicalFuel, scanLexicalCheckNum]
++  have : (if depth > 0 then depth - 1 else 0) = depth - 1 := if_pos h_depth
++  rw [this]
++
++theorem scanLexicalFuel_rbracket (fuel : Nat) (rest : List Char) (depth : Nat) (sc : LexScope) (scopes : List LexScope)
++    (h_depth : depth > 0) :
++    scanLexicalFuel (fuel + 1) (']' :: rest) depth (sc :: scopes) [] false =
++      scanLexicalFuel fuel rest (depth - 1) scopes [] false := by
++  dsimp [scanLexicalFuel, scanLexicalCheckNum]
++  have : (if depth > 0 then depth - 1 else 0) = depth - 1 := if_pos h_depth
++  rw [this]
++
++theorem scanLexicalFuel_colon (fuel : Nat) (rest : List Char) (depth : Nat) (scopes : List LexScope) :
++    scanLexicalFuel (fuel + 1) (':' :: rest) depth scopes [] false =
++      scanLexicalFuel fuel rest depth scopes [] false := rfl
++
++theorem scanLexicalFuel_comma_obj (fuel : Nat) (rest : List Char) (depth : Nat)
++    (keys : List String) (restScopes : List LexScope) :
++    scanLexicalFuel (fuel + 1) (',' :: rest) depth (LexScope.inObj keys false :: restScopes) [] false =
++      scanLexicalFuel fuel rest depth (LexScope.inObj keys true :: restScopes) [] false := rfl
++
++theorem scanLexicalFuel_comma_arr (fuel : Nat) (rest : List Char) (depth : Nat)
++    (cnt : Nat) (h_cnt : cnt + 1 ≤ 4096) (restScopes : List LexScope) :
++    scanLexicalFuel (fuel + 1) (',' :: rest) depth (LexScope.inArr cnt :: restScopes) [] false =
++      scanLexicalFuel fuel rest depth (LexScope.inArr (cnt + 1) :: restScopes) [] false := by
++  dsimp [scanLexicalFuel, scanLexicalCheckNum]
++  have : ¬ (cnt + 1 > 4096) := by omega
++  rw [if_neg this]
++
++theorem scanLexicalFuel_step_key (fuel : Nat) (s : String) (rest rest' : List Char) (depth : Nat)
++    (keys : List String) (restScopes : List LexScope)
++    (h_lex : lexString [] rest = .ok (s, rest'))
++    (h_nodup : keys.contains s = false) :
++    scanLexicalFuel (fuel + 1) ('\"' :: rest) depth (LexScope.inObj keys true :: restScopes) [] false =
++      scanLexicalFuel fuel rest' depth (LexScope.inObj (s :: keys) false :: restScopes) [] false := by
++  dsimp [scanLexicalFuel, scanLexicalCheckNum]
++  rw [h_lex]
++  dsimp
++  rw [h_nodup]
++  rfl
++
++theorem scanLexicalFuel_step_str_val (fuel : Nat) (s : String) (rest rest' : List Char) (depth : Nat)
++    (scopes : List LexScope)
++    (h_not_key : match scopes with | LexScope.inObj _ true :: _ => false | _ => true)
++    (h_lex : lexString [] rest = .ok (s, rest')) :
++    scanLexicalFuel (fuel + 1) ('\"' :: rest) depth scopes [] false =
++      scanLexicalFuel fuel rest' depth scopes [] false := by
++  dsimp [scanLexicalFuel, scanLexicalCheckNum]
++  cases scopes with
++  | nil =>
++    dsimp
++    rw [h_lex]
++  | cons sc tail =>
++    cases sc with
++    | inArr _ =>
++      dsimp
++      rw [h_lex]
++    | inObj keys exp =>
++      cases exp with
++      | false =>
++        dsimp
++        rw [h_lex]
++      | true =>
++        contradiction
++
+ end DefiKernel.Certificates
+ 
+ 
