@@ -20,3 +20,10 @@ gate. In particular, a `checkBytes`/`checkIR` equality is not whole-checker acce
 This contribution is not exported by the default `DefiKernel` entry point and
 provides no qualified certificate delivery route. P19/P20 and the remaining
 program gates remain open. Ongoing checker repairs are reviewed separately.
+
+`LibraryInstantiation` adds reviewed Arithmetic extraction and executable checking
+helpers with their stated Lean theorems. `TrustedHost` supplies static identity
+constants. These two modules have separate scoped R5 acceptance, recorded in
+`GROK-R5-SCOPED-ACCEPTANCE.json` alongside the R3 integration record. They do not
+establish complete certificate-library discharge or validate external host records.
+The rejected R5 delivery route and CLI are not included in this integration.

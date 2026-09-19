@@ -1,0 +1,7 @@
+import DefiKernel.Certificates.LibraryInstantiation
+import DefiKernel.AxiomAudit
+#audit_axioms DefiKernel.Certificates.LibraryInstantiation
+#audit_axioms DefiKernel.Arithmetic.Operations
+#print axioms DefiKernel.Certificates.LibraryInstantiation.addHolds_iff
+#print axioms DefiKernel.Certificates.LibraryInstantiation.transfer_three_credit_add
+#print axioms DefiKernel.Certificates.LibraryInstantiation.transfer_three_debit_add
