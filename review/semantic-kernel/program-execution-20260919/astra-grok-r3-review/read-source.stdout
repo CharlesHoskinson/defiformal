@@ -1,0 +1,662 @@
+--- 
++++ 
+@@ -616,6 +616,658 @@
+         dsimp [TreeJson.depth] at h_depth; omega)
+     | cons _ _ => exact h_scalar.elim
+ 
++theorem scanCost_arr (xs : List TreeJson) : scanCost (.arr xs) = 2 + scanCostList xs := rfl
++theorem scanCost_obj (kvs : List (String × TreeJson)) : scanCost (.obj kvs) = 2 + scanCostObj kvs := rfl
++theorem scanCostList_nil : scanCostList [] = 0 := rfl
++theorem scanCostList_singleton (x : TreeJson) : scanCostList [x] = scanCost x := rfl
++theorem scanCostList_cons_cons (x y : TreeJson) (ys : List TreeJson) :
++    scanCostList (x :: y :: ys) = scanCost x + 1 + scanCostList (y :: ys) := rfl
++theorem scanCostObj_nil : scanCostObj [] = 0 := rfl
++theorem scanCostObj_singleton (k : String) (v : TreeJson) :
++    scanCostObj [(k, v)] = 2 + scanCost v := rfl
++theorem scanCostObj_cons_cons (k : String) (v : TreeJson) (f2 : String × TreeJson)
++    (kvs' : List (String × TreeJson)) :
++    scanCostObj ((k, v) :: f2 :: kvs') = 3 + scanCost v + scanCostObj (f2 :: kvs') := rfl
++
++/-- Numeric buffer left after scanning a canonical array-element encoding. -/
++def lastNumBufList : List TreeJson → List Char
++  | [] => []
++  | [x] => numBuf x
++  | _ :: xs => lastNumBufList xs
++
++/-- Numeric buffer left after scanning a canonical object-field encoding. -/
++def lastNumBufObj : List (String × TreeJson) → List Char
++  | [] => []
++  | [(_, v)] => numBuf v
++  | _ :: kvs => lastNumBufObj kvs
++
++theorem lastNumBufList_nil : lastNumBufList [] = [] := rfl
++theorem lastNumBufList_singleton (x : TreeJson) : lastNumBufList [x] = numBuf x := rfl
++theorem lastNumBufList_cons_cons (x y : TreeJson) (ys : List TreeJson) :
++    lastNumBufList (x :: y :: ys) = lastNumBufList (y :: ys) := rfl
++theorem lastNumBufObj_nil : lastNumBufObj [] = [] := rfl
++theorem lastNumBufObj_singleton (k : String) (v : TreeJson) :
++    lastNumBufObj [(k, v)] = numBuf v := rfl
++theorem lastNumBufObj_cons_cons (k : String) (v : TreeJson) (f2 : String × TreeJson)
++    (kvs' : List (String × TreeJson)) :
++    lastNumBufObj ((k, v) :: f2 :: kvs') = lastNumBufObj (f2 :: kvs') := rfl
++
++theorem scanLexicalCheckNum_lastNumBufList (xs : List TreeJson) :
++    scanLexicalCheckNum (lastNumBufList xs) = .ok () := by
++  induction xs with
++  | nil => simp [lastNumBufList, scanLexicalCheckNum]
++  | cons x xs ih =>
++    cases xs with
++    | nil => simpa [lastNumBufList] using scanLexicalCheckNum_numBuf x
++    | cons y ys => simpa [lastNumBufList] using ih
++
++theorem scanLexicalCheckNum_lastNumBufObj (kvs : List (String × TreeJson)) :
++    scanLexicalCheckNum (lastNumBufObj kvs) = .ok () := by
++  induction kvs with
++  | nil => simp [lastNumBufObj, scanLexicalCheckNum]
++  | cons f kvs ih =>
++    rcases f with ⟨k, v⟩
++    cases kvs with
++    | nil => simpa [lastNumBufObj] using scanLexicalCheckNum_numBuf v
++    | cons f2 kvs' => simpa [lastNumBufObj] using ih
++
++theorem depth_le_depthList (x : TreeJson) (xs : List TreeJson) (hx : x ∈ xs) :
++    TreeJson.depth x ≤ TreeJson.depthList xs := by
++  induction xs with
++  | nil => contradiction
++  | cons y ys ih =>
++    dsimp [TreeJson.depthList]
++    cases hx with
++    | head => omega
++    | tail _ h =>
++      have := ih h
++      omega
++
++theorem depth_le_depthObj (k : String) (v : TreeJson) (kvs : List (String × TreeJson))
++    (h : (k, v) ∈ kvs) :
++    TreeJson.depth v ≤ TreeJson.depthObj kvs := by
++  induction kvs with
++  | nil => contradiction
++  | cons f fs ih =>
++    rcases f with ⟨k', v'⟩
++    dsimp [TreeJson.depthObj]
++    cases h with
++    | head => omega
++    | tail _ h_in =>
++      have := ih h_in
++      omega
++
++theorem depthList_tail_le (x : TreeJson) (xs : List TreeJson) :
++    TreeJson.depthList xs ≤ TreeJson.depthList (x :: xs) := by
++  dsimp [TreeJson.depthList]
++  omega
++
++theorem depthObj_tail_le (k : String) (v : TreeJson) (kvs : List (String × TreeJson)) :
++    TreeJson.depthObj kvs ≤ TreeJson.depthObj ((k, v) :: kvs) := by
++  dsimp [TreeJson.depthObj]
++  omega
++
++/-- Value-fragment continuation hypothesis used by array-element induction. -/
++def ScanEncodeIH (xs : List TreeJson) : Prop :=
++  ∀ x ∈ xs, ∀ (fuel : Nat) (rest : List Char) (depth : Nat) (scopes : List LexScope),
++    notExpectKey scopes →
++    depth + TreeJson.depth x ≤ 64 →
++    TreeJson.Valid x →
++    scanLexicalFuel (fuel + scanCost x) ((TreeJson.encode x).toList ++ rest)
++        depth scopes [] false =
++      scanLexicalFuel fuel rest depth scopes (numBuf x) false
++
++/-- Value-fragment continuation hypothesis used by object-field induction. -/
++def ScanEncodeObjIH (kvs : List (String × TreeJson)) : Prop :=
++  ∀ (k : String) (v : TreeJson), (k, v) ∈ kvs → ∀ (fuel : Nat) (rest : List Char) (depth : Nat)
++    (scopes : List LexScope),
++    notExpectKey scopes →
++    depth + TreeJson.depth v ≤ 64 →
++    TreeJson.Valid v →
++    scanLexicalFuel (fuel + scanCost v) ((TreeJson.encode v).toList ++ rest)
++        depth scopes [] false =
++      scanLexicalFuel fuel rest depth scopes (numBuf v) false
++
++theorem ScanEncodeIH_tail (x : TreeJson) (xs : List TreeJson) (h : ScanEncodeIH (x :: xs)) :
++    ScanEncodeIH xs :=
++  fun y hy => h y (List.Mem.tail x hy)
++
++theorem ScanEncodeObjIH_tail (k : String) (v : TreeJson) (kvs : List (String × TreeJson))
++    (h : ScanEncodeObjIH ((k, v) :: kvs)) :
++    ScanEncodeObjIH kvs :=
++  fun k' v' hy => h k' v' (List.Mem.tail (k, v) hy)
++
++theorem key_not_mem_visited (kvs : List (String × TreeJson)) (visited : List String)
++    (k : String) (v : TreeJson) (h_mem : (k, v) ∈ kvs)
++    (h_disj : (kvs.map Prod.fst).Disjoint visited) :
++    k ∉ visited :=
++  fun hvis => h_disj (List.mem_map.mpr ⟨(k, v), h_mem, rfl⟩) hvis
++
++theorem disjoint_tail_cons_visited (k : String) (v : TreeJson)
++    (kvs : List (String × TreeJson)) (visited : List String)
++    (h_nodup : (((k, v) :: kvs).map Prod.fst).Nodup)
++    (h_disj : (((k, v) :: kvs).map Prod.fst).Disjoint visited) :
++    (kvs.map Prod.fst).Disjoint (k :: visited) := by
++  intro a ha hmem
++  have ha_all : a ∈ ((k, v) :: kvs).map Prod.fst := by
++    simp only [List.map_cons, List.mem_cons]
++    exact Or.inr ha
++  cases hmem with
++  | head =>
++    have h_keys : ((k, v) :: kvs).map Prod.fst = k :: kvs.map Prod.fst := rfl
++    have hnod : (k :: kvs.map Prod.fst).Nodup := by
++      rw [← h_keys]
++      exact h_nodup
++    exact (List.nodup_cons.mp hnod).1 ha
++  | tail _ hvis =>
++    exact h_disj ha_all hvis
++
++theorem isSpace_lbrace : isSpace '{' = false := rfl
++theorem not_isSpace_lbrace : (!isSpace '{') = true := rfl
++
++theorem scanCostList_le_encodeList_length (xs : List TreeJson)
++    (h_ih : ∀ x ∈ xs, scanCost x ≤ (TreeJson.encode x).toList.length) :
++    scanCostList xs ≤ (TreeJson.encodeList xs).toList.length := by
++  induction xs with
++  | nil =>
++    dsimp [scanCostList, TreeJson.encodeList]
++    omega
++  | cons x tl ih =>
++    cases tl with
++    | nil =>
++      dsimp [scanCostList, TreeJson.encodeList]
++      exact h_ih x (List.Mem.head [])
++    | cons x2 xs' =>
++      dsimp [scanCostList, TreeJson.encodeList]
++      repeat rw [String.toList_append]
++      rw [toList_comma]
++      simp only [List.length_append, List.length_cons, List.length_nil]
++      have hx := h_ih x (List.Mem.head _)
++      have htl := ih (fun y hy => h_ih y (List.Mem.tail x hy))
++      omega
++
++theorem scanCostObj_le_encodeObj_length (kvs : List (String × TreeJson))
++    (h_ih : ∀ (k : String) (v : TreeJson), (k, v) ∈ kvs →
++      scanCost v ≤ (TreeJson.encode v).toList.length) :
++    scanCostObj kvs ≤ (TreeJson.encodeObj kvs).toList.length := by
++  induction kvs with
++  | nil =>
++    dsimp [scanCostObj, TreeJson.encodeObj]
++    omega
++  | cons f tl ih =>
++    rcases f with ⟨k, v⟩
++    cases tl with
++    | nil =>
++      dsimp [scanCostObj, TreeJson.encodeObj]
++      repeat rw [String.toList_append]
++      rw [toList_colon]
++      simp only [List.length_append, List.length_cons, List.length_nil]
++      have hv := h_ih k v (List.Mem.head [])
++      have hk := escapeTreeString_length_ge_two k
++      omega
++    | cons f2 kvs' =>
++      dsimp [scanCostObj, TreeJson.encodeObj]
++      repeat rw [String.toList_append]
++      rw [toList_colon, toList_comma]
++      simp only [List.length_append, List.length_cons, List.length_nil]
++      have hv := h_ih k v (List.Mem.head _)
++      have hk := escapeTreeString_length_ge_two k
++      have htl := ih (fun k' v' hy => h_ih k' v' (List.Mem.tail (k, v) hy))
++      omega
++
++theorem scanCost_le_encode_length (t : TreeJson) :
++    scanCost t ≤ (TreeJson.encode t).toList.length := by
++  match t with
++  | .null =>
++    dsimp [scanCost, TreeJson.encode]
++    decide
++  | .bool true =>
++    dsimp [scanCost, TreeJson.encode]
++    decide
++  | .bool false =>
++    dsimp [scanCost, TreeJson.encode]
++    decide
++  | .num n =>
++    dsimp [scanCost, TreeJson.encode]
++    exact Nat.le_of_eq String.length_toList.symm
++  | .str s =>
++    dsimp [scanCost, TreeJson.encode]
++    have := escapeTreeString_length_ge_two s
++    omega
++  | .arr xs =>
++    dsimp [scanCost, TreeJson.encode]
++    repeat rw [String.toList_append]
++    rw [toList_lbracket, toList_rbracket]
++    simp only [List.length_append, List.length_cons, List.length_nil]
++    have h_ih : ∀ x ∈ xs, scanCost x ≤ (TreeJson.encode x).toList.length := by
++      intro x hx
++      have : TreeJson.size x < TreeJson.size (.arr xs) := by
++        dsimp [TreeJson.size]
++        have := TreeJson.mem_sizeList x xs hx
++        omega
++      exact scanCost_le_encode_length x
++    have h_list := scanCostList_le_encodeList_length xs h_ih
++    omega
++  | .obj kvs =>
++    dsimp [scanCost, TreeJson.encode]
++    repeat rw [String.toList_append]
++    rw [toList_lbrace, toList_rbrace]
++    simp only [List.length_append, List.length_cons, List.length_nil]
++    have h_ih : ∀ (k : String) (v : TreeJson), (k, v) ∈ kvs →
++        scanCost v ≤ (TreeJson.encode v).toList.length := by
++      intro k v hv
++      have : TreeJson.size v < TreeJson.size (.obj kvs) := by
++        dsimp [TreeJson.size]
++        have := TreeJson.mem_sizeObj k v kvs hv
++        omega
++      exact scanCost_le_encode_length v
++    have h_obj := scanCostObj_le_encodeObj_length kvs h_ih
++    omega
++termination_by TreeJson.size t
++
++/-- Continuation of `scanLexicalFuel` across a canonical array-element encoding.
++    Array scope counts increment on commas; `cnt + xs.length ≤ 4096` covers every guard. -/
++theorem scanLexicalFuel_encodeList (xs : List TreeJson)
++    (h_ih : ScanEncodeIH xs)
++    (fuel : Nat) (rest : List Char) (depth : Nat) (cnt : Nat)
++    (restScopes : List LexScope)
++    (h_depth : depth + TreeJson.depthList xs ≤ 64)
++    (h_valid : TreeJson.ValidList xs)
++    (h_cnt : cnt + xs.length ≤ 4096) :
++    scanLexicalFuel (fuel + scanCostList xs)
++        ((TreeJson.encodeList xs).toList ++ rest)
++        depth (LexScope.inArr cnt :: restScopes) [] false =
++      scanLexicalFuel fuel rest depth
++        (LexScope.inArr (cnt + (xs.length - 1)) :: restScopes)
++        (lastNumBufList xs) false := by
++  induction xs generalizing fuel rest cnt with
++  | nil =>
++    simp [scanCostList, TreeJson.encodeList, lastNumBufList]
++  | cons x tl ih =>
++    cases tl with
++    | nil =>
++      dsimp [scanCostList, lastNumBufList]
++      rw [encodeList_singleton_toList]
++      have hx := h_ih x (List.Mem.head []) fuel rest depth
++        (LexScope.inArr cnt :: restScopes) (notExpectKey_arr cnt restScopes)
++        (by
++          dsimp [TreeJson.depthList] at h_depth
++          omega)
++        (by
++          dsimp [TreeJson.ValidList] at h_valid
++          exact h_valid.1)
++      simpa using hx
++    | cons x2 xs' =>
++      rw [encodeList_cons_cons_toList, scanCostList_cons_cons]
++      have h_fuel : fuel + (scanCost x + 1 + scanCostList (x2 :: xs')) =
++          (fuel + 1 + scanCostList (x2 :: xs')) + scanCost x := by omega
++      rw [h_fuel]
++      have hx := h_ih x (List.Mem.head _) (fuel + 1 + scanCostList (x2 :: xs'))
++          (',' :: ((TreeJson.encodeList (x2 :: xs')).toList ++ rest))
++          depth (LexScope.inArr cnt :: restScopes) (notExpectKey_arr cnt restScopes)
++          (by
++            dsimp [TreeJson.depthList] at h_depth
++            omega)
++          (by
++            dsimp [TreeJson.ValidList] at h_valid
++            exact h_valid.1)
++      rw [hx]
++      have h_assoc : fuel + 1 + scanCostList (x2 :: xs') =
++          fuel + scanCostList (x2 :: xs') + 1 := by omega
++      rw [h_assoc]
++      have h_comma := scanLexicalFuel_comma_arr_flush (fuel + scanCostList (x2 :: xs'))
++          ((TreeJson.encodeList (x2 :: xs')).toList ++ rest) depth cnt
++          (by
++            have : (x :: x2 :: xs').length = xs'.length + 2 := by simp
++            omega)
++          restScopes (numBuf x) (scanLexicalCheckNum_numBuf x)
++      rw [h_comma]
++      have hrest := ih (ScanEncodeIH_tail x (x2 :: xs') h_ih) fuel rest (cnt + 1)
++          (by
++            dsimp [TreeJson.depthList] at h_depth ⊢
++            omega)
++          (by
++            dsimp [TreeJson.ValidList] at h_valid
++            exact h_valid.2)
++          (by
++            have : (x :: x2 :: xs').length = (x2 :: xs').length + 1 := by simp
++            omega)
++      have hbuf : lastNumBufList (x :: x2 :: xs') = lastNumBufList (x2 :: xs') :=
++        lastNumBufList_cons_cons x x2 xs'
++      have hcntEq : cnt + ((x :: x2 :: xs').length - 1) =
++          cnt + 1 + ((x2 :: xs').length - 1) := by
++        simp [List.length_cons]
++        omega
++      rw [hbuf, hcntEq]
++      exact hrest
++
++/-- Object scope after scanning canonical fields: empty keeps `expectKey`; nonempty prepends keys. -/
++def afterObj (kvs : List (String × TreeJson)) (visited : List String) : LexScope :=
++  match kvs with
++  | [] => LexScope.inObj visited true
++  | _ => LexScope.inObj ((kvs.map Prod.fst).reverse ++ visited) false
++
++theorem afterObj_nil (visited : List String) :
++    afterObj [] visited = LexScope.inObj visited true := rfl
++
++theorem afterObj_singleton (k : String) (v : TreeJson) (visited : List String) :
++    afterObj [(k, v)] visited = LexScope.inObj (k :: visited) false := by
++  simp [afterObj]
++
++theorem afterObj_cons_cons (k : String) (v : TreeJson) (f2 : String × TreeJson)
++    (kvs' : List (String × TreeJson)) (visited : List String) :
++    afterObj ((k, v) :: f2 :: kvs') visited = afterObj (f2 :: kvs') (k :: visited) := by
++  simp [afterObj, List.reverse_cons, List.append_assoc]
++
++theorem encodeObj_nil_toList (rest : List Char) :
++    (TreeJson.encodeObj []).toList ++ rest = rest := rfl
++
++/-- Continuation of `scanLexicalFuel` across a canonical object-field encoding.
++    Remaining keys stay disjoint from visited keys; `TreeJson.Valid` supplies `Nodup`. -/
++theorem scanLexicalFuel_encodeObj (kvs : List (String × TreeJson))
++    (h_ih : ScanEncodeObjIH kvs)
++    (fuel : Nat) (rest : List Char) (depth : Nat)
++    (visited : List String) (restScopes : List LexScope)
++    (h_depth : depth + TreeJson.depthObj kvs ≤ 64)
++    (h_valid : TreeJson.ValidObj kvs)
++    (h_nodup : (kvs.map Prod.fst).Nodup)
++    (h_disj : (kvs.map Prod.fst).Disjoint visited) :
++    scanLexicalFuel (fuel + scanCostObj kvs)
++        ((TreeJson.encodeObj kvs).toList ++ rest)
++        depth (LexScope.inObj visited true :: restScopes) [] false =
++      scanLexicalFuel fuel rest depth
++        (afterObj kvs visited :: restScopes)
++        (lastNumBufObj kvs) false := by
++  induction kvs generalizing fuel rest visited with
++  | nil =>
++    simp [scanCostObj, TreeJson.encodeObj, lastNumBufObj, afterObj]
++  | cons f tl ih =>
++    rcases f with ⟨k, v⟩
++    cases tl with
++    | nil =>
++      rw [encodeObj_singleton_toList, scanCostObj_singleton]
++      have h_fuel : fuel + (2 + scanCost v) = (fuel + scanCost v + 1) + 1 := by omega
++      rw [h_fuel]
++      have hnod : visited.contains k = false :=
++        contains_eq_false_of_not_mem visited k
++          (key_not_mem_visited [(k, v)] visited k v (List.Mem.head []) h_disj)
++      have hk := scanLexicalFuel_str_key (fuel + scanCost v + 1) k
++          (':' :: ((TreeJson.encode v).toList ++ rest)) depth visited restScopes hnod
++      rw [hk]
++      have hcol := scanLexicalFuel_colon (fuel + scanCost v)
++          ((TreeJson.encode v).toList ++ rest) depth
++          (LexScope.inObj (k :: visited) false :: restScopes)
++      rw [hcol]
++      have hv := h_ih k v (List.Mem.head []) fuel rest depth
++          (LexScope.inObj (k :: visited) false :: restScopes)
++          (notExpectKey_obj_val (k :: visited) restScopes)
++          (by
++            dsimp [TreeJson.depthObj] at h_depth
++            omega)
++          (by
++            dsimp [TreeJson.ValidObj] at h_valid
++            exact h_valid.1)
++      rw [hv]
++      simp [afterObj, lastNumBufObj]
++    | cons f2 kvs' =>
++      rw [encodeObj_cons_cons_toList, scanCostObj_cons_cons]
++      have h_fuel : fuel + (3 + scanCost v + scanCostObj (f2 :: kvs')) =
++          ((fuel + scanCostObj (f2 :: kvs') + 1 + scanCost v) + 1) + 1 := by omega
++      rw [h_fuel]
++      have hnod : visited.contains k = false :=
++        contains_eq_false_of_not_mem visited k
++          (key_not_mem_visited ((k, v) :: f2 :: kvs') visited k v (List.Mem.head _) h_disj)
++      have hk := scanLexicalFuel_str_key
++          (fuel + scanCostObj (f2 :: kvs') + 1 + scanCost v + 1) k
++          (':' :: ((TreeJson.encode v).toList ++
++            (',' :: ((TreeJson.encodeObj (f2 :: kvs')).toList ++ rest))))
++          depth visited restScopes hnod
++      rw [hk]
++      have hcol := scanLexicalFuel_colon
++          (fuel + scanCostObj (f2 :: kvs') + 1 + scanCost v)
++          ((TreeJson.encode v).toList ++
++            (',' :: ((TreeJson.encodeObj (f2 :: kvs')).toList ++ rest)))
++          depth (LexScope.inObj (k :: visited) false :: restScopes)
++      rw [hcol]
++      have hv := h_ih k v (List.Mem.head _) (fuel + scanCostObj (f2 :: kvs') + 1)
++          (',' :: ((TreeJson.encodeObj (f2 :: kvs')).toList ++ rest))
++          depth (LexScope.inObj (k :: visited) false :: restScopes)
++          (notExpectKey_obj_val (k :: visited) restScopes)
++          (by
++            dsimp [TreeJson.depthObj] at h_depth
++            omega)
++          (by
++            dsimp [TreeJson.ValidObj] at h_valid
++            exact h_valid.1)
++      rw [hv]
++      have h_comma := scanLexicalFuel_comma_obj_flush (fuel + scanCostObj (f2 :: kvs'))
++          ((TreeJson.encodeObj (f2 :: kvs')).toList ++ rest) depth (k :: visited) restScopes
++          (numBuf v) (scanLexicalCheckNum_numBuf v)
++      have h_fuel_comma : fuel + scanCostObj (f2 :: kvs') + 1 =
++          (fuel + scanCostObj (f2 :: kvs')) + 1 := by omega
++      rw [h_fuel_comma, h_comma]
++      have hrest := ih (ScanEncodeObjIH_tail k v (f2 :: kvs') h_ih) fuel rest (k :: visited)
++          (by
++            dsimp [TreeJson.depthObj] at h_depth ⊢
++            omega)
++          (by
++            dsimp [TreeJson.ValidObj] at h_valid
++            exact h_valid.2)
++          (by
++            have h_keys : ((k, v) :: f2 :: kvs').map Prod.fst =
++                k :: (f2 :: kvs').map Prod.fst := rfl
++            rw [h_keys] at h_nodup
++            exact (List.nodup_cons.mp h_nodup).2)
++          (disjoint_tail_cons_visited k v (f2 :: kvs') visited h_nodup h_disj)
++      have hbuf : lastNumBufObj ((k, v) :: f2 :: kvs') = lastNumBufObj (f2 :: kvs') :=
++        lastNumBufObj_cons_cons k v f2 kvs'
++      rw [hbuf, afterObj_cons_cons]
++      exact hrest
++
++/-- Universal continuation: scanning a canonical `TreeJson.encode` fragment returns to the
++    caller with the numeric buffer of that fragment. Numbers stay buffered; other nodes clear. -/
++theorem scanLexicalFuel_encode (t : TreeJson) (fuel : Nat) (rest : List Char)
++    (depth : Nat) (scopes : List LexScope)
++    (h_not_key : notExpectKey scopes)
++    (h_depth : depth + TreeJson.depth t ≤ 64)
++    (h_valid : TreeJson.Valid t) :
++    scanLexicalFuel (fuel + scanCost t) ((TreeJson.encode t).toList ++ rest) depth scopes [] false =
++      scanLexicalFuel fuel rest depth scopes (numBuf t) false := by
++  match t with
++  | .null =>
++    simpa [numBuf] using scanLexicalFuel_encode_null fuel rest depth scopes
++  | .bool b =>
++    simpa [numBuf] using scanLexicalFuel_encode_bool fuel b rest depth scopes
++  | .num n =>
++    simpa [numBuf] using scanLexicalFuel_encode_num fuel n rest depth scopes
++  | .str s =>
++    simpa [numBuf] using scanLexicalFuel_encode_str fuel s rest depth scopes h_not_key
++  | .arr xs =>
++    rw [encode_arr_toList, scanCost_arr]
++    have h_fuel : fuel + (2 + scanCostList xs) = (fuel + 1 + scanCostList xs) + 1 := by omega
++    rw [h_fuel]
++    have hopen := scanLexicalFuel_lbracket (fuel + 1 + scanCostList xs)
++        ((TreeJson.encodeList xs).toList ++ (']' :: rest)) depth scopes
++        (by
++          dsimp [TreeJson.depth] at h_depth
++          omega)
++    rw [hopen]
++    have h_ih : ScanEncodeIH xs := by
++      intro x hx fuel' rest' depth' scopes' hnk hd hv
++      have : TreeJson.size x < TreeJson.size (.arr xs) := by
++        dsimp [TreeJson.size]
++        have := TreeJson.mem_sizeList x xs hx
++        omega
++      exact scanLexicalFuel_encode x fuel' rest' depth' scopes' hnk hd hv
++    have hlist := scanLexicalFuel_encodeList xs h_ih (fuel + 1) (']' :: rest) (depth + 1) 0 scopes
++        (by
++          dsimp [TreeJson.depth] at h_depth
++          omega)
++        (by
++          dsimp [TreeJson.Valid] at h_valid
++          exact h_valid.2)
++        (by
++          dsimp [TreeJson.Valid] at h_valid
++          simpa using h_valid.1)
++    rw [hlist]
++    have hclose := scanLexicalFuel_rbracket_flush fuel rest (depth + 1)
++        (LexScope.inArr (0 + (xs.length - 1))) scopes (lastNumBufList xs)
++        (by omega) (scanLexicalCheckNum_lastNumBufList xs)
++    simpa [numBuf] using hclose
++  | .obj kvs =>
++    rw [encode_obj_toList, scanCost_obj]
++    have h_fuel : fuel + (2 + scanCostObj kvs) = (fuel + 1 + scanCostObj kvs) + 1 := by omega
++    rw [h_fuel]
++    have hopen := scanLexicalFuel_lbrace (fuel + 1 + scanCostObj kvs)
++        ((TreeJson.encodeObj kvs).toList ++ ('}' :: rest)) depth scopes
++        (by
++          dsimp [TreeJson.depth] at h_depth
++          omega)
++    rw [hopen]
++    have h_ih : ScanEncodeObjIH kvs := by
++      intro k v hv fuel' rest' depth' scopes' hnk hd hval
++      have : TreeJson.size v < TreeJson.size (.obj kvs) := by
++        dsimp [TreeJson.size]
++        have := TreeJson.mem_sizeObj k v kvs hv
++        omega
++      exact scanLexicalFuel_encode v fuel' rest' depth' scopes' hnk hd hval
++    have hobj := scanLexicalFuel_encodeObj kvs h_ih (fuel + 1) ('}' :: rest) (depth + 1) [] scopes
++        (by
++          dsimp [TreeJson.depth] at h_depth
++          omega)
++        (by
++          dsimp [TreeJson.Valid] at h_valid
++          exact h_valid.2)
++        (by
++          dsimp [TreeJson.Valid] at h_valid
++          exact h_valid.1)
++        (List.disjoint_nil_right _)
++    rw [hobj]
++    have hclose := scanLexicalFuel_rbrace_flush fuel rest (depth + 1)
++        (afterObj kvs []) scopes (lastNumBufObj kvs)
++        (by omega) (scanLexicalCheckNum_lastNumBufObj kvs)
++    simpa [numBuf] using hclose
++termination_by TreeJson.size t
++
++theorem numBuf_arr (xs : List TreeJson) : numBuf (.arr xs) = [] := rfl
++theorem numBuf_obj (kvs : List (String × TreeJson)) : numBuf (.obj kvs) = [] := rfl
++
++/-- Extra fuel after a non-numeric canonical encoding reaches the empty-document success case. -/
++theorem scanLexicalFuel_encode_to_ok (t : TreeJson) (extra : Nat)
++    (h_depth : TreeJson.depth t ≤ 64)
++    (h_valid : TreeJson.Valid t)
++    (h_clear : numBuf t = []) :
++    scanLexicalFuel (extra + scanCost t + 1) (TreeJson.encode t).toList 0 [] [] false = .ok () := by
++  have h_fuel : extra + scanCost t + 1 = extra + 1 + scanCost t := by omega
++  rw [h_fuel]
++  have h := scanLexicalFuel_encode t (extra + 1) [] 0 [] notExpectKey_nil
++      (by omega) h_valid
++  simp [List.append_nil] at h
++  rw [h, h_clear]
++  exact scanLexicalFuel_empty extra 0 []
++
++theorem encode_obj_chars (kvs : List (String × TreeJson)) :
++    (TreeJson.encode (.obj kvs)).toList =
++      '{' :: ((TreeJson.encodeObj kvs).toList ++ ['}']) := by
++  simpa using encode_obj_toList kvs []
++
++theorem moduleToTreeJson_is_obj (ir : DecodedIR) (h_adm : StructurallyAdmissibleIR ir) :
++    ∃ kvs, moduleToTreeJson ir = .obj kvs := by
++  rcases h_adm with ⟨h_sup, _⟩
++  dsimp [SupportedIR] at h_sup
++  rcases h_sup with ⟨_, _, _, h_ir⟩
++  cases ir with
++  | execution ex =>
++    cases ex with
++    | typed env p => exact ⟨_, rfl⟩
++    | step env p => exact ⟨_, rfl⟩
++    | run env p => exact ⟨_, rfl⟩
++  | audit _ => contradiction
++  | codec _ => contradiction
++
++/-- Wrapper success for a canonical encoded object whose UTF-8 image is within 1 MiB. -/
++theorem scanLexical_encode_tree_obj (kvs : List (String × TreeJson))
++    (h_valid : TreeJson.Valid (.obj kvs))
++    (h_depth : TreeJson.depth (.obj kvs) ≤ 64)
++    (h_size : ((TreeJson.encode (.obj kvs)).toUTF8).size ≤ 1048576) :
++    scanLexical (TreeJson.encode (.obj kvs)).toUTF8 = .ok () := by
++  dsimp [scanLexical]
++  have h_le : ¬ ((TreeJson.encode (.obj kvs)).toUTF8.size > 1048576) := by omega
++  rw [if_neg h_le]
++  rw [string_fromUTF8?_toUTF8]
++  dsimp
++  have h_chars := encode_obj_chars kvs
++  have h_filter :
++      List.filter (fun x => !isSpace x) (TreeJson.encode (.obj kvs)).toList =
++        '{' :: List.filter (fun x => !isSpace x)
++          ((TreeJson.encodeObj kvs).toList ++ ['}']) := by
++    rw [h_chars]
++    simp [isSpace, List.filter]
++  have h_empty :
++      (List.filter (fun x => !isSpace x) (TreeJson.encode (.obj kvs)).toList).isEmpty = false := by
++    rw [h_filter]
++    rfl
++  rw [h_empty]
++  simp only [Bool.false_eq_true, ↓reduceIte]
++  have h_head :
++      ((List.filter (fun x => !isSpace x)
++          (TreeJson.encode (.obj kvs)).toList).head! != '{') = false := by
++    rw [h_filter]
++    rfl
++  rw [h_head]
++  simp only [Bool.false_eq_true, ↓reduceIte]
++  have h_cost : scanCost (.obj kvs) ≤ (TreeJson.encode (.obj kvs)).toList.length :=
++    scanCost_le_encode_length (.obj kvs)
++  have h_eq : (TreeJson.encode (.obj kvs)).toList.length + 1 =
++      ((TreeJson.encode (.obj kvs)).toList.length - scanCost (.obj kvs)) +
++        scanCost (.obj kvs) + 1 := by omega
++  rw [h_eq]
++  exact scanLexicalFuel_encode_to_ok (.obj kvs)
++    ((TreeJson.encode (.obj kvs)).toList.length - scanCost (.obj kvs))
++    h_depth h_valid (numBuf_obj kvs)
++
++/-- Universal lexical success on the production codec for every structurally admissible IR. -/
++theorem scanLexical_encodeModule (ir : DecodedIR) (h_adm : StructurallyAdmissibleIR ir) :
++    scanLexical (encodeModule ir) = .ok () := by
++  have h_tree := moduleToTreeJson_encode ir h_adm
++  have h_valid := moduleToTreeJson_valid ir h_adm
++  have h_depth := moduleToTreeJson_depth_le_64 ir h_adm
++  have h_size : ((TreeJson.encode (moduleToTreeJson ir)).toUTF8).size ≤ 1048576 := by
++    rw [h_tree, ← encodeModule_eq_toUTF8]
++    exact h_adm.1.1
++  rw [encodeModule_eq_toUTF8, ← h_tree]
++  rcases moduleToTreeJson_is_obj ir h_adm with ⟨kvs, hkvs⟩
++  rw [hkvs] at h_valid h_depth h_size ⊢
++  exact scanLexical_encode_tree_obj kvs h_valid h_depth h_size
++
++/-- Universal codec roundtrip: every structurally admissible IR re-decodes to itself. -/
++theorem encode_decode_roundtrip : EncodeDecodeRoundtripStatement :=
++  fun ir h_adm =>
++    decodeBytes_encodeModule_of_lex ir h_adm (scanLexical_encodeModule ir h_adm)
++
++/-- Checker correspondence: encoded admissible IR is checked as `checkIR` of that IR. -/
++theorem checkBytes_encodeModule (ir : DecodedIR) (h_adm : StructurallyAdmissibleIR ir) :
++    checkBytes (encodeModule ir) = checkIR ir :=
++  checkBytes_ok (encodeModule ir) ir (encode_decode_roundtrip ir h_adm)
++
++theorem checkBytes_encodeModule_typed (env : EnvelopeEnc) (p : TypedExecutePayloadEnc)
++    (h_adm : StructurallyAdmissibleIR (.execution (.typed env p))) :
++    checkBytes (encodeModule (.execution (.typed env p))) = .execution (checkTyped env p) := by
++  rw [checkBytes_encodeModule _ h_adm]
++  rfl
++
++theorem checkBytes_encodeModule_step (env : EnvelopeEnc) (p : CompositionStepPayloadEnc)
++    (h_adm : StructurallyAdmissibleIR (.execution (.step env p))) :
++    checkBytes (encodeModule (.execution (.step env p))) = .execution (checkStep env p) := by
++  rw [checkBytes_encodeModule _ h_adm]
++  rfl
++
++theorem checkBytes_encodeModule_run (env : EnvelopeEnc) (p : CompositionRunPayloadEnc)
++    (h_adm : StructurallyAdmissibleIR (.execution (.run env p))) :
++    checkBytes (encodeModule (.execution (.run env p))) = .execution (checkRun env p) := by
++  rw [checkBytes_encodeModule _ h_adm]
++  rfl
++
+ end DefiKernel.Certificates
+ 
+ 
+

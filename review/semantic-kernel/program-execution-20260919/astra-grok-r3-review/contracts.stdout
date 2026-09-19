@@ -1,0 +1,790 @@
+lean/DefiKernel/Certificates/Correspondence.lean 887 
+def SupportedIR (ir : DecodedIR) : Prop :=
+  SerializedByteBound ir ∧
+  WholeDocumentDepthBounded ir ∧
+  WholeDocumentArrayBounded ir ∧
+  match ir with
+  | .execution (.typed env payload) =>
+    env.schema_version = 1 ∧
+    env.mode = "typed-execute" ∧
+    StandardTypesEnum env.types ∧
+    payload.state.cells.length = 32 ∧
+    payload.state.cells.map (fun c ↦ (c.domain, c.party, c.asset)) = standard32CellKeys ∧
+    payload.state.cells.all (fun c ↦ c.amount.den > 0 ∧ c.amount.num ≥ 0) = true ∧
+    StoreCanonical payload.store ∧
+    (payload.registry.entries.map (·.id)).Nodup ∧
+    EnvelopeLengthBounds env ∧
+    TypedPayloadLengthBounds payload
+  | .execution (.step env payload) =>
+    env.schema_version = 1 ∧
+    env.mode = "composition-step" ∧
+    StandardTypesEnum env.types ∧
+    (match payload.step with | .unsupported _ => False | _ => True) ∧
+    payload.pre.state.cells.length = 32 ∧
+    payload.pre.state.cells.map (fun c ↦ (c.domain, c.party, c.asset)) = standard32CellKeys ∧
+    payload.pre.state.cells.all (fun c ↦ c.amount.den > 0 ∧ c.amount.num ≥ 0) = true ∧
+    StoreCanonical payload.pre.capabilities ∧
+    (payload.config.registry.entries.map (·.id)).Nodup ∧
+    EnvelopeLengthBounds env ∧
+    StepPayloadLengthBounds payload
+  | .execution (.run env payload) =>
+    env.schema_version = 1 ∧
+    env.mode = "composition-run" ∧
+    StandardTypesEnum env.types ∧
+    payload.steps.all (fun s ↦ match s with | .unsupported _ => false | _ => true) = true ∧
+    payload.world.state.cells.length = 32 ∧
+    payload.world.state.cells.map (fun c ↦ (c.domain, c.party, c.asset)) = standard32CellKeys ∧
+    payload.world.state.cells.all (fun c ↦ c.amount.den > 0 ∧ c.amount.num ≥ 0) = true ∧
+    StoreCanonical payload.world.capabilities ∧
+    (payload.config.registry.entries.map (·.id)).Nodup ∧
+    EnvelopeLengthBounds env ∧
+    RunPayloadLengthBounds payload
+  | .audit _ => False
+  | .codec _ => False
+
+/-- Canonical IR predicate: lexicographical source map order, canonical rationals,
+    inactive packed-value fields in arguments, expressions, and observations,
+    and canonical template/step forms. -/
+def CanonicalIR (ir : DecodedIR) : Prop :=
+  match ir with
+  | .execution (.typed env payload) =>
+    SourceMapSorted env.source_map ∧
+    ClaimedNextStateCanonical env.claimed_next_state ∧
+    payload.state.cells.all (fun c ↦ Int.gcd c.amount.num.natAbs c.amount.den = 1) = true ∧
+    (∀ e ∈ payload.registry.entries, TemplateCanonical e.template) ∧
+    RequestCanonical payload.request ∧
+    EnvironmentCanonical payload.env
+  | .execution (.step env payload) =>
+    SourceMapSorted env.source_map ∧
+    ClaimedNextStateCanonical env.claimed_next_state ∧
+    payload.pre.state.cells.all (fun c ↦ Int.gcd c.amount.num.natAbs c.amount.den = 1) = true ∧
+    StepCanonical payload.step ∧
+    (∀ e ∈ payload.config.registry.entries, TemplateCanonical e.template) ∧
+    HistoryCanonical payload.history ∧
+    BoundaryCanonical payload.boundary
+  | .execution (.run env payload) =>
+    SourceMapSorted env.source_map ∧
+lean/DefiKernel/Certificates/Correspondence.lean 933 
+def CanonicalIR (ir : DecodedIR) : Prop :=
+  match ir with
+  | .execution (.typed env payload) =>
+    SourceMapSorted env.source_map ∧
+    ClaimedNextStateCanonical env.claimed_next_state ∧
+    payload.state.cells.all (fun c ↦ Int.gcd c.amount.num.natAbs c.amount.den = 1) = true ∧
+    (∀ e ∈ payload.registry.entries, TemplateCanonical e.template) ∧
+    RequestCanonical payload.request ∧
+    EnvironmentCanonical payload.env
+  | .execution (.step env payload) =>
+    SourceMapSorted env.source_map ∧
+    ClaimedNextStateCanonical env.claimed_next_state ∧
+    payload.pre.state.cells.all (fun c ↦ Int.gcd c.amount.num.natAbs c.amount.den = 1) = true ∧
+    StepCanonical payload.step ∧
+    (∀ e ∈ payload.config.registry.entries, TemplateCanonical e.template) ∧
+    HistoryCanonical payload.history ∧
+    BoundaryCanonical payload.boundary
+  | .execution (.run env payload) =>
+    SourceMapSorted env.source_map ∧
+    ClaimedNextStateCanonical env.claimed_next_state ∧
+    payload.world.state.cells.all (fun c ↦ Int.gcd c.amount.num.natAbs c.amount.den = 1) = true ∧
+    (∀ s ∈ payload.steps, StepCanonical s) ∧
+    (∀ e ∈ payload.config.registry.entries, TemplateCanonical e.template) ∧
+    (∀ b ∈ payload.boundaries, BoundaryCanonical b)
+  | .audit _ => False
+  | .codec _ => False
+
+/-- Structurally admissible canonical IR domain covering the accepted 32-cell execution universe.
+    Defined as the conjunction of SupportedIR and CanonicalIR. -/
+def StructurallyAdmissibleIR (ir : DecodedIR) : Prop :=
+  SupportedIR ir ∧ CanonicalIR ir
+
+/-- Nonempty witness for StructurallyAdmissibleIR: a standard 32-cell zero-initialized state
+    with canonical 0/1 rationals, schema version 1, and typed-execute mode. -/
+def standard32Cells : List StateCellEnc :=
+  let parties : List Party := [.alice, .bob, .vault, .pool]
+  let assets : List Asset := [.usd, .share, .collateral, .debt]
+  let domains : List Domain := [.main, .other]
+  domains.flatMap fun d ↦
+    parties.flatMap fun p ↦
+      assets.map fun a ↦
+        ⟨d, p, a, ⟨0, 1⟩⟩
+
+def canonicalWitnessIR : DecodedIR :=
+  .execution (.typed
+    ⟨1, "typed-execute", ⟨"a12b7cac05a818cc8d35c2ca440b7170a2807e92", "leanprover/lean4:v4.33.0-rc2",
+      "51e6992efd06126df61a496bebf8f49482a4e129", "", none, none⟩,
+      ["DefiKernel.Certificates", "DefiKernel.Typed", "DefiKernel.Composition"],
+      ⟨[.alice, .bob, .vault, .pool], [.usd, .share, .collateral, .debt], [.main, .other]⟩,
+      ["environment-authenticity"], [], [], [], [], none, false, false⟩
+    ⟨⟨[]⟩, ⟨[]⟩, ⟨.alice, .main⟩, ⟨[]⟩, 100, ⟨0, [.alice], [], [], some .alice⟩, ⟨standard32Cells⟩⟩)
+
+set_option maxRecDepth 500000 in
+/-- Theorem: StructurallyAdmissibleIR is nonempty. -/
+theorem structurallyAdmissible_nonempty : StructurallyAdmissibleIR canonicalWitnessIR := by
+  dsimp [StructurallyAdmissibleIR, SupportedIR, CanonicalIR, canonicalWitnessIR, StandardTypesEnum,
+         SourceMapSorted, ClaimedNextStateCanonical, standard32Cells, standard32CellKeys,
+         isSortedStrictAscending, StoreCanonical, RequestCanonical, EnvironmentCanonical,
+         WorldCanonical, StateCellsMatchStandard32, EnvelopeLengthBounds, TypedPayloadLengthBounds,
+         TemplateLengthBounds, SerializedByteBound, WholeDocumentDepthBounded, WholeDocumentArrayBounded]
+  refine ⟨⟨by decide, by decide, by decide, ⟨rfl, rfl, ⟨rfl, rfl, rfl⟩, rfl, rfl, by decide, List.nodup_nil, List.nodup_nil, by decide, ?_⟩⟩, ?_⟩
+  · refine ⟨rfl, by decide, ?_, by decide, by decide, by decide, by decide, by decide⟩
+    intro _ h; contradiction
+  · refine ⟨rfl, trivial, by decide, ?_, ?_, ?_⟩
+    · intro _ h; contradiction
+lean/DefiKernel/Certificates/Correspondence.lean 962 
+def StructurallyAdmissibleIR (ir : DecodedIR) : Prop :=
+  SupportedIR ir ∧ CanonicalIR ir
+
+/-- Nonempty witness for StructurallyAdmissibleIR: a standard 32-cell zero-initialized state
+    with canonical 0/1 rationals, schema version 1, and typed-execute mode. -/
+def standard32Cells : List StateCellEnc :=
+  let parties : List Party := [.alice, .bob, .vault, .pool]
+  let assets : List Asset := [.usd, .share, .collateral, .debt]
+  let domains : List Domain := [.main, .other]
+  domains.flatMap fun d ↦
+    parties.flatMap fun p ↦
+      assets.map fun a ↦
+        ⟨d, p, a, ⟨0, 1⟩⟩
+
+def canonicalWitnessIR : DecodedIR :=
+  .execution (.typed
+    ⟨1, "typed-execute", ⟨"a12b7cac05a818cc8d35c2ca440b7170a2807e92", "leanprover/lean4:v4.33.0-rc2",
+      "51e6992efd06126df61a496bebf8f49482a4e129", "", none, none⟩,
+      ["DefiKernel.Certificates", "DefiKernel.Typed", "DefiKernel.Composition"],
+      ⟨[.alice, .bob, .vault, .pool], [.usd, .share, .collateral, .debt], [.main, .other]⟩,
+      ["environment-authenticity"], [], [], [], [], none, false, false⟩
+    ⟨⟨[]⟩, ⟨[]⟩, ⟨.alice, .main⟩, ⟨[]⟩, 100, ⟨0, [.alice], [], [], some .alice⟩, ⟨standard32Cells⟩⟩)
+
+set_option maxRecDepth 500000 in
+/-- Theorem: StructurallyAdmissibleIR is nonempty. -/
+theorem structurallyAdmissible_nonempty : StructurallyAdmissibleIR canonicalWitnessIR := by
+  dsimp [StructurallyAdmissibleIR, SupportedIR, CanonicalIR, canonicalWitnessIR, StandardTypesEnum,
+         SourceMapSorted, ClaimedNextStateCanonical, standard32Cells, standard32CellKeys,
+         isSortedStrictAscending, StoreCanonical, RequestCanonical, EnvironmentCanonical,
+         WorldCanonical, StateCellsMatchStandard32, EnvelopeLengthBounds, TypedPayloadLengthBounds,
+         TemplateLengthBounds, SerializedByteBound, WholeDocumentDepthBounded, WholeDocumentArrayBounded]
+  refine ⟨⟨by decide, by decide, by decide, ⟨rfl, rfl, ⟨rfl, rfl, rfl⟩, rfl, rfl, by decide, List.nodup_nil, List.nodup_nil, by decide, ?_⟩⟩, ?_⟩
+  · refine ⟨rfl, by decide, ?_, by decide, by decide, by decide, by decide, by decide⟩
+    intro _ h; contradiction
+  · refine ⟨rfl, trivial, by decide, ?_, ?_, ?_⟩
+    · intro _ h; contradiction
+    · intro _ h; contradiction
+    · intro _ h; contradiction
+
+/-- Helper to substitute source_map in canonicalWitnessIR. -/
+def withSourceMap (sm : List (String × String)) : DecodedIR :=
+  match canonicalWitnessIR with
+  | .execution (.typed env payload) => .execution (.typed { env with source_map := sm } payload)
+  | ir => ir
+
+/-- Witness IR containing distinct escaped C0 control key and literal escape spelling keys.
+    Key 1: "a\n" (encodes to JSON key "a\u000a").
+    Key 2: "au000a" (encodes to JSON key "au000a").
+    These keys are distinct strings in strict lexicographical order. -/
+def collisionIR : DecodedIR := withSourceMap [("a\n", "1"), ("au000a", "2")]
+
+set_option maxRecDepth 500000 in
+/-- Theorem: collisionIR with distinct escaped control and literal keys is structurally admissible.
+    Proved without sorry or native_decide, with standard axioms only. -/
+theorem escapedKeyCollision_admissible : StructurallyAdmissibleIR collisionIR := by
+  dsimp [StructurallyAdmissibleIR, SupportedIR, CanonicalIR, collisionIR, withSourceMap, canonicalWitnessIR, StandardTypesEnum,
+         SourceMapSorted, ClaimedNextStateCanonical, standard32Cells, standard32CellKeys,
+         isSortedStrictAscending, StoreCanonical, RequestCanonical, EnvironmentCanonical,
+         WorldCanonical, StateCellsMatchStandard32, EnvelopeLengthBounds, TypedPayloadLengthBounds,
+         TemplateLengthBounds, SerializedByteBound, WholeDocumentDepthBounded, WholeDocumentArrayBounded]
+  refine ⟨⟨by decide, by decide, by decide, ⟨rfl, rfl, ⟨rfl, rfl, rfl⟩, rfl, rfl, by decide, List.nodup_nil, List.nodup_nil, by decide, ?_⟩⟩, ?_⟩
+  · refine ⟨rfl, by decide, ?_, by decide, by decide, by decide, by decide, by decide⟩
+    intro _ h; contradiction
+  · refine ⟨rfl, trivial, by decide, ?_, ?_, ?_⟩
+    · intro _ h; contradiction
+lean/DefiKernel/Certificates/Correspondence.lean 1061 
+def EncodeDecodeRoundtripStatement : Prop :=
+  ∀ (ir : DecodedIR), StructurallyAdmissibleIR ir → decodeBytes (encodeModule ir) = .ok ir
+
+/-- Statement of canonical bytes obligation (T-canonical-bytes). -/
+def DecodeEncodeCanonicalBytesStatement : Prop :=
+  ∀ raw ir, decodeBytes raw = .ok ir → StructurallyAdmissibleIR ir → encodeModule ir = raw
+
+/-- Discharges T-canonical-bytes: universal canonical bytes theorem proven in the Lean kernel. -/
+theorem decode_encode_canonical_bytes : DecodeEncodeCanonicalBytesStatement := by
+  intro raw ir h _
+  exact decodeBytes_encode_canonical raw ir h
+
+/-- Refused decode returns no kernel object (S39-S40, S78). -/
+theorem decode_error_no_kernel (raw : ByteArray) (e : DecodeFailure)
+    (h : decodeBytes raw = .error e) (h_not_res : ∀ lim, e ≠ .resourceLimit lim) :
+    checkBytes raw = .codec (.malformed e) := by
+  dsimp [checkBytes]
+  rw [h]
+  cases e with
+  | resourceLimit lim =>
+    exfalso
+    exact h_not_res lim rfl
+  | emptyDocument => rfl
+  | lexicalScientificOrFloat => rfl
+  | notJsonObject => rfl
+  | duplicateKey _ => rfl
+  | noncanonicalWhitespace => rfl
+  | schemaVersion => rfl
+  | missingField _ => rfl
+  | jsonType _ => rfl
+  | unknownIdentifier _ => rfl
+  | uniqueness _ => rfl
+  | illegalRational _ => rfl
+  | stateNonneg => rfl
+  | unknownExecutableField _ => rfl
+  | unsupportedForm _ => rfl
+
+/-- Resource limit decode refusal maps to blocked codec result. -/
+theorem decode_error_resource_limit (raw : ByteArray) (lim : String)
+    (h : decodeBytes raw = .error (.resourceLimit lim)) :
+    checkBytes raw = .codec (.blocked lim) := by
+  dsimp [checkBytes]
+  rw [h]
+
+/-- Any decode error produces a CodecResult outcome, guaranteeing no kernel entrypoint is invoked. -/
+theorem checkBytes_no_kernel_on_error (raw : ByteArray) (e : DecodeFailure)
+    (h : decodeBytes raw = .error e) :
+    ∃ (c : CodecResult), checkBytes raw = .codec c := by
+  dsimp [checkBytes]
+  rw [h]
+  cases e with
+  | resourceLimit lim => exact ⟨.blocked lim, rfl⟩
+  | emptyDocument => exact ⟨.malformed .emptyDocument, rfl⟩
+  | lexicalScientificOrFloat => exact ⟨.malformed .lexicalScientificOrFloat, rfl⟩
+  | notJsonObject => exact ⟨.malformed .notJsonObject, rfl⟩
+  | duplicateKey k => exact ⟨.malformed (.duplicateKey k), rfl⟩
+  | noncanonicalWhitespace => exact ⟨.malformed .noncanonicalWhitespace, rfl⟩
+  | schemaVersion => exact ⟨.malformed .schemaVersion, rfl⟩
+  | missingField m => exact ⟨.malformed (.missingField m), rfl⟩
+  | jsonType p => exact ⟨.malformed (.jsonType p), rfl⟩
+  | unknownIdentifier u => exact ⟨.malformed (.unknownIdentifier u), rfl⟩
+  | uniqueness k => exact ⟨.malformed (.uniqueness k), rfl⟩
+  | illegalRational r => exact ⟨.malformed (.illegalRational r), rfl⟩
+  | stateNonneg => exact ⟨.malformed .stateNonneg, rfl⟩
+  | unknownExecutableField f => exact ⟨.malformed (.unknownExecutableField f), rfl⟩
+lean/DefiKernel/Certificates/Decode.lean 56 
+def scanLexicalFuel (fuel : Nat) (chars : List Char)
+    (depth : Nat) (scopes : List LexScope) (currentNum : List Char) (foundWhitespace : Bool) :
+    Except DecodeFailure Unit :=
+  match fuel with
+  | 0 => .error (.resourceLimit "maxBytes")
+  | fuel' + 1 =>
+    match chars with
+    | [] =>
+      match scanLexicalCheckNum currentNum with
+      | .error e => .error e
+      | .ok () =>
+        if foundWhitespace then .error .noncanonicalWhitespace else .ok ()
+    | c :: rest =>
+      if c == '"' then
+        match scanLexicalCheckNum currentNum with
+        | .error e => .error e
+        | .ok () =>
+          let isParsingKey : Bool :=
+            match scopes with
+            | LexScope.inObj _ true :: _ => true
+            | _ => false
+          if isParsingKey then
+            match lexString [] rest with
+            | .ok (s, rest') =>
+              match scopes with
+              | LexScope.inObj keys _ :: restScopes =>
+                if keys.contains s then
+                  .error (.duplicateKey s)
+                else
+                  scanLexicalFuel fuel' rest' depth (LexScope.inObj (s :: keys) false :: restScopes) [] foundWhitespace
+              | _ => scanLexicalFuel fuel' rest' depth scopes [] foundWhitespace
+            | .error _ =>
+              match skipStringChars rest with
+              | some rest' =>
+                match scopes with
+                | LexScope.inObj keys _ :: restScopes =>
+                  scanLexicalFuel fuel' rest' depth (LexScope.inObj keys false :: restScopes) [] foundWhitespace
+                | _ => scanLexicalFuel fuel' rest' depth scopes [] foundWhitespace
+              | none => if foundWhitespace then .error .noncanonicalWhitespace else .error .notJsonObject
+          else
+            match lexString [] rest with
+            | .ok (_, rest') =>
+              scanLexicalFuel fuel' rest' depth scopes [] foundWhitespace
+            | .error _ =>
+              match skipStringChars rest with
+              | some rest' =>
+                scanLexicalFuel fuel' rest' depth scopes [] foundWhitespace
+              | none => if foundWhitespace then .error .noncanonicalWhitespace else .error .notJsonObject
+      else if c == '{' then
+        let d := depth + 1
+        if d > 64 then .error (.resourceLimit "maxDepth")
+        else scanLexicalFuel fuel' rest d (LexScope.inObj [] true :: scopes) [] foundWhitespace
+      else if c == '}' then
+        match scanLexicalCheckNum currentNum with
+        | .error e => .error e
+        | .ok () =>
+          let d := if depth > 0 then depth - 1 else 0
+          let sc := if !scopes.isEmpty then scopes.tail! else []
+          scanLexicalFuel fuel' rest d sc [] foundWhitespace
+      else if c == '[' then
+        let d := depth + 1
+        if d > 64 then .error (.resourceLimit "maxDepth")
+        else scanLexicalFuel fuel' rest d (LexScope.inArr 0 :: scopes) [] foundWhitespace
+      else if c == ']' then
+        match scanLexicalCheckNum currentNum with
+lean/DefiKernel/Certificates/Decode.lean 153 
+def scanLexical (bytes : ByteArray) : Except DecodeFailure Unit := do
+  if bytes.size > 1048576 then
+    throw (.resourceLimit "maxBytes")
+  let some str := String.fromUTF8? bytes
+    | throw (.jsonType "utf8")
+  let chars := str.toList
+  let trimmed := chars.filter (!isSpace ·)
+  if trimmed.isEmpty then
+    throw .emptyDocument
+  if trimmed.head! != '{' then
+    throw .notJsonObject
+  scanLexicalFuel (chars.length + 1) chars 0 [] [] false
+
+def checkObjectKeys (fields : List (String × Json)) (allowed : List String) : Except DecodeFailure Unit := do
+  for (k, _) in fields do
+    if !allowed.contains k then
+      throw (.unknownExecutableField k)
+
+def checkExactObjectKeys (fields : List (String × Json)) (exactKeys : List String) : Except DecodeFailure Unit := do
+  for (k, _) in fields do
+    if !exactKeys.contains k then
+      throw (.unknownExecutableField k)
+  for k in exactKeys do
+    if !fields.any (fun (f, _) => f == k) then
+      throw (.missingField k)
+
+def getField? (fields : List (String × Json)) (name : String) : Option Json :=
+  (fields.find? (fun (k, _) => k == name)).map Prod.snd
+
+def getField (fields : List (String × Json)) (name : String) : Except DecodeFailure Json :=
+  match getField? fields name with
+  | some val => .ok val
+  | none => .error (.missingField name)
+
+def decodeParty (j : Json) : Except DecodeFailure Party := do
+  match j with
+  | .str "alice" => .ok .alice
+  | .str "bob" => .ok .bob
+  | .str "vault" => .ok .vault
+  | .str "pool" => .ok .pool
+  | .str s => .error (.unknownIdentifier s)
+  | _ => .error (.jsonType "party")
+
+def decodeAsset (j : Json) : Except DecodeFailure Asset := do
+  match j with
+  | .str "usd" => .ok .usd
+  | .str "share" => .ok .share
+  | .str "collateral" => .ok .collateral
+  | .str "debt" => .ok .debt
+  | .str s => .error (.unknownIdentifier s)
+  | _ => .error (.jsonType "asset")
+
+def decodeDomain (j : Json) : Except DecodeFailure Domain := do
+  match j with
+  | .str "main" => .ok .main
+  | .str "other" => .ok .other
+  | .str s => .error (.unknownIdentifier s)
+  | _ => .error (.jsonType "domain")
+
+def decodeRat (j : Json) : Except DecodeFailure RatEnc := do
+  match j with
+  | .obj fields =>
+    checkExactObjectKeys fields.toList ["num", "den"]
+    let numJ ← getField fields.toList "num"
+    let denJ ← getField fields.toList "den"
+review/semantic-kernel/certificates/p19/implementation/grok-20260919-r3/MANIFEST.json {
+  "schema": "defiformal-p19-manifest/v2",
+  "attempt": "grok-20260919-r3",
+  "timestamp_utc": "2026-09-19T18:50:59.285798+00:00",
+  "git_head": "38de83c58e3f9315bf400807591d538d7565152e",
+  "status": "PARTIAL",
+  "disposition": "USABLE",
+  "author": "grok-4.6",
+  "auditor": "pending gpt-6-astra medium",
+  "self_excluded": true,
+  "seal_script": "seal-r3.py",
+  "recorded_commands_finished_before_seal": true,
+  "strongest_compiled_theorem": {
+    "name": "DefiKernel.Certificates.encode_decode_roundtrip",
+    "signature": "theorem encode_decode_roundtrip : EncodeDecodeRoundtripStatement",
+    "statement": "\u2200 (ir : DecodedIR), StructurallyAdmissibleIR ir \u2192 decodeBytes (encodeModule ir) = .ok ir",
+    "unproved_hypotheses": []
+  },
+  "files": [
+    {
+      "path": ".commands.lock",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "REPORT.md",
+      "sha256": "6445ddf4f068d19ab09d93abd11579d36af68979d9c4a362ab76640039295233",
+      "bytes": 5334
+    },
+    {
+      "path": "commands.json",
+      "sha256": "34ca6e4b33636dba3cc9e2a6bc3a61b8b788009ef43fdc8318878f335837eaef",
+      "bytes": 44287
+    },
+    {
+      "path": "failed-attempts/README.md",
+      "sha256": "11a764b9333ffacb9584de6ad975b1f53fd319068bee223b6db4e917799e8546",
+      "bytes": 596
+    },
+    {
+      "path": "failed-attempts/helpers-encodelist-v1.stderr",
+      "sha256": "c4a27db198c4d8632369ee6102944ef46e83c20d685f7c17a6aaff9cfcfc710f",
+      "bytes": 20
+    },
+    {
+      "path": "logs/axiom-scan-inline/command.json",
+      "sha256": "3d526f27b8eea7ca6a339d800c31b0e9b02fa56b4556a0947d954944f0dba8f9",
+      "bytes": 5897
+    },
+    {
+      "path": "logs/axiom-scan-inline/pid.json",
+      "sha256": "cb9e833c63c833e36e03679a2cfa39e3325eed7c251d848e1a045cbad49be1fe",
+      "bytes": 75
+    },
+    {
+      "path": "logs/axiom-scan-inline/started.json",
+      "sha256": "bede88d16d365aa0b9b9273aa3ffe6de0aeb7c5630d7640f87f6d39f4c9820f2",
+      "bytes": 3462
+    },
+    {
+      "path": "logs/axiom-scan-inline/stderr",
+      "sha256": "de42db996c15a20686a481075d81697747a5f1182463b168950d29a5a35a086b",
+      "bytes": 1883
+    },
+    {
+      "path": "logs/axiom-scan-inline/stdout",
+      "sha256": "dddefa25a4e28d2c4cde6f9a1aab58dded7a02ea2f0b98b7a3652454db41cd9a",
+      "bytes": 1060
+    },
+    {
+      "path": "logs/build-lexical/command.json",
+      "sha256": "1cbacfd57673670dd49ded20b0286a325d177c8b71eee7006528cbb7352e4661",
+      "bytes": 5196
+    },
+    {
+      "path": "logs/build-lexical/pid.json",
+      "sha256": "3104417b7d9eb22300d43ffebf481b5b937baed05c95dca4d7ce733f2151c42b",
+      "bytes": 75
+    },
+    {
+      "path": "logs/build-lexical/started.json",
+      "sha256": "555461475db88f846b8aa05bb445909e4dcf71cc30c1f4e9b7a759122ba62954",
+      "bytes": 2769
+    },
+    {
+      "path": "logs/build-lexical/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "logs/build-lexical/stdout",
+      "sha256": "78575f9543cd1e73423a7eca3f8b294df27ce8ff052b7eeb945472647666f986",
+      "bytes": 35118
+    },
+    {
+      "path": "logs/build-lexical-checkbytes/command.json",
+      "sha256": "ebe74d428cb33341c7717ab17756700716b0f3e70298e0618a3f8dccdc8338f5",
+      "bytes": 5229
+    },
+    {
+      "path": "logs/build-lexical-checkbytes/pid.json",
+      "sha256": "75236ff317901be9dbeecd77d81d105e1e073892ba843eb2b2ffc3286bead0ca",
+      "bytes": 75
+    },
+    {
+      "path": "logs/build-lexical-checkbytes/started.json",
+      "sha256": "1cae7cd4fe3998cb655b864aac4e21559b48856cf5dbe271ba1c1913de1e1493",
+      "bytes": 2780
+    },
+    {
+      "path": "logs/build-lexical-checkbytes/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "logs/build-lexical-checkbytes/stdout",
+      "sha256": "acc600c824ed40960175b33bc5d172e162ac3621bbb13c88e626c2db29bca121",
+      "bytes": 35118
+    },
+    {
+      "path": "logs/build-verify/command.json",
+      "sha256": "f439ebadff93df70f5865fc21ab55fc59f1c2dd0b9c78ea5b75612e28e6a0a04",
+      "bytes": 5192
+    },
+    {
+      "path": "logs/build-verify/pid.json",
+      "sha256": "c363fdad2fca6d02ad0791999d16bdce206fb6f14914e3cd524c5386bfe11d37",
+      "bytes": 75
+    },
+    {
+      "path": "logs/build-verify/started.json",
+      "sha256": "70bc6452f97693462a7994b27fc68f9cab5a94d499990c3d48e1635bee8e59b8",
+      "bytes": 2767
+    },
+    {
+      "path": "logs/build-verify/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "logs/build-verify/stdout",
+      "sha256": "0bd46a7346c32983e78d33aa600c739b655e73d00a0dc098a695614ea5dd1333",
+      "bytes": 1416187
+    },
+    {
+      "path": "logs/build-verify-final/command.json",
+      "sha256": "9872cd67953611bace9ac9bf2a4f835788553efc119f47f46acaa7b3a76d4bf9",
+      "bytes": 5210
+    },
+    {
+      "path": "logs/build-verify-final/pid.json",
+      "sha256": "bbb8b7e5128e48ecb470a96e08b72bd5ab0269ee66146d1d717e09521da54ee5",
+      "bytes": 75
+    },
+    {
+      "path": "logs/build-verify-final/started.json",
+      "sha256": "04d19950a7ef59d50d0b05c5524f9f06dc8c83712ad454d427fd28567149ec98",
+      "bytes": 2773
+    },
+    {
+      "path": "logs/build-verify-final/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "logs/build-verify-final/stdout",
+      "sha256": "99cf6eaefc51d2e797080c07786be8420284ceb6e74401e804096cc4722b2faf",
+      "bytes": 1417030
+    },
+    {
+      "path": "logs/helpers-encodelist-v1/command.json",
+      "sha256": "9f613b2239a445d1204cd78b5f4e9168cc35c016a04cdadbf1d65ecaf536db7a",
+      "bytes": 5220
+    },
+    {
+      "path": "logs/helpers-encodelist-v1/pid.json",
+      "sha256": "80a12474682d1b1ba755ba64a99bf75a95127d1fa99d5c855a5b12a8fb37433e",
+      "bytes": 75
+    },
+    {
+      "path": "logs/helpers-encodelist-v1/started.json",
+      "sha256": "18eaa00aee5a5a9071b0eb56d5e61f01fc3834b50ae52efdce6ecef7e884ab40",
+      "bytes": 2777
+    },
+    {
+      "path": "logs/helpers-encodelist-v1/stderr",
+      "sha256": "c4a27db198c4d8632369ee6102944ef46e83c20d685f7c17a6aaff9cfcfc710f",
+      "bytes": 20
+    },
+    {
+      "path": "logs/helpers-encodelist-v1/stdout",
+      "sha256": "77eba9e65de69b090799eaf8dcf954d89f5e6fec5b8c34a00317fb1e3275f0f6",
+      "bytes": 40117
+    },
+    {
+      "path": "logs/print-axioms-final/command.json",
+      "sha256": "56e2ec967d7823fdef2659c99ef20ddcadf2543502ed94e2eb1c1fb1f1a2392b",
+      "bytes": 5647
+    },
+    {
+      "path": "logs/print-axioms-final/pid.json",
+      "sha256": "6ea4393a9d15170b7d01bf6c0a1e90bced5cd0b8f8c22ffa404a67a80d8ff00c",
+      "bytes": 75
+    },
+    {
+      "path": "logs/print-axioms-final/started.json",
+      "sha256": "bef1597a54d8a6b2a3b706535af0fcaa1e379cf6848a92574870e678c84ea43d",
+      "bytes": 3210
+    },
+    {
+      "path": "logs/print-axioms-final/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "logs/print-axioms-final/stdout",
+      "sha256": "8f4cbc10da24b38e6320368026374721aba6ecf45498281fd4de6de8fdb49570",
+      "bytes": 12239
+    },
+    {
+      "path": "logs/print-axioms-lexical/command.json",
+      "sha256": "e7a59169b273e426cded8cd4ef3ac66d876101c164dba4652065a3f78c31f086",
+      "bytes": 5653
+    },
+    {
+      "path": "logs/print-axioms-lexical/pid.json",
+      "sha256": "5b0c8c73771c075e06ee1aab6b6abf60ba8520f5b90d8d041d0900aaa9e51e09",
+      "bytes": 75
+    },
+    {
+      "path": "logs/print-axioms-lexical/started.json",
+      "sha256": "bf74858ee1457bf50ab07e96341efc8812bf326b89457d4bd9a26ca8680796ac",
+      "bytes": 3212
+    },
+    {
+      "path": "logs/print-axioms-lexical/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "logs/print-axioms-lexical/stdout",
+      "sha256": "d2630ace09c6d27d46bc1c05719f5bab4a5d1b5a9163a79819bbed2d7e37ef21",
+      "bytes": 11788
+    },
+    {
+      "path": "probes/PrintAxioms.lean",
+      "sha256": "7d66cb9402ff421717c2cc4f5590d251cdad15d8d5c97c146dbb06b1cc5527c9",
+      "bytes": 7527
+    },
+    {
+      "path": "seal-r3.py",
+      "sha256": "8a144c99c5629717fc5072e9b2eb37bf8e27d19de2ee344d77f946f41692cc3e",
+      "bytes": 14197
+    },
+    {
+      "path": "source-manifest.json",
+      "sha256": "bbaa96095a719f3ed9dfaef1398789add336f1c01e05d510d3cc63b9797b2185",
+      "bytes": 3792
+    },
+    {
+      "path": "verdict.json",
+      "sha256": "85608e49fdb26df6831977dbb90321a96160f81be66631e74bdec9fc82c22d29",
+      "bytes": 3803
+    },
+    {
+      "path": "lean/DefiKernel/Certificates/CompositionDepth.lean",
+      "sha256": "7fc24af43b856514e97a60f721597ff04cad3e8a5477d65b303660837e097168",
+      "bytes": 17383
+    },
+    {
+      "path": "lean/DefiKernel/Certificates/Lexical.lean",
+      "sha256": "870af1b21dff6c1b4a9bbab093c01d10e7bedf60bba43c1317c6f03507e223c8",
+      "bytes": 57560
+    },
+    {
+      "path": "lean/DefiKernel/Certificates/Verify.lean",
+      "sha256": "f6b0dc7d69d95d2e98417a7b5025828ff477a2d83eafdf37e808ff043f13e94e",
+      "bytes": 699
+    },
+    {
+      "path": "lean/DefiKernel/Certificates/DepthBridge.lean",
+      "sha256": "bd7e639f0cfb0f03504d0b7399c07f43644767af5495bf39a3c93841f6d0e365",
+      "bytes": 13717
+    },
+    {
+      "path": "lean/DefiKernel/Certificates/IRDepth.lean",
+      "sha256": "ae245b2f2bf92697b0a25551638d87a8bd641f0a9a3efe7e373fe89afb8aa0c8",
+      "bytes": 18351
+    },
+    {
+      "path": "lean/DefiKernel/Certificates/Roundtrip.lean",
+      "sha256": "a12a00feade30877cc1bc18e06caf68f9e59cb47e49195a3e788c59bfbff94b1",
+      "bytes": 158982
+    }
+  ]
+}
+
+review/semantic-kernel/certificates/p19/implementation/grok-20260919-r3/REPORT.md # P19 grok-20260919-r3: universal scanner success and codec roundtrip
+
+- **Attempt**: `grok-20260919-r3`
+- **Author**: Grok 4.6 (native implementation)
+- **Checker**: pending independent GPT-6 Astra medium
+- **Disposition**: `PARTIAL`
+- **Build**: `DefiKernel.Certificates.Verify` compiled after Lexical checker correspondence; 943 jobs, forbidden axioms 0
+
+## What this round proved
+
+R2 left `h_lex` open on nonempty `encodeList` / `encodeObj`. This round proves a structural `scanLexicalFuel` continuation for every `TreeJson.Valid` tree at depth `≤ 64` and array length `≤ 4096`, then specializes the wrapper `scanLexical` to production `encodeModule`. Unchanged `StructurallyAdmissibleIR` already supplies `SerializedByteBound` (1 MiB), `WholeDocumentDepthBounded`, `TreeJson.Valid`, and an opening object brace. The existing `EncodeDecodeRoundtripStatement` therefore holds. Checker routing `checkBytes (encodeModule ir) = checkIR ir` follows.
+
+Core scanner theorems:
+
+```lean
+theorem scanLexicalFuel_encode (t : TreeJson) (fuel : Nat) (rest : List Char)
+    (depth : Nat) (scopes : List LexScope)
+    (h_not_key : notExpectKey scopes)
+    (h_depth : depth + TreeJson.depth t ≤ 64)
+    (h_valid : TreeJson.Valid t) :
+    scanLexicalFuel (fuel + scanCost t) ((TreeJson.encode t).toList ++ rest)
+        depth scopes [] false =
+      scanLexicalFuel fuel rest depth scopes (numBuf t) false
+
+theorem scanLexical_encodeModule (ir : DecodedIR)
+    (h_adm : StructurallyAdmissibleIR ir) :
+    scanLexical (encodeModule ir) = .ok ()
+```
+
+## Strongest new theorem
+
+```lean
+theorem encode_decode_roundtrip : EncodeDecodeRoundtripStatement
+```
+
+which is the existing statement
+
+```lean
+∀ (ir : DecodedIR), StructurallyAdmissibleIR ir →
+  decodeBytes (encodeModule ir) = .ok ir
+```
+
+No extra `h_lex` or `h_depth` hypothesis. Admission is unchanged `StructurallyAdmissibleIR`. Axioms: `propext`, `Classical.choice`, `Quot.sound` only.
+
+Checker correspondence:
+
+```lean
+theorem checkBytes_encodeModule (ir : DecodedIR)
+    (h_adm : StructurallyAdmissibleIR ir) :
+    checkBytes (encodeModule ir) = checkIR ir
+```
+
+with typed / step / run specializations to `checkTyped` / `checkStep` / `checkRun`.
+
+## Still open
+
+1. **P19 campaigns / host / schema overlay**: 99 scenarios and 16 mutants were not rerun (unchanged 54/21/7 campaigns forbidden). Overlay, schema-hash, expectedIR, and trusted-host gates were not newly verified this round.
+2. **P20 21.2 / 21.3**: executable `Parallel.admit` / `checkCompatibility` on recomputed footprints, and Lean-checked library instantiation, remain.
+3. **P19/P20 acceptance**: not claimed. Independent Astra review of this candidate is pending. This report does not accept the candidate.
+
+## Source contract
+
+- R1 `DepthBridge.lean` SHA `bd7e639f0cfb0f03504d0b7399c07f43644767af5495bf39a3c93841f6d0e365` preserved.
+- R1 `IRDepth.lean` SHA `ae245b2f2bf92697b0a25551638d87a8bd641f0a9a3efe7e373fe89afb8aa0c8` preserved.
+- Historical Roundtrip 246 declarations preserved. Roundtrip SHA `a12a00feade30877cc1bc18e06caf68f9e59cb47e49195a3e788c59bfbff94b1` unchanged.
+- CompositionDepth SHA `7fc24af43b856514e97a60f721597ff04cad3e8a5477d65b303660837e097168` unchanged from R2.
+- Production edits: `lean/DefiKernel/Certificates/Lexical.lean` only. `Verify.lean` already imported Lexical in R2.
+- No existing theorem statements, signatures, or docstrings changed.
+- No `sorry`, `native_decide`, custom axioms, `h_depth`/`h_lex` added to admission, or alternate codec.
+
+## New compiled declarations
+
+Lexical: 113 top-level `def`/`theorem` matches plus mutual `scanCost`/`scanCostList`/`scanCostObj` (116 declarations). R2 had 60 top-level plus 3 mutual (63). This round added 53 Lexical declarations. CompositionDepth remains 15 theorems, unchanged.
+
+Explicit `#print axioms` on 121 fully qualified names (every Lexical declaration plus five CompositionDepth theorems) reports only `propext`, `Classical.choice`, `Quot.sound`, or no axioms. Zero unknown identifiers.
+
+## Verification recorded this round
+
+| Check | Result |
+|---|---|
+| `helpers-encodelist-v1` first encodeList compile | exit 1; Disjoint implicits and fuel association; preserved |
+| `lake build DefiKernel.Certificates.Lexical` | exit 0, 938 jobs |
+| `lake build DefiKernel.Certificates.Verify` | exit 0, 943 jobs, forbidden=0 |
+| `#print axioms` Lexical snapshot before checker corollaries | exit 0, 117/117 names, standard axioms |
+| Inline axiom helper on CompositionDepth and Lexical | CompositionDepth 15/15 standard; Lexical unresolved without namespace (exit 1; same helper coverage failure as R2) |
+| `lake build DefiKernel.Certificates.Lexical` after `checkBytes_encodeModule` | exit 0, 938 jobs |
+| `lake build DefiKernel.Certificates.Verify` final | exit 0, 943 jobs, forbidden=0, 287/287 theorems, 408/408 supplemental |
+| `#print axioms` final 121 fully qualified names | exit 0, 121/121, standard axioms only |
+
+Toolchain remains Lean/mathlib `v4.33.0-rc2`. No `lake update`.
+
+Root recorder `record-author-r3-command.py` writes evidence under `grok-20260919-r3`. R1 and R2 evidence were not rewritten.
+
+## Evidence seal
+
+All recorded compiler/probe commands finished before this report. REPORT, verdict, source-manifest, and MANIFEST were written by an unrecorded `seal-r3.py` after those commands. MANIFEST is self-excluded.
+

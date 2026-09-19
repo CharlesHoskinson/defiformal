@@ -1,0 +1,23 @@
+def DefiKernel.Certificates.EncodeDecodeRoundtripStatement : Prop :=
+∀ (ir : DecodedIR), StructurallyAdmissibleIR ir → decodeBytes (encodeModule ir) = Except.ok ir
+theorem DefiKernel.Certificates.encode_decode_roundtrip : EncodeDecodeRoundtripStatement :=
+fun ir h_adm => decodeBytes_encodeModule_of_lex ir h_adm (scanLexical_encodeModule ir h_adm)
+theorem DefiKernel.Certificates.scanLexical_encodeModule : ∀ (ir : DecodedIR),
+  StructurallyAdmissibleIR ir → scanLexical (encodeModule ir) = Except.ok () :=
+fun ir h_adm =>
+  have h_tree := moduleToTreeJson_encode ir h_adm;
+  have h_valid := moduleToTreeJson_valid ir h_adm;
+  have h_depth := moduleToTreeJson_depth_le_64 ir h_adm;
+  have h_size :=
+    Eq.mpr (id (congrArg (fun _a => _a.toUTF8.size ≤ 1048576) h_tree))
+      (Eq.mpr (id (congrArg (fun _a => _a.size ≤ 1048576) (Eq.symm (encodeModule_eq_toUTF8 ir)))) h_adm.left.left);
+  Eq.mpr (id (congrArg (fun _a => scanLexical _a = Except.ok ()) (encodeModule_eq_toUTF8 ir)))
+    (Eq.mpr (id (congrArg (fun _a => scanLexical _a.toUTF8 = Except.ok ()) (Eq.symm h_tree)))
+      (Exists.casesOn (moduleToTreeJson_is_obj ir h_adm) fun kvs hkvs =>
+        Eq.mpr (id (congrArg (fun _a => scanLexical _a.encode.toUTF8 = Except.ok ()) hkvs))
+          (scanLexical_encode_tree_obj kvs (Eq.mp (congrArg (fun _a => _a.Valid) hkvs) h_valid)
+            (Eq.mp (congrArg (fun _a => _a.depth ≤ 64) hkvs) h_depth)
+            (Eq.mp (congrArg (fun _a => _a.encode.toUTF8.size ≤ 1048576) hkvs) h_size))))
+theorem DefiKernel.Certificates.checkBytes_encodeModule : ∀ (ir : DecodedIR),
+  StructurallyAdmissibleIR ir → checkBytes (encodeModule ir) = checkIR ir :=
+fun ir h_adm => checkBytes_ok (encodeModule ir) ir (encode_decode_roundtrip ir h_adm)

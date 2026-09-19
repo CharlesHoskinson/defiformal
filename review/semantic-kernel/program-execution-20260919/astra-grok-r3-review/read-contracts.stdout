@@ -1,0 +1,475 @@
+lean/DefiKernel/Certificates/Verify.lean:15:/-! Nonempty axiom audits for Certificates, Typed, and Composition scopes. -/
+lean/DefiKernel/Certificates/Verify.lean-16-
+lean/DefiKernel/Certificates/Verify.lean:17:#audit_axioms DefiKernel.Certificates
+lean/DefiKernel/Certificates/Verify.lean:18:#audit_axioms DefiKernel.Typed
+lean/DefiKernel/Certificates/Verify.lean:19:#audit_axioms DefiKernel.Composition
+--
+lean/DefiKernel/Certificates/Roundtrip.lean:588:    ("audit_record", match pin.audit_record with | some r => TreeJson.str r | none => TreeJson.null)
+lean/DefiKernel/Certificates/Roundtrip.lean-589-  ]
+lean/DefiKernel/Certificates/Roundtrip.lean-590-
+lean/DefiKernel/Certificates/Roundtrip.lean-591-theorem sourcePinToTreeJson_toJson (pin : SourcePinEnc) :
+lean/DefiKernel/Certificates/Roundtrip.lean-592-    (sourcePinToTreeJson pin).toJson = sourcePinToJson pin := by
+lean/DefiKernel/Certificates/Roundtrip.lean-593-  dsimp [sourcePinToTreeJson, sourcePinToJson, TreeJson.toJson, TreeJson.toJsonObj]
+lean/DefiKernel/Certificates/Roundtrip.lean:594:  cases pin.compiler_record <;> cases pin.audit_record <;> rfl
+lean/DefiKernel/Certificates/Roundtrip.lean-595-
+lean/DefiKernel/Certificates/Roundtrip.lean-596-theorem sourcePinToTreeJson_encode (pin : SourcePinEnc) :
+lean/DefiKernel/Certificates/Roundtrip.lean-597-    (sourcePinToTreeJson pin).encode = encodeSourcePin pin := by
+lean/DefiKernel/Certificates/Roundtrip.lean-598-  dsimp [sourcePinToTreeJson, encodeSourcePin]
+lean/DefiKernel/Certificates/Roundtrip.lean-599-  rw [encode_obj_eq_jsonObj]
+lean/DefiKernel/Certificates/Roundtrip.lean-600-  dsimp [List.map, TreeJson.encode]
+lean/DefiKernel/Certificates/Roundtrip.lean-601-  have h_git : escapeTreeString pin.git = escapeJsonString pin.git := escapeTreeString_eq_escapeJsonString pin.git
+lean/DefiKernel/Certificates/Roundtrip.lean-602-  have h_tc : escapeTreeString pin.lean_toolchain = escapeJsonString pin.lean_toolchain := escapeTreeString_eq_escapeJsonString pin.lean_toolchain
+lean/DefiKernel/Certificates/Roundtrip.lean-603-  have h_ml : escapeTreeString pin.mathlib_rev = escapeJsonString pin.mathlib_rev := escapeTreeString_eq_escapeJsonString pin.mathlib_rev
+lean/DefiKernel/Certificates/Roundtrip.lean-604-  have h_cc : escapeTreeString pin.checker_candidate = escapeJsonString pin.checker_candidate := escapeTreeString_eq_escapeJsonString pin.checker_candidate
+lean/DefiKernel/Certificates/Roundtrip.lean-605-  rw [h_git, h_tc, h_ml, h_cc]
+lean/DefiKernel/Certificates/Roundtrip.lean:606:  cases pin.compiler_record <;> cases pin.audit_record <;> dsimp [TreeJson.encode] <;> try rw [escapeTreeString_eq_escapeJsonString] <;> rfl
+lean/DefiKernel/Certificates/Roundtrip.lean-607-
+lean/DefiKernel/Certificates/Roundtrip.lean-608-theorem sourcePinToTreeJson_valid (pin : SourcePinEnc) :
+lean/DefiKernel/Certificates/Roundtrip.lean-609-    TreeJson.Valid (sourcePinToTreeJson pin) := by
+lean/DefiKernel/Certificates/Roundtrip.lean-610-  dsimp [sourcePinToTreeJson, TreeJson.Valid, TreeJson.ValidObj]
+lean/DefiKernel/Certificates/Roundtrip.lean-611-  simp only [List.map_cons, List.map_nil]
+lean/DefiKernel/Certificates/Roundtrip.lean-612-  refine ⟨by decide, trivial, trivial, trivial, trivial, ?_, ?_, trivial⟩
+lean/DefiKernel/Certificates/Roundtrip.lean-613-  · cases pin.compiler_record <;> trivial
+lean/DefiKernel/Certificates/Roundtrip.lean:614:  · cases pin.audit_record <;> trivial
+lean/DefiKernel/Certificates/Roundtrip.lean-615-
+lean/DefiKernel/Certificates/Roundtrip.lean-616-def typesEnumToTreeJson (t : TypesEnumEnc) : TreeJson :=
+lean/DefiKernel/Certificates/Roundtrip.lean-617-  TreeJson.obj [
+lean/DefiKernel/Certificates/Roundtrip.lean-618-    ("parties", TreeJson.arr (t.parties.map partyToTreeJson)),
+lean/DefiKernel/Certificates/Roundtrip.lean-619-    ("assets", TreeJson.arr (t.assets.map assetToTreeJson)),
+lean/DefiKernel/Certificates/Roundtrip.lean-620-    ("domains", TreeJson.arr (t.domains.map domainToTreeJson))
+lean/DefiKernel/Certificates/Roundtrip.lean-621-  ]
+lean/DefiKernel/Certificates/Roundtrip.lean-622-
+lean/DefiKernel/Certificates/Roundtrip.lean-623-theorem typesEnumToTreeJson_toJson (t : TypesEnumEnc) :
+lean/DefiKernel/Certificates/Roundtrip.lean-624-    (typesEnumToTreeJson t).toJson = typesEnumToJson t := by
+lean/DefiKernel/Certificates/Roundtrip.lean-625-  dsimp [typesEnumToTreeJson, typesEnumToJson, TreeJson.toJson, TreeJson.toJsonObj]
+lean/DefiKernel/Certificates/Roundtrip.lean-626-  rw [toJsonList_map, toJsonList_map, toJsonList_map]
+lean/DefiKernel/Certificates/Roundtrip.lean-627-  have h_ps : (t.parties.map (fun x => (partyToTreeJson x).toJson)) = t.parties.map partyToJson := by
+lean/DefiKernel/Certificates/Roundtrip.lean-628-    simp only [List.map_inj_left]; intro p _; exact partyToTreeJson_toJson p
+lean/DefiKernel/Certificates/Roundtrip.lean-629-  have h_as : (t.assets.map (fun x => (assetToTreeJson x).toJson)) = t.assets.map assetToJson := by
+lean/DefiKernel/Certificates/Roundtrip.lean-630-    simp only [List.map_inj_left]; intro a _; exact assetToTreeJson_toJson a
+lean/DefiKernel/Certificates/Roundtrip.lean-631-  have h_ds : (t.domains.map (fun x => (domainToTreeJson x).toJson)) = t.domains.map domainToJson := by
+lean/DefiKernel/Certificates/Roundtrip.lean-632-    simp only [List.map_inj_left]; intro d _; exact domainToTreeJson_toJson d
+lean/DefiKernel/Certificates/Roundtrip.lean-633-  rw [h_ps, h_as, h_ds]
+lean/DefiKernel/Certificates/Roundtrip.lean-634-
+lean/DefiKernel/Certificates/Roundtrip.lean-635-theorem typesEnumToTreeJson_encode (t : TypesEnumEnc) :
+lean/DefiKernel/Certificates/Roundtrip.lean-636-    (typesEnumToTreeJson t).encode = encodeTypesEnum t := by
+lean/DefiKernel/Certificates/Roundtrip.lean-637-  dsimp [typesEnumToTreeJson, encodeTypesEnum]
+lean/DefiKernel/Certificates/Roundtrip.lean-638-  rw [encode_obj_eq_jsonObj]
+lean/DefiKernel/Certificates/Roundtrip.lean-639-  dsimp [List.map]
+lean/DefiKernel/Certificates/Roundtrip.lean-640-  rw [encode_arr_map, encode_arr_map, encode_arr_map]
+lean/DefiKernel/Certificates/Roundtrip.lean-641-  have h_ps : (t.parties.map (fun x => (partyToTreeJson x).encode)) = t.parties.map encodeParty := by
+lean/DefiKernel/Certificates/Roundtrip.lean-642-    simp only [List.map_inj_left]; intro p _; exact partyToTreeJson_encode p
+lean/DefiKernel/Certificates/Roundtrip.lean-643-  have h_as : (t.assets.map (fun x => (assetToTreeJson x).encode)) = t.assets.map encodeAsset := by
+lean/DefiKernel/Certificates/Roundtrip.lean-644-    simp only [List.map_inj_left]; intro a _; exact assetToTreeJson_encode a
+lean/DefiKernel/Certificates/Roundtrip.lean-645-  have h_ds : (t.domains.map (fun x => (domainToTreeJson x).encode)) = t.domains.map encodeDomain := by
+lean/DefiKernel/Certificates/Roundtrip.lean-646-    simp only [List.map_inj_left]; intro d _; exact domainToTreeJson_encode d
+lean/DefiKernel/Certificates/Roundtrip.lean-647-  rw [h_ps, h_as, h_ds]
+lean/DefiKernel/Certificates/Roundtrip.lean-648-
+lean/DefiKernel/Certificates/Roundtrip.lean-649-theorem typesEnumToTreeJson_valid (t : TypesEnumEnc)
+--
+lean/DefiKernel/Certificates/Roundtrip.lean:718:    ("audit_roots", TreeJson.arr (env.audit_roots.map TreeJson.str)),
+lean/DefiKernel/Certificates/Roundtrip.lean-719-    ("types", typesEnumToTreeJson env.types),
+lean/DefiKernel/Certificates/Roundtrip.lean-720-    ("assumptions", TreeJson.arr (env.assumptions.map TreeJson.str)),
+lean/DefiKernel/Certificates/Roundtrip.lean-721-    ("invariants", TreeJson.arr (env.invariants.map TreeJson.str)),
+lean/DefiKernel/Certificates/Roundtrip.lean-722-    ("libraries", TreeJson.arr (env.libraries.map libraryRefToTreeJson)),
+lean/DefiKernel/Certificates/Roundtrip.lean-723-    ("source_map", sourceMapToTreeJson env.source_map),
+lean/DefiKernel/Certificates/Roundtrip.lean-724-    ("payload", payload),
+lean/DefiKernel/Certificates/Roundtrip.lean-725-    ("claimed_judgments", TreeJson.arr (env.claimed_judgments.map TreeJson.str)),
+lean/DefiKernel/Certificates/Roundtrip.lean-726-    ("claimed_next_state", match env.claimed_next_state with | some w => worldToTreeJson w | none => TreeJson.null),
+lean/DefiKernel/Certificates/Roundtrip.lean-727-    ("require_library_discharge", TreeJson.bool env.require_library_discharge),
+lean/DefiKernel/Certificates/Roundtrip.lean-728-    ("require_invariant_discharge", TreeJson.bool env.require_invariant_discharge)
+lean/DefiKernel/Certificates/Roundtrip.lean-729-  ]
+lean/DefiKernel/Certificates/Roundtrip.lean-730-
+lean/DefiKernel/Certificates/Roundtrip.lean-731-theorem envelopeToTreeJson_encode (env : EnvelopeEnc) (payload : TreeJson)
+lean/DefiKernel/Certificates/Roundtrip.lean-732-    (h_sm : SourceMapSorted env.source_map) :
+lean/DefiKernel/Certificates/Roundtrip.lean-733-    (envelopeToTreeJson env payload).encode = encodeEnvelope env payload.encode := by
+lean/DefiKernel/Certificates/Roundtrip.lean-734-  dsimp [envelopeToTreeJson, encodeEnvelope]
+lean/DefiKernel/Certificates/Roundtrip.lean-735-  rw [encode_obj_eq_jsonObj]
+lean/DefiKernel/Certificates/Roundtrip.lean-736-  dsimp [List.map]
+lean/DefiKernel/Certificates/Roundtrip.lean-737-  rw [encode_arr_str, encode_arr_str, encode_arr_str, encode_arr_str, encode_arr_map]
+lean/DefiKernel/Certificates/Roundtrip.lean-738-  have h_libs : (env.libraries.map (fun x => (libraryRefToTreeJson x).encode)) = env.libraries.map encodeLibraryRef := by
+lean/DefiKernel/Certificates/Roundtrip.lean-739-    simp only [List.map_inj_left]; intro lib _; exact libraryRefToTreeJson_encode lib
+lean/DefiKernel/Certificates/Roundtrip.lean-740-  rw [h_libs]
+lean/DefiKernel/Certificates/Roundtrip.lean-741-  rw [sourceMapToTreeJson_encode env.source_map h_sm]
+lean/DefiKernel/Certificates/Roundtrip.lean-742-  rw [sourcePinToTreeJson_encode, typesEnumToTreeJson_encode, natToTreeJson_encode]
+lean/DefiKernel/Certificates/Roundtrip.lean-743-  have h_mode : (TreeJson.str env.mode).encode = escapeJsonString env.mode := escapeTreeString_eq_escapeJsonString env.mode
+lean/DefiKernel/Certificates/Roundtrip.lean-744-  rw [h_mode]
+lean/DefiKernel/Certificates/Roundtrip.lean-745-  cases env.claimed_next_state with
+lean/DefiKernel/Certificates/Roundtrip.lean-746-  | none =>
+lean/DefiKernel/Certificates/Roundtrip.lean-747-    cases env.require_library_discharge <;> cases env.require_invariant_discharge <;> rfl
+lean/DefiKernel/Certificates/Roundtrip.lean-748-  | some w =>
+lean/DefiKernel/Certificates/Roundtrip.lean-749-    rw [worldToTreeJson_encode]
+lean/DefiKernel/Certificates/Roundtrip.lean-750-    cases env.require_library_discharge <;> cases env.require_invariant_discharge <;> rfl
+lean/DefiKernel/Certificates/Roundtrip.lean-751-
+lean/DefiKernel/Certificates/Roundtrip.lean-752-def cellDeltaToTreeJson (d : CellDeltaEnc) : TreeJson :=
+lean/DefiKernel/Certificates/Roundtrip.lean-753-  TreeJson.obj [
+--
+lean/DefiKernel/Certificates/Roundtrip.lean:1245:  | .audit _ => TreeJson.null
+lean/DefiKernel/Certificates/Roundtrip.lean-1246-  | .codec _ => TreeJson.null
+lean/DefiKernel/Certificates/Roundtrip.lean-1247-
+lean/DefiKernel/Certificates/Roundtrip.lean-1248-theorem moduleToTreeJson_encode (ir : DecodedIR) (h_adm : StructurallyAdmissibleIR ir) :
+lean/DefiKernel/Certificates/Roundtrip.lean-1249-    (moduleToTreeJson ir).encode = encodeModuleString ir := by
+lean/DefiKernel/Certificates/Roundtrip.lean-1250-  rcases h_adm with ⟨h_sup, h_can⟩
+lean/DefiKernel/Certificates/Roundtrip.lean-1251-  dsimp [SupportedIR] at h_sup
+lean/DefiKernel/Certificates/Roundtrip.lean-1252-  rcases h_sup with ⟨h_byte, h_depth, h_arr, h_ir_sup⟩
+lean/DefiKernel/Certificates/Roundtrip.lean-1253-  cases ir with
+lean/DefiKernel/Certificates/Roundtrip.lean-1254-  | execution ex =>
+lean/DefiKernel/Certificates/Roundtrip.lean-1255-    cases ex with
+lean/DefiKernel/Certificates/Roundtrip.lean-1256-    | typed env p =>
+lean/DefiKernel/Certificates/Roundtrip.lean-1257-      dsimp [moduleToTreeJson, encodeModuleString]
+lean/DefiKernel/Certificates/Roundtrip.lean-1258-      dsimp [CanonicalIR] at h_can
+lean/DefiKernel/Certificates/Roundtrip.lean-1259-      rcases h_can with ⟨h_sm, _⟩
+lean/DefiKernel/Certificates/Roundtrip.lean-1260-      rw [envelopeToTreeJson_encode env (typedExecutePayloadToTreeJson p) h_sm]
+lean/DefiKernel/Certificates/Roundtrip.lean-1261-      rw [typedExecutePayloadToTreeJson_encode]
+lean/DefiKernel/Certificates/Roundtrip.lean-1262-    | step env p =>
+lean/DefiKernel/Certificates/Roundtrip.lean-1263-      dsimp [moduleToTreeJson, encodeModuleString]
+lean/DefiKernel/Certificates/Roundtrip.lean-1264-      dsimp [CanonicalIR] at h_can
+lean/DefiKernel/Certificates/Roundtrip.lean-1265-      rcases h_can with ⟨h_sm, _, _, h_step_can, _⟩
+lean/DefiKernel/Certificates/Roundtrip.lean-1266-      rw [envelopeToTreeJson_encode env (compositionStepPayloadToTreeJson p) h_sm]
+lean/DefiKernel/Certificates/Roundtrip.lean-1267-      rw [compositionStepPayloadToTreeJson_encode p h_step_can]
+lean/DefiKernel/Certificates/Roundtrip.lean-1268-    | run env p =>
+lean/DefiKernel/Certificates/Roundtrip.lean-1269-      dsimp [moduleToTreeJson, encodeModuleString]
+lean/DefiKernel/Certificates/Roundtrip.lean-1270-      dsimp [CanonicalIR] at h_can
+lean/DefiKernel/Certificates/Roundtrip.lean-1271-      rcases h_can with ⟨h_sm, _, _, h_steps_can, _⟩
+lean/DefiKernel/Certificates/Roundtrip.lean-1272-      rw [envelopeToTreeJson_encode env (compositionRunPayloadToTreeJson p) h_sm]
+lean/DefiKernel/Certificates/Roundtrip.lean-1273-      rw [compositionRunPayloadToTreeJson_encode p h_steps_can]
+lean/DefiKernel/Certificates/Roundtrip.lean:1274:  | audit a =>
+lean/DefiKernel/Certificates/Roundtrip.lean-1275-    dsimp [CanonicalIR] at h_can
+lean/DefiKernel/Certificates/Roundtrip.lean-1276-  | codec doc =>
+lean/DefiKernel/Certificates/Roundtrip.lean-1277-    dsimp [CanonicalIR] at h_can
+lean/DefiKernel/Certificates/Roundtrip.lean-1278-
+lean/DefiKernel/Certificates/Roundtrip.lean-1279-theorem cellDeltaToTreeJson_toJson (d : CellDeltaEnc) :
+lean/DefiKernel/Certificates/Roundtrip.lean-1280-    (cellDeltaToTreeJson d).toJson = cellDeltaToJson d := by
+lean/DefiKernel/Certificates/Roundtrip.lean-1281-  dsimp [cellDeltaToTreeJson, cellDeltaToJson, TreeJson.toJson, TreeJson.toJsonObj]
+lean/DefiKernel/Certificates/Roundtrip.lean-1282-  rw [assetToTreeJson_toJson, cellRefToTreeJson_toJson, exprToTreeJson_toJson]
+lean/DefiKernel/Certificates/Roundtrip.lean-1283-
+lean/DefiKernel/Certificates/Roundtrip.lean-1284-theorem supplyDeltaToTreeJson_toJson (d : SupplyDeltaEnc) :
+lean/DefiKernel/Certificates/Roundtrip.lean-1285-    (supplyDeltaToTreeJson d).toJson = supplyDeltaToJson d := by
+lean/DefiKernel/Certificates/Roundtrip.lean-1286-  dsimp [supplyDeltaToTreeJson, supplyDeltaToJson, TreeJson.toJson, TreeJson.toJsonObj]
+lean/DefiKernel/Certificates/Roundtrip.lean-1287-  rw [domainToTreeJson_toJson, assetToTreeJson_toJson, exprToTreeJson_toJson]
+lean/DefiKernel/Certificates/Roundtrip.lean-1288-
+lean/DefiKernel/Certificates/Roundtrip.lean-1289-theorem envReadToTreeJson_toJson (e : EnvReadEnc) :
+lean/DefiKernel/Certificates/Roundtrip.lean-1290-    (envReadToTreeJson e).toJson = envReadToJson e := by
+lean/DefiKernel/Certificates/Roundtrip.lean-1291-  cases e with
+lean/DefiKernel/Certificates/Roundtrip.lean-1292-  | observation k =>
+lean/DefiKernel/Certificates/Roundtrip.lean-1293-    dsimp [envReadToTreeJson, envReadToJson, TreeJson.toJson, TreeJson.toJsonObj]
+lean/DefiKernel/Certificates/Roundtrip.lean-1294-    rw [observationKeyToTreeJson_toJson]
+lean/DefiKernel/Certificates/Roundtrip.lean-1295-  | currentTime =>
+lean/DefiKernel/Certificates/Roundtrip.lean-1296-    rfl
+lean/DefiKernel/Certificates/Roundtrip.lean-1297-
+lean/DefiKernel/Certificates/Roundtrip.lean-1298-theorem templateToTreeJson_toJson (t : TemplateEnc) :
+lean/DefiKernel/Certificates/Roundtrip.lean-1299-    (templateToTreeJson t).toJson = templateToJson t := by
+lean/DefiKernel/Certificates/Roundtrip.lean-1300-  dsimp [templateToTreeJson, templateToJson, TreeJson.toJson, TreeJson.toJsonObj]
+lean/DefiKernel/Certificates/Roundtrip.lean-1301-  rw [toJsonList_map, toJsonList_map, toJsonList_map, toJsonList_map, toJsonList_map, toJsonList_map]
+lean/DefiKernel/Certificates/Roundtrip.lean-1302-  have h_sig : (t.signature.map (fun x => (unitToTreeJson x).toJson)) = t.signature.map unitToJson := by
+lean/DefiKernel/Certificates/Roundtrip.lean-1303-    simp only [List.map_inj_left]; intro u _; exact unitToTreeJson_toJson u
+lean/DefiKernel/Certificates/Roundtrip.lean-1304-  have h_del : (t.deltas.map (fun x => (cellDeltaToTreeJson x).toJson)) = t.deltas.map cellDeltaToJson := by
+lean/DefiKernel/Certificates/Roundtrip.lean-1305-    simp only [List.map_inj_left]; intro x _; exact cellDeltaToTreeJson_toJson x
+lean/DefiKernel/Certificates/Roundtrip.lean-1306-  have h_sdel : (t.supplyDeltas.map (fun x => (supplyDeltaToTreeJson x).toJson)) = t.supplyDeltas.map supplyDeltaToJson := by
+lean/DefiKernel/Certificates/Roundtrip.lean-1307-    simp only [List.map_inj_left]; intro x _; exact supplyDeltaToTreeJson_toJson x
+lean/DefiKernel/Certificates/Roundtrip.lean-1308-  have h_srd : (t.stateReads.map (fun x => (packedCellRefToTreeJson x).toJson)) = t.stateReads.map packedCellRefToJson := by
+lean/DefiKernel/Certificates/Roundtrip.lean-1309-    simp only [List.map_inj_left]; intro x _; exact packedCellRefToTreeJson_toJson x
+--
+lean/DefiKernel/Certificates/Roundtrip.lean:1872:          valid_arr_map TreeJson.str env.audit_roots h_roots (fun _ _ => trivial),
+lean/DefiKernel/Certificates/Roundtrip.lean-1873-          typesEnumToTreeJson_valid env.types h_ps h_as h_ds,
+lean/DefiKernel/Certificates/Roundtrip.lean-1874-          valid_arr_map TreeJson.str env.assumptions h_asms (fun _ _ => trivial),
+lean/DefiKernel/Certificates/Roundtrip.lean-1875-          valid_arr_map TreeJson.str env.invariants h_invs (fun _ _ => trivial),
+lean/DefiKernel/Certificates/Roundtrip.lean-1876-          valid_arr_map libraryRefToTreeJson env.libraries h_libs (fun l _ => libraryRefToTreeJson_valid l),
+lean/DefiKernel/Certificates/Roundtrip.lean-1877-          sourceMapToTreeJson_valid env.source_map h_sm,
+lean/DefiKernel/Certificates/Roundtrip.lean-1878-          h_p,
+lean/DefiKernel/Certificates/Roundtrip.lean-1879-          valid_arr_map TreeJson.str env.claimed_judgments h_cj (fun _ _ => trivial),
+lean/DefiKernel/Certificates/Roundtrip.lean-1880-          ?_,
+lean/DefiKernel/Certificates/Roundtrip.lean-1881-          trivial, trivial, trivial⟩
+lean/DefiKernel/Certificates/Roundtrip.lean-1882-  cases h_w : env.claimed_next_state with
+lean/DefiKernel/Certificates/Roundtrip.lean-1883-  | none => trivial
+lean/DefiKernel/Certificates/Roundtrip.lean-1884-  | some w =>
+lean/DefiKernel/Certificates/Roundtrip.lean-1885-    have hc : ClaimedNextStateLengthBounds env.claimed_next_state = true := h_cns
+lean/DefiKernel/Certificates/Roundtrip.lean-1886-    rw [h_w] at hc
+lean/DefiKernel/Certificates/Roundtrip.lean-1887-    dsimp [ClaimedNextStateLengthBounds] at hc
+lean/DefiKernel/Certificates/Roundtrip.lean-1888-    have hc_w : w.state.cells.length ≤ 4096 := by
+lean/DefiKernel/Certificates/Roundtrip.lean-1889-      revert hc
+lean/DefiKernel/Certificates/Roundtrip.lean-1890-      simp only [Bool.and_eq_true, beq_iff_eq, decide_eq_true_eq]
+lean/DefiKernel/Certificates/Roundtrip.lean-1891-      intro ⟨h1, _⟩
+lean/DefiKernel/Certificates/Roundtrip.lean-1892-      omega
+lean/DefiKernel/Certificates/Roundtrip.lean-1893-    have hc_caps : w.capabilities.entries.length ≤ 4096 := by
+lean/DefiKernel/Certificates/Roundtrip.lean-1894-      revert hc
+lean/DefiKernel/Certificates/Roundtrip.lean-1895-      simp only [Bool.and_eq_true, beq_iff_eq, decide_eq_true_eq]
+lean/DefiKernel/Certificates/Roundtrip.lean-1896-      intro ⟨_, h2⟩
+lean/DefiKernel/Certificates/Roundtrip.lean-1897-      exact h2
+lean/DefiKernel/Certificates/Roundtrip.lean-1898-    exact worldToTreeJson_valid w hc_w hc_caps
+lean/DefiKernel/Certificates/Roundtrip.lean-1899-
+lean/DefiKernel/Certificates/Roundtrip.lean-1900-theorem moduleToTreeJson_valid (ir : DecodedIR) (h_adm : StructurallyAdmissibleIR ir) :
+lean/DefiKernel/Certificates/Roundtrip.lean-1901-    TreeJson.Valid (moduleToTreeJson ir) := by
+lean/DefiKernel/Certificates/Roundtrip.lean-1902-  rcases h_adm with ⟨h_sup, h_can⟩
+lean/DefiKernel/Certificates/Roundtrip.lean-1903-  dsimp [SupportedIR] at h_sup
+lean/DefiKernel/Certificates/Roundtrip.lean-1904-  rcases h_sup with ⟨h_byte, h_depth, h_arr, h_ir_sup⟩
+lean/DefiKernel/Certificates/Roundtrip.lean-1905-  cases ir with
+lean/DefiKernel/Certificates/Roundtrip.lean-1906-  | execution ex =>
+lean/DefiKernel/Certificates/Roundtrip.lean-1907-    cases ex with
+--
+lean/DefiKernel/Certificates/Roundtrip.lean:1926:  | audit a => contradiction
+lean/DefiKernel/Certificates/Roundtrip.lean-1927-  | codec doc => contradiction
+lean/DefiKernel/Certificates/Roundtrip.lean-1928-
+lean/DefiKernel/Certificates/Roundtrip.lean-1929-theorem parseCanonicalJson_encodeModuleString_tree (ir : DecodedIR)
+lean/DefiKernel/Certificates/Roundtrip.lean-1930-    (h_adm : StructurallyAdmissibleIR ir)
+lean/DefiKernel/Certificates/Roundtrip.lean-1931-    (h_valid : TreeJson.Valid (moduleToTreeJson ir))
+lean/DefiKernel/Certificates/Roundtrip.lean-1932-    (h_depth : TreeJson.depth (moduleToTreeJson ir) ≤ 64) :
+lean/DefiKernel/Certificates/Roundtrip.lean-1933-    parseCanonicalJson (encodeModuleString ir) = .ok ((moduleToTreeJson ir).toJson) := by
+lean/DefiKernel/Certificates/Roundtrip.lean-1934-  have h_enc := moduleToTreeJson_encode ir h_adm
+lean/DefiKernel/Certificates/Roundtrip.lean-1935-  rw [← h_enc]
+lean/DefiKernel/Certificates/Roundtrip.lean-1936-  exact parseCanonicalJson_tree (moduleToTreeJson ir) h_valid h_depth
+lean/DefiKernel/Certificates/Roundtrip.lean-1937-
+lean/DefiKernel/Certificates/Roundtrip.lean-1938-theorem parseCanonicalJson_encodeModuleString_tree_of_depth (ir : DecodedIR)
+lean/DefiKernel/Certificates/Roundtrip.lean-1939-    (h_adm : StructurallyAdmissibleIR ir)
+lean/DefiKernel/Certificates/Roundtrip.lean-1940-    (h_depth : TreeJson.depth (moduleToTreeJson ir) ≤ 64) :
+lean/DefiKernel/Certificates/Roundtrip.lean-1941-    parseCanonicalJson (encodeModuleString ir) = .ok ((moduleToTreeJson ir).toJson) :=
+lean/DefiKernel/Certificates/Roundtrip.lean-1942-  parseCanonicalJson_encodeModuleString_tree ir h_adm (moduleToTreeJson_valid ir h_adm) h_depth
+lean/DefiKernel/Certificates/Roundtrip.lean-1943-
+lean/DefiKernel/Certificates/Roundtrip.lean-1944-theorem depthList_le (xs : List TreeJson) (n : Nat) (h : ∀ x ∈ xs, TreeJson.depth x ≤ n) :
+lean/DefiKernel/Certificates/Roundtrip.lean-1945-    TreeJson.depthList xs ≤ n := by
+lean/DefiKernel/Certificates/Roundtrip.lean-1946-  induction xs with
+lean/DefiKernel/Certificates/Roundtrip.lean-1947-  | nil => dsimp [TreeJson.depthList]; omega
+lean/DefiKernel/Certificates/Roundtrip.lean-1948-  | cons x xs ih =>
+lean/DefiKernel/Certificates/Roundtrip.lean-1949-    dsimp [TreeJson.depthList]
+lean/DefiKernel/Certificates/Roundtrip.lean-1950-    have hx := h x (by simp)
+lean/DefiKernel/Certificates/Roundtrip.lean-1951-    have hxs := ih (fun y hy => h y (by simp [hy]))
+lean/DefiKernel/Certificates/Roundtrip.lean-1952-    omega
+lean/DefiKernel/Certificates/Roundtrip.lean-1953-
+lean/DefiKernel/Certificates/Roundtrip.lean-1954-theorem depthObj_le (kvs : List (String × TreeJson)) (n : Nat) (h : ∀ k v, (k, v) ∈ kvs → TreeJson.depth v ≤ n) :
+lean/DefiKernel/Certificates/Roundtrip.lean-1955-    TreeJson.depthObj kvs ≤ n := by
+lean/DefiKernel/Certificates/Roundtrip.lean-1956-  induction kvs with
+lean/DefiKernel/Certificates/Roundtrip.lean-1957-  | nil => dsimp [TreeJson.depthObj]; omega
+lean/DefiKernel/Certificates/Roundtrip.lean-1958-  | cons kv kvs ih =>
+lean/DefiKernel/Certificates/Roundtrip.lean-1959-    rcases kv with ⟨k, v⟩
+lean/DefiKernel/Certificates/Roundtrip.lean-1960-    dsimp [TreeJson.depthObj]
+lean/DefiKernel/Certificates/Roundtrip.lean-1961-    have hv := h k v (by simp)
+--
+lean/DefiKernel/Certificates/Roundtrip.lean:1975:  ("audit_roots", Lean.Json.arr (TreeJson.toJsonList (env.audit_roots.map TreeJson.str)).toArray),
+lean/DefiKernel/Certificates/Roundtrip.lean-1976-  ("claimed_judgments", Lean.Json.arr (TreeJson.toJsonList (env.claimed_judgments.map TreeJson.str)).toArray),
+lean/DefiKernel/Certificates/Roundtrip.lean-1977-  ("claimed_next_state", match env.claimed_next_state with | some w => (worldToTreeJson w).toJson | none => Lean.Json.null),
+lean/DefiKernel/Certificates/Roundtrip.lean-1978-  ("invariants", Lean.Json.arr (TreeJson.toJsonList (env.invariants.map TreeJson.str)).toArray),
+lean/DefiKernel/Certificates/Roundtrip.lean-1979-  ("libraries", Lean.Json.arr (TreeJson.toJsonList (env.libraries.map libraryRefToTreeJson)).toArray),
+lean/DefiKernel/Certificates/Roundtrip.lean-1980-  ("mode", Lean.Json.str env.mode),
+lean/DefiKernel/Certificates/Roundtrip.lean-1981-  ("payload", payload.toJson),
+lean/DefiKernel/Certificates/Roundtrip.lean-1982-  ("require_invariant_discharge", Lean.Json.bool env.require_invariant_discharge),
+lean/DefiKernel/Certificates/Roundtrip.lean-1983-  ("require_library_discharge", Lean.Json.bool env.require_library_discharge),
+lean/DefiKernel/Certificates/Roundtrip.lean-1984-  ("schema_version", (natToTreeJson env.schema_version).toJson),
+lean/DefiKernel/Certificates/Roundtrip.lean-1985-  ("source_map", (sourceMapToTreeJson env.source_map).toJson),
+lean/DefiKernel/Certificates/Roundtrip.lean-1986-  ("source_pin", (sourcePinToTreeJson env.source_pin).toJson),
+lean/DefiKernel/Certificates/Roundtrip.lean-1987-  ("types", (typesEnumToTreeJson env.types).toJson)
+lean/DefiKernel/Certificates/Roundtrip.lean-1988-]
+lean/DefiKernel/Certificates/Roundtrip.lean-1989-
+lean/DefiKernel/Certificates/Roundtrip.lean-1990-set_option maxHeartbeats 1000000 in
+lean/DefiKernel/Certificates/Roundtrip.lean-1991-theorem envelopeToTreeJson_fields (env : EnvelopeEnc) (payload : TreeJson) :
+lean/DefiKernel/Certificates/Roundtrip.lean-1992-    (match (envelopeToTreeJson env payload).toJson with
+lean/DefiKernel/Certificates/Roundtrip.lean-1993-    | .obj m => m.toList
+lean/DefiKernel/Certificates/Roundtrip.lean-1994-    | _ => []) = envelopeTreeFields env payload := by
+lean/DefiKernel/Certificates/Roundtrip.lean-1995-  dsimp [envelopeToTreeJson, TreeJson.toJson, TreeJson.toJsonObj, envelopeTreeFields]
+lean/DefiKernel/Certificates/Roundtrip.lean-1996-  cases env.claimed_next_state <;> rfl
+lean/DefiKernel/Certificates/Roundtrip.lean-1997-
+lean/DefiKernel/Certificates/Roundtrip.lean-1998-theorem decodeLibraries_tree_ok (libs : List LibraryRefEnc) :
+lean/DefiKernel/Certificates/Roundtrip.lean-1999-    ((TreeJson.toJsonList (libs.map libraryRefToTreeJson)).toArray.toList.mapM decodeLibraryRef) = Except.ok libs := by
+lean/DefiKernel/Certificates/Roundtrip.lean-2000-  rw [toJsonList_map]
+lean/DefiKernel/Certificates/Roundtrip.lean-2001-  apply list_mapM_decode_ok
+lean/DefiKernel/Certificates/Roundtrip.lean-2002-  intro l _
+lean/DefiKernel/Certificates/Roundtrip.lean-2003-  exact decodeLibraryRef_libraryRefToTreeJson l
+lean/DefiKernel/Certificates/Roundtrip.lean-2004-
+lean/DefiKernel/Certificates/Roundtrip.lean-2005-theorem decodeClaimedNextState_tree_some (w : WorldEnc) (h : WorldCanonical w) :
+lean/DefiKernel/Certificates/Roundtrip.lean-2006-    decodeClaimedNextState (worldToTreeJson w).toJson = .ok (some w) := by
+lean/DefiKernel/Certificates/Roundtrip.lean-2007-  cases w with | mk st caps =>
+lean/DefiKernel/Certificates/Roundtrip.lean-2008-  have h_valid := world_valid_of_canonical ⟨st, caps⟩ h
+lean/DefiKernel/Certificates/Roundtrip.lean-2009-  have h_unique := world_unique_of_canonical ⟨st, caps⟩ h
+lean/DefiKernel/Certificates/Roundtrip.lean-2010-  have h_world := decodeWorld_worldToTreeJson ⟨st, caps⟩ h_valid h_unique
+--
+lean/DefiKernel/Certificates/Roundtrip.lean:2045:        let audit_roots ← (TreeJson.toJsonList (roots.map TreeJson.str)).toArray.toList.mapM (fun x => match x with | .str s => (Except.ok s : Except DecodeFailure String) | _ => Except.error (.jsonType "root"))
+lean/DefiKernel/Certificates/Roundtrip.lean-2046-        let types ← decodeTypesEnum (typesEnumToTreeJson types).toJson
+lean/DefiKernel/Certificates/Roundtrip.lean-2047-        let assumptions ← (TreeJson.toJsonList (asms.map TreeJson.str)).toArray.toList.mapM (fun x => match x with | .str s => (Except.ok s : Except DecodeFailure String) | _ => Except.error (.jsonType "assumption"))
+lean/DefiKernel/Certificates/Roundtrip.lean-2048-        let invariants ← (TreeJson.toJsonList (invs.map TreeJson.str)).toArray.toList.mapM (fun x => match x with | .str s => (Except.ok s : Except DecodeFailure String) | _ => Except.error (.jsonType "invariant"))
+lean/DefiKernel/Certificates/Roundtrip.lean-2049-        let libraries ← (TreeJson.toJsonList (libs.map libraryRefToTreeJson)).toArray.toList.mapM decodeLibraryRef
+lean/DefiKernel/Certificates/Roundtrip.lean-2050-        let source_map ← decodeSourceMap (sourceMapToTreeJson sm).toJson
+lean/DefiKernel/Certificates/Roundtrip.lean-2051-        let claimed_judgments ← (TreeJson.toJsonList (cj.map TreeJson.str)).toArray.toList.mapM (fun x => match x with | .str s => (Except.ok s : Except DecodeFailure String) | _ => Except.error (.jsonType "claimedJudgment"))
+lean/DefiKernel/Certificates/Roundtrip.lean-2052-        let claimed_next_state ← decodeClaimedNextState Lean.Json.null
+lean/DefiKernel/Certificates/Roundtrip.lean:2053:        .ok ⟨1, mode, source_pin, audit_roots, types, assumptions, invariants, libraries, source_map, claimed_judgments, claimed_next_state, rld, rid⟩) := rfl
+lean/DefiKernel/Certificates/Roundtrip.lean-2054-    rw [h_def, h_sp, h_roots, h_types, h_asms, h_invs, h_libs, h_sm_dec, h_cj, h_cns_dec]
+lean/DefiKernel/Certificates/Roundtrip.lean-2055-    rfl
+lean/DefiKernel/Certificates/Roundtrip.lean-2056-  | some w =>
+lean/DefiKernel/Certificates/Roundtrip.lean-2057-    have h_cns_dec := decodeClaimedNextState_tree_some w h_cns
+lean/DefiKernel/Certificates/Roundtrip.lean-2058-    have h_def : decodeEnvelope (envelopeTreeFields ⟨1, mode, sp, roots, types, asms, invs, libs, sm, cj, some w, rld, rid⟩ payload) = (do
+lean/DefiKernel/Certificates/Roundtrip.lean-2059-        let source_pin ← decodeSourcePin (sourcePinToTreeJson sp).toJson
+lean/DefiKernel/Certificates/Roundtrip.lean:2060:        let audit_roots ← (TreeJson.toJsonList (roots.map TreeJson.str)).toArray.toList.mapM (fun x => match x with | .str s => (Except.ok s : Except DecodeFailure String) | _ => Except.error (.jsonType "root"))
+lean/DefiKernel/Certificates/Roundtrip.lean-2061-        let types ← decodeTypesEnum (typesEnumToTreeJson types).toJson
+lean/DefiKernel/Certificates/Roundtrip.lean-2062-        let assumptions ← (TreeJson.toJsonList (asms.map TreeJson.str)).toArray.toList.mapM (fun x => match x with | .str s => (Except.ok s : Except DecodeFailure String) | _ => Except.error (.jsonType "assumption"))
+lean/DefiKernel/Certificates/Roundtrip.lean-2063-        let invariants ← (TreeJson.toJsonList (invs.map TreeJson.str)).toArray.toList.mapM (fun x => match x with | .str s => (Except.ok s : Except DecodeFailure String) | _ => Except.error (.jsonType "invariant"))
+lean/DefiKernel/Certificates/Roundtrip.lean-2064-        let libraries ← (TreeJson.toJsonList (libs.map libraryRefToTreeJson)).toArray.toList.mapM decodeLibraryRef
+lean/DefiKernel/Certificates/Roundtrip.lean-2065-        let source_map ← decodeSourceMap (sourceMapToTreeJson sm).toJson
+lean/DefiKernel/Certificates/Roundtrip.lean-2066-        let claimed_judgments ← (TreeJson.toJsonList (cj.map TreeJson.str)).toArray.toList.mapM (fun x => match x with | .str s => (Except.ok s : Except DecodeFailure String) | _ => Except.error (.jsonType "claimedJudgment"))
+lean/DefiKernel/Certificates/Roundtrip.lean-2067-        let claimed_next_state ← decodeClaimedNextState (worldToTreeJson w).toJson
+lean/DefiKernel/Certificates/Roundtrip.lean:2068:        .ok ⟨1, mode, source_pin, audit_roots, types, assumptions, invariants, libraries, source_map, claimed_judgments, claimed_next_state, rld, rid⟩) := rfl
+lean/DefiKernel/Certificates/Roundtrip.lean-2069-    rw [h_def, h_sp, h_roots, h_types, h_asms, h_invs, h_libs, h_sm_dec, h_cj, h_cns_dec]
+lean/DefiKernel/Certificates/Roundtrip.lean-2070-    rfl
+lean/DefiKernel/Certificates/Roundtrip.lean-2071-
+lean/DefiKernel/Certificates/Roundtrip.lean-2072-set_option maxHeartbeats 1000000 in
+lean/DefiKernel/Certificates/Roundtrip.lean-2073-theorem decodeDecodedIR_envelopeToTreeJson_eq (env : EnvelopeEnc) (payload : TreeJson) (raw : String) :
+lean/DefiKernel/Certificates/Roundtrip.lean-2074-    decodeDecodedIR ((envelopeToTreeJson env payload).toJson) raw = (do
+lean/DefiKernel/Certificates/Roundtrip.lean-2075-      let env_dec ← decodeEnvelope (envelopeTreeFields env payload)
+lean/DefiKernel/Certificates/Roundtrip.lean-2076-      let payloadJ_dec ← getField (envelopeTreeFields env payload) "payload"
+lean/DefiKernel/Certificates/Roundtrip.lean-2077-      match env_dec.mode with
+lean/DefiKernel/Certificates/Roundtrip.lean-2078-      | "typed-execute" =>
+lean/DefiKernel/Certificates/Roundtrip.lean-2079-        let payload_dec ← decodeTypedExecutePayload payloadJ_dec
+lean/DefiKernel/Certificates/Roundtrip.lean-2080-        Except.ok (DecodedIR.execution (.typed env_dec payload_dec))
+lean/DefiKernel/Certificates/Roundtrip.lean-2081-      | "composition-step" =>
+lean/DefiKernel/Certificates/Roundtrip.lean-2082-        let payload_dec ← decodeCompositionStepPayload payloadJ_dec
+lean/DefiKernel/Certificates/Roundtrip.lean-2083-        Except.ok (DecodedIR.execution (.step env_dec payload_dec))
+lean/DefiKernel/Certificates/Roundtrip.lean-2084-      | "composition-run" =>
+lean/DefiKernel/Certificates/Roundtrip.lean-2085-        let payload_dec ← decodeCompositionRunPayload payloadJ_dec
+lean/DefiKernel/Certificates/Roundtrip.lean-2086-        Except.ok (DecodedIR.execution (.run env_dec payload_dec))
+lean/DefiKernel/Certificates/Roundtrip.lean-2087-      | "codec" => Except.ok (DecodedIR.codec ⟨some env_dec, raw⟩)
+lean/DefiKernel/Certificates/Roundtrip.lean:2088:      | "audit" =>
+lean/DefiKernel/Certificates/Roundtrip.lean-2089-        let payload_dec ← decodeAuditPayload env_dec payloadJ_dec true
+lean/DefiKernel/Certificates/Roundtrip.lean:2090:        Except.ok (DecodedIR.audit payload_dec)
+lean/DefiKernel/Certificates/Roundtrip.lean-2091-      | s => Except.error (.unknownIdentifier s)) := by
+lean/DefiKernel/Certificates/Roundtrip.lean-2092-  dsimp [decodeDecodedIR, envelopeToTreeJson, TreeJson.toJson, TreeJson.toJsonObj, envelopeTreeFields]
+lean/DefiKernel/Certificates/Roundtrip.lean-2093-  cases env.claimed_next_state <;> rfl
+lean/DefiKernel/Certificates/Roundtrip.lean-2094-
+lean/DefiKernel/Certificates/Roundtrip.lean-2095-theorem decodeDecodedIR_fields_tree_typed (env : EnvelopeEnc) (payload : TypedExecutePayloadEnc)
+lean/DefiKernel/Certificates/Roundtrip.lean-2096-    (h_ver : env.schema_version = 1)
+lean/DefiKernel/Certificates/Roundtrip.lean-2097-    (h_mode : env.mode = "typed-execute")
+lean/DefiKernel/Certificates/Roundtrip.lean-2098-    (h_sm : SourceMapSorted env.source_map)
+lean/DefiKernel/Certificates/Roundtrip.lean-2099-    (h_cns : ClaimedNextStateCanonical env.claimed_next_state)
+lean/DefiKernel/Certificates/Roundtrip.lean-2100-    (h_reg_can : RegistryCanonical payload.registry)
+lean/DefiKernel/Certificates/Roundtrip.lean-2101-    (h_env_can : EnvironmentCanonical payload.env)
+lean/DefiKernel/Certificates/Roundtrip.lean-2102-    (h_req_can : RequestCanonical payload.request)
+lean/DefiKernel/Certificates/Roundtrip.lean-2103-    (h_state_valid : ∀ c ∈ payload.state.cells, c.amount.den ≠ 0 ∧ Int.gcd c.amount.num.natAbs c.amount.den = 1 ∧ c.amount.num ≥ 0)
+lean/DefiKernel/Certificates/Roundtrip.lean-2104-    (h_state_unique : (payload.state.cells.map (fun c => (c.domain, c.party, c.asset))).eraseDups.length = payload.state.cells.length)
+lean/DefiKernel/Certificates/Roundtrip.lean-2105-    (raw : String) :
+lean/DefiKernel/Certificates/Roundtrip.lean-2106-    decodeDecodedIR ((envelopeToTreeJson env (typedExecutePayloadToTreeJson payload)).toJson) raw =
+lean/DefiKernel/Certificates/Roundtrip.lean-2107-      Except.ok (DecodedIR.execution (.typed env payload)) := by
+lean/DefiKernel/Certificates/Roundtrip.lean-2108-  rw [decodeDecodedIR_envelopeToTreeJson_eq]
+lean/DefiKernel/Certificates/Roundtrip.lean-2109-  have h_env := decodeEnvelope_treeFields env (typedExecutePayloadToTreeJson payload) h_ver h_sm h_cns
+lean/DefiKernel/Certificates/Roundtrip.lean-2110-  have h_p := decodeTypedExecutePayload_typedExecutePayloadToTreeJson payload h_reg_can h_env_can h_req_can h_state_valid h_state_unique
+lean/DefiKernel/Certificates/Roundtrip.lean-2111-  rw [h_env]
+lean/DefiKernel/Certificates/Roundtrip.lean-2112-  dsimp [bind, Except.bind]
+lean/DefiKernel/Certificates/Roundtrip.lean-2113-  have h_fld : getField (envelopeTreeFields env (typedExecutePayloadToTreeJson payload)) "payload" = .ok (typedExecutePayloadToTreeJson payload).toJson := rfl
+lean/DefiKernel/Certificates/Roundtrip.lean-2114-  rw [h_fld]
+lean/DefiKernel/Certificates/Roundtrip.lean-2115-  dsimp [bind, Except.bind]
+lean/DefiKernel/Certificates/Roundtrip.lean-2116-  rw [h_mode]
+lean/DefiKernel/Certificates/Roundtrip.lean-2117-  rw [h_p]
+lean/DefiKernel/Certificates/Roundtrip.lean-2118-  rfl
+lean/DefiKernel/Certificates/Roundtrip.lean-2119-
+lean/DefiKernel/Certificates/Roundtrip.lean-2120-theorem decodeDecodedIR_fields_tree_step (env : EnvelopeEnc) (payload : CompositionStepPayloadEnc)
+lean/DefiKernel/Certificates/Roundtrip.lean-2121-    (h_ver : env.schema_version = 1)
+lean/DefiKernel/Certificates/Roundtrip.lean-2122-    (h_mode : env.mode = "composition-step")
+lean/DefiKernel/Certificates/Roundtrip.lean-2123-    (h_sm : SourceMapSorted env.source_map)
+lean/DefiKernel/Certificates/Roundtrip.lean-2124-    (h_cns : ClaimedNextStateCanonical env.claimed_next_state)
+lean/DefiKernel/Certificates/Roundtrip.lean-2125-    (h_cfg_can : RegistryCanonical payload.config.registry)
+--
+lean/DefiKernel/Certificates/Roundtrip.lean:2175:  rcases ir with ⟨exec⟩ | ⟨audit_val⟩ | ⟨codec_val⟩
+lean/DefiKernel/Certificates/Roundtrip.lean-2176-  · rcases exec with ⟨env, payload⟩ | ⟨env, payload⟩ | ⟨env, payload⟩
+lean/DefiKernel/Certificates/Roundtrip.lean-2177-    · -- typed-execute
+lean/DefiKernel/Certificates/Roundtrip.lean-2178-      rcases h_adm with ⟨h_sup, h_can⟩
+lean/DefiKernel/Certificates/Roundtrip.lean-2179-      dsimp [SupportedIR] at h_sup
+lean/DefiKernel/Certificates/Roundtrip.lean-2180-      dsimp [CanonicalIR] at h_can
+lean/DefiKernel/Certificates/Roundtrip.lean-2181-      rcases h_sup with ⟨_, _, _, h_ver, h_mode, _, h_len, h_map, h_all_pos, _, h_nodup, _⟩
+lean/DefiKernel/Certificates/Roundtrip.lean-2182-      rcases h_can with ⟨h_sm, h_cns, h_all_gcd, h_tmpl, h_req, h_env⟩
+lean/DefiKernel/Certificates/Roundtrip.lean-2183-      have h_reg : RegistryCanonical payload.registry := ⟨h_nodup, h_tmpl⟩
+lean/DefiKernel/Certificates/Roundtrip.lean-2184-      have h_st_valid : ∀ c ∈ payload.state.cells, c.amount.den ≠ 0 ∧ Int.gcd c.amount.num.natAbs c.amount.den = 1 ∧ c.amount.num ≥ 0 := by
+lean/DefiKernel/Certificates/Roundtrip.lean-2185-        intro c hc
+lean/DefiKernel/Certificates/Roundtrip.lean-2186-        have h1 := all_mem_of_all_eq_true _ _ h_all_pos c hc
+lean/DefiKernel/Certificates/Roundtrip.lean-2187-        have h2 := all_mem_of_all_eq_true _ _ h_all_gcd c hc
+lean/DefiKernel/Certificates/Roundtrip.lean-2188-        simp only [decide_eq_true_eq] at h1 h2
+lean/DefiKernel/Certificates/Roundtrip.lean-2189-        refine ⟨by omega, h2, by omega⟩
+lean/DefiKernel/Certificates/Roundtrip.lean-2190-      have h_st_unique : (payload.state.cells.map (fun c => (c.domain, c.party, c.asset))).eraseDups.length = payload.state.cells.length := by
+lean/DefiKernel/Certificates/Roundtrip.lean-2191-        rw [h_map, standard32CellKeys_eraseDups_len, h_len]
+lean/DefiKernel/Certificates/Roundtrip.lean-2192-      dsimp [moduleToTreeJson]
+lean/DefiKernel/Certificates/Roundtrip.lean-2193-      exact decodeDecodedIR_fields_tree_typed env payload h_ver h_mode h_sm h_cns h_reg h_env h_req h_st_valid h_st_unique raw
+lean/DefiKernel/Certificates/Roundtrip.lean-2194-    · -- composition-step
+lean/DefiKernel/Certificates/Roundtrip.lean-2195-      rcases h_adm with ⟨h_sup, h_can⟩
+lean/DefiKernel/Certificates/Roundtrip.lean-2196-      dsimp [SupportedIR] at h_sup
+lean/DefiKernel/Certificates/Roundtrip.lean-2197-      dsimp [CanonicalIR] at h_can
+lean/DefiKernel/Certificates/Roundtrip.lean-2198-      rcases h_sup with ⟨_, _, _, h_ver, h_mode, _, _, h_len, h_map, h_all_pos, _, h_nodup, _⟩
+lean/DefiKernel/Certificates/Roundtrip.lean-2199-      rcases h_can with ⟨h_sm, h_cns, h_all_gcd, h_step, h_tmpl, h_hist, h_bnd⟩
+lean/DefiKernel/Certificates/Roundtrip.lean-2200-      have h_cfg : RegistryCanonical payload.config.registry := ⟨h_nodup, h_tmpl⟩
+lean/DefiKernel/Certificates/Roundtrip.lean-2201-      have h_pre_valid : ∀ c ∈ payload.pre.state.cells, c.amount.den ≠ 0 ∧ Int.gcd c.amount.num.natAbs c.amount.den = 1 ∧ c.amount.num ≥ 0 := by
+lean/DefiKernel/Certificates/Roundtrip.lean-2202-        intro c hc
+lean/DefiKernel/Certificates/Roundtrip.lean-2203-        have h1 := all_mem_of_all_eq_true _ _ h_all_pos c hc
+lean/DefiKernel/Certificates/Roundtrip.lean-2204-        have h2 := all_mem_of_all_eq_true _ _ h_all_gcd c hc
+lean/DefiKernel/Certificates/Roundtrip.lean-2205-        simp only [decide_eq_true_eq] at h1 h2
+lean/DefiKernel/Certificates/Roundtrip.lean-2206-        refine ⟨by omega, h2, by omega⟩
+lean/DefiKernel/Certificates/Roundtrip.lean-2207-      have h_pre_unique : (payload.pre.state.cells.map (fun c => (c.domain, c.party, c.asset))).eraseDups.length = payload.pre.state.cells.length := by
+lean/DefiKernel/Certificates/Roundtrip.lean-2208-        rw [h_map, standard32CellKeys_eraseDups_len, h_len]
+lean/DefiKernel/Certificates/Roundtrip.lean-2209-      dsimp [moduleToTreeJson]
+lean/DefiKernel/Certificates/Roundtrip.lean-2210-      exact decodeDecodedIR_fields_tree_step env payload h_ver h_mode h_sm h_cns h_cfg h_bnd h_hist h_step h_pre_valid h_pre_unique raw
+--
+lean/DefiKernel/Certificates/Roundtrip.lean:2228:  · -- audit: not supported
+lean/DefiKernel/Certificates/Roundtrip.lean-2229-    rcases h_adm with ⟨h_sup, _⟩
+lean/DefiKernel/Certificates/Roundtrip.lean-2230-    dsimp [SupportedIR] at h_sup
+lean/DefiKernel/Certificates/Roundtrip.lean-2231-    rcases h_sup with ⟨_, _, _, h_f⟩
+lean/DefiKernel/Certificates/Roundtrip.lean-2232-    contradiction
+lean/DefiKernel/Certificates/Roundtrip.lean-2233-  · -- codec: not supported
+lean/DefiKernel/Certificates/Roundtrip.lean-2234-    rcases h_adm with ⟨h_sup, _⟩
+lean/DefiKernel/Certificates/Roundtrip.lean-2235-    dsimp [SupportedIR] at h_sup
+lean/DefiKernel/Certificates/Roundtrip.lean-2236-    rcases h_sup with ⟨_, _, _, h_f⟩
+lean/DefiKernel/Certificates/Roundtrip.lean-2237-    contradiction
+lean/DefiKernel/Certificates/Roundtrip.lean-2238-
+lean/DefiKernel/Certificates/Roundtrip.lean-2239-theorem decodeBytes_encodeModule_of_valid_and_depth (ir : DecodedIR)
+lean/DefiKernel/Certificates/Roundtrip.lean-2240-    (h_adm : StructurallyAdmissibleIR ir)
+lean/DefiKernel/Certificates/Roundtrip.lean-2241-    (h_valid : TreeJson.Valid (moduleToTreeJson ir))
+lean/DefiKernel/Certificates/Roundtrip.lean-2242-    (h_depth : TreeJson.depth (moduleToTreeJson ir) ≤ 64)
+lean/DefiKernel/Certificates/Roundtrip.lean-2243-    (h_dec : decodeDecodedIR ((moduleToTreeJson ir).toJson) (encodeModuleString ir) = .ok ir)
+lean/DefiKernel/Certificates/Roundtrip.lean-2244-    (h_lex : scanLexical (encodeModule ir) = .ok ()) :
+lean/DefiKernel/Certificates/Roundtrip.lean-2245-    decodeBytes (encodeModule ir) = .ok ir := by
+lean/DefiKernel/Certificates/Roundtrip.lean-2246-  have h_parse := parseCanonicalJson_encodeModuleString_tree ir h_adm h_valid h_depth
+lean/DefiKernel/Certificates/Roundtrip.lean-2247-  apply decodeBytes_eq_of_steps (encodeModule ir) (encodeModuleString ir) ((moduleToTreeJson ir).toJson) ir
+lean/DefiKernel/Certificates/Roundtrip.lean-2248-  · exact h_lex
+lean/DefiKernel/Certificates/Roundtrip.lean-2249-  · exact string_fromUTF8_encodeModule ir
+lean/DefiKernel/Certificates/Roundtrip.lean-2250-  · exact h_parse
+lean/DefiKernel/Certificates/Roundtrip.lean-2251-  · exact h_dec
+lean/DefiKernel/Certificates/Roundtrip.lean-2252-  · rfl
+lean/DefiKernel/Certificates/Roundtrip.lean-2253-
+lean/DefiKernel/Certificates/Roundtrip.lean-2254-theorem decodeBytes_encodeModule_of_depth (ir : DecodedIR)
+lean/DefiKernel/Certificates/Roundtrip.lean-2255-    (h_adm : StructurallyAdmissibleIR ir)
+lean/DefiKernel/Certificates/Roundtrip.lean-2256-    (h_depth : TreeJson.depth (moduleToTreeJson ir) ≤ 64)
+lean/DefiKernel/Certificates/Roundtrip.lean-2257-    (h_dec : decodeDecodedIR ((moduleToTreeJson ir).toJson) (encodeModuleString ir) = .ok ir)
+lean/DefiKernel/Certificates/Roundtrip.lean-2258-    (h_lex : scanLexical (encodeModule ir) = .ok ()) :
+lean/DefiKernel/Certificates/Roundtrip.lean-2259-    decodeBytes (encodeModule ir) = .ok ir :=
+lean/DefiKernel/Certificates/Roundtrip.lean-2260-  decodeBytes_encodeModule_of_valid_and_depth ir h_adm (moduleToTreeJson_valid ir h_adm) h_depth h_dec h_lex
+lean/DefiKernel/Certificates/Roundtrip.lean-2261-
+lean/DefiKernel/Certificates/Roundtrip.lean-2262-theorem decodeBytes_encodeModule_of_depth_and_lex (ir : DecodedIR)
+lean/DefiKernel/Certificates/Roundtrip.lean-2263-    (h_adm : StructurallyAdmissibleIR ir)
+--
+lean/DefiKernel/Certificates/Roundtrip.lean:2295:  cases pin.compiler_record <;> cases pin.audit_record <;> rfl
+lean/DefiKernel/Certificates/Roundtrip.lean-2296-
+lean/DefiKernel/Certificates/Roundtrip.lean-2297-theorem libraryRefToTreeJson_depth (lib : LibraryRefEnc) : TreeJson.depth (libraryRefToTreeJson lib) = 1 := by
+lean/DefiKernel/Certificates/Roundtrip.lean-2298-  dsimp [libraryRefToTreeJson, TreeJson.depth, TreeJson.depthObj]
+lean/DefiKernel/Certificates/Roundtrip.lean-2299-  cases lib.moduleName <;> rfl
+lean/DefiKernel/Certificates/Roundtrip.lean-2300-
+lean/DefiKernel/Certificates/Roundtrip.lean-2301-theorem cellToTreeJson_depth (c : CellEnc) : TreeJson.depth (cellToTreeJson c) = 1 := by
+lean/DefiKernel/Certificates/Roundtrip.lean-2302-  dsimp [cellToTreeJson, TreeJson.depth, TreeJson.depthObj]
+lean/DefiKernel/Certificates/Roundtrip.lean-2303-  rw [domainToTreeJson_depth, partyToTreeJson_depth, assetToTreeJson_depth]
+lean/DefiKernel/Certificates/Roundtrip.lean-2304-  rfl
+lean/DefiKernel/Certificates/Roundtrip.lean-2305-
+lean/DefiKernel/Certificates/Roundtrip.lean-2306-theorem stateCellToTreeJson_depth (c : StateCellEnc) : TreeJson.depth (stateCellToTreeJson c) = 2 := by
+lean/DefiKernel/Certificates/Roundtrip.lean-2307-  dsimp [stateCellToTreeJson, TreeJson.depth, TreeJson.depthObj]
+lean/DefiKernel/Certificates/Roundtrip.lean-2308-  rw [domainToTreeJson_depth, partyToTreeJson_depth, assetToTreeJson_depth, ratToTreeJson_depth]
+lean/DefiKernel/Certificates/Roundtrip.lean-2309-  rfl
+lean/DefiKernel/Certificates/Roundtrip.lean-2310-
+lean/DefiKernel/Certificates/Roundtrip.lean-2311-theorem stateToTreeJson_depth_le (s : StateEnc) : TreeJson.depth (stateToTreeJson s) ≤ 4 := by
+lean/DefiKernel/Certificates/Roundtrip.lean-2312-  dsimp [stateToTreeJson]
+lean/DefiKernel/Certificates/Roundtrip.lean-2313-  apply obj_depth_le
+lean/DefiKernel/Certificates/Roundtrip.lean-2314-  dsimp [TreeJson.depthObj]
+lean/DefiKernel/Certificates/Roundtrip.lean-2315-  have h_list : TreeJson.depthList (s.cells.map stateCellToTreeJson) ≤ 2 := by
+lean/DefiKernel/Certificates/Roundtrip.lean-2316-    apply depthList_map_le
+lean/DefiKernel/Certificates/Roundtrip.lean-2317-    intro c _
+lean/DefiKernel/Certificates/Roundtrip.lean-2318-    rw [stateCellToTreeJson_depth]
+lean/DefiKernel/Certificates/Roundtrip.lean-2319-  have h_arr := arr_depth_le (s.cells.map stateCellToTreeJson) 2 h_list
+lean/DefiKernel/Certificates/Roundtrip.lean-2320-  omega
+lean/DefiKernel/Certificates/Roundtrip.lean-2321-
+lean/DefiKernel/Certificates/Roundtrip.lean-2322-theorem rightToTreeJson_depth_le (r : RightEnc) : TreeJson.depth (rightToTreeJson r) ≤ 2 := by
+lean/DefiKernel/Certificates/Roundtrip.lean-2323-  cases r with
+lean/DefiKernel/Certificates/Roundtrip.lean-2324-  | invoke => dsimp [rightToTreeJson, TreeJson.depth, TreeJson.depthObj]; decide
+lean/DefiKernel/Certificates/Roundtrip.lean-2325-  | debit c =>
+lean/DefiKernel/Certificates/Roundtrip.lean-2326-    dsimp [rightToTreeJson, TreeJson.depth, TreeJson.depthObj]
+lean/DefiKernel/Certificates/Roundtrip.lean-2327-    rw [cellToTreeJson_depth]
+lean/DefiKernel/Certificates/Roundtrip.lean-2328-    decide
+lean/DefiKernel/Certificates/Roundtrip.lean-2329-  | changeSupply d a =>
+lean/DefiKernel/Certificates/Roundtrip.lean-2330-    dsimp [rightToTreeJson, TreeJson.depth, TreeJson.depthObj]
