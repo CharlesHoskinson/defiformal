@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "modules": [
+    "DefiKernel.Certificates.Decode",
+    "DefiKernel.Certificates.Audit"
+  ],
+  "mutations": [
+    {
+      "name": "m07-skip-gcd-canonical-branch",
+      "module": "DefiKernel.Certificates.Decode",
+      "needle": "if den = 0 then .error (.illegalRational .zeroDenominator) else if Int.gcd num.natAbs den ≠ 1 then .error (.illegalRational .noncanonical) else .ok ⟨num, den⟩",
+      "replacement": "if den = 0 then .error (.illegalRational .zeroDenominator) else .ok ⟨num, den⟩",
+      "required_false": [
+        "cert.rational.canonical"
+      ]
+    }
+  ],
+  "positive_checks": [
+    "cert.rational.zero-den"
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "scope": "P19 SF10/S97 execution-only public API: Delivered.Execution.checkIR : DecodedExecution → Report and checkBytes routing",
+  "whole_P19_accepted": false,
+  "author": "Grok 4.6",
+  "reviewer": "Astra separate",
+  "unchanged_compatibility_sources": {
+    "lean/DefiKernel/Certificates/Check.lean": "bdd321e3c9ca6f7db84c92e2e50eca4968314de0a151281298798c960728b06c",
+    "lean/DefiKernel/Certificates/Delivered.lean": "556f94b2edc9be9c6337e3fc79d75d8ec8b3d713808ed0c9e427f3f7cee109bc",
+    "scripts/run_certificate_fixtures.py": "95cc57414446ccefc8329feea00280a1f669877f2f50de50c47a6b01946da34e",
+    "openspec/changes/serialized-kernel-certificates/fixtures.json": "ad1857ecf7269920a2169ab7e644d28da3311cad91be60df09a737cf94fe7742"
+  },
+  "changed_files": {
+    "lean/DefiKernel/Certificates/ExecutionAPI.lean": "e706a690f788ebed258f6c5e70fa005ce486f059dc2a3881c555382dedf65906",
+    "lean/DefiKernel/Certificates/ExecutionAPIRegression.lean": "010fe8bea63081c4455cc998dcb85391d3cabed883e676eee00208c7d9566550",
+    "lean/DefiKernel/Certificates/RunFixtures.lean": "71942bb4b4fa66904c12c99704df7dacc908df8adbb6d5d2e138831b468954af",
+    "lean/DefiKernel/Certificates/Verify.lean": "c538d9a96d985a8118e84e8efa3f9a46d42357e9413bd890296e58f950ed5582",
+    "lean/README.md": "79ddb650dfa99be5dde435454c0eac14b62a2b4d9a11ee90a786b4262b16b592"
+  },
+  "old_api_type_mismatch": {
+    "ascription": "Delivered.checkIR : DecodedExecution → Report",
+    "actual_type": "DecodedIR → Outcome",
+    "exit": 1
+  },
+  "commands": [
+    {
+      "command": "lake env lean /tmp/p19-exec-api-probe/OldCheckIRMismatch.lean",
+      "cwd": "lean",
+      "exit": 1,
+      "note": "reproduced historical checkIR type mismatch"
+    },
+    {
+      "command": "lake build DefiKernel.Certificates.ExecutionAPI DefiKernel.Certificates.ExecutionAPIRegression DefiKernel.Certificates.RunFixtures DefiKernel.Certificates.Verify",
+      "cwd": "lean",
+      "exit": 0
+    },
+    {
+      "command": "lake env lean --run DefiKernel/Certificates/ExecutionAPIRegression.lean",
+      "cwd": "lean",
+      "exit": 0,
+      "note": "11/11 runtime checks true; static types Execution.checkIR : DecodedExecution → Report"
+    },
+    {
+      "command": "lake env lean --run DefiKernel/Certificates/RunFixtures.lean check cli/empty.dat",
+      "cwd": "lean",
+      "exit": 0,
+      "note": "CLI codec malformed emptyDocument via Execution.checkBytes"
+    },
+    {
+      "command": "lake env lean --run DefiKernel/Certificates/RunFixtures.lean check cli/typed.json",
+      "cwd": "lean",
+      "exit": 0,
+      "note": "CLI execution Report accepted via Execution.checkBytes"
+    }
+  ],
+  "axioms": ["propext", "Classical.choice", "Quot.sound"],
+  "sorry_native_decide_custom_axioms": false
+}

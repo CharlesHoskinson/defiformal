@@ -455,3 +455,24 @@ deployed-protocol or whole-program acceptance.
 ## Core roadmap resumed with AGY implementation and Grok audit (2026-09-10)
 
 The user selected native AGY Gemini3.8FlashHigh with high effort to implement and fresh native Grok4.6 high to audit. P19 certificate implementation is dispatched in its prepared isolated checkout. Frozen P17 R6 is under a fresh Grok repair audit using exact unchanged prior Opus evidence; P18 R2 remains queued for Grok review. Earlier author/reviewer identities and acceptance limits are preserved. The app goal objective and active status were read back after the authorized resumption. STATE.json and CURRENT.json bind current dispatches. This changes routing and resumes work; it grants no new implementation acceptance.
+
+
+## P19 implementation accepted (2026-09-20)
+
+P19 program tasks 20.1–20.4 are independently accepted. The delivered candidate
+includes source-bound host validation, typed/sequential runtime checks, accurate
+assumption judgments, strict fixture/mutation evidence gates, and the public
+execution-only API used by the CLI. Native Grok 4.6 authored the changes;
+independent Astra medium reviewed the exact inputs.
+
+The final main build completed 1,146 jobs with nonempty certificate, typed and
+composition axiom audits and zero forbidden axioms. All 11 API regressions and
+54 fixture acceptance/control checks passed. Frozen F41 retains its visible
+incorrect expectation and is covered by two reviewed corrective companions.
+The 16 source-mutation campaign remains attributed to its recorded snapshot,
+with reviewed reuse for the unchanged execution behavior.
+
+[Acceptance and scope](../../review/semantic-kernel/program-execution-20260919/P19-ACCEPTANCE.md)
+and the linked reconciliation distinguish implementation acceptance from P20's
+remaining quantified correspondence and qualified certificate-delivery gates.
+The original frozen planning checkboxes remain historical records.
