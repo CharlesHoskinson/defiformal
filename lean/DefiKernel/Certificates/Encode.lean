@@ -478,7 +478,7 @@ def encodeReport (r : Report) : String :=
     ("outstanding", jsonArr (r.outstanding.map escapeJsonString)),
     ("source_pin", encodeSourcePin r.source_pin),
     ("audit_roots", jsonArr (r.audit_roots.map escapeJsonString)),
-    ("unsupported", "null")
+    ("unsupported", match r.unsupported with | some u => escapeJsonString u | none => "null")
   ]
 
 def encodeRawObservation (ro : RawObservation) : String :=
