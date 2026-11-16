@@ -1,22 +1,8 @@
 ## Purpose
 
-State the economic properties the field has only scoped proofs of (among competitors, MEV-formal's ordering safety is the only supported economic cell), as separate theorems with explicit premises, so that lending solvency and price integrity move from partial to supported at a stated scope. Serves tasks II.4 and IV.2.
+Explore ordering safety on the interleaving executor with an explicit counterexample or a proven bound under declared assumptions. Serves task IV.2.
 
 ## ADDED Requirements
-
-### Requirement: Solvency, price integrity and ordering SHALL be separate theorems
-
-Solvency, price integrity and ordering SHALL be stated as three separate theorems, each with explicit premises on the existing borrow and oracle guards.
-
-#### Scenario: Obligations are stated with premises
-
-- **WHEN** the economic obligations module is built
-- **THEN** solvency, price integrity and ordering are three named theorems, each listing its premises on the existing borrow and oracle guards, and none is folded into another
-
-#### Scenario: Matrix cells move
-
-- **WHEN** the property matrix is regraded from source
-- **THEN** lending solvency and price integrity read supported at the scope the premises state
 
 ### Requirement: An ordering scenario SHALL be run on the interleaving executor
 

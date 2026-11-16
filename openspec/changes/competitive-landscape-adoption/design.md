@@ -8,7 +8,7 @@ Measurements cited here are of abstract benchmark models under the assessment's 
 
 **Goals:**
 
-- One ordered list of 24 tasks, each with the gap it closes, the sprint it serves, the kind of value it buys (better product, trusted by others, better measurement) and an observable completion criterion.
+- One ordered list of 13 tasks, each with the gap it addresses, the sprint it serves, the kind of value it buys (better product, trusted by others, better measurement) and an observable completion criterion.
 - Delta specs whose scenarios are the completion criteria, so that acceptance of a task is a check, not a judgment.
 - Additions only. No edit to accepted specs, the frozen sprint plan, the roadmap or any Lean file.
 
@@ -23,7 +23,7 @@ Measurements cited here are of abstract benchmark models under the assessment's 
 
 ### 1. One change, four phases, rather than four changes
 
-The repository's active changes are sprint-sized slices. The 24 tasks are heterogeneous, so a single umbrella change keeps one review and one evidence index. Phases carry the ordering: I is operational; II targets the first composed example subject to its financial connection and preservation requirements; III depends on II for its subject; IV depends on II and, for liquidation, on sprint P27. Adapter-dependent tasks in every phase also require the artifacts specified in task 1.2. If the owner prefers, phase II can later be split into its own slice without changing this file.
+The repository's active changes are sprint-sized slices. The 13 tasks are heterogeneous, so a single umbrella change keeps one review and one evidence index. Phases carry the ordering: I is operational; II targets the first composed example subject to its financial connection and preservation requirements; III depends on II for its subject; IV depends on II and, for liquidation, on sprint P27. Adapter-dependent tasks in every phase also require the artifacts specified in task 1.2. If the owner prefers, phase II can later be split into its own slice without changing this file.
 
 **Rejected:** editing `sprint-plan.md` to add tasks. The program is frozen and earlier changes state they do not edit it.
 
@@ -33,15 +33,15 @@ The report names sprints at four points only: P18 (task I.4 and gap D5), P27 (ta
 
 | Sprint | Tasks that would serve it |
 | --- | --- |
-| P17 platform reuse | II.1, II.2, II.5, III.7 |
-| P18 external package (named by the report) | I.4, I.6, III.2, III.4 |
-| P19 certificates (named by the report for D3 and D5) | II.3, III.2 |
+| P17 platform reuse | II.1, II.2 |
+| P18 external package (named by the report) | I.4, III.1, III.2 |
+| P19 certificates (named by the report for D3 and D5) | II.3, III.1 |
 | P16 Solidity/EVM token0 campaign (named by the report for D3) | II.3 |
 | P20 quantified correspondence | II.2, II.3 |
 | P27 liquidation and margin (named by the report) | IV.3, IV.4 |
 | P30 source refinement | II.3 |
-| P37 reproducible developer package | III.3, III.4 |
-| No sprint | I.1, I.2, I.3, I.5, I.7, II.4, II.6, III.1, III.5, III.6, IV.1, IV.2 |
+| P37 reproducible developer package | III.2 |
+| No sprint | I.1, I.2, I.3, IV.1, IV.2 |
 
 ### 3. Kind of value is recorded per task
 
@@ -49,7 +49,7 @@ Each task carries one of three kinds. *Better product* changes what the kernel c
 
 ### 4. Completion criteria are the scenarios
 
-Every "done when" of the report's task table appears as a WHEN / THEN scenario in the delta spec of its capability, with the report's number where it states one (for example the 1.1× replay-growth bound of task I.1, which keeps the sixteen-transfer mark on top of the four-transfer mark as in section 2.3, and the R3 growth of 1.04× against Act's 5.8× in section 2.4). A task closes when its scenario is demonstrated, not when it is declared done.
+Every "done when" of the report's task table appears as a WHEN / THEN scenario in the delta spec of its capability. A task closes when its scenario is demonstrated, not when it is declared done.
 
 ### 5. Evidence location
 
@@ -61,9 +61,8 @@ The report's section 2.1 takeaway: replay time itself needs no task. 2.4 to 3.9 
 
 ## Risks / Trade-offs
 
-- The adapters are not in this repository. Every adapter-dependent task, including II.2, II.5 and II.6, remains blocked until its required pinned adapters, proofs and helpers, or specified replacements, are available.
-- Tasks I.4 and I.7 need a person outside the project and an assessment run outside this repository; they are the two tasks the implementation loop cannot complete alone.
-- The "on its own kernel library" claim for the seven rational-1 executor-level cases rests on the measurement records' origin field; tasks III.5 and III.7 make that claim re-checkable inside this repository.
+- The adapters are not in this repository. Every adapter-dependent task, including II.2 and IV.1, remains blocked until its required pinned adapters, proofs and helpers, or specified replacements, are available.
+- Tasks I.4 and III.1 need a person outside the project; the implementation loop cannot complete them alone.
 
 ## Open Questions
 
