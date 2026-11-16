@@ -1,6 +1,6 @@
 ## Purpose
 
-Turn the single fixed-value correspondence into per-operation contracts over the full domain, and state the relation between the Lean library and the pinned deployed code. Serves tasks II.2, II.3 and II.6.
+Turn the single fixed-value correspondence into per-operation contracts over the full domain, and state the relation between the Lean library and the pinned deployed code. Serves tasks II.2 and II.3.
 
 ## ADDED Requirements
 
@@ -21,12 +21,3 @@ The repository SHALL state the relation between the pinned token0 Solidity campa
 
 - **WHEN** the pinned token0 Solidity campaign is compared with the Lean library
 - **THEN** the repository holds a model theorem, a differential observation record and a written refinement obligation naming what remains unproved
-
-### Requirement: The swap theorem SHALL be attempted without target-specific guidance
-
-The swap case (P2, R2-SWAP) SHALL be attempted with a general tactic or an SMT bridge and no lemma written for it, and the outcome SHALL be recorded whether it passes or fails.
-
-#### Scenario: Attempt is recorded either way
-
-- **WHEN** the swap case (P2, R2-SWAP) is attempted with a general tactic or an SMT bridge and no lemma written for it
-- **THEN** the adapter record states the outcome, pass or fail, and the guidance line count of the attempt

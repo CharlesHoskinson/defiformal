@@ -1,6 +1,6 @@
 ## Purpose
 
-Produce the first composed financial example: two real components under one composition contract with one shared lemma, so that unit consistency and interface compatibility become demonstrated rather than available. Serves tasks I.3, II.1, II.5 and III.7.
+Produce the first composed financial example: two real components under one composition contract with one shared lemma, so that unit consistency and interface compatibility become demonstrated rather than available. Serves tasks I.3 and II.1.
 
 ## ADDED Requirements
 
@@ -17,21 +17,3 @@ Composition of the sUSDS deposit and the token0 quote register SHALL require an 
 
 - **WHEN** the second component is registered
 - **THEN** the record reports its model, specification and guidance line counts, authoring effort and attribution, separately from the first
-
-### Requirement: Per-case guidance SHALL be refactored into shared lemmas
-
-The per-case tactic scripts SHALL be refactored into shared lemmas, starting with the swap proof, and lines and module sizes SHALL be re-measured afterwards.
-
-#### Scenario: Swap proof shrinks without loss
-
-- **WHEN** the per-case tactic scripts are replaced by shared lemmas
-- **THEN** guidance per benchmark case is below today's 15 to 37 lines, the swap proof module is below 196 KB, and Suite 1.0 still reports 4 of 4
-
-### Requirement: Second-instance provenance SHALL be stated
-
-The rational-1 R8 record SHALL state whether the second vault instantiation is native to the library or goes through a trusted wrapper.
-
-#### Scenario: R8 record names the mechanism
-
-- **WHEN** the rational-1 R8 record is produced
-- **THEN** it states whether the second vault instantiation is native to the library or goes through a trusted wrapper
