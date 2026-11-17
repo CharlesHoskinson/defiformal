@@ -85,3 +85,15 @@ ratio threshold at zero equity, while the repeated fixture has negative equity.
 Twenty-one source controls and separate elapsed-time/negative-parameter mutants
 are recorded, not rerun by compiled replay. Collateral deposit and withdrawal
 and IV.4 remain open; see `docs/examples/lending-accrue.md` for exact scope.
+
+## Collateral deposit evidence refresh
+
+The next refresh adds `DefiKernel.Lending.DepositCollateral` and its audit.
+Actual execution moves collateral from the bound borrower's free wallet into
+that borrower's custody, with no supply, cash or debt change. Constructive
+success uses nonnegative quantity, actual free funding and invocation/debit
+rights. There is no oracle or health guard. Non-worsening health is an algebraic
+result at an explicitly supplied nonnegative price. Eighteen source controls
+and a real wrong-custody mutation are recorded, not rerun by compiled replay.
+Withdrawal and final lending acceptance remain open; see
+`docs/examples/lending-deposit-collateral.md` for exact scope.
