@@ -14,6 +14,7 @@ import DefiKernel.Metatheory.Verify
 import DefiKernel.Interface.Verify
 import DefiKernel.Arithmetic.Verify
 import DefiKernel.AMM.Verify
+import DefiKernel.Lending.Verify
 import DefiKernel.Nary.Verify
 import DefiKernel.Nary.Tree.Recovery
 import DefiKernel.CapabilityProvenance.Trace
