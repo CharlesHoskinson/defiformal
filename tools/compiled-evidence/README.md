@@ -59,3 +59,17 @@ This refresh selects twenty-one modules: the prior eighteen, plus `DefiKernel.Le
 The settlement targets connect native quotes to actual four-delta Typed transfers, empty supply changes and per-asset conservation. Rational quotes read the actual pre-ledger pool cells; the Word wrapper first checks exact raw-scale1 reserve compatibility. Word post-reserve casts and the rational floor interval constrain the actual trader gain. Zero Word output still transfers the full input and can succeed without a pool-Y debit right; the generic three-right funded-success theorem gives stronger sufficient conditions. Trader wallets are nonnegative rationals, without Word wallet bounds. These are single-swap settlement results; native same-pool round-trip bounds remain separate and no Typed two-swap execution theorem is claimed. Authentication/registry truth, initial capabilities and aggregate net funding are explicit framework assumptions. The fifteen rational and twenty-two Word runtime assertions and distinct model/proof mutations are recorded evidence, not rerun by compiled replay. The dated AMM capability addendum preserves the historical report and names the exact three cells and scope. A complete lending lifecycle and liquidation remain separate work; first repayment is described below.
 
 The first lending operation performs capped cash repayment and matching debt/supply burn through actual Typed execution. It binds the selected borrower to the authenticated context, proves cash/collateral conservation and debt-total reconciliation, and preserves other custody cells. Quantified funded success derives actual validity from amount/debt bounds, cash funding and operation-scoped rights. Repayment has no oracle or health-restoration prerequisite; partial repayment of an unhealthy position is allowed. Over-repayment has a conditional exact guard-refusal theorem; insufficient cash has a generic non-success theorem and a separate finite exact-refusal observation. Native capability provisioning, seventeen source assertions and two actual wrong-ledger mutations are recorded evidence. Historical borrow/debt-burn examples remain unchanged. The reference universe has two borrowers, a shared cash pool and distinct same-asset custody accounts. Borrow, accrual and both collateral movements in this API remain unaccepted by this slice, so the full lending task remains open.
+
+## Borrow evidence refresh
+
+The next refresh adds `DefiKernel.Lending.Oracle`, `Support`, `Borrow` and
+`BorrowAudit` to the selected modules. Actual borrower-bound execution transfers
+pool cash and issues matching debt. Its post-debt health bound uses actual locked
+custody and an explicit well-typed observed price; freshness, oracle authenticity
+and clock assumptions remain documented in `docs/examples/lending-borrow.md`.
+Constructive success discharges execution checks from explicit policy, pool
+funding and operation-scoped rights. Twenty-five source controls and separate
+wrong-health/wrong-cash mutation evidence are recorded, not rerun by compiled
+replay. Repayment remains included. Accrual and collateral movement remain open,
+so this refresh does not complete IV.4. Historical effort, outside reproduction
+and deployed-source equivalence are not claimed.
