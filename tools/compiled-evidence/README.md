@@ -73,3 +73,15 @@ wrong-health/wrong-cash mutation evidence are recorded, not rerun by compiled
 replay. Repayment remains included. Accrual and collateral movement remain open,
 so this refresh does not complete IV.4. Historical effort, outside reproduction
 and deployed-source equivalence are not claimed.
+
+## Accrual evidence refresh
+
+The next refresh adds `DefiKernel.Lending.Accrue` and `AccrueAudit`. Actual
+execution changes only borrower debt and its signed supply, using the per-call
+formula `D*(1+r*dt)`. It has no health guard or persistent accrual timestamp.
+Repeating the same interval compounds again; rate/interval authenticity, units
+and nonoverlap remain assumptions. The first fixture crosses the collateral
+ratio threshold at zero equity, while the repeated fixture has negative equity.
+Twenty-one source controls and separate elapsed-time/negative-parameter mutants
+are recorded, not rerun by compiled replay. Collateral deposit and withdrawal
+and IV.4 remain open; see `docs/examples/lending-accrue.md` for exact scope.
