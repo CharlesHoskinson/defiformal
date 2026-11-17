@@ -1,0 +1,375 @@
+/private/tmp/defiformal-margin-close-author/r2-adl_bypasses_liquidation_guard-full-proofs.lean:194:2: error: Tactic `rfl` failed: The left-hand side
+  if cfg.secondaryAdl = false then
+    match
+      throw
+        (Refusal.positionShouldNotBeLiquidated "" (equity before cfg buckets domain) ↑cfg.minCollateralUsd
+          ↑cfg.minLeverageUsd) with
+    | Except.error err => Except.error err
+    | Except.ok v =>
+      match
+        Except.mapError Refusal.typed
+          (Realization.run before cfg.closeBasePnlUsd cfg.side cfg.pnlPrice ownerContext ids) with
+      | Except.error err => Except.error err
+      | Except.ok v =>
+        match
+          Except.mapError Refusal.typed
+            (Realization.run { world := v.1.world, position := before.position } cfg.closeImpactUsd cfg.side
+              cfg.pnlPrice ownerContext ids) with
+        | Except.error err => Except.error err
+        | Except.ok v_1 =>
+          match
+            Except.mapError fundingError
+              (Funding.run { world := v_1.1.world, position := before.position } cfg.latest domain cfg.prices
+                (addPayout (addPayout buckets cfg.side v.2.paidTokens) cfg.side v_1.2.paidTokens) cfg.holdingConfigured
+                ownerContext Funding.payIds Funding.holdingIds) with
+          | Except.error err => Except.error err
+          | Except.ok v_2 =>
+            finish before cfg v.2 v_1.2 { world := v_1.1.world, position := before.position } v_2.1
+              (addPayout (addPayout buckets cfg.side v.2.paidTokens) cfg.side v_1.2.paidTokens) v_2.2
+  else
+    match
+      Except.mapError Refusal.typed
+        (Realization.run before cfg.closeBasePnlUsd cfg.side cfg.pnlPrice ownerContext ids) with
+    | Except.error err => Except.error err
+    | Except.ok v =>
+      match
+        Except.mapError Refusal.typed
+          (Realization.run { world := v.1.world, position := before.position } cfg.closeImpactUsd cfg.side cfg.pnlPrice
+            ownerContext ids) with
+      | Except.error err => Except.error err
+      | Except.ok v_1 =>
+        match
+          Except.mapError fundingError
+            (Funding.run { world := v_1.1.world, position := before.position } cfg.latest domain cfg.prices
+              (addPayout (addPayout buckets cfg.side v.2.paidTokens) cfg.side v_1.2.paidTokens) cfg.holdingConfigured
+              ownerContext Funding.payIds Funding.holdingIds) with
+        | Except.error err => Except.error err
+        | Except.ok v_2 =>
+          finish before cfg v.2 v_1.2 { world := v_1.1.world, position := before.position } v_2.1
+            (addPayout (addPayout buckets cfg.side v.2.paidTokens) cfg.side v_1.2.paidTokens) v_2.2
+is not definitionally equal to the right-hand side
+  Except.error
+    (Refusal.positionShouldNotBeLiquidated "" (equity before cfg buckets domain) ↑cfg.minCollateralUsd
+      ↑cfg.minLeverageUsd)
+
+before : Funding.State
+cfg : Config
+domain : Funding.Admissible before.position cfg.latest
+buckets : Funding.Buckets
+ids : List CapabilityId
+compatible :
+  PaymentSettlement.Compatible
+    { costUsd := 0, primaryOutput := buckets.output, collateral := buckets.collateral,
+      secondaryOutput := buckets.secondary }
+    before.world.state
+liquidation : cfg.liquidation = true
+healthy : liquidatable (equity before cfg buckets domain) cfg = false
+binding :
+  decide
+      (PaymentSettlement.Compatible
+        { costUsd := 0, primaryOutput := buckets.output, collateral := buckets.collateral,
+          secondaryOutput := buckets.secondary }
+        before.world.state) =
+    true
+⊢ (if cfg.secondaryAdl = false then
+      match
+        throw
+          (Refusal.positionShouldNotBeLiquidated "" (equity before cfg buckets domain) ↑cfg.minCollateralUsd
+            ↑cfg.minLeverageUsd) with
+      | Except.error err => Except.error err
+      | Except.ok v =>
+        match
+          Except.mapError Refusal.typed
+            (Realization.run before cfg.closeBasePnlUsd cfg.side cfg.pnlPrice ownerContext ids) with
+        | Except.error err => Except.error err
+        | Except.ok v =>
+          match
+            Except.mapError Refusal.typed
+              (Realization.run { world := v.1.world, position := before.position } cfg.closeImpactUsd cfg.side
+                cfg.pnlPrice ownerContext ids) with
+          | Except.error err => Except.error err
+          | Except.ok v_1 =>
+            match
+              Except.mapError fundingError
+                (Funding.run { world := v_1.1.world, position := before.position } cfg.latest domain cfg.prices
+                  (addPayout (addPayout buckets cfg.side v.2.paidTokens) cfg.side v_1.2.paidTokens)
+                  cfg.holdingConfigured ownerContext Funding.payIds Funding.holdingIds) with
+            | Except.error err => Except.error err
+            | Except.ok v_2 =>
+              finish before cfg v.2 v_1.2 { world := v_1.1.world, position := before.position } v_2.1
+                (addPayout (addPayout buckets cfg.side v.2.paidTokens) cfg.side v_1.2.paidTokens) v_2.2
+    else
+      match
+        Except.mapError Refusal.typed
+          (Realization.run before cfg.closeBasePnlUsd cfg.side cfg.pnlPrice ownerContext ids) with
+      | Except.error err => Except.error err
+      | Except.ok v =>
+        match
+          Except.mapError Refusal.typed
+            (Realization.run { world := v.1.world, position := before.position } cfg.closeImpactUsd cfg.side
+              cfg.pnlPrice ownerContext ids) with
+        | Except.error err => Except.error err
+        | Except.ok v_1 =>
+          match
+            Except.mapError fundingError
+              (Funding.run { world := v_1.1.world, position := before.position } cfg.latest domain cfg.prices
+                (addPayout (addPayout buckets cfg.side v.2.paidTokens) cfg.side v_1.2.paidTokens) cfg.holdingConfigured
+                ownerContext Funding.payIds Funding.holdingIds) with
+          | Except.error err => Except.error err
+          | Except.ok v_2 =>
+            finish before cfg v.2 v_1.2 { world := v_1.1.world, position := before.position } v_2.1
+              (addPayout (addPayout buckets cfg.side v.2.paidTokens) cfg.side v_1.2.paidTokens) v_2.2) =
+    Except.error
+      (Refusal.positionShouldNotBeLiquidated "" (equity before cfg buckets domain) ↑cfg.minCollateralUsd
+        ↑cfg.minLeverageUsd)
+/private/tmp/defiformal-margin-close-author/r2-adl_bypasses_liquidation_guard-full-proofs.lean:350:39: warning: This simp argument is unused:
+  or_assoc
+
+Hint: Omit it from the simp argument list.
+  [apply] simp only [Admitted, liquidatable_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/private/tmp/defiformal-margin-close-author/r2-adl_bypasses_liquidation_guard-full-proofs.lean:404:17: error: unsolved goals
+case error
+before : Funding.State
+cfg : Config
+domain : Funding.Admissible before.position cfg.latest
+buckets : Funding.Buckets
+ids : List CapabilityId
+result : Result
+compatible :
+  PaymentSettlement.Compatible
+    { costUsd := 0, primaryOutput := buckets.output, collateral := buckets.collateral,
+      secondaryOutput := buckets.secondary }
+    before.world.state
+admitted : Admitted (equity before cfg buckets domain) cfg
+binding :
+  decide
+      (PaymentSettlement.Compatible
+        { costUsd := 0, primaryOutput := buckets.output, collateral := buckets.collateral,
+          secondaryOutput := buckets.secondary }
+        before.world.state) =
+    true
+notDenied : (cfg.liquidation && !liquidatable (equity before cfg buckets domain) cfg) = false
+reason : Typed.Refusal
+baseCall : Realization.run before cfg.closeBasePnlUsd cfg.side cfg.pnlPrice ownerContext ids = Except.error reason
+success :
+  (if
+        (cfg.liquidation = true ∧ cfg.secondaryAdl = false) ∧
+          liquidatable (equity before cfg buckets domain) cfg = false then
+      match
+        throw
+          (Refusal.positionShouldNotBeLiquidated "" (equity before cfg buckets domain) ↑cfg.minCollateralUsd
+            ↑cfg.minLeverageUsd) with
+      | Except.error err => Except.error err
+      | Except.ok v => Except.error (Refusal.typed reason)
+    else Except.error (Refusal.typed reason)) =
+    Except.ok result
+⊢ ∃ baseAfter base impactAfter impact funded funding,
+    Except.error reason = Except.ok (baseAfter, base) ∧
+      Realization.run { world := baseAfter.world, position := before.position } cfg.closeImpactUsd cfg.side cfg.pnlPrice
+            ownerContext ids =
+          Except.ok (impactAfter, impact) ∧
+        Funding.run { world := impactAfter.world, position := before.position } cfg.latest domain cfg.prices
+              (addPayout (addPayout buckets cfg.side base.paidTokens) cfg.side impact.paidTokens) cfg.holdingConfigured
+              ownerContext Funding.payIds Funding.holdingIds =
+            Except.ok (funded, funding) ∧
+          finish before cfg base impact { world := impactAfter.world, position := before.position } funded
+              (addPayout (addPayout buckets cfg.side base.paidTokens) cfg.side impact.paidTokens) funding =
+            Except.ok result
+/private/tmp/defiformal-margin-close-author/r2-adl_bypasses_liquidation_guard-full-proofs.lean:409:19: error: unsolved goals
+case ok.error
+before : Funding.State
+cfg : Config
+domain : Funding.Admissible before.position cfg.latest
+buckets : Funding.Buckets
+ids : List CapabilityId
+result : Result
+compatible :
+  PaymentSettlement.Compatible
+    { costUsd := 0, primaryOutput := buckets.output, collateral := buckets.collateral,
+      secondaryOutput := buckets.secondary }
+    before.world.state
+admitted : Admitted (equity before cfg buckets domain) cfg
+binding :
+  decide
+      (PaymentSettlement.Compatible
+        { costUsd := 0, primaryOutput := buckets.output, collateral := buckets.collateral,
+          secondaryOutput := buckets.secondary }
+        before.world.state) =
+    true
+notDenied : (cfg.liquidation && !liquidatable (equity before cfg buckets domain) cfg) = false
+baseAfter : Funding.State
+base : Realization.Receipt
+baseCall :
+  Realization.run before cfg.closeBasePnlUsd cfg.side cfg.pnlPrice ownerContext ids = Except.ok (baseAfter, base)
+reason : Typed.Refusal
+impactCall :
+  Realization.run { world := baseAfter.world, position := before.position } cfg.closeImpactUsd cfg.side cfg.pnlPrice
+      ownerContext ids =
+    Except.error reason
+success :
+  (if
+        (cfg.liquidation = true ∧ cfg.secondaryAdl = false) ∧
+          liquidatable (equity before cfg buckets domain) cfg = false then
+      match
+        throw
+          (Refusal.positionShouldNotBeLiquidated "" (equity before cfg buckets domain) ↑cfg.minCollateralUsd
+            ↑cfg.minLeverageUsd) with
+      | Except.error err => Except.error err
+      | Except.ok v => Except.error (Refusal.typed reason)
+    else Except.error (Refusal.typed reason)) =
+    Except.ok result
+⊢ ∃ baseAfter_1 base_1 impactAfter impact funded funding,
+    Except.ok (baseAfter, base) = Except.ok (baseAfter_1, base_1) ∧
+      Realization.run { world := baseAfter_1.world, position := before.position } cfg.closeImpactUsd cfg.side
+            cfg.pnlPrice ownerContext ids =
+          Except.ok (impactAfter, impact) ∧
+        Funding.run { world := impactAfter.world, position := before.position } cfg.latest domain cfg.prices
+              (addPayout (addPayout buckets cfg.side base_1.paidTokens) cfg.side impact.paidTokens)
+              cfg.holdingConfigured ownerContext Funding.payIds Funding.holdingIds =
+            Except.ok (funded, funding) ∧
+          finish before cfg base_1 impact { world := impactAfter.world, position := before.position } funded
+              (addPayout (addPayout buckets cfg.side base_1.paidTokens) cfg.side impact.paidTokens) funding =
+            Except.ok result
+/private/tmp/defiformal-margin-close-author/r2-adl_bypasses_liquidation_guard-full-proofs.lean:415:21: error: unsolved goals
+case ok.ok.error
+before : Funding.State
+cfg : Config
+domain : Funding.Admissible before.position cfg.latest
+buckets : Funding.Buckets
+ids : List CapabilityId
+result : Result
+compatible :
+  PaymentSettlement.Compatible
+    { costUsd := 0, primaryOutput := buckets.output, collateral := buckets.collateral,
+      secondaryOutput := buckets.secondary }
+    before.world.state
+admitted : Admitted (equity before cfg buckets domain) cfg
+binding :
+  decide
+      (PaymentSettlement.Compatible
+        { costUsd := 0, primaryOutput := buckets.output, collateral := buckets.collateral,
+          secondaryOutput := buckets.secondary }
+        before.world.state) =
+    true
+notDenied : (cfg.liquidation && !liquidatable (equity before cfg buckets domain) cfg) = false
+baseAfter : Funding.State
+base : Realization.Receipt
+baseCall :
+  Realization.run before cfg.closeBasePnlUsd cfg.side cfg.pnlPrice ownerContext ids = Except.ok (baseAfter, base)
+impactAfter : Funding.State
+impact : Realization.Receipt
+impactCall :
+  Realization.run { world := baseAfter.world, position := before.position } cfg.closeImpactUsd cfg.side cfg.pnlPrice
+      ownerContext ids =
+    Except.ok (impactAfter, impact)
+reason : Funding.Refusal
+fundingCall :
+  Funding.run { world := impactAfter.world, position := before.position } cfg.latest domain cfg.prices
+      (addPayout (addPayout buckets cfg.side base.paidTokens) cfg.side impact.paidTokens) cfg.holdingConfigured
+      ownerContext Funding.payIds Funding.holdingIds =
+    Except.error reason
+success :
+  (if
+        (cfg.liquidation = true ∧ cfg.secondaryAdl = false) ∧
+          liquidatable (equity before cfg buckets domain) cfg = false then
+      match
+        throw
+          (Refusal.positionShouldNotBeLiquidated "" (equity before cfg buckets domain) ↑cfg.minCollateralUsd
+            ↑cfg.minLeverageUsd) with
+      | Except.error err => Except.error err
+      | Except.ok v => Except.error (fundingError reason)
+    else Except.error (fundingError reason)) =
+    Except.ok result
+⊢ ∃ baseAfter_1 base_1 impactAfter impact funded funding,
+    Except.ok (baseAfter, base) = Except.ok (baseAfter_1, base_1) ∧
+      Realization.run { world := baseAfter_1.world, position := before.position } cfg.closeImpactUsd cfg.side
+            cfg.pnlPrice ownerContext ids =
+          Except.ok (impactAfter, impact) ∧
+        Funding.run { world := impactAfter.world, position := before.position } cfg.latest domain cfg.prices
+              (addPayout (addPayout buckets cfg.side base_1.paidTokens) cfg.side impact.paidTokens)
+              cfg.holdingConfigured ownerContext Funding.payIds Funding.holdingIds =
+            Except.ok (funded, funding) ∧
+          finish before cfg base_1 impact { world := impactAfter.world, position := before.position } funded
+              (addPayout (addPayout buckets cfg.side base_1.paidTokens) cfg.side impact.paidTokens) funding =
+            Except.ok result
+/private/tmp/defiformal-margin-close-author/r2-adl_bypasses_liquidation_guard-full-proofs.lean:420:10: error: Type mismatch: After simplification, term
+  success
+ has type
+  (if (cfg.liquidation && !cfg.secondaryAdl && !liquidatable (equity before cfg buckets domain) cfg) = true then
+      match
+        throw
+          (Refusal.positionShouldNotBeLiquidated "" (equity before cfg buckets domain) ↑cfg.minCollateralUsd
+            ↑cfg.minLeverageUsd) with
+      | Except.error err => Except.error err
+      | Except.ok v =>
+        finish before cfg base impact { world := impactAfter.world, position := before.position } funded
+          (addPayout (addPayout buckets cfg.side base.paidTokens) cfg.side impact.paidTokens) funding
+    else
+      finish before cfg base impact { world := impactAfter.world, position := before.position } funded
+        (addPayout (addPayout buckets cfg.side base.paidTokens) cfg.side impact.paidTokens) funding) =
+    Except.ok result
+but is expected to have type
+  finish before cfg base impact { world := impactAfter.world, position := before.position } funded
+      (addPayout (addPayout buckets cfg.side base.paidTokens) cfg.side impact.paidTokens) funding =
+    Except.ok result
+/private/tmp/defiformal-margin-close-author/r2-adl_bypasses_liquidation_guard-full-proofs.lean:404:38: warning: This simp argument is unused:
+  notDenied
+
+Hint: Omit it from the simp argument list.
+  [apply] simp [run, binding, baseCall, Except.mapError, bind, Except.bind] at success
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/private/tmp/defiformal-margin-close-author/r2-adl_bypasses_liquidation_guard-full-proofs.lean:409:40: warning: This simp argument is unused:
+  notDenied
+
+Hint: Omit it from the simp argument list.
+  [apply] simp [run, binding, baseCall, impactCall, Except.mapError, bind, Except.bind] at success
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/private/tmp/defiformal-margin-close-author/r2-adl_bypasses_liquidation_guard-full-proofs.lean:415:42: warning: This simp argument is unused:
+  notDenied
+
+Hint: Omit it from the simp argument list.
+  [apply] simp [run, binding, baseCall, impactCall, fundingCall, Except.mapError, bind, Except.bind] at success
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/private/tmp/defiformal-margin-close-author/r2-adl_bypasses_liquidation_guard-full-proofs.lean:1017:4: error: Type mismatch
+  finished
+has type
+  finish before cfg base impact prepared funded preparedBuckets funding = Except.ok result
+but is expected to have type
+  (if (cfg.liquidation && !cfg.secondaryAdl && !liquidatable (equity before cfg buckets domain) cfg) = true then
+      match
+        throw
+          (Refusal.positionShouldNotBeLiquidated "" (equity before cfg buckets domain) ↑cfg.minCollateralUsd
+            ↑cfg.minLeverageUsd) with
+      | Except.error err => Except.error err
+      | Except.ok v =>
+        match
+          match Except.ok (funded, funding) with
+          | Except.error err => Except.error (fundingError err)
+          | Except.ok v => Except.ok v with
+        | Except.error err => Except.error err
+        | Except.ok v =>
+          finish before cfg base impact { world := impactAfter.world, position := before.position } v.1
+            (addPayout (addPayout buckets cfg.side base.paidTokens) cfg.side impact.paidTokens) v.2
+    else
+      match
+        match Except.ok (funded, funding) with
+        | Except.error err => Except.error (fundingError err)
+        | Except.ok v => Except.ok v with
+      | Except.error err => Except.error err
+      | Except.ok v =>
+        finish before cfg base impact { world := impactAfter.world, position := before.position } v.1
+          (addPayout (addPayout buckets cfg.side base.paidTokens) cfg.side impact.paidTokens) v.2) =
+    Except.ok result
+/private/tmp/defiformal-margin-close-author/r2-adl_bypasses_liquidation_guard-full-proofs.lean:1012:27: warning: This simp argument is unused:
+  notDenied
+
+Hint: Omit it from the simp argument list.
+  [apply] simp only [run, binding, Bool.not_true, Bool.false_eq_true, ite_false, baseCall, impactCall, Except.mapError,
+    bind, Except.bind]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`

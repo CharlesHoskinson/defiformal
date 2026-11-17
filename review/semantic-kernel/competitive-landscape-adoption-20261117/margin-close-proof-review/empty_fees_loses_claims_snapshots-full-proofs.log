@@ -1,0 +1,200 @@
+/private/tmp/defiformal-margin-close-review/r2-empty_fees_loses_claims_snapshots-full-proofs.lean:180:69: error: Application type mismatch: The argument
+  rfl
+has type
+  ?m.30 = ?m.30
+but is expected to have type
+  (emptyFees fees).latest = fees.latest
+in the application
+  ⟨?m.28, rfl⟩
+/private/tmp/defiformal-margin-close-review/r2-empty_fees_loses_claims_snapshots-full-proofs.lean:350:39: warning: This simp argument is unused:
+  or_assoc
+
+Hint: Omit it from the simp argument list.
+  [apply] simp only [Admitted, liquidatable_iff]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/private/tmp/defiformal-margin-close-review/r2-empty_fees_loses_claims_snapshots-full-proofs.lean:1030:12: error: Tactic `rfl` failed: The left-hand side
+  (emptyFees progress.fees).pending
+is not definitionally equal to the right-hand side
+  progress.fees.pending
+
+case isTrue
+cfg : Config
+progress : Progress
+stage : Stage
+cost : ℕ
+payment : Payment.Result
+post : World
+left✝ :
+  PaymentSettlement.run cfg.prices
+      { costUsd := cost, primaryOutput := progress.buckets.output, collateral := progress.buckets.collateral,
+        secondaryOutput := progress.buckets.secondary }
+      progress.state.world.capabilities ownerContext Funding.payIds progress.state.world.state =
+    Except.ok (post, payment)
+success : payOne cfg progress stage cost = Except.ok (nextProgress progress stage cost post payment, payment)
+h✝ :
+  (decide (stage = Stage.fees) &&
+      !(decide (payment.sourceRemainingCostUsd = 0) && decide (payment.paidSecondary = 0))) =
+    true
+⊢ (emptyFees progress.fees).pending = progress.fees.pending
+/private/tmp/defiformal-margin-close-review/r2-empty_fees_loses_claims_snapshots-full-proofs.lean:1061:10: error: Type mismatch
+  step
+has type
+  next.fees.pending = progress.fees.pending
+but is expected to have type
+  {
+            progress :=
+              { state := next.state, buckets := next.buckets, fees := emptyFees next.fees, executed := next.executed },
+            kind := Kind.exceptional stage payment.sourceRemainingCostUsd, skipped := tail, baseRealization := base,
+            impactRealization := impact }.progress.fees.pending =
+    progress.fees.pending
+/private/tmp/defiformal-margin-close-review/r2-empty_fees_loses_claims_snapshots-full-proofs.lean:1084:8: error: Tactic `rfl` failed: The left-hand side
+  {
+          progress :=
+            {
+              state :=
+                (fundingProgress cfg { world := impactAfter.world, position := before.position } funded
+                    (addPayout (addPayout buckets cfg.side base.paidTokens) cfg.side impact.paidTokens) funding).state,
+              buckets :=
+                (fundingProgress cfg { world := impactAfter.world, position := before.position } funded
+                    (addPayout (addPayout buckets cfg.side base.paidTokens) cfg.side impact.paidTokens)
+                    funding).buckets,
+              fees :=
+                emptyFees
+                  (fundingProgress cfg { world := impactAfter.world, position := before.position } funded
+                      (addPayout (addPayout buckets cfg.side base.paidTokens) cfg.side impact.paidTokens) funding).fees,
+              executed :=
+                (fundingProgress cfg { world := impactAfter.world, position := before.position } funded
+                    (addPayout (addPayout buckets cfg.side base.paidTokens) cfg.side impact.paidTokens)
+                    funding).executed },
+          kind := Kind.exceptional Stage.funding funding.payment.sourceRemainingCostUsd, skipped := remainingCosts cfg,
+          baseRealization := base, impactRealization := impact }.progress.fees.pending
+is not definitionally equal to the right-hand side
+  (initialFees funding.funding cfg).pending
+
+case pos.true
+before : Funding.State
+cfg : Config
+domain : Funding.Admissible before.position cfg.latest
+buckets : Funding.Buckets
+ids : List CapabilityId
+left✝¹ :
+  PaymentSettlement.Compatible
+    { costUsd := 0, primaryOutput := buckets.output, collateral := buckets.collateral,
+      secondaryOutput := buckets.secondary }
+    before.world.state
+left✝ : Admitted (equity before cfg buckets domain) cfg
+baseAfter : Funding.State
+base : Realization.Receipt
+impactAfter : Funding.State
+impact : Realization.Receipt
+funded : Funding.State
+funding : Funding.Receipt
+baseCall :
+  Realization.run before cfg.closeBasePnlUsd cfg.side cfg.pnlPrice ownerContext ids = Except.ok (baseAfter, base)
+impactCall :
+  Realization.run { world := baseAfter.world, position := before.position } cfg.closeImpactUsd cfg.side cfg.pnlPrice
+      ownerContext ids =
+    Except.ok (impactAfter, impact)
+fundingCall :
+  Funding.run { world := impactAfter.world, position := before.position } cfg.latest domain cfg.prices
+      (addPayout (addPayout buckets cfg.side base.paidTokens) cfg.side impact.paidTokens) cfg.holdingConfigured
+      ownerContext Funding.payIds Funding.holdingIds =
+    Except.ok (funded, funding)
+observation :
+  funding =
+    Funding.receipt
+      (Funding.quote { world := impactAfter.world, position := before.position }.position cfg.latest domain)
+      (Payment.payCost cfg.prices
+        (Funding.paymentInput cfg.prices
+          (Funding.quote { world := impactAfter.world, position := before.position }.position cfg.latest domain)
+          (addPayout (addPayout buckets cfg.side base.paidTokens) cfg.side impact.paidTokens)))
+residual : 0 < funding.payment.sourceRemainingCostUsd
+allowedEq : allowed before cfg = true
+success :
+  run before cfg domain buckets ids =
+    Except.ok
+      {
+        progress :=
+          {
+            state :=
+              (fundingProgress cfg { world := impactAfter.world, position := before.position } funded
+                  (addPayout (addPayout buckets cfg.side base.paidTokens) cfg.side impact.paidTokens) funding).state,
+            buckets :=
+              (fundingProgress cfg { world := impactAfter.world, position := before.position } funded
+                  (addPayout (addPayout buckets cfg.side base.paidTokens) cfg.side impact.paidTokens) funding).buckets,
+            fees :=
+              emptyFees
+                (fundingProgress cfg { world := impactAfter.world, position := before.position } funded
+                    (addPayout (addPayout buckets cfg.side base.paidTokens) cfg.side impact.paidTokens) funding).fees,
+            executed :=
+              (fundingProgress cfg { world := impactAfter.world, position := before.position } funded
+                  (addPayout (addPayout buckets cfg.side base.paidTokens) cfg.side impact.paidTokens)
+                  funding).executed },
+        kind := Kind.exceptional Stage.funding funding.payment.sourceRemainingCostUsd, skipped := remainingCosts cfg,
+        baseRealization := base, impactRealization := impact }
+finished :
+  Except.ok
+      {
+        progress :=
+          {
+            state :=
+              (fundingProgress cfg { world := impactAfter.world, position := before.position } funded
+                  (addPayout (addPayout buckets cfg.side base.paidTokens) cfg.side impact.paidTokens) funding).state,
+            buckets :=
+              (fundingProgress cfg { world := impactAfter.world, position := before.position } funded
+                  (addPayout (addPayout buckets cfg.side base.paidTokens) cfg.side impact.paidTokens) funding).buckets,
+            fees :=
+              emptyFees
+                (fundingProgress cfg { world := impactAfter.world, position := before.position } funded
+                    (addPayout (addPayout buckets cfg.side base.paidTokens) cfg.side impact.paidTokens) funding).fees,
+            executed :=
+              (fundingProgress cfg { world := impactAfter.world, position := before.position } funded
+                  (addPayout (addPayout buckets cfg.side base.paidTokens) cfg.side impact.paidTokens)
+                  funding).executed },
+        kind := Kind.exceptional Stage.funding funding.payment.sourceRemainingCostUsd, skipped := remainingCosts cfg,
+        baseRealization := base, impactRealization := impact } =
+    Except.ok
+      {
+        progress :=
+          {
+            state :=
+              (fundingProgress cfg { world := impactAfter.world, position := before.position } funded
+                  (addPayout (addPayout buckets cfg.side base.paidTokens) cfg.side impact.paidTokens) funding).state,
+            buckets :=
+              (fundingProgress cfg { world := impactAfter.world, position := before.position } funded
+                  (addPayout (addPayout buckets cfg.side base.paidTokens) cfg.side impact.paidTokens) funding).buckets,
+            fees :=
+              emptyFees
+                (fundingProgress cfg { world := impactAfter.world, position := before.position } funded
+                    (addPayout (addPayout buckets cfg.side base.paidTokens) cfg.side impact.paidTokens) funding).fees,
+            executed :=
+              (fundingProgress cfg { world := impactAfter.world, position := before.position } funded
+                  (addPayout (addPayout buckets cfg.side base.paidTokens) cfg.side impact.paidTokens)
+                  funding).executed },
+        kind := Kind.exceptional Stage.funding funding.payment.sourceRemainingCostUsd, skipped := remainingCosts cfg,
+        baseRealization := base, impactRealization := impact }
+⊢ {
+            progress :=
+              {
+                state :=
+                  (fundingProgress cfg { world := impactAfter.world, position := before.position } funded
+                      (addPayout (addPayout buckets cfg.side base.paidTokens) cfg.side impact.paidTokens)
+                      funding).state,
+                buckets :=
+                  (fundingProgress cfg { world := impactAfter.world, position := before.position } funded
+                      (addPayout (addPayout buckets cfg.side base.paidTokens) cfg.side impact.paidTokens)
+                      funding).buckets,
+                fees :=
+                  emptyFees
+                    (fundingProgress cfg { world := impactAfter.world, position := before.position } funded
+                        (addPayout (addPayout buckets cfg.side base.paidTokens) cfg.side impact.paidTokens)
+                        funding).fees,
+                executed :=
+                  (fundingProgress cfg { world := impactAfter.world, position := before.position } funded
+                      (addPayout (addPayout buckets cfg.side base.paidTokens) cfg.side impact.paidTokens)
+                      funding).executed },
+            kind := Kind.exceptional Stage.funding funding.payment.sourceRemainingCostUsd,
+            skipped := remainingCosts cfg, baseRealization := base,
+            impactRealization := impact }.progress.fees.pending =
+    (initialFees funding.funding cfg).pending
