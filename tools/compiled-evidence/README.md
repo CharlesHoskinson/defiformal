@@ -1,6 +1,6 @@
 # Compiled DeFiFormal evidence for macOS arm64
 
-Current source coverage includes all five exact-rational lending operations and a finite lifecycle replay. The refresh notes below describe earlier increments; their pending-work statements apply to those earlier slices. Release acceptance remains bound by the separate publication record.
+Current source coverage includes all five exact-rational lending operations, a finite lifecycle replay and native rounded-payment arithmetic. Actual Typed liquidation and solvency remain open. The refresh notes below describe earlier increments; their pending-work statements apply to those earlier slices. Release acceptance remains bound by the separate publication record.
 
 This package replays the explicit modules in `targets.txt` using the bundled Lean `leanchecker`. It contains their actual compiled import closure, all associated Lean source files, dependency revision and license records, runtime libraries, checksums, and selected accepted evidence. `manifest.json` identifies the exact source revision, checker binaries, platform and scope of each check. The package archive has an external SHA-256 in its publication record; compare that before extraction. Internal checksums detect missing or altered payload bytes, not a maliciously replaced archive plus checksum.
 
@@ -117,3 +117,25 @@ exact-rational reference API. It does not claim market solvency, an indexed
 accrual clock, oracle authenticity, deployed equivalence, historical author
 effort, outside reproduction or adoption. The old report/proofs remain intact.
 Final IV.4 closure additionally requires this package's verified publication.
+
+## Native rounded-payment evidence refresh
+
+This refresh adds `DefiKernel.Margin.Payment` and `PaymentAudit`. Generic
+raw-natural payment proofs establish primary ceil and secondary floor bounds,
+exact bucket reconciliation, two-dust accounting, a zero-source-residual
+shortfall witness, and arithmetic coverage under sufficient primary funds.
+They do not establish actual Typed payment execution or liquidation solvency.
+
+Twelve native source controls and two meaningful mutations are recorded
+separately. A thin wrapper calls the unchanged pinned GMX pure helpers: eleven
+successful source values and five raw arithmetic Panics remain distinct. Nine
+exact payment cases match six observed Native/source outputs. These finite
+observations do not prove universal EVM256 or full-handler correspondence.
+Source residual, rounding dust and economic shortfall remain separate.
+
+The archive binds source/compiler inputs, raw observations and native tool
+identities and licenses. External Solidity/EVM/Go payloads are not bundled;
+the compiled proof replay does not rerun helper calls or source controls.
+Original third-party terms, including GMX BUSL-1.1, are preserved. Actual
+Typed custody/funding/realization, ordered liquidation, separate solvency,
+historical effort and outside reproduction remain open.
