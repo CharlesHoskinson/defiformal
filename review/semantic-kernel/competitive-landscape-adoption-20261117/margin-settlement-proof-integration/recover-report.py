@@ -1,0 +1,17 @@
+from pathlib import Path
+import json,hashlib,shutil,gzip,subprocess,re
+r=Path('/Users/andreaskendziorra/repositories/from_Stefan/defiformal');e=r/'review/semantic-kernel/competitive-landscape-adoption-20261117/margin-settlement-proof-integration';s=Path('/private/tmp/defiformal-amm-package-source');tc=Path('/private/tmp/defiformal-adapter-author/runtime/lean-4.33.0-rc2-darwin_aarch64');f=json.loads((e/'PROOF-FREEZE.json').read_text());driver=Path('/private/tmp/defiformal-margin-settlement-root-driver.log');data=driver.read_bytes()
+names=['build','controls','audit','kernel-Types','kernel-PaymentSettlement','kernel-PaymentSettlementAudit'];assert all(data.decode().splitlines().count(n+' PASS')==1 for n in names);assert b"KeyError: 'baseline'" in data
+shutil.copy2(driver,e/'report-writer-failure.log');shutil.copy2('/private/tmp/defiformal-verify-margin-settlement-root.py',e/'original-verifier.py')
+commands=[('build',[str(tc/'bin/lake'),'build']),('controls',[str(tc/'bin/lake'),'env','lean','DefiKernel/Margin/PaymentSettlementAudit.lean']),('audit',[str(tc/'bin/lake'),'env','lean',str(e/'Audit.lean')])]+[('kernel-'+m,[str(tc/'bin/lake'),'env','leanchecker','-v','DefiKernel.Margin.'+m]) for m in ['Types','PaymentSettlement','PaymentSettlementAudit']]
+runs=[];counts={}
+for name,argv in commands:
+ p=e/(name+'.log');p=p if p.exists() else e/(name+'.log.gz');raw=gzip.decompress(p.read_bytes()) if p.suffix=='.gz' else p.read_bytes();assert raw
+ runs.append(dict(name=name,argv=argv,cwd=str(s/'lean'),started_utc=None,exit=0,exit_evidence='Original verifier prints this unique PASS only after asserting actual subprocess exit0; report-writer-failure.log retains all six completions before final metadata KeyError',raw_sha256=hashlib.sha256(raw).hexdigest(),raw_bytes=len(raw),stored=p.name))
+ if name=='controls':assert b'MARGIN_SETTLEMENT_CONTROL PASSED 22/22' in raw;counts['native_controls']=22
+ if name=='audit':
+  for key,pattern in [('theorems',r'AXIOM AUDIT PASSED: (\d+)/(\d+) theorems; forbidden=0'),('supplemental_declarations',r'AXIOM AUDIT DECLARATIONS PASSED: (\d+)/(\d+) supplemental declarations; forbidden=0')]:
+   m=re.search(pattern,raw.decode());assert m and m[1]==m[2] and int(m[1])>0;counts[key]=int(m[1])
+for row in f['files']:assert hashlib.sha256((s/row['path']).read_bytes()).hexdigest()==row['sha256']
+result=dict(status='PASS',author_baseline=f['baseline_detached'],accepted_dependency_revision=f['accepted_dependency_revision'],integration_baseline=subprocess.check_output(['git','rev-parse','HEAD'],cwd=s,text=True).strip(),files=f['files'],runs=runs,counts=counts,forbidden_dependencies=0,scope='Exact frozen actual Typed payment primitive; fresh source controls, full build/root audit and three kernel targets; no completed liquidation or universal source correspondence claim',report_recovery=dict(original_orchestrator_exit=1,reason='Final JSON writer expected baseline instead of baseline_detached; all six verification commands completed successfully first',rerun_credit=False,source_or_proof_changes=False,per_command_start_times='Unavailable after failed in-memory report write; not inferred from wall-clock or file timestamps',raw_failure='report-writer-failure.log',original_verifier='original-verifier.py'))
+(e/'result.json').write_text(json.dumps(result,indent=2)+'\n');shutil.copy2(__file__,e/'recover-report.py');print('Recovered existing successful verification records',counts,'without reruns')
