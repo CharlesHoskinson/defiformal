@@ -1,0 +1,39 @@
+DefiKernel.ConcentratedLiquidity.SqrtPriceMath.add_result_le (sqrtP : DefiKernel.ConcentratedLiquidity.U160)
+  (L : DefiKernel.ConcentratedLiquidity.U128) (amount : DefiKernel.ConcentratedLiquidity.U256)
+  (q : DefiKernel.ConcentratedLiquidity.U160)
+  (hsucc :
+    DefiKernel.ConcentratedLiquidity.SqrtPriceMath.getNextSqrtPriceFromAmount0RoundingUp sqrtP L amount true =
+      Except.ok q) :
+  q.value ≤ sqrtP.value
+'DefiKernel.ConcentratedLiquidity.SqrtPriceMath.add_result_le' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+DefiKernel.ConcentratedLiquidity.SqrtPriceMath.primary_add (sqrtP : DefiKernel.ConcentratedLiquidity.U160)
+  (L : DefiKernel.ConcentratedLiquidity.U128) (amount : DefiKernel.ConcentratedLiquidity.U256) (hnz : amount.value ≠ 0)
+  (hfitB : (DefiKernel.ConcentratedLiquidity.SqrtPriceMath.product amount sqrtP).blt (2 ^ 256) = true)
+  (hwrapB :
+    (DefiKernel.ConcentratedLiquidity.SqrtPriceMath.numerator1 L).ble
+        (DefiKernel.ConcentratedLiquidity.SqrtPriceMath.wrap256
+          (DefiKernel.ConcentratedLiquidity.SqrtPriceMath.numerator1 L +
+            DefiKernel.ConcentratedLiquidity.SqrtPriceMath.product amount sqrtP)) =
+      true) :
+  DefiKernel.ConcentratedLiquidity.SqrtPriceMath.getNextSqrtPriceFromAmount0RoundingUp sqrtP L amount true =
+    match
+      DefiKernel.ConcentratedLiquidity.FullMath.mulDivRoundingUp
+        (DefiKernel.ConcentratedLiquidity.SqrtPriceMath.numerator1Word L)
+        (DefiKernel.ConcentratedLiquidity.SqrtPriceMath.widen160 sqrtP)
+        (DefiKernel.ConcentratedLiquidity.SqrtPriceMath.wrapWord
+          (DefiKernel.ConcentratedLiquidity.SqrtPriceMath.numerator1 L +
+            DefiKernel.ConcentratedLiquidity.SqrtPriceMath.product amount sqrtP)) with
+    | Except.ok q => Except.ok (DefiKernel.ConcentratedLiquidity.SqrtPriceMath.bareToUint160 q)
+    | Except.error e => Except.error e
+DefiKernel.ConcentratedLiquidity.SqrtPriceMath.remove_require (sqrtP : DefiKernel.ConcentratedLiquidity.U160)
+  (L : DefiKernel.ConcentratedLiquidity.U128) (amount : DefiKernel.ConcentratedLiquidity.U256) (hnz : amount.value ≠ 0)
+  (hfail :
+    ((DefiKernel.ConcentratedLiquidity.SqrtPriceMath.product amount sqrtP).blt (2 ^ 256) &&
+        decide
+          (DefiKernel.ConcentratedLiquidity.SqrtPriceMath.numerator1 L >
+            DefiKernel.ConcentratedLiquidity.SqrtPriceMath.product amount sqrtP)) =
+      false) :
+  DefiKernel.ConcentratedLiquidity.SqrtPriceMath.getNextSqrtPriceFromAmount0RoundingUp sqrtP L amount false =
+    Except.error DefiKernel.ConcentratedLiquidity.Failure.subUnderflow

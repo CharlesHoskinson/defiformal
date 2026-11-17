@@ -1,0 +1,11 @@
+# Unproved token0 source refinement obligation
+
+**Status: open.** The model theorem and the finite accepted observations in this directory do not prove universal Solidity/EVM correspondence or equivalence to a deployed pool.
+
+For all inputs in the ABI domain defined in [model-theorem.md](model-theorem.md), a future proof must show that execution of the pinned pure probe runtime, under a precisely stated EVM fork, call context and adequate-gas condition, satisfies the stated success/coarse-refusal relation to `getNextSqrtPriceFromAmount0RoundingUp`. It must establish ABI decoding and encoding, word widths and conversions, arithmetic overflow and wrap behavior, assembly operations, checked division and rounding, fallback selection, SafeCast, semantic revert propagation, and correspondence of the source and compiled runtime. It must account for termination and gas separately from semantic refusal. A claim about source Solidity additionally needs a justified compiler/source-to-runtime link; a claim about a deployed contract needs the deployed bytecode identity and its context.
+
+The pinned compiler is solc `0.7.6+commit.7338295f`, optimizer enabled with 800 runs, metadata bytecode hash disabled, compiler target Istanbul. The recorded EVM execution fork is independently Istanbul. The manifest distinguishes runtime bytecode bytes from its hex-file text hash and records the original binary identities, gas, calldata and genesis context. These pins identify the finite experiment; hashes are not a proof of compiler correctness or EVM refinement.
+
+The four recorded source reverts have empty returndata despite different Lean model labels. A stronger theorem assigning a unique Lean error from those source bytes remains unsupported. A complete proof may retain the coarse refusal relation or prove a stronger relation from execution semantics; it must not infer error identity from this dataset.
+
+Pool settlement, reserves, fees, ledger state, transaction history, caller authorization beyond this pure probe, and full deployed-library equivalence are outside this relation. This package introduces no assumptions or axioms into the Lean kernel. Its fresh proof replay concerns the unchanged model module; source campaign observations are reused historical evidence, not newly executed observations or a universal simulation theorem.
