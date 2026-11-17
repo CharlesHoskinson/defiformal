@@ -8,6 +8,8 @@ Prove actual execution, reserve/output bounds, conservation of each transferred 
 
 Add checked Word arithmetic with explicit widths, overflow/refusal domains and output-floor rounding. Prove correspondence to the exact rational quote throughout the admissible domain, stating which post-reserve/product properties survive rounding. Do not credit Word correspondence from examples alone. No invented source/deployed-code equivalence. Follow the repository's existing checked arithmetic conventions where useful.
 
+Word follow-up: state the zero-output policy explicitly. Rounding can make the first output zero, so do not infer a successful reverse trade or rollback from a compound `Except` result. If wide intermediates are used, prove their concrete width bounds and distinguish them from a claim about 256-bit EVM intermediate execution. For actual wallet settlement, keep the two assets and trader/pool roles distinct and derive reserve changes from the executed ledger transition.
+
 Use decisive regressions for fee retention, wrong denominator, rounding and refusals. Keep malformed-number adapter input handling separate from native bounded Word inputs. Record prospective line counts and attribution; do not fabricate historical effort. Freeze one concrete proof/behavior at a time, with focused Astra review and immediate accepted integration, then extend the compiled evidence package for the delivered targets.
 
 Publish a dated capability addendum with exact theorem/replay links and scope, rather than editing historical report cells in place. IV.1 stays open until both arithmetic contracts, conservation/no-arbitrage and a fresh R2 library replay are present and accepted.
