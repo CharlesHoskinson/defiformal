@@ -1,5 +1,7 @@
 # Compiled DeFiFormal evidence for macOS arm64
 
+Current source coverage includes all five exact-rational lending operations and a finite lifecycle replay. The refresh notes below describe earlier increments; their pending-work statements apply to those earlier slices. Release acceptance remains bound by the separate publication record.
+
 This package replays the explicit modules in `targets.txt` using the bundled Lean `leanchecker`. It contains their actual compiled import closure, all associated Lean source files, dependency revision and license records, runtime libraries, checksums, and selected accepted evidence. `manifest.json` identifies the exact source revision, checker binaries, platform and scope of each check. The package archive has an external SHA-256 in its publication record; compare that before extraction. Internal checksums detect missing or altered payload bytes, not a maliciously replaced archive plus checksum.
 
 Extract the archive, then run from any directory:
@@ -97,3 +99,21 @@ result at an explicitly supplied nonnegative price. Eighteen source controls
 and a real wrong-custody mutation are recorded, not rerun by compiled replay.
 Withdrawal and final lending acceptance remain open; see
 `docs/examples/lending-deposit-collateral.md` for exact scope.
+
+## Complete scoped lending source refresh
+
+This refresh adds `WithdrawCollateral`, `WithdrawCollateralAudit` and
+`LifecycleAudit`. Actual withdrawal checks owner, locked quantity, positive fresh
+price and remaining-collateral health, with constructive success and exact
+qualified policy refusal. The separate finite lifecycle executes all five public
+operations on one ledger with thirteen actually issued noncolliding capability
+IDs, checks exact stage/final ledgers and totals, and catches cross-operation
+permission misuse. Its eight controls are finite evidence, not a universal
+lifecycle theorem. Twenty-seven withdrawal controls and ten public CLI negatives
+are recorded separately. Compiled replay does not rerun these source controls.
+
+The dated lending addendum marks `primitive:lending` supported within this
+exact-rational reference API. It does not claim market solvency, an indexed
+accrual clock, oracle authenticity, deployed equivalence, historical author
+effort, outside reproduction or adoption. The old report/proofs remain intact.
+Final IV.4 closure additionally requires this package's verified publication.
