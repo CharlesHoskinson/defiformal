@@ -1,0 +1,240 @@
+{
+  "schema": "defiformal-p27-entry-observations/v1",
+  "created_utc": "2026-11-17T17:25:11.770058+00:00",
+  "kind": "Source-formula worksheet / proposed contract expectations, not Solidity/EVM observations",
+  "raw_units": "Amounts are raw token integers; products amount*source price are raw source USD integers. FLOAT_PRECISION=10^30; funding denominator10^45. No token-decimal normalization inferred.",
+  "cases": [
+    {
+      "id": "funding_direction_and_asymmetric_rounding",
+      "source_excerpts": [
+        "funding_charge_and_claimables",
+        "funding_scaled_rounding"
+      ],
+      "input": {
+        "size_usd": 1000000000000000000000000000000,
+        "fee_factor_delta": 1,
+        "long_factor_delta": 1,
+        "short_factor_delta": 1,
+        "denominator": 1000000000000000000000000000000000000000000000
+      },
+      "expected": {
+        "fee_collateral_raw": 1,
+        "claimable_long_raw": 0,
+        "claimable_short_raw": 0,
+        "signed_fee_equity_delta_at_primary_price_2": -2,
+        "spendable_token_delta": 0
+      }
+    },
+    {
+      "id": "healthy_liquidation_selected_rejection",
+      "source_excerpts": [
+        "liquidation_health",
+        "selected_admission_refusal"
+      ],
+      "input": {
+        "collateral_raw": 10,
+        "primary_min_price": 1,
+        "signed_position_pnl_usd": 5,
+        "signed_capped_impact_usd": 0,
+        "total_cost_raw": 2,
+        "min_collateral_usd": 1,
+        "min_leverage_usd": 4,
+        "should_validate_min": true,
+        "for_liquidation": true
+      },
+      "expected": {
+        "health_equity_usd": 13,
+        "is_liquidatable": false,
+        "selected_error": "PositionShouldNotBeLiquidated",
+        "error_arguments": [
+          "",
+          13,
+          1,
+          4
+        ]
+      }
+    },
+    {
+      "id": "allowed_full_liquidation_bankruptcy_success",
+      "source_excerpts": [
+        "full_close_exception_rule",
+        "negative_pnl_cost_stage",
+        "cost_payment_and_exception"
+      ],
+      "input": {
+        "stage": "pnl",
+        "cost_usd": 20,
+        "primary_min_price": 1,
+        "secondary_min_price": 1,
+        "output_primary": 0,
+        "position_collateral": 3,
+        "output_secondary": 0,
+        "full_size_close": true,
+        "liquidation_order": true,
+        "secondary_adl": false
+      },
+      "expected": {
+        "payment": {
+          "primary_output_paid": 0,
+          "position_collateral_paid": 3,
+          "secondary_paid": 0,
+          "output_left": 0,
+          "collateral_left": 0,
+          "secondary_left": 0,
+          "source_remainingCostUsd": 17,
+          "ceil_dust_usd": 0,
+          "floor_dust_usd": 0,
+          "economic_shortfall_usd": 17
+        },
+        "stage_outcome": "allowed_exceptional_success",
+        "event": "InsolventClose",
+        "event_step": "pnl",
+        "automatic_insurance_credit": 0
+      }
+    },
+    {
+      "id": "same_shortfall_manual_close_rejects",
+      "source_excerpts": [
+        "full_close_exception_rule",
+        "cost_payment_and_exception"
+      ],
+      "input": {
+        "stage": "pnl",
+        "cost_usd": 20,
+        "primary_min_price": 1,
+        "secondary_min_price": 1,
+        "output_primary": 0,
+        "position_collateral": 3,
+        "output_secondary": 0,
+        "full_size_close": true,
+        "liquidation_order": false,
+        "secondary_adl": false
+      },
+      "expected": {
+        "payment": {
+          "primary_output_paid": 0,
+          "position_collateral_paid": 3,
+          "secondary_paid": 0,
+          "output_left": 0,
+          "collateral_left": 0,
+          "secondary_left": 0,
+          "source_remainingCostUsd": 17,
+          "ceil_dust_usd": 0,
+          "floor_dust_usd": 0,
+          "economic_shortfall_usd": 17
+        },
+        "error": "InsufficientFundsToPayForCosts",
+        "error_arguments": [
+          17,
+          "pnl"
+        ]
+      }
+    },
+    {
+      "id": "zero_source_residual_does_not_discharge_exact_cost",
+      "source_excerpts": [
+        "cost_payment_and_exception"
+      ],
+      "input": {
+        "cost_usd": 1,
+        "primary_min_price": 1,
+        "secondary_min_price": 2,
+        "output_primary": 0,
+        "position_collateral": 0,
+        "output_secondary": 0
+      },
+      "expected": {
+        "primary_output_paid": 0,
+        "position_collateral_paid": 0,
+        "secondary_paid": 0,
+        "output_left": 0,
+        "collateral_left": 0,
+        "secondary_left": 0,
+        "source_remainingCostUsd": 0,
+        "ceil_dust_usd": 0,
+        "floor_dust_usd": 1,
+        "economic_shortfall_usd": 1
+      }
+    },
+    {
+      "id": "both_rounding_terms_are_distinct",
+      "source_excerpts": [
+        "ceil_native_expression",
+        "cost_payment_and_exception"
+      ],
+      "input": {
+        "cost_usd": 5,
+        "primary_min_price": 3,
+        "secondary_min_price": 4,
+        "output_primary": 0,
+        "position_collateral": 0,
+        "output_secondary": 0
+      },
+      "expected": {
+        "primary_output_paid": 0,
+        "position_collateral_paid": 0,
+        "secondary_paid": 0,
+        "output_left": 0,
+        "collateral_left": 0,
+        "secondary_left": 0,
+        "source_remainingCostUsd": 4,
+        "ceil_dust_usd": 1,
+        "floor_dust_usd": 2,
+        "economic_shortfall_usd": 5
+      }
+    },
+    {
+      "id": "sufficient_primary_liquidity_covers_cost",
+      "source_excerpts": [
+        "cost_payment_and_exception"
+      ],
+      "input": {
+        "cost_usd": 5,
+        "primary_min_price": 3,
+        "secondary_min_price": 4,
+        "output_primary": 1,
+        "position_collateral": 1,
+        "output_secondary": 0
+      },
+      "expected": {
+        "primary_output_paid": 1,
+        "position_collateral_paid": 1,
+        "secondary_paid": 0,
+        "output_left": 0,
+        "collateral_left": 0,
+        "secondary_left": 0,
+        "source_remainingCostUsd": 0,
+        "ceil_dust_usd": 1,
+        "floor_dust_usd": 0,
+        "economic_shortfall_usd": 0
+      }
+    },
+    {
+      "id": "positive_unsettled_pnl_only_becomes_output_on_realization",
+      "source_excerpts": [
+        "non_cash_collateral_sufficiency",
+        "positive_pnl_realization"
+      ],
+      "input": {
+        "unsettled_positive_pnl_usd": 10,
+        "pnl_token_max_price": 3,
+        "pool_token_funding": 3,
+        "secondary_token_distinct_from_collateral": true,
+        "no_swap": true,
+        "pre_spendable_tokens": 0
+      },
+      "expected": {
+        "mark_only_spendable_tokens": 0,
+        "realization_pool_debit_raw": 3,
+        "realization_secondary_output_credit_raw": 3,
+        "pnl_realization_dust_usd": 1
+      }
+    }
+  ],
+  "case_count": 8,
+  "limitations": [
+    "No source runtime executed; no compiler campaign repeated",
+    "PayForCost witnesses are at selected pure helper boundary; whole close completion remains conditional on later validation/handlers",
+    "Error names/arguments are source branch observations, not captured ABI revert bytes"
+  ]
+}

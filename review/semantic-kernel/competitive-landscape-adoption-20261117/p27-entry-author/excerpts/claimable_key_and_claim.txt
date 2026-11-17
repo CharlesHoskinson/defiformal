@@ -1,0 +1,79 @@
+    // @param delta the amount to increment
+    function incrementClaimableFundingAmount(
+        DataStore dataStore,
+        EventEmitter eventEmitter,
+        address market,
+        address token,
+        address account,
+        uint256 delta
+    ) internal {
+        uint256 nextValue = dataStore.incrementUint(
+            Keys.claimableFundingAmountKey(market, token, account),
+            delta
+        );
+
+        uint256 nextPoolValue = dataStore.incrementUint(
+            Keys.claimableFundingAmountKey(market, token),
+            delta
+        );
+
+        MarketEventUtils.emitClaimableFundingUpdated(
+            eventEmitter,
+            market,
+            token,
+            account,
+            delta,
+            nextValue,
+            nextPoolValue
+        );
+    }
+
+    // @dev claim funding fees
+    // @param dataStore DataStore
+    // @param eventEmitter EventEmitter
+    // @param market the market to claim for
+    // @param token the token to claim
+    // @param account the account to claim for
+    // @param receiver the receiver to send the amount to
+    function claimFundingFees(
+        DataStore dataStore,
+        EventEmitter eventEmitter,
+        address market,
+        address token,
+        address account,
+        address receiver
+    ) internal returns (uint256) {
+        bytes32 key = Keys.claimableFundingAmountKey(market, token, account);
+
+        uint256 claimableAmount = dataStore.getUint(key);
+        dataStore.setUint(key, 0);
+
+        uint256 nextPoolValue = dataStore.decrementUint(
+            Keys.claimableFundingAmountKey(market, token),
+            claimableAmount
+        );
+
+        MarketToken(payable(market)).transferOut(
+            token,
+            receiver,
+            claimableAmount
+        );
+
+        validateMarketTokenBalance(dataStore, market);
+
+        MarketEventUtils.emitFundingFeesClaimed(
+            eventEmitter,
+            market,
+            token,
+            account,
+            receiver,
+            claimableAmount,
+            nextPoolValue
+        );
+
+        return claimableAmount;
+    }
+
+    function batchClaimCollateral(
+        DataStore dataStore,
+        EventEmitter eventEmitter,

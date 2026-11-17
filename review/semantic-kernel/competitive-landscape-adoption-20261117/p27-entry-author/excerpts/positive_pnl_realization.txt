@@ -1,0 +1,22 @@
+        // if the pnl is positive, deduct the pnl amount from the pool
+        if (values.basePnlUsd > 0) {
+            // use pnlTokenPrice.max to minimize the tokens paid out
+            uint256 deductionAmountForPool = values.basePnlUsd.toUint256() / cache.pnlTokenPrice.max;
+
+            MarketUtils.applyDeltaToPoolAmount(
+                params.contracts.dataStore,
+                params.contracts.eventEmitter,
+                params.market,
+                cache.pnlToken,
+                -deductionAmountForPool.toInt256()
+            );
+
+            if (values.output.outputToken == cache.pnlToken) {
+                values.output.outputAmount += deductionAmountForPool;
+            } else {
+                values.output.secondaryOutputAmount += deductionAmountForPool;
+            }
+        }
+
+        // order size has been enforced to be less or equal than position size (i.e. sizeDeltaUsd <= sizeInUsd)
+        (values.proportionalPendingImpactAmount, values.proportionalPendingImpactUsd) = _getProportionalPendingImpactValues(

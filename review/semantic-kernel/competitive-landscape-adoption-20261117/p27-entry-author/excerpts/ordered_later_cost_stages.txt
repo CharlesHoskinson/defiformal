@@ -1,0 +1,109 @@
+        if (collateralCache.result.remainingCostUsd > 0) {
+            return handleEarlyReturn(
+                params,
+                values,
+                fees,
+                collateralCache,
+                "fees"
+            );
+        }
+
+        // pay for negative price impact
+        if (values.totalImpactUsd < 0) {
+            (values, collateralCache.result) = payForCost(
+                params,
+                values,
+                cache.prices,
+                cache.collateralTokenPrice,
+                (-values.totalImpactUsd).toUint256()
+            );
+
+            if (collateralCache.result.amountPaidInCollateralToken > 0) {
+                MarketUtils.applyDeltaToPoolAmount(
+                    params.contracts.dataStore,
+                    params.contracts.eventEmitter,
+                    params.market,
+                    params.position.collateralToken(),
+                    collateralCache.result.amountPaidInCollateralToken.toInt256()
+                );
+
+                MarketUtils.applyDeltaToPositionImpactPool(
+                    params.contracts.dataStore,
+                    params.contracts.eventEmitter,
+                    params.market.marketToken,
+                    (collateralCache.result.amountPaidInCollateralToken * cache.collateralTokenPrice.min / cache.prices.indexTokenPrice.max).toInt256()
+                );
+            }
+
+            if (collateralCache.result.amountPaidInSecondaryOutputToken > 0) {
+                MarketUtils.applyDeltaToPoolAmount(
+                    params.contracts.dataStore,
+                    params.contracts.eventEmitter,
+                    params.market,
+                    values.output.secondaryOutputToken,
+                    collateralCache.result.amountPaidInSecondaryOutputToken.toInt256()
+                );
+
+                MarketUtils.applyDeltaToPositionImpactPool(
+                    params.contracts.dataStore,
+                    params.contracts.eventEmitter,
+                    params.market.marketToken,
+                    (collateralCache.result.amountPaidInSecondaryOutputToken * cache.pnlTokenPrice.min / cache.prices.indexTokenPrice.max).toInt256()
+                );
+            }
+
+            if (collateralCache.result.remainingCostUsd > 0) {
+                return handleEarlyReturn(
+                    params,
+                    values,
+                    fees,
+                    collateralCache,
+                    "impact"
+                );
+            }
+        }
+
+        // pay for price impact diff
+        if (values.priceImpactDiffUsd > 0) {
+            (values, collateralCache.result) = payForCost(
+                params,
+                values,
+                cache.prices,
+                cache.collateralTokenPrice,
+                values.priceImpactDiffUsd
+            );
+
+            if (collateralCache.result.amountPaidInCollateralToken > 0) {
+                MarketUtils.incrementClaimableCollateralAmount(
+                    params.contracts.dataStore,
+                    params.contracts.eventEmitter,
+                    params.market.marketToken,
+                    params.position.collateralToken(),
+                    params.order.account(),
+                    collateralCache.result.amountPaidInCollateralToken
+                );
+            }
+
+            if (collateralCache.result.amountPaidInSecondaryOutputToken > 0) {
+                MarketUtils.incrementClaimableCollateralAmount(
+                    params.contracts.dataStore,
+                    params.contracts.eventEmitter,
+                    params.market.marketToken,
+                    values.output.secondaryOutputToken,
+                    params.order.account(),
+                    collateralCache.result.amountPaidInSecondaryOutputToken
+                );
+            }
+
+            if (collateralCache.result.remainingCostUsd > 0) {
+                return handleEarlyReturn(
+                    params,
+                    values,
+                    fees,
+                    collateralCache,
+                    "diff"
+                );
+            }
+        }
+
+        // the priceImpactDiffUsd has been deducted from the output amount or the position's collateral

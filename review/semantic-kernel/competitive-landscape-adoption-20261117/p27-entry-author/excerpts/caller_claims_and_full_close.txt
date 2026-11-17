@@ -1,0 +1,59 @@
+
+        cache.initialCollateralAmount = params.position.collateralAmount();
+        (
+            PositionUtils.DecreasePositionCollateralValues memory values,
+            PositionPricingUtils.PositionFees memory fees
+        ) = DecreasePositionCollateralUtils.processCollateral(
+            params,
+            cache
+        );
+
+        cache.nextPositionSizeInUsd = params.position.sizeInUsd() - params.order.sizeDeltaUsd();
+        cache.nextPositionBorrowingFactor = MarketUtils.getCumulativeBorrowingFactor(params.contracts.dataStore, params.market.marketToken, params.position.isLong());
+
+        PositionUtils.updateTotalBorrowing(
+            params,
+            cache.nextPositionSizeInUsd,
+            cache.nextPositionBorrowingFactor
+        );
+
+        params.position.setSizeInUsd(cache.nextPositionSizeInUsd);
+        params.position.setSizeInTokens(params.position.sizeInTokens() - values.sizeDeltaInTokens);
+        params.position.setCollateralAmount(values.remainingCollateralAmount);
+        params.position.setPendingImpactAmount(params.position.pendingImpactAmount() - values.proportionalPendingImpactAmount);
+        params.position.setDecreasedAtTime(Chain.currentTimestamp());
+
+        PositionUtils.incrementClaimableFundingAmount(params, fees);
+
+        // subtract values.proportionalPendingImpactAmount from the total to remove it
+        MarketUtils.applyDeltaToTotalPendingImpactAmount(
+            params.contracts.dataStore,
+            params.contracts.eventEmitter,
+            params.market.marketToken,
+            -values.proportionalPendingImpactAmount
+        );
+
+        if (params.position.sizeInUsd() == 0 || params.position.sizeInTokens() == 0) {
+            // withdraw all collateral if the position will be closed
+            values.output.outputAmount += params.position.collateralAmount();
+
+            params.position.setSizeInUsd(0);
+            params.position.setSizeInTokens(0);
+            params.position.setCollateralAmount(0);
+
+            PositionStoreUtils.remove(params.contracts.dataStore, params.positionKey, params.order.account());
+        } else {
+            params.position.setBorrowingFactor(cache.nextPositionBorrowingFactor);
+
+            params.position.setFundingFeeAmountPerSize(fees.funding.latestFundingFeeAmountPerSize);
+            params.position.setLongTokenClaimableFundingAmountPerSize(fees.funding.latestLongTokenClaimableFundingAmountPerSize);
+            params.position.setShortTokenClaimableFundingAmountPerSize(fees.funding.latestShortTokenClaimableFundingAmountPerSize);
+
+            PositionStoreUtils.set(params.contracts.dataStore, params.positionKey, params.position);
+        }
+
+        MarketUtils.applyDeltaToCollateralSum(
+            params.contracts.dataStore,
+            params.contracts.eventEmitter,
+            params.position.market(),
+            params.position.collateralToken(),
