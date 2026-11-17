@@ -198,3 +198,29 @@ No single-use/idempotence guarantee, new EVM execution, full source handler,
 impact-pool bookkeeping or deployed equivalence is claimed. Ordered close
 and separate lifecycle correctness/solvency remain open. See
 `docs/examples/margin-realization.md` for the exact boundary.
+
+## Bounded margin close evidence refresh
+
+This refresh adds `DefiKernel.Margin.Close` and `CloseAudit`. Earlier refresh
+sections record the scope at those releases. The selected ordered close prefix
+now has separately accepted correctness and constructive solvency proofs;
+whole caller/handler execution and deployed equivalence remain unproved.
+
+The actual operation checks raw custody binding and selected admission, pays
+positive close PnL and capped impact from the actual selected pool, then executes
+funding and active PnL/fee/impact/difference costs in order. Proofs establish the
+actual ledger chain, physical conservation, exact planned prefix and first-stop
+policy, pending claims/latest factors, and per-payment two-dust reconciliation.
+The separate solvency theorem constructs complete execution and actual economic
+coverage from concrete admission, summed pool and rounded primary budgets and
+genuine operation permissions. A source-residual-zero result alone need not pay
+every economic cost.
+
+Twenty-six fresh controls and thirteen mutation commands are separate evidence;
+compiled replay does not execute them. The accepted source branch adapter records
+23 conditional observations. Two fresh Native Close admission comparisons reuse
+two of those EVM records and add no EVM execution. Exact original source terms,
+excerpts and explicit stubs remain recorded. Upstream marked/close observations,
+numeric comparison conditions, fixed reference escrow, index-impact-pool
+bookkeeping and caller removal/withdrawal/output suffix remain explicit limits.
+See `docs/examples/margin-close.md` and the dated liquidation addendum.
