@@ -2,10 +2,12 @@
 
 All boxes stay unchecked in this planning freeze. Do not start Lean, CI configuration or adapter work until independent review accepts this slice. The 13 tasks follow section 4.2 of the report, with the project-specific prerequisites and acceptance conditions below. Each line carries the task, then in brackets its kind (better product, trusted by others, better measurement) and what it serves (gap D1 to D5 and report sections), and ends with its completion criterion as the verify clause.
 
+Implementation transition (2026-11-17): task 1.1 accepted with limitations at revision `a163c10460ce61dd62a5001d6e7bd5b650cd8d75`, with all 17 boxes unchecked before acceptance. See [the review decision](../../../review/semantic-kernel/competitive-landscape-adoption-20261117/DECISION.json) and its exact-input manifest. The planning freeze above remains historical; this checkbox update records the subsequent apply action. No implementation task is accepted.
+
 ## 1. Planning gate
 
-- [ ] 1.1 Obtain independent review of this exact `competitive-landscape-adoption` candidate under the reviewer bindings in `AGENTS.md`, record verdict, requested and reported model identity and input hashes, and verify no box in this file is ticked before acceptance.
-- [ ] 1.2 Decide whether the IOG Suite 1.0 and rational-1 adapters are contributed as a separate change. Verify every task using their adapters, proofs or helpers (including II.2 and IV.1) stays blocked until its required pinned artifacts or specified replacements are available; a recorded contribution decision alone does not unblock it.
+- [x] 1.1 Obtain independent review of this exact `competitive-landscape-adoption` candidate under the reviewer bindings in `AGENTS.md`, record verdict, requested and reported model identity and input hashes, and verify no box in this file is ticked before acceptance.
+- [x] 1.2 Include the IOG Suite 1.0 and rational-1 adapters in this change, as authorized on 2026-11-17. Import the required sources, proofs and helpers with pinned revision, file hashes, IOG attribution and replay instructions. Verify every dependent task (including II.2 and IV.1) stays blocked until its required pinned artifacts and dependencies are verified available; the contribution decision alone does not unblock it, and import alone is not fresh replay or proof on the kernel.
 
 ## 2. Phase I: operational
 

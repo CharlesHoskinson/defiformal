@@ -10,11 +10,12 @@ Measurements cited here are of abstract benchmark models under the assessment's 
 
 - One ordered list of 13 tasks, each with the gap it addresses, the sprint it serves, the kind of value it buys (better product, trusted by others, better measurement) and an observable completion criterion.
 - Delta specs whose scenarios are the completion criteria, so that acceptance of a task is a check, not a judgment.
-- Additions only. No edit to accepted specs, the frozen sprint plan, the roadmap or any Lean file.
+- Preserve accepted specs, the frozen sprint plan, the roadmap and historical theorem statements. Add implementation and evidence through individually reviewed slices.
+- Import the IOG Suite 1.0 and rational-1 adapters in this change with pinned provenance, preserved attribution and portable replay.
 
 **Non-Goals:**
 
-- Implementation of any task, including CI configuration, adapters, Lean modules or proofs.
+- Treating imported benchmark proofs as new kernel proofs or outside reproduction.
 - Re-running or re-grading the assessment inside this repository.
 - Changing historical theorem statements, accepted review identities or the P16 to P19 acceptance records.
 - Ranking DeFiFormal against competitors by speed.
@@ -64,7 +65,13 @@ The report's section 2.1 takeaway: replay time itself needs no task. 2.4 to 3.9 
 - The adapters are not in this repository. Every adapter-dependent task, including II.2 and IV.1, remains blocked until its required pinned adapters, proofs and helpers, or specified replacements, are available.
 - Tasks I.4 and III.1 need a person outside the project; the implementation loop cannot complete them alone.
 
+### Implementation transition authorized on 2026-11-17
+
+The owner directed that both benchmark adapters be included in this change and supplied access to `input-output-hk/SOTA-DeFiFormal-Moriarty`. Import only the relevant DeFiFormal adapter sources, proofs, helpers and required contracts. Record the assessment repository revision and each imported file's hash; preserve upstream files unchanged and place portability wrappers separately. Verify the expected file inventory, dependency pins and replay prerequisites before clearing an adapter-dependent task. Preserve failed automatic cases and characteristic mutations as negative evidence. A source import or historical passing record alone is not a fresh successful replay.
+
+Codex now authors this change, with `gpt-6.1-sol` at high effort requested where available, otherwise the current model. Independent `gpt-6-astra` at medium remains the checker. This supersedes the native Grok author requirement for this change only. Preserve the original planning review and actual model identity limitations. Review this amendment before adapter implementation; review each completed implementation candidate independently. No Foreman or new orchestration framework.
+
 ## Open Questions
 
-- Whether the owner wants the IOG benchmark adapters contributed as a separate change.
+- Resolved: the owner requests both IOG benchmark adapters in this change, not a separate change.
 - Whether phase II should be filed as its own slice once accepted.

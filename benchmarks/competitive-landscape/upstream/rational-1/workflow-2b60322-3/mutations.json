@@ -1,0 +1,293 @@
+{
+  "schema_version": 1,
+  "cases": {
+    "R3-COMPOSE-N4": {
+      "stale_intermediate_state": {
+        "probe": "mutants/stale_intermediate_state_N4.lean",
+        "model_modules": [
+          "WorkflowModel",
+          "WorkflowControl",
+          "ComposeModel"
+        ],
+        "changes": [
+          {
+            "file": "WorkflowControl.lean",
+            "find": "def runCalls := runWith execute",
+            "replace": "def runCalls (entry : PublicState) (calls : List Call) : SequenceResult :=\n  runWith (fun current call =>\n    if \u00ac AmountValid call then .refused .badAmount current\n    else if \u00ac Authorized current.capabilities call then .refused .unauthorized current\n    else if \u00ac Funded entry.ledger.balance current.rates call then .refused .insufficientFunds current\n    else execute current call) entry calls",
+            "count": 1
+          }
+        ],
+        "discrimination": "Complete cycle must succeed because its share debit is funded by the preceding deposit. Mutant checks initial zero shares and refuses at index one."
+      },
+      "wrong_share_rate": {
+        "probe": "mutants/wrong_share_rate_N4.lean",
+        "model_modules": [
+          "WorkflowModel",
+          "WorkflowControl",
+          "ComposeModel"
+        ],
+        "changes": [
+          {
+            "file": "WorkflowModel.lean",
+            "find": "q / rates v",
+            "replace": "q * rates v",
+            "count": 2
+          }
+        ],
+        "discrimination": "The 3/2 deposit must mint one share. Mutant mints 9/4 and complete-cycle exact balances, supply, receipts and surplus fail."
+      },
+      "broken_frame": {
+        "probe": "mutants/broken_frame_N4.lean",
+        "model_modules": [
+          "WorkflowModel",
+          "WorkflowControl",
+          "ComposeModel"
+        ],
+        "changes": [
+          {
+            "file": "WorkflowModel.lean",
+            "find": "DefiKernel.Examples.pulse (userAccount u, (shareAsset v).native) (q / rates v) c",
+            "replace": "DefiKernel.Examples.pulse (userAccount u, (shareAsset v).native) (q / rates v) c +\n      DefiKernel.Examples.pulse (.pool, .usd) 1 c",
+            "count": 1
+          }
+        ],
+        "discrimination": "Required successful A deposit may not change B cash. Mutant inserts a B-cash pulse and native accounting rejects it, violating guaranteed success."
+      }
+    },
+    "R3-COMPOSE-N16": {
+      "stale_intermediate_state": {
+        "probe": "mutants/stale_intermediate_state_N16.lean",
+        "model_modules": [
+          "WorkflowModel",
+          "WorkflowControl",
+          "ComposeModel"
+        ],
+        "changes": [
+          {
+            "file": "WorkflowControl.lean",
+            "find": "def runCalls := runWith execute",
+            "replace": "def runCalls (entry : PublicState) (calls : List Call) : SequenceResult :=\n  runWith (fun current call =>\n    if \u00ac AmountValid call then .refused .badAmount current\n    else if \u00ac Authorized current.capabilities call then .refused .unauthorized current\n    else if \u00ac Funded entry.ledger.balance current.rates call then .refused .insufficientFunds current\n    else execute current call) entry calls",
+            "count": 1
+          }
+        ],
+        "discrimination": "Complete cycle must succeed because its share debit is funded by the preceding deposit. Mutant checks initial zero shares and refuses at index one."
+      },
+      "wrong_share_rate": {
+        "probe": "mutants/wrong_share_rate_N16.lean",
+        "model_modules": [
+          "WorkflowModel",
+          "WorkflowControl",
+          "ComposeModel"
+        ],
+        "changes": [
+          {
+            "file": "WorkflowModel.lean",
+            "find": "q / rates v",
+            "replace": "q * rates v",
+            "count": 2
+          }
+        ],
+        "discrimination": "The 3/2 deposit must mint one share. Mutant mints 9/4 and complete-cycle exact balances, supply, receipts and surplus fail."
+      },
+      "broken_frame": {
+        "probe": "mutants/broken_frame_N16.lean",
+        "model_modules": [
+          "WorkflowModel",
+          "WorkflowControl",
+          "ComposeModel"
+        ],
+        "changes": [
+          {
+            "file": "WorkflowModel.lean",
+            "find": "DefiKernel.Examples.pulse (userAccount u, (shareAsset v).native) (q / rates v) c",
+            "replace": "DefiKernel.Examples.pulse (userAccount u, (shareAsset v).native) (q / rates v) c +\n      DefiKernel.Examples.pulse (.pool, .usd) 1 c",
+            "count": 1
+          }
+        ],
+        "discrimination": "Required successful A deposit may not change B cash. Mutant inserts a B-cash pulse and native accounting rejects it, violating guaranteed success."
+      }
+    },
+    "R4-REFUSAL": {
+      "execute_after_refusal": {
+        "probe": "mutants/execute_after_refusal.lean",
+        "changes": [
+          {
+            "file": "WorkflowControl.lean",
+            "find": "| .refused reason _ => \u27e8state, some (reason, 0), 0\u27e9",
+            "replace": "| .refused _ _ => runWith step state calls",
+            "count": 1
+          }
+        ],
+        "discrimination": "Actual suffix executes after the failed transfer; failure/count/state/history differ from exactly one committed prefix."
+      },
+      "erase_successful_prefix": {
+        "probe": "mutants/erase_successful_prefix.lean",
+        "changes": [
+          {
+            "file": "WorkflowControl.lean",
+            "find": "def runRaw := runWith rawExecute",
+            "replace": "def runRaw (state : PublicState) (calls : List RawCall) : SequenceResult :=\n  let result := runWith rawExecute state calls\n  match result.failure with\n  | none => result\n  | some failure => \u27e8state, some failure, result.committed\u27e9",
+            "count": 1
+          }
+        ],
+        "discrimination": "Refusal public state is incorrectly rolled back to entry: expected balances1,1 and its committed event disappear."
+      }
+    },
+    "R5-REVOKE": {
+      "ignore_revocation": {
+        "probe": "mutants/ignore_revocation.lean",
+        "changes": [
+          {
+            "file": "WorkflowModel.lean",
+            "find": "| .grant _ c => insert c caps | .revoke _ c => caps.erase c | _ => caps",
+            "replace": "| .grant _ c => insert c caps | .revoke _ _ => caps | _ => caps",
+            "count": 1
+          }
+        ],
+        "discrimination": "The required cap remains live and repeated transfer succeeds instead of unauthorized."
+      },
+      "unauthorized_grant": {
+        "probe": "mutants/unauthorized_grant.lean",
+        "changes": [
+          {
+            "file": "WorkflowModel.lean",
+            "find": "| .grant p _ | .revoke p _ => p = .pool",
+            "replace": "| .grant _ _ => True\n  | .revoke p _ => p = .pool",
+            "count": 1
+          }
+        ],
+        "discrimination": "Alice grant incorrectly succeeds and changes capability/history."
+      }
+    },
+    "R6-ATOMIC": {
+      "partial_atomic_commit": {
+        "probe": "mutants/partial_atomic_commit.lean",
+        "changes": [
+          {
+            "file": "WorkflowControl.lean",
+            "find": "| some located => \u27e8state, some located, 0\u27e9",
+            "replace": "| some _ => staged",
+            "count": 1
+          }
+        ],
+        "discrimination": "The staged deposit changes cash/share balances and derived supply after failure."
+      },
+      "leaked_atomic_history": {
+        "probe": "mutants/leaked_atomic_history.lean",
+        "changes": [
+          {
+            "file": "WorkflowControl.lean",
+            "find": "| some located => \u27e8state, some located, 0\u27e9",
+            "replace": "| some located => \u27e8{ state with history := staged.state.history }, some located, 0\u27e9",
+            "count": 1
+          }
+        ],
+        "discrimination": "Full-state equality detects staged history even when balances/supply/capabilities restore."
+      },
+      "leaked_atomic_capability": {
+        "probe": "mutants/leaked_atomic_capability.lean",
+        "changes": [
+          {
+            "file": "WorkflowControl.lean",
+            "find": "| some located => \u27e8state, some located, 0\u27e9",
+            "replace": "| some located => \u27e8{ state with capabilities := staged.state.capabilities }, some located, 0\u27e9",
+            "count": 1
+          }
+        ],
+        "discrimination": "Full-state equality detects leaked revoke even when balances/supply/history restore."
+      }
+    },
+    "R7-NET": {
+      "overwrite_aggregate_delta": {
+        "probe": "mutants/overwrite_aggregate_delta.lean",
+        "changes": [
+          {
+            "file": "NetModel.lean",
+            "find": "| t :: ts => fun c => t.delta c + aggregate ts c",
+            "replace": "| t :: ts => fun c => if ts.any (fun later => decide (c = (later.source, later.asset.native) \u2228 c = (later.target, later.asset.native))) then aggregate ts c else t.delta c",
+            "count": 1
+          }
+        ],
+        "discrimination": "The altered recursive aggregate retains the final instruction touching a cell and discards preceding signed occurrences. The alias fixture must settle Alice 3/4 and Bob 1/4; overwriting refuses or changes those exact outputs.",
+        "model_modules": [
+          "WorkflowModel",
+          "WorkflowControl",
+          "NetModel",
+          "NetFixtures"
+        ]
+      },
+      "net_uses_sequential_guards": {
+        "probe": "mutants/net_uses_sequential_guards.lean",
+        "changes": [
+          {
+            "file": "NetModel.lean",
+            "find": "else if \u00ac NetFunded s ts then .refused .insufficientFunds none s",
+            "replace": "else if \u00ac NetFunded s ts \u2228 \u00ac PrefixFunds s.ledger.balance ts then .refused .insufficientFunds none s",
+            "count": 1
+          }
+        ],
+        "discrimination": "This adds the exact algebraic sequential gross-prefix funding predicate to actual net settlement. The zero-funded fully authorized cycle has zero aggregate deltas and must succeed; the mutant refuses funds.",
+        "model_modules": [
+          "WorkflowModel",
+          "WorkflowControl",
+          "NetModel",
+          "NetFixtures"
+        ]
+      },
+      "net_uses_gross_authority": {
+        "probe": "mutants/net_uses_gross_authority.lean",
+        "changes": [
+          {
+            "file": "NetModel.lean",
+            "find": "if \u00ac NetAuthorized s actor ts then .refused .unauthorized none s",
+            "replace": "if \u00ac NetAuthorized s actor ts \u2228 \u00ac GrossAuthority s.capabilities actor ts then .refused .unauthorized none s",
+            "count": 1
+          }
+        ],
+        "discrimination": "This adds authority for every gross source to actual net settlement. The invoke-only zero-delta cycle must succeed without debit rights; the mutant refuses unauthorized.",
+        "model_modules": [
+          "WorkflowModel",
+          "WorkflowControl",
+          "NetModel",
+          "NetFixtures"
+        ]
+      }
+    },
+    "R8-REUSE": {
+      "hardcoded_vault_a": {
+        "probe": "mutants/hardcoded_vault_a.lean",
+        "model_modules": [
+          "WorkflowModel",
+          "WorkflowControl",
+          "ComposeModel"
+        ],
+        "changes": [
+          {
+            "file": "ComposeModel.lean",
+            "find": "amounts.mapIdx (workflowCall p v)",
+            "replace": "amounts.mapIdx (workflowCall p false)",
+            "count": 1
+          }
+        ],
+        "discrimination": "B workflow must update only B vault/share; mutant binds its workflow to A and violates complete B output/A frame."
+      },
+      "hardcoded_rate_a": {
+        "probe": "mutants/hardcoded_rate_a.lean",
+        "model_modules": [
+          "WorkflowModel",
+          "WorkflowControl",
+          "ComposeModel"
+        ],
+        "changes": [
+          {
+            "file": "WorkflowModel.lean",
+            "find": "q / rates v",
+            "replace": "q / rates false",
+            "count": 2
+          }
+        ],
+        "discrimination": "B deposit7/5 with rB7/5 must mint1; mutant uses rA3/2 and mints14/15. Native accounting still holds but exact-rate output fails."
+      }
+    }
+  }
+}
