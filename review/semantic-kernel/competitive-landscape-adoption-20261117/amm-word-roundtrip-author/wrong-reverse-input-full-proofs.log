@@ -1,0 +1,54 @@
+/private/tmp/defiformal-amm-word-roundtrip-author/wrong-reverse-input-full-proofs.lean:31:53: error: unsolved goals
+pool : Pool
+amount : Word 256
+fee : Fee
+domain : Admissible pool amount fee
+zero : (computed pool amount fee domain).output.value = 0
+postPositive :
+  0 < (computed pool amount fee domain).post.reserveX.value ∧ 0 < (computed pool amount fee domain).post.reserveY.value
+refused :
+  swapPool (flip (computed pool amount fee domain).post) (computed pool amount fee domain).output fee =
+    Except.error Refusal.badAmount
+⊢ (match swapPool (flip (computed pool amount fee domain).post) amount fee with
+    | Except.error err => Except.error err
+    | Except.ok v => pure (computed pool amount fee domain, v)) =
+    Except.error Refusal.badAmount
+/private/tmp/defiformal-amm-word-roundtrip-author/wrong-reverse-input-full-proofs.lean:35:51: warning: This simp argument is unused:
+  refused
+
+Hint: Omit it from the simp argument list.
+  [apply] simp [roundTrip, success pool amount fee domain, bind, Except.bind]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/private/tmp/defiformal-amm-word-roundtrip-author/wrong-reverse-input-full-proofs.lean:51:2: error: Tactic `rfl` failed: The left-hand side
+  match swapPool (flip (computed pool amount fee domain).post) amount fee with
+  | Except.error err => Except.error err
+  | Except.ok v => Except.ok (computed pool amount fee domain, v)
+is not definitionally equal to the right-hand side
+  Except.ok (computed pool amount fee domain, reverse)
+
+pool : Pool
+amount : Word 256
+fee : Fee
+domain : Admissible pool amount fee
+positive : 0 < (computed pool amount fee domain).output.value
+reverseDomain : Admissible (flip (computed pool amount fee domain).post) (computed pool amount fee domain).output fee :=
+  reverse_domain pool amount fee domain positive
+reverse : Swap :=
+  computed (flip (computed pool amount fee domain).post) (computed pool amount fee domain).output fee reverseDomain
+executed :
+  swapPool (flip (computed pool amount fee domain).post) (computed pool amount fee domain).output fee =
+    Except.ok
+      (computed (flip (computed pool amount fee domain).post) (computed pool amount fee domain).output fee
+        reverseDomain)
+⊢ (match swapPool (flip (computed pool amount fee domain).post) amount fee with
+    | Except.error err => Except.error err
+    | Except.ok v => Except.ok (computed pool amount fee domain, v)) =
+    Except.ok (computed pool amount fee domain, reverse)
+/private/tmp/defiformal-amm-word-roundtrip-author/wrong-reverse-input-full-proofs.lean:49:75: warning: This simp argument is unused:
+  executed
+
+Hint: Omit it from the simp argument list.
+  [apply] simp only [roundTrip, success pool amount fee domain, bind, Except.bind, pure, Except.pure]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
