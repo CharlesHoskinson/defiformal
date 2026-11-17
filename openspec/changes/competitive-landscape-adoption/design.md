@@ -71,6 +71,10 @@ The owner directed that both benchmark adapters be included in this change and s
 
 Codex now authors this change, with `gpt-6.1-sol` at high effort requested where available, otherwise the current model. Independent `gpt-6-astra` at medium remains the checker. This supersedes the native Grok author requirement for this change only. Preserve the original planning review and actual model identity limitations. Review this amendment before adapter implementation; review each completed implementation candidate independently. No Foreman or new orchestration framework.
 
+### Continued implementation with missing historical effort (2026-11-17)
+
+The owner asked to continue after the Phase I evidence pause. Proceed with dependency-ready Phase II and later engineering tasks while I.3 historical effort and I.4 outside reproduction remain open. Historical effort stays unknown (`null`), never inferred from command runtimes or reported as zero. This changes execution ordering only: no acceptance criterion, proof obligation, outside-reproduction requirement or task checkbox is waived. Record prospective authoring-session intervals for new work separately from historical effort and human person-hours. Later tasks still require their real source, semantic and evidence dependencies; a missing external recheck remains an open release/adoption claim rather than a reason to stop unrelated engineering.
+
 ## Open Questions
 
 - Resolved: the owner requests both IOG benchmark adapters in this change, not a separate change.

@@ -1,3 +1,4 @@
+import DefiKernel.Composition.ShareQuote
 import DefiKernel.VerifyAxioms
 import DefiKernel.Typed.Verify
 import DefiKernel.Composition.Verify
