@@ -1,0 +1,12 @@
+from pathlib import Path
+import subprocess,time,datetime,json,hashlib
+r=Path('/private/tmp/defiformal-ci-author');e=Path('/private/tmp/defiformal-lending-withdraw-author');tc=Path('/private/tmp/defiformal-adapter-author/runtime/lean-4.33.0-rc2-darwin_aarch64');s=(r/'lean/DefiKernel/Lending/WithdrawCollateral.lean').read_text();control=(r/'lean/DefiKernel/Lending/WithdrawCollateralAudit.lean').read_text();tail='\n'.join(control.splitlines()[1:]);marker='def evaluated';rows=[]
+def execute(name,source,expected,diagnostics):
+ p=e/(name+'.lean');p.write_text(source);a=[str(tc/'bin/lake'),'env','lean','-R',str(e),str(p)];t=time.monotonic();started=datetime.datetime.now(datetime.timezone.utc).isoformat();q=subprocess.run(a,cwd=r/'lean',env={'PATH':str(tc/'bin')+':/usr/bin:/bin','HOME':str(Path.home())},stdout=subprocess.PIPE,stderr=subprocess.STDOUT,timeout=120);(e/(name+'.log')).write_bytes(q.stdout);assert q.returncode==expected and all(v.encode() in q.stdout for v in diagnostics),(name,q.returncode,q.stdout[-1000:]);rows.append(dict(name=name,argv=a,cwd=str(r/'lean'),started_utc=started,wall_seconds=time.monotonic()-t,exit=q.returncode,required_diagnostics=diagnostics,source_sha256=hashlib.sha256(source.encode()).hexdigest(),log_sha256=hashlib.sha256(q.stdout).hexdigest()));print(name,q.returncode,flush=True)
+def prefix(source):return source[:source.index(marker)]+'\nend DefiKernel.Lending.WithdrawCollateral\n'+tail
+execute('intact-prefix',prefix(s),0,['WITHDRAW_OBSERVATION 8 7 2','WITHDRAW_CONTROL PASSED 27/27'])
+wrong=s.replace('    (.binary (.sub (.amount Asset.collateral))\n      (.balance (ref .collateral borrower.custody)) amount) Oracle.price','    (.balance (ref .collateral borrower.custody)) Oracle.price',1)
+assert wrong!=s
+execute('pre_collateral_health-runtime-prefix',prefix(wrong),1,['WITHDRAW_HEALTH_OBSERVATION 14 1 2','WITHDRAW_CONTROL remaining_collateral_not_prestate_health false','FAIL: actual withdraw comparison'])
+execute('pre_collateral_health-full-proofs',wrong,1,['error:'])
+(e/'mutations.json').write_text(json.dumps(dict(status='PASS',model_sha256=hashlib.sha256(s.encode()).hexdigest(),controls_sha256=hashlib.sha256(control.encode()).hexdigest(),runs=rows,scope='Actual remainingCash expression altered to use full pre-withdrawal locked balance. Altered operation accepts q9, yielding free14/locked1/debt2; health4>2. Prefix imports unchanged Oracle/Support/Types, not intact cached WithdrawCollateral. False runtime comparison and unchanged-proof compiler rejection are distinct.'),indent=2)+'\n')

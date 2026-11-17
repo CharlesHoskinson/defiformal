@@ -1,0 +1,19 @@
+# Collateral withdrawal proof/runtime review
+
+ACCEPT_WITH_LIMITATIONS. No required repair.
+
+Exact baseline7ce144d701a2039e789eb039ca14ded5a6f8a2bf; all three frozen source hashes/lengths match. All254 tracked Lean/configuration baseline inputs matched before copying into the isolated reviewer tree. INPUTS.json binds source and evidence identities. Existing lending and historical financial proofs remain unchanged.
+
+Actual registered execution binds the requested borrower to the invocation principal. It debits the owner's distinct custody and credits that owner's free collateral with no supply change. Real administrative provisioning gives operation-scoped invoke and custody-debit rights. Required state reads include actual custody and debt (custody appears twice); declared footprints cover these plus the oracle/time reads and both written collateral cells.
+
+The eager guard requires nonnegative quantity, quantity no greater than locked custody, positive collateral/cash price, observedAt≤now≤observedAt+5, and twice current debt bounded by (locked−quantity)*price. Free collateral never enters this health test. guard_evaluate proves correspondence to these explicit pre-state Conditions at a supplied well-typed observed point. success_conditions derives them from actual success. actual_collateralization uses actual effects and unchanged debt to prove health of the actual post-state; it does not assume post-state health.
+
+funded_success constructs a post-state from the observed point, explicit policy and real invocation/custody-debit rights, deriving actual Valid. There is no Valid/result premise. The policy already contains custody funding. Sufficient rights are not claimed minimal: zero quantity can need only invocation, while still satisfying price/freshness/health. actual_frame preserves every other cell; actual_accounting conserves every asset total with zero supply change and capabilities remain unchanged.
+
+policy_refusal has the necessary qualifications: owner binding, invocation, a well-typed observation and failed Conditions yield exactly guard. It does not overwrite earlier actor/invoke/evaluation errors. Over-locked withdrawal is a guard failure; no insufficientFunds priority is invented. The27 actual controls separately cover health equality, excessive withdrawal, free-versus-locked custody, unhealthy zero, invoke-only healthy zero, price/age/unit/feed defects, eager missing observation despite negative quantity, permission and owner precedence, frame and totals.
+
+Independent verification passed targeted Lending.Verify build, fresh27/27 controls, focused153 theorem constants/145 supplemental declarations with forbidden0, both new module kernel replays, intact runtime prefix, actual pre-collateral-health mutant failure and separate unchanged-proof rejection. Standard axioms propext/Classical.choice/Quot.sound and generated/private count scope remain disclosed. The mutation changes remainingCash to full pre-custody: actual q9 execution succeeds to free14/locked1/debt2, violating health4≤2, then the comparison fails. The runtime prefix imports unchanged Oracle/Support/Types, not cached intact WithdrawCollateral; full proof source changes only that expression.
+
+Limits: oracle authenticity, clock truth, context authentication and registry truth remain assumptions. Rational reference semantics/net effects are not deployed equivalence or rollback. Same-kernel replay trusts imports; finite controls are separate from generic proofs. Public delivery, actual five-operation lifecycle evidence, capability addendum and compiled publication remain separate gates. IV.4 is not closed by this snapshot; outside reproduction and historical effort remain open.
+
+Requested reviewer gpt-6-astra at medium. Actual provider-returned model/effort attestation is unavailable and not claimed.
