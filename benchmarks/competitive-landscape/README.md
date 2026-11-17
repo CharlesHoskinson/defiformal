@@ -98,9 +98,13 @@ the imported source or establishes a new kernel theorem.
 
 ## Attribution
 
-Original benchmark adapter work is attributed to the IOG Technical Intelligence
-assessment and its retained AI-assistance/effort records. Underlying DeFiFormal
-and mathlib files retain their original provenance. No external license has been
-inferred for the assessment repository; repository-owner license selection is
-recorded separately. Import authorization does not convert measurement evidence
-into proof or accept any wider library, release, or third-party onboarding gate.
+The [recorded user authorization](../../review/semantic-kernel/competitive-landscape-adoption-20261117/LICENSE-AUTHORIZATION.json)
+permits distribution of the 168 files selected by `PROVENANCE.json` under
+[Apache-2.0](../../LICENSE). Original benchmark adapter work retains attribution
+to the IOG Technical Intelligence assessment and its AI-assistance/effort records;
+that attribution does not assign copyright ownership. The six native DeFiFormal
+snapshots and all existing notices remain unchanged. See the
+[license scope and retained notices](../../THIRD_PARTY_NOTICES.md) for dependency
+terms and historical exceptions. This grant covers the selected files, not the
+complete assessment repository. Licensing does not convert measurement evidence
+into proof or close any wider library or third-party onboarding gate.

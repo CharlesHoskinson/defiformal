@@ -11,7 +11,7 @@ Implementation transition (2026-11-17): task 1.1 accepted with limitations at re
 
 ## 2. Phase I: operational
 
-- [ ] I.1 Add CI that runs the build and the axiom audit on every commit. [trusted by others; D5] Verify a passing run is visible at the current revision and the gate has been seen to fail on a deliberate break.
+- [x] I.1 Add CI that runs the build and the axiom audit on every commit. [trusted by others; D5] Verify a passing run is visible at the current revision and the gate has been seen to fail on a deliberate break.
 - [ ] I.2 Cut a first tagged release, and add a contribution guide and a license file. [trusted by others; D5; 3.1] Verify a tagged release; both files in the repository.
 - [ ] I.3 Start per-component accounting of model, specification and guidance lines, of authoring effort, and of attribution (AI-authored or human). [better measurement; D1; 2.7] Verify the vault deposit and the token0 register each report their counts and effort.
 - [ ] I.4 Have an outside developer run the DeFiFormal sprint P18 token0 package from its README and record the outcome and setup time. [trusted by others; D5; 3.1] Verify a reproduction record by someone outside the project exists, pass or fail, with its setup time.
