@@ -1,0 +1,12 @@
+# Claims that remain outside this change's evidence
+
+This record accompanies the scenario inventory. It does not close an unmet scenario or replace proof, execution or external reproduction with a declaration.
+
+- **Replay speed.** Recorded command durations identify particular machines, inputs and tool versions. They do not establish comparative speed, general scalability, or a speed advantage over another project. No cross-project timing campaign is credited.
+- **Deployed-code equivalence.** The token0 relation binds a pinned source campaign to particular Lean observations. Its universal compiler/EVM/ABI refinement obligation remains open. Rational and checked arithmetic models do not establish deployed AMM, vault or lending equivalence. Wide intermediate arithmetic must not be described as ordinary 256-bit EVM intermediate execution.
+- **A complete adversary model.** The ordering example contains two declared schedules and exact observed ledgers/refusals. The rational AMM round-trip theorem concerns one unchanged pool with the stated fee and input conditions. Neither establishes market-wide no-arbitrage, MEV resistance, oracle authenticity, or safety against arbitrary participants and schedules.
+- **Corroborated adoption.** Releases, downloads, agent checks and repository availability are not adoption records. No corroborated adoption is claimed. The owner reports no outside P18 reproduction, and actual outside package-only rechecking is also absent.
+- **Historical effort.** Unknown original authoring effort stays unknown. Prospective agent wall-clock intervals, line counts and attribution do not reconstruct human labor or separately attributable historical effort.
+- **Proof trust and execution scope.** Accepted proofs are checked with the pinned Lean kernel and separate axiom audits. Default compiled replay trusts imported declarations and uses the same kernel. It does not run source-level finite assertions. Finite controls and mutation experiments have their own exact input identities and do not establish a universal theorem. Compiled artifacts are not claimed to be bit-reproducible across build caches.
+
+AMM Word correspondence, actual wallet settlement/conservation, fresh full-domain R2 library replay, lending lifecycle operations and the conditional P27 liquidation scope are implementation obligations in the working inventory. They are not converted into permanent exclusions by this remainder record. An item may gain evidence only through its actual acceptance gate and an updated exact-source record.
