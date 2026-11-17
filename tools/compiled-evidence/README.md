@@ -1,6 +1,6 @@
 # Compiled DeFiFormal evidence for macOS arm64
 
-Current source coverage includes all five exact-rational lending operations, a finite lifecycle replay, native rounded-payment arithmetic, actual Typed reference payment and a source-stage reference funding operation. Actual liquidation and lifecycle solvency remain open. The refresh notes below describe earlier increments; their pending-work statements apply to those earlier slices. Release acceptance remains bound by the separate publication record.
+Current source coverage includes all five exact-rational lending operations, a finite lifecycle replay, native rounded-payment arithmetic, actual Typed reference payment, source-stage reference funding and actual pool-funded realization. Actual liquidation and lifecycle solvency remain open. The refresh notes below describe earlier increments; their pending-work statements apply to those earlier slices. Release acceptance remains bound by the separate publication record.
 
 This package replays the explicit modules in `targets.txt` using the bundled Lean `leanchecker`. It contains their actual compiled import closure, all associated Lean source files, dependency revision and license records, runtime libraries, checksums, and selected accepted evidence. `manifest.json` identifies the exact source revision, checker binaries, platform and scope of each check. The package archive has an external SHA-256 in its publication record; compare that before extraction. Internal checksums detect missing or altered payload bytes, not a maliciously replaced archive plus checksum.
 
@@ -180,3 +180,21 @@ Primary collateral is selected as the long token, secondary as the short token.
 Computed factors and PnL/impact remain upstream observations. Funded close-PnL
 realization, ordered liquidation and separate lifecycle solvency remain open.
 See `docs/examples/margin-funding.md` for the exact receipt and claim scope.
+
+## Funded realization evidence refresh
+
+This refresh adds `DefiKernel.Margin.Realization` and `RealizationAudit`.
+An explicit computed signed close-PnL observation determines the positive floor
+payout at the selected PnL token maximum price. Actual execution debits that
+pool token and credits its matching output, with zero supply change. Generic
+proofs establish real-rights/sufficient-pool success, exact effects and frame,
+asset conservation and floor-value correspondence to actual output gain.
+Nonpositive PnL skips the transfer; positive subtoken values pay zero tokens.
+
+Eighteen source controls and actual ceil/fictitious-pool-cash mutations are
+recorded separately. Compiled replay does not rerun those controls. Marked
+valuation PnL and computed close PnL remain distinct upstream observations.
+No single-use/idempotence guarantee, new EVM execution, full source handler,
+impact-pool bookkeeping or deployed equivalence is claimed. Ordered close
+and separate lifecycle correctness/solvency remain open. See
+`docs/examples/margin-realization.md` for the exact boundary.
