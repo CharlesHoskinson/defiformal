@@ -1,0 +1,11 @@
+# Compiled evidence for actual reference payment
+
+The [artifact](artifact.json) binds this thirty-seven-target macOS arm64 archive to source revision `6e8c30cc1979992597ea25ecf1aeea35bc785812`. It adds Types, PaymentSettlement and PaymentSettlementAudit using the unchanged accepted builder, checker and replay script. The [manifest](manifest.json) records the measured import closure and exact source identities. [Verification](verification.json) records eight actual commands against a fresh extraction. Publication is recorded separately.
+
+Follow the [package replay instructions](../../../tools/compiled-evidence/README.md). The selected modules replay with the bundled runtime from an unrelated directory. Missing payment-settlement artifact, unreadable payload and empty inventory block (3); altered bytes fail (1). Optional inventory and the packaged 101-file token0 consistency check are separate checks.
+
+The new primitive binds all three raw integer input buckets to the same ledger, executes permission-checked transfers and proves actual remainders, recipient gains, complete outside frame and per-asset conservation. Claim counters are distinct from spendable physical tokens. Actual gains satisfy the two-dust identity, and economic shortfall is the positive part of unpaid cost. Constructive execution and sufficient-primary single-cost coverage use real invocation/debit rights; they do not assume success or an opaque validity premise. Qualified quote mismatch refuses the reference guard.
+
+Twenty-two fresh source controls and two real wrong-execution mutations are recorded separately from generic proofs and kernel replay. Compiled replay does not rerun source controls, mutations or Solidity helper calls. The declared recipient and mismatch guard are reference-model choices, not GMX destination or selected financial-refusal refinement. Partial payment can succeed with residual or economic shortfall. Source funding, funded PnL realization, ordered liquidation and separate lifecycle solvency remain open; IV.3 is incomplete.
+
+The same Lean kernel and trusted imports, original third-party terms, external unbundled Solidity/EVM/Go executables, unknown historical effort, absent actual outside reproduction and unproved deployed equivalence remain explicit. Earlier targets retain their documented scopes.

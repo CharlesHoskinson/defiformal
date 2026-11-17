@@ -1,6 +1,6 @@
 # Compiled DeFiFormal evidence for macOS arm64
 
-Current source coverage includes all five exact-rational lending operations, a finite lifecycle replay and native rounded-payment arithmetic. Actual Typed liquidation and solvency remain open. The refresh notes below describe earlier increments; their pending-work statements apply to those earlier slices. Release acceptance remains bound by the separate publication record.
+Current source coverage includes all five exact-rational lending operations, a finite lifecycle replay, native rounded-payment arithmetic and actual Typed reference payment. Actual liquidation and lifecycle solvency remain open. The refresh notes below describe earlier increments; their pending-work statements apply to those earlier slices. Release acceptance remains bound by the separate publication record.
 
 This package replays the explicit modules in `targets.txt` using the bundled Lean `leanchecker`. It contains their actual compiled import closure, all associated Lean source files, dependency revision and license records, runtime libraries, checksums, and selected accepted evidence. `manifest.json` identifies the exact source revision, checker binaries, platform and scope of each check. The package archive has an external SHA-256 in its publication record; compare that before extraction. Internal checksums detect missing or altered payload bytes, not a maliciously replaced archive plus checksum.
 
@@ -139,3 +139,22 @@ the compiled proof replay does not rerun helper calls or source controls.
 Original third-party terms, including GMX BUSL-1.1, are preserved. Actual
 Typed custody/funding/realization, ordered liquidation, separate solvency,
 historical effort and outside reproduction remain open.
+
+## Actual reference payment evidence refresh
+
+This refresh adds `DefiKernel.Margin.Types`, `PaymentSettlement` and
+`PaymentSettlementAudit`. The primitive binds all three raw input buckets to
+the same pre-ledger cells, derives available funding from native bounds, and
+executes real permission-checked transfers to a declared reference recipient.
+Generic proofs establish actual remainders, recipient gains, complete outside
+frame, per-asset conservation, two-dust reconciliation and the positive-part
+economic shortfall. Constructive sufficient-primary coverage proves actual
+recipient gains cover this one cost using explicit invocation/debit rights.
+
+Twenty-two source controls, two meaningful mutations and public runner negatives
+are separately recorded; compiled replay does not execute them. Claim-counter
+assets stay separate and cannot supply these physical payment buckets. A
+successful partial payment may retain source residual or economic shortfall.
+The reference recipient and mismatch guard are not GMX destination or selected
+financial-refusal refinements. Funding, realized PnL, ordered close and separate
+lifecycle solvency remain open. See `docs/examples/margin-payment-settlement.md`.
