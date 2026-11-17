@@ -94,7 +94,8 @@ def r2_inputs(repo, revision, directory, tc):
             path = directory/(row['name']+'.'+stream)
             content = path.read_bytes()
             expected = row.get(stream+'_sha256')
-            if not content and expected!=hashlib.sha256(b'').hexdigest():
+            allowed_empty = stream=='stderr' or row['name'] in ['original-model','original-relation']
+            if not content and (not allowed_empty or expected!=hashlib.sha256(b'').hexdigest()):
                 raise Blocked('empty required R2 replay log: '+path.name)
             if hashlib.sha256(content).hexdigest()!=expected:
                 raise RuntimeError('R2 replay log changed: '+path.name)
