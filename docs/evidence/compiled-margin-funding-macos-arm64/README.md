@@ -1,0 +1,11 @@
+# Compiled evidence for reference funding
+
+The [artifact](artifact.json) binds this thirty-nine-target macOS arm64 archive to source revision `b90182135ea979c3a8fd5899fb28ca8822a1c9d0`. It adds Funding and FundingAudit using the unchanged accepted builder, checker and replay script. The [manifest](manifest.json) records the measured import closure and source identities. [Verification](verification.json) records eight commands against a fresh extraction. Publication is recorded separately.
+
+Follow the [package replay instructions](../../../tools/compiled-evidence/README.md). The selected modules replay with the bundled runtime from an unrelated directory. Missing funding artifact, unreadable payload and empty inventory block (3); altered bytes fail (1). Optional inventory and the packaged 101-file token0 check are separate checks.
+
+The funding operation derives rounded fee and pending claims from explicit observed factors and position snapshots. It executes the actual bound-ledger payment, then records a secondary holding collateral claim separately from owner funding claims. Owner claims and latest snapshots remain pending until caller commit. Generic proofs establish real-rights constructive execution, exact frame/effects, physical conservation and two-dust accounting. A restricted primary-paid marked-equity theorem counts the rounded fee once; it does not compute all source health fees or impact preprocessing.
+
+Twenty-one source controls, three mutations and seven fresh helper/native rounding comparisons have distinct records. The prior pinned compiler output and runtime were reused; no new compiler or full-handler execution is claimed. Compiled replay does not rerun source controls, mutants or helper calls. The selected token assignment is collateral-primary as long token and secondary as short token. Observed factors, marked PnL and impact remain explicit upstream assumptions. Full GMX destination/handler/deployment refinement, caller claim/snapshot commit, funded close-PnL realization, ordered liquidation and separate lifecycle solvency remain open. IV.3 is incomplete.
+
+The same Lean kernel and trusted imports, original third-party terms, external unbundled Solidity/EVM/Go executables, unknown historical effort and absent actual outside reproduction remain explicit. Earlier targets retain their documented scopes.

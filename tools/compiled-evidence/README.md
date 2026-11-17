@@ -1,6 +1,6 @@
 # Compiled DeFiFormal evidence for macOS arm64
 
-Current source coverage includes all five exact-rational lending operations, a finite lifecycle replay, native rounded-payment arithmetic and actual Typed reference payment. Actual liquidation and lifecycle solvency remain open. The refresh notes below describe earlier increments; their pending-work statements apply to those earlier slices. Release acceptance remains bound by the separate publication record.
+Current source coverage includes all five exact-rational lending operations, a finite lifecycle replay, native rounded-payment arithmetic, actual Typed reference payment and a source-stage reference funding operation. Actual liquidation and lifecycle solvency remain open. The refresh notes below describe earlier increments; their pending-work statements apply to those earlier slices. Release acceptance remains bound by the separate publication record.
 
 This package replays the explicit modules in `targets.txt` using the bundled Lean `leanchecker`. It contains their actual compiled import closure, all associated Lean source files, dependency revision and license records, runtime libraries, checksums, and selected accepted evidence. `manifest.json` identifies the exact source revision, checker binaries, platform and scope of each check. The package archive has an external SHA-256 in its publication record; compare that before extraction. Internal checksums detect missing or altered payload bytes, not a maliciously replaced archive plus checksum.
 
@@ -158,3 +158,25 @@ successful partial payment may retain source residual or economic shortfall.
 The reference recipient and mismatch guard are not GMX destination or selected
 financial-refusal refinements. Funding, realized PnL, ordered close and separate
 lifecycle solvency remain open. See `docs/examples/margin-payment-settlement.md`.
+
+## Reference funding evidence refresh
+
+This refresh adds `DefiKernel.Margin.Funding` and `FundingAudit`. Rounded fee
+and pending owner claims derive from explicit position size, factor snapshots
+and latest observations. Actual payment uses the same bound ledger buckets,
+then separately records a holding collateral claim when secondary tokens paid.
+The holding role key is distinct from the owner funding-claim keys; physical
+tokens and claim counters remain separate. Owner claims and latest snapshots
+remain pending until a separate caller commit. Real invocation, debit and
+claim-counter issuance rights construct successful execution.
+
+The actual effect, frame, conservation and two-dust theorems remain separate
+from the restricted primary-paid marked-equity theorem, which charges the fee
+once. Twenty-one source controls, three actual mutations, public CLI negatives
+and seven fresh helper/native rounding comparisons are recorded separately.
+The unchanged pinned Solidity wrapper/runtime was reused for those calls;
+compiled replay reruns none of them and claims no new full-handler execution.
+Primary collateral is selected as the long token, secondary as the short token.
+Computed factors and PnL/impact remain upstream observations. Funded close-PnL
+realization, ordered liquidation and separate lifecycle solvency remain open.
+See `docs/examples/margin-funding.md` for the exact receipt and claim scope.
