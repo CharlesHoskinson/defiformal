@@ -41,7 +41,7 @@ seen='|'
 while IFS= read -r target; do
   [ -n "$target" ] || blocked 'empty target name'
   case "$target" in *[!A-Za-z0-9_.]*) failed 'malformed target name';; esac
-  case "$target" in DefiKernel.*) ;; *) failed 'unexpected target namespace';; esac
+  case "$target" in DefiKernel.*|R2Replay|OriginalContractRelation) ;; *) failed 'unexpected target namespace';; esac
   case "$seen" in *"|$target|"*) failed 'duplicate target';; esac
   seen=$seen$target'|'
   module_path=$(echo "$target" | /usr/bin/tr . /)

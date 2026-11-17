@@ -42,3 +42,14 @@ The package also replays the rational AMM model and its audit definitions. Its c
 This refresh was assembled by root from the independently verified source/build copy at the recorded commit. Previously observed cache-byte differences are allowed; this archive does not promise unchanged compiled bytes relative to earlier releases. Its own source identities, checksums and replay results are authoritative.
 
 The checked Word targets add generic constructive success and exact refusal conditions, proved 512/513/768-bit intermediates, correspondence to the rational quote with one final output floor, and actual post-reserve bounds and product nondecrease. Positive reserves/input, a proper fee pair and input-reserve headroom define the admissible domain. Zero output is permitted; reversing zero output refuses. This is a widened mathematical Word model, with no EVM256 or deployed-source equivalence claim. Fifteen finite controls, separate model/proof mutations and public CLI defect controls are recorded execution evidence. The archive replays compiled declarations and does not rerun those source controls.
+
+Optional accepted R2 replay artifacts can be included with `--r2-replay DIR`.
+The builder checks the exact three source recipes against the repository revision,
+the recorded Lean identity and all nine command/log records, and bundles their
+existing compiled artifacts. Selected `R2Replay` and `OriginalContractRelation`
+replace production R2 targets to avoid duplicate declarations. `SwapModel` is a
+trusted imported compatibility dependency. The effective target inventory and
+original configuration are both retained, with transformations in `manifest.json`.
+Only those two additional top-level module names are allowed by the shell; the
+optional Python checker is unchanged. This reuse binds recorded execution and
+artifact bytes, not a new reproducible-build or source-to-binary refinement proof.
