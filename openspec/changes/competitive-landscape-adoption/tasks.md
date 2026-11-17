@@ -4,6 +4,8 @@ All boxes stay unchecked in this planning freeze. Do not start Lean, CI configur
 
 Implementation transition (2026-11-17): task 1.1 accepted with limitations at revision `a163c10460ce61dd62a5001d6e7bd5b650cd8d75`, with all 17 boxes unchecked before acceptance. See [the review decision](../../../review/semantic-kernel/competitive-landscape-adoption-20261117/DECISION.json) and its exact-input manifest. The planning freeze above remains historical; this checkbox update records the subsequent apply action. No implementation task is accepted.
 
+Apply status (2026-11-17): tasks 1.1, 1.2, I.1 and I.2 are complete. The [partial accounting baseline](../../../benchmarks/component-accounting/README.md) records selected adapter counts and attribution, but I.3 stays open because separate historical authoring effort is unavailable. The owner confirms no outside reproduction record exists, so I.4 stays open. The ordered apply is paused at these Phase I evidence gates; see [current apply status](../../../review/semantic-kernel/competitive-landscape-adoption-20261117/APPLY-STATUS.json). Later phases remain unimplemented.
+
 ## 1. Planning gate
 
 - [x] 1.1 Obtain independent review of this exact `competitive-landscape-adoption` candidate under the reviewer bindings in `AGENTS.md`, record verdict, requested and reported model identity and input hashes, and verify no box in this file is ticked before acceptance.
@@ -12,7 +14,7 @@ Implementation transition (2026-11-17): task 1.1 accepted with limitations at re
 ## 2. Phase I: operational
 
 - [x] I.1 Add CI that runs the build and the axiom audit on every commit. [trusted by others; D5] Verify a passing run is visible at the current revision and the gate has been seen to fail on a deliberate break.
-- [ ] I.2 Cut a first tagged release, and add a contribution guide and a license file. [trusted by others; D5; 3.1] Verify a tagged release; both files in the repository.
+- [x] I.2 Cut a first tagged release, and add a contribution guide and a license file. [trusted by others; D5; 3.1] Verify a tagged release; both files in the repository.
 - [ ] I.3 Start per-component accounting of model, specification and guidance lines, of authoring effort, and of attribution (AI-authored or human). [better measurement; D1; 2.7] Verify the vault deposit and the token0 register each report their counts and effort.
 - [ ] I.4 Have an outside developer run the DeFiFormal sprint P18 token0 package from its README and record the outcome and setup time. [trusted by others; D5; 3.1] Verify a reproduction record by someone outside the project exists, pass or fail, with its setup time.
 
