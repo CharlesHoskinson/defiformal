@@ -1,3 +1,4 @@
+import DefiKernel.Vault.ComputedDepositAudit
 import DefiKernel.Vault.ConversionDomain
 import DefiKernel.Composition.VaultQuoteWorkflow
 import DefiKernel.Composition.ShareQuote
