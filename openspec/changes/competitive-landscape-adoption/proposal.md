@@ -1,12 +1,12 @@
 ## Why
 
-**Draft amendment — 2026-11-18, pending owner review.** This change would become
-the implementation and evidence-delivery milestone. Prospective effort measurement
-and actual outside reproduction would remain obligations of the linked
+**Accepted amendment — 2026-11-18.** The [acceptance record](../../../review/semantic-kernel/competitive-landscape-restructure-20261118/ACCEPTANCE.json) closes this
+implementation and evidence-delivery milestone under its amended criteria.
+Prospective effort measurement and actual outside reproduction remain obligations of the linked
 [validation change](../competitive-landscape-validation/proposal.md).
 The 2026-11-17 acceptance remains historical evidence for the original contract:
-13/17 tasks, four unmet criteria. This draft does not update that acceptance or
-authorize integration, publication or archival.
+13/17 tasks, four unmet criteria. The owner authorized continued commits on
+`semantic-kernel-pivot`; the original acceptance remains unchanged.
 
 IOG Technical Intelligence assessed DeFiFormal against 13 formal-verification tools and semantic models for DeFi (ConCert, Act, Certora Prover/CVL, CFF, Kontrol, Lean AMM formalization, Marlowe Isabelle semantics, Maude-LP, MEV-formal, Move Prover, Scribble, Solidity SMTChecker, Verity) on capability, performance and maturity. DeFiFormal was benchmarked on the same two workloads on 2026-11-06 and its capabilities were graded from this repository at `2b60322cdc8c98f0e0c27cab3b2d6dcc824c3eda` (branch `semantic-kernel-pivot`). The report is `docs/research/competitive-landscape-2026-11/defiformal-competition-tech-strategy.html`.
 
@@ -66,12 +66,12 @@ None in `openspec/specs/`. Where a task extends an accepted capability (for exam
 
 ## Impact
 
-The proposed revision edits planning artifacts only and adds a linked validation
+The accepted amendment edits planning artifacts and adds a linked validation
 plan. Existing Lean/Solidity/Python implementations, accounting manifests,
 historical report, frozen reviews, source observations and release assets retain
-their exact bytes and identities. A later accepted apply step must add new
-reconciliation records rather than rewrite the 2026-11-17 evidence. The original
-milestone can close only under the approved amended contract; the validation
+their exact bytes and identities. The accepted apply step adds new
+reconciliation records and preserves the 2026-11-17 evidence. The delivery
+milestone is complete under the approved amended contract; the validation
 change remains open until its own measurement and outside-run criteria pass.
 
 Planning files live under `openspec/changes/competitive-landscape-adoption/`. The report and its README live under `docs/research/competitive-landscape-2026-11/`. The measurement records behind the report are retained in IOG's assessment repository (`input-output-hk/SOTA-DeFiFormal-Moriarty`), which is private; `evidence-index.json` names them and the report embeds every number. The owner authorized importing the IOG-authored Suite 1.0 and rational-1 adapters into `benchmarks/competitive-landscape/` in this change. All tasks using their adapters, proofs or helpers remain blocked until the required pinned artifacts and dependencies are verified available. Preserve the report and historical evidence; new replay results are separate records.

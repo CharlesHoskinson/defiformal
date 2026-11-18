@@ -6,9 +6,10 @@ reproduction is absent. A separate validation change gives prospective measureme
 and outside usability evidence explicit completion criteria without making release
 delivery depend on recovering missing historical data.
 
-**Draft — 2026-11-18, pending owner review.** This plan accompanies the proposed
-[delivery amendment](../competitive-landscape-adoption/proposal.md). Neither the
-transfer nor any validation result is accepted merely because these files exist.
+**Plan accepted — 2026-11-18.** The [acceptance record](../../../review/semantic-kernel/competitive-landscape-restructure-20261118/ACCEPTANCE.json) binds owner approval
+and independent planning review alongside the
+[delivery amendment](../competitive-landscape-adoption/proposal.md). Actual
+validation results require their own evidence and acceptance.
 
 ## What Changes
 

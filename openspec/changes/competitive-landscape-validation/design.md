@@ -1,11 +1,12 @@
 ## Context
 
-This is the proposed follow-up to the
+This is the accepted follow-up to the
 [delivery amendment](../competitive-landscape-adoption/design.md). Original
 accepted state is 13/17 at `cd2f8ef5`; historical component effort is unknown and
 the owner confirms no outside P18 reproduction exists. Existing agent replays and
 reviews support engineering delivery. They do not supply outside-person records.
-All tasks below are pending; these planning files are not observed results.
+Planning task 1.1 is accepted; measurement and outside-run tasks remain pending.
+These planning files are not observed results.
 
 ## Goals / Non-Goals
 

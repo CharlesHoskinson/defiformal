@@ -1,9 +1,8 @@
 ## Context
 
-**Draft amendment — 2026-11-18, pending owner review.** The proposed completion
-structure below supersedes the original umbrella decision only if this amendment
-is accepted. Existing accepted evidence remains bound to the original bytes and
-criteria. See tasks.md for the obligation mapping and remaining amendment gates.
+**Accepted amendment — 2026-11-18.** The completion structure below is accepted
+in the [acceptance record](../../../review/semantic-kernel/competitive-landscape-restructure-20261118/ACCEPTANCE.json). Existing accepted evidence remains bound to
+the original bytes and criteria. See tasks.md for the obligation mapping.
 
 See proposal.md. Inputs are the IOG Technical Intelligence report (data as of 2026-11-06), the DeFiFormal source at `2b60322cdc8c98f0e0c27cab3b2d6dcc824c3eda` on `semantic-kernel-pivot`, the toolchain pin `lean/lean-toolchain` `leanprover/lean4:v4.33.0-rc2` with mathlib `v4.33.0-rc2`, and the accepted P16, P17, P18 and P19 records under `review/semantic-kernel/program-execution-20260908/`.
 
@@ -57,8 +56,8 @@ Each task carries one of three kinds. *Better product* changes what the kernel c
 
 Every "done when" of the report's task table appears as a WHEN / THEN scenario in the delta spec of its capability. A task closes when its scenario is demonstrated, not when it is declared done.
 
-For the proposed amendment, the report's original criteria remain historical.
-The revised scenarios govern the delivery milestone only after acceptance, and
+Under the accepted amendment, the report's original criteria remain historical.
+The revised scenarios govern the delivery milestone, and
 the transferred criteria govern the linked validation change. A checked delivery
 task cannot be used as evidence that a transferred criterion passed.
 
@@ -72,7 +71,7 @@ The report's section 2.1 takeaway: replay time itself needs no task. 2.4 to 3.9 
 
 ## Risks / Trade-offs
 
-- Original entry risk: adapter-dependent tasks were blocked until pinned imports were available. The accepted import and subsequent delivery records now supply those artifacts; this draft does not reopen accepted implementation.
+- Original entry risk: adapter-dependent tasks were blocked until pinned imports were available. The accepted import and subsequent delivery records now supply those artifacts; the amendment does not reopen accepted implementation.
 - Outside-run tasks still need a person outside the project. The linked validation change keeps these obligations visible; an agent cannot satisfy them.
 
 ### Proposed completion amendment, 2026-11-18
@@ -110,11 +109,11 @@ must meet its own requirements; an agent, download or release is insufficient.
 
 **5. Amendment acceptance is explicit.** The source and scope of every transferred
 obligation are mapped in tasks.md. Original accepted records at `cd2f8ef5` remain
-the evidence for the previous 13/17 state. This uncommitted draft is not an
-accepted amendment. Its task 1.3 requires owner approval and independent planning
-review under applicable reviewer bindings. I.3 and 6.1 remain open until new
-accounting/scenario reconciliation records are accepted. No archival or release
-action follows merely from writing this draft.
+the evidence for the previous 13/17 state. Owner approval and independent planning
+review close task 1.3. The independently accepted accounting/scenario reconciliation
+closes amended I.3 and 6.1. ACCEPTANCE.json records the exact reviewed inputs and
+this status transition. No outside-run or prospective-measurement result follows
+from amendment acceptance.
 
 ### Applying the amendment after approval
 
@@ -141,4 +140,4 @@ The owner asked to continue after the Phase I evidence pause. Proceed with depen
 ## Open Questions
 
 - Resolved: the owner requests both IOG benchmark adapters in this change, not a separate change.
-- Owner review of this draft is pending. No additional implementation decision is needed before that review.
+- Resolved: the owner approved this amendment and continuing work on `semantic-kernel-pivot` on 2026-11-18. Actual outside records remain pending in the validation change.

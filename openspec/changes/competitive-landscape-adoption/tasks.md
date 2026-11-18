@@ -1,8 +1,9 @@
 # Competitive landscape adoption: delivery milestone
 
-**Draft restructuring — 2026-11-18; pending owner review.** These edits are a
-proposal for review, not an accepted completion transition. No commit, push,
-archive or live evidence-state update is authorized by this draft.
+**Accepted amendment — 2026-11-18. Delivery: 17/17 under the amended contract.**
+The owner approved the restructuring and continued delivery on
+`semantic-kernel-pivot`. Independent planning and reconciliation reviews are bound
+in the [acceptance record](../../../review/semantic-kernel/competitive-landscape-restructure-20261118/ACCEPTANCE.json). This change is not archived.
 
 The accepted original result remains **13/17** at revision
 `cd2f8ef5409c7e79a47e069738922858b5947409`, recorded in
@@ -10,15 +11,16 @@ The accepted original result remains **13/17** at revision
 That record and all frozen reviews, accounting manifests, scenario inventories and
 publication receipts retain their original criteria and byte identities.
 
-The proposed milestone is the implemented, reviewed and published verification
+The amended milestone is the implemented, reviewed and published verification
 library, with explicit scoped accounting and engineering replay. Prospective effort
 measurement and actual outside reproduction belong to the linked
 [validation plan](../competitive-landscape-validation/tasks.md).
-Its tasks remain open; they are not evidence of completed validation.
+Its measurement and outside-run tasks remain open; planning acceptance is not
+evidence of completed validation.
 
 ## Obligation mapping
 
-| Original obligation | Proposed delivery criterion | Remaining validation obligation |
+| Original obligation | Amended delivery criterion | Remaining validation obligation |
 | --- | --- | --- |
 | I.3: counts, attribution and historical effort | Scoped counts/attribution, exact source boundaries and recorded effort availability; unknown historical effort stays `null` with reasons | Validation 2.1 establishes prospective component accounting; 2.2 collects a new separate-effort experiment. Original effort has not been recovered. |
 | I.4: actual outside P18 run | Transferred in full; absent from the delivery checklist | Validation 3.1 retains actual outside person, outcome and setup time. |
@@ -26,24 +28,24 @@ Its tasks remain open; they are not evidence of completed validation.
 | III.1: compiled delivery plus outside recheck | Exact published package and successful engineering replay from fresh extraction | Validation 4.1 retains actual outside package-only replay. |
 | 6.1: scenario reconciliation | Reconcile the amended scenarios and transfer map after amendment acceptance | Original 2026-11-17 reconciliation stays historical; follow-up closure requires its own evidence. |
 
-The proposed checklist retains existing acceptance for unchanged implementation
+The amended checklist retains existing acceptance for unchanged implementation
 criteria. II.1 and III.1 below recognise already accepted engineering evidence;
 their transferred criteria remain unchecked in the validation plan. I.3, new
-amendment gate 1.3 and revised reconciliation 6.1 remain open. Completion under
-the amended contract requires all three gates. No conclusion about productivity,
+amendment gate 1.3 and revised reconciliation 6.1 now have accepted evidence.
+The original acceptance and its four unmet criteria remain unchanged. No conclusion about productivity,
 outside usability or adoption follows from closing the delivery milestone.
 
 ## 1. Planning gate
 
 - [x] 1.1 Obtain independent review of this exact `competitive-landscape-adoption` candidate under the reviewer bindings in `AGENTS.md`, record verdict, requested and reported model identity and input hashes, and verify no box in this file is ticked before acceptance.
 - [x] 1.2 Include the IOG Suite 1.0 and rational-1 adapters in this change, as authorized on 2026-11-17. Import the required sources, proofs and helpers with pinned revision, file hashes, IOG attribution and replay instructions. Verify every dependent task (including II.2 and IV.1) stays blocked until its required pinned artifacts and dependencies are verified available; the contribution decision alone does not unblock it, and import alone is not fresh replay or proof on the kernel.
-- [ ] 1.3 Obtain owner approval and independent planning acceptance of the exact 2026-11-18 restructuring and linked validation plan. Verify a new revision/hash-bound decision explicitly accepts the changed completion criteria and obligation transfer, preserves the original 13/17 result, and records requested/reported reviewer identity under applicable bindings. Preparing this uncommitted draft does not close this gate.
+- [x] 1.3 Obtain owner approval and independent planning acceptance of the exact 2026-11-18 restructuring and linked validation plan. Verify a new revision/hash-bound decision explicitly accepts the changed completion criteria and obligation transfer, preserves the original 13/17 result, and records requested/reported reviewer identity under applicable bindings. Preparing this uncommitted draft does not close this gate.
 
 ## 2. Phase I: operational
 
 - [x] I.1 Add CI that runs the build and the axiom audit on every commit. [trusted by others; D5] Verify a passing run is visible at the current revision and the gate has been seen to fail on a deliberate break.
 - [x] I.2 Cut a first tagged release, and add a contribution guide and a license file. [trusted by others; D5; 3.1] Verify a tagged release; both files in the repository.
-- [ ] I.3 Publish a scoped accounting reconciliation for the selected vault-deposit adapter and token0 quote-register adapter. [better measurement; D1; 2.7] Verify exact source identities, exhaustive model/specification/guidance counts, attribution with provenance, supporting-code exclusions, and effort availability for each. Unknown historical or per-component effort must remain null with a reason; shared elapsed sessions and command runtimes must not become authoring/person-hours. Bind the accepted baseline and state that it is not a complete-component cost or productivity measurement. Preserve its legacy unmet-I.3 verdict; a new accepted reconciliation must identify this amended criterion. Prospective measurement remains validation 2.1/2.2.
+- [x] I.3 Publish a scoped accounting reconciliation for the selected vault-deposit adapter and token0 quote-register adapter. [better measurement; D1; 2.7] Verify exact source identities, exhaustive model/specification/guidance counts, attribution with provenance, supporting-code exclusions, and effort availability for each. Unknown historical or per-component effort must remain null with a reason; shared elapsed sessions and command runtimes must not become authoring/person-hours. Bind the accepted baseline and state that it is not a complete-component cost or productivity measurement. Preserve its legacy unmet-I.3 verdict; a new accepted reconciliation must identify this amended criterion. Prospective measurement remains validation 2.1/2.2.
 
 ## 3. Phase II: the first composed example
 
@@ -65,5 +67,5 @@ outside usability or adoption follows from closing the delivery milestone.
 
 ## 6. Review and remainders
 
-- [ ] 6.1 After amendment acceptance, publish a new reconciliation of every revised delta-spec scenario and each transferred obligation to proof, finite, mutation, measurement, unknown or pending external evidence. Verify exact scenario/spec identities, preserve the original scenario inventory and final acceptance, name open validation task IDs, and obtain independent acceptance before changing live status or closing the amended milestone. No scenario is credited from a declaration or requirement transfer alone.
+- [x] 6.1 After amendment acceptance, publish a new reconciliation of every revised delta-spec scenario and each transferred obligation to proof, finite, mutation, measurement, unknown or pending external evidence. Verify exact scenario/spec identities, preserve the original scenario inventory and final acceptance, name open validation task IDs, and obtain independent acceptance before changing live status or closing the amended milestone. No scenario is credited from a declaration or requirement transfer alone.
 - [x] 6.2 Leave replay speed, deployed-code equivalence, a complete adversary model and corroborated adoption named as remainders, and verify none is claimed by this change.

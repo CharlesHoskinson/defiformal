@@ -1,6 +1,6 @@
 # Competitive landscape validation
 
-**Draft — 2026-11-18, pending owner review. All tasks are open.** This plan
+**Plan accepted — 2026-11-18.** See the [acceptance record](../../../review/semantic-kernel/competitive-landscape-restructure-20261118/ACCEPTANCE.json). This plan
 accompanies the [delivery amendment](../competitive-landscape-adoption/tasks.md).
 It does not claim historical effort was recovered or an outside developer has
 performed any run. The existing published proofs and agent checks remain delivery
@@ -15,7 +15,7 @@ evidence. The measurement experiment is new prospective work.
 
 ## 1. Accept the plan
 
-- [ ] 1.1 Obtain owner approval and independent planning acceptance of this exact follow-up together with the delivery amendment. Verify a revision/hash-bound decision records reviewer identity, the obligation mapping and the distinct closure criteria; no requirement transfer is treated as an observed result.
+- [x] 1.1 Obtain owner approval and independent planning acceptance of this exact follow-up together with the delivery amendment. Verify a revision/hash-bound decision records reviewer identity, the obligation mapping and the distinct closure criteria; no requirement transfer is treated as an observed result.
 
 ## 2. Measure prospective effort
 
