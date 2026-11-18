@@ -1,0 +1,25 @@
+# Independent correction review
+
+Verdict: ACCEPT WITH LIMITATIONS. No required fixes.
+
+Reviewed the complete working-tree candidate against base `1bbc02891a22d61a60b360466e9eef8fec774f4d`, including staged and unstaged changes and the new regression test. `INPUTS.json` freezes all seven paths and SHA-256 values before substantive review; all seven were checked unchanged after verification. Requested reviewer: `gpt-6-astra`, medium reasoning. Actual returned model identity: unavailable (null); no provider identity is invented. This is an independent nonauthor Codex review.
+
+The threat model is accidental omission or drift, not coordinated adversarial rewriting of the checker and its evidence. Scope is the three corrections and their integrity controls, not the separate validation change or wider roadmap.
+
+## Findings
+
+- The liquidation downgrade to partial is justified by the cited `Close.run`, `run_accounting`, `Admitted`, `SolventBudget`, `constructive_solvency` and `liquidation_correct` definitions/statements. Owner invocation, unchanged positions, conditional cost coverage and the built-in ledger nonnegativity invariant do not establish comprehensive third-party liquidation or post-liquidation solvency. The empty-store CloseAudit case is consistent with the stated authority limitation. The historical report's scoped peer findings support the conservative calibration.
+- AMM conservation supported within the explicitly stated single-swap scope and no-arbitrage partial are reasonable report-calibrated grades. The correspondence statements preserve actual reserves and per-asset totals; WordSettlement also states trader deltas directly. Rational Settlement trader deltas follow from its two-party ledger and totals/reserve equations, rather than appearing as explicit conjuncts in `run_correspondence`. The immediate reversal theorems do not establish unrestricted market no-arbitrage. The correction states those limitations.
+- The ShareQuote correction is accurate: the recorded adding commit and interval agree, the workflow imports and uses the bridge, and the 50 physical lines are exhaustively allocated. Inspection confirms deposit 2 specification/9 guidance, quote 2 specification/7 guidance, shared 3 model/1 specification/3 guidance, with 23 excluded/blank lines overall. These additions produce the recorded combined counts. Scope remains illustrative workflow/support source. Original per-component effort remains unavailable; shared elapsed time is not promoted to effort or savings.
+- Fixed correction IDs, mandatory sections, and exact grade-cell sets address the partial-inventory false pass. Real CLI tests observe intact success, missing correction/section/cell blocking, duplicate/unexpected correction failure, count/hash disagreement failure, and empty/missing input blocking. The intact control also verifies bound inputs' bytes and modification times are unchanged.
+- The candidate adds correction records and explanatory text without changing historical evidence, Lean source, normative delta specs or task checkbox states. IV.1 and IV.3 grades leave unknown; II.1 now includes the previously excluded support source. The underlying acceptance criteria are not weakened.
+
+## Verification and limits
+
+`checks.json` retains exact commands, exit codes and complete output. Seven unittest methods pass (including their subtest cases); the intact checker exits 0 over 3 corrections, 45 hash checks, 7 statement checks, 32 cited lines, 8 calibrations, 6 historical grade strings, 1 commit and 50 accounted lines. Strict OpenSpec validation exits 0.
+
+This review reads the cited Lean statements and existing evidence; it does not rebuild Lean or assert a new mathematical proof. The integrity CLI checks recorded bytes/citations/counts and selected report findings. It does not mechanically establish semantic grades, ownership classification, arbitrary prose consistency or every possible nested-record omission. Those judgments are supplied by this scoped review. Malformed input hardening beyond the demonstrated omission/drift controls is not a release blocker for this dated fixed-input utility. Historical comparative findings were checked against the frozen report, not independently re-audited against current peer implementations.
+
+## Permitted delivery transition
+
+The reviewed proposed correction is accepted. Owner approval is recorded in the candidate. Root may make an explicit status-only transition to effective, recording this review and a separate transition record with before/after hashes. Such a transition may update proposed/open-review wording and review-status metadata, but must not change grades, counts, evidence, code, normative criteria or task checkbox states. Preserve all original reviewed bytes retrievably in a commit before the transition. The accounting method's historical statement that classification had not yet been independently reviewed is superseded by this review, without rewriting the frozen reviewed record. This acceptance does not authorize executing validation or roadmap work.

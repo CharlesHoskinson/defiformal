@@ -1,0 +1,244 @@
+{
+  "schema": "competitive-landscape-corrections-1",
+  "date": "2026-11-18",
+  "status": "candidate: takes effect only after owner approval and independent acceptance of the exact candidate; required independent acceptance open",
+  "base_revision": "1bbc02891a22d61a60b360466e9eef8fec774f4d",
+  "change": "openspec/changes/competitive-landscape-adoption",
+  "authoring_session": {
+    "tool": "Claude Code (VS Code extension)",
+    "model_reported_by_session": "claude-opus-5-5",
+    "instruction": "Owner request in the authoring session: implement the must-fix corrections from the post-acceptance review, aligned with the OpenSpec documents; do not push before owner approval.",
+    "basis": "Post-acceptance review in the same session. Its reviewers were subagents of that session, not the independent reviewer bound by AGENTS.md."
+  },
+  "review": {
+    "owner_approval": "Approved on 2026-11-18: I approve all uncommited (staged and unstaged) changes.",
+    "independent_review": "required acceptance open; conversational review requested repairs and does not accept the repaired candidate",
+    "binding": "AGENTS.md 2026-09-19: independent gpt-6-astra at medium checks frozen candidates. An unavailable or unperformed review is open, not an approval."
+  },
+  "policy": "Frozen records keep their bytes. After owner approval and independent acceptance of the exact candidate, this record supersedes only the statements named under supersedes and supplies grades named under completes. Until then its corrections are proposed. Integrity-check success is not independent acceptance of grades or proof claims. It changes no Lean source, theorem statement, task checkbox or normative delta spec.",
+  "grade_labels": ["supported", "partial", "unsupported", "unknown"],
+  "report": {
+    "path": "docs/research/competitive-landscape-2026-11/defiformal-competition-tech-strategy.html",
+    "sha256": "7a66283c04bdc282bd4b396cf6821f3c1abfb906fa8fd8596d553ebe45fc2ff9"
+  },
+  "verification_command": ["python3", "scripts/check_capability_corrections.py"],
+  "corrections": [
+    {
+      "id": "C1-liquidation-grades",
+      "task": "IV.3",
+      "scenario": {
+        "path": "openspec/changes/competitive-landscape-adoption/specs/financial-scope/spec.md",
+        "sha256": "082db7db56190450b3062b226a20ae24db08ce080a4eb28a97fc9ff54234085f",
+        "name": "Liquidation cells move"
+      },
+      "historical_report_grades": [
+        "\"cell:liquidation:liquidation_correctness\": [\"unknown\", \"Not modeled.\"]",
+        "\"cell:liquidation:solvency\": [\"unknown\", \"Not modeled.\"]",
+        "\"primitive:liquidation\": [\"unknown\", \"Not modeled; planned as roadmap sprint P27.\"]"
+      ],
+      "supersedes": [
+        {
+          "path": "review/semantic-kernel/competitive-landscape-adoption-20261117/IV-3-ACCEPTANCE.json",
+          "sha256": "115d6f4bf88611a939022146fe61910b313bc06055b1dc1cffbfe610f0d20f47",
+          "contains": "\"effective_status\": \"supported within the dated bounded reference API and explicit assumptions\""
+        },
+        {
+          "path": "review/semantic-kernel/competitive-landscape-adoption-20261117/final-reconciliation-review/referenced-records.json",
+          "sha256": "5e0bd4343b9fa4059459e79250df1514b7162833638303783c4021b23ca7672b",
+          "contains": "\"effective_status\": \"supported within the dated bounded reference API and explicit assumptions\""
+        },
+        {
+          "path": "docs/research/competitive-landscape-2026-11/liquidation-library-addendum-2026-11-17.md",
+          "sha256": "675dd6692248949bfe923a047c0ed981a51d9c3bbb81eb8168d0ec4caa933fed",
+          "contains": "**Supported** here always means the selected reference payment"
+        },
+        {
+          "path": "docs/research/competitive-landscape-2026-11/liquidation-library-addendum-2026-11-17.md",
+          "sha256": "675dd6692248949bfe923a047c0ed981a51d9c3bbb81eb8168d0ec4caa933fed",
+          "contains": "| `primitive:liquidation` | unknown: planned P27 | Supported within the declared signed-margin/NoSwap reference"
+        }
+      ],
+      "effective_grades": {
+        "cell:liquidation:liquidation_correctness": "partial",
+        "cell:liquidation:solvency": "partial",
+        "primitive:liquidation": "partial"
+      },
+      "reasons": [
+        "Every Close step executes with the fixed owner invocation context. There is no third-party liquidator authority, no liquidation incentive or penalty, and no collateral transfer to a liquidator.",
+        "A liquidatable position (base config liquidation=true) with an empty capability store is refused with unauthorizedInvoke, so liquidation needs the owner's own capabilities.",
+        "run_accounting proves the position record unchanged after the run; position removal is outside the model.",
+        "liquidation_correct proves the selected admission/preparation/payment prefix. Its admission conjunct is Admitted, which is trivially true for an ordinary close (liquidation=false).",
+        "constructive_solvency assumes SolventBudget: the costs fit within the output, collateral and preparation budgets and the pool covers preparation. Bankrupt positions are excluded, and nothing is stated about assets against liabilities after liquidation or about pool solvency.",
+        "The nonnegative-custody conjunct of constructive_solvency is the ledger invariant State.nonneg, which every ledger satisfies; it is not a derived solvency property.",
+        "The report grades comparable or stronger peer results partial: Verity's conditional solvency theorem, Maude-LP's and Verity's correctness findings, and CFF's liquidation model with a liquidator collateral transfer."
+      ],
+      "calibration": [
+        {"tool": "Verity", "cell": "cell:liquidation:solvency", "support": "partial", "claim_prefix": "Below the stated inverse liquidation-incentive LTV threshold, full repayment seizes at most collateral"},
+        {"tool": "Verity", "cell": "cell:liquidation:liquidation_correctness", "support": "partial", "claim_prefix": "A take protected by the lock leaves the liquidation marker unchanged"},
+        {"tool": "Maude-LP", "cell": "cell:liquidation:liquidation_correctness", "support": "partial", "claim_prefix": "The supplied concrete tests check repayment-to-seizure"},
+        {"tool": "Clockwork-Finance-Framework-CFF", "cell": "primitive:liquidation", "support": "partial", "claim_prefix": "Maker undercollateralization trigger, debt clearing and whole-collateral transfer to the liquidator."},
+        {"tool": "Maude-LP", "cell": "primitive:liquidation", "support": "supported", "claim_prefix": "Collateral-triggered debt repayment and minted-collateral seizure, with an automated liquidation candidate strategy."}
+      ],
+      "evidence": [
+        {"path": "lean/DefiKernel/Margin/Types.lean", "sha256": "a334ff8591d479ba91d0069dbb2e5aac9bc6184d1713e88d68d32040d301a89d", "line": 26, "contains": "def ownerContext : InvocationContext Party Domain := ⟨.owner,.margin⟩"},
+        {"path": "lean/DefiKernel/Margin/Close.lean", "sha256": "b64c7db618d99a1127e227f4549cd6671a068a8850033de28fa07781b8956a27", "line": 140, "contains": "ownerContext realizationIds"},
+        {"path": "lean/DefiKernel/Margin/Close.lean", "sha256": "b64c7db618d99a1127e227f4549cd6671a068a8850033de28fa07781b8956a27", "line": 146, "contains": "ownerContext Funding.payIds Funding.holdingIds"},
+        {"path": "lean/DefiKernel/Margin/CloseAudit.lean", "sha256": "2735f124b8327d51b201e5909900142a518728e58806a5870dfa4c66e03f43ca", "line": 7, "contains": "Funding.precision+1,true,false"},
+        {"path": "lean/DefiKernel/Margin/CloseAudit.lean", "sha256": "2735f124b8327d51b201e5909900142a518728e58806a5870dfa4c66e03f43ca", "line": 28, "contains": "private def simpleCfg : Close.Config := {cfg with"},
+        {"path": "lean/DefiKernel/Margin/CloseAudit.lean", "sha256": "2735f124b8327d51b201e5909900142a518728e58806a5870dfa4c66e03f43ca", "line": 130, "contains": "funding_needs_real_invoke_when_no_preparation"},
+        {"path": "lean/DefiKernel/Margin/CloseAudit.lean", "sha256": "2735f124b8327d51b201e5909900142a518728e58806a5870dfa4c66e03f43ca", "line": 131, "contains": ".empty) (.typed .unauthorizedInvoke)"},
+        {"path": "lean/DefiKernel/Margin/Close.lean", "sha256": "b64c7db618d99a1127e227f4549cd6671a068a8850033de28fa07781b8956a27", "line": 182, "contains": "theorem healthy_refusal"},
+        {"path": "lean/DefiKernel/Margin/Close.lean", "sha256": "b64c7db618d99a1127e227f4549cd6671a068a8850033de28fa07781b8956a27", "line": 344, "contains": "cfg.liquidation=false ∨ liquidatable value cfg=true"},
+        {"path": "lean/DefiKernel/Margin/Close.lean", "sha256": "b64c7db618d99a1127e227f4549cd6671a068a8850033de28fa07781b8956a27", "line": 430, "contains": "result.progress.state.position=before.position"},
+        {"path": "lean/DefiKernel/Margin/Close.lean", "sha256": "b64c7db618d99a1127e227f4549cd6671a068a8850033de28fa07781b8956a27", "line": 746, "contains": "def SolventBudget"},
+        {"path": "lean/DefiKernel/Margin/Close.lean", "sha256": "b64c7db618d99a1127e227f4549cd6671a068a8850033de28fa07781b8956a27", "line": 751, "contains": "feePrimary+primaryBudget cfg (remainingCosts cfg) ≤"},
+        {"path": "lean/DefiKernel/Margin/Close.lean", "sha256": "b64c7db618d99a1127e227f4549cd6671a068a8850033de28fa07781b8956a27", "line": 752, "contains": "buckets.output+buckets.collateral+"},
+        {"path": "lean/DefiKernel/Margin/Close.lean", "sha256": "b64c7db618d99a1127e227f4549cd6671a068a8850033de28fa07781b8956a27", "line": 937, "contains": "theorem constructive_solvency"},
+        {"path": "lean/DefiKernel/Margin/Close.lean", "sha256": "b64c7db618d99a1127e227f4549cd6671a068a8850033de28fa07781b8956a27", "line": 944, "contains": "∀ cell,0≤result.progress.state.world.state.balance cell"},
+        {"path": "lean/DefiKernel/Margin/Close.lean", "sha256": "b64c7db618d99a1127e227f4549cd6671a068a8850033de28fa07781b8956a27", "line": 1019, "contains": "result.progress.state.world.state.nonneg"},
+        {"path": "lean/DefiKernel/Typed/Types.lean", "sha256": "5f2b7d30028c7445f5523b9a06cb1fb21f36fc28e38d50844d4270177f601f82", "line": 34, "contains": "nonneg : ∀ c, 0 ≤ balance c"},
+        {"path": "lean/DefiKernel/Margin/Close.lean", "sha256": "b64c7db618d99a1127e227f4549cd6671a068a8850033de28fa07781b8956a27", "line": 1291, "contains": "theorem liquidation_correct"}
+      ],
+      "task_effect": "IV.3 stays complete. Its verify clause requires the liquidation cells of matrices 1.1 and 1.2 to leave unknown; partial satisfies it. Only the stated effective grade changes."
+    },
+    {
+      "id": "C2-amm-grades",
+      "task": "IV.1",
+      "scenario": {
+        "path": "openspec/changes/competitive-landscape-adoption/specs/financial-scope/spec.md",
+        "sha256": "082db7db56190450b3062b226a20ae24db08ce080a4eb28a97fc9ff54234085f",
+        "name": "Swap specified in both arithmetics"
+      },
+      "historical_report_grades": [
+        "\"cell:amm:conservation\": [\"unknown\", \"No AMM operation; the token0 arithmetic carries no reserve accounting.\"]",
+        "\"cell:amm:no_arbitrage\": [\"unknown\", \"No AMM operation.\"]",
+        "\"primitive:amm\": [\"partial\", \"Uniswap v3 token0 next-price arithmetic with overflow and rounding theorems; no swap or pool operation.\"]"
+      ],
+      "completes": [
+        {
+          "path": "docs/research/competitive-landscape-2026-11/amm-library-addendum-2026-11-17.md",
+          "sha256": "5ccf23dcd0b99112abbd301872e3d78f77424926545b4ba80446fe8efffc9c66",
+          "contains": "| Historical cell | Historical status | New source evidence and scope |"
+        },
+        {
+          "path": "review/semantic-kernel/competitive-landscape-adoption-20261117/IV-1-ACCEPTANCE.json",
+          "sha256": "4a608f15ed5e451e8005597216b664857023fff8c6c5504d2e26c585e7d50e06",
+          "contains": "\"no_arbitrage\": \"Native immediate same-pool full-output reversal bound"
+        }
+      ],
+      "effective_grades": {
+        "cell:amm:conservation": "supported",
+        "cell:amm:no_arbitrage": "partial"
+      },
+      "not_regraded": {
+        "primitive:amm": "The historical partial grade remains effective. IV.1's verify clause concerns the two matrix 1.2 cells only."
+      },
+      "reasons": [
+        "The 2026-11-17 AMM addendum lists evidence for both cells but states no grade, so the IV.1 verify clause had no stated cell move.",
+        "Conservation: Settlement.run_correspondence and WordSettlement.run_correspondence prove, for every successful single swap, the actual pool post-reserves, the trader deltas and unchanged per-asset ledger totals. Scope: one swap, two parties, two assets; no liquidity provision or Typed two-swap execution.",
+        "No-arbitrage: Rational.round_trip_nonprofit and CheckedRoundTrip.two_success_no_profit bound only an immediate full-output reversal against the same pool's actual post-state. No partial reversal, other strategy, external price or multi-pool sequence is covered.",
+        "The report grades comparable peer results the same way: Lean-AMM and MEV-formal scoped conservation supported, Lean-AMM same-state reverse-swap no-arbitrage partial."
+      ],
+      "calibration": [
+        {"tool": "Lean-AMM-formalization", "cell": "cell:amm:no_arbitrage", "support": "partial", "claim_prefix": "Partial no-arbitrage coverage: given a profitable forward constant-product swap"},
+        {"tool": "Lean-AMM-formalization", "cell": "cell:amm:conservation", "support": "supported", "claim_prefix": "Every minted token-pair supply is unchanged by a valid swap."},
+        {"tool": "MEV-formal", "cell": "cell:amm:conservation", "support": "supported", "claim_prefix": "Every finite AMM move sequence preserves each token quantity"}
+      ],
+      "evidence": [
+        {"path": "lean/DefiKernel/AMM/Settlement.lean", "sha256": "d5c83a2847bad890e94a747d291f8cdb797ff5ccd4fd21beffc2b57c135b7816", "line": 225, "contains": "theorem typed_conservation"},
+        {"path": "lean/DefiKernel/AMM/Settlement.lean", "sha256": "d5c83a2847bad890e94a747d291f8cdb797ff5ccd4fd21beffc2b57c135b7816", "line": 234, "contains": "theorem run_correspondence"},
+        {"path": "lean/DefiKernel/AMM/WordSettlement.lean", "sha256": "24c419d48b51c6b47e23819d0872bf56bde22577125db1ae3bde5d0a0b73751a", "line": 116, "contains": "theorem run_correspondence"},
+        {"path": "lean/DefiKernel/AMM/WordSettlement.lean", "sha256": "24c419d48b51c6b47e23819d0872bf56bde22577125db1ae3bde5d0a0b73751a", "line": 124, "contains": "(∀ asset, total post.state .pool asset = total pre .pool asset)"},
+        {"path": "lean/DefiKernel/AMM/Rational.lean", "sha256": "6ca55d0ba7013a5392b7e1d7bd87d821a72cb4b0e8af849519e7423188a983aa", "line": 179, "contains": "theorem round_trip_nonprofit"},
+        {"path": "lean/DefiKernel/AMM/Rational.lean", "sha256": "6ca55d0ba7013a5392b7e1d7bd87d821a72cb4b0e8af849519e7423188a983aa", "line": 182, "contains": "(computedRoundTrip pool amount fee).returnedX ≤ amount"},
+        {"path": "lean/DefiKernel/AMM/CheckedRoundTrip.lean", "sha256": "638cfd71e7809eb21a4d198ca55e311fb70941c4fa26959669663747a9066a80", "line": 53, "contains": "theorem two_success_no_profit"},
+        {"path": "lean/DefiKernel/AMM/CheckedRoundTrip.lean", "sha256": "638cfd71e7809eb21a4d198ca55e311fb70941c4fa26959669663747a9066a80", "line": 56, "contains": "(second : swapPool (flip forward.post) forward.output fee = .ok reverse)"},
+        {"path": "lean/DefiKernel/AMM/CheckedRoundTrip.lean", "sha256": "638cfd71e7809eb21a4d198ca55e311fb70941c4fa26959669663747a9066a80", "line": 57, "contains": "reverse.output.value ≤ amount.value"}
+      ],
+      "task_effect": "IV.1 stays complete. Its verify clause requires the AMM conservation and no-arbitrage cells of matrix 1.2 to leave unknown; this record states those grades explicitly."
+    },
+    {
+      "id": "C3-sharequote-accounting",
+      "task": "II.1",
+      "scenario": {
+        "path": "openspec/changes/competitive-landscape-adoption/specs/composed-financial-workflow/spec.md",
+        "sha256": "f7b37c77b441b07a8458c8285830fbb620d05652c0e7d6a2d7b7021eb019582f",
+        "name": "Component counts are reported"
+      },
+      "supersedes": [
+        {
+          "path": "benchmarks/component-accounting/vault-quote-workflow.json",
+          "sha256": "e192b319baf0baae2e83ebc70ce3293b9898cabf948ecbc25973370a063e1f45",
+          "contains": "Inherited ShareQuote/native Vault and token0/kernel source retain original authorship; not charged here."
+        }
+      ],
+      "corrected_statement": "ShareQuote.lean was created in this change by commit 8a494ab4 at 2026-11-17T10:13:40Z, inside the workflow record's implementation interval that starts at 10:04:49Z and is recorded through 10:24:03Z. VaultQuoteWorkflow.lean imports it and uses ShareQuote.raw_share_conversion. Native Vault, token0 and kernel sources remain inherited and uncharged.",
+      "commit": {
+        "sha": "8a494ab4c404dfc648dd22ae2d516e193f278904",
+        "adds": "lean/DefiKernel/Composition/ShareQuote.lean",
+        "author_time_utc": "2026-11-17T10:13:40Z",
+        "interval_start_utc": "2026-11-17T10:04:49Z",
+        "interval_recorded_through_utc": "2026-11-17T10:24:03Z"
+      },
+      "evidence": [
+        {"path": "lean/DefiKernel/Composition/VaultQuoteWorkflow.lean", "sha256": "129fa7a619523edc33fff57e0e3bfa06980d631777a1393f18d3f51af8f52df7", "line": 1, "contains": "import DefiKernel.Composition.ShareQuote"},
+        {"path": "lean/DefiKernel/Composition/VaultQuoteWorkflow.lean", "sha256": "129fa7a619523edc33fff57e0e3bfa06980d631777a1393f18d3f51af8f52df7", "line": 164, "contains": "ShareQuote.raw_share_conversion"},
+        {"path": "lean/DefiKernel/Composition/ShareQuote.lean", "sha256": "4687e008245b4a6ca06f1859b954ab87ff7142463914a329d211c5edcab9e3c8", "line": 13, "contains": "theorem raw_share_conversion"},
+        {"path": "review/semantic-kernel/competitive-landscape-adoption-20261117/sharequote-author/session-interval-clarification.json", "sha256": "7c4f81e85bbbdb5f53a3b90ac334cc75fe8ae30e38706f52511a99fe75bb57bc", "line": 7, "contains": "Raw conversion, shared lemma and combined workflow work are shared and were not separately timed."},
+        {"path": "review/semantic-kernel/competitive-landscape-adoption-20261117/sharequote-integration-decision.json", "sha256": "f0df82e43559270fe2ab5a209c2df1174c28b4963c71adcdef39cdca09037baa", "line": 7, "contains": "\"lean/DefiKernel/Composition/ShareQuote.lean\": \"4687e008245b4a6ca06f1859b954ab87ff7142463914a329d211c5edcab9e3c8\""}
+      ],
+      "accounting": {
+        "source": {
+          "path": "lean/DefiKernel/Composition/ShareQuote.lean",
+          "sha256": "4687e008245b4a6ca06f1859b954ab87ff7142463914a329d211c5edcab9e3c8"
+        },
+        "frozen_workflow_record": {
+          "path": "benchmarks/component-accounting/vault-quote-workflow.json",
+          "sha256": "e192b319baf0baae2e83ebc70ce3293b9898cabf948ecbc25973370a063e1f45"
+        },
+        "physical_lines": 50,
+        "method": "The frozen workflow record's method: explicit inclusive physical-line ranges, one owner and one primary role per line. Imports, comments, namespace/open/end lines and audit commands are excluded from model/specification/guidance but counted. Definitions are model; theorem statement lines are specification; proof lines are guidance. Owners: raw_share_conversion is deposit (native vault conversion), zero_share_quote_differs is quote (token0 library), convertedShareQuote and converted_share_quote are shared, #print axioms lines are verification. A blank line between different owners is shared. This classification was made by the authoring session and is not independently reviewed.",
+        "ranges": [
+          [1, 2, "shared", "excluded"],
+          [3, 3, "shared", "blank"],
+          [4, 6, "shared", "excluded"],
+          [7, 7, "shared", "blank"],
+          [8, 10, "shared", "excluded"],
+          [11, 11, "shared", "blank"],
+          [12, 12, "deposit", "excluded"],
+          [13, 14, "deposit", "specification"],
+          [15, 23, "deposit", "guidance"],
+          [24, 24, "shared", "blank"],
+          [25, 25, "shared", "excluded"],
+          [26, 28, "shared", "model"],
+          [29, 29, "shared", "blank"],
+          [30, 30, "shared", "specification"],
+          [31, 33, "shared", "guidance"],
+          [34, 34, "shared", "blank"],
+          [35, 35, "quote", "excluded"],
+          [36, 37, "quote", "specification"],
+          [38, 44, "quote", "guidance"],
+          [45, 45, "shared", "blank"],
+          [46, 48, "verification", "excluded"],
+          [49, 49, "shared", "blank"],
+          [50, 50, "shared", "excluded"]
+        ],
+        "counts": {
+          "deposit": {"model": 0, "specification": 2, "guidance": 9, "excluded": 1, "blank": 0},
+          "quote": {"model": 0, "specification": 2, "guidance": 7, "excluded": 1, "blank": 0},
+          "shared": {"model": 3, "specification": 1, "guidance": 3, "excluded": 10, "blank": 8},
+          "verification": {"model": 0, "specification": 0, "guidance": 0, "excluded": 3, "blank": 0}
+        },
+        "combined_with_workflow_record": {
+          "deposit": {"model": 28, "specification": 15, "guidance": 17, "excluded": 5, "blank": 6},
+          "quote": {"model": 21, "specification": 8, "guidance": 12, "excluded": 9, "blank": 3},
+          "shared": {"model": 36, "specification": 32, "guidance": 35, "excluded": 29, "blank": 33},
+          "verification": {"model": 0, "specification": 0, "guidance": 0, "excluded": 38, "blank": 2}
+        },
+        "effort": "Unchanged: per-component effort stays null. ShareQuote work falls inside the same shared implementation interval and was not separately timed.",
+        "authorship": "Same authoring session as the workflow record's new_source; no ownership is inferred from AI authorship or repository location."
+      },
+      "task_effect": "II.1 stays complete. The scenario requires scoped counts reported separately with shared source identified; the corrected counts now include all source authored for the workflow."
+    }
+  ]
+}

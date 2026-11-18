@@ -35,6 +35,15 @@ amendment gate 1.3 and revised reconciliation 6.1 now have accepted evidence.
 The original acceptance and its four unmet criteria remain unchanged. No conclusion about productivity,
 outside usability or adoption follows from closing the delivery milestone.
 
+**Proposed post-acceptance correction — 2026-11-18.** A dated
+[correction record](../../../review/semantic-kernel/competitive-landscape-corrections-20261118/CORRECTIONS.json)
+proposes regrading the three IV.3 liquidation cells from supported to partial,
+stating the missing IV.1 AMM grades and adding `ShareQuote.lean` to the II.1 counts.
+It takes effect only after owner approval and independent acceptance of the exact
+candidate; required independent acceptance remains open. Its status and review
+identity are recorded there. No checkbox, proof, theorem statement or
+delta spec changes, and frozen records keep their bytes.
+
 ## 1. Planning gate
 
 - [x] 1.1 Obtain independent review of this exact `competitive-landscape-adoption` candidate under the reviewer bindings in `AGENTS.md`, record verdict, requested and reported model identity and input hashes, and verify no box in this file is ticked before acceptance.
@@ -49,7 +58,7 @@ outside usability or adoption follows from closing the delivery milestone.
 
 ## 3. Phase II: the first composed example
 
-- [x] II.1 Deliver the sUSDS deposit-to-token0-quote workflow under one `ComponentContract` with a shared financial lemma and scoped line counts. [better product; D1] Verify a meaningful financial input/output relation, actual initialization/preservation with each local guarantee discharged, one shared lemma, units and refusal; report deposit, quote and shared counts separately. Accepted [workflow evidence](../../../review/semantic-kernel/competitive-landscape-adoption-20261117/workflow-integration-decision.json) and [accounting](../../../benchmarks/component-accounting/vault-quote-workflow.json) support this fixed illustrative workflow, not pool settlement or full-domain composition. Prospective separate-effort measurement is validation 2.2; unknown original component effort and effort-saving claims receive no completion credit here.
+- [x] II.1 Deliver the sUSDS deposit-to-token0-quote workflow under one `ComponentContract` with a shared financial lemma and scoped line counts. [better product; D1] Verify a meaningful financial input/output relation, actual initialization/preservation with each local guarantee discharged, one shared lemma, units and refusal; report deposit, quote and shared counts separately. Accepted [workflow evidence](../../../review/semantic-kernel/competitive-landscape-adoption-20261117/workflow-integration-decision.json) and [accounting](../../../benchmarks/component-accounting/vault-quote-workflow.json) support this fixed illustrative workflow, not pool settlement or full-domain composition. That accounting labels `ShareQuote.lean` as inherited, but this change authored it (`8a494ab4`); the [proposed correction record](../../../review/semantic-kernel/competitive-landscape-corrections-20261118/CORRECTIONS.json) would add its 50 scoped lines to the deposit, quote and shared counts. Prospective separate-effort measurement is validation 2.2; unknown original component effort and effort-saving claims receive no completion credit here.
 - [x] II.2 Extend the deposit correspondence from the fixed WAD case to the full domain, using the native-correspondence helper of the benchmark adapter as the template for per-operation arithmetic contracts. [better product; D2; 2.7] Verify a theorem over all admissible assets and rates, not one literal. (Every benchmark result in the field is on a new model, 2.8.)
 - [x] II.3 Write the simulation relation between the pinned token0 Solidity campaign and the Lean library, and state the remaining obligation. [better product; D3] Verify three artifacts exist: model theorem, differential observations, refinement obligation.
 
@@ -60,9 +69,9 @@ outside usability or adoption follows from closing the delivery milestone.
 
 ## 5. Phase IV: widen the financial scope
 
-- [x] IV.1 Add an AMM swap operation with reserve accounting, specify it in both arithmetics with fees and refusal, and re-run R2 on the library instead of the benchmark model. [better product; D2; 1.1, 1.2, 2.2] Verify AMM conservation and no-arbitrage cells in 1.2 move from unknown; R2 is proved on the kernel.
+- [x] IV.1 Add an AMM swap operation with reserve accounting, specify it in both arithmetics with fees and refusal, and re-run R2 on the library instead of the benchmark model. [better product; D2; 1.1, 1.2, 2.2] Verify AMM conservation and no-arbitrage cells in 1.2 move from unknown; R2 is proved on the kernel. The [proposed 2026-11-18 grade corrections](../../../docs/research/competitive-landscape-2026-11/capability-grade-corrections-2026-11-18.md) would state the grades: conservation supported (single-swap scope), no-arbitrage partial (immediate same-pool reversal only).
 - [x] IV.2 Run one small ordering scenario on the interleaving executor and state the invariant or gain bound it suggests. [better product; D4] Verify a replayed counterexample or a proven bound with declared assumptions.
-- [x] IV.3 Model liquidation with solvency and correctness stated as separate theorems, when DeFiFormal sprint P27 opens. [better product; D4; 1.1, 1.2] Verify liquidation cells in 1.1 and 1.2 move from unknown.
+- [x] IV.3 Model liquidation with solvency and correctness stated as separate theorems, when DeFiFormal sprint P27 opens. [better product; D4; 1.1, 1.2] Verify liquidation cells in 1.1 and 1.2 move from unknown. Under the [proposed 2026-11-18 grade corrections](../../../docs/research/competitive-landscape-2026-11/capability-grade-corrections-2026-11-18.md), all three cells would be partial after acceptance, superseding "supported" in IV-3-ACCEPTANCE.json and the 2026-11-17 addendum. The run uses the owner's authority with no third-party liquidator, does not remove the position, and its solvency theorem assumes the costs are covered.
 - [x] IV.4 Extend lending beyond borrow: repay, interest accrual, collateral deposit and withdrawal. [better product; D2; 1.1] Verify the lending cell in 1.1 moves from partial to supported. (Lending is supported by 2 competitors.)
 
 ## 6. Review and remainders

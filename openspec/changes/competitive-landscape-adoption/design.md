@@ -127,6 +127,22 @@ from amendment acceptance.
    the amended contract while validation remains open. The broader roadmap and
    all stated deployment/adversary/market-safety limitations remain in force.
 
+### Post-acceptance corrections, 2026-11-18
+
+A grade or accounting statement found wrong after acceptance gets a new dated
+record; frozen bytes are not edited. Effective capability grades use the report's
+labels and its grading of comparable peer findings, and a correction cites those
+findings and the exact Lean statements. A correction changes no checkbox while the
+task's verify clause still holds: IV.1 and IV.3 require only that cells leave
+unknown. The 2026-11-18
+[correction record](../../../review/semantic-kernel/competitive-landscape-corrections-20261118/CORRECTIONS.json)
+proposes regrading the three IV.3 liquidation cells to partial, stating the two
+IV.1 AMM grades and adding `ShareQuote.lean` to the II.1 counts. It takes effect
+only after both owner approval and independent acceptance of the exact candidate
+under the `AGENTS.md` bindings are recorded. Until then, the corrections remain
+proposed; required independent acceptance is open. Passing the integrity checker
+does not close that review gate.
+
 ### Implementation transition authorized on 2026-11-17
 
 The owner directed that both benchmark adapters be included in this change and supplied access to `input-output-hk/SOTA-DeFiFormal-Moriarty`. Import only the relevant DeFiFormal adapter sources, proofs, helpers and required contracts. Record the assessment repository revision and each imported file's hash; preserve upstream files unchanged and place portability wrappers separately. Verify the expected file inventory, dependency pins and replay prerequisites before clearing an adapter-dependent task. Preserve failed automatic cases and characteristic mutations as negative evidence. A source import or historical passing record alone is not a fresh successful replay.
