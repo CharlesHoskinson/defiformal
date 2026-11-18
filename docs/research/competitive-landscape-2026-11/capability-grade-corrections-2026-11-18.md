@@ -1,15 +1,14 @@
 # Capability grade corrections — 2026-11-18
 
-**Proposed corrections.** They take effect only after owner approval and
-independent acceptance of the exact candidate under the `AGENTS.md` bindings.
-The required independent acceptance remains open.
+**Accepted corrections — 2026-11-18.** Owner approval and independent acceptance
+of the exact candidate are recorded in the [acceptance transition](../../../review/semantic-kernel/competitive-landscape-corrections-20261118/ACCEPTANCE.json).
 
-This record proposes corrections to the scoped grades stated for DeFiFormal after the
+This record corrects the scoped grades stated for DeFiFormal after the
 [historical report](defiformal-competition-tech-strategy.html). Its HTML, original
 cell statuses and measurements remain unchanged. The
 [AMM addendum](amm-library-addendum-2026-11-17.md) and the
 [liquidation addendum](liquidation-library-addendum-2026-11-17.md) keep their
-bytes; after acceptance, this record supersedes only their named statements. Status, review identity and
+bytes; this accepted record supersedes only their named statements. Status, review identity and
 exact hash bindings are in the
 [correction record](../../../review/semantic-kernel/competitive-landscape-corrections-20261118/CORRECTIONS.json).
 Run `python3 scripts/check_capability_corrections.py` to check inventory,
@@ -20,7 +19,7 @@ of the grades or proof claims.
 Each grade below uses the report's labels and the report's own grading of
 comparable peer findings. No Lean source or theorem statement changes.
 
-| Cell | Report (2026-11-06) | Stated 2026-11-17 | Proposed grade |
+| Cell | Report (2026-11-06) | Stated 2026-11-17 | Effective grade |
 | --- | --- | --- | --- |
 | `cell:amm:conservation` | unknown | evidence, no grade | **supported**, single-swap scope |
 | `cell:amm:no_arbitrage` | unknown | evidence, no grade | **partial** |
@@ -47,7 +46,7 @@ grades Lean-AMM's comparable same-state reverse-swap result partial.
 ## Liquidation
 
 The Lean proves the source liquidatable guard (`Close.healthy_refusal`) and the
-selected admission, preparation and payment prefix. The proposed grades are partial for
+selected admission, preparation and payment prefix. The accepted grades are partial for
 these reasons:
 
 - **No liquidator.** Every `Close.run` step executes with the fixed owner
@@ -75,8 +74,8 @@ transfer to the liquidator.
 
 ## Effect on the change
 
-On acceptance, IV.1 and IV.3 stay complete: their criteria require these cells to
-leave unknown, and the proposed grades meet that requirement. The lending grade
+IV.1 and IV.3 stay complete: their criteria require these cells to
+leave unknown, and the accepted grades meet that requirement. The lending grade
 is unchanged.
 Broader liquidation coverage would address third-party liquidator authority,
 collateral seizure and position removal. A stronger solvency result should state

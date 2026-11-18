@@ -136,12 +136,11 @@ findings and the exact Lean statements. A correction changes no checkbox while t
 task's verify clause still holds: IV.1 and IV.3 require only that cells leave
 unknown. The 2026-11-18
 [correction record](../../../review/semantic-kernel/competitive-landscape-corrections-20261118/CORRECTIONS.json)
-proposes regrading the three IV.3 liquidation cells to partial, stating the two
-IV.1 AMM grades and adding `ShareQuote.lean` to the II.1 counts. It takes effect
-only after both owner approval and independent acceptance of the exact candidate
-under the `AGENTS.md` bindings are recorded. Until then, the corrections remain
-proposed; required independent acceptance is open. Passing the integrity checker
-does not close that review gate.
+regrades the three IV.3 liquidation cells to partial, states the two IV.1 AMM
+grades and adds `ShareQuote.lean` to the II.1 counts. Owner approval and independent
+acceptance of the exact candidate are recorded in the [acceptance transition](../../../review/semantic-kernel/competitive-landscape-corrections-20261118/ACCEPTANCE.json).
+The corrections are effective. Passing the integrity checker alone does not
+constitute independent acceptance.
 
 ### Implementation transition authorized on 2026-11-17
 

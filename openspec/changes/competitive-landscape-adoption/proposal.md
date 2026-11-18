@@ -73,9 +73,9 @@ their exact bytes and identities. The accepted apply step adds new
 reconciliation records and preserves the 2026-11-17 evidence. The delivery
 milestone is complete under the approved amended contract; the validation
 change remains open until its own measurement and outside-run criteria pass.
-A dated 2026-11-18 candidate proposes corrections to three capability grades and
-one accounting label, plus explicit AMM grades. It takes effect only after owner
-approval and independent acceptance of the exact candidate. It adds records and
-changes no proof, task outcome or frozen byte.
+The accepted 2026-11-18 correction record corrects three capability grades and
+one accounting label, and states explicit AMM grades. Owner approval and independent
+acceptance are bound in the [acceptance transition](../../../review/semantic-kernel/competitive-landscape-corrections-20261118/ACCEPTANCE.json). It adds records and changes
+no proof, task outcome or frozen byte.
 
 Planning files live under `openspec/changes/competitive-landscape-adoption/`. The report and its README live under `docs/research/competitive-landscape-2026-11/`. The measurement records behind the report are retained in IOG's assessment repository (`input-output-hk/SOTA-DeFiFormal-Moriarty`), which is private; `evidence-index.json` names them and the report embeds every number. The owner authorized importing the IOG-authored Suite 1.0 and rational-1 adapters into `benchmarks/competitive-landscape/` in this change. All tasks using their adapters, proofs or helpers remain blocked until the required pinned artifacts and dependencies are verified available. Preserve the report and historical evidence; new replay results are separate records.
