@@ -1,0 +1,7 @@
+from pathlib import Path
+import subprocess,shutil,json,hashlib,time
+r=Path('/private/tmp/defiformal-ci-author');e=Path('/private/tmp/defiformal-r2-package-empty-log-repair');original=Path('/private/tmp/defiformal-amm-r2-author/public-final');d=e/'input';shutil.copytree(original,d)
+(d/'fresh-source.stdout').write_bytes(b'');p=d/'result.json';receipt=json.loads(p.read_text())
+next(row for row in receipt['commands'] if row['name']=='fresh-source')['stdout_sha256']=hashlib.sha256(b'').hexdigest();p.write_text(json.dumps(receipt,indent=2)+'\n')
+a=['python3',str(r/'tools/compiled-evidence/build.py'),'--repo',str(r),'--toolchain','/private/tmp/defiformal-adapter-author/runtime/lean-4.33.0-rc2-darwin_aarch64','--r2-replay',str(d),'--output',str(e/'must-not-build'),'--archive',str(e/'must-not-build.tar.gz')]
+t=time.monotonic();q=subprocess.run(a,cwd=r,stdout=subprocess.PIPE,stderr=subprocess.PIPE,timeout=120);log=q.stdout+q.stderr;(e/'updated-receipt-empty-stdout.log').write_bytes(log);passed=q.returncode==3 and b'BLOCKED: empty required R2 replay log: fresh-source.stdout' in log;record=dict(argv=a,exit=q.returncode,expected_exit=3,required_diagnostic='BLOCKED: empty required R2 replay log: fresh-source.stdout',pass_=passed,wall_seconds=time.monotonic()-t,log_sha256=hashlib.sha256(log).hexdigest());(e/'control.json').write_text(json.dumps(record,indent=2)+'\n');print(record);assert passed

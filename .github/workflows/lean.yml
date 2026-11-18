@@ -1,0 +1,40 @@
+name: Lean verification
+
+on:
+  push:
+    branches: [semantic-kernel-pivot]
+  pull_request:
+    branches: [semantic-kernel-pivot]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lean:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the candidate
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Build the pinned Lean project
+        uses: leanprover/lean-action@ba3fdfe5c4476c925da13bf11a005ddb47e47aee # v1
+        with:
+          lake-package-directory: lean
+          build: true
+          test: false
+          lint: false
+          use-mathlib-cache: true
+
+      - name: Fresh axiom audit of the complete imported kernel
+        working-directory: lean
+        shell: bash
+        run: |
+          audit_file="$RUNNER_TEMP/DefiKernelCIAudit.lean"
+          trap 'rm -f "$audit_file"' EXIT
+          printf '%s\n' 'import DefiKernel' '#audit_axioms DefiKernel' > "$audit_file"
+          lake env lean "$audit_file"
+
+      - name: Check audit success, forbidden axioms and empty scopes
+        shell: bash
+        run: python3 scripts/test_kernel_axiom_audit.py --output "$RUNNER_TEMP/kernel-axiom-controls"

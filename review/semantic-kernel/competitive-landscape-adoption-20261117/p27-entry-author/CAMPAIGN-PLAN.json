@@ -1,0 +1,253 @@
+{
+  "status": "PLANNED_NOT_EXECUTED",
+  "source_pin": "a85ea3491c19c93bb4b5a002d9b358fb769b7849",
+  "compiler": {
+    "version": "0.8.29+commit.ab55807c",
+    "optimizer": {
+      "enabled": true,
+      "runs": 10,
+      "details": {
+        "constantOptimizer": true
+      }
+    },
+    "evm_version": "cancun",
+    "note": "Prior input omitted evmVersion, metadata Cancun; new explicit Cancun is recorded input. Newly acquired compiler distribution hash required."
+  },
+  "evm": {
+    "module": "github.com/ethereum/go-ethereum/cmd/evm",
+    "version": "v1.15.11",
+    "native_hash": null,
+    "chain_config": "Fresh explicit Cancun genesis/config, hashed before invocation",
+    "note": "Existing P16 Istanbul genesis is not reused as Cancun."
+  },
+  "source_input": "Reuse exact91 source strings from sealed prior input.json.gz plus new wrapper source; verify against pinned source/dependency records, preserve original licenses",
+  "wrapper": {
+    "planned_methods": [
+      "fundingAmount(uint256,uint256,uint256,bool) returns (uint256)",
+      "payCost(uint256,uint256,uint256,uint256,uint256,uint256) returns (uint256,uint256,uint256,uint256,uint256,uint256)"
+    ],
+    "pay_arguments": [
+      "costUsd",
+      "primaryMinPrice",
+      "secondaryMinPrice",
+      "primaryOutputRaw",
+      "positionCollateralRaw",
+      "secondaryOutputRaw"
+    ],
+    "token_setup": "Distinct fixed token addresses; primary=long, secondary=short; NoSwap; stub struct fields explicitly initialized, no handler/deployment assumption",
+    "required": "Freeze wrapper/source recipe, ABI/selectors, exact compiler input/output/settings, creation/runtime bytes, hashes, own linkReferences empty, runtime identity/config, canonical ABI return length, raw stdout/stderr and each invocation"
+  },
+  "controls": [
+    {
+      "id": "funding_direction_and_asymmetric_rounding",
+      "helper": "MarketUtils.getFundingAmount",
+      "calls": [
+        {
+          "arguments": [
+            1,
+            0,
+            1000000000000000000000000000000,
+            true
+          ],
+          "expected_return": 1
+        },
+        {
+          "arguments": [
+            1,
+            0,
+            1000000000000000000000000000000,
+            false
+          ],
+          "expected_return": 0
+        }
+      ],
+      "scope": "Up fee vs down claimable arithmetic; no cash movement or complete claim path executed"
+    },
+    {
+      "id": "allowed_full_liquidation_bankruptcy_success",
+      "helper": "DecreasePositionCollateralUtils.payForCost",
+      "flat_arguments": [
+        20,
+        1,
+        1,
+        0,
+        3,
+        0
+      ],
+      "expected_return": [
+        0,
+        0,
+        0,
+        3,
+        0,
+        17
+      ],
+      "return_units": [
+        "primary_raw",
+        "primary_raw",
+        "secondary_raw",
+        "primary_raw",
+        "secondary_raw",
+        "source_usd_raw"
+      ],
+      "scope": "Actual helper return only; exception/ordinary-close outcomes are separate model/source-branch obligations, not this helper runtime"
+    },
+    {
+      "id": "same_shortfall_manual_close_rejects",
+      "helper": "DecreasePositionCollateralUtils.payForCost",
+      "flat_arguments": [
+        20,
+        1,
+        1,
+        0,
+        3,
+        0
+      ],
+      "expected_return": [
+        0,
+        0,
+        0,
+        3,
+        0,
+        17
+      ],
+      "return_units": [
+        "primary_raw",
+        "primary_raw",
+        "secondary_raw",
+        "primary_raw",
+        "secondary_raw",
+        "source_usd_raw"
+      ],
+      "scope": "Actual helper return only; exception/ordinary-close outcomes are separate model/source-branch obligations, not this helper runtime"
+    },
+    {
+      "id": "zero_source_residual_does_not_discharge_exact_cost",
+      "helper": "DecreasePositionCollateralUtils.payForCost",
+      "flat_arguments": [
+        1,
+        1,
+        2,
+        0,
+        0,
+        0
+      ],
+      "expected_return": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "return_units": [
+        "primary_raw",
+        "primary_raw",
+        "secondary_raw",
+        "primary_raw",
+        "secondary_raw",
+        "source_usd_raw"
+      ],
+      "scope": "Actual helper return only; exception/ordinary-close outcomes are separate model/source-branch obligations, not this helper runtime"
+    },
+    {
+      "id": "both_rounding_terms_are_distinct",
+      "helper": "DecreasePositionCollateralUtils.payForCost",
+      "flat_arguments": [
+        5,
+        3,
+        4,
+        0,
+        0,
+        0
+      ],
+      "expected_return": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        4
+      ],
+      "return_units": [
+        "primary_raw",
+        "primary_raw",
+        "secondary_raw",
+        "primary_raw",
+        "secondary_raw",
+        "source_usd_raw"
+      ],
+      "scope": "Actual helper return only; exception/ordinary-close outcomes are separate model/source-branch obligations, not this helper runtime"
+    },
+    {
+      "id": "sufficient_primary_liquidity_covers_cost",
+      "helper": "DecreasePositionCollateralUtils.payForCost",
+      "flat_arguments": [
+        5,
+        3,
+        4,
+        1,
+        1,
+        0
+      ],
+      "expected_return": [
+        0,
+        0,
+        0,
+        2,
+        0,
+        0
+      ],
+      "return_units": [
+        "primary_raw",
+        "primary_raw",
+        "secondary_raw",
+        "primary_raw",
+        "secondary_raw",
+        "source_usd_raw"
+      ],
+      "scope": "Actual helper return only; exception/ordinary-close outcomes are separate model/source-branch obligations, not this helper runtime"
+    },
+    {
+      "id": "zero_cost_no_payment",
+      "helper": "DecreasePositionCollateralUtils.payForCost",
+      "flat_arguments": [
+        0,
+        3,
+        4,
+        2,
+        5,
+        7
+      ],
+      "expected_return": [
+        2,
+        5,
+        7,
+        0,
+        0,
+        0
+      ],
+      "scope": "Zero-cost branch with all buckets retained"
+    },
+    {
+      "id": "arithmetic_failures_separate_from_financial_refusal",
+      "planned_inputs": [
+        "funding latest<snapshot",
+        "positive cost with zero primary denominator",
+        "positive remaining primary cost with zero secondary denominator",
+        "cost+primaryPrice-1 uint256 overflow"
+      ],
+      "expected": "Non-success arithmetic outcomes, preserving raw return/revert bytes and compiler/runtime classification; never matched to PositionShouldNotBeLiquidated",
+      "outside_admissible_financial_domain": true
+    }
+  ],
+  "model_only_required_controls": [
+    "selected healthy-liquidation guard and exact bound arguments",
+    "allowed full-close liquidation/secondaryADL exceptional result with stopped stage/residual/preserved claimables",
+    "ordinary unpaid-cost rejection",
+    "positive unrealized PnL changes health but not spendable custody before funded realization",
+    "actual PnL-as-cash mutant and source-independent residual-zero/payment-equation negative"
+  ],
+  "gate": "Independent entry acceptance before wrapper/financial implementation; acquire/verify compiler and EVM before source execution; missing tool is setup work, not missing source or fabricated observation",
+  "limits": "Pure helper execution does not establish admission/handler/event/custody/deployed behavior. Any source-branch adapter must have a separate exact excerpt recipe and explicit stub boundary; no full-source refinement claim."
+}

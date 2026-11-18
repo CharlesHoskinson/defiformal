@@ -1,0 +1,17 @@
+# Complete scoped lending compiled package review
+
+ACCEPT_WITH_LIMITATIONS. No required repair. Eligible for publication subject to exact delivery CI and verified release assets.
+
+Exact source revision6b1a26e73b883fe4adc9109d89f8a707de72cd82. All seven frozen configuration/document files match hashes and byte lengths. Archive SHA256 ca42b04e699e6d665e982177846ab481cf1b3aa1c056e94434088fa75ba68d52,598081824 bytes. Extracted manifest is byte-identical to the delivery manifest. INPUTS.json and independent-verification.json record exact inputs, commands and logs.
+
+Inventory measured32 targets,2485 modules and11333 checksummed files. Exactly WithdrawCollateral, WithdrawCollateralAudit and LifecycleAudit are added relative to the accepted deposit package. All bundled module source hashes match; repository module and evidence bytes match source-revision Git objects. Target text matches manifest. Accepted repaired99d10 builder, replay/checker, dependencies/licenses and generated R2 source/artifact identities are unchanged. Reuse of prior mathematical, tool, licensing and graph evidence is explicit; no new independent source-to-binary refinement is inferred.
+
+Independent extraction under /private/tmp/defiformal-lending-final-package-review passed all32 selected default kernel replays from the shipped shell with only system PATH in a fresh subprocess environment, no repository/cache/ambient Lean paths. Optional inventory and packaged token0 consistency checks passed with101 bound files. Removing WithdrawCollateral.olean returned BLOCKED3; changing its bytes returned FAIL1; original bytes were restored. All eight root control raw stdout/stderr hash and diagnostic bindings also match, including unreadable and empty-target controls.
+
+The source/delivery content review already accepted all five exact-rational reference operations and the explicitly scoped primitive:lending supported claim. This package includes that final supported-status editorial version and its accounting binding through the pinned source revision. Generic execution/effect/accounting and constructive-success proofs remain distinct from27 withdrawal and8 finite full-ledger lifecycle comparisons; compiled replay does not rerun these comparisons or10 CLI negatives. The lifecycle's13 issued operation-scoped capabilities and exact final ledger do not imply a general composition or solvency theorem. Qualified oracle/refusal priorities, unindexed accrual and zero-equity versus negative-equity distinctions remain accurate. Historical report bytes and prior release records remain preserved; earlier pending-slice descriptions are historical, not current acceptance claims.
+
+IV.4 content and this compiled package's technical replay criteria are met within the declared reference-API scope. Actual final publication, matching downloadable assets and exact delivery CI remain root gates before task closure. No task checkbox was modified by this review.
+
+Limits: macOS arm64 bundled runtime with system libraries; same Lean kernel/trusted imports and separate axiom-audit evidence. Source/evidence binding is provenance, not a reproducible-build proof or Solidity/deployed refinement. Oracle/clock/authentication/registry/rate-interval assumptions remain. No temporal lending protocol, market solvency, liquidation, outside developer reproduction, recovered historical effort or adoption claim follows.
+
+Requested reviewer gpt-6-astra, medium. Actual provider-returned model/effort attestation is unavailable and not claimed.

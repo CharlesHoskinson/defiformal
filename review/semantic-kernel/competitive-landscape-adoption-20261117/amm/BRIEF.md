@@ -1,0 +1,15 @@
+# IV.1 library AMM work after packaging and ordering
+
+Use the accepted financial-scope requirement and the pinned `rational-1/swap-2b60322-2` adapter as the R2 specification/template. Its historical provenance remains `new_model`; a new replay must call an actual reusable kernel library operation and keep the new result separate. Preserve all 168 imported files and the dated competitive report.
+
+Implement in a new `DefiKernel.AMM` namespace. First concrete behavior: exact-input constant-product swap with positive reserves, positive input, and an explicit input fee retained in the pool. Define the fee convention and refusal priority before proving results. A suitable convention is an exact fraction `f` with `0 ≤ f < 1`, effective input `d*(1-f)`, output `y*effective/(x+effective)`, and actual post-reserves `(x+d, y-output)`. Do not silently remove the fee from reserve accounting.
+
+Prove actual execution, reserve/output bounds, conservation of each transferred asset under the stated reserve/wallet accounting, and nondecrease of the reserve product. State and prove a precise no-profitable-round-trip result for a single unchanged pool under declared fee/rounding assumptions. This is not market-wide no-arbitrage or an MEV theorem. The zero-fee exact-rational instance must establish the original full R2 success/refusal contract by calling this library; no literal-only proof or renamed benchmark model.
+
+Add checked Word arithmetic with explicit widths, overflow/refusal domains and output-floor rounding. Prove correspondence to the exact rational quote throughout the admissible domain, stating which post-reserve/product properties survive rounding. Do not credit Word correspondence from examples alone. No invented source/deployed-code equivalence. Follow the repository's existing checked arithmetic conventions where useful.
+
+Word follow-up: state the zero-output policy explicitly. Rounding can make the first output zero, so do not infer a successful reverse trade or rollback from a compound `Except` result. If wide intermediates are used, prove their concrete width bounds and distinguish them from a claim about 256-bit EVM intermediate execution. For actual wallet settlement, keep the two assets and trader/pool roles distinct and derive reserve changes from the executed ledger transition.
+
+Use decisive regressions for fee retention, wrong denominator, rounding and refusals. Keep malformed-number adapter input handling separate from native bounded Word inputs. Record prospective line counts and attribution; do not fabricate historical effort. Freeze one concrete proof/behavior at a time, with focused Astra review and immediate accepted integration, then extend the compiled evidence package for the delivered targets.
+
+Publish a dated capability addendum with exact theorem/replay links and scope, rather than editing historical report cells in place. IV.1 stays open until both arithmetic contracts, conservation/no-arbitrage and a fresh R2 library replay are present and accepted.

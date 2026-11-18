@@ -1,0 +1,29 @@
+--- BOUNDARY-r1.md
++++ BOUNDARY-r2.md
+@@ -27,7 +27,9 @@
+ then equity <= 0, then equity < minLeverage; otherwise selected healthy refusal
+ PositionShouldNotBeLiquidated(reason,equity,minCollateral,minLeverage), reason
+ empty in that refusal. Earlier source validation/authorization is not implemented.
+-Ordinary/secondary-ADL routes do not invent a liquidation guard.
++The guard applies exactly when the actual order kind is liquidation, regardless
++of the secondary-ADL flag. Only non-liquidation order kinds omit this selected
++guard; an ADL flag never independently bypasses it.
+ 
+ Marked health PnL/impact and computed close base PnL/total impact are distinct
+ observations. Their compatibility with the pinned source is an explicit upstream
+@@ -105,7 +107,14 @@
+ Ordinary refusal must retain exact financial constructor/arguments, without
+ assuming that positive source residual is full economic insolvency.
+ 
+-Separate solvency theorem: sufficient actual selected-pool custody for the SUM of
++Separate solvency theorem requires CONCRETE ADMISSION first: either the actual
++order kind is not liquidation, or computed equity satisfies at least one declared
++liquidatable condition (E < minCollateral, E <= 0, or E < minLeverage), evaluated
++in the stated source priority. This is an arithmetic/route premise, not assumed
++successful execution. A healthy liquidation cannot complete merely because it has
++liquidity/rights; secondary ADL does not exempt a liquidation order.
++
++With that admission premise, sufficient actual selected-pool custody for the SUM of
+ the two positive floor payouts, plus real preparation rights, constructs both cash
+ legs. Concrete primary output+collateral after those derived payouts must cover the
+ sum of all active per-stage rounded primary obligations; genuine payment rights and

@@ -1,0 +1,7 @@
+# Prepared compiled evidence package
+
+The [artifact record](artifact.json) identifies the prepared macOS arm64 archive by SHA-256, size and exact proof-source revision. The [manifest](manifest.json) lists all 2449 actual metadata imports and their trusted role during five selected target replays. The generated archive is stored outside Git; the eventual separate release record establishes publication. This artifact does not change the existing v0.1.0 release.
+
+See [assembly and package-alone replay instructions](../../../tools/compiled-evidence/README.md). The archive contains a mandatory shell entrypoint, the pinned Lean runtime/checker, licenses, source files and checksums. Python is optional for additional consistency checks. [Verification](verification.json) records actual commands against the extracted exact archive: five target replays, missing target and unreadable inputs blocked, altered byte rejected, empty target inventory blocked, and optional package/token0 consistency passes. The controlled payload mutations were restored; the archive bytes were unchanged.
+
+These are author-agent checks, not a real outside developer's recheck. Third-party reproduction and corroborated adoption remain open. Historical source/financial runtime controls are bound as evidence and are not rerun by kernel replay. Token0 universal source refinement remains unproved. The package is tied to the unchanged accepted proof sources at 039c5a6c; its builder and instructions are separately hash-bound in the payload and reviewed candidate.

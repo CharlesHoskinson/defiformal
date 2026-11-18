@@ -1,0 +1,252 @@
+⚠ [921/934] Replayed DefiKernel.Typed.Transition
+warning: DefiKernel/Typed/Transition.lean:239:20: `simp_all [throw, throwThe]` is a flexible tactic modifying `⊢`. Try `simp_all?` and use the suggested `simp_all only [...]`. Alternatively, use `suffices` to explicitly state the simplified form.
+
+Note: This linter can be disabled with `set_option linter.flexible false`
+info: DefiKernel/Typed/Transition.lean:239:20: Try this:
+  [apply] simp_all only [or_false, Prod.forall, true_and]
+info: DefiKernel/Typed/Transition.lean:244:6: `rename_i args`
+modifies the current goal, which was modified by the flexible tactic `simp_all` on line 239!
+warning: DefiKernel/Typed/Transition.lean:239:20: `simp_all [throw, throwThe]` is a flexible tactic modifying `⊢`. Try `simp_all?` and use the suggested `simp_all only [...]`. Alternatively, use `suffices` to explicitly state the simplified form.
+
+Note: This linter can be disabled with `set_option linter.flexible false`
+info: DefiKernel/Typed/Transition.lean:239:20: Try this:
+  [apply] simp_all only [Option.some.injEq, false_or, Prod.forall]
+info: DefiKernel/Typed/Transition.lean:244:6: `rename_i args`
+modifies the current goal, which was modified by the flexible tactic `simp_all` on line 239!
+✖ [934/934] Building DefiKernel.Lending.DepositCollateral (1.4s)
+trace: .> LEAN_PATH=/private/tmp/defiformal-ci-author/lean/.lake/packages/Cli/.lake/build/lib/lean:/private/tmp/defiformal-ci-author/lean/.lake/packages/batteries/.lake/build/lib/lean:/private/tmp/defiformal-ci-author/lean/.lake/packages/Qq/.lake/build/lib/lean:/private/tmp/defiformal-ci-author/lean/.lake/packages/aesop/.lake/build/lib/lean:/private/tmp/defiformal-ci-author/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/private/tmp/defiformal-ci-author/lean/.lake/packages/importGraph/.lake/build/lib/lean:/private/tmp/defiformal-ci-author/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/private/tmp/defiformal-ci-author/lean/.lake/packages/plausible/.lake/build/lib/lean:/private/tmp/defiformal-ci-author/lean/.lake/packages/mathlib/.lake/build/lib/lean:/private/tmp/defiformal-ci-author/lean/.lake/build/lib/lean /private/tmp/defiformal-adapter-author/runtime/lean-4.33.0-rc2-darwin_aarch64/bin/lean /private/tmp/defiformal-ci-author/lean/DefiKernel/Lending/DepositCollateral.lean -o /private/tmp/defiformal-ci-author/lean/.lake/build/lib/lean/DefiKernel/Lending/DepositCollateral.olean -i /private/tmp/defiformal-ci-author/lean/.lake/build/lib/lean/DefiKernel/Lending/DepositCollateral.ilean -c /private/tmp/defiformal-ci-author/lean/.lake/build/ir/DefiKernel/Lending/DepositCollateral.c --setup /private/tmp/defiformal-ci-author/lean/.lake/build/ir/DefiKernel/Lending/DepositCollateral.setup.json --json
+error: DefiKernel/Lending/DepositCollateral.lean:15:28: Invalid dotted identifier notation: The expected type of `.collateral` could not be determined
+
+Hint: Using `Asset.collateral would be unambiguous:
+  [apply] `Asset.collateral`
+error: DefiKernel/Lending/DepositCollateral.lean:50:6: Application type mismatch: The argument
+  Args.cons ?m.17 Args.nil
+has type
+  Args [?m.15]
+but is expected to have type
+  Args (template borrower).signature
+in the application
+  EvalContext.mk pre (fun x ↦ none) ctx.principal [] (Args.cons ?m.17 Args.nil)
+error: DefiKernel/Lending/DepositCollateral.lean:50:16: Application type mismatch: The argument
+  quantity
+has type
+  ℚ
+but is expected to have type
+  Value ?m.15
+in the application
+  Args.cons quantity
+error: DefiKernel/Lending/DepositCollateral.lean:73:27: Type mismatch
+  Args.cons ?m.192 Args.nil
+has type
+  Args [?m.190]
+but is expected to have type
+  Args (template borrower).signature
+error: DefiKernel/Lending/DepositCollateral.lean:73:96: Tactic `rfl` failed: The left-hand side
+  Args.check (template borrower).signature (request borrower ids quantity).arguments
+is not definitionally equal to the right-hand side
+  Except.ok ?m.197
+
+borrower : Borrower
+store : Store
+ctx : InvocationContext Party Domain
+ids : List CapabilityId
+quantity : ℚ
+pre : Ledger
+post : World
+correspondence :
+  execute (registry borrower) store ctx (fun x ↦ none) 0 (request borrower ids quantity) pre = Except.ok post ↔
+    ∃ template,
+      registry borrower (request borrower ids quantity).operation = some template ∧
+        ((request borrower ids quantity).claimedActor = none ∨
+            (request borrower ids quantity).claimedActor = some ctx.principal) ∧
+          ctx.domain = template.domain ∧
+            (request borrower ids quantity).parties.length = template.partyArity ∧
+              ∃ args,
+                Args.check template.signature (request borrower ids quantity).arguments = Except.ok args ∧
+                  hasAuthority store (request borrower ids quantity).capabilityIds ctx
+                        (request borrower ids quantity).operation Right.invoke =
+                      true ∧
+                    ∃ e,
+                      template.evaluate
+                            { state := pre, env := fun x ↦ none, caller := ctx.principal,
+                              parties := (request borrower ids quantity).parties, args := args, now := 0 } =
+                          Except.ok e ∧
+                        Evaluated.Valid store ctx (request borrower ids quantity) pre e ∧
+                          post.capabilities = store ∧
+                            ∀ (c : Cell Party Asset Domain), post.state.balance c = pre.balance c + e.effect c
+success : run borrower store ctx ids quantity pre = Except.ok post
+actor :
+  (request borrower ids quantity).claimedActor = none ∨
+    (request borrower ids quantity).claimedActor = some ctx.principal
+invoke :
+  hasAuthority store (request borrower ids quantity).capabilityIds ctx (request borrower ids quantity).operation
+      Right.invoke =
+    true
+e : Evaluated Party Asset Domain
+valid : Evaluated.Valid store ctx (request borrower ids quantity) pre e
+capabilities : post.capabilities = store
+balances : ∀ (c : Cell Party Asset Domain), post.state.balance c = pre.balance c + e.effect c
+registered : registry borrower (request borrower ids quantity).operation = some (template borrower)
+dom : ctx.domain = (template borrower).domain
+arity : (request borrower ids quantity).parties.length = (template borrower).partyArity
+args : Args (template borrower).signature
+checked : Args.check (template borrower).signature (request borrower ids quantity).arguments = Except.ok args
+observed :
+  Template.evaluate (template borrower)
+      { state := pre, env := fun x ↦ none, caller := ctx.principal, parties := (request borrower ids quantity).parties,
+        args := args, now := 0 } =
+    Except.ok e
+⊢ Args.check (template borrower).signature (request borrower ids quantity).arguments = Except.ok ?m.197
+error: DefiKernel/Lending/DepositCollateral.lean:73:37: Application type mismatch: The argument
+  quantity
+has type
+  ℚ
+but is expected to have type
+  Value ?m.190
+in the application
+  Args.cons quantity
+error: DefiKernel/Lending/DepositCollateral.lean:83:48: Application type mismatch: The argument
+  Args.cons ?m.262 Args.nil
+has type
+  Args [?m.260]
+but is expected to have type
+  Args (template borrower).signature
+in the application
+  Exists.intro (Args.cons ?m.262 Args.nil)
+error: DefiKernel/Lending/DepositCollateral.lean:84:43: Unknown identifier `template_evaluate`
+warning: DefiKernel/Lending/DepositCollateral.lean:100:29: missing space in the source
+
+This part of the code
+  '(.lending,borrower.party,.collateral))'
+should be written as
+  '(.lending, borrower.party,'
+
+
+Note: This linter can be disabled with `set_option linter.style.whitespace false`
+warning: DefiKernel/Lending/DepositCollateral.lean:100:44: missing space in the source
+
+This part of the code
+  '(.lending,borrower.party,.collateral))'
+should be written as
+  'borrower.party, .collateral))'
+
+
+Note: This linter can be disabled with `set_option linter.style.whitespace false`
+warning: DefiKernel/Lending/DepositCollateral.lean:101:31: missing space in the source
+
+This part of the code
+  '(.lending,borrower.custody,.collateral))'
+should be written as
+  '(.lending, borrower.custody,'
+
+
+Note: This linter can be disabled with `set_option linter.style.whitespace false`
+warning: DefiKernel/Lending/DepositCollateral.lean:101:48: missing space in the source
+
+This part of the code
+  '(.lending,borrower.custody,.collateral))'
+should be written as
+  'borrower.custody, .collateral))'
+
+
+Note: This linter can be disabled with `set_option linter.style.whitespace false`
+warning: DefiKernel/Lending/DepositCollateral.lean:130:29: missing space in the source
+
+This part of the code
+  '(.lending,borrower.party,.collateral))'
+should be written as
+  '(.lending, borrower.party,'
+
+
+Note: This linter can be disabled with `set_option linter.style.whitespace false`
+warning: DefiKernel/Lending/DepositCollateral.lean:130:44: missing space in the source
+
+This part of the code
+  '(.lending,borrower.party,.collateral))'
+should be written as
+  'borrower.party, .collateral))'
+
+
+Note: This linter can be disabled with `set_option linter.style.whitespace false`
+warning: DefiKernel/Lending/DepositCollateral.lean:131:31: missing space in the source
+
+This part of the code
+  '(.lending,borrower.custody,.collateral))'
+should be written as
+  '(.lending, borrower.custody,'
+
+
+Note: This linter can be disabled with `set_option linter.style.whitespace false`
+warning: DefiKernel/Lending/DepositCollateral.lean:131:48: missing space in the source
+
+This part of the code
+  '(.lending,borrower.custody,.collateral))'
+should be written as
+  'borrower.custody, .collateral))'
+
+
+Note: This linter can be disabled with `set_option linter.style.whitespace false`
+error: DefiKernel/Lending/DepositCollateral.lean:159:36: Type mismatch
+  sub_nonneg.mpr funded
+has type
+  0 ≤ pre.balance (Domain.lending, borrower.party, Asset.collateral) - quantity
+but is expected to have type
+  0 ≤ pre.balance (Domain.lending, borrower.party, Asset.collateral) + -quantity
+warning: DefiKernel/Lending/DepositCollateral.lean:198:47: missing space in the source
+
+This part of the code
+  '(.lending,borrower.party,.collateral))'
+should be written as
+  '(.lending, borrower.party,'
+
+
+Note: This linter can be disabled with `set_option linter.style.whitespace false`
+warning: DefiKernel/Lending/DepositCollateral.lean:198:62: missing space in the source
+
+This part of the code
+  '(.lending,borrower.party,.collateral))'
+should be written as
+  'borrower.party, .collateral))'
+
+
+Note: This linter can be disabled with `set_option linter.style.whitespace false`
+warning: DefiKernel/Lending/DepositCollateral.lean:201:24: missing space in the source
+
+This part of the code
+  '(.lending,borrower.party,.collateral))'
+should be written as
+  '(.lending, borrower.party,'
+
+
+Note: This linter can be disabled with `set_option linter.style.whitespace false`
+warning: DefiKernel/Lending/DepositCollateral.lean:201:39: missing space in the source
+
+This part of the code
+  '(.lending,borrower.party,.collateral))'
+should be written as
+  'borrower.party, .collateral))'
+
+
+Note: This linter can be disabled with `set_option linter.style.whitespace false`
+warning: DefiKernel/Lending/DepositCollateral.lean:226:34: missing space in the source
+
+This part of the code
+  '(.lending,borrower.party,.collateral)'
+should be written as
+  '(.lending, borrower.party,'
+
+
+Note: This linter can be disabled with `set_option linter.style.whitespace false`
+warning: DefiKernel/Lending/DepositCollateral.lean:226:49: missing space in the source
+
+This part of the code
+  '(.lending,borrower.party,.collateral)'
+should be written as
+  'borrower.party, .collateral)'
+
+
+Note: This linter can be disabled with `set_option linter.style.whitespace false`
+error: Lean exited with code 1
+Some required targets logged failures:
+- DefiKernel.Lending.DepositCollateral
+error: build failed

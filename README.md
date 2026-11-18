@@ -77,7 +77,7 @@ You will need Git and Lean's `elan` toolchain manager, which supplies Lean and
 its build tool, Lake. The repository pins its Lean and mathlib versions.
 
 ```bash
-git clone --branch semantic-kernel-pivot https://github.com/CharlesHoskinson/defiformal.git
+git clone --branch semantic-kernel-pivot https://github.com/stefan-contiu/defiformal.git
 cd defiformal/lean
 lake exe cache get
 lake build DefiKernel
@@ -187,3 +187,15 @@ keep this evidence distinct. The [roadmap](roadmap.md) lists the remaining work.
 | [`corpus/normalized/`](corpus/normalized/) | Protocol identities, mechanism annotations, and source provenance. |
 | [`graphify-out/strategy-audit-20260908/`](graphify-out/strategy-audit-20260908/) | Current source dependency map, including isolated candidates. Open `graph.html`; see the scope limits in `GRAPH_REPORT.md`. |
 | [`graphify-out/codebase/`](graphify-out/codebase/) | Historical source-graph snapshot. |
+
+## Contributing, release notes and license
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the pinned build, verification and
+contribution workflow, and the [prepared v0.1.0 release notes](docs/releases/v0.1.0.md)
+for the source release scope and open reproduction gate.
+
+Original DeFiFormal code and proofs, together with the specifically authorized
+IOG adapter inventory, are licensed under [Apache-2.0](LICENSE). The
+[license scope and retained notices](THIRD_PARTY_NOTICES.md) identify existing
+attribution and third-party exceptions. Historical source evidence and external
+dependencies retain their own terms.

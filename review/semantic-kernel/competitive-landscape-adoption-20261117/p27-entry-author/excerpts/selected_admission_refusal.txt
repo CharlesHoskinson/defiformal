@@ -1,0 +1,19 @@
+        if (Order.isLiquidationOrder(params.order.orderType())) {
+            (bool isLiquidatable, string memory reason, PositionUtils.IsPositionLiquidatableInfo memory info) = PositionUtils.isPositionLiquidatable(
+                params.contracts.dataStore,
+                params.contracts.referralStorage,
+                params.position,
+                params.market,
+                cache.prices,
+                true, // shouldValidateMinCollateralUsd
+                true // forLiquidation
+            );
+
+            if (!isLiquidatable) {
+                revert Errors.PositionShouldNotBeLiquidated(
+                    reason,
+                    info.remainingCollateralUsd,
+                    info.minCollateralUsd,
+                    info.minCollateralUsdForLeverage
+                );
+            }

@@ -1,0 +1,53 @@
+/private/tmp/defiformal-amm-author/wrong-denominator-full-proofs.lean:95:53: error: Application type mismatch: The argument
+  denominator_pos pool amount fee hx hd hf
+has type
+  0 < pool.reserveX + effectiveInput amount fee
+but is expected to have type
+  0 < pool.reserveX
+in the application
+  div_pos (mul_pos hy (mul_pos hd (sub_pos.mpr hf))) (denominator_pos pool amount fee hx hd hf)
+/private/tmp/defiformal-amm-author/wrong-denominator-full-proofs.lean:100:2: error: Tactic `apply` failed: could not unify the conclusion of `(div_lt_iff₀ (denominator_pos pool amount fee hx hd hf)).mpr`
+  ?m.25 / (pool.reserveX + effectiveInput amount fee) < ?m.24
+with the goal
+  (computed pool amount fee).output < pool.reserveY
+
+Note: The full type of `(div_lt_iff₀ (denominator_pos pool amount fee hx hd hf)).mpr` is
+  ?m.25 < ?m.24 * (pool.reserveX + effectiveInput amount fee) →
+    ?m.25 / (pool.reserveX + effectiveInput amount fee) < ?m.24
+
+pool : Pool
+amount fee : ℚ
+hx : 0 < pool.reserveX
+hy : 0 < pool.reserveY
+hd : 0 < amount
+hf : fee < 1
+⊢ (computed pool amount fee).output < pool.reserveY
+Try this:
+  [apply] ring_nf
+  
+  The `ring` tactic failed to close the goal. Use `ring_nf` to obtain a normal form.
+    
+  Note that `ring` works primarily in *commutative* rings. If you have a noncommutative ring, abelian group or module, consider using `noncomm_ring`, `abel` or `module` instead.
+/private/tmp/defiformal-amm-author/wrong-denominator-full-proofs.lean:116:55: error: unsolved goals
+pool : Pool
+amount fee : ℚ
+hx : 0 < pool.reserveX
+hd : 0 < amount
+hf : fee < 1
+hn : pool.reserveX + amount * (1 - fee) ≠ 0
+⊢ -(pool.reserveY * pool.reserveX * amount ^ 2) + pool.reserveY * pool.reserveX * amount ^ 2 * fee * 2 -
+              pool.reserveY * pool.reserveX * amount ^ 2 * fee ^ 2 +
+            pool.reserveY * pool.reserveX ^ 2 * amount * fee -
+          pool.reserveY * amount ^ 3 +
+        pool.reserveY * amount ^ 3 * fee * 2 -
+      pool.reserveY * amount ^ 3 * fee ^ 2 =
+    pool.reserveY * pool.reserveX ^ 2 * amount * fee
+/private/tmp/defiformal-amm-author/wrong-denominator-full-proofs.lean:153:4: error: Application type mismatch: The argument
+  rfl
+has type
+  ?m.36 = ?m.36
+but is expected to have type
+  (computed pool amount fee).output =
+    pool.reserveY * effectiveInput amount fee / (pool.reserveX + effectiveInput amount fee)
+in the application
+  And.intro rfl

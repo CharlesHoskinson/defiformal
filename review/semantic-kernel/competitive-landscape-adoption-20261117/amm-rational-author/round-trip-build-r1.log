@@ -1,0 +1,68 @@
+✖ [842/842] Building DefiKernel.AMM.Rational (1.4s)
+trace: .> LEAN_PATH=/private/tmp/defiformal-ci-author/lean/.lake/packages/Cli/.lake/build/lib/lean:/private/tmp/defiformal-ci-author/lean/.lake/packages/batteries/.lake/build/lib/lean:/private/tmp/defiformal-ci-author/lean/.lake/packages/Qq/.lake/build/lib/lean:/private/tmp/defiformal-ci-author/lean/.lake/packages/aesop/.lake/build/lib/lean:/private/tmp/defiformal-ci-author/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/private/tmp/defiformal-ci-author/lean/.lake/packages/importGraph/.lake/build/lib/lean:/private/tmp/defiformal-ci-author/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/private/tmp/defiformal-ci-author/lean/.lake/packages/plausible/.lake/build/lib/lean:/private/tmp/defiformal-ci-author/lean/.lake/packages/mathlib/.lake/build/lib/lean:/private/tmp/defiformal-ci-author/lean/.lake/build/lib/lean /private/tmp/defiformal-adapter-author/runtime/lean-4.33.0-rc2-darwin_aarch64/bin/lean /private/tmp/defiformal-ci-author/lean/DefiKernel/AMM/Rational.lean -o /private/tmp/defiformal-ci-author/lean/.lake/build/lib/lean/DefiKernel/AMM/Rational.olean -i /private/tmp/defiformal-ci-author/lean/.lake/build/lib/lean/DefiKernel/AMM/Rational.ilean -c /private/tmp/defiformal-ci-author/lean/.lake/build/ir/DefiKernel/AMM/Rational.c --setup /private/tmp/defiformal-ci-author/lean/.lake/build/ir/DefiKernel/AMM/Rational.setup.json --json
+error: DefiKernel/AMM/Rational.lean:163:75: unsolved goals
+pool : Pool
+amount fee : ℚ
+hx : 0 < pool.reserveX
+hy : 0 < pool.reserveY
+hd : 0 < amount
+hf0 : 0 ≤ fee
+hf1 : fee < 1
+first : swapPool pool amount fee = Except.ok (computed pool amount fee)
+post : 0 < (computed pool amount fee).post.reserveX ∧ 0 < (computed pool amount fee).post.reserveY
+second :
+  swapPool (computed pool amount fee).post.flip (computed pool amount fee).output fee =
+    Except.ok (computed (computed pool amount fee).post.flip (computed pool amount fee).output fee)
+⊢ (do
+      let forward ← Except.ok (computed pool amount fee)
+      (fun a ↦ { returnedX := a.output, finalPool := a.post.flip }) <$> swapPool forward.post.flip forward.output fee) =
+    Except.ok
+      { returnedX := (computed (computed pool amount fee).post.flip (computed pool amount fee).output fee).output,
+        finalPool := (computed (computed pool amount fee).post.flip (computed pool amount fee).output fee).post.flip }
+warning: DefiKernel/AMM/Rational.lean:169:26: This simp argument is unused:
+  second
+
+Hint: Omit it from the simp argument list.
+  [apply] simp [roundTrip, first, computedRoundTrip]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+error: DefiKernel/AMM/Rational.lean:196:4: linarith failed to find a contradiction
+pool : Pool
+amount fee : ℚ
+hx : 0 < pool.reserveX
+hy : 0 < pool.reserveY
+hd : 0 < amount
+hf0 : 0 ≤ fee
+hf1 : fee < 1
+forward : Swap := computed pool amount fee
+reverse : Swap := computed forward.post.flip forward.output fee
+first :
+  pool.reserveX * pool.reserveY ≤ (computed pool amount fee).post.reserveX * (computed pool amount fee).post.reserveY
+post : 0 < (computed pool amount fee).post.reserveX ∧ 0 < (computed pool amount fee).post.reserveY
+second :
+  forward.post.reserveY * forward.post.reserveX ≤
+    (computed { reserveX := forward.post.reserveY, reserveY := forward.post.reserveX } forward.output
+            fee).post.reserveX *
+      (computed { reserveX := forward.post.reserveY, reserveY := forward.post.reserveX } forward.output
+            fee).post.reserveY
+finalY : reverse.post.reserveX = pool.reserveY
+finalX : reverse.post.reserveY = pool.reserveX + amount - reverse.output
+a✝ : reverse.post.reserveX * reverse.post.reserveY < pool.reserveX * pool.reserveY
+⊢ False
+failed
+error: DefiKernel/AMM/Rational.lean:200:38: Invalid field `mp`: The environment does not contain `Function.mp`, so it is not possible to project the field `mp` from an expression
+  mul_le_mul_right ?m.119
+of type
+  ∀ (a : ?m.113), a * ?m.117 ≤ a * ?m.118
+error: DefiKernel/AMM/Rational.lean:200:34: Application type mismatch: The argument
+  hy
+has type
+  0 < pool.reserveY
+but is expected to have type
+  ?m.117 ≤ ?m.118
+in the application
+  mul_le_mul_right hy
+error: Lean exited with code 1
+Some required targets logged failures:
+- DefiKernel.AMM.Rational
+error: build failed

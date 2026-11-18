@@ -1,0 +1,67 @@
+/private/tmp/defiformal-amm-word-author/output-ceiling-full-proofs.lean:125:72: error: unsolved goals
+pool : Pool
+amount : Word 256
+fee : Fee
+domain : Admissible pool amount fee
+add : Operations.add pool.reserveX amount = Except.ok (computed pool amount fee domain).post.reserveX
+divided :
+  Rounding.down.divideNat (numerator pool amount fee).value (denominator pool amount fee).value =
+    Except.ok (floorValue pool amount fee)
+checked :
+  Word.checked Failure.quotientOverflow (floorValue pool amount fee) = Except.ok (floorOutput pool amount fee domain)
+sub :
+  Operations.sub pool.reserveY (floorOutput pool amount fee domain) =
+    Except.ok (computed pool amount fee domain).post.reserveY
+⊢ (match
+      match Rounding.up.divideNat (numerator pool amount fee).value (denominator pool amount fee).value with
+      | Except.error err => Except.error (Refusal.arithmetic err)
+      | Except.ok v => Except.ok v with
+    | Except.error err => Except.error err
+    | Except.ok v =>
+      match
+        match Word.checked Failure.quotientOverflow v with
+        | Except.error err => Except.error (Refusal.arithmetic err)
+        | Except.ok v => Except.ok v with
+      | Except.error err => Except.error err
+      | Except.ok v =>
+        match
+          match Operations.sub pool.reserveY v with
+          | Except.error err => Except.error (Refusal.arithmetic err)
+          | Except.ok v => Except.ok v with
+        | Except.error err => Except.error err
+        | Except.ok v_1 =>
+          Except.ok
+            { output := v,
+              post := { reserveX := { value := pool.reserveX.value + amount.value, bound := ⋯ }, reserveY := v_1 } }) =
+    Except.ok
+      { output := floorOutput pool amount fee domain,
+        post :=
+          { reserveX := { value := pool.reserveX.value + amount.value, bound := ⋯ },
+            reserveY := { value := pool.reserveY.value - floorValue pool amount fee, bound := ⋯ } } }
+/private/tmp/defiformal-amm-word-author/output-ceiling-full-proofs.lean:141:59: warning: This simp argument is unused:
+  divided
+
+Hint: Omit it from the simp argument list.
+  [apply] simp [swapPool, Nat.ne_of_gt domain.reserveX_pos, Nat.ne_of_gt domain.reserveY_pos,
+    Nat.ne_of_gt domain.amount_pos, domain.fee_valid, add, checked, sub, Except.mapError, bind, Except.bind, pure,
+    Except.pure, computed]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/private/tmp/defiformal-amm-word-author/output-ceiling-full-proofs.lean:141:68: warning: This simp argument is unused:
+  checked
+
+Hint: Omit it from the simp argument list.
+  [apply] simp [swapPool, Nat.ne_of_gt domain.reserveX_pos, Nat.ne_of_gt domain.reserveY_pos,
+    Nat.ne_of_gt domain.amount_pos, domain.fee_valid, add, divided, sub, Except.mapError, bind, Except.bind, pure,
+    Except.pure, computed]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/private/tmp/defiformal-amm-word-author/output-ceiling-full-proofs.lean:141:77: warning: This simp argument is unused:
+  sub
+
+Hint: Omit it from the simp argument list.
+  [apply] simp [swapPool, Nat.ne_of_gt domain.reserveX_pos, Nat.ne_of_gt domain.reserveY_pos,
+    Nat.ne_of_gt domain.amount_pos, domain.fee_valid, add, divided, checked, Except.mapError, bind, Except.bind, pure,
+    Except.pure, computed]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`

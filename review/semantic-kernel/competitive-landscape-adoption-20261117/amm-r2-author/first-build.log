@@ -1,0 +1,101 @@
+✖ [933/933] Building DefiKernel.AMM.R2Bridge (4.8s)
+trace: .> LEAN_PATH=/private/tmp/defiformal-ci-author/lean/.lake/packages/Cli/.lake/build/lib/lean:/private/tmp/defiformal-ci-author/lean/.lake/packages/batteries/.lake/build/lib/lean:/private/tmp/defiformal-ci-author/lean/.lake/packages/Qq/.lake/build/lib/lean:/private/tmp/defiformal-ci-author/lean/.lake/packages/aesop/.lake/build/lib/lean:/private/tmp/defiformal-ci-author/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/private/tmp/defiformal-ci-author/lean/.lake/packages/importGraph/.lake/build/lib/lean:/private/tmp/defiformal-ci-author/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/private/tmp/defiformal-ci-author/lean/.lake/packages/plausible/.lake/build/lib/lean:/private/tmp/defiformal-ci-author/lean/.lake/packages/mathlib/.lake/build/lib/lean:/private/tmp/defiformal-ci-author/lean/.lake/build/lib/lean /private/tmp/defiformal-adapter-author/runtime/lean-4.33.0-rc2-darwin_aarch64/bin/lean /private/tmp/defiformal-ci-author/lean/DefiKernel/AMM/R2Bridge.lean -o /private/tmp/defiformal-ci-author/lean/.lake/build/lib/lean/DefiKernel/AMM/R2Bridge.olean -i /private/tmp/defiformal-ci-author/lean/.lake/build/lib/lean/DefiKernel/AMM/R2Bridge.ilean -c /private/tmp/defiformal-ci-author/lean/.lake/build/ir/DefiKernel/AMM/R2Bridge.c --setup /private/tmp/defiformal-ci-author/lean/.lake/build/ir/DefiKernel/AMM/R2Bridge.setup.json --json
+error: DefiKernel/AMM/R2Bridge.lean:25:56: unsolved goals
+case pos
+pool : Rational.Pool
+amount : ℚ
+h✝² : 0 < pool.reserveX ∧ 0 < pool.reserveY
+h✝¹ : 0 < amount
+h✝ : 1 ≤ 0
+⊢ False
+warning: DefiKernel/AMM/R2Bridge.lean:74:72: missing space in the source
+
+This part of the code
+  'x+amount'
+should be written as
+  'x + amount'
+
+
+Note: This linter can be disabled with `set_option linter.style.whitespace false`
+error: DefiKernel/AMM/R2Bridge.lean:87:59: unsolved goals
+x y amount : ℚ
+hx : 0 < x
+hy : 0 < y
+hd : 0 < amount
+native :
+  Rational.swapPool { reserveX := x, reserveY := y } amount 0 =
+    Except.ok (Rational.computed { reserveX := x, reserveY := y } amount 0)
+positive : 0 < y * amount / (x + amount)
+bound : y * amount / (x + amount) < y
+post : 0 < x + amount ∧ 0 < y - y * amount / (x + amount)
+product : (x + amount) * (y - y * amount / (x + amount)) - x * y = 0
+product_eq : (x + amount) * (y - y * amount / (x + amount)) = x * y
+⊢ (match Rational.swapPool { reserveX := x, reserveY := y } amount 0, ⋯ with
+    | Except.ok result, x => Result.success result.output result.post.reserveX result.post.reserveY
+    | Except.error Rational.Refusal.badReserve, x => Result.refused Reason.badReserve
+    | Except.error Rational.Refusal.badAmount, x => Result.refused Reason.badAmount
+    | Except.error Rational.Refusal.badFee, impossible => ⋯.elim) =
+    Result.success (y * amount / (x + amount)) (x + amount) (y - y * amount / (x + amount))
+warning: DefiKernel/AMM/R2Bridge.lean:99:25: This simp argument is unused:
+  native
+
+Hint: Omit it from the simp argument list.
+  [apply] simp [swap, swapExact, projectLibrary, Rational.computed, Rational.effectiveInput]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+warning: DefiKernel/AMM/R2Bridge.lean:99:49: This simp argument is unused:
+  Rational.computed
+
+Hint: Omit it from the simp argument list.
+  [apply] simp [swap, swapExact, native, projectLibrary, Rational.effectiveInput]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+warning: DefiKernel/AMM/R2Bridge.lean:99:68: This simp argument is unused:
+  Rational.effectiveInput
+
+Hint: Omit it from the simp argument list.
+  [apply] simp [swap, swapExact, native, projectLibrary, Rational.computed]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+error: DefiKernel/AMM/R2Bridge.lean:103:2: unsolved goals
+case refine_1
+x y amount : ℚ
+invalid : x ≤ 0 ∨ y ≤ 0
+native : Rational.swapPool { reserveX := x, reserveY := y } amount 0 = Except.error Rational.Refusal.badReserve
+⊢ (match Rational.swapPool { reserveX := x, reserveY := y } amount 0, ⋯ with
+    | Except.ok result, x => Result.success result.output result.post.reserveX result.post.reserveY
+    | Except.error Rational.Refusal.badReserve, x => Result.refused Reason.badReserve
+    | Except.error Rational.Refusal.badAmount, x => Result.refused Reason.badAmount
+    | Except.error Rational.Refusal.badFee, impossible => ⋯.elim) =
+    Result.refused Reason.badReserve
+error: DefiKernel/AMM/R2Bridge.lean:106:2: unsolved goals
+case refine_2
+x y amount : ℚ
+hx : 0 < x
+hy : 0 < y
+invalid : amount ≤ 0
+native : Rational.swapPool { reserveX := x, reserveY := y } amount 0 = Except.error Rational.Refusal.badAmount
+⊢ (match Rational.swapPool { reserveX := x, reserveY := y } amount 0, ⋯ with
+    | Except.ok result, x => Result.success result.output result.post.reserveX result.post.reserveY
+    | Except.error Rational.Refusal.badReserve, x => Result.refused Reason.badReserve
+    | Except.error Rational.Refusal.badAmount, x => Result.refused Reason.badAmount
+    | Except.error Rational.Refusal.badFee, impossible => ⋯.elim) =
+    Result.refused Reason.badAmount
+warning: DefiKernel/AMM/R2Bridge.lean:105:27: This simp argument is unused:
+  native
+
+Hint: Omit it from the simp argument list.
+  [apply] simp [swap, swapExact, projectLibrary]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+warning: DefiKernel/AMM/R2Bridge.lean:108:27: This simp argument is unused:
+  native
+
+Hint: Omit it from the simp argument list.
+  [apply] simp [swap, swapExact, projectLibrary]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+error: Lean exited with code 1
+Some required targets logged failures:
+- DefiKernel.AMM.R2Bridge
+error: build failed

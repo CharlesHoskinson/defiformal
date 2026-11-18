@@ -1,0 +1,17 @@
+# Borrow compiled package review
+
+ACCEPT_WITH_LIMITATIONS. No required repair. Eligible for publication after the separate root delivery/CI gate.
+
+Exact source revision: `7adeee6b73465a2b51eb6673ffa8924468bef483`. All seven frozen configuration/document files match their lengths and SHA256 hashes. The archive is 593378281 bytes with SHA256 `7295a400852e41dab1c4f695f3d9bcb88650b520de7564b3a9552c07ae041425`. The extracted manifest is byte-identical to the frozen delivery record. INPUTS.json binds full input identities and integration records.
+
+The archive has 25 selected targets, 2478 modules and 10966 checksummed files. The exact addition relative to the accepted repayment package is Oracle, Support, Borrow and BorrowAudit: four modules and four targets. Every bundled module source matches its recorded hash; repository module and evidence source bytes match the pinned Git revision. The source/effective target inventories retain accepted R2Replay and OriginalContractRelation routing. Generated R2 source/artifact identities, dependency records, license files, checker and shell are unchanged from the accepted prior package. The repaired builder remains SHA256 99d10e444a58f6c4525ed6866afbb7a3b3a031a577e417bb996d65b2eb22db28. Existing proof and tool reviews are reused, not relabelled as new proof campaigns.
+
+Independent extraction under /private/tmp/defiformal-borrow-package-review passed all 25 selected kernel targets using the shipped shell with only system PATH in a fresh subprocess environment, no repository/cache/ambient Lean path. Optional inventory and packaged token0 checks passed (101 bound files). Removing Borrow.olean returned BLOCKED 3; altering its bytes returned FAIL 1. Original bytes were restored. Independent commands/raw logs are in independent-verification.json. All eight root extracted-control raw stdout/stderr hash and diagnostic bindings also match, including unreadable and empty-target controls.
+
+The first root invocation selected the old adjacent 21-target configuration. Its correction record explicitly rejects that attempt before review/publication and records invocation from the prepared clone as the repair. This review accepts only the final hash above and the measured 25-target inventory. No omitted-target attempt receives acceptance or proof credit.
+
+The new package record accurately scopes actual borrower binding, cash transfer/debt issuance, locked-custody post-health and constructive success. Source 25-case execution and runtime/proof mutations are historical bound evidence; compiled replay does not rerun them. Prior release records remain historical. The shared guide retains earlier slice descriptions followed by the new Borrow refresh; the authoritative current inventory is the exact manifest/targets and dated Borrow record.
+
+Limits: macOS arm64 bundled runtime with system libraries; same Lean kernel and trusted imports, separate axiom-audit evidence, and provenance rather than source-to-binary refinement or reproducible-build proof. Oracle authenticity, clock and framework assumptions remain. Accrual and collateral deposit/withdrawal remain outstanding, so IV.4 remains open. Agent relocation is not actual outside developer reproduction. No adoption, historical effort or market/deployed-source equivalence is established. Publication and actual delivery CI remain root responsibilities.
+
+Requested reviewer: gpt-6-astra at medium reasoning. Actual provider-returned model/effort identity is unavailable; no provider attestation is claimed.

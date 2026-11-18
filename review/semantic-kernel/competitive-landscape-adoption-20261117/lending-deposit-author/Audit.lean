@@ -1,0 +1,8 @@
+import DefiKernel.Lending.DepositCollateralAudit
+import DefiKernel.AxiomAudit
+#audit_axioms DefiKernel.Lending
+#print axioms DefiKernel.Lending.DepositCollateral.funded_success
+#print axioms DefiKernel.Lending.DepositCollateral.actual_effects
+#print axioms DefiKernel.Lending.DepositCollateral.actual_accounting
+#print axioms DefiKernel.Lending.DepositCollateral.health_preserved_at_price
+#print axioms DefiKernel.Lending.DepositCollateral.negative_quantity_refusal

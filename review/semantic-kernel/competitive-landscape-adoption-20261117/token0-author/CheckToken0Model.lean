@@ -1,0 +1,5 @@
+import DefiKernel.ConcentratedLiquidity.Token0Proofs
+#check DefiKernel.ConcentratedLiquidity.SqrtPriceMath.add_result_le
+#print axioms DefiKernel.ConcentratedLiquidity.SqrtPriceMath.add_result_le
+#check DefiKernel.ConcentratedLiquidity.SqrtPriceMath.primary_add
+#check DefiKernel.ConcentratedLiquidity.SqrtPriceMath.remove_require

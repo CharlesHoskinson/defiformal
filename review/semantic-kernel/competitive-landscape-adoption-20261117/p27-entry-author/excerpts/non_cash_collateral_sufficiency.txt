@@ -1,0 +1,34 @@
+            market,
+            prices
+        );
+
+        int256 remainingCollateralUsd = values.positionCollateralAmount.toInt256() * collateralTokenPrice.min.toInt256();
+
+        // deduct realized pnl if it is negative since this would be paid from
+        // the position's collateral
+        if (values.realizedPnlUsd < 0) {
+            remainingCollateralUsd = remainingCollateralUsd + values.realizedPnlUsd;
+        }
+
+        if (remainingCollateralUsd < 0) {
+            return (false, remainingCollateralUsd);
+        }
+
+        // the min collateral factor will increase as the open interest for a market increases
+        // this may lead to previously created limit increase orders not being executable
+        //
+        // the position's pnl is not factored into the remainingCollateralUsd value, since
+        // factoring in a positive pnl may allow the user to manipulate price and bypass this check
+        // it may be useful to factor in a negative pnl for this check, this can be added if required
+        uint256 minCollateralFactor = MarketUtils.getMinCollateralFactorForOpenInterest(
+            dataStore,
+            market,
+            values.openInterestDelta,
+            isLong
+        );
+
+        uint256 minCollateralFactorForMarket = MarketUtils.getMinCollateralFactor(dataStore, market.marketToken);
+        // use the minCollateralFactor for the market if it is larger
+        if (minCollateralFactorForMarket > minCollateralFactor) {
+            minCollateralFactor = minCollateralFactorForMarket;
+        }

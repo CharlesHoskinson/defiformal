@@ -1,0 +1,9 @@
+# Compiled evidence for native rounded payment
+
+The [artifact](artifact.json) binds this thirty-four-target macOS arm64 archive to source revision `3df7bdcc6c953c0155d27310de67f1305149cc1b`. It adds Payment and PaymentAudit using the unchanged accepted builder, checker and replay script. The [manifest](manifest.json) records the measured import closure and exact source identities. [Verification](verification.json) records eight actual commands against the extracted archive. Publication is recorded separately.
+
+Follow the [package replay instructions](../../../tools/compiled-evidence/README.md). The selected modules replay with the bundled runtime from an unrelated directory. Missing payment artifact, unreadable payload and empty inventory must return BLOCKED (3); an altered payment byte must return FAIL (1). Optional inventory and packaged token0 consistency remain separate checks.
+
+The new proofs cover raw-natural ceil/floor payment, bucket reconciliation, two distinct rounding terms, an economic-shortfall counterexample and sufficient-primary arithmetic coverage. They do not establish actual Typed payment execution, liquidation or solvency. Twelve native controls, mutations, eleven successful source helper calls, five arithmetic Panics and nine Native/source payment comparisons are separately recorded. Compiled replay does not rerun those controls or source calls. Finite correspondence is not a universal source refinement theorem.
+
+The package includes source-helper compiler inputs and evidence, preserving original GMX and dependency licenses. Solidity/EVM/Go executables remain external and are identified in the evidence; they are not required or claimed bundled for this Lean proof replay. The same Lean kernel and trusted imports, absence of actual outside reproduction, unknown historical effort and unproved deployed equivalence remain explicit. Earlier targets retain their documented scopes. IV.3 remains open.

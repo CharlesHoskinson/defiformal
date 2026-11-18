@@ -1,0 +1,8 @@
+import DefiKernel.Lending.WithdrawCollateralAudit
+import DefiKernel.Lending.LifecycleAudit
+import DefiKernel.AxiomAudit
+#audit_axioms DefiKernel.Lending
+#print axioms DefiKernel.Lending.WithdrawCollateral.funded_success
+#print axioms DefiKernel.Lending.WithdrawCollateral.actual_collateralization
+#print axioms DefiKernel.Lending.LifecycleAudit.issued_exact
+#print axioms DefiKernel.Lending.LifecycleAudit.capability_ids_distinct

@@ -1,0 +1,8 @@
+import DefiKernel.Margin.PaymentSettlementAudit
+import DefiKernel.AxiomAudit
+#audit_axioms DefiKernel.Margin
+#print axioms DefiKernel.Margin.PaymentSettlement.actual_financial_reconciliation
+#print axioms DefiKernel.Margin.PaymentSettlement.actual_economic_shortfall
+#print axioms DefiKernel.Margin.PaymentSettlement.sufficient_primary_execution
+#print axioms DefiKernel.Margin.PaymentSettlement.run_exists
+#print axioms DefiKernel.Margin.PaymentSettlement.mismatch_refusal

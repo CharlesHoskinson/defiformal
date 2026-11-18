@@ -1,0 +1,442 @@
+{
+  "schema_version": 1,
+  "suite_version": "rational-1",
+  "arithmetic_profile": "EXACT_RATIONAL",
+  "acceptance_domain": "canonical_EXACT_RATIONAL",
+  "source_repository": "https://github.com/CharlesHoskinson/defiformal",
+  "source_revision": "2b60322cdc8c98f0e0c27cab3b2d6dcc824c3eda",
+  "mapping_status": "source_correspondence_pending_independent_admission",
+  "workload_origin": "adapted_library",
+  "semantic_boundary": "abstract_model",
+  "correspondence": "CORRESPONDENCE.md",
+  "case_plan": "case-plan.json",
+  "native_sources": {
+    "root": "adapter",
+    "paths": [
+      "upstream/DefiKernel/Core.lean",
+      "upstream/DefiKernel/Examples.lean"
+    ],
+    "lock": "native-lock.json",
+    "execution": [
+      "DefiKernel.execute",
+      "DefiKernel.applyEffect",
+      "DefiKernel.total",
+      "DefiKernel.Examples.move",
+      "DefiKernel.Examples.pulse"
+    ],
+    "proof_reuse": [
+      "DefiKernel.execute_ok_iff",
+      "DefiKernel.execute_accounting",
+      "DefiKernel.execute_locality"
+    ]
+  },
+  "public_state_mapping": {
+    "accounts": "alice,bob,vaultA,vaultB map to native alice,bob,vault,pool",
+    "principals": "alice,bob,operator,admin map to native alice,bob,vault,pool in a separate role mapping; no implicit owner rights",
+    "assets": "cash,shareA,shareB map to native usd,share,collateral",
+    "balances": "All twelve canonical rational cells are arbitrary nonnegative. The unused native debt cells are zero under ValidState.",
+    "supply": "Derived separately by native total for each canonical asset; matches the required S=sum balances domain.",
+    "rates": "Two independent arbitrary positive rationals, fixed by all operations.",
+    "capabilities": "Any Finset of all canonical actor/right/target triples, including empty sets.",
+    "history": "Arbitrary finite initial event list preserved exactly; successful single calls append one exact event, net appends one list-containing event. Theorems also tolerate initial histories outside the canonical well-formed subset.",
+    "raw_inputs": "Arbitrary identifier Strings, all signed rational Number.exact values, Number.malformed envelope, and unsupported records. No production serializer refinement is claimed."
+  },
+  "canonical_refusal_order": [
+    "BAD_OPERATION",
+    "BAD_TARGET",
+    "BAD_NUMBER",
+    "BAD_AMOUNT",
+    "UNAUTHORIZED",
+    "INSUFFICIENT_FUNDS"
+  ],
+  "new_work": [
+    "Generalized canonical financial operations and complete success/refusal contracts",
+    "Canonical invoke/gross-debit guards and raw input decoder",
+    "Finset administrator grants/revokes and complete public event history",
+    "Local-contract composition and prefix executor",
+    "Atomic public-state commit/rollback wrapper",
+    "Net validation/aggregation and sequential-domain equivalence",
+    "Second-vault theorem instantiation and acceptance witnesses"
+  ],
+  "native_control_boundary": {
+    "measured": false,
+    "not_invoked": [
+      "DefiKernel.Typed.issueCapability",
+      "DefiKernel.Typed.revokeCapability",
+      "DefiKernel.Composition.executeStep",
+      "DefiKernel.Atomic.runAtomic"
+    ],
+    "reason": "Native registered-operation, capability-ID/tombstone, and grouped atomic event semantics differ from the canonical suite; the added control wrappers have their own proofs. No refinement to those native control executors is claimed."
+  },
+  "automation": {
+    "procedure": "procedure.json",
+    "selection_evidence": "selection/result.json",
+    "tactic": "aesop",
+    "maxHeartbeats": 20000,
+    "threads": 1,
+    "unchanged_before_targets": true,
+    "assistance": "AI target-specific theorem selection, helpers, decompositions, algebraic tactics and generic reuse application are assisted; models and canonical types are shared. All new proof helpers occur in the assisted replay chains.",
+    "observations": "Finite witnesses and mutants are admission diagnostics, not universal proofs or scored measurements. Automatic failures must remain separate from assisted success."
+  },
+  "proof_checking": {
+    "artifact": "Lean 4.33.0-rc2 .olean compiled modules",
+    "checker": "leanchecker -v",
+    "boundary": "Separate invocations replay all new model/helper/target modules without source tactics, using the same Lean kernel. --fresh is not used; pinned imported library artifacts are trusted.",
+    "allowed_axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "trust": [
+      "Official pinned Lean compiler/checker/runtime",
+      "Pinned imported Lean, mathlib and native dependency artifacts",
+      "Standard allowed Lean axioms",
+      "Host execution and harness source/artifact selection and result parsing"
+    ],
+    "not_claimed": [
+      "Diverse-kernel proof validation",
+      "Fresh checking of every imported library declaration",
+      "Deployed source or bytecode refinement"
+    ]
+  },
+  "reuse": {
+    "foundation_case": "R3-COMPOSE-N4",
+    "checkpoint": "reuse/foundation-source.json",
+    "checked_before_extension": true,
+    "frozen_at": "2026-11-06T09:47:51.298346+00:00",
+    "foundation_checks": "reuse/foundation-check.json",
+    "extension": "reuse/extension-source.json",
+    "extension_checks": "reuse/extension-check.json",
+    "actual_application": "RationalWorkflow.generic_compose true 4",
+    "scope": "Second instance of the frozen generic contract; no arbitrary new-protocol expressiveness claim. Phase effort and case allocations overlap and are not independent totals."
+  },
+  "cases": {
+    "R3-COMPOSE-N4": {
+      "sources": [
+        "ComposeModel.lean",
+        "ComposeAssisted.lean",
+        "R3N4Assisted.lean"
+      ],
+      "domain": "Every valid public state, every principal, and four independent signed rational amounts; vault A is fixed. AlgebraDomain computes intermediate balances from input effects and requires each amount, authority and gross debit check without assuming executor success.",
+      "claims": "ComposeCanonical gives complete success iff AlgebraDomain and exact first-refusal prefix behavior outside it. WorkflowClaims gives checked local contract composition, all prefixes, exact balances and receipts, nonnegativity, per-asset accounting, unchanged cash supply/rates/capabilities, shareA issuance minus burn, A surplus preservation, ordered four events, and the complete outside-footprint frame.",
+      "proof_dependencies": [
+        "RationalWorkflow.execute_success",
+        "RationalWorkflow.deposit_surplus",
+        "RationalWorkflow.withdraw_surplus",
+        "RationalWorkflow.compose_success",
+        "RationalWorkflow.workflow_trace_preserves",
+        "RationalWorkflow.generic_compose"
+      ],
+      "wrappers": "New canonical operation contracts and generic composition over actual native Core.execute. Native Composition.executeStep is not called.",
+      "candidate": "adapted_library_pending_independent_admission",
+      "status": "pending_independent_admission",
+      "workload_origin": "adapted_library",
+      "semantic_boundary": "abstract_model",
+      "source_root": "adapter",
+      "canonical_type": "RationalWorkflow.ComposeCanonical false 4",
+      "canonical_symbol": "RationalComposeN4.canonical",
+      "automatic_modules": [
+        "WorkflowModel",
+        "WorkflowControl",
+        "ComposeModel",
+        "R3N4Automatic"
+      ],
+      "assisted_modules": [
+        "WorkflowModel",
+        "WorkflowControl",
+        "ComposeModel",
+        "LocalContracts",
+        "ComposeAssisted",
+        "R3N4Assisted"
+      ],
+      "witness_modules": [
+        "WorkflowModel",
+        "WorkflowControl",
+        "ComposeModel",
+        "ComposeWitnesses"
+      ],
+      "case_dependencies": []
+    },
+    "R3-COMPOSE-N16": {
+      "sources": [
+        "ComposeModel.lean",
+        "ComposeAssisted.lean",
+        "R3N16Assisted.lean"
+      ],
+      "domain": "Every valid public state, every principal, and sixteen independent signed rational amounts, with the A deposit/share-transfer/withdraw/cash-transfer pattern repeated four times. All guards use algebraically computed actual prefix balances.",
+      "claims": "Same complete success/refusal and modular WorkflowClaims as N4, with sixteen ordered events and independent amounts at every position. No coverage or timing is pooled with N4; both lengths share the canonical R3 adaptation allowance.",
+      "proof_dependencies": [
+        "RationalWorkflow.execute_success",
+        "RationalWorkflow.compose_success",
+        "RationalWorkflow.workflow_trace_preserves",
+        "RationalWorkflow.generic_compose"
+      ],
+      "wrappers": "New composition contract and induction; actual financial execution and native local theorems reused.",
+      "candidate": "adapted_library_pending_independent_admission",
+      "status": "pending_independent_admission",
+      "workload_origin": "adapted_library",
+      "semantic_boundary": "abstract_model",
+      "source_root": "adapter",
+      "canonical_type": "RationalWorkflow.ComposeCanonical false 16",
+      "canonical_symbol": "RationalComposeN16.canonical",
+      "automatic_modules": [
+        "WorkflowModel",
+        "WorkflowControl",
+        "ComposeModel",
+        "R3N16Automatic"
+      ],
+      "assisted_modules": [
+        "WorkflowModel",
+        "WorkflowControl",
+        "ComposeModel",
+        "LocalContracts",
+        "ComposeAssisted",
+        "R3N16Assisted"
+      ],
+      "witness_modules": [
+        "WorkflowModel",
+        "WorkflowControl",
+        "ComposeModel",
+        "ComposeWitnesses"
+      ],
+      "case_dependencies": []
+    },
+    "R4-REFUSAL": {
+      "sources": [
+        "WorkflowControl.lean",
+        "WorkflowSequenceProofs.lean",
+        "WorkflowControlProofs.lean",
+        "R4Assisted.lean"
+      ],
+      "domain": "Every valid state and every list of four arbitrary RawCall records, including unsupported tags, invalid identifiers/numbers, signed amounts and administrative calls.",
+      "claims": "RawExecutionSpec fixes every actual successful prefix state/event and exact first refusal. R4Canonical fixes the failure index and committed count, full preserved prefix state, complete-success count four, history prefix/count, and unchanged refused result for every appended suffix.",
+      "proof_dependencies": [
+        "RationalWorkflow.raw_step_spec",
+        "RationalWorkflow.runRaw_spec",
+        "RationalWorkflow.runWith_failed",
+        "RationalWorkflow.rawSpec_history"
+      ],
+      "wrappers": "New runRaw/RawStepSpec control wrapper around the native-backed single-call executor; no native registered-composition executor claim.",
+      "candidate": "adapted_library_pending_independent_admission",
+      "status": "pending_independent_admission",
+      "workload_origin": "adapted_library",
+      "semantic_boundary": "abstract_model",
+      "source_root": "adapter",
+      "canonical_type": "RationalWorkflow.R4Canonical",
+      "canonical_symbol": "RationalWorkflow.r4_canonical",
+      "automatic_modules": [
+        "WorkflowModel",
+        "WorkflowControl",
+        "R4Automatic"
+      ],
+      "assisted_modules": [
+        "WorkflowModel",
+        "WorkflowControl",
+        "WorkflowSequenceProofs",
+        "LocalContracts",
+        "WorkflowControlProofs",
+        "R4Assisted"
+      ],
+      "witness_modules": [
+        "WorkflowModel",
+        "WorkflowControl",
+        "ControlWitnesses"
+      ],
+      "case_dependencies": []
+    },
+    "R5-REVOKE": {
+      "sources": [
+        "WorkflowControl.lean",
+        "WorkflowRevokeProofs.lean",
+        "R5Assisted.lean"
+      ],
+      "domain": "Every valid state, every financial call in its explicit success domain, and any member of its required capability set; all valid capabilities and all nonadmin/admin actors for general administration.",
+      "claims": "First call and admin revoke succeed; the same call then refuses UNAUTHORIZED unchanged without a repeat-call funds premise. Exact admin-only insert/erase, set idempotence, one event per successful administration, unchanged balances/supply/rates and regrant restoration are included.",
+      "proof_dependencies": [
+        "RationalWorkflow.execute_success",
+        "RationalWorkflow.admin_success",
+        "RationalWorkflow.admin_post",
+        "RationalWorkflow.required_authority"
+      ],
+      "wrappers": "New Finset capability administration and trusted admin mapping. Native Typed.Authority capability IDs/tombstones are not executed or refined by these theorems.",
+      "candidate": "adapted_library_pending_independent_admission",
+      "status": "pending_independent_admission",
+      "workload_origin": "adapted_library",
+      "semantic_boundary": "abstract_model",
+      "source_root": "adapter",
+      "canonical_type": "RationalWorkflow.R5Canonical",
+      "canonical_symbol": "RationalWorkflow.r5_canonical",
+      "automatic_modules": [
+        "WorkflowModel",
+        "WorkflowControl",
+        "R5Automatic"
+      ],
+      "assisted_modules": [
+        "WorkflowModel",
+        "WorkflowControl",
+        "LocalContracts",
+        "WorkflowRevokeProofs",
+        "R5Assisted"
+      ],
+      "witness_modules": [
+        "WorkflowModel",
+        "WorkflowControl",
+        "ControlWitnesses"
+      ],
+      "case_dependencies": []
+    },
+    "R6-ATOMIC": {
+      "sources": [
+        "WorkflowControl.lean",
+        "WorkflowSequenceProofs.lean",
+        "WorkflowControlProofs.lean",
+        "R6Assisted.lean"
+      ],
+      "domain": "Every valid state and every four-element raw call list in the R4 domain, including staged grants, revokes, issuance and burns.",
+      "claims": "atomicRaw stages the exact runRaw result. Complete success returns the identical state with four ordered events. Any refusal returns its same reason/index, committed count zero, and exact complete entry PublicState, restoring balances, derived supply, rates, capabilities and history.",
+      "proof_dependencies": [
+        "RationalWorkflow.runRaw_spec",
+        "RationalWorkflow.runWith_complete",
+        "RationalWorkflow.rawSpec_history"
+      ],
+      "wrappers": "New abstract commit/rollback wrapper; native Atomic.runAtomic and its grouped-event semantics are not measured.",
+      "candidate": "adapted_library_pending_independent_admission",
+      "status": "pending_independent_admission",
+      "workload_origin": "adapted_library",
+      "semantic_boundary": "abstract_model",
+      "source_root": "adapter",
+      "canonical_type": "RationalWorkflow.R6Canonical",
+      "canonical_symbol": "RationalWorkflow.r6_canonical",
+      "automatic_modules": [
+        "WorkflowModel",
+        "WorkflowControl",
+        "R6Automatic"
+      ],
+      "assisted_modules": [
+        "WorkflowModel",
+        "WorkflowControl",
+        "WorkflowSequenceProofs",
+        "LocalContracts",
+        "WorkflowControlProofs",
+        "R6Assisted"
+      ],
+      "witness_modules": [
+        "WorkflowModel",
+        "WorkflowControl",
+        "ControlWitnesses"
+      ],
+      "case_dependencies": []
+    },
+    "R7-NET": {
+      "sources": [
+        "NetModel.lean",
+        "NetAssisted.lean"
+      ],
+      "domain": "Every valid state and four independent same-request-actor transfer records, all account/asset aliases and self-transfers. Raw validation and aggregate theorems quantify arbitrary-length raw lists, including invalid request actors, unsupported records, invalid/mismatched targets, malformed numbers and signed amounts.",
+      "claims": "Canonical includes exact signed aggregate, raw success iff an independent RawMatches-based domain, ordered first invalid record refusal, invoke plus exactly negative aggregate debit authority, final-cell nonnegativity funds domain, native settlement success and exact NetClaims. Sequential success iff GrossAuthority and input-derived PrefixFunds implies net success and equal balances/supply/rates/capabilities. Histories remain one net versus four sequential events; net success need not imply sequential success.",
+      "proof_dependencies": [
+        "RationalWorkflow.Net.aggregate_canonical",
+        "RationalWorkflow.Net.raw_total_canonical",
+        "RationalWorkflow.Net.net_authority_exact",
+        "RationalWorkflow.Net.settlement_canonical",
+        "RationalWorkflow.Net.sequence_success_iff",
+        "RationalWorkflow.Net.sequential_canonical"
+      ],
+      "wrappers": "New validation, sum-of-native-move aggregate, event and sequential-correspondence wrappers. Financial settlement invokes native Core.execute; authority uses native DebitAuthorized on aggregate effects.",
+      "candidate": "adapted_library_pending_independent_admission",
+      "status": "pending_independent_admission",
+      "workload_origin": "adapted_library",
+      "semantic_boundary": "abstract_model",
+      "source_root": "adapter",
+      "canonical_type": "RationalWorkflow.Net.Canonical",
+      "canonical_symbol": "RationalWorkflow.Net.canonical",
+      "automatic_modules": [
+        "WorkflowModel",
+        "WorkflowControl",
+        "NetModel",
+        "NetAutomatic"
+      ],
+      "assisted_modules": [
+        "WorkflowModel",
+        "WorkflowControl",
+        "NetModel",
+        "LocalContracts",
+        "NetAssisted"
+      ],
+      "witness_modules": [
+        "WorkflowModel",
+        "WorkflowControl",
+        "NetModel",
+        "NetFixtures",
+        "NetWitnesses"
+      ],
+      "case_dependencies": []
+    },
+    "R8-REUSE": {
+      "sources": [
+        "ReuseModel.lean",
+        "ReuseAssisted.lean",
+        "reuse/foundation-source.json",
+        "reuse/foundation-check.json",
+        "reuse/extension-source.json",
+        "reuse/extension-check.json"
+      ],
+      "domain": "Every valid state, actor and four independent signed rational amounts for vault B/shareB. Both vault rates remain independent arbitrary positive rational inputs; the A cells and shares are framed.",
+      "claims": "The entire ComposeCanonical true 4 contract, including complete success/refusal behavior, local composition, receipts, all prefixes, frame and B surplus. ReuseAssisted imports the checked R3N4 foundation and actually applies generic_compose true 4; it adds no financial model or copied proof.",
+      "proof_dependencies": [
+        "RationalWorkflow.generic_compose",
+        "RationalWorkflow.compose_success",
+        "RationalWorkflow.execute_success",
+        "RationalWorkflow.deposit_surplus",
+        "RationalWorkflow.withdraw_surplus",
+        "RationalWorkflow.workflow_trace_preserves"
+      ],
+      "wrappers": "Second instance of the already parameterized adapted contract. Reused generic theorem was checked before extension authoring; its selected application is AI proof assistance.",
+      "case_dependencies": [
+        "R3-COMPOSE-N4"
+      ],
+      "candidate": "adapted_library_pending_independent_admission",
+      "status": "pending_independent_admission",
+      "workload_origin": "adapted_library",
+      "semantic_boundary": "abstract_model",
+      "source_root": "adapter",
+      "canonical_type": "RationalReuse.Canonical",
+      "canonical_symbol": "RationalReuse.canonical",
+      "automatic_modules": [
+        "WorkflowModel",
+        "WorkflowControl",
+        "ComposeModel",
+        "ReuseModel",
+        "ReuseAutomatic"
+      ],
+      "assisted_modules": [
+        "WorkflowModel",
+        "WorkflowControl",
+        "ComposeModel",
+        "ReuseModel",
+        "LocalContracts",
+        "ComposeAssisted",
+        "R3N4Assisted",
+        "ReuseAssisted"
+      ],
+      "witness_modules": [
+        "WorkflowModel",
+        "WorkflowControl",
+        "ComposeModel",
+        "ComposeWitnesses",
+        "ReuseModel",
+        "ReuseWitnesses"
+      ]
+    }
+  },
+  "excluded_cases": [
+    "R1-TRANSFER",
+    "R2-SWAP"
+  ],
+  "limitations": [
+    "Abstract state/effect proofs only; no claim about deployed programs, signatures, dishonest administrator resistance or distributed atomicity.",
+    "Fixed-rate accounting surplus preservation is not changing-price economic solvency; negative entry surplus remains in scope.",
+    "Raw malformed-number tags model validation outcomes without proving an external serialization implementation.",
+    "Source/proof correspondence and preparation checks do not replace executed acceptance, reconstruction, separate-context admission or scored replay."
+  ]
+}

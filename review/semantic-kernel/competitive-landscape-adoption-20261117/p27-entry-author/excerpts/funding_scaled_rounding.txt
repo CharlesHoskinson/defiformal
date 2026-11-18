@@ -1,0 +1,27 @@
+    function getFundingAmount(
+        uint256 latestFundingAmountPerSize,
+        uint256 positionFundingAmountPerSize,
+        uint256 positionSizeInUsd,
+        bool roundUpMagnitude
+    ) internal pure returns (uint256) {
+        uint256 fundingDiffFactor = (latestFundingAmountPerSize - positionFundingAmountPerSize);
+
+        // a user could avoid paying funding fees by continually updating the position
+        // before the funding fee becomes large enough to be chargeable
+        // to avoid this, funding fee amounts should be rounded up
+        //
+        // this could lead to large additional charges if the token has a low number of decimals
+        // or if the token's value is very high, so care should be taken to inform users of this
+        //
+        // if the calculation is for the claimable amount, the amount should be rounded down instead
+
+        // divide the result by Precision.FLOAT_PRECISION * Precision.FLOAT_PRECISION_SQRT as the fundingAmountPerSize values
+        // are stored based on FLOAT_PRECISION_SQRT values
+        return Precision.mulDiv(
+            positionSizeInUsd,
+            fundingDiffFactor,
+            Precision.FLOAT_PRECISION * Precision.FLOAT_PRECISION_SQRT,
+            roundUpMagnitude
+        );
+    }
+
