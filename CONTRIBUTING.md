@@ -1,10 +1,16 @@
 # Contributing
 
-Use the [delivery repository](https://github.com/stefan-contiu/defiformal) and
-base proposed changes on `semantic-kernel-pivot`, its development and delivery
-branch. Follow [AGENTS.md](AGENTS.md) for the current implementation and review
-workflow. Keep a change focused on one behavior, proof obligation or document
-correction, and state its expected result.
+Submit pull requests to [CharlesHoskinson/defiformal](https://github.com/CharlesHoskinson/defiformal),
+targeting `semantic-kernel-pivot`, its development and delivery branch. If you
+have read-only access upstream, push your changes to a fork and open the pull
+request from that fork. Follow [AGENTS.md](AGENTS.md) for the current
+implementation and review workflow. Keep a change focused on one behavior,
+proof obligation or document correction, and state its expected result.
+
+For integration of the competitive-landscape work, see the
+[upstream maintainer handover](docs/upstream-maintainer-handover.md). Historical
+review, CI and release records keep their original repository URLs and source
+identities; they are not rewritten to imply upstream publication.
 
 Submit original code and proofs only when you have the right to contribute
 them under [Apache-2.0](LICENSE). Identify imported material, its source revision
