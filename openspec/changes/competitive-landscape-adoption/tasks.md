@@ -1,34 +1,59 @@
-# Competitive landscape adoption tasks (after independent planning review)
+# Competitive landscape adoption: delivery milestone
 
-All boxes stay unchecked in this planning freeze. Do not start Lean, CI configuration or adapter work until independent review accepts this slice. The 13 tasks follow section 4.2 of the report, with the project-specific prerequisites and acceptance conditions below. Each line carries the task, then in brackets its kind (better product, trusted by others, better measurement) and what it serves (gap D1 to D5 and report sections), and ends with its completion criterion as the verify clause.
+**Draft restructuring — 2026-11-18; pending owner review.** These edits are a
+proposal for review, not an accepted completion transition. No commit, push,
+archive or live evidence-state update is authorized by this draft.
 
-Implementation transition (2026-11-17): task 1.1 accepted with limitations at revision `a163c10460ce61dd62a5001d6e7bd5b650cd8d75`, with all 17 boxes unchecked before acceptance. See [the review decision](../../../review/semantic-kernel/competitive-landscape-adoption-20261117/DECISION.json) and its exact-input manifest. The planning freeze above remains historical; this checkbox update records the subsequent apply action. No implementation task is accepted.
+The accepted original result remains **13/17** at revision
+`cd2f8ef5409c7e79a47e069738922858b5947409`, recorded in
+[FINAL-ACCEPTANCE.json](../../../review/semantic-kernel/competitive-landscape-adoption-20261117/FINAL-ACCEPTANCE.json).
+That record and all frozen reviews, accounting manifests, scenario inventories and
+publication receipts retain their original criteria and byte identities.
 
-Apply status (2026-11-17): tasks 1.1, 1.2, I.1 and I.2 are complete. The [partial accounting baseline](../../../benchmarks/component-accounting/README.md) records selected adapter counts and attribution, but I.3 stays open because separate historical authoring effort is unavailable. The owner confirms no outside reproduction record exists, so I.4 stays open. The owner subsequently authorized continued engineering with historical effort unknown; I.3 and I.4 remain open without blocking dependency-ready work. See [current apply status](../../../review/semantic-kernel/competitive-landscape-adoption-20261117/APPLY-STATUS.json). II.1 now has an accepted fixed deposit-to-quote workflow; its separate-effort measurement scenario stays open. See [workflow acceptance](../../../review/semantic-kernel/competitive-landscape-adoption-20261117/workflow-integration-decision.json). II.2 is complete with [quantified arithmetic-to-typed-model correspondence](../../../review/semantic-kernel/competitive-landscape-adoption-20261117/computed-integration-decision.json); II.3 is complete with [the explicit token0 observation relation](../../../review/semantic-kernel/competitive-landscape-adoption-20261117/token0-integration-decision.json); universal source refinement remains unproved. III.2 is complete for these integrations with [v0.2.0 compiled evidence](../../../docs/evidence/compiled-macos-arm64/publication.json); later integrations retain the same package obligation. III.1 remains open for an actual outside recheck. IV.2 is complete with [the shared-liquidity ordering counterexample and v0.2.1 evidence](../../../docs/evidence/compiled-ordering-macos-arm64/publication.json). IV.1 has an accepted rational AMM operation and round-trip proof with [v0.3.0 compiled evidence](../../../docs/evidence/compiled-amm-rational-macos-arm64/publication.json); [checked Word correspondence and replay are also published in v0.4.0](../../../docs/evidence/compiled-amm-word-macos-arm64/publication.json). The Word two-success round-trip theorem and full R2 library replay with its original-contract relation are published with [v0.5.0 compiled evidence](../../../docs/evidence/compiled-r2-roundtrip-macos-arm64/publication.json). IV.1 is complete with actual rational and Word Typed settlement and [v0.6.0 compiled evidence](../../../docs/evidence/compiled-amm-settlement-macos-arm64/publication.json), within the [dated AMM capability scope](../../../docs/research/competitive-landscape-2026-11/amm-library-addendum-2026-11-17.md). Native pool round-trip bounds are separate from Typed single-swap settlement. IV.4 is complete within the [dated lending reference-API scope](../../../docs/research/competitive-landscape-2026-11/lending-library-addendum-2026-11-17.md), with [v0.11.0 compiled evidence](../../../docs/evidence/compiled-lending-final-macos-arm64/publication.json). Generic operation proofs, finite lifecycle observations and compiled replay remain distinct. IV.3 is complete within the [dated bounded liquidation scope](../../../docs/research/competitive-landscape-2026-11/liquidation-library-addendum-2026-11-17.md), with separate actual correctness and conditional constructive solvency proofs and [v0.16.0 compiled evidence](../../../docs/evidence/compiled-margin-close-macos-arm64/publication.json). Whole-handler/caller-suffix refinement remains unproved.
+The proposed milestone is the implemented, reviewed and published verification
+library, with explicit scoped accounting and engineering replay. Prospective effort
+measurement and actual outside reproduction belong to the linked
+[validation plan](../competitive-landscape-validation/tasks.md).
+Its tasks remain open; they are not evidence of completed validation.
 
-Final apply reconciliation (2026-11-17): **13/17 tasks complete**. All dependency-ready scoped engineering, compiled delivery and scenario/remainder review are accepted. I.3 (historical component effort), I.4 (outside P18 reproduction), II.1 (separate-effort measurement) and III.1 (outside package-only recheck) remain open. Agent runs and elapsed intervals do not replace these criteria. See [final acceptance](../../../review/semantic-kernel/competitive-landscape-adoption-20261117/FINAL-ACCEPTANCE.json). The change is not archived.
+## Obligation mapping
+
+| Original obligation | Proposed delivery criterion | Remaining validation obligation |
+| --- | --- | --- |
+| I.3: counts, attribution and historical effort | Scoped counts/attribution, exact source boundaries and recorded effort availability; unknown historical effort stays `null` with reasons | Validation 2.1 establishes prospective component accounting; 2.2 collects a new separate-effort experiment. Original effort has not been recovered. |
+| I.4: actual outside P18 run | Transferred in full; absent from the delivery checklist | Validation 3.1 retains actual outside person, outcome and setup time. |
+| II.1: composition plus separate-effort reuse scenario | Accepted actual composition proof and scoped deposit/quote/shared line counts | Validation 2.2 measures prospective effort separately; historical workflow component times stay unknown. |
+| III.1: compiled delivery plus outside recheck | Exact published package and successful engineering replay from fresh extraction | Validation 4.1 retains actual outside package-only replay. |
+| 6.1: scenario reconciliation | Reconcile the amended scenarios and transfer map after amendment acceptance | Original 2026-11-17 reconciliation stays historical; follow-up closure requires its own evidence. |
+
+The proposed checklist retains existing acceptance for unchanged implementation
+criteria. II.1 and III.1 below recognise already accepted engineering evidence;
+their transferred criteria remain unchecked in the validation plan. I.3, new
+amendment gate 1.3 and revised reconciliation 6.1 remain open. Completion under
+the amended contract requires all three gates. No conclusion about productivity,
+outside usability or adoption follows from closing the delivery milestone.
 
 ## 1. Planning gate
 
 - [x] 1.1 Obtain independent review of this exact `competitive-landscape-adoption` candidate under the reviewer bindings in `AGENTS.md`, record verdict, requested and reported model identity and input hashes, and verify no box in this file is ticked before acceptance.
 - [x] 1.2 Include the IOG Suite 1.0 and rational-1 adapters in this change, as authorized on 2026-11-17. Import the required sources, proofs and helpers with pinned revision, file hashes, IOG attribution and replay instructions. Verify every dependent task (including II.2 and IV.1) stays blocked until its required pinned artifacts and dependencies are verified available; the contribution decision alone does not unblock it, and import alone is not fresh replay or proof on the kernel.
+- [ ] 1.3 Obtain owner approval and independent planning acceptance of the exact 2026-11-18 restructuring and linked validation plan. Verify a new revision/hash-bound decision explicitly accepts the changed completion criteria and obligation transfer, preserves the original 13/17 result, and records requested/reported reviewer identity under applicable bindings. Preparing this uncommitted draft does not close this gate.
 
 ## 2. Phase I: operational
 
 - [x] I.1 Add CI that runs the build and the axiom audit on every commit. [trusted by others; D5] Verify a passing run is visible at the current revision and the gate has been seen to fail on a deliberate break.
 - [x] I.2 Cut a first tagged release, and add a contribution guide and a license file. [trusted by others; D5; 3.1] Verify a tagged release; both files in the repository.
-- [ ] I.3 Start per-component accounting of model, specification and guidance lines, of authoring effort, and of attribution (AI-authored or human). [better measurement; D1; 2.7] Verify the vault deposit and the token0 register each report their counts and effort.
-- [ ] I.4 Have an outside developer run the DeFiFormal sprint P18 token0 package from its README and record the outcome and setup time. [trusted by others; D5; 3.1] Verify a reproduction record by someone outside the project exists, pass or fail, with its setup time.
+- [ ] I.3 Publish a scoped accounting reconciliation for the selected vault-deposit adapter and token0 quote-register adapter. [better measurement; D1; 2.7] Verify exact source identities, exhaustive model/specification/guidance counts, attribution with provenance, supporting-code exclusions, and effort availability for each. Unknown historical or per-component effort must remain null with a reason; shared elapsed sessions and command runtimes must not become authoring/person-hours. Bind the accepted baseline and state that it is not a complete-component cost or productivity measurement. Preserve its legacy unmet-I.3 verdict; a new accepted reconciliation must identify this amended criterion. Prospective measurement remains validation 2.1/2.2.
 
 ## 3. Phase II: the first composed example
 
-- [ ] II.1 Compose the sUSDS deposit and the token0 quote register into one workflow under one `ComponentContract` that invokes one shared financial lemma; report the second instance's lines. [better product; D1] Verify a meaningful financial input/output relation, invariant initialization and preservation from actual execution with each step's local guarantees discharged, one shared lemma, units, refusal and counts. Without that relation, record only narrower reuse and leave composition open. (No tool has a supported unit-consistency or interface-compatibility cell, 1.2.)
+- [x] II.1 Deliver the sUSDS deposit-to-token0-quote workflow under one `ComponentContract` with a shared financial lemma and scoped line counts. [better product; D1] Verify a meaningful financial input/output relation, actual initialization/preservation with each local guarantee discharged, one shared lemma, units and refusal; report deposit, quote and shared counts separately. Accepted [workflow evidence](../../../review/semantic-kernel/competitive-landscape-adoption-20261117/workflow-integration-decision.json) and [accounting](../../../benchmarks/component-accounting/vault-quote-workflow.json) support this fixed illustrative workflow, not pool settlement or full-domain composition. Prospective separate-effort measurement is validation 2.2; unknown original component effort and effort-saving claims receive no completion credit here.
 - [x] II.2 Extend the deposit correspondence from the fixed WAD case to the full domain, using the native-correspondence helper of the benchmark adapter as the template for per-operation arithmetic contracts. [better product; D2; 2.7] Verify a theorem over all admissible assets and rates, not one literal. (Every benchmark result in the field is on a new model, 2.8.)
 - [x] II.3 Write the simulation relation between the pinned token0 Solidity campaign and the Lean library, and state the remaining obligation. [better product; D3] Verify three artifacts exist: model theorem, differential observations, refinement obligation.
 
 ## 4. Phase III: ship the evidence
 
-- [ ] III.1 Ship the compiled proof modules as the evidence package: checker name and version, trusted-import list, what each check covers and checksums. [trusted by others; D5; 2.5, 2.8] Verify a third party re-runs the leanchecker pass from the package alone.
+- [x] III.1 Ship compiled proof modules with checker/runtime identity, version, trusted-import list, coverage and checksums. [trusted by others; D5; 2.5, 2.8] Verify an exact published archive successfully replays selected modules from a fresh extraction using the bundled runtime, and that missing/empty/unreadable required evidence blocks while altered bytes fail. The [v0.16.0 publication](../../../docs/evidence/compiled-margin-close-macos-arm64/publication.json) and its independently reviewed package controls support engineering delivery. Actual outside package-only reproduction remains validation 4.1; it is not implied by this checked box.
 - [x] III.2 Ship an evidence package with the composed example and with every later integration, and record adoption only when it is corroborated. [trusted by others; D5; 3.1] Verify each shipped integration carries its package; every recorded adoption is corroborated.
 
 ## 5. Phase IV: widen the financial scope
@@ -40,5 +65,5 @@ Final apply reconciliation (2026-11-17): **13/17 tasks complete**. All dependenc
 
 ## 6. Review and remainders
 
-- [x] 6.1 Reconcile every delta-spec scenario to proof, finite, mutation, measurement or assumption evidence, and verify no scenario is credited from a declaration alone.
+- [ ] 6.1 After amendment acceptance, publish a new reconciliation of every revised delta-spec scenario and each transferred obligation to proof, finite, mutation, measurement, unknown or pending external evidence. Verify exact scenario/spec identities, preserve the original scenario inventory and final acceptance, name open validation task IDs, and obtain independent acceptance before changing live status or closing the amended milestone. No scenario is credited from a declaration or requirement transfer alone.
 - [x] 6.2 Leave replay speed, deployed-code equivalence, a complete adversary model and corroborated adoption named as remainders, and verify none is claimed by this change.

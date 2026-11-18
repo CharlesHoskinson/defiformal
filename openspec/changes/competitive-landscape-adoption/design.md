@@ -1,5 +1,10 @@
 ## Context
 
+**Draft amendment — 2026-11-18, pending owner review.** The proposed completion
+structure below supersedes the original umbrella decision only if this amendment
+is accepted. Existing accepted evidence remains bound to the original bytes and
+criteria. See tasks.md for the obligation mapping and remaining amendment gates.
+
 See proposal.md. Inputs are the IOG Technical Intelligence report (data as of 2026-11-06), the DeFiFormal source at `2b60322cdc8c98f0e0c27cab3b2d6dcc824c3eda` on `semantic-kernel-pivot`, the toolchain pin `lean/lean-toolchain` `leanprover/lean4:v4.33.0-rc2` with mathlib `v4.33.0-rc2`, and the accepted P16, P17, P18 and P19 records under `review/semantic-kernel/program-execution-20260908/`.
 
 Measurements cited here are of abstract benchmark models under the assessment's measurement contract (local process wall clock, three successful runs per value). They are not proofs about deployed code and they do not rank tools; records were taken in different comparison groups.
@@ -8,7 +13,7 @@ Measurements cited here are of abstract benchmark models under the assessment's 
 
 **Goals:**
 
-- One ordered list of 13 tasks, each with the gap it addresses, the sprint it serves, the kind of value it buys (better product, trusted by others, better measurement) and an observable completion criterion.
+- A delivery milestone with observable proof, package and accounting criteria, linked to a separately tracked validation change. Preserve the original 13 report tasks and 17-item implementation checklist as historical references.
 - Delta specs whose scenarios are the completion criteria, so that acceptance of a task is a check, not a judgment.
 - Preserve accepted specs, the frozen sprint plan, the roadmap and historical theorem statements. Add implementation and evidence through individually reviewed slices.
 - Import the IOG Suite 1.0 and rational-1 adapters in this change with pinned provenance, preserved attribution and portable replay.
@@ -22,7 +27,7 @@ Measurements cited here are of abstract benchmark models under the assessment's 
 
 ## Decisions
 
-### 1. One change, four phases, rather than four changes
+### 1. Original decision: one change, four phases
 
 The repository's active changes are sprint-sized slices. The 13 tasks are heterogeneous, so a single umbrella change keeps one review and one evidence index. Phases carry the ordering: I is operational; II targets the first composed example subject to its financial connection and preservation requirements; III depends on II for its subject; IV depends on II and, for liquidation, on sprint P27. Adapter-dependent tasks in every phase also require the artifacts specified in task 1.2. If the owner prefers, phase II can later be split into its own slice without changing this file.
 
@@ -52,6 +57,11 @@ Each task carries one of three kinds. *Better product* changes what the kernel c
 
 Every "done when" of the report's task table appears as a WHEN / THEN scenario in the delta spec of its capability. A task closes when its scenario is demonstrated, not when it is declared done.
 
+For the proposed amendment, the report's original criteria remain historical.
+The revised scenarios govern the delivery milestone only after acceptance, and
+the transferred criteria govern the linked validation change. A checked delivery
+task cannot be used as evidence that a transferred criterion passed.
+
 ### 5. Evidence location
 
 The report embeds every number it cites. The underlying measurement records stay in IOG's private assessment repository and are named in `evidence-index.json` with their record identifiers. A reviewer inside this repository can verify every claim against the report; verification against raw records needs access to that repository, which the proposal states openly.
@@ -62,8 +72,61 @@ The report's section 2.1 takeaway: replay time itself needs no task. 2.4 to 3.9 
 
 ## Risks / Trade-offs
 
-- The adapters are not in this repository. Every adapter-dependent task, including II.2 and IV.1, remains blocked until its required pinned adapters, proofs and helpers, or specified replacements, are available.
-- Tasks I.4 and III.1 need a person outside the project; the implementation loop cannot complete them alone.
+- Original entry risk: adapter-dependent tasks were blocked until pinned imports were available. The accepted import and subsequent delivery records now supply those artifacts; this draft does not reopen accepted implementation.
+- Outside-run tasks still need a person outside the project. The linked validation change keeps these obligations visible; an agent cannot satisfy them.
+
+### Proposed completion amendment, 2026-11-18
+
+**1. Delivery and validation have separate completion gates.** The existing
+change covers the implemented, reviewed and published bounded reference APIs,
+engineering replay and scoped accounting. The linked
+[competitive-landscape-validation](../competitive-landscape-validation/design.md)
+change covers prospective effort measurement and both outside reproductions.
+Keeping all obligations in one permanently open delivery checklist was considered;
+the split gives each milestone an observable finish without erasing missing data.
+
+**2. Unknown historical effort is a reported result.** I.3's amended criterion is
+a scoped accounting record with counts, attribution, source identities, explicit
+exclusions and effort availability. Historical time stays `null` with a reason;
+command time, shared elapsed intervals and unallocated support files do not become
+component authoring cost. The accepted baseline measures selected adapters only.
+A new reconciliation note must bind those records and state the changed criterion;
+the legacy checker and manifests retain their original `unmet` conclusion.
+This amendment cannot establish cheaper development or a complete component cost.
+
+**3. Functional composition and effort measurement are separate.** II.1 retains
+all accepted financial connection, initialization/preservation, local guarantee,
+unit, refusal and shared-lemma obligations. Its count scope is the illustrative
+workflow and its separate deposit/quote/shared partitions. Separately measured
+authoring effort moves to a prospective experiment with a predeclared protocol;
+it cannot reconstruct the original workflow's unknown component times.
+
+**4. Package delivery and outside validation are separate.** III.1 closes on an
+exact published package, checker/runtime/import identities, scope/checksums and
+successful engineering replay from a fresh extraction. The original outside
+package-only run is retained in validation task 4.1. Original I.4 becomes
+validation task 3.1. One outside developer may supply both records, but each run
+must meet its own requirements; an agent, download or release is insufficient.
+
+**5. Amendment acceptance is explicit.** The source and scope of every transferred
+obligation are mapped in tasks.md. Original accepted records at `cd2f8ef5` remain
+the evidence for the previous 13/17 state. This uncommitted draft is not an
+accepted amendment. Its task 1.3 requires owner approval and independent planning
+review under applicable reviewer bindings. I.3 and 6.1 remain open until new
+accounting/scenario reconciliation records are accepted. No archival or release
+action follows merely from writing this draft.
+
+### Applying the amendment after approval
+
+1. Freeze and independently review the exact amendment plus linked follow-up.
+2. Publish a new scoped accounting reconciliation using the existing source-bound
+   counts/attribution and explicit unknowns. Preserve legacy evidence bytes.
+3. Add a new scenario inventory mapping unchanged scenarios to prior acceptance,
+   changed accounting/package scenarios to their actual support, and transferred
+   requirements to the open validation tasks. Preserve the original inventory.
+4. Update live status only after that acceptance. Delivery may then close under
+   the amended contract while validation remains open. The broader roadmap and
+   all stated deployment/adversary/market-safety limitations remain in force.
 
 ### Implementation transition authorized on 2026-11-17
 
@@ -78,4 +141,4 @@ The owner asked to continue after the Phase I evidence pause. Proceed with depen
 ## Open Questions
 
 - Resolved: the owner requests both IOG benchmark adapters in this change, not a separate change.
-- Whether phase II should be filed as its own slice once accepted.
+- Owner review of this draft is pending. No additional implementation decision is needed before that review.
